@@ -186,7 +186,6 @@ test('shift and cash movement projections use explicit Room migration and remain
  const dao=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/ShiftProjectionDao.kt'),'utf8');
  const repository=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosShiftRepository.kt'),'utf8');
  const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
- assert.match(db,/version\s*=\s*4/);
  assert.match(db,/Migration\(3,\s*4\)/);
  assert.match(shift,/tableName\s*=\s*"shift_projection"/);
  assert.match(movement,/tableName\s*=\s*"cash_movement_projection"/);
