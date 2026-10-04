@@ -10,7 +10,8 @@
     printer:handler('printer'),
     telegram:handler('telegram'),
     photoPicker:handler('photoPicker'),
-    backup:handler('backup')
+    backup:handler('backup'),
+    settings:handler('settings')
   });
   global.__MPOS_PLATFORM__='android';
   global.__MPOS_VERSION__='0.1.0';

@@ -17,19 +17,19 @@ test('all bundled JavaScript parses',()=>{
 
 test('every local script referenced by POS is bundled',()=>{
  const scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(match=>match[1]);
- assert.ok(scripts.includes('android-bridge.js'));assert.ok(scripts.includes('notification-native.js'));
+ assert.ok(scripts.includes('android-bridge.js'));assert.ok(scripts.includes('notification-native.js'));assert.ok(scripts.includes('native-settings.js'));
  scripts.forEach(script=>assert.ok(fs.existsSync(path.join(assets,script)),script));
 });
 
 test('Android bridge preserves all native iPad channels',()=>{
  const bridge=fs.readFileSync(path.join(assets,'android-bridge.js'),'utf8');
- for(const channel of ['printer','telegram','photoPicker','backup'])assert.match(bridge,new RegExp(`${channel}:handler\\('${channel}'\\)`));
+ for(const channel of ['printer','telegram','photoPicker','backup','settings'])assert.match(bridge,new RegExp(`${channel}:handler\\('${channel}'\\)`));
  assert.match(bridge,/window\.__MPOS_PLATFORM__|global\.__MPOS_PLATFORM__/);
 });
 
 test('Android POS differs from source HTML only by platform scripts',()=>{
  const manifest=JSON.parse(fs.readFileSync(path.join(root,'web-source-manifest.json')));
- const restored=html.replace('<script src="android-bridge.js"></script>\n','').replace('\n<script src="notification-native.js"></script>','');
+ const restored=html.replace('<script src="android-bridge.js"></script>\n','').replace('\n<script src="native-settings.js"></script>','').replace('\n<script src="notification-native.js"></script>','');
  assert.equal(sha(restored),manifest.files['pos.html']);
  for(const [file,expected] of Object.entries(manifest.files)){
    if(file==='pos.html')continue;
@@ -52,4 +52,18 @@ test('native report routes preserve shift printing and monthly Telegram delivery
  assert.match(telegram,/"sendMonthlyWarehouseReport"/);
  assert.match(telegram,/sendDocument/);
  assert.match(activity,/onTelegramMonthlyWarehouseResult/);
+});
+
+
+test('native Android settings boundary is isolated from POS business storage',()=>{
+ const activity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/MainActivity.kt'),'utf8');
+ const router=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/bridge/NativeBridgeRouter.kt'),'utf8');
+ const store=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/settings/NativeSettingsStore.kt'),'utf8');
+ const adapter=fs.readFileSync(path.join(assets,'native-settings.js'),'utf8');
+ assert.match(activity,/NativeSettingsStore/);
+ assert.match(router,/"settings" -> settings\.handle/);
+ assert.match(store,/getSharedPreferences\("mpos_native_settings"/);
+ assert.match(store,/platform_settings_snapshot/);
+ assert.match(adapter,/__printerSettingsSnapshot/);
+ assert.doesNotMatch(store,/products|orders|shifts|receipts/);
 });

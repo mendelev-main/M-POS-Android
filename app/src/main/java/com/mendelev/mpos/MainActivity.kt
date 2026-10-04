@@ -23,6 +23,7 @@ import com.mendelev.mpos.media.ProductImageStore
 import com.mendelev.mpos.media.ProductPhotoManager
 import com.mendelev.mpos.print.EscPosPrinter
 import com.mendelev.mpos.share.ReportShareManager
+import com.mendelev.mpos.settings.NativeSettingsStore
 import com.mendelev.mpos.telegram.TelegramClient
 import com.mendelev.mpos.web.LocalContentWebViewClient
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +45,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var printer: EscPosPrinter
     private lateinit var shares: ReportShareManager
     private lateinit var telegram: TelegramClient
+    private lateinit var nativeSettings: NativeSettingsStore
 
     private val photoPicker = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri ?: return@registerForActivityResult
@@ -72,7 +74,8 @@ class MainActivity : AppCompatActivity() {
         printer = EscPosPrinter(::printerEvent)
         shares = ReportShareManager(this)
         telegram = TelegramClient(shares::createWarehousePdf, ::telegramResult, ::telegramMonthlyResult)
-        router = NativeBridgeRouter(this, photos, backup)
+        nativeSettings = NativeSettingsStore(this, ::nativeSettingsResult)
+        router = NativeBridgeRouter(this, photos, backup, nativeSettings)
 
         webView = WebView(this).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -175,6 +178,7 @@ class MainActivity : AppCompatActivity() {
     private fun printerEvent(event: JSONObject) = callJavaScript("window.__nativePrinterEvent&&window.__nativePrinterEvent($event);")
     private fun telegramResult(ok: Boolean, message: String) = callJavaScript("window.handleTelegramResult&&window.handleTelegramResult({ok:$ok,message:${JSONObject.quote(message)}});")
     private fun telegramMonthlyResult(result: JSONObject) = callJavaScript("window.onTelegramMonthlyWarehouseResult&&window.onTelegramMonthlyWarehouseResult($result);")
+    private fun nativeSettingsResult(result: JSONObject) = callJavaScript("window.__nativeSettingsResult&&window.__nativeSettingsResult($result);")
 
     private fun hideSystemBars() {
         WindowInsetsControllerCompat(window, window.decorView).apply {
