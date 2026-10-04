@@ -7,6 +7,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -101,11 +102,12 @@ class MainActivity : AppCompatActivity() {
         webView.webViewClient = LocalContentWebViewClient(this, loader, imageStore)
         setContentView(webView)
 
-        require(WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
-            "Android System WebView не поддерживает безопасный bridge"
-        }
-        WebViewCompat.addWebMessageListener(webView, "MPosNative", setOf(APP_ORIGIN)) { _, message, sourceOrigin, isMainFrame, _ ->
-            if (isMainFrame && sourceOrigin.scheme == "https" && sourceOrigin.host == APP_HOST) router.receive(message.data ?: "")
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
+            WebViewCompat.addWebMessageListener(webView, "MPosNative", setOf(APP_ORIGIN)) { _, message, sourceOrigin, isMainFrame, _ ->
+                if (isMainFrame && sourceOrigin.scheme == "https" && sourceOrigin.host == APP_HOST) router.receive(message.data ?: "")
+            }
+        } else {
+            throw IllegalStateException("Android System WebView не поддерживает безопасный bridge")
         }
         webView.loadUrl(START_URL)
 
@@ -140,7 +142,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun pickProductPhoto() = runOnUiThread {
-        photoPicker.launch(ActivityResultContracts.PickVisualMedia.Request(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
 
     fun createBackupFile(name: String) = runOnUiThread { backupCreator.launch(name) }

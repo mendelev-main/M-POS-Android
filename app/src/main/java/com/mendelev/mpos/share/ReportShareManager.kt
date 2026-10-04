@@ -52,7 +52,7 @@ class ReportShareManager(private val activity: MainActivity) {
                     order.optJSONArray("items").objects().forEach { item ->
                         rows.put(JSONArray(listOf(item.optString("name", item.optString("productName")), item.optString("quantity", item.optString("qty")))))
                     }
-                }))
+                })))
         val file = File(directory, "Заказ-${safeName(order.optString("supplierName", "поставщику"))}.pdf")
         createPdf(report, file)
         share(file, "application/pdf", "Заказ поставщику")

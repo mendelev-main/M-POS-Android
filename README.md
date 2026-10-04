@@ -23,6 +23,9 @@ The application uses a small Kotlin shell around the reviewed offline POS interf
 
 Install Android Studio, then install Android SDK Platform 35 and Build-Tools 35 from SDK Manager.
 The first installation requires accepting Google's Android SDK license in Android Studio.
+The project has been compiled with Platform 35 and Build-Tools 35.0.0; both debug and minified
+release variants pass compilation. GitHub Actions repeats source-parity tests, lint and the debug
+build for every change to `main`.
 
 ```bash
 ./gradlew assembleDebug
