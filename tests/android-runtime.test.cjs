@@ -17,19 +17,19 @@ test('all bundled JavaScript parses',()=>{
 
 test('every local script referenced by POS is bundled',()=>{
  const scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(match=>match[1]);
- assert.ok(scripts.includes('android-bridge.js'));assert.ok(scripts.includes('notification-native.js'));assert.ok(scripts.includes('native-settings.js'));
+ assert.ok(scripts.includes('android-bridge.js'));assert.ok(scripts.includes('notification-native.js'));assert.ok(scripts.includes('native-settings.js'));assert.ok(scripts.includes('native-storage-shadow.js'));
  scripts.forEach(script=>assert.ok(fs.existsSync(path.join(assets,script)),script));
 });
 
 test('Android bridge preserves all native iPad channels',()=>{
  const bridge=fs.readFileSync(path.join(assets,'android-bridge.js'),'utf8');
- for(const channel of ['printer','telegram','photoPicker','backup','settings'])assert.match(bridge,new RegExp(`${channel}:handler\\('${channel}'\\)`));
+ for(const channel of ['printer','telegram','photoPicker','backup','settings','storage'])assert.match(bridge,new RegExp(`${channel}:handler\\('${channel}'\\)`));
  assert.match(bridge,/window\.__MPOS_PLATFORM__|global\.__MPOS_PLATFORM__/);
 });
 
 test('Android POS differs from source HTML only by platform scripts',()=>{
  const manifest=JSON.parse(fs.readFileSync(path.join(root,'web-source-manifest.json')));
- const restored=html.replace('<script src="android-bridge.js"></script>\n','').replace('\n<script src="native-settings.js"></script>','').replace('\n<script src="notification-native.js"></script>','');
+ const restored=html.replace('<script src="android-bridge.js"></script>\n','').replace('\n<script src="native-storage-shadow.js"></script>','').replace('\n<script src="native-settings.js"></script>','').replace('\n<script src="notification-native.js"></script>','');
  assert.equal(sha(restored),manifest.files['pos.html']);
  for(const [file,expected] of Object.entries(manifest.files)){
    if(file==='pos.html')continue;
@@ -67,4 +67,21 @@ test('native Android settings boundary is isolated from POS business storage',()
  assert.match(store,/platform_settings_snapshot/);
  assert.match(adapter,/__printerSettingsSnapshot/);
  assert.doesNotMatch(store,/products|orders|shifts|receipts/);
+});
+
+
+test('Room shadow storage mirrors existing prilavok keys without becoming authoritative',()=>{
+ const appBuild=fs.readFileSync(path.join(root,'app/build.gradle.kts'),'utf8');
+ const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
+ const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/LegacyStorageShadowEntity.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const adapter=fs.readFileSync(path.join(assets,'native-storage-shadow.js'),'utf8');
+ assert.match(appBuild,/androidx\.room:room-runtime/);
+ assert.match(db,/@Database/);
+ assert.match(entity,/tableName\s*=\s*"legacy_storage_shadow"/);
+ assert.match(mirror,/"put"/);
+ assert.match(adapter,/PrilavokCore\.Storage/);
+ assert.match(adapter,/sourceOfTruth/);
+ assert.match(adapter,/local-pos/);
+ assert.doesNotMatch(adapter,/return\s+native|sourceOfTruth\s*:\s*['"]room/);
 });

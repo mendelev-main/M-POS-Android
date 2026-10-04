@@ -50,7 +50,7 @@ Initial scope:
 This stage must not change payment, order, stock or receipt persistence.
 
 ### P2 — Core local persistence (Room)
-**Status: 🟡 Candidate**
+**Status: 🟢 In progress — shadow persistence foundation**
 
 Introduce a transactional Kotlin persistence layer using Room/SQLite.
 
@@ -68,7 +68,7 @@ Requirements:
 - idempotent migration and rollback strategy;
 - no network dependency.
 
-Room must become authoritative only after migration and physical restart/recovery tests pass.
+Current first step: Room receives a non-authoritative shadow copy of existing `prilavok_` storage writes and initial localStorage contents. The WebView/local storage contract remains authoritative.\n\nRoom must become authoritative only after migration and physical restart/recovery tests pass.
 
 ### P3 — Native network/SSE infrastructure
 **Status: 🟡 Candidate**

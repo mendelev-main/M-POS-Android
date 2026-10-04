@@ -11,7 +11,8 @@
     telegram:handler('telegram'),
     photoPicker:handler('photoPicker'),
     backup:handler('backup'),
-    settings:handler('settings')
+    settings:handler('settings'),
+    storage:handler('storage')
   });
   global.__MPOS_PLATFORM__='android';
   global.__MPOS_VERSION__='0.1.0';
