@@ -17,7 +17,7 @@ test('all bundled JavaScript parses',()=>{
 
 test('every local script referenced by POS is bundled',()=>{
  const scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(match=>match[1]);
- assert.ok(scripts.includes('android-bridge.js'));assert.ok(scripts.includes('notification-native.js'));assert.ok(scripts.includes('native-settings.js'));assert.ok(scripts.includes('native-storage-shadow.js'));
+ assert.ok(scripts.includes('android-bridge.js'));assert.ok(scripts.includes('notification-native.js'));assert.ok(scripts.includes('native-settings.js'));assert.ok(scripts.includes('native-storage-shadow.js'));assert.ok(scripts.includes('native-catalog-cutover.js'));
  scripts.forEach(script=>assert.ok(fs.existsSync(path.join(assets,script)),script));
 });
 
@@ -29,7 +29,7 @@ test('Android bridge preserves all native iPad channels',()=>{
 
 test('Android POS differs from source HTML only by platform scripts',()=>{
  const manifest=JSON.parse(fs.readFileSync(path.join(root,'web-source-manifest.json')));
- const restored=html.replace('<script src="android-bridge.js"></script>\n','').replace('\n<script src="native-storage-shadow.js"></script>','').replace('\n<script src="native-settings.js"></script>','').replace('\n<script src="notification-native.js"></script>','');
+ const restored=html.replace('<script src="android-bridge.js"></script>\n','').replace('\n<script src="native-storage-shadow.js"></script>','').replace('\n<script src="native-catalog-cutover.js"></script>','').replace('\n<script src="native-settings.js"></script>','').replace('\n<script src="notification-native.js"></script>','');
  assert.equal(sha(restored),manifest.files['pos.html']);
  for(const [file,expected] of Object.entries(manifest.files)){
    if(file==='pos.html')continue;
@@ -146,4 +146,16 @@ test('native catalog read contract is feature-gated and parity-protected',()=>{
  assert.match(adapter,/nativeReadsEnabled:false/);
  assert.match(adapter,/getNativeSnapshot/);
  assert.match(adapter,/catalogSnapshot/);
+});
+
+
+test('catalog cutover controller defaults to compare and blocks Room activation',()=>{
+ const controller=fs.readFileSync(path.join(assets,'native-catalog-cutover.js'),'utf8');
+ assert.match(controller,/COMPARE:'compare'/);
+ assert.match(controller,/let mode=MODES\.COMPARE/);
+ assert.match(controller,/activeSource:'legacy'/);
+ assert.match(controller,/roomCutoverAllowed:false/);
+ assert.match(controller,/nextMode==='room'/);
+ assert.match(controller,/blocked until physical acceptance/);
+ assert.doesNotMatch(controller,/activeSource:'room'/);
 });

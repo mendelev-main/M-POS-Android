@@ -77,6 +77,8 @@ Third step: `MPosCatalogRepository` reads the structured projection and produces
 
 Fourth step: a parity-protected native catalog snapshot contract is exposed through `MPosCore.Catalog`, but `nativeReadsEnabled` remains `false` by default until physical acceptance.
 
+Fifth step: `MPosCore.CatalogCutover` introduces `legacy` and `compare` modes. `compare` is the default and continuously treats legacy as the active source while allowing Room parity checks. `room` mode is explicitly blocked until physical acceptance.
+
 Room must become authoritative only after migration and physical restart/recovery tests pass.
 
 ### P3 — Native network/SSE infrastructure
