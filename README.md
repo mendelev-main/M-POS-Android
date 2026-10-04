@@ -1,16 +1,17 @@
 # M POS Android
 
-Native Android tablet port of the production M POS.
+Android tablet port of the production M POS with a native Kotlin shell and a bundled offline POS web runtime.
 
-The application uses a small Kotlin shell around the reviewed offline POS interface. HTML, CSS and JavaScript are bundled into the APK and loaded locally. Kotlin owns device-specific work: LAN ESC/POS printing, photos, document sharing, reports and complete `.mposbackup` files.
+The current application deliberately keeps the reviewed HTML/CSS/JavaScript business runtime inside the APK while Kotlin owns Android-specific work. The project is being migrated incrementally toward a more native architecture where doing so improves reliability, maintainability or device integration. The migration plan lives in [docs/NATIVE_MIGRATION_ROADMAP.md](docs/NATIVE_MIGRATION_ROADMAP.md).
 
 ## Architecture
 
 - One hardware-accelerated `WebView`; no remote UI and no cross-platform runtime.
 - `WebViewAssetLoader` serves bundled files through a trusted HTTPS origin.
-- An origin-restricted message bridge preserves the existing iPad `window.webkit.messageHandlers` contract.
-- Existing `prilavok_` keys and JSON records remain compatible with iPad backup schema v13.
+- An origin-restricted message bridge preserves the existing iPad `window.webkit.messageHandlers` contract and adds Android-only native boundaries.
+- Existing `prilavok_` keys and JSON records remain compatible with iPad backup schema v13 until an explicitly specified migration is accepted.
 - Network operations never replace or gate local POS persistence.
+- Native migrations are performed one module/boundary at a time with parity and rollback evidence.
 
 ## Platform support
 
@@ -37,7 +38,7 @@ Install over USB:
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Release APKs must always use the same private signing key. The key is stored outside Git.
+Production APKs must always use the same private release signing key. The key is stored outside Git.
 
 The repository is currently an engineering baseline, not an accepted production replacement. Track
-the remaining native and physical checks in [the parity matrix](docs/PARITY_MATRIX.md).
+the remaining physical parity checks in [docs/PARITY_MATRIX.md](docs/PARITY_MATRIX.md).
