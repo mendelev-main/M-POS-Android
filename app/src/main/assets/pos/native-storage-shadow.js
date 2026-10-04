@@ -2,17 +2,17 @@
   'use strict';
 
   const bridge=global.webkit?.messageHandlers?.storage;
-  const core=global.PrilavokCore?.Storage;
-  if(!bridge||!core)return;
+  const legacyStorage=global.PrilavokCore?.Storage;
+  if(!bridge||!legacyStorage)return;
 
   let sequence=0;
-  const prefix='prilavok_';
+  const legacyPrefix='prilavok_';
 
   function post(action,payload){
     try{
       bridge.postMessage({action,requestId:'storage-'+(++sequence),...(payload||{})});
     }catch(error){
-      console.error('[NativeStorageShadow] bridge failed',error);
+      console.error('[MPosStorageShadow] bridge failed',error);
     }
   }
 
@@ -23,44 +23,60 @@
 
   function mirrorValue(key,value){
     try{mirrorSerialized(key,JSON.stringify(value))}
-    catch(error){console.error('[NativeStorageShadow] serialization failed',key,error)}
+    catch(error){console.error('[MPosStorageShadow] serialization failed',key,error)}
   }
 
-  global.PrilavokCore.Storage=Object.freeze({
+  const mposStorage=Object.freeze({
     async get(key,fallback,onError){
-      return core.get(key,fallback,onError);
+      return legacyStorage.get(key,fallback,onError);
     },
     async set(key,value){
-      await core.set(key,value);
+      await legacyStorage.set(key,value);
       mirrorValue(key,value);
     },
     remove(key){
-      const result=core.remove(key);
+      const result=legacyStorage.remove(key);
       post('remove',{key});
       return result;
     },
     describe(){
-      const current=core.describe();
-      return Object.freeze({...current,nativeShadow:'room',nativeShadowAuthoritative:false,sourceOfTruth:'local-pos'});
+      const current=legacyStorage.describe();
+      return Object.freeze({
+        ...current,
+        runtimeNamespace:'MPosCore',
+        nativeShadow:'room',
+        nativeShadowAuthoritative:false,
+        sourceOfTruth:'local-pos'
+      });
     }
   });
 
+  const mposCore=global.MPosCore=global.MPosCore||{};
+  mposCore.Storage=mposStorage;
+
+  // Temporary compatibility alias for the bundled parity runtime.
+  // New Android-specific code must use MPosCore.
+  global.PrilavokCore=global.PrilavokCore||{};
+  global.PrilavokCore.Storage=mposStorage;
+
   function mirrorExistingLocalStorage(){
-    const description=core.describe?.();
+    const description=legacyStorage.describe?.();
     if(description?.mode!=='localStorage')return;
     try{
       for(let i=0;i<global.localStorage.length;i++){
         const storageKey=global.localStorage.key(i);
-        if(!storageKey||!storageKey.startsWith(prefix))continue;
+        if(!storageKey||!storageKey.startsWith(legacyPrefix))continue;
         const serialized=global.localStorage.getItem(storageKey);
-        if(serialized!==null)mirrorSerialized(storageKey.slice(prefix.length),serialized);
+        if(serialized!==null)mirrorSerialized(storageKey.slice(legacyPrefix.length),serialized);
       }
     }catch(error){
-      console.error('[NativeStorageShadow] initial mirror failed',error);
+      console.error('[MPosStorageShadow] initial mirror failed',error);
     }
   }
 
-  global.__nativeStorageShadowStats=()=>post('stats');
+  global.__mposNativeStorageStats=()=>post('stats');
+  global.__mposCatalogParity=()=>post('catalogParity');
+  global.__nativeStorageShadowStats=global.__mposNativeStorageStats;
   global.__nativeStorageResult=result=>{global.__lastNativeStorageResult=result||null};
   setTimeout(mirrorExistingLocalStorage,0);
 })(window);

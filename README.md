@@ -9,7 +9,7 @@ The current application deliberately keeps the reviewed HTML/CSS/JavaScript busi
 - One hardware-accelerated `WebView`; no remote UI and no cross-platform runtime.
 - `WebViewAssetLoader` serves bundled files through a trusted HTTPS origin.
 - An origin-restricted message bridge preserves the existing iPad `window.webkit.messageHandlers` contract and adds Android-only native boundaries.
-- Existing `prilavok_` keys and JSON records remain compatible with iPad backup schema v13 until an explicitly specified migration is accepted.
+- M POS naming is mandatory for all new and rewritten code. `PrilavokCore` and `prilavok_` exist only as temporary legacy compatibility surfaces for the bundled parity runtime and backup schema v13 until those boundaries are migrated.
 - Network operations never replace or gate local POS persistence.
 - Native migrations are performed one module/boundary at a time with parity and rollback evidence.
 

@@ -15,6 +15,7 @@ This is an incremental migration, not a rewrite. Until a migrated boundary is ac
 5. Automated build/tests do not replace physical Android acceptance.
 6. UI should not be moved to Compose before its state/domain boundary is stable unless the UI itself is the primary problem.
 7. Do not move business logic merely to increase the percentage of Kotlin.
+8. All new/reworked modules use `M POS` / `MPos` naming. `PrilavokCore` and `prilavok_` are compatibility-only legacy surfaces and are removed as the corresponding module is migrated.
 
 ## Status legend
 
@@ -71,6 +72,8 @@ Requirements:
 Current first step: Room receives a non-authoritative shadow copy of existing `prilavok_` storage writes and initial localStorage contents. The WebView/local storage contract remains authoritative.
 
 Second step: the `products` shadow is projected into structured native `product_projection` and `category_projection` tables. These tables are still non-authoritative and exist to validate the future native catalog repository.
+
+Third step: `MPosCatalogRepository` reads the structured projection and produces automated parity diagnostics against the mirrored legacy JSON before any authoritative cutover.
 
 Room must become authoritative only after migration and physical restart/recovery tests pass.
 

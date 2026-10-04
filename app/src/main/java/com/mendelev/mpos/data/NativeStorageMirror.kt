@@ -14,6 +14,7 @@ class NativeStorageMirror(
 ) {
     private val shadowDao = database.legacyStorageShadowDao()
     private val catalogDao = database.catalogProjectionDao()
+    private val catalogRepository = MPosCatalogRepository(database)
 
     fun handle(payload: JSONObject) {
         val requestId = payload.optString("requestId")
@@ -64,6 +65,15 @@ class NativeStorageMirror(
                     }.onSuccess { result(requestId, true) }
                         .onFailure { result(requestId, false, it.localizedMessage ?: "shadow delete failed") }
                 }
+            }
+
+            "catalogParity" -> scope.launch(Dispatchers.IO) {
+                runCatching { catalogRepository.parityReport() }
+                    .onSuccess { report ->
+                        report.put("requestId", requestId)
+                        onResult(report)
+                    }
+                    .onFailure { result(requestId, false, it.localizedMessage ?: "catalog parity failed") }
             }
 
             "stats" -> scope.launch(Dispatchers.IO) {

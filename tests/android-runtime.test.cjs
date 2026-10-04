@@ -70,7 +70,7 @@ test('native Android settings boundary is isolated from POS business storage',()
 });
 
 
-test('Room shadow storage mirrors existing prilavok keys without becoming authoritative',()=>{
+test('Room shadow storage preserves legacy keys without becoming authoritative',()=>{
  const appBuild=fs.readFileSync(path.join(root,'app/build.gradle.kts'),'utf8');
  const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
  const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/LegacyStorageShadowEntity.kt'),'utf8');
@@ -80,7 +80,9 @@ test('Room shadow storage mirrors existing prilavok keys without becoming author
  assert.match(db,/@Database/);
  assert.match(entity,/tableName\s*=\s*"legacy_storage_shadow"/);
  assert.match(mirror,/"put"/);
- assert.match(adapter,/PrilavokCore\.Storage/);
+ assert.match(adapter,/MPosCore/);
+ assert.match(adapter,/mposCore\.Storage/);
+ assert.match(adapter,/PrilavokCore\.Storage=mposStorage/);
  assert.match(adapter,/sourceOfTruth/);
  assert.match(adapter,/local-pos/);
  assert.doesNotMatch(adapter,/return\s+native|sourceOfTruth\s*:\s*['"]room/);
@@ -103,4 +105,30 @@ test('native catalog projection is structured, migrated, and non-authoritative',
  assert.match(mirror,/projectCatalog/);
  assert.match(mirror,/"Без категории"/);
  assert.match(mirror,/authoritative", false/);
+});
+
+
+test('M POS catalog repository provides non-authoritative parity diagnostics',()=>{
+ const repository=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosCatalogRepository.kt'),'utf8');
+ const dao=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/CatalogProjectionDao.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const adapter=fs.readFileSync(path.join(assets,'native-storage-shadow.js'),'utf8');
+ assert.match(repository,/class MPosCatalogRepository/);
+ assert.match(repository,/parityReport/);
+ assert.match(repository,/missingProductIds/);
+ assert.match(repository,/mismatchedProductIds/);
+ assert.match(repository,/authoritative", false/);
+ assert.match(dao,/allProducts/);
+ assert.match(dao,/allCategories/);
+ assert.match(mirror,/"catalogParity"/);
+ assert.match(adapter,/__mposCatalogParity/);
+ assert.match(adapter,/MPosCore/);
+});
+
+test('new migration rules enforce M POS naming while retaining explicit compatibility exceptions',()=>{
+ const agents=fs.readFileSync(path.join(root,'AGENTS.md'),'utf8');
+ const constitution=fs.readFileSync(path.join(root,'.specify/memory/constitution.md'),'utf8');
+ assert.match(agents,/new or rewritten code uses M POS naming/i);
+ assert.match(constitution,/M POS — единственный naming/);
+ assert.match(constitution,/compatibility boundary/);
 });

@@ -14,4 +14,5 @@
 12. Migrate and verify one native boundary at a time. Avoid broad rewrites of business logic. Each migration needs a rollback/compatibility path until accepted.
 13. Test critical behavior on physical Android tablets after every substantial stage. Do not add dependencies on a particular manufacturer, model, screen resolution or chipset.
 14. Native migration order is documented in `docs/NATIVE_MIGRATION_ROADMAP.md`; completed parity work remains documented in `docs/PARITY_MATRIX.md`.
-15. Do not commit or push unless authorized by the user. The current session authorizes commits and pushes to `main`.
+15. All new or rewritten code uses M POS naming: Kotlin/Compose classes use `MPos...`, new JS/runtime namespaces use `MPosCore`, and new docs/UI must not introduce `Prilavok`. Existing `PrilavokCore` / `prilavok_` are temporary compatibility surfaces only and must disappear as their legacy modules are migrated.
+16. Do not commit or push unless authorized by the user. The current session authorizes commits and pushes to `main`.

@@ -7,7 +7,7 @@
 - [x] Preserve source product JSON in projection rows.
 - [x] Keep catalog projection non-authoritative.
 - [x] Extend diagnostics counts.
-- [ ] Extend automated architecture tests.
-- [ ] Run Node tests, lint and debug build.
+- [x] Extend automated architecture tests.
+- [x] Run Node tests, lint and debug build.
 - [ ] Physical verification of projection counts after restart/product edits.
 - [ ] Authoritative catalog cutover remains blocked until physical acceptance.

@@ -22,6 +22,12 @@ interface CatalogProjectionDao {
     @Query("SELECT COUNT(*) FROM product_projection")
     suspend fun productCount(): Int
 
+    @Query("SELECT * FROM product_projection ORDER BY sortIndex ASC, id ASC")
+    suspend fun allProducts(): List<ProductProjectionEntity>
+
     @Query("SELECT COUNT(*) FROM category_projection")
     suspend fun categoryCount(): Int
+
+    @Query("SELECT * FROM category_projection ORDER BY sortIndex ASC, name ASC")
+    suspend fun allCategories(): List<CategoryProjectionEntity>
 }
