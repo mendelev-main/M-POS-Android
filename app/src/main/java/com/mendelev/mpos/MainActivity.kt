@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity() {
         backup = BackupManager(this, imageStore)
         printer = EscPosPrinter(::printerEvent)
         shares = ReportShareManager(this)
-        telegram = TelegramClient(::telegramResult)
+        telegram = TelegramClient(shares::createWarehousePdf, ::telegramResult, ::telegramMonthlyResult)
         router = NativeBridgeRouter(this, photos, backup)
 
         webView = WebView(this).apply {
@@ -159,10 +159,7 @@ class MainActivity : AppCompatActivity() {
             "shareWarehouseReport" -> payload.optJSONObject("report")?.let(shares::warehousePdf)
             "shareWarehouseExcel" -> payload.optJSONObject("report")?.let(shares::warehouseExcel)
             "sharePurchaseOrder" -> payload.optJSONObject("order")?.let(shares::purchaseOrder)
-            "printShiftReport" -> payload.optJSONObject("report")?.let { report ->
-                val order = JSONObject(report.toString()).put("__printDocumentType", "shift-close")
-                printer.handle(JSONObject().put("order", order))
-            }
+            "printShiftReport" -> payload.optJSONObject("report")?.let(shares::printShiftReport)
         }
     }
 
@@ -175,6 +172,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun printerEvent(event: JSONObject) = callJavaScript("window.__nativePrinterEvent&&window.__nativePrinterEvent($event);")
     private fun telegramResult(ok: Boolean, message: String) = callJavaScript("window.handleTelegramResult&&window.handleTelegramResult({ok:$ok,message:${JSONObject.quote(message)}});")
+    private fun telegramMonthlyResult(result: JSONObject) = callJavaScript("window.onTelegramMonthlyWarehouseResult&&window.onTelegramMonthlyWarehouseResult($result);")
 
     private fun hideSystemBars() {
         WindowInsetsControllerCompat(window, window.decorView).apply {

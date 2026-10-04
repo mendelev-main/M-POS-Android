@@ -1,12 +1,18 @@
 package com.mendelev.mpos.telegram
 
 import org.json.JSONObject
+import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import java.util.UUID
 import java.util.concurrent.Executors
 
-class TelegramClient(private val onResult: (Boolean, String) -> Unit) {
+class TelegramClient(
+    private val createWarehousePdf: (JSONObject) -> File,
+    private val onResult: (Boolean, String) -> Unit,
+    private val onMonthlyResult: (JSONObject) -> Unit,
+) {
     private val executor = Executors.newSingleThreadExecutor()
 
     fun handle(payload: JSONObject) {
@@ -14,6 +20,23 @@ class TelegramClient(private val onResult: (Boolean, String) -> Unit) {
         val chatId = payload.optString("chatId").trim()
         if (token.isBlank() || chatId.isBlank()) return onResult(false, "Укажите токен бота и ID рабочей группы")
         val action = payload.optString("action")
+        if (action == "sendMonthlyWarehouseReport") {
+            val periodKey = payload.optString("periodKey")
+            val report = payload.optJSONObject("report")
+            if (periodKey.isBlank() || report == null) return onMonthlyResult(JSONObject().put("ok", false).put("message", "Не заполнен складской отчёт").put("periodKey", periodKey))
+            executor.execute {
+                runCatching {
+                    val file = createWarehousePdf(report)
+                    sendDocument(token, chatId, payload.optString("threadId"), file,
+                        "📊 <b>Ежемесячный складской отчёт</b>\nПериод: ${escape(report.optString("period", periodKey))}")
+                }.onSuccess {
+                    onMonthlyResult(JSONObject().put("ok", true).put("message", "Ежемесячный складской отчёт отправлен").put("periodKey", periodKey))
+                }.onFailure {
+                    onMonthlyResult(JSONObject().put("ok", false).put("message", it.message ?: "Ошибка Telegram").put("periodKey", periodKey))
+                }
+            }
+            return
+        }
         val text = when (action) {
             "test" -> "🟢 <b>Telegram подключён</b>\nM POS Android успешно связался с рабочей группой."
             "send" -> payload.optString("text")
@@ -42,6 +65,31 @@ class TelegramClient(private val onResult: (Boolean, String) -> Unit) {
         if (connection.responseCode !in 200..299 || !JSONObject(response.ifBlank { "{}" }).optBoolean("ok")) error("Telegram HTTP ${connection.responseCode}")
     }
 
+    private fun sendDocument(token: String, chatId: String, threadId: String, file: File, caption: String) {
+        val boundary = "MPos-${UUID.randomUUID()}"
+        val connection = URL("https://api.telegram.org/bot$token/sendDocument").openConnection() as HttpURLConnection
+        connection.requestMethod = "POST"
+        connection.connectTimeout = 10_000
+        connection.readTimeout = 30_000
+        connection.doOutput = true
+        connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
+        connection.outputStream.buffered().use { output ->
+            fun field(name: String, value: String) {
+                output.write("--$boundary\r\nContent-Disposition: form-data; name=\"$name\"\r\n\r\n$value\r\n".toByteArray())
+            }
+            field("chat_id", chatId)
+            if (threadId.isNotBlank()) field("message_thread_id", threadId)
+            field("caption", caption)
+            field("parse_mode", "HTML")
+            output.write("--$boundary\r\nContent-Disposition: form-data; name=\"document\"; filename=\"${file.name}\"\r\nContent-Type: application/pdf\r\n\r\n".toByteArray())
+            file.inputStream().use { it.copyTo(output) }
+            output.write("\r\n--$boundary--\r\n".toByteArray())
+        }
+        val code = connection.responseCode
+        val response = (if (code in 200..299) connection.inputStream else connection.errorStream)?.bufferedReader()?.use { it.readText() }.orEmpty()
+        if (code !in 200..299 || !JSONObject(response.ifBlank { "{}" }).optBoolean("ok")) error("Telegram HTTP $code")
+    }
+
     private fun shiftText(report: JSONObject): String = buildString {
         append("<b>Смена закрыта · M POS</b>\n")
         append("Сотрудник: ${escape(report.optString("employeeName", "Сотрудник"))}\n")
@@ -56,4 +104,3 @@ class TelegramClient(private val onResult: (Boolean, String) -> Unit) {
     private fun escape(value: String) = value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     private fun money(value: Double) = "%.2f BYN".format(value)
 }
-

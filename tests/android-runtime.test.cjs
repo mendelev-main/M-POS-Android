@@ -43,3 +43,13 @@ test('shell uses trusted local origin and blocks file and cleartext WebView acce
  const manifest=fs.readFileSync(path.join(root,'app/src/main/AndroidManifest.xml'),'utf8');assert.match(manifest,/usesCleartextTraffic="false"/);
 });
 
+test('native report routes preserve shift printing and monthly Telegram delivery',()=>{
+ const activity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/MainActivity.kt'),'utf8');
+ const reports=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/share/ReportShareManager.kt'),'utf8');
+ const telegram=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/telegram/TelegramClient.kt'),'utf8');
+ assert.match(activity,/"printShiftReport"[\s\S]{0,120}shares::printShiftReport/);
+ assert.match(reports,/PrintManager/);
+ assert.match(telegram,/"sendMonthlyWarehouseReport"/);
+ assert.match(telegram,/sendDocument/);
+ assert.match(activity,/onTelegramMonthlyWarehouseResult/);
+});

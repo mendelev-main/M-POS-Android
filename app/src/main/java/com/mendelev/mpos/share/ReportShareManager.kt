@@ -6,6 +6,13 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
+import android.os.Bundle
+import android.os.CancellationSignal
+import android.os.ParcelFileDescriptor
+import android.print.PrintAttributes
+import android.print.PrintDocumentAdapter
+import android.print.PrintDocumentInfo
+import android.print.PrintManager
 import androidx.core.content.FileProvider
 import com.mendelev.mpos.BuildConfig
 import com.mendelev.mpos.MainActivity
@@ -13,6 +20,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -20,8 +30,7 @@ class ReportShareManager(private val activity: MainActivity) {
     private val directory = File(activity.cacheDir, "shared").apply { mkdirs() }
 
     fun warehousePdf(report: JSONObject) = runCatching {
-        val file = File(directory, safeName(report.optString("title", "Складской-учёт")) + ".pdf")
-        createPdf(report, file)
+        val file = createWarehousePdf(report)
         share(file, "application/pdf", report.optString("title", "Складской учёт"))
     }.onFailure { activity.nativeMessage("Не удалось сформировать PDF") }
 
@@ -48,6 +57,65 @@ class ReportShareManager(private val activity: MainActivity) {
         createPdf(report, file)
         share(file, "application/pdf", "Заказ поставщику")
     }.onFailure { activity.nativeMessage("Не удалось сформировать заказ") }
+
+    fun createWarehousePdf(report: JSONObject): File {
+        val file = File(directory, safeName(report.optString("title", "Складской-учёт")) + ".pdf")
+        createPdf(report, file)
+        return file
+    }
+
+    fun printShiftReport(report: JSONObject) = runCatching {
+        val formatter = SimpleDateFormat("dd.MM.yyyy-HH-mm", Locale("ru", "RU"))
+        val openedAt = report.optLong("openedAt").takeIf { it > 0 } ?: System.currentTimeMillis()
+        val file = File(directory, "Смена-${formatter.format(Date(openedAt))}.pdf")
+        createShiftPdf(report, file)
+        val printManager = activity.getSystemService(Context.PRINT_SERVICE) as PrintManager
+        printManager.print("Отчёт по смене", PdfFilePrintAdapter(file), PrintAttributes.Builder()
+            .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+            .setColorMode(PrintAttributes.COLOR_MODE_COLOR)
+            .build())
+    }.onFailure { activity.nativeMessage("Не удалось подготовить отчёт по смене") }
+
+    private fun createShiftPdf(report: JSONObject, file: File) {
+        val money = { value: Double -> "%.2f %s".format(Locale.US, value, report.optString("currency", "Br")) }
+        val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("ru", "RU"))
+        fun date(value: Long) = if (value > 0) formatter.format(Date(value)) else "—"
+        val employee = report.optString("employeeName", "Сотрудник не указан")
+        val movements = report.optJSONArray("cashMovements") ?: JSONArray()
+        val sectionRows = JSONArray().apply {
+            put(JSONArray(listOf("Заказов", report.optInt("count").toString())))
+            put(JSONArray(listOf("Выручка", money(report.optDouble("total")))))
+            put(JSONArray(listOf("Наличные", money(report.optDouble("cash")))))
+            put(JSONArray(listOf("Карта", money(report.optDouble("card")))))
+            put(JSONArray(listOf("Наличные на начало смены", money(report.optDouble("openingCash")))))
+            put(JSONArray(listOf("Внесено", money(report.optDouble("deposits")))))
+            put(JSONArray(listOf("Изъято", money(report.optDouble("withdrawals")))))
+            put(JSONArray(listOf("Ожидается", money(report.optDouble("expectedCash")))))
+            put(JSONArray(listOf("Факт", money(report.optDouble("countedCash")))))
+            put(JSONArray(listOf("Расхождение", money(report.optDouble("difference")))))
+        }
+        val sections = JSONArray().put(JSONObject()
+            .put("title", "Итоги смены")
+            .put("headers", JSONArray(listOf("Показатель", "Значение")))
+            .put("rows", sectionRows))
+        if (movements.length() > 0) {
+            val rows = JSONArray()
+            movements.objects().forEach { movement ->
+                val kind = if (movement.optString("type") == "deposit") "Внесение" else "Изъятие"
+                rows.put(JSONArray(listOf(date(movement.optLong("timestamp")), kind, movement.optString("note"), money(movement.optDouble("amount")))))
+            }
+            sections.put(JSONObject().put("title", "Движение наличных")
+                .put("headers", JSONArray(listOf("Время", "Операция", "Комментарий", "Сумма")))
+                .put("rows", rows))
+        }
+        val printable = JSONObject()
+            .put("company", report.optString("establishmentName").ifBlank { "M POS" })
+            .put("title", "Отчёт по кассовой смене")
+            .put("period", "${date(report.optLong("openedAt"))} — ${date(report.optLong("closedAt"))}")
+            .put("sections", sections)
+            .put("notes", JSONArray(listOf("Сотрудник: $employee${report.optString("employeePhone").takeIf(String::isNotBlank)?.let { " · $it" } ?: ""}")))
+        createPdf(printable, file)
+    }
 
     private fun createPdf(report: JSONObject, file: File) {
         val document = PdfDocument()
@@ -148,6 +216,23 @@ class ReportShareManager(private val activity: MainActivity) {
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }, title))
+    }
+
+    private class PdfFilePrintAdapter(private val file: File) : PrintDocumentAdapter() {
+        override fun onLayout(oldAttributes: PrintAttributes?, newAttributes: PrintAttributes, cancellationSignal: CancellationSignal, callback: LayoutResultCallback, extras: Bundle?) {
+            if (cancellationSignal.isCanceled) return callback.onLayoutCancelled()
+            callback.onLayoutFinished(PrintDocumentInfo.Builder(file.name)
+                .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
+                .setPageCount(PrintDocumentInfo.PAGE_COUNT_UNKNOWN)
+                .build(), oldAttributes != newAttributes)
+        }
+
+        override fun onWrite(pages: Array<out android.print.PageRange>, destination: ParcelFileDescriptor, cancellationSignal: CancellationSignal, callback: WriteResultCallback) {
+            if (cancellationSignal.isCanceled) return callback.onWriteCancelled()
+            runCatching { file.inputStream().use { input -> FileOutputStream(destination.fileDescriptor).use(input::copyTo) } }
+                .onSuccess { callback.onWriteFinished(arrayOf(android.print.PageRange.ALL_PAGES)) }
+                .onFailure { callback.onWriteFailed(it.message) }
+        }
     }
 
     private fun ZipOutputStream.put(path: String, value: String) { putNextEntry(ZipEntry(path)); write(value.toByteArray()); closeEntry() }
