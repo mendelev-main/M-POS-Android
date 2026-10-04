@@ -38,7 +38,7 @@ This is an incremental migration, not a rewrite. Until a migrated boundary is ac
 ## Planned migration order
 
 ### P1 — Android platform settings boundary
-**Status: 🟢 In progress**
+**Status: 🟢 Implemented, physical acceptance pending**
 
 Move Android-specific/platform settings behind a Kotlin-owned persistence boundary while keeping the current JSON representation as a compatibility cache for backup and parity.
 

@@ -10,6 +10,7 @@
 | Payments, receipts and shifts | web runtime and native shift PDF printing implemented | Cash/card/split, restart recovery and printed output |
 | Purchasing, receiving and inventory | web runtime implemented | Weighted cost, draft restart and reports |
 | Product photos | native implementation | Picker, rotation, large image, restart and backup |
+| Android platform settings mirror | native implementation; compatibility cache remains in WebView | Change printer/notification settings, restart app, verify UI + native snapshot parity |
 | Complete backup v13 | native implementation | iPad → Android and Android → clean Android restore |
 | LAN ESC/POS | native raster implementation | 58/80 mm printers, routing, copies and timeouts |
 | Warehouse PDF/XLSX | native implementation | Exact values and visual comparison with iPad |
