@@ -95,7 +95,7 @@ test('native catalog projection is structured, migrated, and non-authoritative',
  const category=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/CategoryProjectionEntity.kt'),'utf8');
  const dao=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/CatalogProjectionDao.kt'),'utf8');
  const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
- assert.match(db,/version\s*=\s*2/);
+ assert.match(db,/version\s*=\s*3/);
  assert.match(db,/Migration\(1,\s*2\)/);
  assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
  assert.match(product,/tableName\s*=\s*"product_projection"/);
