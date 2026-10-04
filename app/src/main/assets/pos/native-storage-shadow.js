@@ -6,14 +6,30 @@
   if(!bridge||!legacyStorage)return;
 
   let sequence=0;
+  const pending=new Map();
   const legacyPrefix='prilavok_';
 
   function post(action,payload){
+    const requestId='storage-'+(++sequence);
     try{
-      bridge.postMessage({action,requestId:'storage-'+(++sequence),...(payload||{})});
+      bridge.postMessage({action,requestId,...(payload||{})});
+      return requestId;
     }catch(error){
       console.error('[MPosStorageShadow] bridge failed',error);
+      return null;
     }
+  }
+
+  function request(action,payload){
+    return new Promise((resolve,reject)=>{
+      const requestId=post(action,payload);
+      if(!requestId){reject(new Error('M POS native storage bridge unavailable'));return}
+      const timer=setTimeout(()=>{
+        pending.delete(requestId);
+        reject(new Error('M POS native storage request timed out'));
+      },3000);
+      pending.set(requestId,{resolve,reject,timer});
+    });
   }
 
   function mirrorSerialized(key,serialized){
@@ -53,6 +69,17 @@
 
   const mposCore=global.MPosCore=global.MPosCore||{};
   mposCore.Storage=mposStorage;
+  mposCore.Catalog=Object.freeze({
+    nativeReadsEnabled:false,
+    async getNativeSnapshot(){
+      const result=await request('catalogSnapshot');
+      if(!result?.ok)throw new Error(result?.reason||result?.message||'M POS native catalog unavailable');
+      return result;
+    },
+    async parity(){
+      return request('catalogParity');
+    }
+  });
 
   // Temporary compatibility alias for the bundled parity runtime.
   // New Android-specific code must use MPosCore.
@@ -74,9 +101,18 @@
     }
   }
 
-  global.__mposNativeStorageStats=()=>post('stats');
-  global.__mposCatalogParity=()=>post('catalogParity');
+  global.__mposNativeStorageStats=()=>request('stats');
+  global.__mposCatalogParity=()=>mposCore.Catalog.parity();
+  global.__mposCatalogSnapshot=()=>mposCore.Catalog.getNativeSnapshot();
   global.__nativeStorageShadowStats=global.__mposNativeStorageStats;
-  global.__nativeStorageResult=result=>{global.__lastNativeStorageResult=result||null};
+  global.__nativeStorageResult=result=>{
+    global.__lastNativeStorageResult=result||null;
+    const requestId=result?.requestId;
+    const waiter=requestId?pending.get(requestId):null;
+    if(!waiter)return;
+    pending.delete(requestId);
+    clearTimeout(waiter.timer);
+    waiter.resolve(result);
+  };
   setTimeout(mirrorExistingLocalStorage,0);
 })(window);

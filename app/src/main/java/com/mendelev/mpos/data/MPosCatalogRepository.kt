@@ -71,6 +71,37 @@ class MPosCatalogRepository(
             .put("extraCategories", JSONArray(extraCategories.toList()))
     }
 
+    suspend fun snapshot(): JSONObject {
+        val parity = parityReport()
+        if (!parity.optBoolean("ok") || !parity.optBoolean("matches")) {
+            return JSONObject()
+                .put("ok", false)
+                .put("authoritative", false)
+                .put("reason", "catalog projection parity is not confirmed")
+                .put("parity", parity)
+        }
+
+        val products = catalogDao.allProducts()
+        val categories = catalogDao.allCategories()
+
+        return JSONObject()
+            .put("ok", true)
+            .put("authoritative", false)
+            .put("source", "room-projection")
+            .put("products", JSONArray(products.map { JSONObject(it.payload) }))
+            .put(
+                "categories",
+                JSONArray(
+                    categories.map {
+                        JSONObject()
+                            .put("name", it.name)
+                            .put("sortIndex", it.sortIndex)
+                            .put("productCount", it.productCount)
+                    }
+                )
+            )
+    }
+
     private fun normalizedCategory(value: String): String =
         value.trim().ifEmpty { "Без категории" }
 }

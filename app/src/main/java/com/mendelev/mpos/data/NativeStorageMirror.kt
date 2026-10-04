@@ -67,6 +67,15 @@ class NativeStorageMirror(
                 }
             }
 
+            "catalogSnapshot" -> scope.launch(Dispatchers.IO) {
+                runCatching { catalogRepository.snapshot() }
+                    .onSuccess { snapshot ->
+                        snapshot.put("requestId", requestId)
+                        onResult(snapshot)
+                    }
+                    .onFailure { result(requestId, false, it.localizedMessage ?: "catalog snapshot failed") }
+            }
+
             "catalogParity" -> scope.launch(Dispatchers.IO) {
                 runCatching { catalogRepository.parityReport() }
                     .onSuccess { report ->

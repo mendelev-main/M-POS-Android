@@ -7,7 +7,7 @@
 - [x] Add `MPosCatalogRepository`.
 - [x] Add catalog parity diagnostics bridge action.
 - [x] Keep Room catalog non-authoritative.
-- [ ] Extend automated tests for naming and repository parity boundary.
-- [ ] Run Node tests, lint and debug build.
+- [x] Extend automated tests for naming and repository parity boundary.
+- [x] Run Node tests, lint and debug build.
 - [ ] Physical catalog parity/restart verification.
 - [ ] Remove legacy catalog namespace dependency only after authoritative cutover.

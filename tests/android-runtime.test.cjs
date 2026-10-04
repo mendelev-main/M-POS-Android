@@ -132,3 +132,18 @@ test('new migration rules enforce M POS naming while retaining explicit compatib
  assert.match(constitution,/M POS — единственный naming/);
  assert.match(constitution,/compatibility boundary/);
 });
+
+
+test('native catalog read contract is feature-gated and parity-protected',()=>{
+ const repository=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosCatalogRepository.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const adapter=fs.readFileSync(path.join(assets,'native-storage-shadow.js'),'utf8');
+ assert.match(repository,/suspend fun snapshot/);
+ assert.match(repository,/catalog projection parity is not confirmed/);
+ assert.match(repository,/source", "room-projection"/);
+ assert.match(mirror,/"catalogSnapshot"/);
+ assert.match(adapter,/mposCore\.Catalog/);
+ assert.match(adapter,/nativeReadsEnabled:false/);
+ assert.match(adapter,/getNativeSnapshot/);
+ assert.match(adapter,/catalogSnapshot/);
+});

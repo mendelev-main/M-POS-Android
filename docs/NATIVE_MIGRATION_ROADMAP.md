@@ -75,6 +75,8 @@ Second step: the `products` shadow is projected into structured native `product_
 
 Third step: `MPosCatalogRepository` reads the structured projection and produces automated parity diagnostics against the mirrored legacy JSON before any authoritative cutover.
 
+Fourth step: a parity-protected native catalog snapshot contract is exposed through `MPosCore.Catalog`, but `nativeReadsEnabled` remains `false` by default until physical acceptance.
+
 Room must become authoritative only after migration and physical restart/recovery tests pass.
 
 ### P3 — Native network/SSE infrastructure
