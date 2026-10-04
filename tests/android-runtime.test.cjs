@@ -101,7 +101,7 @@ test('native catalog projection is structured, migrated, and non-authoritative',
  assert.match(product,/tableName\s*=\s*"product_projection"/);
  assert.match(category,/tableName\s*=\s*"category_projection"/);
  assert.match(dao,/clearProducts/);
- assert.match(mirror,/key\s*==\s*"products"/);
+ assert.match(mirror,/"products"\s*->\s*runCatching\s*\{\s*projectCatalog\(serialized\)/);
  assert.match(mirror,/projectCatalog/);
  assert.match(mirror,/"Без категории"/);
  assert.match(mirror,/authoritative", false/);
