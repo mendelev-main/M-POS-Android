@@ -8,6 +8,6 @@
 - [x] Add employee parity diagnostics.
 - [x] Keep employee/admin/shift runtime authoritative.
 - [x] Extend architecture tests.
-- [ ] Run Node tests, lint and debug build.
+- [x] Run Node tests, lint and debug build.
 - [ ] Physical employee create/edit/delete + restart verification.
 - [ ] Employee authoritative cutover remains blocked.

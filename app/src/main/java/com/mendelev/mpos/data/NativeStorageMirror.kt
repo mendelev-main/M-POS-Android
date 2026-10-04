@@ -17,6 +17,8 @@ class NativeStorageMirror(
     private val catalogRepository = MPosCatalogRepository(database)
     private val employeeDao = database.employeeProjectionDao()
     private val employeeRepository = MPosEmployeeRepository(database)
+    private val shiftDao = database.shiftProjectionDao()
+    private val shiftRepository = MPosShiftRepository(database)
 
     fun handle(payload: JSONObject) {
         val requestId = payload.optString("requestId")
@@ -40,6 +42,7 @@ class NativeStorageMirror(
                         val projectionOk = when (key) {
                             "products" -> runCatching { projectCatalog(serialized) }.isSuccess
                             "employees" -> runCatching { projectEmployees(serialized) }.isSuccess
+                            "shifts" -> runCatching { projectShifts(serialized) }.isSuccess
                             else -> true
                         }
                         result(requestId, true, projectionOk = projectionOk)
@@ -64,10 +67,23 @@ class NativeStorageMirror(
                                 catalogDao.clearCategories()
                             }
                             "employees" -> employeeDao.clear()
+                            "shifts" -> database.withTransaction {
+                                shiftDao.clearMovements()
+                                shiftDao.clearShifts()
+                            }
                         }
                     }.onSuccess { result(requestId, true) }
                         .onFailure { result(requestId, false, it.localizedMessage ?: "shadow delete failed") }
                 }
+            }
+
+            "shiftParity" -> scope.launch(Dispatchers.IO) {
+                runCatching { shiftRepository.parityReport() }
+                    .onSuccess { report ->
+                        report.put("requestId", requestId)
+                        onResult(report)
+                    }
+                    .onFailure { result(requestId, false, it.localizedMessage ?: "shift parity failed") }
             }
 
             "employeeParity" -> scope.launch(Dispatchers.IO) {
@@ -104,6 +120,8 @@ class NativeStorageMirror(
                         catalogDao.productCount(),
                         catalogDao.categoryCount(),
                         employeeDao.count(),
+                        shiftDao.shiftCount(),
+                        shiftDao.movementCount(),
                     )
                 }.onSuccess { counts ->
                     onResult(
@@ -114,6 +132,8 @@ class NativeStorageMirror(
                             .put("catalogProducts", counts[1])
                             .put("catalogCategories", counts[2])
                             .put("employees", counts[3])
+                            .put("shifts", counts[4])
+                            .put("cashMovements", counts[5])
                             .put("authoritative", false)
                     )
                 }.onFailure {
@@ -193,6 +213,60 @@ class NativeStorageMirror(
         database.withTransaction {
             employeeDao.clear()
             if (employees.isNotEmpty()) employeeDao.insertAll(employees)
+        }
+    }
+
+    private suspend fun projectShifts(serialized: String) {
+        val source = JSONArray(serialized)
+        val now = System.currentTimeMillis()
+        val shifts = ArrayList<ShiftProjectionEntity>(source.length())
+        val movements = ArrayList<CashMovementProjectionEntity>()
+
+        for (shiftIndex in 0 until source.length()) {
+            val shift = source.optJSONObject(shiftIndex) ?: continue
+            val shiftId = shift.optString("id").trim()
+            if (shiftId.isEmpty()) continue
+
+            shifts += ShiftProjectionEntity(
+                id = shiftId,
+                status = shift.optString("status"),
+                employeeId = shift.optString("employeeId"),
+                employeeName = shift.optString("employeeName"),
+                employeePhone = shift.optString("employeePhone"),
+                openedAt = shift.optLong("openedAt"),
+                closedAt = shift.optLong("closedAt"),
+                openingCash = shift.optDouble("openingCash"),
+                countedCash = shift.optDouble("countedCash"),
+                sortIndex = shiftIndex,
+                payload = shift.toString(),
+                updatedAt = now,
+            )
+
+            val sourceMovements = shift.optJSONArray("cashMovements") ?: JSONArray()
+            for (movementIndex in 0 until sourceMovements.length()) {
+                val movement = sourceMovements.optJSONObject(movementIndex) ?: continue
+                val movementId = movement.optString("id").trim()
+                if (movementId.isEmpty()) continue
+                movements += CashMovementProjectionEntity(
+                    id = movementId,
+                    shiftId = shiftId,
+                    type = movement.optString("type"),
+                    subtype = movement.optString("subtype"),
+                    amount = movement.optDouble("amount"),
+                    timestamp = movement.optLong("timestamp"),
+                    note = movement.optString("note"),
+                    sortIndex = movementIndex,
+                    payload = movement.toString(),
+                    updatedAt = now,
+                )
+            }
+        }
+
+        database.withTransaction {
+            shiftDao.clearMovements()
+            shiftDao.clearShifts()
+            if (shifts.isNotEmpty()) shiftDao.insertShifts(shifts)
+            if (movements.isNotEmpty()) shiftDao.insertMovements(movements)
         }
     }
 
