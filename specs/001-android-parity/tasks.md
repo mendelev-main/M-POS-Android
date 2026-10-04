@@ -10,4 +10,4 @@
 - [x] Port Telegram text, shift-close and monthly warehouse actions; physical delivery remains pending.
 - [x] Add automated source, bridge, syntax and shell-policy parity checks.
 - [ ] Build debug and release APKs.
-- [ ] Complete physical Redmi Pad 2 Pro acceptance.
+- [ ] Complete physical acceptance on Android tablets with different screen sizes and resolutions.

@@ -1,6 +1,6 @@
 # M POS Android
 
-Native Android port of the production M POS for Xiaomi Redmi Pad 2 Pro.
+Native Android tablet port of the production M POS.
 
 The application uses a small Kotlin shell around the reviewed offline POS interface. HTML, CSS and JavaScript are bundled into the APK and loaded locally. Kotlin owns device-specific work: LAN ESC/POS printing, photos, document sharing, reports and complete `.mposbackup` files.
 
@@ -12,11 +12,11 @@ The application uses a small Kotlin shell around the reviewed offline POS interf
 - Existing `prilavok_` keys and JSON records remain compatible with iPad backup schema v13.
 - Network operations never replace or gate local POS persistence.
 
-## Target
+## Platform support
 
-- Xiaomi Redmi Pad 2 Pro 8/256 GB Wi‑Fi
-- 12.1-inch 2560×1600 landscape display
-- Android 15 / API 35 target
+- Android tablets from any manufacturer; no model-specific APIs or dimensions
+- Responsive landscape interface for different tablet sizes, resolutions and pixel densities
+- Android 9 and newer (minimum API 28), targeting Android 15 / API 35
 - Package: `com.mendelev.mpos`
 
 ## Build

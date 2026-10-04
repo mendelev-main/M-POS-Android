@@ -12,6 +12,5 @@
 10. Do not commit signing keys, Telegram tokens, device keys, backup files or production data.
 11. Keep the Android package ID and release signing key stable after the first production installation.
 12. Migrate and verify one native boundary at a time. Avoid broad rewrites of business logic.
-13. Test critical behavior on the target Xiaomi Redmi Pad 2 Pro after every substantial stage.
+13. Test critical behavior on physical Android tablets after every substantial stage. Do not add dependencies on a particular manufacturer, model, screen resolution or chipset.
 14. Do not commit or push unless authorized by the user. The current session authorizes commits and pushes to `main`.
-

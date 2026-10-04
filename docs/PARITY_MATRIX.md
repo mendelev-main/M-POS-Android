@@ -1,10 +1,10 @@
 # Android parity matrix
 
-`implemented` means code exists. Only `accepted` means it passed the physical Redmi Pad 2 Pro case.
+`implemented` means code exists. Only `accepted` means it passed the physical Android tablet cases.
 
 | Domain | Current state | Remaining evidence |
 |---|---|---|
-| POS interface and business modules | implemented from iPad commit `44fbf37` | Screenshot and interaction comparison on 2560×1600 |
+| POS interface and business modules | implemented from iPad commit `44fbf37` | Screenshot and interaction comparison on multiple tablet sizes, aspect ratios and densities |
 | Local keys and JSON records | implemented unchanged | Restart, storage failure and large-data checks |
 | Products, recipes and stock | web runtime implemented | Full physical sale/return matrix |
 | Payments, receipts and shifts | web runtime and native shift PDF printing implemented | Cash/card/split, restart recovery and printed output |
