@@ -85,3 +85,22 @@ test('Room shadow storage mirrors existing prilavok keys without becoming author
  assert.match(adapter,/local-pos/);
  assert.doesNotMatch(adapter,/return\s+native|sourceOfTruth\s*:\s*['"]room/);
 });
+
+
+test('native catalog projection is structured, migrated, and non-authoritative',()=>{
+ const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
+ const product=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/ProductProjectionEntity.kt'),'utf8');
+ const category=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/CategoryProjectionEntity.kt'),'utf8');
+ const dao=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/CatalogProjectionDao.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ assert.match(db,/version\s*=\s*2/);
+ assert.match(db,/Migration\(1,\s*2\)/);
+ assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
+ assert.match(product,/tableName\s*=\s*"product_projection"/);
+ assert.match(category,/tableName\s*=\s*"category_projection"/);
+ assert.match(dao,/clearProducts/);
+ assert.match(mirror,/key\s*==\s*"products"/);
+ assert.match(mirror,/projectCatalog/);
+ assert.match(mirror,/"Без категории"/);
+ assert.match(mirror,/authoritative", false/);
+});

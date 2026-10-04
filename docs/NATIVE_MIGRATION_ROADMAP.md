@@ -68,7 +68,11 @@ Requirements:
 - idempotent migration and rollback strategy;
 - no network dependency.
 
-Current first step: Room receives a non-authoritative shadow copy of existing `prilavok_` storage writes and initial localStorage contents. The WebView/local storage contract remains authoritative.\n\nRoom must become authoritative only after migration and physical restart/recovery tests pass.
+Current first step: Room receives a non-authoritative shadow copy of existing `prilavok_` storage writes and initial localStorage contents. The WebView/local storage contract remains authoritative.
+
+Second step: the `products` shadow is projected into structured native `product_projection` and `category_projection` tables. These tables are still non-authoritative and exist to validate the future native catalog repository.
+
+Room must become authoritative only after migration and physical restart/recovery tests pass.
 
 ### P3 — Native network/SSE infrastructure
 **Status: 🟡 Candidate**

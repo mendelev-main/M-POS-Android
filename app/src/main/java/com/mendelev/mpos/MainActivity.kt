@@ -78,7 +78,7 @@ class MainActivity : AppCompatActivity() {
         shares = ReportShareManager(this)
         telegram = TelegramClient(shares::createWarehousePdf, ::telegramResult, ::telegramMonthlyResult)
         nativeSettings = NativeSettingsStore(this, ::nativeSettingsResult)
-        nativeStorageMirror = NativeStorageMirror(MPosDatabase.get(this).legacyStorageShadowDao(), lifecycleScope, ::nativeStorageResult)
+        nativeStorageMirror = NativeStorageMirror(MPosDatabase.get(this), lifecycleScope, ::nativeStorageResult)
         router = NativeBridgeRouter(this, photos, backup, nativeSettings, nativeStorageMirror)
 
         webView = WebView(this).apply {
