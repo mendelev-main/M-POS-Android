@@ -9,5 +9,5 @@
 - [x] Implement PDF/XLSX and sharing; exact visual comparison remains pending.
 - [x] Port Telegram text, shift-close and monthly warehouse actions; physical delivery remains pending.
 - [x] Add automated source, bridge, syntax and shell-policy parity checks.
-- [ ] Build debug and release APKs.
+- [x] Build debug and minified release APKs; production signing remains pending.
 - [ ] Complete physical acceptance on Android tablets with different screen sizes and resolutions.
