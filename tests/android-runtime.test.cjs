@@ -62,7 +62,8 @@ test('native Android settings boundary is isolated from POS business storage',()
  const adapter=fs.readFileSync(path.join(assets,'native-settings.js'),'utf8');
  assert.match(activity,/NativeSettingsStore/);
  assert.match(router,/"settings" -> settings\.handle/);
- assert.match(store,/getSharedPreferences\("mpos_native_settings"/);
+ assert.match(store,/PREFS_NAME\s*=\s*"mpos_native_settings"/);
+ assert.match(store,/getSharedPreferences\(PREFS_NAME,\s*Context\.MODE_PRIVATE\)/);
  assert.match(store,/platform_settings_snapshot/);
  assert.match(adapter,/__printerSettingsSnapshot/);
  assert.doesNotMatch(store,/products|orders|shifts|receipts/);
