@@ -19,6 +19,8 @@ class NativeStorageMirror(
     private val employeeRepository = MPosEmployeeRepository(database)
     private val shiftDao = database.shiftProjectionDao()
     private val shiftRepository = MPosShiftRepository(database)
+    private val orderDao = database.orderProjectionDao()
+    private val orderRepository = MPosOrderRepository(database)
 
     fun handle(payload: JSONObject) {
         val requestId = payload.optString("requestId")
@@ -43,6 +45,7 @@ class NativeStorageMirror(
                             "products" -> runCatching { projectCatalog(serialized) }.isSuccess
                             "employees" -> runCatching { projectEmployees(serialized) }.isSuccess
                             "shifts" -> runCatching { projectShifts(serialized) }.isSuccess
+                            "orders" -> runCatching { projectOrders(serialized) }.isSuccess
                             else -> true
                         }
                         result(requestId, true, projectionOk = projectionOk)
@@ -71,10 +74,24 @@ class NativeStorageMirror(
                                 shiftDao.clearMovements()
                                 shiftDao.clearShifts()
                             }
+                            "orders" -> database.withTransaction {
+                                orderDao.clearPayments()
+                                orderDao.clearLines()
+                                orderDao.clearOrders()
+                            }
                         }
                     }.onSuccess { result(requestId, true) }
                         .onFailure { result(requestId, false, it.localizedMessage ?: "shadow delete failed") }
                 }
+            }
+
+            "orderParity" -> scope.launch(Dispatchers.IO) {
+                runCatching { orderRepository.parityReport() }
+                    .onSuccess { report ->
+                        report.put("requestId", requestId)
+                        onResult(report)
+                    }
+                    .onFailure { result(requestId, false, it.localizedMessage ?: "order parity failed") }
             }
 
             "shiftParity" -> scope.launch(Dispatchers.IO) {
@@ -122,6 +139,9 @@ class NativeStorageMirror(
                         employeeDao.count(),
                         shiftDao.shiftCount(),
                         shiftDao.movementCount(),
+                        orderDao.orderCount(),
+                        orderDao.lineCount(),
+                        orderDao.paymentCount(),
                     )
                 }.onSuccess { counts ->
                     onResult(
@@ -134,6 +154,9 @@ class NativeStorageMirror(
                             .put("employees", counts[3])
                             .put("shifts", counts[4])
                             .put("cashMovements", counts[5])
+                            .put("orders", counts[6])
+                            .put("orderLines", counts[7])
+                            .put("payments", counts[8])
                             .put("authoritative", false)
                     )
                 }.onFailure {
@@ -267,6 +290,89 @@ class NativeStorageMirror(
             shiftDao.clearShifts()
             if (shifts.isNotEmpty()) shiftDao.insertShifts(shifts)
             if (movements.isNotEmpty()) shiftDao.insertMovements(movements)
+        }
+    }
+
+    private suspend fun projectOrders(serialized: String) {
+        val source = JSONArray(serialized)
+        val now = System.currentTimeMillis()
+        val orders = ArrayList<OrderProjectionEntity>(source.length())
+        val lines = ArrayList<OrderLineProjectionEntity>()
+        val payments = ArrayList<PaymentProjectionEntity>()
+
+        for (orderIndex in 0 until source.length()) {
+            val order = source.optJSONObject(orderIndex) ?: continue
+            val orderId = order.optString("id").trim()
+            if (orderId.isEmpty()) continue
+
+            orders += OrderProjectionEntity(
+                id = orderId,
+                shiftId = order.optString("shiftId"),
+                receiptNumber = order.optInt("receiptNumber"),
+                receiptDisplayNumber = order.optString("receiptDisplayNumber"),
+                employeeId = order.optString("employeeId"),
+                employeeName = order.optString("employeeName"),
+                method = order.optString("method"),
+                total = order.optDouble("total"),
+                orderType = order.optString("orderType"),
+                orderLabel = order.optString("orderLabel"),
+                deliveryFee = order.optDouble("deliveryFee"),
+                source = order.optString("source"),
+                webOrderId = order.optString("webOrderId"),
+                timestamp = order.optLong("timestamp"),
+                returnedAt = order.optLong("returnedAt"),
+                returnAmount = order.optDouble("returnAmount"),
+                sortIndex = orderIndex,
+                payload = order.toString(),
+                updatedAt = now,
+            )
+
+            val sourceLines = order.optJSONArray("items") ?: JSONArray()
+            for (lineIndex in 0 until sourceLines.length()) {
+                val line = sourceLines.optJSONObject(lineIndex) ?: continue
+                lines += OrderLineProjectionEntity(
+                    id = MPosOrderRepository.lineKey(orderId, lineIndex),
+                    orderId = orderId,
+                    productId = line.optString("productId"),
+                    name = line.optString("name"),
+                    category = line.optString("category"),
+                    qty = line.optDouble("qty"),
+                    price = line.optDouble("price"),
+                    cost = line.optDouble("cost"),
+                    discountName = line.optString("discountName"),
+                    discountType = line.optString("discountType"),
+                    discountValue = line.optDouble("discountValue"),
+                    comment = line.optString("comment"),
+                    sortIndex = lineIndex,
+                    payload = line.toString(),
+                    updatedAt = now,
+                )
+            }
+
+            val sourcePayments = order.optJSONArray("payments") ?: JSONArray()
+            for (paymentIndex in 0 until sourcePayments.length()) {
+                val payment = sourcePayments.optJSONObject(paymentIndex) ?: continue
+                payments += PaymentProjectionEntity(
+                    id = MPosOrderRepository.paymentKey(orderId, paymentIndex),
+                    orderId = orderId,
+                    method = payment.optString("method"),
+                    amount = payment.optDouble("amount"),
+                    cashGiven = payment.optDouble("cashGiven"),
+                    changeAmount = payment.optDouble("change"),
+                    sortIndex = paymentIndex,
+                    payload = payment.toString(),
+                    updatedAt = now,
+                )
+            }
+        }
+
+        database.withTransaction {
+            orderDao.clearPayments()
+            orderDao.clearLines()
+            orderDao.clearOrders()
+            if (orders.isNotEmpty()) orderDao.insertOrders(orders)
+            if (lines.isNotEmpty()) orderDao.insertLines(lines)
+            if (payments.isNotEmpty()) orderDao.insertPayments(payments)
         }
     }
 

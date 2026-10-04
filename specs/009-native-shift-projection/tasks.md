@@ -9,6 +9,6 @@
 - [x] Add `MPosShiftRepository` parity diagnostics.
 - [x] Keep shift/cash operational logic authoritative in legacy runtime.
 - [x] Extend architecture tests.
-- [ ] Run Node tests, lint and debug build.
+- [x] Run Node tests, lint and debug build.
 - [ ] Physical open/deposit/withdraw/close/restart verification.
 - [ ] Shift authoritative cutover remains blocked.
