@@ -15,6 +15,8 @@ class NativeStorageMirror(
     private val shadowDao = database.legacyStorageShadowDao()
     private val catalogDao = database.catalogProjectionDao()
     private val catalogRepository = MPosCatalogRepository(database)
+    private val employeeDao = database.employeeProjectionDao()
+    private val employeeRepository = MPosEmployeeRepository(database)
 
     fun handle(payload: JSONObject) {
         val requestId = payload.optString("requestId")
@@ -35,10 +37,10 @@ class NativeStorageMirror(
                                 updatedAt = System.currentTimeMillis(),
                             )
                         )
-                        val projectionOk = if (key == "products") {
-                            runCatching { projectCatalog(serialized) }.isSuccess
-                        } else {
-                            true
+                        val projectionOk = when (key) {
+                            "products" -> runCatching { projectCatalog(serialized) }.isSuccess
+                            "employees" -> runCatching { projectEmployees(serialized) }.isSuccess
+                            else -> true
                         }
                         result(requestId, true, projectionOk = projectionOk)
                     }.onFailure {
@@ -56,15 +58,25 @@ class NativeStorageMirror(
                 scope.launch(Dispatchers.IO) {
                     runCatching {
                         shadowDao.delete(key)
-                        if (key == "products") {
-                            database.withTransaction {
+                        when (key) {
+                            "products" -> database.withTransaction {
                                 catalogDao.clearProducts()
                                 catalogDao.clearCategories()
                             }
+                            "employees" -> employeeDao.clear()
                         }
                     }.onSuccess { result(requestId, true) }
                         .onFailure { result(requestId, false, it.localizedMessage ?: "shadow delete failed") }
                 }
+            }
+
+            "employeeParity" -> scope.launch(Dispatchers.IO) {
+                runCatching { employeeRepository.parityReport() }
+                    .onSuccess { report ->
+                        report.put("requestId", requestId)
+                        onResult(report)
+                    }
+                    .onFailure { result(requestId, false, it.localizedMessage ?: "employee parity failed") }
             }
 
             "catalogSnapshot" -> scope.launch(Dispatchers.IO) {
@@ -87,19 +99,21 @@ class NativeStorageMirror(
 
             "stats" -> scope.launch(Dispatchers.IO) {
                 runCatching {
-                    Triple(
+                    listOf(
                         shadowDao.count(),
                         catalogDao.productCount(),
                         catalogDao.categoryCount(),
+                        employeeDao.count(),
                     )
-                }.onSuccess { (shadowCount, productCount, categoryCount) ->
+                }.onSuccess { counts ->
                     onResult(
                         JSONObject()
                             .put("requestId", requestId)
                             .put("ok", true)
-                            .put("count", shadowCount)
-                            .put("catalogProducts", productCount)
-                            .put("catalogCategories", categoryCount)
+                            .put("count", counts[0])
+                            .put("catalogProducts", counts[1])
+                            .put("catalogCategories", counts[2])
+                            .put("employees", counts[3])
                             .put("authoritative", false)
                     )
                 }.onFailure {
@@ -152,6 +166,33 @@ class NativeStorageMirror(
             catalogDao.clearCategories()
             if (products.isNotEmpty()) catalogDao.insertProducts(products)
             if (categories.isNotEmpty()) catalogDao.insertCategories(categories)
+        }
+    }
+
+    private suspend fun projectEmployees(serialized: String) {
+        val source = JSONArray(serialized)
+        val now = System.currentTimeMillis()
+        val employees = ArrayList<EmployeeProjectionEntity>(source.length())
+
+        for (index in 0 until source.length()) {
+            val employee = source.optJSONObject(index) ?: continue
+            val id = employee.optString("id").trim()
+            if (id.isEmpty()) continue
+
+            employees += EmployeeProjectionEntity(
+                id = id,
+                name = employee.optString("name"),
+                phone = employee.optString("phone"),
+                role = employee.optString("role", "employee"),
+                sortIndex = index,
+                payload = employee.toString(),
+                updatedAt = now,
+            )
+        }
+
+        database.withTransaction {
+            employeeDao.clear()
+            if (employees.isNotEmpty()) employeeDao.insertAll(employees)
         }
     }
 

@@ -8,6 +8,6 @@
 - [x] Hard-block Room activation before physical acceptance.
 - [x] Keep business read paths unchanged.
 - [x] Extend architecture tests.
-- [ ] Run Node tests, lint and debug build.
+- [x] Run Node tests, lint and debug build.
 - [ ] Physical catalog parity/restart acceptance.
 - [ ] Introduce real Room mode only in a later accepted cutover spec.

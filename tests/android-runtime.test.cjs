@@ -159,3 +159,23 @@ test('catalog cutover controller defaults to compare and blocks Room activation'
  assert.match(controller,/blocked until physical acceptance/);
  assert.doesNotMatch(controller,/activeSource:'room'/);
 });
+
+
+test('employee projection uses M POS naming and explicit Room migration',()=>{
+ const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
+ const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/EmployeeProjectionEntity.kt'),'utf8');
+ const dao=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/EmployeeProjectionDao.kt'),'utf8');
+ const repository=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosEmployeeRepository.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ assert.match(db,/version\s*=\s*3/);
+ assert.match(db,/Migration\(2,\s*3\)/);
+ assert.match(entity,/tableName\s*=\s*"employee_projection"/);
+ assert.match(dao,/suspend fun all/);
+ assert.match(repository,/class MPosEmployeeRepository/);
+ assert.match(repository,/mismatchedEmployeeIds/);
+ assert.match(repository,/authoritative", false/);
+ assert.match(mirror,/key\) \{/);
+ assert.match(mirror,/"employees" -> runCatching \{ projectEmployees/);
+ assert.match(mirror,/"employeeParity"/);
+ assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
+});

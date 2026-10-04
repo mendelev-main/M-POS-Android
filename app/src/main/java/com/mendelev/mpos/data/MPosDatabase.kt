@@ -12,13 +12,15 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         LegacyStorageShadowEntity::class,
         ProductProjectionEntity::class,
         CategoryProjectionEntity::class,
+        EmployeeProjectionEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class MPosDatabase : RoomDatabase() {
     abstract fun legacyStorageShadowDao(): LegacyStorageShadowDao
     abstract fun catalogProjectionDao(): CatalogProjectionDao
+    abstract fun employeeProjectionDao(): EmployeeProjectionDao
 
     companion object {
         @Volatile private var instance: MPosDatabase? = null
@@ -51,6 +53,24 @@ abstract class MPosDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS employee_projection (
+                        id TEXT NOT NULL PRIMARY KEY,
+                        name TEXT NOT NULL,
+                        phone TEXT NOT NULL,
+                        role TEXT NOT NULL,
+                        sortIndex INTEGER NOT NULL,
+                        payload TEXT NOT NULL,
+                        updatedAt INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
         fun get(context: Context): MPosDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -58,7 +78,7 @@ abstract class MPosDatabase : RoomDatabase() {
                     MPosDatabase::class.java,
                     "mpos.db",
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .build()
                     .also { instance = it }
             }

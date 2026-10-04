@@ -79,6 +79,8 @@ Fourth step: a parity-protected native catalog snapshot contract is exposed thro
 
 Fifth step: `MPosCore.CatalogCutover` introduces `legacy` and `compare` modes. `compare` is the default and continuously treats legacy as the active source while allowing Room parity checks. `room` mode is explicitly blocked until physical acceptance.
 
+Sixth step: employees are projected into structured Room storage through `employee_projection`, with `MPosEmployeeRepository` parity diagnostics. Employee UI, admin-password rules and shift logic remain on the current runtime until this projection is physically accepted.
+
 Room must become authoritative only after migration and physical restart/recovery tests pass.
 
 ### P3 — Native network/SSE infrastructure
