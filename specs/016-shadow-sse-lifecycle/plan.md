@@ -1,0 +1,1 @@
+# Implementation plan\n1. Retain shadow endpoint/device configuration.\n2. Pause shadow on Activity onPause.\n3. Resume requested shadow on Activity onResume.\n4. Cancel and clear on destroy/explicit stop.\n5. Keep legacy EventSource unchanged.\n

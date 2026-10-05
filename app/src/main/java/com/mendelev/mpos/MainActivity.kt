@@ -133,15 +133,18 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         hideSystemBars()
+        nativeNetworkTransport.onForeground()
         if (::webView.isInitialized) callJavaScript("window._availabilityAppActive=true;window.onAvailabilityAppState&&window.onAvailabilityAppState(true);")
     }
 
     override fun onPause() {
+        nativeNetworkTransport.onBackground()
         if (::webView.isInitialized) callJavaScript("window._availabilityAppActive=false;window.onAvailabilityAppState&&window.onAvailabilityAppState(false);")
         super.onPause()
     }
 
     override fun onDestroy() {
+        nativeNetworkTransport.close()
         if (::webView.isInitialized) {
             webView.stopLoading()
             webView.loadUrl("about:blank")

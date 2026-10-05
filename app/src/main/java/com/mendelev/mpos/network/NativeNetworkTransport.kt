@@ -26,6 +26,9 @@ class NativeNetworkTransport(
     @Volatile private var shadowEvents = 0L
     @Volatile private var reconnects = 0L
     @Volatile private var lastEventHash = ""
+    @Volatile private var shadowBackendUrl = ""
+    @Volatile private var shadowDeviceKey = ""
+    @Volatile private var shadowRequested = false
 
     fun handle(payload: JSONObject) {
         val requestId = payload.optString("requestId")
@@ -33,7 +36,7 @@ class NativeNetworkTransport(
             "describe" -> onResult(status(requestId))
             "probe" -> probe(requestId, payload)
             "startShadowSse" -> startShadowSse(requestId, payload)
-            "stopShadowSse" -> { stopShadowSse(); onResult(status(requestId).put("ok", true)) }
+            "stopShadowSse" -> { stopShadowSse(true); onResult(status(requestId).put("ok", true)) }
             "shadowStatus" -> onResult(status(requestId).put("ok", true))
             else -> result(requestId, false, "unsupported native network action")
         }
@@ -55,7 +58,7 @@ class NativeNetworkTransport(
     private fun startShadowSse(requestId:String,payload:JSONObject){
         val backendUrl=payload.optString("backendUrl").trim().trimEnd('/'); val deviceKey=payload.optString("deviceKey")
         if(!validBackend(backendUrl,deviceKey)){result(requestId,false,"HTTPS backend URL and device key are required");return}
-        stopShadowSse(); shadowEvents=0; reconnects=0; lastEventHash=""
+        stopShadowSse(false); shadowBackendUrl=backendUrl; shadowDeviceKey=deviceKey; shadowRequested=true; shadowEvents=0; reconnects=0; lastEventHash=""
         shadowJob=scope.launch(Dispatchers.IO){
             var attempt=0
             while(isActive){
@@ -87,7 +90,10 @@ class NativeNetworkTransport(
         onEvent(JSONObject().put("type","shadow-observed").put("authoritative",false).put("events",shadowEvents).put("hash",lastEventHash))
     }
     private fun emitState(state:String)=onEvent(JSONObject().put("type","shadow-state").put("state",state).put("authoritative",false).put("reconnects",reconnects))
-    private fun stopShadowSse(){ shadowJob?.cancel(); shadowJob=null; shadowCall?.cancel(); shadowCall=null; shadowConnected=false }
+    private fun stopShadowSse(clearRequest:Boolean){ shadowJob?.cancel(); shadowJob=null; shadowCall?.cancel(); shadowCall=null; shadowConnected=false; if(clearRequest){shadowRequested=false;shadowBackendUrl="";shadowDeviceKey=""} }
+    fun onBackground(){ if(shadowRequested){ stopShadowSse(false); emitState("background-paused") } }
+    fun onForeground(){ if(shadowRequested && shadowJob?.isActive!=true && validBackend(shadowBackendUrl,shadowDeviceKey)){ startShadowSse("",JSONObject().put("backendUrl",shadowBackendUrl).put("deviceKey",shadowDeviceKey)); emitState("foreground-resumed") } }
+    fun close(){ stopShadowSse(true) }
     private fun validBackend(url:String,key:String)=url.startsWith("https://")&&key.isNotBlank()
     private fun eventsUrl(url:String,key:String)=url+"/api/orders/events?deviceKey="+URLEncoder.encode(key,"UTF-8")
     private fun sha256(value:String)=MessageDigest.getInstance("SHA-256").digest(value.toByteArray()).joinToString(""){"%02x".format(it)}

@@ -288,3 +288,12 @@ test('SSE parity diagnostics fingerprint legacy raw event data without changing 
  assert.match(bridge,/NativeEventSource=global\.EventSource/);assert.match(bridge,/addEventListener\('message'/);
  assert.doesNotMatch(webOrders,/observeLegacySse/);assert.match(webOrders,/new EventSource/);
 });
+
+
+test('native shadow SSE follows Activity lifecycle without changing legacy EventSource authority',()=>{
+ const activity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/MainActivity.kt'),'utf8');
+ const transport=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/network/NativeNetworkTransport.kt'),'utf8');
+ const webOrders=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/web-orders.js'),'utf8');
+ assert.match(activity,/nativeNetworkTransport\.onForeground\(\)/);assert.match(activity,/nativeNetworkTransport\.onBackground\(\)/);assert.match(activity,/nativeNetworkTransport\.close\(\)/);
+ assert.match(transport,/background-paused/);assert.match(transport,/foreground-resumed/);assert.match(transport,/shadowRequested/);assert.match(webOrders,/new EventSource/);
+});
