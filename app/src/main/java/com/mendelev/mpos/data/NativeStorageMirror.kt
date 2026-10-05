@@ -25,6 +25,7 @@ class NativeStorageMirror(
     private val parkedRepository = MPosParkedOrderRepository(database)
     private val stockEventDao = database.stockEventProjectionDao()
     private val stockEventRepository = MPosStockEventRepository(database)
+    private val webAcceptanceDao = database.webAcceptanceProjectionDao()
 
     fun handle(payload: JSONObject) {
         val requestId = payload.optString("requestId")
@@ -52,6 +53,7 @@ class NativeStorageMirror(
                             "orders" -> runCatching { projectOrders(serialized) }.isSuccess
                             "parked" -> runCatching { projectParkedOrders(serialized) }.isSuccess
                             "receivings", "inventoryHistory" -> runCatching { projectStockEvents(key, serialized) }.isSuccess
+                            "webOrderAcceptances" -> runCatching { projectWebAcceptances(serialized) }.isSuccess
                             else -> true
                         }
                         result(requestId, true, projectionOk = projectionOk)
@@ -93,6 +95,7 @@ class NativeStorageMirror(
                                 stockEventDao.clearLines(key)
                                 stockEventDao.clearEvents(key)
                             }
+                            "webOrderAcceptances" -> webAcceptanceDao.clear()
                         }
                     }.onSuccess { result(requestId, true) }
                         .onFailure { result(requestId, false, it.localizedMessage ?: "shadow delete failed") }
@@ -176,6 +179,8 @@ class NativeStorageMirror(
                         parkedDao.lineCount(),
                         stockEventDao.eventCount(),
                         stockEventDao.lineCount(),
+                        webAcceptanceDao.count(),
+                        webAcceptanceDao.pendingCount(),
                     )
                 }.onSuccess { counts ->
                     onResult(
@@ -195,6 +200,8 @@ class NativeStorageMirror(
                             .put("parkedOrderLines", counts[10])
                             .put("stockEvents", counts[11])
                             .put("stockEventLines", counts[12])
+                            .put("webAcceptances", counts[13])
+                            .put("pendingWebAcceptances", counts[14])
                             .put("authoritative", false)
                     )
                 }.onFailure {
@@ -509,6 +516,19 @@ class NativeStorageMirror(
             if(events.isNotEmpty()) stockEventDao.insertEvents(events)
             if(lines.isNotEmpty()) stockEventDao.insertLines(lines)
         }
+    }
+
+    private suspend fun projectWebAcceptances(serialized:String) {
+        val source=JSONObject(serialized); val now=System.currentTimeMillis(); val rows=ArrayList<WebAcceptanceProjectionEntity>()
+        for(webOrderId in source.keys()){
+            val record=source.optJSONObject(webOrderId)?:continue
+            val parked=record.optJSONObject("parked")?:JSONObject()
+            rows += WebAcceptanceProjectionEntity(
+                webOrderId=webOrderId, stage=record.optString("stage"), readyEstimate=record.optString("readyEstimate"),
+                parkedOrderId=parked.optString("id"), preparedAt=record.optLong("preparedAt"), confirmedAt=record.optLong("confirmedAt"),
+                payload=record.toString(), updatedAt=now)
+        }
+        database.withTransaction { webAcceptanceDao.clear(); if(rows.isNotEmpty()) webAcceptanceDao.insertAll(rows) }
     }
 
     private fun result(

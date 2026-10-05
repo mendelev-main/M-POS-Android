@@ -303,3 +303,13 @@ test('shadow SSE foreground resume preserves diagnostic counters and hashes',()=
  const transport=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/network/NativeNetworkTransport.kt'),'utf8');
  assert.match(transport,/resetDiagnostics:Boolean=true/);assert.match(transport,/if\(resetDiagnostics\)\{shadowEvents=0; reconnects=0; lastEventHash=""\}/);assert.match(transport,/shadowDeviceKey\),false\)/);assert.match(transport,/Charsets\.UTF_8/);
 });
+
+
+test('P4 WEB acceptance journal is shadow-projected without taking recovery authority',()=>{
+ const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const web=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/web-orders.js'),'utf8');
+ assert.match(db,/WebAcceptanceProjectionEntity::class/);assert.match(db,/version = 8/);assert.match(db,/MIGRATION_7_8/);
+ assert.match(mirror,/webOrderAcceptances/);assert.match(mirror,/projectWebAcceptances/);assert.match(mirror,/pendingWebAcceptances/);
+ assert.match(web,/stage:'prepared'/);assert.match(web,/record\.stage='local'/);assert.match(web,/record\.stage='confirmed'/);assert.match(web,/ACK recovery is best-effort/);
+});

@@ -112,9 +112,12 @@ Current first step: Android owns a non-authoritative OkHttp transport boundary e
 **P3 automated gate:** specs 013–017 are now build/lint/source-test verified. Native SSE remains diagnostic-only and non-authoritative. The remaining P3 gates are physical same-stream parity, network interruption/reconnect, and background/foreground verification on an Android device; no SSE authority cutover is permitted before those pass.
 
 ## P4 — Operational outbox and recovery
-**Status: 🟡 Candidate**
+**Status: 🟢 In progress — legacy recovery journal shadow projection**
 
 After Room + network transport:
+
+Current first step: preserve the existing WEB acceptance recovery journal (`prepared → local → confirmed`) as the authoritative recovery workflow and project `webOrderAcceptances` into Room for restart/parity diagnostics. The native projection is non-authoritative and must not send ACKs or mutate parked orders.
+
 - durable pending network operations;
 - retry for explicitly allowed operations;
 - process/restart recovery;

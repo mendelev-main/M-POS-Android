@@ -22,8 +22,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ParkedOrderLineProjectionEntity::class,
         StockEventProjectionEntity::class,
         StockEventLineProjectionEntity::class,
+        WebAcceptanceProjectionEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = false,
 )
 abstract class MPosDatabase : RoomDatabase() {
@@ -34,6 +35,7 @@ abstract class MPosDatabase : RoomDatabase() {
     abstract fun orderProjectionDao(): OrderProjectionDao
     abstract fun parkedOrderProjectionDao(): ParkedOrderProjectionDao
     abstract fun stockEventProjectionDao(): StockEventProjectionDao
+    abstract fun webAcceptanceProjectionDao(): WebAcceptanceProjectionDao
 
     companion object {
         @Volatile private var instance: MPosDatabase? = null
@@ -257,6 +259,15 @@ abstract class MPosDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""CREATE TABLE IF NOT EXISTS web_acceptance_projection (
+                    webOrderId TEXT NOT NULL PRIMARY KEY, stage TEXT NOT NULL, readyEstimate TEXT NOT NULL,
+                    parkedOrderId TEXT NOT NULL, preparedAt INTEGER NOT NULL, confirmedAt INTEGER NOT NULL,
+                    payload TEXT NOT NULL, updatedAt INTEGER NOT NULL)""")
+            }
+        }
+
         fun get(context: Context): MPosDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -264,7 +275,7 @@ abstract class MPosDatabase : RoomDatabase() {
                     MPosDatabase::class.java,
                     "mpos.db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                     .build()
                     .also { instance = it }
             }
