@@ -1,0 +1,1 @@
+# Tasks\n- [x] Add resetDiagnostics start mode.\n- [x] Preserve diagnostics on lifecycle resume.\n- [x] Use explicit UTF-8 for native SHA-256.\n- [x] Keep explicit fresh start reset behavior.\n- [x] Add architecture test.\n- [ ] Run Node tests, lint and debug build.\n- [ ] Physical background/reconnect continuity verification.\n- [ ] Native SSE cutover remains blocked.\n

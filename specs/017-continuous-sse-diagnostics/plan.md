@@ -1,0 +1,1 @@
+# Implementation plan\n1. Separate fresh-start reset semantics from lifecycle resume.\n2. Preserve counters/hash on resume.\n3. Make hash byte encoding explicit UTF-8.\n4. Keep shadow non-authoritative.\n

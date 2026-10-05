@@ -297,3 +297,9 @@ test('native shadow SSE follows Activity lifecycle without changing legacy Event
  assert.match(activity,/nativeNetworkTransport\.onForeground\(\)/);assert.match(activity,/nativeNetworkTransport\.onBackground\(\)/);assert.match(activity,/nativeNetworkTransport\.close\(\)/);
  assert.match(transport,/background-paused/);assert.match(transport,/foreground-resumed/);assert.match(transport,/shadowRequested/);assert.match(webOrders,/new EventSource/);
 });
+
+
+test('shadow SSE foreground resume preserves diagnostic counters and hashes',()=>{
+ const transport=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/network/NativeNetworkTransport.kt'),'utf8');
+ assert.match(transport,/resetDiagnostics:Boolean=true/);assert.match(transport,/if\(resetDiagnostics\)\{shadowEvents=0; reconnects=0; lastEventHash=""\}/);assert.match(transport,/deviceKey\),false\)/);assert.match(transport,/Charsets\.UTF_8/);
+});

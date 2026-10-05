@@ -55,10 +55,10 @@ class NativeNetworkTransport(
         }
     }
 
-    private fun startShadowSse(requestId:String,payload:JSONObject){
+    private fun startShadowSse(requestId:String,payload:JSONObject,resetDiagnostics:Boolean=true){
         val backendUrl=payload.optString("backendUrl").trim().trimEnd('/'); val deviceKey=payload.optString("deviceKey")
         if(!validBackend(backendUrl,deviceKey)){result(requestId,false,"HTTPS backend URL and device key are required");return}
-        stopShadowSse(false); shadowBackendUrl=backendUrl; shadowDeviceKey=deviceKey; shadowRequested=true; shadowEvents=0; reconnects=0; lastEventHash=""
+        stopShadowSse(false); shadowBackendUrl=backendUrl; shadowDeviceKey=deviceKey; shadowRequested=true; if(resetDiagnostics){shadowEvents=0; reconnects=0; lastEventHash=""}
         shadowJob=scope.launch(Dispatchers.IO){
             var attempt=0
             while(isActive){
@@ -92,10 +92,10 @@ class NativeNetworkTransport(
     private fun emitState(state:String)=onEvent(JSONObject().put("type","shadow-state").put("state",state).put("authoritative",false).put("reconnects",reconnects))
     private fun stopShadowSse(clearRequest:Boolean){ shadowJob?.cancel(); shadowJob=null; shadowCall?.cancel(); shadowCall=null; shadowConnected=false; if(clearRequest){shadowRequested=false;shadowBackendUrl="";shadowDeviceKey=""} }
     fun onBackground(){ if(shadowRequested){ stopShadowSse(false); emitState("background-paused") } }
-    fun onForeground(){ if(shadowRequested && shadowJob?.isActive!=true && validBackend(shadowBackendUrl,shadowDeviceKey)){ startShadowSse("",JSONObject().put("backendUrl",shadowBackendUrl).put("deviceKey",shadowDeviceKey)); emitState("foreground-resumed") } }
+    fun onForeground(){ if(shadowRequested && shadowJob?.isActive!=true && validBackend(shadowBackendUrl,shadowDeviceKey)){ startShadowSse("",JSONObject().put("backendUrl",shadowBackendUrl).put("deviceKey",shadowDeviceKey),false); emitState("foreground-resumed") } }
     fun close(){ stopShadowSse(true) }
     private fun validBackend(url:String,key:String)=url.startsWith("https://")&&key.isNotBlank()
     private fun eventsUrl(url:String,key:String)=url+"/api/orders/events?deviceKey="+URLEncoder.encode(key,"UTF-8")
-    private fun sha256(value:String)=MessageDigest.getInstance("SHA-256").digest(value.toByteArray()).joinToString(""){"%02x".format(it)}
+    private fun sha256(value:String)=MessageDigest.getInstance("SHA-256").digest(value.toByteArray(Charsets.UTF_8)).joinToString(""){"%02x".format(it)}
     private fun result(requestId:String,ok:Boolean,message:String)=onResult(JSONObject().put("requestId",requestId).put("ok",ok).put("message",message).put("authoritative",false))
 }
