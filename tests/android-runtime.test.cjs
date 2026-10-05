@@ -17,19 +17,19 @@ test('all bundled JavaScript parses',()=>{
 
 test('every local script referenced by POS is bundled',()=>{
  const scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(match=>match[1]);
- assert.ok(scripts.includes('android-bridge.js'));assert.ok(scripts.includes('notification-native.js'));assert.ok(scripts.includes('native-settings.js'));assert.ok(scripts.includes('native-storage-shadow.js'));assert.ok(scripts.includes('native-catalog-cutover.js'));
+ assert.ok(scripts.includes('android-bridge.js'));assert.ok(scripts.includes('notification-native.js'));assert.ok(scripts.includes('native-settings.js'));assert.ok(scripts.includes('native-storage-shadow.js'));assert.ok(scripts.includes('native-catalog-cutover.js'));assert.ok(scripts.includes('native-network-shadow.js'));
  scripts.forEach(script=>assert.ok(fs.existsSync(path.join(assets,script)),script));
 });
 
 test('Android bridge preserves all native iPad channels',()=>{
  const bridge=fs.readFileSync(path.join(assets,'android-bridge.js'),'utf8');
- for(const channel of ['printer','telegram','photoPicker','backup','settings','storage'])assert.match(bridge,new RegExp(`${channel}:handler\\('${channel}'\\)`));
+ for(const channel of ['printer','telegram','photoPicker','backup','settings','storage','network'])assert.match(bridge,new RegExp(`${channel}:handler\\('${channel}'\\)`));
  assert.match(bridge,/window\.__MPOS_PLATFORM__|global\.__MPOS_PLATFORM__/);
 });
 
 test('Android POS differs from source HTML only by platform scripts',()=>{
  const manifest=JSON.parse(fs.readFileSync(path.join(root,'web-source-manifest.json')));
- const restored=html.replace('<script src="android-bridge.js"></script>\n','').replace('\n<script src="native-storage-shadow.js"></script>','').replace('\n<script src="native-catalog-cutover.js"></script>','').replace('\n<script src="native-settings.js"></script>','').replace('\n<script src="notification-native.js"></script>','');
+ const restored=html.replace('<script src="android-bridge.js"></script>\n','').replace('\n<script src="native-storage-shadow.js"></script>','').replace('\n<script src="native-catalog-cutover.js"></script>','').replace('\n<script src="native-network-shadow.js"></script>','').replace('\n<script src="native-settings.js"></script>','').replace('\n<script src="notification-native.js"></script>','');
  assert.equal(sha(restored),manifest.files['pos.html']);
  for(const [file,expected] of Object.entries(manifest.files)){
    if(file==='pos.html')continue;
