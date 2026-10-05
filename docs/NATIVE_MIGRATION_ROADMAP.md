@@ -123,7 +123,7 @@ Implemented automated recovery groundwork:
 - loyalty sale/reversal recovery statuses are projected from paid orders; existing idempotent JS/backend retry remains authoritative.
 - native recovery projections are diagnostic-only: they do not send ACK/ready/loyalty requests or mutate operational order state.
 
-Automated source/build coverage is complete through specs 018–026. WEB ready additionally uses a two-phase `prepared → pending → confirmed` journal so backend confirmation cannot start until the local current-order session and retry state are durably stored; physical offline/restart/online recovery scenarios remain required before any authority cutover.
+Automated source/build coverage is complete through specs 018–027. WEB ready additionally uses a two-phase `prepared → pending → confirmed` journal so backend confirmation cannot start until the local current-order session and retry state are durably stored; physical offline/restart/online recovery scenarios remain required before any authority cutover.
 
 - durable pending network operations;
 - retry for explicitly allowed operations;

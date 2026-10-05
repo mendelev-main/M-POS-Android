@@ -386,3 +386,12 @@ test('P4 critical storage journal parity is read-only and compares recovery iden
  const parity=mirror.slice(mirror.indexOf('"criticalStorageJournalParity"'),mirror.indexOf('"webAcceptanceParity"'));
  assert.doesNotMatch(parity,/\.set\(|\.replace\(|\.clear\(|commitCriticalStorage|recoverCriticalStorageJournal/);
 });
+
+
+test('P4 loyalty network retry state is persisted before send and after outcome',()=>{
+ const loyalty=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/loyalty.js'),'utf8');
+ const sale=loyalty.slice(loyalty.indexOf('async function publishPaidOrderLoyalty'),loyalty.indexOf('async function reverseOrderLoyalty'));
+ const reversal=loyalty.slice(loyalty.indexOf('async function reverseOrderLoyalty'),loyalty.indexOf('async function settleReturnedOrderLoyalty'));
+ for(const section of [sale,reversal]){const sending=section.indexOf("status:'sending'");const persist=section.indexOf("await window.PrilavokCore.Storage.set('orders',state.orders)");const network=section.indexOf("loyaltyApi(");assert.ok(sending>=0&&persist>sending&&network>persist);assert.match(section,/status:'synced'/);assert.match(section,/status:'pending'/);}
+ assert.match(sale,/status:'synced'[\s\S]*await window\.PrilavokCore\.Storage\.set\('orders',state\.orders\)/);assert.match(reversal,/status:'synced'[\s\S]*await window\.PrilavokCore\.Storage\.set\('orders',state\.orders\)/);
+});

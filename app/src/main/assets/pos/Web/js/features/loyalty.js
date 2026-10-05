@@ -100,13 +100,15 @@ async function createCustomerFromPos(){try{const data=await loyaltyApi('/api/cus
 async function publishPaidOrderLoyalty(order){
  if(!order?.customer?.id||order.loyaltySync?.status==='sending')return;
  order.loyaltySync={...(order.loyaltySync||{}),status:'sending',attemptedAt:Date.now()};
- try{const data=await loyaltyApi('/api/loyalty/sales',{method:'POST',body:JSON.stringify({orderId:order.id,customerId:order.customer.id,items:(order.items||[]).map(x=>({productId:x.productId,quantity:x.qty})),redemptions:order.loyaltyRedemptions||{},rewardAllocations:order.loyaltyRewardAllocations||{}})});order.loyaltySync={status:'synced',at:Date.now(),events:data.events||[]};saveKey('orders',state.orders);if(order.returnedAt&&order.loyaltyReversal?.status==='pending')await reverseOrderLoyalty(order)}
- catch(e){order.loyaltySync={status:'pending',error:String(e?.message||e),at:Date.now()};saveKey('orders',state.orders)}
+ try{await window.PrilavokCore.Storage.set('orders',state.orders)}catch(e){order.loyaltySync={...(order.loyaltySync||{}),status:'pending',error:'local-persist-before-send',at:Date.now()};markStorageBroken(e);return}
+ try{const data=await loyaltyApi('/api/loyalty/sales',{method:'POST',body:JSON.stringify({orderId:order.id,customerId:order.customer.id,items:(order.items||[]).map(x=>({productId:x.productId,quantity:x.qty})),redemptions:order.loyaltyRedemptions||{},rewardAllocations:order.loyaltyRewardAllocations||{}})});order.loyaltySync={status:'synced',at:Date.now(),events:data.events||[]};await window.PrilavokCore.Storage.set('orders',state.orders);if(order.returnedAt&&order.loyaltyReversal?.status==='pending')await reverseOrderLoyalty(order)}
+ catch(e){order.loyaltySync={status:'pending',error:String(e?.message||e),at:Date.now()};try{await window.PrilavokCore.Storage.set('orders',state.orders)}catch(storageError){markStorageBroken(storageError)}}
 }
 async function reverseOrderLoyalty(order){
  if(!order?.customer?.id||order.loyaltyReversal?.status==='sending'||order.loyaltyReversal?.status==='synced')return;
  order.loyaltyReversal={...(order.loyaltyReversal||{}),status:'sending',attemptedAt:Date.now()};
- try{await loyaltyApi('/api/loyalty/reversal',{method:'POST',body:JSON.stringify({orderId:order.id,customerId:order.customer.id})});order.loyaltyReversal={status:'synced',at:Date.now()};saveKey('orders',state.orders)}catch(e){order.loyaltyReversal={status:'pending',error:String(e?.message||e),at:Date.now()};saveKey('orders',state.orders)}
+ try{await window.PrilavokCore.Storage.set('orders',state.orders)}catch(e){order.loyaltyReversal={...(order.loyaltyReversal||{}),status:'pending',error:'local-persist-before-send',at:Date.now()};markStorageBroken(e);return}
+ try{await loyaltyApi('/api/loyalty/reversal',{method:'POST',body:JSON.stringify({orderId:order.id,customerId:order.customer.id})});order.loyaltyReversal={status:'synced',at:Date.now()};await window.PrilavokCore.Storage.set('orders',state.orders)}catch(e){order.loyaltyReversal={status:'pending',error:String(e?.message||e),at:Date.now()};try{await window.PrilavokCore.Storage.set('orders',state.orders)}catch(storageError){markStorageBroken(storageError)}}
 }
 async function settleReturnedOrderLoyalty(order){
  if(!order?.customer?.id||!order.returnedAt)return;

@@ -4,5 +4,5 @@
 - [x] Keep diagnostic non-authoritative.
 - [x] Add no-mutation source assertion.
 - [x] Confirm no Room schema/version change.
-- [ ] Run full Node tests, parity, lint and Android debug build.
+- [x] Run full Node tests, parity, lint and Android debug build.
 - [ ] Physical crash/restart parity check on Android.
