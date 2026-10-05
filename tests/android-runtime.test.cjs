@@ -269,7 +269,7 @@ test('native network transport is present but cannot take authority from legacy 
  const transport=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/network/NativeNetworkTransport.kt'),'utf8');
  const bridge=fs.readFileSync(path.join(root,'app/src/main/assets/pos/native-network-shadow.js'),'utf8');
  const webOrders=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/web-orders.js'),'utf8');
- assert.match(gradle,/okhttp:4\.12\.0/);assert.match(transport,/class NativeNetworkTransport/);assert.match(transport,/authoritative", false/);assert.match(transport,/sseEnabled", false/);assert.match(bridge,/authoritative:false/);assert.match(bridge,/probe:/);assert.match(webOrders,/new EventSource/);assert.match(webOrders,/accept/);
+ assert.match(gradle,/okhttp:4\.12\.0/);assert.match(transport,/class NativeNetworkTransport/);assert.match(transport,/authoritative"\s*,\s*false/);assert.match(transport,/businessHandlers","legacy"/);assert.match(bridge,/authoritative:false/);assert.match(bridge,/probe:/);assert.match(webOrders,/new EventSource/);assert.match(webOrders,/accept/);
 });
 
 
@@ -277,5 +277,5 @@ test('native SSE shadow observes and reconnects without owning web-order busines
  const transport=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/network/NativeNetworkTransport.kt'),'utf8');
  const bridge=fs.readFileSync(path.join(root,'app/src/main/assets/pos/native-network-shadow.js'),'utf8');
  const webOrders=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/web-orders.js'),'utf8');
- assert.match(transport,/startShadowSse/);assert.match(transport,/reconnects/);assert.match(transport,/30000L/);assert.match(transport,/shadow-observed/);assert.match(transport,/authoritative",false/);assert.match(bridge,/startShadowSse/);assert.match(bridge,/shadowStatus/);assert.match(webOrders,/new EventSource/);assert.doesNotMatch(transport,/PrilavokCore|parked|webOrderAcceptances/);
+ assert.match(transport,/startShadowSse/);assert.match(transport,/reconnects/);assert.match(transport,/30000L/);assert.match(transport,/shadow-observed/);assert.match(transport,/authoritative"\s*,\s*false/);assert.match(bridge,/startShadowSse/);assert.match(bridge,/shadowStatus/);assert.match(webOrders,/new EventSource/);assert.doesNotMatch(transport,/PrilavokCore|parked|webOrderAcceptances/);
 });
