@@ -102,7 +102,39 @@ class NativeStorageMirror(
                 }
             }
 
-            "webAcceptanceParity" -> scope.launch(Dispatchers.IO) {\n                runCatching {\n                    val shadow = shadowDao.get("webOrderAcceptances")?.payload ?: "{}"\n                    val source = JSONObject(shadow)\n                    val nativeRows = webAcceptanceDao.all()\n                    val nativeById = nativeRows.associateBy { it.webOrderId }\n                    val legacyIds = mutableSetOf<String>()\n                    val stageMismatches = JSONArray()\n                    for (id in source.keys()) {\n                        legacyIds += id\n                        val legacyStage = source.optJSONObject(id)?.optString("stage").orEmpty()\n                        val nativeStage = nativeById[id]?.stage\n                        if (nativeStage != legacyStage) stageMismatches.put(id)\n                    }\n                    val missingNative = JSONArray()\n                    legacyIds.filter { it !in nativeById }.sorted().forEach { missingNative.put(it) }\n                    val extraNative = JSONArray()\n                    nativeById.keys.filter { it !in legacyIds }.sorted().forEach { extraNative.put(it) }\n                    JSONObject().put("requestId", requestId).put("ok", true).put("authoritative", false)\n                        .put("legacyCount", legacyIds.size).put("nativeCount", nativeRows.size)\n                        .put("missingNativeIds", missingNative).put("extraNativeIds", extraNative)\n                        .put("stageMismatches", stageMismatches)\n                        .put("matches", missingNative.length() == 0 && extraNative.length() == 0 && stageMismatches.length() == 0)\n                }.onSuccess(onResult).onFailure { result(requestId, false, it.localizedMessage ?: "web acceptance parity failed") }\n            }\n\n            "stockEventParity" -> scope.launch(Dispatchers.IO) {
+            "webAcceptanceParity" -> scope.launch(Dispatchers.IO) {
+                runCatching {
+                    val shadow = shadowDao.get("webOrderAcceptances")?.payload ?: "{}"
+                    val source = JSONObject(shadow)
+                    val nativeRows = webAcceptanceDao.all()
+                    val nativeById = nativeRows.associateBy { it.webOrderId }
+                    val legacyIds = mutableSetOf<String>()
+                    val stageMismatches = JSONArray()
+                    for (id in source.keys()) {
+                        legacyIds += id
+                        val legacyStage = source.optJSONObject(id)?.optString("stage").orEmpty()
+                        val nativeStage = nativeById[id]?.stage
+                        if (nativeStage != legacyStage) stageMismatches.put(id)
+                    }
+                    val missingNative = JSONArray()
+                    legacyIds.filter { it !in nativeById }.sorted().forEach { missingNative.put(it) }
+                    val extraNative = JSONArray()
+                    nativeById.keys.filter { it !in legacyIds }.sorted().forEach { extraNative.put(it) }
+                    JSONObject()
+                        .put("requestId", requestId)
+                        .put("ok", true)
+                        .put("authoritative", false)
+                        .put("legacyCount", legacyIds.size)
+                        .put("nativeCount", nativeRows.size)
+                        .put("missingNativeIds", missingNative)
+                        .put("extraNativeIds", extraNative)
+                        .put("stageMismatches", stageMismatches)
+                        .put("matches", missingNative.length() == 0 && extraNative.length() == 0 && stageMismatches.length() == 0)
+                }.onSuccess(onResult)
+                    .onFailure { result(requestId, false, it.localizedMessage ?: "web acceptance parity failed") }
+            }
+
+            "stockEventParity" -> scope.launch(Dispatchers.IO) {
                 val sourceKey = payload.optString("sourceKey")
                 runCatching { stockEventRepository.parityReport(sourceKey) }
                     .onSuccess { report -> report.put("requestId", requestId); onResult(report) }
