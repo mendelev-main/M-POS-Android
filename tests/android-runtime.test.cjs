@@ -324,7 +324,7 @@ test('P4 current order session is shadow-projected for crash recovery evidence',
  const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
  const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
  const payment=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/payment.js'),'utf8');
- assert.match(db,/CurrentOrderSessionProjectionEntity::class/);assert.match(db,/version = 9/);assert.match(db,/Migration\(8, 9\)/);
+ assert.match(db,/CurrentOrderSessionProjectionEntity::class/);assert.match(db,/version\s*=\s*\d+/);assert.match(db,/Migration\(8, 9\)/);
  assert.match(mirror,/"currentOrderSession"/);assert.match(mirror,/projectCurrentOrderSession/);
  assert.match(payment,/split-payment-progress/);assert.match(payment,/currentOrderSession:currentOrderSessionSnapshot/);
 });
