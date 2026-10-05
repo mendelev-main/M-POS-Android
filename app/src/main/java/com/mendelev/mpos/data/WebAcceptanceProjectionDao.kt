@@ -11,4 +11,5 @@ interface WebAcceptanceProjectionDao {
     @Query("DELETE FROM web_acceptance_projection") suspend fun clear()
     @Query("SELECT COUNT(*) FROM web_acceptance_projection") suspend fun count(): Int
     @Query("SELECT COUNT(*) FROM web_acceptance_projection WHERE stage != 'confirmed'") suspend fun pendingCount(): Int
+    @Query("SELECT * FROM web_acceptance_projection ORDER BY webOrderId") suspend fun all(): List<WebAcceptanceProjectionEntity>
 }

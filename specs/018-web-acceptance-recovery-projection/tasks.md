@@ -5,6 +5,7 @@
 - [x] Expose total and pending diagnostic counts.
 - [x] Keep legacy recovery authoritative.
 - [x] Add architecture test.
-- [ ] Run Node tests, lint and debug build.
+- [x] Run Node tests, lint and debug build.
+- [x] Add non-authoritative ID/stage parity diagnostics.
 - [ ] Physical restart from prepared/local recovery states.
 - [ ] Native outbox/recovery authority remains blocked.

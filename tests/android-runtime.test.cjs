@@ -315,3 +315,6 @@ test('P4 WEB acceptance journal is shadow-projected without taking recovery auth
  assert.match(mirror,/webOrderAcceptances/);assert.match(mirror,/projectWebAcceptances/);assert.match(mirror,/pendingWebAcceptances/);
  assert.match(web,/stage:existing\?'local':'prepared'/);assert.match(web,/record\.stage='local'/);assert.match(web,/record\.stage='confirmed'/);assert.match(web,/ACK recovery is best-effort/);
 });
+
+
+test("P4 WEB acceptance parity compares IDs and stages without recovery authority",()=>{ const dao=fs.readFileSync(path.join(root,"app/src/main/java/com/mendelev/mpos/data/WebAcceptanceProjectionDao.kt"),"utf8"); const mirror=fs.readFileSync(path.join(root,"app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt"),"utf8"); assert.match(dao,/suspend fun all\(\)/); assert.match(mirror,/"webAcceptanceParity"/); assert.match(mirror,/missingNativeIds/); assert.match(mirror,/extraNativeIds/); assert.match(mirror,/stageMismatches/); assert.match(mirror,/authoritative", false/); });
