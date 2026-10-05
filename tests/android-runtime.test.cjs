@@ -285,6 +285,6 @@ test('SSE parity diagnostics fingerprint legacy raw event data without changing 
  const bridge=fs.readFileSync(path.join(root,'app/src/main/assets/pos/native-network-shadow.js'),'utf8');
  const webOrders=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/web-orders.js'),'utf8');
  assert.match(bridge,/observeLegacySse/);assert.match(bridge,/crypto\.subtle\.digest\('SHA-256'/);assert.match(bridge,/parityStatus/);assert.match(bridge,/authoritative:false/);
- assert.match(webOrders,/observeLegacySse\?\.\(ev\.data\|\|''\);const d=JSON\.parse\(ev\.data\|\|'\{\}'\)/);
- assert.match(webOrders,/new EventSource/);
+ assert.match(bridge,/NativeEventSource=global\.EventSource/);assert.match(bridge,/addEventListener\('message'/);
+ assert.doesNotMatch(webOrders,/observeLegacySse/);assert.match(webOrders,/new EventSource/);
 });

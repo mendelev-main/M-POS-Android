@@ -7,6 +7,15 @@
  async function sha256(value){if(!global.crypto?.subtle)return '';const bytes=new TextEncoder().encode(String(value||''));const digest=await global.crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('')}
  async function observeLegacySse(raw){parity.legacyEvents++;parity.legacyHash=await sha256(raw);return parity.legacyHash}
  function parityStatus(){return {...parity,authoritative:false}}
+ const NativeEventSource=global.EventSource;
+ if(NativeEventSource){
+  global.EventSource=function(url,config){
+   const source=new NativeEventSource(url,config);
+   source.addEventListener('message',event=>{observeLegacySse(event.data||'')});
+   return source;
+  };
+  global.EventSource.prototype=NativeEventSource.prototype;
+ }
  global.MPosCore=global.MPosCore||{};
  global.MPosCore.Network=Object.freeze({authoritative:false,sseEnabled:false,describe:()=>request('describe'),probe:(backendUrl,deviceKey)=>request('probe',{backendUrl,deviceKey}),startShadowSse:(backendUrl,deviceKey)=>request('startShadowSse',{backendUrl,deviceKey}),stopShadowSse:()=>request('stopShadowSse'),shadowStatus:()=>request('shadowStatus'),observeLegacySse,parityStatus});
 })(window);
