@@ -1541,7 +1541,6 @@ async function loadAll(){
   void flushOperationalOutbox();
   startOperationalSchedule();
   void recoverWebAcceptanceJournal().catch(e=>console.warn('WEB acceptance recovery:',e));
-  void recoverWebOrderReadyJournal().catch(e=>console.warn('WEB ready recovery:',e));
 }
 function categoryLayoutSnapshot(){
   return {
@@ -1900,7 +1899,7 @@ async function flushOperationalOutbox(){
 }
 function operationalReconnect(){
   if(!state.loaded||document.hidden||window._availabilityAppActive===false)return;
-  operationalFailures=0;void recoverWebAcceptanceJournal();void recoverWebOrderReadyJournal();void retryPendingLoyalty();
+  operationalFailures=0;void recoverWebAcceptanceJournal();void retryPendingLoyalty();
   if((state.operationalOutbox||[]).some(x=>x.type==='snapshot'))void flushOperationalOutbox();
 }
 function startOperationalSchedule(){
