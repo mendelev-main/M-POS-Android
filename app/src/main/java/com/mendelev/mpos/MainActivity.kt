@@ -20,7 +20,7 @@ import androidx.webkit.WebViewFeature
 import com.mendelev.mpos.backup.BackupManager
 import com.mendelev.mpos.bridge.NativeBridgeRouter
 import com.mendelev.mpos.data.MPosDatabase
-import com.mendelev.mpos.data.NativeStorageMirror
+import com.mendelev.mpos.data.MPosStorageMirror
 import com.mendelev.mpos.diagnostics.MPosDiagnosticBreadcrumbStore
 import com.mendelev.mpos.diagnostics.MPosDiagnosticExporter
 import com.mendelev.mpos.media.ProductImageStore
@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var shares: ReportShareManager
     private lateinit var telegram: TelegramClient
     private lateinit var nativeSettings: NativeSettingsStore
-    private lateinit var nativeStorageMirror: NativeStorageMirror
+    private lateinit var nativeStorageMirror: MPosStorageMirror
     private lateinit var nativeNetworkTransport: NativeNetworkTransport
     private lateinit var diagnostics: MPosDiagnosticBreadcrumbStore
     private var diagnosticExportPending = false
@@ -97,7 +97,7 @@ class MainActivity : AppCompatActivity() {
         shares = ReportShareManager(this)
         telegram = TelegramClient(shares::createWarehousePdf, ::telegramResult, ::telegramMonthlyResult, ::telegramShiftResult)
         nativeSettings = NativeSettingsStore(this, ::nativeSettingsResult)
-        nativeStorageMirror = NativeStorageMirror(MPosDatabase.get(this), lifecycleScope, ::nativeStorageResult)
+        nativeStorageMirror = MPosStorageMirror(MPosDatabase.get(this), lifecycleScope, ::nativeStorageResult)
         nativeNetworkTransport = NativeNetworkTransport(lifecycleScope, ::nativeNetworkResult, ::nativeNetworkEvent)
         router = NativeBridgeRouter(this, photos, backup, nativeSettings, nativeStorageMirror, nativeNetworkTransport)
 
@@ -164,6 +164,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         nativeNetworkTransport.close()
+        if (::nativeStorageMirror.isInitialized) nativeStorageMirror.close()
         if (::webView.isInitialized) {
             webView.stopLoading()
             webView.loadUrl("about:blank")

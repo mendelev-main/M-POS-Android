@@ -16,8 +16,8 @@
     const parity=await core.Catalog.parity();
     lastComparison={
       at:Date.now(),
-      ok:!!parity?.ok,
-      matches:!!parity?.matches,
+      ok:!!parity?.ok&&parity?.shadowCaughtUp!==false,
+      matches:!!parity?.matches&&parity?.shadowCaughtUp!==false,
       legacyProductCount:parity?.legacyProductCount??null,
       nativeProductCount:parity?.nativeProductCount??null,
       legacyCategoryCount:parity?.legacyCategoryCount??null,

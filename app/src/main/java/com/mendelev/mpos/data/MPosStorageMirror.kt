@@ -1,17 +1,70 @@
 package com.mendelev.mpos.data
 
-import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.room.withTransaction
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import org.json.JSONArray
 import org.json.JSONObject
 
-class NativeStorageMirror(
+class MPosStorageMirror(
     private val database: MPosDatabase,
-    private val scope: LifecycleCoroutineScope,
+    scope: CoroutineScope,
     private val onResult: (JSONObject) -> Unit,
 ) {
+    private val queue = MPosStorageQueue(scope)
+    private val writeState = MPosShadowWriteState()
+
+    private data class Command(val action: String, val requestId: String, val key: String, val serialized: String?, val sourceKey: String, val version: Long?)
+
+    fun handle(payload: JSONObject) {
+        val action = payload.optString("action")
+        val key = payload.optString("key")
+        val command = Command(action, payload.optString("requestId"), key, payload.opt("payload") as? String, payload.optString("sourceKey"),
+            if (key.isNotBlank() && action in setOf("put", "remove")) writeState.request(key) else null)
+        if (!queue.submit({ result(command.requestId, false, "native shadow command failed") }) { dispatch(command) }) {
+            result(command.requestId, false, "native shadow queue is full or closed")
+        }
+    }
+
+    fun close() = queue.close()
+
+    private suspend fun <T> attempt(block: suspend () -> T): Result<T> = try {
+        Result.success(block())
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (error: Exception) {
+        Result.failure(error)
+    }
+
+    private suspend fun <T> readAttempt(action: String, block: suspend () -> T): Result<T> = attempt {
+        val value = database.withTransaction {
+            requireCaughtUp(action)
+            block()
+        }
+        requireCaughtUp(action)
+        value
+    }
+
+    private fun emitResult(value: JSONObject) {
+        value.put("shadowCaughtUp", writeState.caughtUp()).put("pendingShadowKeys", writeState.pendingKeys())
+        onResult(value)
+    }
+
+    private fun requireCaughtUp(action: String) {
+        val keys = when (action) {
+            "catalogSnapshot", "catalogParity" -> setOf("products")
+            "employeeParity" -> setOf("employees")
+            "shiftParity" -> setOf("shifts")
+            "orderParity" -> setOf("orders")
+            "parkedOrderParity" -> setOf("parked")
+            "stockEventParity" -> setOf("receivings", "inventoryHistory")
+            "webAcceptanceParity" -> setOf("webOrderAcceptances")
+            "webReadyParity" -> setOf("webOrderReadyJournal")
+            "criticalStorageJournalParity" -> setOf("criticalStorageJournal")
+            else -> return
+        }
+        check(writeState.caughtUp(keys)) { "native shadow has unapplied changes" }
+    }
     private val shadowDao = database.legacyStorageShadowDao()
     private val catalogDao = database.catalogProjectionDao()
     private val catalogRepository = MPosCatalogRepository(database)
@@ -30,89 +83,94 @@ class NativeStorageMirror(
     private val webReadyDao = database.webReadyProjectionDao()
     private val criticalJournalDao = database.criticalStorageJournalProjectionDao()
 
-    fun handle(payload: JSONObject) {
-        val requestId = payload.optString("requestId")
-        when (payload.optString("action")) {
+    private suspend fun dispatch(command: Command) {
+        val requestId = command.requestId
+        try {
+            requireCaughtUp(command.action)
+        } catch (_: IllegalStateException) {
+            result(requestId, false, "native shadow has unapplied changes")
+            return
+        }
+        when (command.action) {
             "put" -> {
-                val key = payload.optString("key")
-                val serialized = payload.optString("payload", null)
+                val key = command.key
+                val serialized = command.serialized
                 if (key.isBlank() || serialized == null) {
                     result(requestId, false, "invalid shadow storage payload")
                     return
                 }
-                scope.launch(Dispatchers.IO) {
-                    runCatching {
-                        shadowDao.upsert(
-                            LegacyStorageShadowEntity(
-                                key = key,
-                                payload = serialized,
-                                updatedAt = System.currentTimeMillis(),
+                run {
+                    readAttempt(command.action) {
+                        database.withTransaction {
+                            shadowDao.upsert(
+                                LegacyStorageShadowEntity(key, serialized, System.currentTimeMillis())
                             )
-                        )
-                        val projectionOk = when (key) {
-                            "products" -> runCatching { projectCatalog(serialized) }.isSuccess
-                            "employees" -> runCatching { projectEmployees(serialized) }.isSuccess
-                            "shifts" -> runCatching { projectShifts(serialized) }.isSuccess
-                            "orders" -> runCatching { projectOrders(serialized) }.isSuccess
-                            "parked" -> runCatching { projectParkedOrders(serialized) }.isSuccess
-                            "receivings", "inventoryHistory" -> runCatching { projectStockEvents(key, serialized) }.isSuccess
-                            "webOrderAcceptances" -> runCatching { projectWebAcceptances(serialized) }.isSuccess
-                            "currentOrderSession" -> runCatching { projectCurrentOrderSession(serialized) }.isSuccess
-                            "webOrderReadyJournal" -> runCatching { projectWebReadyJournal(serialized) }.isSuccess
-                            "criticalStorageJournal" -> runCatching { projectCriticalStorageJournal(serialized) }.isSuccess
-                            else -> true
+                            when (key) {
+                                "products" -> projectCatalog(serialized)
+                                "employees" -> projectEmployees(serialized)
+                                "shifts" -> projectShifts(serialized)
+                                "orders" -> projectOrders(serialized)
+                                "parked" -> projectParkedOrders(serialized)
+                                "receivings", "inventoryHistory" -> projectStockEvents(key, serialized)
+                                "webOrderAcceptances" -> projectWebAcceptances(serialized)
+                                "currentOrderSession" -> projectCurrentOrderSession(serialized)
+                                "webOrderReadyJournal" -> projectWebReadyJournal(serialized)
+                                "criticalStorageJournal" -> projectCriticalStorageJournal(serialized)
+                            }
                         }
-                        result(requestId, true, projectionOk = projectionOk)
-                    }.onFailure {
-                        result(requestId, false, it.localizedMessage ?: "shadow write failed")
-                    }
+                        writeState.commit(key, command.version!!)
+                    }.onSuccess { result(requestId, true, projectionOk = true) }
+                        .onFailure { result(requestId, false, "shadow write or projection failed", projectionOk = false) }
                 }
             }
 
             "remove" -> {
-                val key = payload.optString("key")
+                val key = command.key
                 if (key.isBlank()) {
                     result(requestId, false, "invalid shadow storage key")
                     return
                 }
-                scope.launch(Dispatchers.IO) {
-                    runCatching {
-                        shadowDao.delete(key)
-                        when (key) {
-                            "products" -> database.withTransaction {
-                                catalogDao.clearProducts()
-                                catalogDao.clearCategories()
+                run {
+                    readAttempt(command.action) {
+                        database.withTransaction {
+                            shadowDao.delete(key)
+                            when (key) {
+                                "products" -> database.withTransaction {
+                                    catalogDao.clearProducts()
+                                    catalogDao.clearCategories()
+                                }
+                                "employees" -> employeeDao.clear()
+                                "shifts" -> database.withTransaction {
+                                    shiftDao.clearMovements()
+                                    shiftDao.clearShifts()
+                                }
+                                "orders" -> database.withTransaction {
+                                    orderDao.clearPayments()
+                                    orderDao.clearLines()
+                                    orderDao.clearOrders()
+                                }
+                                "parked" -> database.withTransaction {
+                                    parkedDao.clearLines()
+                                    parkedDao.clearOrders()
+                                }
+                                "receivings", "inventoryHistory" -> database.withTransaction {
+                                    stockEventDao.clearLines(key)
+                                    stockEventDao.clearEvents(key)
+                                }
+                                "webOrderAcceptances" -> webAcceptanceDao.clear()
+                                "currentOrderSession" -> currentOrderSessionDao.clear()
+                                "webOrderReadyJournal" -> webReadyDao.clear()
+                                "criticalStorageJournal" -> criticalJournalDao.clear()
                             }
-                            "employees" -> employeeDao.clear()
-                            "shifts" -> database.withTransaction {
-                                shiftDao.clearMovements()
-                                shiftDao.clearShifts()
-                            }
-                            "orders" -> database.withTransaction {
-                                orderDao.clearPayments()
-                                orderDao.clearLines()
-                                orderDao.clearOrders()
-                            }
-                            "parked" -> database.withTransaction {
-                                parkedDao.clearLines()
-                                parkedDao.clearOrders()
-                            }
-                            "receivings", "inventoryHistory" -> database.withTransaction {
-                                stockEventDao.clearLines(key)
-                                stockEventDao.clearEvents(key)
-                            }
-                            "webOrderAcceptances" -> webAcceptanceDao.clear()
-                            "currentOrderSession" -> currentOrderSessionDao.clear()
-                            "webOrderReadyJournal" -> webReadyDao.clear()
-                            "criticalStorageJournal" -> criticalJournalDao.clear()
                         }
+                        writeState.commit(key, command.version!!)
                     }.onSuccess { result(requestId, true) }
                         .onFailure { result(requestId, false, it.localizedMessage ?: "shadow delete failed") }
                 }
             }
 
-            "criticalStorageJournalParity" -> scope.launch(Dispatchers.IO) {
-                runCatching {
+            "criticalStorageJournalParity" -> run {
+                readAttempt(command.action) {
                     val shadow = shadowDao.get("criticalStorageJournal")?.payload
                     val source = shadow?.takeUnless { it == "null" }?.let(::JSONObject)
                     val native = criticalJournalDao.current()
@@ -140,12 +198,12 @@ class NativeStorageMirror(
                         .put("typeMatches", typeMatches)
                         .put("writeKeysMatch", keysMatch)
                         .put("matches", presenceMatches && idMatches && typeMatches && keysMatch)
-                }.onSuccess(onResult)
+                }.onSuccess(::emitResult)
                     .onFailure { result(requestId, false, it.localizedMessage ?: "critical storage journal parity failed") }
             }
 
-            "webAcceptanceParity" -> scope.launch(Dispatchers.IO) {
-                runCatching {
+            "webAcceptanceParity" -> run {
+                readAttempt(command.action) {
                     val shadow = shadowDao.get("webOrderAcceptances")?.payload ?: "{}"
                     val source = JSONObject(shadow)
                     val nativeRows = webAcceptanceDao.all()
@@ -172,12 +230,12 @@ class NativeStorageMirror(
                         .put("extraNativeIds", extraNative)
                         .put("stageMismatches", stageMismatches)
                         .put("matches", missingNative.length() == 0 && extraNative.length() == 0 && stageMismatches.length() == 0)
-                }.onSuccess(onResult)
+                }.onSuccess(::emitResult)
                     .onFailure { result(requestId, false, it.localizedMessage ?: "web acceptance parity failed") }
             }
 
-            "webReadyParity" -> scope.launch(Dispatchers.IO) {
-                runCatching {
+            "webReadyParity" -> run {
+                readAttempt(command.action) {
                     val shadow = shadowDao.get("webOrderReadyJournal")?.payload ?: "{}"
                     val source = JSONObject(shadow)
                     val nativeRows = webReadyDao.all()
@@ -204,73 +262,73 @@ class NativeStorageMirror(
                         .put("extraNativeIds", extraNative)
                         .put("stageMismatches", stageMismatches)
                         .put("matches", missingNative.length() == 0 && extraNative.length() == 0 && stageMismatches.length() == 0)
-                }.onSuccess(onResult)
+                }.onSuccess(::emitResult)
                     .onFailure { result(requestId, false, it.localizedMessage ?: "web ready parity failed") }
             }
 
-            "stockEventParity" -> scope.launch(Dispatchers.IO) {
-                val sourceKey = payload.optString("sourceKey")
-                runCatching { stockEventRepository.parityReport(sourceKey) }
-                    .onSuccess { report -> report.put("requestId", requestId); onResult(report) }
+            "stockEventParity" -> run {
+                val sourceKey = command.sourceKey
+                readAttempt(command.action) { stockEventRepository.parityReport(sourceKey) }
+                    .onSuccess { report -> report.put("requestId", requestId); emitResult(report) }
                     .onFailure { result(requestId, false, it.localizedMessage ?: "stock event parity failed") }
             }
 
-            "parkedOrderParity" -> scope.launch(Dispatchers.IO) {
-                runCatching { parkedRepository.parityReport() }
+            "parkedOrderParity" -> run {
+                readAttempt(command.action) { parkedRepository.parityReport() }
                     .onSuccess { report ->
                         report.put("requestId", requestId)
-                        onResult(report)
+                        emitResult(report)
                     }
                     .onFailure { result(requestId, false, it.localizedMessage ?: "parked order parity failed") }
             }
 
-            "orderParity" -> scope.launch(Dispatchers.IO) {
-                runCatching { orderRepository.parityReport() }
+            "orderParity" -> run {
+                readAttempt(command.action) { orderRepository.parityReport() }
                     .onSuccess { report ->
                         report.put("requestId", requestId)
-                        onResult(report)
+                        emitResult(report)
                     }
                     .onFailure { result(requestId, false, it.localizedMessage ?: "order parity failed") }
             }
 
-            "shiftParity" -> scope.launch(Dispatchers.IO) {
-                runCatching { shiftRepository.parityReport() }
+            "shiftParity" -> run {
+                readAttempt(command.action) { shiftRepository.parityReport() }
                     .onSuccess { report ->
                         report.put("requestId", requestId)
-                        onResult(report)
+                        emitResult(report)
                     }
                     .onFailure { result(requestId, false, it.localizedMessage ?: "shift parity failed") }
             }
 
-            "employeeParity" -> scope.launch(Dispatchers.IO) {
-                runCatching { employeeRepository.parityReport() }
+            "employeeParity" -> run {
+                readAttempt(command.action) { employeeRepository.parityReport() }
                     .onSuccess { report ->
                         report.put("requestId", requestId)
-                        onResult(report)
+                        emitResult(report)
                     }
                     .onFailure { result(requestId, false, it.localizedMessage ?: "employee parity failed") }
             }
 
-            "catalogSnapshot" -> scope.launch(Dispatchers.IO) {
-                runCatching { catalogRepository.snapshot() }
+            "catalogSnapshot" -> run {
+                readAttempt(command.action) { catalogRepository.snapshot() }
                     .onSuccess { snapshot ->
                         snapshot.put("requestId", requestId)
-                        onResult(snapshot)
+                        emitResult(snapshot)
                     }
                     .onFailure { result(requestId, false, it.localizedMessage ?: "catalog snapshot failed") }
             }
 
-            "catalogParity" -> scope.launch(Dispatchers.IO) {
-                runCatching { catalogRepository.parityReport() }
+            "catalogParity" -> run {
+                readAttempt(command.action) { catalogRepository.parityReport() }
                     .onSuccess { report ->
                         report.put("requestId", requestId)
-                        onResult(report)
+                        emitResult(report)
                     }
                     .onFailure { result(requestId, false, it.localizedMessage ?: "catalog parity failed") }
             }
 
-            "stats" -> scope.launch(Dispatchers.IO) {
-                runCatching {
+            "stats" -> run {
+                readAttempt(command.action) {
                     listOf(
                         shadowDao.count(),
                         catalogDao.productCount(),
@@ -289,7 +347,7 @@ class NativeStorageMirror(
                         webAcceptanceDao.pendingCount(),
                     )
                 }.onSuccess { counts ->
-                    onResult(
+                    emitResult(
                         JSONObject()
                             .put("requestId", requestId)
                             .put("ok", true)
@@ -712,6 +770,6 @@ class NativeStorageMirror(
             .put("authoritative", false)
         if (message != null) result.put("message", message)
         if (projectionOk != null) result.put("projectionOk", projectionOk)
-        onResult(result)
+        emitResult(result)
     }
 }

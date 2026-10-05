@@ -6,6 +6,7 @@
 |---|---|---|
 | POS interface and business modules | implemented from iPad commit `44fbf37` | Screenshot and interaction comparison on multiple tablet sizes, aspect ratios and densities |
 | Local keys and JSON records | implemented unchanged | Restart, storage failure and large-data checks |
+| Ordered transactional Room shadow | implemented, spec 035; raw/projection writes and deletes are atomic; bounded FIFO, stale diagnostic guards | Physical rapid writes, process exit during projection, backpressure/large histories and restore/re-mirror parity; no authority cutover |
 | Products, recipes and stock | web runtime implemented | Full physical sale/return matrix |
 | Payments, receipts and shifts | web runtime and native shift PDF printing implemented | Cash/card/split, restart recovery and printed output |
 | Purchasing, receiving and inventory | web runtime implemented | Weighted cost, draft restart and reports |

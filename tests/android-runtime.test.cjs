@@ -74,7 +74,7 @@ test('Room shadow storage preserves legacy keys without becoming authoritative',
  const appBuild=fs.readFileSync(path.join(root,'app/build.gradle.kts'),'utf8');
  const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
  const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/LegacyStorageShadowEntity.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  const adapter=fs.readFileSync(path.join(assets,'native-storage-shadow.js'),'utf8');
  assert.match(appBuild,/androidx\.room:room-runtime/);
  assert.match(db,/@Database/);
@@ -94,13 +94,13 @@ test('native catalog projection is structured, migrated, and non-authoritative',
  const product=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/ProductProjectionEntity.kt'),'utf8');
  const category=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/CategoryProjectionEntity.kt'),'utf8');
  const dao=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/CatalogProjectionDao.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  assert.match(db,/Migration\(1,\s*2\)/);
  assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
  assert.match(product,/tableName\s*=\s*"product_projection"/);
  assert.match(category,/tableName\s*=\s*"category_projection"/);
  assert.match(dao,/clearProducts/);
- assert.match(mirror,/"products"\s*->\s*runCatching\s*\{\s*projectCatalog\(serialized\)/);
+ assert.match(mirror,/"products"\s*->\s*projectCatalog\(serialized\)/);
  assert.match(mirror,/projectCatalog/);
  assert.match(mirror,/"Без категории"/);
  assert.match(mirror,/authoritative", false/);
@@ -110,7 +110,7 @@ test('native catalog projection is structured, migrated, and non-authoritative',
 test('M POS catalog repository provides non-authoritative parity diagnostics',()=>{
  const repository=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosCatalogRepository.kt'),'utf8');
  const dao=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/CatalogProjectionDao.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  const adapter=fs.readFileSync(path.join(assets,'native-storage-shadow.js'),'utf8');
  assert.match(repository,/class MPosCatalogRepository/);
  assert.match(repository,/parityReport/);
@@ -135,7 +135,7 @@ test('new migration rules enforce M POS naming while retaining explicit compatib
 
 test('native catalog read contract is feature-gated and parity-protected',()=>{
  const repository=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosCatalogRepository.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  const adapter=fs.readFileSync(path.join(assets,'native-storage-shadow.js'),'utf8');
  assert.match(repository,/suspend fun snapshot/);
  assert.match(repository,/catalog projection parity is not confirmed/);
@@ -165,7 +165,7 @@ test('employee projection uses M POS naming and explicit Room migration',()=>{
  const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/EmployeeProjectionEntity.kt'),'utf8');
  const dao=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/EmployeeProjectionDao.kt'),'utf8');
  const repository=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosEmployeeRepository.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  assert.match(db,/Migration\(2,\s*3\)/);
  assert.match(entity,/tableName\s*=\s*"employee_projection"/);
  assert.match(dao,/suspend fun all/);
@@ -173,7 +173,7 @@ test('employee projection uses M POS naming and explicit Room migration',()=>{
  assert.match(repository,/mismatchedEmployeeIds/);
  assert.match(repository,/authoritative", false/);
  assert.match(mirror,/key\) \{/);
- assert.match(mirror,/"employees" -> runCatching \{ projectEmployees/);
+ assert.match(mirror,/"employees" -> projectEmployees/);
  assert.match(mirror,/"employeeParity"/);
  assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
 });
@@ -185,7 +185,7 @@ test('shift and cash movement projections use explicit Room migration and remain
  const movement=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/CashMovementProjectionEntity.kt'),'utf8');
  const dao=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/ShiftProjectionDao.kt'),'utf8');
  const repository=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosShiftRepository.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  assert.match(db,/Migration\(3,\s*4\)/);
  assert.match(shift,/tableName\s*=\s*"shift_projection"/);
  assert.match(movement,/tableName\s*=\s*"cash_movement_projection"/);
@@ -196,7 +196,7 @@ test('shift and cash movement projections use explicit Room migration and remain
  assert.match(repository,/mismatchedShiftIds/);
  assert.match(repository,/mismatchedMovementIds/);
  assert.match(repository,/authoritative", false/);
- assert.match(mirror,/"shifts"\s*->\s*runCatching\s*\{\s*projectShifts\(serialized\)/);
+ assert.match(mirror,/"shifts"\s*->\s*projectShifts\(serialized\)/);
  assert.match(mirror,/"shiftParity"/);
  assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
 });
@@ -209,7 +209,7 @@ test('orders, lines and payments project through explicit Room migration and rem
  const payment=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/PaymentProjectionEntity.kt'),'utf8');
  const dao=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/OrderProjectionDao.kt'),'utf8');
  const repository=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosOrderRepository.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  assert.match(db,/Migration\(4,\s*5\)/);
  assert.match(order,/tableName\s*=\s*"order_projection"/);
  assert.match(line,/tableName\s*=\s*"order_line_projection"/);
@@ -219,7 +219,7 @@ test('orders, lines and payments project through explicit Room migration and rem
  assert.match(repository,/class MPosOrderRepository/);
  assert.match(repository,/mismatchedOrderIds/);
  assert.match(repository,/authoritative", false/);
- assert.match(mirror,/"orders"\s*->\s*runCatching\s*\{\s*projectOrders\(serialized\)/);
+ assert.match(mirror,/"orders"\s*->\s*projectOrders\(serialized\)/);
  assert.match(mirror,/"orderParity"/);
  assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
 });
@@ -237,7 +237,7 @@ test('parked orders project through explicit Room migration and remain non-autho
  const order=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/ParkedOrderProjectionEntity.kt'),'utf8');
  const line=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/ParkedOrderLineProjectionEntity.kt'),'utf8');
  const repository=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosParkedOrderRepository.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  assert.match(db,/Migration\(5,\s*6\)/);
  assert.match(order,/tableName\s*=\s*"parked_order_projection"/);
  assert.match(line,/tableName\s*=\s*"parked_order_line_projection"/);
@@ -245,7 +245,7 @@ test('parked orders project through explicit Room migration and remain non-autho
  assert.match(repository,/class MPosParkedOrderRepository/);
  assert.match(repository,/mismatchedParkedOrderIds/);
  assert.match(repository,/authoritative", false/);
- assert.match(mirror,/"parked"\s*->\s*runCatching\s*\{\s*projectParkedOrders\(serialized\)/);
+ assert.match(mirror,/"parked"\s*->\s*projectParkedOrders\(serialized\)/);
  assert.match(mirror,/"parkedOrderParity"/);
  assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
 });
@@ -256,7 +256,7 @@ test('warehouse stock events project existing receiving and inventory history wi
  const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/StockEventProjectionEntity.kt'),'utf8');
  const line=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/StockEventLineProjectionEntity.kt'),'utf8');
  const repository=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStockEventRepository.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  assert.match(db,/Migration\(6,\s*7\)/);
  assert.match(entity,/stock_event_projection/); assert.match(line,/stock_event_line_projection/);
  assert.match(repository,/"receivings"/); assert.match(repository,/"inventoryHistory"/);
@@ -309,7 +309,7 @@ test('shadow SSE foreground resume preserves diagnostic counters and hashes',()=
 
 test('P4 WEB acceptance journal is shadow-projected without taking recovery authority',()=>{
  const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  const web=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/web-orders.js'),'utf8');
  assert.match(db,/WebAcceptanceProjectionEntity::class/);assert.match(db,/Migration\(7, 8\)/);assert.match(db,/MIGRATION_7_8/);
  assert.match(mirror,/webOrderAcceptances/);assert.match(mirror,/projectWebAcceptances/);assert.match(mirror,/pendingWebAcceptances/);
@@ -317,12 +317,12 @@ test('P4 WEB acceptance journal is shadow-projected without taking recovery auth
 });
 
 
-test("P4 WEB acceptance parity compares IDs and stages without recovery authority",()=>{ const dao=fs.readFileSync(path.join(root,"app/src/main/java/com/mendelev/mpos/data/WebAcceptanceProjectionDao.kt"),"utf8"); const mirror=fs.readFileSync(path.join(root,"app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt"),"utf8"); assert.match(dao,/suspend fun all\(\)/); assert.match(mirror,/"webAcceptanceParity"/); assert.match(mirror,/missingNativeIds/); assert.match(mirror,/extraNativeIds/); assert.match(mirror,/stageMismatches/); assert.match(mirror,/authoritative", false/); });
+test("P4 WEB acceptance parity compares IDs and stages without recovery authority",()=>{ const dao=fs.readFileSync(path.join(root,"app/src/main/java/com/mendelev/mpos/data/WebAcceptanceProjectionDao.kt"),"utf8"); const mirror=fs.readFileSync(path.join(root,"app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt"),"utf8"); assert.match(dao,/suspend fun all\(\)/); assert.match(mirror,/"webAcceptanceParity"/); assert.match(mirror,/missingNativeIds/); assert.match(mirror,/extraNativeIds/); assert.match(mirror,/stageMismatches/); assert.match(mirror,/authoritative", false/); });
 
 
 test('P4 current order session is shadow-projected for crash recovery evidence',()=>{
  const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  const payment=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/payment.js'),'utf8');
  assert.match(db,/CurrentOrderSessionProjectionEntity::class/);assert.match(db,/version\s*=\s*\d+/);assert.match(db,/Migration\(8, 9\)/);
  assert.match(mirror,/"currentOrderSession"/);assert.match(mirror,/projectCurrentOrderSession/);
@@ -340,7 +340,7 @@ test('P4 WEB ready transition is durable before idempotent retry',()=>{
 test('P4 loyalty recovery status is shadow-projected without native retry authority',()=>{
  const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/OrderProjectionEntity.kt'),'utf8');
  const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  const loyalty=fs.readFileSync(path.join(assets,'Web/js/features/loyalty.js'),'utf8');
  assert.match(entity,/loyaltySyncStatus/);assert.match(entity,/loyaltyReversalStatus/);assert.match(db,/version\s*=\s*\d+/);assert.match(db,/Migration\(9, 10\)/);assert.match(db,/ALTER TABLE order_projection ADD COLUMN loyaltySyncStatus/);assert.match(mirror,/optJSONObject\("loyaltySync"\)/);assert.match(mirror,/optJSONObject\("loyaltyReversal"\)/);
  assert.match(loyalty,/function retryPendingLoyalty/);assert.match(loyalty,/\/api\/loyalty\/sales/);assert.doesNotMatch(mirror,/api\/loyalty\/sales|retryPendingLoyalty/);
@@ -349,7 +349,7 @@ test('P4 loyalty recovery status is shadow-projected without native retry author
 
 test('P4 WEB ready journal is shadow-projected for restart evidence',()=>{
  const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/WebReadyProjectionEntity.kt'),'utf8');
  assert.match(entity,/web_ready_projection/);assert.match(db,/version\s*=\s*\d+/);assert.match(db,/Migration\(10, 11\)/);assert.match(db,/WebReadyProjectionEntity::class/);assert.match(mirror,/webOrderReadyJournal/);assert.match(mirror,/projectWebReadyJournal/);assert.doesNotMatch(mirror,/\/api\/orders\/.*\/ready/);
 });
@@ -357,7 +357,7 @@ test('P4 WEB ready journal is shadow-projected for restart evidence',()=>{
 
 test('P4 WEB ready parity compares IDs and stages without retry authority',()=>{
  const dao=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/WebReadyProjectionDao.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  assert.match(dao,/suspend fun all\(\)/);assert.match(mirror,/"webReadyParity"/);assert.match(mirror,/webOrderReadyJournal/);assert.match(mirror,/missingNativeIds/);assert.match(mirror,/extraNativeIds/);assert.match(mirror,/stageMismatches/);assert.match(mirror,/authoritative", false/);assert.doesNotMatch(mirror,/fetch\(|\/api\/orders\/.*\/ready/);
 });
 
@@ -373,7 +373,7 @@ test('P4 WEB ready never reaches backend before local session and retry state ar
 
 test('P4 critical storage journal is shadow-projected without native replay authority',()=>{
  const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/CriticalStorageJournalProjectionEntity.kt'),'utf8');
  const html=fs.readFileSync(path.join(root,'app/src/main/assets/pos/pos.html'),'utf8');
  assert.match(entity,/critical_storage_journal_projection/);assert.match(db,/version = 12/);assert.match(db,/Migration\(11, 12\)/);assert.match(db,/CriticalStorageJournalProjectionEntity::class/);assert.match(mirror,/"criticalStorageJournal"/);assert.match(mirror,/projectCriticalStorageJournal/);assert.match(mirror,/writeKeys/);assert.match(html,/recoverCriticalStorageJournal\(\)/);assert.match(html,/commitCriticalStorage\(type,writes\)/);assert.doesNotMatch(mirror,/recoverCriticalStorageJournal|commitCriticalStorage/);
@@ -381,7 +381,7 @@ test('P4 critical storage journal is shadow-projected without native replay auth
 
 
 test('P4 critical storage journal parity is read-only and compares recovery identity',()=>{
- const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  assert.match(mirror,/"criticalStorageJournalParity"/);assert.match(mirror,/criticalJournalDao\.current\(\)/);assert.match(mirror,/presenceMatches/);assert.match(mirror,/idMatches/);assert.match(mirror,/typeMatches/);assert.match(mirror,/writeKeysMatch/);assert.match(mirror,/authoritative", false/);
  const parity=mirror.slice(mirror.indexOf('"criticalStorageJournalParity"'),mirror.indexOf('"webAcceptanceParity"'));
  assert.doesNotMatch(parity,/\.set\(|\.replace\(|\.clear\(|commitCriticalStorage|recoverCriticalStorageJournal/);

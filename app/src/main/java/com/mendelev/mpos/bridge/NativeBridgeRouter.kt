@@ -2,7 +2,7 @@ package com.mendelev.mpos.bridge
 
 import com.mendelev.mpos.MainActivity
 import com.mendelev.mpos.backup.BackupManager
-import com.mendelev.mpos.data.NativeStorageMirror
+import com.mendelev.mpos.data.MPosStorageMirror
 import com.mendelev.mpos.media.ProductPhotoManager
 import com.mendelev.mpos.network.NativeNetworkTransport
 import com.mendelev.mpos.settings.NativeSettingsStore
@@ -13,7 +13,7 @@ class NativeBridgeRouter(
     private val photos: ProductPhotoManager,
     private val backup: BackupManager,
     private val settings: NativeSettingsStore,
-    private val storageMirror: NativeStorageMirror,
+    private val storageMirror: MPosStorageMirror,
     private val networkTransport: NativeNetworkTransport,
 ) {
     fun receive(raw: String) {

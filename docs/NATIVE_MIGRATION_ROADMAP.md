@@ -91,6 +91,8 @@ Tenth step: warehouse stock-event history is projected from the existing `receiv
 
 Room must become authoritative only after migration and physical restart/recovery tests pass.
 
+Spec 035 adds the transactional native storage foundation: one bounded Kotlin FIFO processes bridge operations; raw shadow and projections commit or roll back together; reads follow writes in Room transactions. Failed/rejected/pending shadow changes are explicitly reflected in catch-up metadata, and cannot produce healthy catalog diagnostics. Local POS storage remains authoritative; physical restart, large-history and backup recovery evidence is still required.
+
 ### P3 — Native network/SSE infrastructure
 **Status: 🟢 In progress — non-authoritative OkHttp transport boundary**
 

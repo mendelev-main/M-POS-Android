@@ -73,7 +73,7 @@
     nativeReadsEnabled:false,
     async getNativeSnapshot(){
       const result=await request('catalogSnapshot');
-      if(!result?.ok)throw new Error(result?.reason||result?.message||'M POS native catalog unavailable');
+      if(!result?.ok||result?.shadowCaughtUp===false)throw new Error(result?.reason||result?.message||'M POS native catalog unavailable or not caught up');
       return result;
     },
     async parity(){

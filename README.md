@@ -12,6 +12,7 @@ The current application deliberately keeps the reviewed HTML/CSS/JavaScript busi
 - M POS naming is mandatory for all new and rewritten code. `PrilavokCore` and `prilavok_` exist only as temporary legacy compatibility surfaces for the bundled parity runtime and backup schema v13 until those boundaries are migrated.
 - Network operations never replace or gate local POS persistence.
 - Native migrations are performed one module/boundary at a time with parity and rollback evidence.
+- Kotlin processes Room shadow operations in a bounded FIFO; raw JSON and domain projections commit atomically. Failed or pending writes block green native catalog diagnostics. Local POS storage remains authoritative; see [spec 035](specs/035-transactional-native-shadow-storage/spec.md).
 
 ## Platform support
 
