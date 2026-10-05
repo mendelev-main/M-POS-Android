@@ -117,7 +117,7 @@ async function settleReturnedOrderLoyalty(order){
  if(order.loyaltySync?.status==='synced'&&order.loyaltyReversal?.status!=='synced')await reverseOrderLoyalty(order);
 }
 
-function retryPendingLoyalty(){for(const order of state.orders||[]){if(!order?.customer?.id)continue;if(order.returnedAt)void settleReturnedOrderLoyalty(order);else if(order?.loyaltySync?.status==='pending')void publishPaidOrderLoyalty(order)}}
+function retryPendingLoyalty(){for(const order of state.orders||[]){if(!order?.customer?.id)continue;if(order.loyaltySync?.status==='sending')order.loyaltySync={...(order.loyaltySync||{}),status:'pending',recoveredAt:Date.now()};if(order.loyaltyReversal?.status==='sending')order.loyaltyReversal={...(order.loyaltyReversal||{}),status:'pending',recoveredAt:Date.now()};if(order.returnedAt)void settleReturnedOrderLoyalty(order);else if(order?.loyaltySync?.status==='pending')void publishPaidOrderLoyalty(order)}}
 
 function loyaltyRewardAllocation(){
   const units=[];

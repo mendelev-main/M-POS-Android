@@ -6,5 +6,5 @@
 - [x] Keep JS/backend retry authority unchanged.
 - [x] Synchronize canonical iPad source.
 - [x] Add ordering/source contract test.
-- [ ] Run full Node tests, source parity, lint and Android debug build.
+- [x] Run full Node tests, source parity, lint and Android debug build.
 - [ ] Physical offline/crash/restart sale and reversal recovery.

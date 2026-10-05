@@ -395,3 +395,10 @@ test('P4 loyalty network retry state is persisted before send and after outcome'
  for(const section of [sale,reversal]){const sending=section.indexOf("status:'sending'");const persist=section.indexOf("await window.PrilavokCore.Storage.set('orders',state.orders)");const network=section.indexOf("loyaltyApi(");assert.ok(sending>=0&&persist>sending&&network>persist);assert.match(section,/status:'synced'/);assert.match(section,/status:'pending'/);}
  assert.match(sale,/status:'synced'[\s\S]*await window\.PrilavokCore\.Storage\.set\('orders',state\.orders\)/);assert.match(reversal,/status:'synced'[\s\S]*await window\.PrilavokCore\.Storage\.set\('orders',state\.orders\)/);
 });
+
+
+test('P4 loyalty restart recovery requeues interrupted sending states',()=>{
+ const loyalty=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/loyalty.js'),'utf8');
+ const retry=loyalty.slice(loyalty.indexOf('function retryPendingLoyalty'),loyalty.indexOf('function loyaltyRewardAllocation'));
+ assert.match(retry,/loyaltySync\?\.status==='sending'/);assert.match(retry,/loyaltyReversal\?\.status==='sending'/);assert.match(retry,/status:'pending',recoveredAt:Date\.now\(\)/);assert.match(retry,/publishPaidOrderLoyalty\(order\)/);assert.match(retry,/settleReturnedOrderLoyalty\(order\)/);
+});
