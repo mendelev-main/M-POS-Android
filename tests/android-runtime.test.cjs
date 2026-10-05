@@ -313,5 +313,5 @@ test('P4 WEB acceptance journal is shadow-projected without taking recovery auth
  const web=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/web-orders.js'),'utf8');
  assert.match(db,/WebAcceptanceProjectionEntity::class/);assert.match(db,/version = 8/);assert.match(db,/MIGRATION_7_8/);
  assert.match(mirror,/webOrderAcceptances/);assert.match(mirror,/projectWebAcceptances/);assert.match(mirror,/pendingWebAcceptances/);
- assert.match(web,/stage:'prepared'/);assert.match(web,/record\.stage='local'/);assert.match(web,/record\.stage='confirmed'/);assert.match(web,/ACK recovery is best-effort/);
+ assert.match(web,/stage:existing\?'local':'prepared'/);assert.match(web,/record\.stage='local'/);assert.match(web,/record\.stage='confirmed'/);assert.match(web,/ACK recovery is best-effort/);
 });
