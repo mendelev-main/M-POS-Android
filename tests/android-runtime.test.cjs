@@ -369,3 +369,12 @@ test('P4 WEB ready never reaches backend before local session and retry state ar
  assert.ok(prepared>=0&&saveSession>prepared&&pending>saveSession&&persistPending>pending&&confirm>persistPending);
  assert.match(web,/record\?\.stage==='pending'&&await confirmWebOrderReady/);assert.match(web,/stage==='confirmed'\)\{delete journal\[id\];changed=true;/);
 });
+
+
+test('P4 critical storage journal is shadow-projected without native replay authority',()=>{
+ const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/CriticalStorageJournalProjectionEntity.kt'),'utf8');
+ const html=fs.readFileSync(path.join(root,'app/src/main/assets/pos/pos.html'),'utf8');
+ assert.match(entity,/critical_storage_journal_projection/);assert.match(db,/version = 12/);assert.match(db,/Migration\(11, 12\)/);assert.match(db,/CriticalStorageJournalProjectionEntity::class/);assert.match(mirror,/"criticalStorageJournal"/);assert.match(mirror,/projectCriticalStorageJournal/);assert.match(mirror,/writeKeys/);assert.match(html,/recoverCriticalStorageJournal\(\)/);assert.match(html,/commitCriticalStorage\(type,writes\)/);assert.doesNotMatch(mirror,/recoverCriticalStorageJournal|commitCriticalStorage/);
+});

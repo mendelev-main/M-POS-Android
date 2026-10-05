@@ -7,5 +7,5 @@
 - [x] Synchronize canonical iPad source and Android source manifest.
 - [x] Update existing ready tests for two-phase semantics.
 - [x] Add ordering/source contract test.
-- [ ] Run full Node tests, parity, lint and Android debug build.
+- [x] Run full Node tests, parity, lint and Android debug build.
 - [ ] Physical crash/offline/restart/online ready recovery test.

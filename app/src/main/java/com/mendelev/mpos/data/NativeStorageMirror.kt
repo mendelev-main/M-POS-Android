@@ -28,6 +28,7 @@ class NativeStorageMirror(
     private val webAcceptanceDao = database.webAcceptanceProjectionDao()
     private val currentOrderSessionDao = database.currentOrderSessionProjectionDao()
     private val webReadyDao = database.webReadyProjectionDao()
+    private val criticalJournalDao = database.criticalStorageJournalProjectionDao()
 
     fun handle(payload: JSONObject) {
         val requestId = payload.optString("requestId")
@@ -58,6 +59,7 @@ class NativeStorageMirror(
                             "webOrderAcceptances" -> runCatching { projectWebAcceptances(serialized) }.isSuccess
                             "currentOrderSession" -> runCatching { projectCurrentOrderSession(serialized) }.isSuccess
                             "webOrderReadyJournal" -> runCatching { projectWebReadyJournal(serialized) }.isSuccess
+                            "criticalStorageJournal" -> runCatching { projectCriticalStorageJournal(serialized) }.isSuccess
                             else -> true
                         }
                         result(requestId, true, projectionOk = projectionOk)
@@ -102,6 +104,7 @@ class NativeStorageMirror(
                             "webOrderAcceptances" -> webAcceptanceDao.clear()
                             "currentOrderSession" -> currentOrderSessionDao.clear()
                             "webOrderReadyJournal" -> webReadyDao.clear()
+                            "criticalStorageJournal" -> criticalJournalDao.clear()
                         }
                     }.onSuccess { result(requestId, true) }
                         .onFailure { result(requestId, false, it.localizedMessage ?: "shadow delete failed") }
@@ -638,6 +641,30 @@ class NativeStorageMirror(
             webReadyDao.clear()
             if (rows.isNotEmpty()) webReadyDao.insertAll(rows)
         }
+    }
+
+    private suspend fun projectCriticalStorageJournal(serialized: String) {
+        val journal = if (serialized == "null") null else JSONObject(serialized)
+        if (journal == null) {
+            criticalJournalDao.clear()
+            return
+        }
+        val writes = journal.optJSONArray("writes") ?: JSONArray()
+        val keys = mutableListOf<String>()
+        for (index in 0 until writes.length()) {
+            val key = writes.optJSONObject(index)?.optString("key").orEmpty()
+            if (key.isNotBlank()) keys += key
+        }
+        criticalJournalDao.replace(
+            CriticalStorageJournalProjectionEntity(
+                journalId = journal.optString("id"),
+                operationType = journal.optString("type"),
+                createdAt = journal.optLong("createdAt"),
+                writeKeys = JSONArray(keys).toString(),
+                payload = journal.toString(),
+                updatedAt = System.currentTimeMillis(),
+            )
+        )
     }
 
     private fun result(
