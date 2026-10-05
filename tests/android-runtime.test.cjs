@@ -417,3 +417,9 @@ test('P5 diagnostics breadcrumbs are bounded local metadata without business pay
  assert.match(store,/MAX_ENTRIES = 200/);assert.match(store,/mpos_diagnostic_breadcrumbs/);assert.match(store,/category: String/);assert.match(store,/event: String/);assert.doesNotMatch(store,/payload|customer|phone|items|deviceKey/);
  assert.match(activity,/diagnostics\.record\("printer"/);assert.match(activity,/diagnostics\.record\("network"/);assert.match(activity,/diagnostics\.record\("storage"/);
 });
+
+
+test('Kotlin sources do not contain escaped newline artifacts',()=>{
+ const activity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/MainActivity.kt'),'utf8');
+ assert.doesNotMatch(activity,/\\\\n/);
+});
