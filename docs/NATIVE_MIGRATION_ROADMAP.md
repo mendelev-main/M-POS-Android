@@ -92,7 +92,7 @@ Tenth step: warehouse stock-event history is projected from the existing `receiv
 Room must become authoritative only after migration and physical restart/recovery tests pass.
 
 ### P3 — Native network/SSE infrastructure
-**Status: 🟡 Candidate**
+**Status: 🟢 In progress — non-authoritative OkHttp transport boundary**
 
 Move network transport from WebView to Kotlin/OkHttp while retaining existing trigger rules.
 
@@ -105,6 +105,8 @@ Candidates:
 - loyalty/backend transport.
 
 Native networking must not imply automatic catalogue synchronization.
+
+Current first step: Android owns a non-authoritative OkHttp transport boundary exposed through `MPosCore.Network`. It can describe/probe the configured HTTPS backend, but SSE consumption and all WEB-order business handlers remain on the reviewed legacy runtime until parity/reconnect tests are complete.
 
 ### P4 — Operational outbox and recovery
 **Status: 🟡 Candidate**

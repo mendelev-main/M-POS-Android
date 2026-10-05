@@ -22,6 +22,7 @@ import com.mendelev.mpos.bridge.NativeBridgeRouter
 import com.mendelev.mpos.data.MPosDatabase
 import com.mendelev.mpos.data.NativeStorageMirror
 import com.mendelev.mpos.media.ProductImageStore
+import com.mendelev.mpos.network.NativeNetworkTransport
 import com.mendelev.mpos.media.ProductPhotoManager
 import com.mendelev.mpos.print.EscPosPrinter
 import com.mendelev.mpos.share.ReportShareManager
@@ -49,6 +50,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var telegram: TelegramClient
     private lateinit var nativeSettings: NativeSettingsStore
     private lateinit var nativeStorageMirror: NativeStorageMirror
+    private lateinit var nativeNetworkTransport: NativeNetworkTransport
 
     private val photoPicker = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri ?: return@registerForActivityResult
@@ -79,7 +81,8 @@ class MainActivity : AppCompatActivity() {
         telegram = TelegramClient(shares::createWarehousePdf, ::telegramResult, ::telegramMonthlyResult)
         nativeSettings = NativeSettingsStore(this, ::nativeSettingsResult)
         nativeStorageMirror = NativeStorageMirror(MPosDatabase.get(this), lifecycleScope, ::nativeStorageResult)
-        router = NativeBridgeRouter(this, photos, backup, nativeSettings, nativeStorageMirror)
+        nativeNetworkTransport = NativeNetworkTransport(lifecycleScope, ::nativeNetworkResult, ::nativeNetworkEvent)
+        router = NativeBridgeRouter(this, photos, backup, nativeSettings, nativeStorageMirror, nativeNetworkTransport)
 
         webView = WebView(this).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -184,6 +187,8 @@ class MainActivity : AppCompatActivity() {
     private fun telegramMonthlyResult(result: JSONObject) = callJavaScript("window.onTelegramMonthlyWarehouseResult&&window.onTelegramMonthlyWarehouseResult($result);")
     private fun nativeSettingsResult(result: JSONObject) = callJavaScript("window.__nativeSettingsResult&&window.__nativeSettingsResult($result);")
     private fun nativeStorageResult(result: JSONObject) = callJavaScript("window.__nativeStorageResult&&window.__nativeStorageResult($result);")
+    private fun nativeNetworkResult(result: JSONObject) = callJavaScript("window.__nativeNetworkResult&&window.__nativeNetworkResult($result);")
+    private fun nativeNetworkEvent(event: JSONObject) = callJavaScript("window.__nativeNetworkEvent&&window.__nativeNetworkEvent($event);")
 
     private fun hideSystemBars() {
         WindowInsetsControllerCompat(window, window.decorView).apply {

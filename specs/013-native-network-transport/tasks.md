@@ -1,0 +1,12 @@
+# Tasks
+- [x] Add OkHttp transport dependency.
+- [x] Add `NativeNetworkTransport`.
+- [x] Add secure `network` bridge channel.
+- [x] Add `MPosCore.Network` diagnostics contract.
+- [x] Enforce HTTPS for native backend probes.
+- [x] Keep native SSE disabled.
+- [x] Keep legacy EventSource/fetch business handlers authoritative.
+- [x] Extend architecture tests.
+- [ ] Run Node tests, lint and debug build.
+- [ ] Physical backend probe/reconnect verification.
+- [ ] Native SSE cutover remains blocked.

@@ -8,6 +8,6 @@
 - [x] Add per-source parity diagnostics.
 - [x] Keep product stock authoritative in legacy runtime.
 - [x] Extend architecture tests.
-- [ ] Run Node tests, lint and debug build.
+- [x] Run Node tests, lint and debug build.
 - [ ] Physical receiving/inventory/restart verification.
 - [ ] Authoritative stock cutover remains blocked.
