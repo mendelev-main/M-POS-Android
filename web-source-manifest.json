@@ -16,7 +16,7 @@
     "Web/js/features/employees.js": "9913d8f629c134c964a422976ff9f25284cc6d07550daaebb5b4829e4a0f568f",
     "Web/js/features/hall-bookings.js": "44d342fdd3e0c81011b23f02fefb9e3221dcf08872eacbbb5938e0e4e52a53e8",
     "Web/js/features/inventory.js": "7fcd358c563585e4c5c35af3d346091a74579cecda493fb03f45449e75a89335",
-    "Web/js/features/loyalty.js": "__CALC_IN_CI__",
+    "Web/js/features/loyalty.js": "13d2bdb49421ec0dd9754c66048b24c379c5febea6372b6c4c925c32183f2b11",
     "Web/js/features/parked-orders.js": "fd2cac81d62ec56fa396a1dd973250fd7fe0fe5c5cb6dfa9138f36718b4a72f7",
     "Web/js/features/payment.js": "6f38fdb6699f0d7ac5dc03853161bb37cd6c6df59781b382e24fdd00008bd3f4",
     "Web/js/features/pos-navigation.js": "cf099f0648311af8311f116cb0b588a1397348531630c1439378981edab0ec7c",
