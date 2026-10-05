@@ -351,5 +351,12 @@ test('P4 WEB ready journal is shadow-projected for restart evidence',()=>{
  const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
  const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
  const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/WebReadyProjectionEntity.kt'),'utf8');
- assert.match(entity,/web_ready_projection/);assert.match(db,/version = 11/);assert.match(db,/Migration\(10, 11\)/);assert.match(db,/WebReadyProjectionEntity::class/);assert.match(mirror,/webOrderReadyJournal/);assert.match(mirror,/projectWebReadyJournal/);assert.doesNotMatch(mirror,/\/api\/orders\/.*\/ready/);
+ assert.match(entity,/web_ready_projection/);assert.match(db,/version\s*=\s*\d+/);assert.match(db,/Migration\(10, 11\)/);assert.match(db,/WebReadyProjectionEntity::class/);assert.match(mirror,/webOrderReadyJournal/);assert.match(mirror,/projectWebReadyJournal/);assert.doesNotMatch(mirror,/\/api\/orders\/.*\/ready/);
+});
+
+
+test('P4 WEB ready parity compares IDs and stages without retry authority',()=>{
+ const dao=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/WebReadyProjectionDao.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ assert.match(dao,/suspend fun all\(\)/);assert.match(mirror,/"webReadyParity"/);assert.match(mirror,/webOrderReadyJournal/);assert.match(mirror,/missingNativeIds/);assert.match(mirror,/extraNativeIds/);assert.match(mirror,/stageMismatches/);assert.match(mirror,/authoritative", false/);assert.doesNotMatch(mirror,/fetch\(|\/api\/orders\/.*\/ready/);
 });

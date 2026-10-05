@@ -4,5 +4,5 @@
 - [x] Shadow-project ready journal writes/removes.
 - [x] Keep `/ready` retry authority in JS.
 - [x] Architecture test.
-- [ ] Run Node tests, lint and debug build.
+- [x] Run Node tests, lint and debug build.
 - [ ] Physical offline → ready → restart → online recovery test.

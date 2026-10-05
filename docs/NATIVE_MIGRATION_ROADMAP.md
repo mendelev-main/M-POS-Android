@@ -116,7 +116,14 @@ Current first step: Android owns a non-authoritative OkHttp transport boundary e
 
 After Room + network transport:
 
-Current first step: preserve the existing WEB acceptance recovery journal (`prepared → local → confirmed`) as the authoritative recovery workflow and project `webOrderAcceptances` into Room for restart/parity diagnostics. The native projection is non-authoritative and must not send ACKs or mutate parked orders.
+Implemented automated recovery groundwork:
+- WEB acceptance keeps the existing `prepared → local → confirmed` journal authoritative; Room shadows it and exposes ID/stage parity diagnostics.
+- `currentOrderSession` is shadow-projected so split-payment/current-order restart state can be compared before any payment authority cutover.
+- WEB ready now has a dedicated durable legacy journal. The backend ready endpoint is idempotent, startup/reconnect retry stays in shared JS, and Room shadows the journal for restart evidence.
+- loyalty sale/reversal recovery statuses are projected from paid orders; existing idempotent JS/backend retry remains authoritative.
+- native recovery projections are diagnostic-only: they do not send ACK/ready/loyalty requests or mutate operational order state.
+
+Automated source/build coverage is complete through specs 018–023; physical offline/restart/online recovery scenarios remain required before any authority cutover.
 
 - durable pending network operations;
 - retry for explicitly allowed operations;

@@ -140,6 +140,38 @@ class NativeStorageMirror(
                     .onFailure { result(requestId, false, it.localizedMessage ?: "web acceptance parity failed") }
             }
 
+            "webReadyParity" -> scope.launch(Dispatchers.IO) {
+                runCatching {
+                    val shadow = shadowDao.get("webOrderReadyJournal")?.payload ?: "{}"
+                    val source = JSONObject(shadow)
+                    val nativeRows = webReadyDao.all()
+                    val nativeById = nativeRows.associateBy { it.webOrderId }
+                    val legacyIds = mutableSetOf<String>()
+                    val stageMismatches = JSONArray()
+                    for (id in source.keys()) {
+                        legacyIds += id
+                        val legacyStage = source.optJSONObject(id)?.optString("stage").orEmpty()
+                        val nativeStage = nativeById[id]?.stage
+                        if (nativeStage != legacyStage) stageMismatches.put(id)
+                    }
+                    val missingNative = JSONArray()
+                    legacyIds.filter { it !in nativeById }.sorted().forEach { missingNative.put(it) }
+                    val extraNative = JSONArray()
+                    nativeById.keys.filter { it !in legacyIds }.sorted().forEach { extraNative.put(it) }
+                    JSONObject()
+                        .put("requestId", requestId)
+                        .put("ok", true)
+                        .put("authoritative", false)
+                        .put("legacyCount", legacyIds.size)
+                        .put("nativeCount", nativeRows.size)
+                        .put("missingNativeIds", missingNative)
+                        .put("extraNativeIds", extraNative)
+                        .put("stageMismatches", stageMismatches)
+                        .put("matches", missingNative.length() == 0 && extraNative.length() == 0 && stageMismatches.length() == 0)
+                }.onSuccess(onResult)
+                    .onFailure { result(requestId, false, it.localizedMessage ?: "web ready parity failed") }
+            }
+
             "stockEventParity" -> scope.launch(Dispatchers.IO) {
                 val sourceKey = payload.optString("sourceKey")
                 runCatching { stockEventRepository.parityReport(sourceKey) }
