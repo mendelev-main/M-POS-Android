@@ -225,9 +225,11 @@ test('orders, lines and payments project through explicit Room migration and rem
 });
 
 
-test('Room schema has one centralized current version assertion',()=>{
+test('Room schema current version is backed by an explicit latest migration',()=>{
  const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
- assert.match(db,/version\s*=\s*7/);
+ const version=Number(db.match(/version\s*=\s*(\d+)/)?.[1]||0);
+ assert.ok(version>=1);if(version>1){assert.match(db,new RegExp('Migration\\('+String(version-1)+',\\s*'+String(version)+'\\)'));assert.match(db,new RegExp('MIGRATION_'+String(version-1)+'_'+String(version)));}
+ assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
 });
 
 test('parked orders project through explicit Room migration and remain non-authoritative',()=>{
