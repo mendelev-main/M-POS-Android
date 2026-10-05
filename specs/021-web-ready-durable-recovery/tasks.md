@@ -5,5 +5,5 @@
 - [x] Recover on startup and reconnect.
 - [x] Keep operational snapshot outbox separate.
 - [x] Architecture test.
-- [ ] Run Node tests, lint and debug build.
+- [x] Run Node tests, lint and debug build.
 - [ ] Physical offline/restart/online recovery test.

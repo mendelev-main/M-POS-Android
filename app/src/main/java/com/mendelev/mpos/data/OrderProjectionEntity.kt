@@ -21,6 +21,8 @@ data class OrderProjectionEntity(
     val timestamp: Long,
     val returnedAt: Long,
     val returnAmount: Double,
+    val loyaltySyncStatus: String,
+    val loyaltyReversalStatus: String,
     val sortIndex: Int,
     val payload: String,
     val updatedAt: Long,

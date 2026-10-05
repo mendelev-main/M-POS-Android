@@ -402,6 +402,8 @@ class NativeStorageMirror(
                 timestamp = order.optLong("timestamp"),
                 returnedAt = order.optLong("returnedAt"),
                 returnAmount = order.optDouble("returnAmount"),
+                loyaltySyncStatus = order.optJSONObject("loyaltySync")?.optString("status").orEmpty(),
+                loyaltyReversalStatus = order.optJSONObject("loyaltyReversal")?.optString("status").orEmpty(),
                 sortIndex = orderIndex,
                 payload = order.toString(),
                 updatedAt = now,

@@ -335,3 +335,13 @@ test('P4 WEB ready transition is durable before idempotent retry',()=>{
  assert.match(web,/webOrderReadyJournal/);assert.match(web,/stage:'pending'/);assert.match(web,/async function recoverWebOrderReadyJournal/);assert.match(web,/async function confirmWebOrderReady/);assert.match(web,/record\.stage='confirmed'/);assert.match(web,/currentWebOrderStatus='ready'/);assert.match(web,/will be repeated automatically|будет повторено автоматически/);
  assert.match(web,/addEventListener\('online',\(\)=>\{void recoverWebOrderReadyJournal\(\)/);assert.match(web,/queueMicrotask\(\(\)=>\{void recoverWebOrderReadyJournal/);
 });
+
+
+test('P4 loyalty recovery status is shadow-projected without native retry authority',()=>{
+ const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/OrderProjectionEntity.kt'),'utf8');
+ const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const loyalty=fs.readFileSync(path.join(assets,'Web/js/features/loyalty.js'),'utf8');
+ assert.match(entity,/loyaltySyncStatus/);assert.match(entity,/loyaltyReversalStatus/);assert.match(db,/version = 10/);assert.match(db,/Migration\(9, 10\)/);assert.match(db,/ALTER TABLE order_projection ADD COLUMN loyaltySyncStatus/);assert.match(mirror,/optJSONObject\("loyaltySync"\)/);assert.match(mirror,/optJSONObject\("loyaltyReversal"\)/);
+ assert.match(loyalty,/function retryPendingLoyalty/);assert.match(loyalty,/\/api\/loyalty\/sales/);assert.doesNotMatch(mirror,/api\/loyalty\/sales|retryPendingLoyalty/);
+});
