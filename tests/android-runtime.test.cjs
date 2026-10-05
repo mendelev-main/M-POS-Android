@@ -224,3 +224,23 @@ test('orders, lines and payments project through explicit Room migration and rem
  assert.match(mirror,/"orderParity"/);
  assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
 });
+
+
+test('parked orders project through explicit Room migration and remain non-authoritative',()=>{
+ const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
+ const order=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/ParkedOrderProjectionEntity.kt'),'utf8');
+ const line=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/ParkedOrderLineProjectionEntity.kt'),'utf8');
+ const repository=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosParkedOrderRepository.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ assert.match(db,/version\s*=\s*6/);
+ assert.match(db,/Migration\(5,\s*6\)/);
+ assert.match(order,/tableName\s*=\s*"parked_order_projection"/);
+ assert.match(line,/tableName\s*=\s*"parked_order_line_projection"/);
+ assert.match(line,/Index\("parkedOrderId"\)/);
+ assert.match(repository,/class MPosParkedOrderRepository/);
+ assert.match(repository,/mismatchedParkedOrderIds/);
+ assert.match(repository,/authoritative", false/);
+ assert.match(mirror,/"parked"\s*->\s*runCatching\s*\{\s*projectParkedOrders\(serialized\)/);
+ assert.match(mirror,/"parkedOrderParity"/);
+ assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
+});

@@ -10,6 +10,6 @@
 - [x] Add `MPosOrderRepository` parity diagnostics.
 - [x] Keep payment/return/print/stock/loyalty flows authoritative in legacy runtime.
 - [x] Extend architecture tests.
-- [ ] Run Node tests, lint and debug build.
+- [x] Run Node tests, lint and debug build.
 - [ ] Physical cash/card/split/return/restart verification.
 - [ ] Order authoritative cutover remains blocked.

@@ -18,8 +18,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         OrderProjectionEntity::class,
         OrderLineProjectionEntity::class,
         PaymentProjectionEntity::class,
+        ParkedOrderProjectionEntity::class,
+        ParkedOrderLineProjectionEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false,
 )
 abstract class MPosDatabase : RoomDatabase() {
@@ -28,6 +30,7 @@ abstract class MPosDatabase : RoomDatabase() {
     abstract fun employeeProjectionDao(): EmployeeProjectionDao
     abstract fun shiftProjectionDao(): ShiftProjectionDao
     abstract fun orderProjectionDao(): OrderProjectionDao
+    abstract fun parkedOrderProjectionDao(): ParkedOrderProjectionDao
 
     companion object {
         @Volatile private var instance: MPosDatabase? = null
@@ -186,6 +189,55 @@ abstract class MPosDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS parked_order_projection (
+                        id TEXT NOT NULL PRIMARY KEY,
+                        receiptDisplayNumber TEXT NOT NULL,
+                        total REAL NOT NULL,
+                        subtotal REAL NOT NULL,
+                        orderLabel TEXT NOT NULL,
+                        orderType TEXT NOT NULL,
+                        deliveryFee REAL NOT NULL,
+                        comment TEXT NOT NULL,
+                        source TEXT NOT NULL,
+                        webOrderId TEXT NOT NULL,
+                        webOrderStatus TEXT NOT NULL,
+                        employeeName TEXT NOT NULL,
+                        customerId TEXT NOT NULL,
+                        customerName TEXT NOT NULL,
+                        customerPhone TEXT NOT NULL,
+                        createdAt INTEGER NOT NULL,
+                        kitchenPrinted INTEGER NOT NULL,
+                        sortIndex INTEGER NOT NULL,
+                        payload TEXT NOT NULL,
+                        updatedAt INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS parked_order_line_projection (
+                        id TEXT NOT NULL PRIMARY KEY,
+                        parkedOrderId TEXT NOT NULL,
+                        productId TEXT NOT NULL,
+                        name TEXT NOT NULL,
+                        category TEXT NOT NULL,
+                        qty REAL NOT NULL,
+                        price REAL NOT NULL,
+                        comment TEXT NOT NULL,
+                        sortIndex INTEGER NOT NULL,
+                        payload TEXT NOT NULL,
+                        updatedAt INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_parked_order_line_projection_parkedOrderId ON parked_order_line_projection(parkedOrderId)")
+            }
+        }
+
         fun get(context: Context): MPosDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -193,7 +245,7 @@ abstract class MPosDatabase : RoomDatabase() {
                     MPosDatabase::class.java,
                     "mpos.db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                     .build()
                     .also { instance = it }
             }

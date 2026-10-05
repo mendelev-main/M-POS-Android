@@ -21,6 +21,8 @@ class NativeStorageMirror(
     private val shiftRepository = MPosShiftRepository(database)
     private val orderDao = database.orderProjectionDao()
     private val orderRepository = MPosOrderRepository(database)
+    private val parkedDao = database.parkedOrderProjectionDao()
+    private val parkedRepository = MPosParkedOrderRepository(database)
 
     fun handle(payload: JSONObject) {
         val requestId = payload.optString("requestId")
@@ -46,6 +48,7 @@ class NativeStorageMirror(
                             "employees" -> runCatching { projectEmployees(serialized) }.isSuccess
                             "shifts" -> runCatching { projectShifts(serialized) }.isSuccess
                             "orders" -> runCatching { projectOrders(serialized) }.isSuccess
+                            "parked" -> runCatching { projectParkedOrders(serialized) }.isSuccess
                             else -> true
                         }
                         result(requestId, true, projectionOk = projectionOk)
@@ -79,10 +82,23 @@ class NativeStorageMirror(
                                 orderDao.clearLines()
                                 orderDao.clearOrders()
                             }
+                            "parked" -> database.withTransaction {
+                                parkedDao.clearLines()
+                                parkedDao.clearOrders()
+                            }
                         }
                     }.onSuccess { result(requestId, true) }
                         .onFailure { result(requestId, false, it.localizedMessage ?: "shadow delete failed") }
                 }
+            }
+
+            "parkedOrderParity" -> scope.launch(Dispatchers.IO) {
+                runCatching { parkedRepository.parityReport() }
+                    .onSuccess { report ->
+                        report.put("requestId", requestId)
+                        onResult(report)
+                    }
+                    .onFailure { result(requestId, false, it.localizedMessage ?: "parked order parity failed") }
             }
 
             "orderParity" -> scope.launch(Dispatchers.IO) {
@@ -142,6 +158,8 @@ class NativeStorageMirror(
                         orderDao.orderCount(),
                         orderDao.lineCount(),
                         orderDao.paymentCount(),
+                        parkedDao.orderCount(),
+                        parkedDao.lineCount(),
                     )
                 }.onSuccess { counts ->
                     onResult(
@@ -157,6 +175,8 @@ class NativeStorageMirror(
                             .put("orders", counts[6])
                             .put("orderLines", counts[7])
                             .put("payments", counts[8])
+                            .put("parkedOrders", counts[9])
+                            .put("parkedOrderLines", counts[10])
                             .put("authoritative", false)
                     )
                 }.onFailure {
@@ -373,6 +393,68 @@ class NativeStorageMirror(
             if (orders.isNotEmpty()) orderDao.insertOrders(orders)
             if (lines.isNotEmpty()) orderDao.insertLines(lines)
             if (payments.isNotEmpty()) orderDao.insertPayments(payments)
+        }
+    }
+
+    private suspend fun projectParkedOrders(serialized: String) {
+        val source = JSONArray(serialized)
+        val now = System.currentTimeMillis()
+        val orders = ArrayList<ParkedOrderProjectionEntity>(source.length())
+        val lines = ArrayList<ParkedOrderLineProjectionEntity>()
+
+        for (orderIndex in 0 until source.length()) {
+            val order = source.optJSONObject(orderIndex) ?: continue
+            val orderId = order.optString("id").trim()
+            if (orderId.isEmpty()) continue
+            val customer = order.optJSONObject("customer") ?: JSONObject()
+
+            orders += ParkedOrderProjectionEntity(
+                id = orderId,
+                receiptDisplayNumber = order.optString("receiptDisplayNumber"),
+                total = order.optDouble("total"),
+                subtotal = order.optDouble("subtotal"),
+                orderLabel = order.optString("orderLabel"),
+                orderType = order.optString("orderType"),
+                deliveryFee = order.optDouble("deliveryFee"),
+                comment = order.optString("comment"),
+                source = order.optString("source"),
+                webOrderId = order.optString("webOrderId"),
+                webOrderStatus = order.optString("webOrderStatus"),
+                employeeName = order.optString("employeeName"),
+                customerId = customer.optString("id"),
+                customerName = customer.optString("name"),
+                customerPhone = customer.optString("phone"),
+                createdAt = order.optLong("createdAt"),
+                kitchenPrinted = order.optBoolean("kitchenPrinted"),
+                sortIndex = orderIndex,
+                payload = order.toString(),
+                updatedAt = now,
+            )
+
+            val items = order.optJSONArray("items") ?: JSONArray()
+            for (lineIndex in 0 until items.length()) {
+                val line = items.optJSONObject(lineIndex) ?: continue
+                lines += ParkedOrderLineProjectionEntity(
+                    id = MPosParkedOrderRepository.lineKey(orderId, lineIndex),
+                    parkedOrderId = orderId,
+                    productId = line.optString("productId"),
+                    name = line.optString("name"),
+                    category = line.optString("category"),
+                    qty = line.optDouble("qty"),
+                    price = line.optDouble("price"),
+                    comment = line.optString("comment"),
+                    sortIndex = lineIndex,
+                    payload = line.toString(),
+                    updatedAt = now,
+                )
+            }
+        }
+
+        database.withTransaction {
+            parkedDao.clearLines()
+            parkedDao.clearOrders()
+            if (orders.isNotEmpty()) parkedDao.insertOrders(orders)
+            if (lines.isNotEmpty()) parkedDao.insertLines(lines)
         }
     }
 
