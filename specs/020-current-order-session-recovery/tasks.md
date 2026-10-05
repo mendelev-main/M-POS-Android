@@ -4,6 +4,6 @@
 - [x] Preserve full payload and diagnostic fields.
 - [x] Keep payment/session authority in legacy commitCriticalStorage.
 - [x] Add architecture test.
-- [ ] Run Node tests, lint and debug build.
+- [x] Run Node tests, lint and debug build.
 - [ ] Physical restart during split payment.
 - [ ] Native session/payment authority remains blocked.

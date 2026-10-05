@@ -179,16 +179,49 @@ async function acceptWebOrder(id,readyEstimate=''){
   finally{webAcceptBusy=false;}
 }
 
+let webReadyRecoveryBusy=false;
+async function confirmWebOrderReady(id,journal){
+  const record=journal?.[id];if(!record||record.stage==='confirmed')return true;
+  const n=networkConfigFromState();if(!n.backendUrl||!n.deviceKey)return false;
+  try{
+    const r=await fetch(n.backendUrl.replace(/\/+$/,'')+'/api/orders/'+encodeURIComponent(id)+'/ready',{method:'POST',headers:{'Content-Type':'application/json','X-Device-Key':n.deviceKey},body:'{}',cache:'no-store'});
+    const d=await r.json().catch(()=>null);if(!r.ok)throw new Error(d?.error||('HTTP '+r.status));
+    record.stage='confirmed';record.confirmedAt=Date.now();
+    await window.PrilavokCore.Storage.set('webOrderReadyJournal',journal);
+    return true;
+  }catch(_e){return false;}
+}
+async function recoverWebOrderReadyJournal(){
+  if(webReadyRecoveryBusy)return false;webReadyRecoveryBusy=true;
+  try{
+    const journal=await loadKey('webOrderReadyJournal',{});
+    let changed=false;
+    for(const [id,record] of Object.entries(journal||{})){
+      if(record?.stage!=='pending')continue;
+      if(await confirmWebOrderReady(id,journal))changed=true;
+    }
+    if(changed){
+      for(const id of Object.keys(journal)){if(journal[id]?.stage==='confirmed')delete journal[id];}
+      await window.PrilavokCore.Storage.set('webOrderReadyJournal',journal);
+    }
+    return true;
+  }finally{webReadyRecoveryBusy=false;}
+}
 async function markCurrentWebOrderReady(){
   const id=state.currentWebOrderId;
   if(!id || state.currentOrderSource!=='web') return;
-  const n=networkConfigFromState();
-  if(!n.backendUrl||!n.deviceKey){flash('Проверьте сетевые настройки');return;}
-  try{
-    const r=await fetch(n.backendUrl.replace(/\/+$/,'')+'/api/orders/'+encodeURIComponent(id)+'/ready',{method:'POST',headers:{'Content-Type':'application/json','X-Device-Key':n.deviceKey},body:'{}',cache:'no-store'});
-    const d=await r.json().catch(()=>null); if(!r.ok)throw new Error(d?.error||('HTTP '+r.status));
-    state.currentWebOrderStatus='ready'; saveCurrentOrderSession(); render(); flash('Веб-заказ отмечен как готовый');
-  }catch(e){flash('Не удалось отметить заказ готовым: '+(e?.message||'Ошибка сети'));}
+  const journal=await loadKey('webOrderReadyJournal',{});
+  journal[id]={stage:'pending',createdAt:Date.now()};
+  try{await window.PrilavokCore.Storage.set('webOrderReadyJournal',journal);}catch(e){markStorageBroken(e);flash('Не удалось сохранить статус готовности');return;}
+  state.currentWebOrderStatus='ready';
+  try{await saveCurrentOrderSession();}catch(_e){}
+  render();
+  if(await confirmWebOrderReady(id,journal)){
+    delete journal[id];try{await window.PrilavokCore.Storage.set('webOrderReadyJournal',journal);}catch(e){markStorageBroken(e);}
+    flash('Веб-заказ отмечен как готовый');
+  }else{
+    flash('Заказ отмечен готовым локально. Подтверждение на сайте будет повторено автоматически');
+  }
 }
 
 function testWebOrder(){const n=networkConfigFromState();fetch(n.backendUrl.replace(/\/+$/,'')+'/api/orders/test',{method:'POST',headers:{'Content-Type':'application/json','X-Device-Key':n.deviceKey},body:'{}',cache:'no-store'}).then(async r=>{const d=await r.json().catch(()=>null);if(!r.ok)throw new Error(d?.error||('HTTP '+r.status));flash('Тестовый заказ отправлен');}).catch(()=>flash('Не удалось создать тестовый заказ'));}
