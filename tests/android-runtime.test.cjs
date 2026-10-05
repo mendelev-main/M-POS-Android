@@ -345,3 +345,11 @@ test('P4 loyalty recovery status is shadow-projected without native retry author
  assert.match(entity,/loyaltySyncStatus/);assert.match(entity,/loyaltyReversalStatus/);assert.match(db,/version = 10/);assert.match(db,/Migration\(9, 10\)/);assert.match(db,/ALTER TABLE order_projection ADD COLUMN loyaltySyncStatus/);assert.match(mirror,/optJSONObject\("loyaltySync"\)/);assert.match(mirror,/optJSONObject\("loyaltyReversal"\)/);
  assert.match(loyalty,/function retryPendingLoyalty/);assert.match(loyalty,/\/api\/loyalty\/sales/);assert.doesNotMatch(mirror,/api\/loyalty\/sales|retryPendingLoyalty/);
 });
+
+
+test('P4 WEB ready journal is shadow-projected for restart evidence',()=>{
+ const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/WebReadyProjectionEntity.kt'),'utf8');
+ assert.match(entity,/web_ready_projection/);assert.match(db,/version = 11/);assert.match(db,/Migration\(10, 11\)/);assert.match(db,/WebReadyProjectionEntity::class/);assert.match(mirror,/webOrderReadyJournal/);assert.match(mirror,/projectWebReadyJournal/);assert.doesNotMatch(mirror,/\/api\/orders\/.*\/ready/);
+});

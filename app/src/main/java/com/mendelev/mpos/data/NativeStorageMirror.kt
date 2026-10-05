@@ -27,6 +27,7 @@ class NativeStorageMirror(
     private val stockEventRepository = MPosStockEventRepository(database)
     private val webAcceptanceDao = database.webAcceptanceProjectionDao()
     private val currentOrderSessionDao = database.currentOrderSessionProjectionDao()
+    private val webReadyDao = database.webReadyProjectionDao()
 
     fun handle(payload: JSONObject) {
         val requestId = payload.optString("requestId")
@@ -56,6 +57,7 @@ class NativeStorageMirror(
                             "receivings", "inventoryHistory" -> runCatching { projectStockEvents(key, serialized) }.isSuccess
                             "webOrderAcceptances" -> runCatching { projectWebAcceptances(serialized) }.isSuccess
                             "currentOrderSession" -> runCatching { projectCurrentOrderSession(serialized) }.isSuccess
+                            "webOrderReadyJournal" -> runCatching { projectWebReadyJournal(serialized) }.isSuccess
                             else -> true
                         }
                         result(requestId, true, projectionOk = projectionOk)
@@ -99,6 +101,7 @@ class NativeStorageMirror(
                             }
                             "webOrderAcceptances" -> webAcceptanceDao.clear()
                             "currentOrderSession" -> currentOrderSessionDao.clear()
+                            "webOrderReadyJournal" -> webReadyDao.clear()
                         }
                     }.onSuccess { result(requestId, true) }
                         .onFailure { result(requestId, false, it.localizedMessage ?: "shadow delete failed") }
@@ -582,6 +585,27 @@ class NativeStorageMirror(
                 payload=record.toString(), updatedAt=now)
         }
         database.withTransaction { webAcceptanceDao.clear(); if(rows.isNotEmpty()) webAcceptanceDao.insertAll(rows) }
+    }
+
+    private suspend fun projectWebReadyJournal(serialized: String) {
+        val source = JSONObject(serialized)
+        val now = System.currentTimeMillis()
+        val rows = mutableListOf<WebReadyProjectionEntity>()
+        for (id in source.keys()) {
+            val record = source.optJSONObject(id) ?: continue
+            rows += WebReadyProjectionEntity(
+                webOrderId = id,
+                stage = record.optString("stage"),
+                createdAt = record.optLong("createdAt"),
+                confirmedAt = record.optLong("confirmedAt"),
+                payload = record.toString(),
+                updatedAt = now,
+            )
+        }
+        database.withTransaction {
+            webReadyDao.clear()
+            if (rows.isNotEmpty()) webReadyDao.insertAll(rows)
+        }
     }
 
     private fun result(
