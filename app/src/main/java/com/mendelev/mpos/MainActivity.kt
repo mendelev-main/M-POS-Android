@@ -20,7 +20,7 @@ import androidx.webkit.WebViewFeature
 import com.mendelev.mpos.backup.BackupManager
 import com.mendelev.mpos.bridge.NativeBridgeRouter
 import com.mendelev.mpos.data.MPosDatabase
-import com.mendelev.mpos.data.NativeStorageMirror
+import com.mendelev.mpos.data.NativeStorageMirror\nimport com.mendelev.mpos.diagnostics.DiagnosticBreadcrumbStore
 import com.mendelev.mpos.media.ProductImageStore
 import com.mendelev.mpos.network.NativeNetworkTransport
 import com.mendelev.mpos.media.ProductPhotoManager
@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var telegram: TelegramClient
     private lateinit var nativeSettings: NativeSettingsStore
     private lateinit var nativeStorageMirror: NativeStorageMirror
-    private lateinit var nativeNetworkTransport: NativeNetworkTransport
+    private lateinit var nativeNetworkTransport: NativeNetworkTransport\n    private lateinit var diagnostics: DiagnosticBreadcrumbStore
 
     private val photoPicker = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri ?: return@registerForActivityResult
@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         hideSystemBars()
 
-        imageStore = ProductImageStore(this)
+        diagnostics = DiagnosticBreadcrumbStore(this)\n        imageStore = ProductImageStore(this)
         photos = ProductPhotoManager(this, imageStore)
         backup = BackupManager(this, imageStore)
         printer = EscPosPrinter(::printerEvent)
@@ -185,13 +185,13 @@ class MainActivity : AppCompatActivity() {
         recreate()
     }
 
-    private fun printerEvent(event: JSONObject) = callJavaScript("window.__nativePrinterEvent&&window.__nativePrinterEvent($event);")
+    private fun printerEvent(event: JSONObject) {\n        diagnostics.record("printer", event.optString("status", event.optString("type", "event")), event.optString("type") != "printError")\n        callJavaScript("window.__nativePrinterEvent&&window.__nativePrinterEvent($event);")\n    }
     private fun telegramResult(ok: Boolean, message: String) = callJavaScript("window.handleTelegramResult&&window.handleTelegramResult({ok:$ok,message:${JSONObject.quote(message)}});")
     private fun telegramMonthlyResult(result: JSONObject) = callJavaScript("window.onTelegramMonthlyWarehouseResult&&window.onTelegramMonthlyWarehouseResult($result);")
     private fun nativeSettingsResult(result: JSONObject) = callJavaScript("window.__nativeSettingsResult&&window.__nativeSettingsResult($result);")
-    private fun nativeStorageResult(result: JSONObject) = callJavaScript("window.__nativeStorageResult&&window.__nativeStorageResult($result);")
+    private fun nativeStorageResult(result: JSONObject) {\n        diagnostics.record("storage", "result", result.optBoolean("ok", false))\n        callJavaScript("window.__nativeStorageResult&&window.__nativeStorageResult($result);")\n    }
     private fun nativeNetworkResult(result: JSONObject) = callJavaScript("window.__nativeNetworkResult&&window.__nativeNetworkResult($result);")
-    private fun nativeNetworkEvent(event: JSONObject) = callJavaScript("window.__nativeNetworkEvent&&window.__nativeNetworkEvent($event);")
+    private fun nativeNetworkEvent(event: JSONObject) {\n        diagnostics.record("network", event.optString("state", event.optString("type", "event")))\n        callJavaScript("window.__nativeNetworkEvent&&window.__nativeNetworkEvent($event);")\n    }
 
     private fun hideSystemBars() {
         WindowInsetsControllerCompat(window, window.decorView).apply {

@@ -409,3 +409,11 @@ test('P4 availability resyncs after startup, reconnect and foreground',()=>{
  const html=fs.readFileSync(path.join(root,'app/src/main/assets/pos/pos.html'),'utf8');
  assert.match(availability,/function startAvailabilityRecovery\(\)/);assert.match(availability,/addEventListener\('online',[^\n]*publishAvailability/);assert.match(availability,/visibilitychange[^\n]*onAvailabilityAppState/);assert.match(availability,/if\(state\.loaded\)void publishAvailability\(\)/);assert.match(html,/loadAll\(\)\.then\(\(\)=>startAvailabilityRecovery\(\)\)/);
 });
+
+
+test('P5 diagnostics breadcrumbs are bounded local metadata without business payloads',()=>{
+ const store=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/diagnostics/DiagnosticBreadcrumbStore.kt'),'utf8');
+ const activity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/MainActivity.kt'),'utf8');
+ assert.match(store,/MAX_ENTRIES = 200/);assert.match(store,/mpos_diagnostic_breadcrumbs/);assert.match(store,/category: String/);assert.match(store,/event: String/);assert.doesNotMatch(store,/payload|customer|phone|items|deviceKey/);
+ assert.match(activity,/diagnostics\.record\("printer"/);assert.match(activity,/diagnostics\.record\("network"/);assert.match(activity,/diagnostics\.record\("storage"/);
+});
