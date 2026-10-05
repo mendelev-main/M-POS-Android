@@ -332,7 +332,6 @@ test('P4 current order session is shadow-projected for crash recovery evidence',
 
 test('P4 WEB ready transition is durable before idempotent retry',()=>{
  const web=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/web-orders.js'),'utf8');
- const pos=fs.readFileSync(path.join(root,'app/src/main/assets/pos/pos.html'),'utf8');
  assert.match(web,/webOrderReadyJournal/);assert.match(web,/stage:'pending'/);assert.match(web,/async function recoverWebOrderReadyJournal/);assert.match(web,/async function confirmWebOrderReady/);assert.match(web,/record\.stage='confirmed'/);assert.match(web,/currentWebOrderStatus='ready'/);assert.match(web,/will be repeated automatically|будет повторено автоматически/);
- assert.match(pos,/recoverWebOrderReadyJournal/);
+ assert.match(web,/addEventListener\('online',\(\)=>\{void recoverWebOrderReadyJournal\(\)/);assert.match(web,/queueMicrotask\(\(\)=>\{void recoverWebOrderReadyJournal/);
 });
