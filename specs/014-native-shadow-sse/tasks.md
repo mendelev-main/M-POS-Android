@@ -1,0 +1,12 @@
+# Tasks
+- [x] Add shadow SSE start/stop/status actions.
+- [x] Parse SSE data frames without business dispatch.
+- [x] Add bounded reconnect/backoff.
+- [x] Cancel active call on stop.
+- [x] Expose event count/hash and reconnect count.
+- [x] Keep legacy EventSource authoritative.
+- [x] Add architecture tests preventing business-storage ownership.
+- [ ] Run Node tests, lint and debug build.
+- [ ] Physical disconnect/reconnect verification.
+- [ ] Compare native observations with legacy EventSource traffic.
+- [ ] Native SSE cutover remains blocked.

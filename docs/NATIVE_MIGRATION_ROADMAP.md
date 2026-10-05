@@ -106,7 +106,7 @@ Candidates:
 
 Native networking must not imply automatic catalogue synchronization.
 
-Current first step: Android owns a non-authoritative OkHttp transport boundary exposed through `MPosCore.Network`. It can describe/probe the configured HTTPS backend, but SSE consumption and all WEB-order business handlers remain on the reviewed legacy runtime until parity/reconnect tests are complete.
+Current first step: Android owns a non-authoritative OkHttp transport boundary exposed through `MPosCore.Network`. It can describe/probe the configured HTTPS backend. Second step adds opt-in shadow SSE observation with bounded exponential reconnect backoff and event hashes/counters; observed payloads are not forwarded into WEB-order business handlers. Legacy `EventSource` remains authoritative until parity/reconnect tests are complete.
 
 ### P4 — Operational outbox and recovery
 **Status: 🟡 Candidate**

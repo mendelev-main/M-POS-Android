@@ -7,6 +7,6 @@
 - [x] Keep native SSE disabled.
 - [x] Keep legacy EventSource/fetch business handlers authoritative.
 - [x] Extend architecture tests.
-- [ ] Run Node tests, lint and debug build.
+- [x] Run Node tests, lint and debug build.
 - [ ] Physical backend probe/reconnect verification.
 - [ ] Native SSE cutover remains blocked.

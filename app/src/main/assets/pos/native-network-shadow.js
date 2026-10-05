@@ -5,5 +5,5 @@
  global.__nativeNetworkResult=function(result){const entry=pending.get(result?.requestId);if(!entry)return;pending.delete(result.requestId);entry.resolve(result)};
  global.__nativeNetworkEvent=function(event){global.dispatchEvent(new CustomEvent('mpos-native-network-event',{detail:event||{}}))};
  global.MPosCore=global.MPosCore||{};
- global.MPosCore.Network=Object.freeze({authoritative:false,sseEnabled:false,describe:()=>request('describe'),probe:(backendUrl,deviceKey)=>request('probe',{backendUrl,deviceKey})});
+ global.MPosCore.Network=Object.freeze({authoritative:false,sseEnabled:false,describe:()=>request('describe'),probe:(backendUrl,deviceKey)=>request('probe',{backendUrl,deviceKey}),startShadowSse:(backendUrl,deviceKey)=>request('startShadowSse',{backendUrl,deviceKey}),stopShadowSse:()=>request('stopShadowSse'),shadowStatus:()=>request('shadowStatus')});
 })(window);
