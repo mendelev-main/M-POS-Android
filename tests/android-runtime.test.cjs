@@ -279,3 +279,12 @@ test('native SSE shadow observes and reconnects without owning web-order busines
  const webOrders=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/web-orders.js'),'utf8');
  assert.match(transport,/startShadowSse/);assert.match(transport,/reconnects/);assert.match(transport,/30000L/);assert.match(transport,/shadow-observed/);assert.match(transport,/authoritative"\s*,\s*false/);assert.match(bridge,/startShadowSse/);assert.match(bridge,/shadowStatus/);assert.match(webOrders,/new EventSource/);assert.doesNotMatch(transport,/PrilavokCore|parked|webOrderAcceptances/);
 });
+
+
+test('SSE parity diagnostics fingerprint legacy raw event data without changing business dispatch',()=>{
+ const bridge=fs.readFileSync(path.join(root,'app/src/main/assets/pos/native-network-shadow.js'),'utf8');
+ const webOrders=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/web-orders.js'),'utf8');
+ assert.match(bridge,/observeLegacySse/);assert.match(bridge,/crypto\.subtle\.digest\('SHA-256'/);assert.match(bridge,/parityStatus/);assert.match(bridge,/authoritative:false/);
+ assert.match(webOrders,/observeLegacySse\?\.\(ev\.data\|\|''\);const d=JSON\.parse\(ev\.data\|\|'\{\}'\)/);
+ assert.match(webOrders,/new EventSource/);
+});

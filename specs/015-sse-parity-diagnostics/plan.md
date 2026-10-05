@@ -1,0 +1,1 @@
+# Implementation plan\n1. Observe legacy raw event.data without altering its handler.\n2. Hash it using Web Crypto SHA-256.\n3. Compare with native shadow hash/counters.\n4. Expose diagnostic parity status only.\n5. Keep legacy EventSource authoritative.\n

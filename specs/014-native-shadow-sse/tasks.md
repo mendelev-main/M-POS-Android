@@ -6,7 +6,8 @@
 - [x] Expose event count/hash and reconnect count.
 - [x] Keep legacy EventSource authoritative.
 - [x] Add architecture tests preventing business-storage ownership.
-- [ ] Run Node tests, lint and debug build.
+- [x] Run Node tests, lint and debug build.
 - [ ] Physical disconnect/reconnect verification.
-- [ ] Compare native observations with legacy EventSource traffic.
+- [x] Add non-authoritative legacy/native fingerprint comparison diagnostics.
+- [ ] Physically compare native observations with legacy EventSource traffic.
 - [ ] Native SSE cutover remains blocked.
