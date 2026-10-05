@@ -23,6 +23,8 @@ class NativeStorageMirror(
     private val orderRepository = MPosOrderRepository(database)
     private val parkedDao = database.parkedOrderProjectionDao()
     private val parkedRepository = MPosParkedOrderRepository(database)
+    private val stockEventDao = database.stockEventProjectionDao()
+    private val stockEventRepository = MPosStockEventRepository(database)
 
     fun handle(payload: JSONObject) {
         val requestId = payload.optString("requestId")
@@ -49,6 +51,7 @@ class NativeStorageMirror(
                             "shifts" -> runCatching { projectShifts(serialized) }.isSuccess
                             "orders" -> runCatching { projectOrders(serialized) }.isSuccess
                             "parked" -> runCatching { projectParkedOrders(serialized) }.isSuccess
+                            "receivings", "inventoryHistory" -> runCatching { projectStockEvents(key, serialized) }.isSuccess
                             else -> true
                         }
                         result(requestId, true, projectionOk = projectionOk)
@@ -86,10 +89,21 @@ class NativeStorageMirror(
                                 parkedDao.clearLines()
                                 parkedDao.clearOrders()
                             }
+                            "receivings", "inventoryHistory" -> database.withTransaction {
+                                stockEventDao.clearLines(key)
+                                stockEventDao.clearEvents(key)
+                            }
                         }
                     }.onSuccess { result(requestId, true) }
                         .onFailure { result(requestId, false, it.localizedMessage ?: "shadow delete failed") }
                 }
+            }
+
+            "stockEventParity" -> scope.launch(Dispatchers.IO) {
+                val sourceKey = payload.optString("sourceKey")
+                runCatching { stockEventRepository.parityReport(sourceKey) }
+                    .onSuccess { report -> report.put("requestId", requestId); onResult(report) }
+                    .onFailure { result(requestId, false, it.localizedMessage ?: "stock event parity failed") }
             }
 
             "parkedOrderParity" -> scope.launch(Dispatchers.IO) {
@@ -160,6 +174,8 @@ class NativeStorageMirror(
                         orderDao.paymentCount(),
                         parkedDao.orderCount(),
                         parkedDao.lineCount(),
+                        stockEventDao.eventCount(),
+                        stockEventDao.lineCount(),
                     )
                 }.onSuccess { counts ->
                     onResult(
@@ -177,6 +193,8 @@ class NativeStorageMirror(
                             .put("payments", counts[8])
                             .put("parkedOrders", counts[9])
                             .put("parkedOrderLines", counts[10])
+                            .put("stockEvents", counts[11])
+                            .put("stockEventLines", counts[12])
                             .put("authoritative", false)
                     )
                 }.onFailure {
@@ -455,6 +473,41 @@ class NativeStorageMirror(
             parkedDao.clearOrders()
             if (orders.isNotEmpty()) parkedDao.insertOrders(orders)
             if (lines.isNotEmpty()) parkedDao.insertLines(lines)
+        }
+    }
+
+    private suspend fun projectStockEvents(sourceKey:String, serialized:String) {
+        val source=JSONArray(serialized); val now=System.currentTimeMillis()
+        val events=ArrayList<StockEventProjectionEntity>(); val lines=ArrayList<StockEventLineProjectionEntity>()
+        for(i in 0 until source.length()){
+            val event=source.optJSONObject(i)?:continue
+            val rawId=event.optString("id").trim()
+            val eventId=if(rawId.isNotEmpty()) "$sourceKey:$rawId" else "$sourceKey:event:$i"
+            val inventory=sourceKey=="inventoryHistory"
+            events += StockEventProjectionEntity(
+                id=eventId, sourceKey=sourceKey, eventType=if(inventory) event.optString("type","inventory") else event.optString("type","receiving"),
+                supplierId=event.optString("supplierId"), supplierName=event.optString("supplierName"),
+                referenceId=if(inventory) event.optString("id") else event.optString("purchaseOrderId"),
+                totalCost=if(inventory) event.optDouble("estimatedLoss") else event.optDouble("totalCost"),
+                timestamp=if(inventory) event.optLong("completedAt") else event.optLong("timestamp"),
+                sortIndex=i,payload=event.toString(),updatedAt=now)
+            val items=event.optJSONArray("items")?:JSONArray()
+            for(j in 0 until items.length()){
+                val item=items.optJSONObject(j)?:continue
+                lines += StockEventLineProjectionEntity(
+                    id="$eventId:line:$j", eventId=eventId, productId=item.optString("productId"),
+                    productName=item.optString("productName",item.optString("name")),
+                    quantity=if(inventory) item.optDouble("actual") else item.optDouble("qty"),
+                    unitCost=if(inventory) item.optDouble("cost") else item.optDouble("unitCost"),
+                    difference=if(inventory) item.optDouble("difference") else item.optDouble("qty"),
+                    stockUnit=if(inventory) item.optString("unit") else item.optString("stockUnit"),
+                    sortIndex=j,payload=item.toString(),updatedAt=now)
+            }
+        }
+        database.withTransaction {
+            stockEventDao.clearLines(sourceKey); stockEventDao.clearEvents(sourceKey)
+            if(events.isNotEmpty()) stockEventDao.insertEvents(events)
+            if(lines.isNotEmpty()) stockEventDao.insertLines(lines)
         }
     }
 

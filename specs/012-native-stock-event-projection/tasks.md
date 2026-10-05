@@ -1,0 +1,13 @@
+# Tasks
+- [x] Confirm no standalone legacy stock-movement ledger exists.
+- [x] Add stock event and line entities.
+- [x] Add explicit Room 6→7 migration.
+- [x] Project receiving history.
+- [x] Project inventory history.
+- [x] Preserve original JSON.
+- [x] Add per-source parity diagnostics.
+- [x] Keep product stock authoritative in legacy runtime.
+- [x] Extend architecture tests.
+- [ ] Run Node tests, lint and debug build.
+- [ ] Physical receiving/inventory/restart verification.
+- [ ] Authoritative stock cutover remains blocked.

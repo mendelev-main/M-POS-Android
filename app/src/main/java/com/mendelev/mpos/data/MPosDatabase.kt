@@ -20,8 +20,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         PaymentProjectionEntity::class,
         ParkedOrderProjectionEntity::class,
         ParkedOrderLineProjectionEntity::class,
+        StockEventProjectionEntity::class,
+        StockEventLineProjectionEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = false,
 )
 abstract class MPosDatabase : RoomDatabase() {
@@ -31,6 +33,7 @@ abstract class MPosDatabase : RoomDatabase() {
     abstract fun shiftProjectionDao(): ShiftProjectionDao
     abstract fun orderProjectionDao(): OrderProjectionDao
     abstract fun parkedOrderProjectionDao(): ParkedOrderProjectionDao
+    abstract fun stockEventProjectionDao(): StockEventProjectionDao
 
     companion object {
         @Volatile private var instance: MPosDatabase? = null
@@ -238,6 +241,22 @@ abstract class MPosDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""CREATE TABLE IF NOT EXISTS stock_event_projection (
+                    id TEXT NOT NULL PRIMARY KEY, sourceKey TEXT NOT NULL, eventType TEXT NOT NULL,
+                    supplierId TEXT NOT NULL, supplierName TEXT NOT NULL, referenceId TEXT NOT NULL,
+                    totalCost REAL NOT NULL, timestamp INTEGER NOT NULL, sortIndex INTEGER NOT NULL,
+                    payload TEXT NOT NULL, updatedAt INTEGER NOT NULL)""")
+                db.execSQL("""CREATE TABLE IF NOT EXISTS stock_event_line_projection (
+                    id TEXT NOT NULL PRIMARY KEY, eventId TEXT NOT NULL, productId TEXT NOT NULL,
+                    productName TEXT NOT NULL, quantity REAL NOT NULL, unitCost REAL NOT NULL,
+                    difference REAL NOT NULL, stockUnit TEXT NOT NULL, sortIndex INTEGER NOT NULL,
+                    payload TEXT NOT NULL, updatedAt INTEGER NOT NULL)""")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_stock_event_line_projection_eventId ON stock_event_line_projection(eventId)")
+            }
+        }
+
         fun get(context: Context): MPosDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -245,7 +264,7 @@ abstract class MPosDatabase : RoomDatabase() {
                     MPosDatabase::class.java,
                     "mpos.db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                     .build()
                     .also { instance = it }
             }

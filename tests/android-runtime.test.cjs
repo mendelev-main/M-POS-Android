@@ -227,7 +227,7 @@ test('orders, lines and payments project through explicit Room migration and rem
 
 test('Room schema has one centralized current version assertion',()=>{
  const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
- assert.match(db,/version\s*=\s*6/);
+ assert.match(db,/version\s*=\s*7/);
 });
 
 test('parked orders project through explicit Room migration and remain non-authoritative',()=>{
@@ -245,5 +245,20 @@ test('parked orders project through explicit Room migration and remain non-autho
  assert.match(repository,/authoritative", false/);
  assert.match(mirror,/"parked"\s*->\s*runCatching\s*\{\s*projectParkedOrders\(serialized\)/);
  assert.match(mirror,/"parkedOrderParity"/);
+ assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
+});
+
+
+test('warehouse stock events project existing receiving and inventory history without inventing a new legacy ledger',()=>{
+ const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
+ const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/StockEventProjectionEntity.kt'),'utf8');
+ const line=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/StockEventLineProjectionEntity.kt'),'utf8');
+ const repository=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStockEventRepository.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ assert.match(db,/Migration\(6,\s*7\)/);
+ assert.match(entity,/stock_event_projection/); assert.match(line,/stock_event_line_projection/);
+ assert.match(repository,/"receivings"/); assert.match(repository,/"inventoryHistory"/);
+ assert.match(repository,/authoritative",false/);
+ assert.match(mirror,/"receivings", "inventoryHistory"/); assert.match(mirror,/"stockEventParity"/);
  assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
 });
