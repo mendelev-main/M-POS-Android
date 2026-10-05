@@ -225,3 +225,8 @@ async function markCurrentWebOrderReady(){
 }
 
 function testWebOrder(){const n=networkConfigFromState();fetch(n.backendUrl.replace(/\/+$/,'')+'/api/orders/test',{method:'POST',headers:{'Content-Type':'application/json','X-Device-Key':n.deviceKey},body:'{}',cache:'no-store'}).then(async r=>{const d=await r.json().catch(()=>null);if(!r.ok)throw new Error(d?.error||('HTTP '+r.status));flash('Тестовый заказ отправлен');}).catch(()=>flash('Не удалось создать тестовый заказ'));}
+
+
+// Ready recovery hooks stay in the web-order feature so shared POS HTML remains platform-neutral.
+window.addEventListener('online',()=>{void recoverWebOrderReadyJournal();});
+queueMicrotask(()=>{void recoverWebOrderReadyJournal().catch(e=>console.warn('WEB ready recovery:',e));});
