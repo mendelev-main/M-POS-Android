@@ -23,8 +23,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         StockEventProjectionEntity::class,
         StockEventLineProjectionEntity::class,
         WebAcceptanceProjectionEntity::class,
+        CurrentOrderSessionProjectionEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = false,
 )
 abstract class MPosDatabase : RoomDatabase() {
@@ -36,6 +37,7 @@ abstract class MPosDatabase : RoomDatabase() {
     abstract fun parkedOrderProjectionDao(): ParkedOrderProjectionDao
     abstract fun stockEventProjectionDao(): StockEventProjectionDao
     abstract fun webAcceptanceProjectionDao(): WebAcceptanceProjectionDao
+    abstract fun currentOrderSessionProjectionDao(): CurrentOrderSessionProjectionDao
 
     companion object {
         @Volatile private var instance: MPosDatabase? = null
@@ -268,6 +270,15 @@ abstract class MPosDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""CREATE TABLE IF NOT EXISTS current_order_session_projection (
+                    singletonId INTEGER NOT NULL PRIMARY KEY, itemCount INTEGER NOT NULL, orderType TEXT NOT NULL,
+                    source TEXT NOT NULL, webOrderId TEXT NOT NULL, webOrderStatus TEXT NOT NULL,
+                    updatedAt INTEGER NOT NULL, payload TEXT NOT NULL)""")
+            }
+        }
+
         fun get(context: Context): MPosDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -275,7 +286,7 @@ abstract class MPosDatabase : RoomDatabase() {
                     MPosDatabase::class.java,
                     "mpos.db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                     .build()
                     .also { instance = it }
             }

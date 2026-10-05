@@ -318,3 +318,13 @@ test('P4 WEB acceptance journal is shadow-projected without taking recovery auth
 
 
 test("P4 WEB acceptance parity compares IDs and stages without recovery authority",()=>{ const dao=fs.readFileSync(path.join(root,"app/src/main/java/com/mendelev/mpos/data/WebAcceptanceProjectionDao.kt"),"utf8"); const mirror=fs.readFileSync(path.join(root,"app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt"),"utf8"); assert.match(dao,/suspend fun all\(\)/); assert.match(mirror,/"webAcceptanceParity"/); assert.match(mirror,/missingNativeIds/); assert.match(mirror,/extraNativeIds/); assert.match(mirror,/stageMismatches/); assert.match(mirror,/authoritative", false/); });
+
+
+test('P4 current order session is shadow-projected for crash recovery evidence',()=>{
+ const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ const payment=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/payment.js'),'utf8');
+ assert.match(db,/CurrentOrderSessionProjectionEntity::class/);assert.match(db,/version = 9/);assert.match(db,/Migration\(8, 9\)/);
+ assert.match(mirror,/"currentOrderSession"/);assert.match(mirror,/projectCurrentOrderSession/);
+ assert.match(payment,/split-payment-progress/);assert.match(payment,/currentOrderSession:currentOrderSessionSnapshot/);
+});

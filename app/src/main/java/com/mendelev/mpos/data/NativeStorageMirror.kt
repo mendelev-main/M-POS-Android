@@ -26,6 +26,7 @@ class NativeStorageMirror(
     private val stockEventDao = database.stockEventProjectionDao()
     private val stockEventRepository = MPosStockEventRepository(database)
     private val webAcceptanceDao = database.webAcceptanceProjectionDao()
+    private val currentOrderSessionDao = database.currentOrderSessionProjectionDao()
 
     fun handle(payload: JSONObject) {
         val requestId = payload.optString("requestId")
@@ -54,6 +55,7 @@ class NativeStorageMirror(
                             "parked" -> runCatching { projectParkedOrders(serialized) }.isSuccess
                             "receivings", "inventoryHistory" -> runCatching { projectStockEvents(key, serialized) }.isSuccess
                             "webOrderAcceptances" -> runCatching { projectWebAcceptances(serialized) }.isSuccess
+                            "currentOrderSession" -> runCatching { projectCurrentOrderSession(serialized) }.isSuccess
                             else -> true
                         }
                         result(requestId, true, projectionOk = projectionOk)
@@ -96,6 +98,7 @@ class NativeStorageMirror(
                                 stockEventDao.clearEvents(key)
                             }
                             "webOrderAcceptances" -> webAcceptanceDao.clear()
+                            "currentOrderSession" -> currentOrderSessionDao.clear()
                         }
                     }.onSuccess { result(requestId, true) }
                         .onFailure { result(requestId, false, it.localizedMessage ?: "shadow delete failed") }
@@ -548,6 +551,22 @@ class NativeStorageMirror(
             if(events.isNotEmpty()) stockEventDao.insertEvents(events)
             if(lines.isNotEmpty()) stockEventDao.insertLines(lines)
         }
+    }
+
+    private suspend fun projectCurrentOrderSession(serialized: String) {
+        val source = JSONObject(serialized)
+        val items = source.optJSONArray("items")
+        currentOrderSessionDao.upsert(
+            CurrentOrderSessionProjectionEntity(
+                itemCount = items?.length() ?: 0,
+                orderType = source.optString("orderType"),
+                source = source.optString("source"),
+                webOrderId = source.optString("webOrderId"),
+                webOrderStatus = source.optString("webOrderStatus"),
+                updatedAt = source.optLong("updatedAt"),
+                payload = source.toString(),
+            ),
+        )
     }
 
     private suspend fun projectWebAcceptances(serialized:String) {
