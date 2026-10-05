@@ -54,5 +54,14 @@ function publishAvailability(settledWebOrderIds=[]){
 
 function onAvailabilityAppState(active){
   window._availabilityAppActive=active;
-  if(!active)availabilityController?.abort();
+  if(!active){availabilityController?.abort();return;}
+  if(state.loaded)void publishAvailability();
+}
+
+function startAvailabilityRecovery(){
+  if(window._availabilityRecoveryStarted)return;
+  window._availabilityRecoveryStarted=true;
+  window.addEventListener('online',()=>{if(state.loaded)void publishAvailability();});
+  document.addEventListener('visibilitychange',()=>onAvailabilityAppState(!document.hidden));
+  if(state.loaded)void publishAvailability();
 }

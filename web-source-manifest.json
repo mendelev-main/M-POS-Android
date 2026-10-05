@@ -1,15 +1,15 @@
 {
   "sourceRepository": "mendelev-main/prilavok-pos-ipad",
-  "sourceCommit": "d5ee761d26d4410ab93dce666017b1d5631bb557",
+  "sourceCommit": "67d039c3216a2f4422ca0616074653ccff586107",
   "files": {
-    "pos.html": "5b9ec0c387db194fcfa34d95624d237cbecff5719da3d14ddbe1f928339fe39d",
+    "pos.html": "__VERIFY_POS_SHA256__",
     "network-printer.js": "f32d11114c31775cb46ed803fd44c28aa6ccbea6e9bfbad279bca7785e072cd6",
     "notification-native.js": "d14a707f108f4ffd192a660a3a0f2dd87f2d9484c8309e6105a76e8935a40ca1",
     "Web/fonts/Manrope-Variable.ttf": "3ae11c49db0455a3cc33e37d380f20fdb8c7f8b41dc07625c177e3d87a9d6ae6",
     "Web/fonts/OFL.txt": "58172e0c0fac2cda8a37b348164bb55e44b0e69051e557e92b1d3f6910141f7b",
     "Web/js/core/storage.js": "4e9d29d56f1a1cbf663f21bedada61bce46236ee322efe44756b18dbec4d92db",
     "Web/js/features/analytics.js": "e47103546bf22a5ed92c77641cce17d11a28e3a0d2f5b6b7f4fc4eaca3d0bd8b",
-    "Web/js/features/availability.js": "56b0fd808e921c3c4752c5b800dcd0f2761a825573fdce74905c9820024525b1",
+    "Web/js/features/availability.js": "__VERIFY_SHA256__",
     "Web/js/features/backup.js": "5523d9e43a3cf2f101f29c603bc8432b4354167f2cd4f78552de04f2d9acedcb",
     "Web/js/features/cart-composition.js": "ceb1b859d955c6084305507a2c4ca71d436df321a052408b819d0d24ada3897d",
     "Web/js/features/cart-presentation.js": "a24e96607c116847b17e612ff1d7b550f789484c968ccabdd629baec85859392",

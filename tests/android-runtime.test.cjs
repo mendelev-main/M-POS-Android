@@ -402,3 +402,10 @@ test('P4 loyalty restart recovery requeues interrupted sending states',()=>{
  const retry=loyalty.slice(loyalty.indexOf('function retryPendingLoyalty'),loyalty.indexOf('function loyaltyRewardAllocation'));
  assert.match(retry,/loyaltySync\?\.status==='sending'/);assert.match(retry,/loyaltyReversal\?\.status==='sending'/);assert.match(retry,/status:'pending',recoveredAt:Date\.now\(\)/);assert.match(retry,/publishPaidOrderLoyalty\(order\)/);assert.match(retry,/settleReturnedOrderLoyalty\(order\)/);
 });
+
+
+test('P4 availability resyncs after startup, reconnect and foreground',()=>{
+ const availability=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/availability.js'),'utf8');
+ const html=fs.readFileSync(path.join(root,'app/src/main/assets/pos/pos.html'),'utf8');
+ assert.match(availability,/function startAvailabilityRecovery\(\)/);assert.match(availability,/addEventListener\('online',[^\n]*publishAvailability/);assert.match(availability,/visibilitychange[^\n]*onAvailabilityAppState/);assert.match(availability,/if\(state\.loaded\)void publishAvailability\(\)/);assert.match(html,/loadAll\(\)\.then\(\(\)=>startAvailabilityRecovery\(\)\)/);
+});
