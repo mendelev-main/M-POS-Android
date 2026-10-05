@@ -378,3 +378,11 @@ test('P4 critical storage journal is shadow-projected without native replay auth
  const html=fs.readFileSync(path.join(root,'app/src/main/assets/pos/pos.html'),'utf8');
  assert.match(entity,/critical_storage_journal_projection/);assert.match(db,/version = 12/);assert.match(db,/Migration\(11, 12\)/);assert.match(db,/CriticalStorageJournalProjectionEntity::class/);assert.match(mirror,/"criticalStorageJournal"/);assert.match(mirror,/projectCriticalStorageJournal/);assert.match(mirror,/writeKeys/);assert.match(html,/recoverCriticalStorageJournal\(\)/);assert.match(html,/commitCriticalStorage\(type,writes\)/);assert.doesNotMatch(mirror,/recoverCriticalStorageJournal|commitCriticalStorage/);
 });
+
+
+test('P4 critical storage journal parity is read-only and compares recovery identity',()=>{
+ const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
+ assert.match(mirror,/"criticalStorageJournalParity"/);assert.match(mirror,/criticalJournalDao\.current\(\)/);assert.match(mirror,/presenceMatches/);assert.match(mirror,/idMatches/);assert.match(mirror,/typeMatches/);assert.match(mirror,/writeKeysMatch/);assert.match(mirror,/authoritative", false/);
+ const parity=mirror.slice(mirror.indexOf('"criticalStorageJournalParity"'),mirror.indexOf('"webAcceptanceParity"'));
+ assert.doesNotMatch(parity,/\.set\(|\.replace\(|\.clear\(|commitCriticalStorage|recoverCriticalStorageJournal/);
+});

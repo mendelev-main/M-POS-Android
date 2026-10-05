@@ -6,5 +6,5 @@
 - [x] Keep replay authority in legacy storage flow.
 - [x] Review old Room version assertions for migration coupling.
 - [x] Add architecture/source contract test.
-- [ ] Run full Node tests, parity, lint and Android debug build.
+- [x] Run full Node tests, parity, lint and Android debug build.
 - [ ] Physical crash during critical payment/storage write and restart recovery.

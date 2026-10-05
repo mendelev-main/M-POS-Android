@@ -111,6 +111,39 @@ class NativeStorageMirror(
                 }
             }
 
+            "criticalStorageJournalParity" -> scope.launch(Dispatchers.IO) {
+                runCatching {
+                    val shadow = shadowDao.get("criticalStorageJournal")?.payload
+                    val source = shadow?.takeUnless { it == "null" }?.let(::JSONObject)
+                    val native = criticalJournalDao.current()
+                    val legacyKeys = mutableSetOf<String>()
+                    val writes = source?.optJSONArray("writes") ?: JSONArray()
+                    for (index in 0 until writes.length()) {
+                        writes.optJSONObject(index)?.optString("key")?.takeIf { it.isNotBlank() }?.let(legacyKeys::add)
+                    }
+                    val nativeKeys = native?.writeKeys?.let { raw ->
+                        val array = JSONArray(raw)
+                        buildSet { for (index in 0 until array.length()) array.optString(index).takeIf { it.isNotBlank() }?.let(::add) }
+                    } ?: emptySet()
+                    val presenceMatches = (source == null) == (native == null)
+                    val idMatches = source?.optString("id").orEmpty() == native?.journalId.orEmpty()
+                    val typeMatches = source?.optString("type").orEmpty() == native?.operationType.orEmpty()
+                    val keysMatch = legacyKeys == nativeKeys
+                    JSONObject()
+                        .put("requestId", requestId)
+                        .put("ok", true)
+                        .put("authoritative", false)
+                        .put("legacyPresent", source != null)
+                        .put("nativePresent", native != null)
+                        .put("presenceMatches", presenceMatches)
+                        .put("idMatches", idMatches)
+                        .put("typeMatches", typeMatches)
+                        .put("writeKeysMatch", keysMatch)
+                        .put("matches", presenceMatches && idMatches && typeMatches && keysMatch)
+                }.onSuccess(onResult)
+                    .onFailure { result(requestId, false, it.localizedMessage ?: "critical storage journal parity failed") }
+            }
+
             "webAcceptanceParity" -> scope.launch(Dispatchers.IO) {
                 runCatching {
                     val shadow = shadowDao.get("webOrderAcceptances")?.payload ?: "{}"
