@@ -12,14 +12,31 @@ class TelegramClient(
     private val createWarehousePdf: (JSONObject) -> File,
     private val onResult: (Boolean, String) -> Unit,
     private val onMonthlyResult: (JSONObject) -> Unit,
+    private val onShiftResult: (Boolean, String) -> Unit,
 ) {
     private val executor = Executors.newSingleThreadExecutor()
 
     fun handle(payload: JSONObject) {
+        val action = payload.optString("action")
         val token = payload.optString("botToken").trim()
         val chatId = payload.optString("chatId").trim()
-        if (token.isBlank() || chatId.isBlank()) return onResult(false, "Укажите токен бота и ID рабочей группы")
-        val action = payload.optString("action")
+        if (token.isBlank() || chatId.isBlank()) {
+            if (action == "sendShiftCloseReport") onShiftResult(false, "Укажите токен бота и ID рабочей группы")
+            else onResult(false, "Укажите токен бота и ID рабочей группы")
+            return
+        }
+        if (action == "sendShiftCloseReport") {
+            val report = payload.optJSONObject("report")
+            if (report == null || report.length() == 0) return onShiftResult(false, "Не заполнен отчёт о закрытии смены")
+            executor.execute {
+                runCatching {
+                    val png = MPosShiftReceiptImage.render(report)
+                    sendPhoto(token, chatId, payload.optString("threadId"), png, MPosShiftReceipt.caption(report))
+                }.onSuccess { onShiftResult(true, "Чек закрытия смены отправлен в Telegram") }
+                    .onFailure { onShiftResult(false, "Не удалось отправить изображение закрытия смены в Telegram") }
+            }
+            return
+        }
         if (action == "sendMonthlyWarehouseReport") {
             val periodKey = payload.optString("periodKey")
             val report = payload.optJSONObject("report")
@@ -40,7 +57,6 @@ class TelegramClient(
         val text = when (action) {
             "test" -> "🟢 <b>Telegram подключён</b>\nM POS Android успешно связался с рабочей группой."
             "send" -> payload.optString("text")
-            "sendShiftCloseReport" -> shiftText(payload.optJSONObject("report") ?: JSONObject())
             else -> return onResult(false, "Эта Telegram-команда ещё не перенесена на Android")
         }
         executor.execute {
@@ -90,17 +106,24 @@ class TelegramClient(
         if (code !in 200..299 || !JSONObject(response.ifBlank { "{}" }).optBoolean("ok")) error("Telegram HTTP $code")
     }
 
-    private fun shiftText(report: JSONObject): String = buildString {
-        append("<b>Смена закрыта · M POS</b>\n")
-        append("Сотрудник: ${escape(report.optString("employeeName", "Сотрудник"))}\n")
-        append("Заказов: ${report.optInt("count")}\n")
-        append("Выручка: ${money(report.optDouble("total"))}\n")
-        append("Наличные: ${money(report.optDouble("cash"))}\n")
-        append("Карта: ${money(report.optDouble("card"))}\n")
-        append("Расхождение: ${money(report.optDouble("difference"))}")
+    private fun sendPhoto(token: String, chatId: String, threadId: String, png: ByteArray, caption: String) {
+        val boundary = "MPos-${UUID.randomUUID()}"
+        val connection = URL("https://api.telegram.org/bot$token/sendPhoto").openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod = "POST"
+            connection.connectTimeout = 10_000
+            connection.readTimeout = 15_000
+            connection.doOutput = true
+            connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
+            connection.outputStream.buffered().use { MPosTelegramPhoto.write(it, boundary, chatId, threadId, caption, png) }
+            val code = connection.responseCode
+            val response = (if (code in 200..299) connection.inputStream else connection.errorStream)?.bufferedReader()?.use { it.readText() }.orEmpty()
+            if (code !in 200..299 || !JSONObject(response.ifBlank { "{}" }).optBoolean("ok")) error("Telegram photo rejected")
+        } finally {
+            connection.disconnect()
+        }
     }
 
     private fun encode(value: String) = URLEncoder.encode(value, Charsets.UTF_8.name())
     private fun escape(value: String) = value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    private fun money(value: Double) = "%.2f BYN".format(value)
 }

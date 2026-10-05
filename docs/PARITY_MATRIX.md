@@ -15,8 +15,9 @@
 | LAN ESC/POS | native raster implementation | 58/80 mm printers, routing, copies and timeouts |
 | Warehouse PDF/XLSX | native implementation | Exact values and visual comparison with iPad |
 | Purchase-order sharing | native PDF implementation | Android share sheet and multi-page document |
-| Telegram text/shift/monthly reports | implemented; shift close currently uses a text summary | Compare delivery and decide whether Android also needs the iPad raster image |
-| WEB orders and availability | shared runtime implemented | SSE reconnect, acceptance recovery and post-payment stock |
+| Telegram text/shift/monthly reports | implemented; shift close is a native PNG receipt via sendPhoto (spec 034), matching the approved iPad format | Physical image/content comparison and Telegram group/topic delivery, offline failure isolation |
+| WEB orders and availability | shared runtime implemented; Android availability retry policy in spec 033 | SSE reconnect, acceptance recovery, post-payment stock and failed-send retry only after next persisted payment |
 | Release/update installation | pending | Stable signing key and `adb install -r` data retention |
+| Native diagnostic report | implemented; manual metadata-only JSON export, spec 032 | Offline save, cancellation/recreation/provider failure, 200-event retention and private-data exclusion on a tablet |
 
 The iPad application remains the production source of truth until every critical row is accepted.

@@ -6,7 +6,7 @@
 4. Keep existing `prilavok_` keys, JSON shapes and backup schema v13 compatible. Change them only with an explicit migration and compatibility tests.
 5. Preserve the primary data direction: POS → Backend → Web / Mini App.
 6. Never add automatic catalogue synchronization. Existing manual synchronization remains the only catalogue sync trigger unless the user explicitly changes this rule.
-7. Availability publication may run only after a successfully persisted payment, matching the accepted POS behavior.
+7. Availability publication may run only after a successfully persisted payment, matching the accepted POS behavior. After a failed or interrupted availability send, retry only after the next successfully persisted payment; startup, reconnect and foreground must not retry. Existing stock-change/manual-sync triggers must not bypass this retry gate. Spec 033 supersedes spec 030's automatic recovery triggers on Android.
 8. Until a module has an approved native-migration specification, its reviewed HTML/JavaScript implementation remains the parity reference. Approved modules may move to Kotlin/Compose incrementally while preserving behavior and data compatibility.
 9. Prefer native Kotlin APIs for Android platform boundaries: storage infrastructure, LAN ESC/POS, networking/SSE infrastructure, photos, file import/export, sharing, reports, diagnostics, updates and lifecycle. Do not add a general cross-platform runtime.
 10. Do not commit signing keys, Telegram tokens, device keys, backup files or production data.
@@ -15,4 +15,4 @@
 13. Test critical behavior on physical Android tablets after every substantial stage. Do not add dependencies on a particular manufacturer, model, screen resolution or chipset.
 14. Native migration order is documented in `docs/NATIVE_MIGRATION_ROADMAP.md`; completed parity work remains documented in `docs/PARITY_MATRIX.md`.
 15. All new or rewritten code uses M POS naming: Kotlin/Compose classes use `MPos...`, new JS/runtime namespaces use `MPosCore`, and new docs/UI must not introduce `Prilavok`. Existing `PrilavokCore` / `prilavok_` are temporary compatibility surfaces only and must disappear as their legacy modules are migrated.
-16. Do not commit or push unless authorized by the user. The current session authorizes commits and pushes to `main`.
+16. The user authorizes commits and pushes to `main`. After completing and validating requested changes, publish them to `main` so GitHub stays up to date. Preserve unrelated user changes and never force-push.

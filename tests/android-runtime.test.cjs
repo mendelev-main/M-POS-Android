@@ -29,7 +29,7 @@ test('Android bridge preserves all native iPad channels',()=>{
 
 test('Android POS differs from source HTML only by platform scripts',()=>{
  const manifest=JSON.parse(fs.readFileSync(path.join(root,'web-source-manifest.json')));
- const restored=html.replace('<script src="android-bridge.js"></script>\n','').replace('\n<script src="native-storage-shadow.js"></script>','').replace('\n<script src="native-catalog-cutover.js"></script>','').replace('\n<script src="native-network-shadow.js"></script>','').replace('\n<script src="native-settings.js"></script>','').replace('\n<script src="notification-native.js"></script>','');
+ const restored=html.replace('<script src="android-bridge.js"></script>\n','').replace('\n<script src="native-storage-shadow.js"></script>','').replace('\n<script src="native-catalog-cutover.js"></script>','').replace('\n<script src="native-network-shadow.js"></script>','').replace('\n<script src="native-settings.js"></script>','').replace('\n<script src="notification-native.js"></script>','').replace('<script src="native-availability.js"></script>\n','');
  assert.equal(sha(restored),manifest.files['pos.html']);
  for(const [file,expected] of Object.entries(manifest.files)){
    if(file==='pos.html')continue;
@@ -404,15 +404,16 @@ test('P4 loyalty restart recovery requeues interrupted sending states',()=>{
 });
 
 
-test('P4 availability resyncs after startup, reconnect and foreground',()=>{
+test('reviewed availability reference retains recovery; Android policy is installed before initialization',()=>{
  const availability=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/availability.js'),'utf8');
  const html=fs.readFileSync(path.join(root,'app/src/main/assets/pos/pos.html'),'utf8');
  assert.match(availability,/function startAvailabilityRecovery\(\)/);assert.match(availability,/addEventListener\('online',[^\n]*publishAvailability/);assert.match(availability,/visibilitychange[^\n]*onAvailabilityAppState/);assert.match(availability,/if\(state\.loaded\)void publishAvailability\(\)/);assert.match(html,/loadAll\(\)\.then\(\(\)=>startAvailabilityRecovery\(\)\)/);
+ assert.ok(html.indexOf('<script src="native-availability.js"></script>')<html.indexOf('<script>loadAll().then'));
 });
 
 
 test('P5 diagnostics breadcrumbs are bounded local metadata without business payloads',()=>{
- const store=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/diagnostics/DiagnosticBreadcrumbStore.kt'),'utf8');
+ const store=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/diagnostics/MPosDiagnosticBreadcrumbStore.kt'),'utf8');
  const activity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/MainActivity.kt'),'utf8');
  assert.match(store,/MAX_ENTRIES = 200/);assert.match(store,/mpos_diagnostic_breadcrumbs/);assert.match(store,/category: String/);assert.match(store,/event: String/);assert.doesNotMatch(store,/payload|customer|phone|items|deviceKey/);
  assert.match(activity,/diagnostics\.record\("printer"/);assert.match(activity,/diagnostics\.record\("network"/);assert.match(activity,/diagnostics\.record\("storage"/);

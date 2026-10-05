@@ -21,7 +21,8 @@ import com.mendelev.mpos.backup.BackupManager
 import com.mendelev.mpos.bridge.NativeBridgeRouter
 import com.mendelev.mpos.data.MPosDatabase
 import com.mendelev.mpos.data.NativeStorageMirror
-import com.mendelev.mpos.diagnostics.DiagnosticBreadcrumbStore
+import com.mendelev.mpos.diagnostics.MPosDiagnosticBreadcrumbStore
+import com.mendelev.mpos.diagnostics.MPosDiagnosticExporter
 import com.mendelev.mpos.media.ProductImageStore
 import com.mendelev.mpos.network.NativeNetworkTransport
 import com.mendelev.mpos.media.ProductPhotoManager
@@ -52,7 +53,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nativeSettings: NativeSettingsStore
     private lateinit var nativeStorageMirror: NativeStorageMirror
     private lateinit var nativeNetworkTransport: NativeNetworkTransport
-    private lateinit var diagnostics: DiagnosticBreadcrumbStore
+    private lateinit var diagnostics: MPosDiagnosticBreadcrumbStore
+    private var diagnosticExportPending = false
+
+    private val diagnosticCreator = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        diagnosticExportPending = false
+        if (uri != null) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                val ok = MPosDiagnosticExporter(contentResolver, diagnostics).write(uri)
+                nativeMessage(if (ok) "Диагностика сохранена" else "Не удалось сохранить диагностику")
+            }
+        }
+    }
 
     private val photoPicker = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri ?: return@registerForActivityResult
@@ -75,13 +87,15 @@ class MainActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         hideSystemBars()
 
-        diagnostics = DiagnosticBreadcrumbStore(this)
+        diagnostics = MPosDiagnosticBreadcrumbStore(this)
+        diagnosticExportPending = savedInstanceState?.getBoolean("mposDiagnosticExportPending") ?: false
+        diagnostics.record("lifecycle", "created")
         imageStore = ProductImageStore(this)
         photos = ProductPhotoManager(this, imageStore)
         backup = BackupManager(this, imageStore)
         printer = EscPosPrinter(::printerEvent)
         shares = ReportShareManager(this)
-        telegram = TelegramClient(shares::createWarehousePdf, ::telegramResult, ::telegramMonthlyResult)
+        telegram = TelegramClient(shares::createWarehousePdf, ::telegramResult, ::telegramMonthlyResult, ::telegramShiftResult)
         nativeSettings = NativeSettingsStore(this, ::nativeSettingsResult)
         nativeStorageMirror = NativeStorageMirror(MPosDatabase.get(this), lifecycleScope, ::nativeStorageResult)
         nativeNetworkTransport = NativeNetworkTransport(lifecycleScope, ::nativeNetworkResult, ::nativeNetworkEvent)
@@ -136,11 +150,13 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         hideSystemBars()
+        diagnostics.record("lifecycle", "foreground")
         nativeNetworkTransport.onForeground()
         if (::webView.isInitialized) callJavaScript("window._availabilityAppActive=true;window.onAvailabilityAppState&&window.onAvailabilityAppState(true);")
     }
 
     override fun onPause() {
+        diagnostics.record("lifecycle", "background")
         nativeNetworkTransport.onBackground()
         if (::webView.isInitialized) callJavaScript("window._availabilityAppActive=false;window.onAvailabilityAppState&&window.onAvailabilityAppState(false);")
         super.onPause()
@@ -164,6 +180,21 @@ class MainActivity : AppCompatActivity() {
     fun createBackupFile(name: String) = runOnUiThread { backupCreator.launch(name) }
     fun chooseBackupFile() = runOnUiThread { backupPicker.launch(arrayOf("application/json", "application/octet-stream", "*/*")) }
 
+    fun exportDiagnostics() = runOnUiThread {
+        if (!diagnosticExportPending) {
+            diagnosticExportPending = true
+            runCatching { diagnosticCreator.launch("M-POS-diagnostics.json") }.onFailure {
+                diagnosticExportPending = false
+                nativeMessage("Не удалось открыть сохранение диагностики")
+            }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean("mposDiagnosticExportPending", diagnosticExportPending)
+        super.onSaveInstanceState(outState)
+    }
+
     fun callJavaScript(script: String, onError: (() -> Unit)? = null) = runOnUiThread {
         runCatching { webView.evaluateJavascript(script, null) }.onFailure { onError?.invoke() }
     }
@@ -184,6 +215,7 @@ class MainActivity : AppCompatActivity() {
     fun handleTelegram(payload: JSONObject) = telegram.handle(payload)
 
     fun recreateAfterRendererExit() = runOnUiThread {
+        diagnostics.record("lifecycle", "renderer-exit")
         nativeMessage("WebView был перезапущен. Локальные данные сохранены")
         recreate()
     }
@@ -194,12 +226,19 @@ class MainActivity : AppCompatActivity() {
     }
     private fun telegramResult(ok: Boolean, message: String) = callJavaScript("window.handleTelegramResult&&window.handleTelegramResult({ok:$ok,message:${JSONObject.quote(message)}});")
     private fun telegramMonthlyResult(result: JSONObject) = callJavaScript("window.onTelegramMonthlyWarehouseResult&&window.onTelegramMonthlyWarehouseResult($result);")
+    private fun telegramShiftResult(ok: Boolean, message: String) {
+        val result = JSONObject().put("ok", ok).put("message", message)
+        callJavaScript("window.onTelegramShiftClosedResult?window.onTelegramShiftClosedResult($result):(window.flash&&window.flash(${JSONObject.quote(message)}));")
+    }
     private fun nativeSettingsResult(result: JSONObject) = callJavaScript("window.__nativeSettingsResult&&window.__nativeSettingsResult($result);")
     private fun nativeStorageResult(result: JSONObject) {
-        diagnostics.record("storage", "result", result.optBoolean("ok", false))
+        diagnostics.record("storage", "result", result.optBoolean("ok", false) && result.optBoolean("projectionOk", true))
         callJavaScript("window.__nativeStorageResult&&window.__nativeStorageResult($result);")
     }
-    private fun nativeNetworkResult(result: JSONObject) = callJavaScript("window.__nativeNetworkResult&&window.__nativeNetworkResult($result);")
+    private fun nativeNetworkResult(result: JSONObject) {
+        diagnostics.record("network", "result", result.optBoolean("ok", false))
+        callJavaScript("window.__nativeNetworkResult&&window.__nativeNetworkResult($result);")
+    }
     private fun nativeNetworkEvent(event: JSONObject) {
         diagnostics.record("network", event.optString("state", event.optString("type", "event")))
         callJavaScript("window.__nativeNetworkEvent&&window.__nativeNetworkEvent($event);")

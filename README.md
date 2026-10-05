@@ -42,3 +42,21 @@ Production APKs must always use the same private release signing key. The key is
 
 The repository is currently an engineering baseline, not an accepted production replacement. Track
 the remaining physical parity checks in [docs/PARITY_MATRIX.md](docs/PARITY_MATRIX.md).
+
+## Android diagnostics and availability
+
+In Settings, “Сохранить диагностику” saves a local JSON report through Android's document picker.
+It includes app/API version and up to 200 technical events, excluding receipts, customers and secrets.
+Cancellation does not change POS data. Physical export acceptance remains pending.
+
+After a failed/interrupted availability send, Android waits for the next successfully saved payment
+before attempting again; restart, reconnect and foreground do not retry. See
+[spec 033](specs/033-availability-payment-retry-policy/spec.md) and the
+[native migration review](docs/NATIVE_MIGRATION_REVIEW.md) for the active policy and sector priorities.
+
+Run Kotlin report/storage tests with `./gradlew testDebugUnitTest` in addition to the Node checks.
+
+When shift-close notifications are enabled, Telegram receives a PNG receipt with shift totals and cash
+movements, matching the iPad report contract. Shift closure is committed locally before sending;
+Telegram failure does not undo closure or stop LAN receipt printing. See
+[spec 034](specs/034-telegram-shift-receipt-image/spec.md) for image parity and remaining physical checks.

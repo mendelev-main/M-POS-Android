@@ -28,8 +28,8 @@ class NativeBridgeRouter(
                 "settings" -> settings.handle(payload)
                 "storage" -> storageMirror.handle(payload)
                 "network" -> networkTransport.handle(payload)
+                "diagnostics" -> if (payload.optString("action") == "export") activity.exportDiagnostics()
             }
         }.onFailure { activity.nativeMessage("Не удалось обработать нативную команду") }
     }
 }
-

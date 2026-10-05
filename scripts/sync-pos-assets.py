@@ -26,6 +26,17 @@ ios = source / "PrilavokPOS"
 if not (ios / "pos.html").is_file():
     raise SystemExit(f"iPad POS not found at {source}")
 
+source_html = (ios / "pos.html").read_text()
+anchors = ['<script src="Web/js/core/storage.js"></script>',
+           '<script src="network-printer.js"></script>',
+           '<script>loadAll().then(()=>startAvailabilityRecovery());</script>']
+if any(source_html.count(anchor) != 1 for anchor in anchors):
+    raise SystemExit("Reviewed source initialization changed; inspect Android adapters before synchronization")
+adapters = ["android-bridge.js", "native-storage-shadow.js", "native-catalog-cutover.js",
+            "native-network-shadow.js", "native-settings.js", "native-availability.js"]
+if any(not (target / name).is_file() for name in adapters):
+    raise SystemExit("Required Android adapter is missing; no source files were changed")
+
 bridge = (target / "android-bridge.js").read_bytes() if (target / "android-bridge.js").exists() else b""
 if (target / "Web").exists():
     shutil.rmtree(target / "Web")
@@ -33,13 +44,18 @@ shutil.copytree(ios / "Web", target / "Web", ignore=shutil.ignore_patterns(".DS_
 shutil.copy2(ios / "network-printer.js", target / "network-printer.js")
 shutil.copy2(ios / "notification-native.js", target / "notification-native.js")
 
-source_html = (ios / "pos.html").read_text()
 android_html = source_html.replace(
     '<script src="Web/js/core/storage.js"></script>',
-    '<script src="android-bridge.js"></script>\n<script src="Web/js/core/storage.js"></script>',
+    '<script src="android-bridge.js"></script>\n<script src="Web/js/core/storage.js"></script>\n'
+    '<script src="native-storage-shadow.js"></script>\n<script src="native-catalog-cutover.js"></script>\n'
+    '<script src="native-network-shadow.js"></script>',
 ).replace(
     '<script src="network-printer.js"></script>',
-    '<script src="network-printer.js"></script>\n<script src="notification-native.js"></script>',
+    '<script src="network-printer.js"></script>\n<script src="native-settings.js"></script>\n'
+    '<script src="notification-native.js"></script>',
+).replace(
+    '<script>loadAll().then(()=>startAvailabilityRecovery());</script>',
+    '<script src="native-availability.js"></script>\n<script>loadAll().then(()=>startAvailabilityRecovery());</script>',
 )
 (target / "pos.html").write_text(android_html)
 (target / "android-bridge.js").write_bytes(bridge)
@@ -54,4 +70,3 @@ manifest = {
 }
 (root / "web-source-manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
 print(f"Synced {len(files)} source files from {commit}")
-

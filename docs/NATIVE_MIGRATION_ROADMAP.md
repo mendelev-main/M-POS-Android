@@ -125,13 +125,17 @@ Implemented automated recovery groundwork:
 
 Automated source/build coverage is complete through specs 018–030. WEB ready additionally uses a two-phase `prepared → pending → confirmed` journal so backend confirmation cannot start until the local current-order session and retry state are durably stored; physical offline/restart/online recovery scenarios remain required before any authority cutover.
 
+**Availability policy correction (spec 033):** user decision supersedes automatic start/online/foreground publication from spec 030 on Android. After an unsuccessful or interrupted send, only the next successfully persisted payment permits another attempt. Existing stock-change/manual-sync triggers cannot bypass that gate. The Android adapter preserves shared-source checksums and existing snapshot/revision/settlement contracts; it adds no automatic catalog sync.
+
 - durable pending network operations;
 - retry for explicitly allowed operations;
 - process/restart recovery;
 - idempotency tracking.
 
 ### P5 — Diagnostics and update infrastructure
-**Status: 🟡 Candidate**
+**Status: 🟢 Native diagnostic export implemented; physical acceptance pending. Updates remain a candidate.**
+
+Spec 032 completes the spec 031 breadcrumb foundation with an allowlisted, metadata-only JSON report saved manually through Android's document picker. Kotlin owns filtering, bounded snapshots and IO; the Android settings adapter only requests export. No business/storage authority changes. See [migration review](NATIVE_MIGRATION_REVIEW.md) for sector priorities and unresolved business questions.
 
 Native diagnostics:
 - printer/network/storage events;
