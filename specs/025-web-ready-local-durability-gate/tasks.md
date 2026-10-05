@@ -1,0 +1,11 @@
+# Tasks
+- [x] Add prepared stage before local session persistence.
+- [x] Promote to pending only after local session save.
+- [x] Persist pending before `/ready`.
+- [x] Recovery retries pending only.
+- [x] Cleanup confirmed leftovers independently.
+- [x] Synchronize canonical iPad source and Android source manifest.
+- [x] Update existing ready tests for two-phase semantics.
+- [x] Add ordering/source contract test.
+- [ ] Run full Node tests, parity, lint and Android debug build.
+- [ ] Physical crash/offline/restart/online ready recovery test.

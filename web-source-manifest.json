@@ -1,6 +1,6 @@
 {
   "sourceRepository": "mendelev-main/prilavok-pos-ipad",
-  "sourceCommit": "5774e6569db0dc7ba1061722dadbacf736faa249",
+  "sourceCommit": "3a267d9914da0f2891a9d3f097623412e5aec710",
   "files": {
     "pos.html": "5b9ec0c387db194fcfa34d95624d237cbecff5719da3d14ddbe1f928339fe39d",
     "network-printer.js": "f32d11114c31775cb46ed803fd44c28aa6ccbea6e9bfbad279bca7785e072cd6",
@@ -34,6 +34,6 @@
     "Web/js/features/shifts.js": "8eb3a07878fab6ac4b6afd5eb13adeff5a7e84f5d4569306159b5a5d0051b279",
     "Web/js/features/suppliers.js": "c0a0fcd26818e9e4be9447363c39e573f59dfde86bbf1c46b79de8ed96f3faba",
     "Web/js/features/warehouse-reporting.js": "93f59d35ea961f5053da8a9623293ed1f6ad6188820ec10b395c5e7806ca6dc4",
-    "Web/js/features/web-orders.js": "5cbc7c2f21eca6c369ffcf4da0b4317845786b8904e54f02e7f72beea50ef625"
+    "Web/js/features/web-orders.js": "f9f4438b2a8f01039505ad6f8db60791cc2e788d"
   }
 }

@@ -197,13 +197,10 @@ async function recoverWebOrderReadyJournal(){
     const journal=await loadKey('webOrderReadyJournal',{});
     let changed=false;
     for(const [id,record] of Object.entries(journal||{})){
-      if(record?.stage!=='pending')continue;
-      if(await confirmWebOrderReady(id,journal))changed=true;
+      if(record?.stage==='pending'&&await confirmWebOrderReady(id,journal))changed=true;
     }
-    if(changed){
-      for(const id of Object.keys(journal)){if(journal[id]?.stage==='confirmed')delete journal[id];}
-      await window.PrilavokCore.Storage.set('webOrderReadyJournal',journal);
-    }
+    for(const id of Object.keys(journal)){if(journal[id]?.stage==='confirmed'){delete journal[id];changed=true;}}
+    if(changed)await window.PrilavokCore.Storage.set('webOrderReadyJournal',journal);
     return true;
   }finally{webReadyRecoveryBusy=false;}
 }
@@ -211,10 +208,13 @@ async function markCurrentWebOrderReady(){
   const id=state.currentWebOrderId;
   if(!id || state.currentOrderSource!=='web') return;
   const journal=await loadKey('webOrderReadyJournal',{});
-  journal[id]={stage:'pending',createdAt:Date.now()};
+  journal[id]={stage:'prepared',createdAt:Date.now()};
   try{await window.PrilavokCore.Storage.set('webOrderReadyJournal',journal);}catch(e){markStorageBroken(e);flash('Не удалось сохранить статус готовности');return;}
   state.currentWebOrderStatus='ready';
-  try{await saveCurrentOrderSession();}catch(_e){}
+  try{await saveCurrentOrderSession();}
+  catch(e){state.currentWebOrderStatus='accepted';markStorageBroken(e);render();flash('Не удалось сохранить локальный статус готовности. Подтверждение на сайте не отправлено');return;}
+  journal[id].stage='pending';journal[id].localSavedAt=Date.now();
+  try{await window.PrilavokCore.Storage.set('webOrderReadyJournal',journal);}catch(e){markStorageBroken(e);flash('Локальный статус готовности сохранён, но очередь подтверждения не обновлена');return;}
   render();
   if(await confirmWebOrderReady(id,journal)){
     delete journal[id];try{await window.PrilavokCore.Storage.set('webOrderReadyJournal',journal);}catch(e){markStorageBroken(e);}

@@ -332,7 +332,7 @@ test('P4 current order session is shadow-projected for crash recovery evidence',
 
 test('P4 WEB ready transition is durable before idempotent retry',()=>{
  const web=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/web-orders.js'),'utf8');
- assert.match(web,/webOrderReadyJournal/);assert.match(web,/stage:'pending'/);assert.match(web,/async function recoverWebOrderReadyJournal/);assert.match(web,/async function confirmWebOrderReady/);assert.match(web,/record\.stage='confirmed'/);assert.match(web,/currentWebOrderStatus='ready'/);assert.match(web,/will be repeated automatically|будет повторено автоматически/);
+ assert.match(web,/webOrderReadyJournal/);assert.match(web,/stage:'prepared'/);assert.match(web,/journal\[id\]\.stage='pending'/);assert.match(web,/async function recoverWebOrderReadyJournal/);assert.match(web,/async function confirmWebOrderReady/);assert.match(web,/record\.stage='confirmed'/);assert.match(web,/currentWebOrderStatus='ready'/);assert.match(web,/await saveCurrentOrderSession\(\)/);assert.match(web,/Подтверждение на сайте не отправлено/);assert.match(web,/will be repeated automatically|будет повторено автоматически/);
  assert.match(web,/addEventListener\('online',\(\)=>\{void recoverWebOrderReadyJournal\(\)/);assert.match(web,/queueMicrotask\(\(\)=>\{void recoverWebOrderReadyJournal/);
 });
 
@@ -359,4 +359,13 @@ test('P4 WEB ready parity compares IDs and stages without retry authority',()=>{
  const dao=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/WebReadyProjectionDao.kt'),'utf8');
  const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/NativeStorageMirror.kt'),'utf8');
  assert.match(dao,/suspend fun all\(\)/);assert.match(mirror,/"webReadyParity"/);assert.match(mirror,/webOrderReadyJournal/);assert.match(mirror,/missingNativeIds/);assert.match(mirror,/extraNativeIds/);assert.match(mirror,/stageMismatches/);assert.match(mirror,/authoritative", false/);assert.doesNotMatch(mirror,/fetch\(|\/api\/orders\/.*\/ready/);
+});
+
+
+test('P4 WEB ready never reaches backend before local session and retry state are durable',()=>{
+ const web=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/web-orders.js'),'utf8');
+ const mark=web.slice(web.indexOf('async function markCurrentWebOrderReady'),web.indexOf('function testWebOrder'));
+ const prepared=mark.indexOf("stage:'prepared'");const saveSession=mark.indexOf('await saveCurrentOrderSession()');const pending=mark.indexOf("journal[id].stage='pending'");const persistPending=mark.indexOf("Storage.set('webOrderReadyJournal',journal)",pending);const confirm=mark.indexOf('await confirmWebOrderReady(id,journal)');
+ assert.ok(prepared>=0&&saveSession>prepared&&pending>saveSession&&persistPending>pending&&confirm>persistPending);
+ assert.match(web,/record\?\.stage==='pending'&&await confirmWebOrderReady/);assert.match(web,/stage==='confirmed'\)\{delete journal\[id\];changed=true;/);
 });
