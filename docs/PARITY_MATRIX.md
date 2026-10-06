@@ -238,3 +238,7 @@ forms получили тот же стиль. Presentation-only: финансо
 072: initial split plan — native engine/source fixtures, current payment
 quote cutover for initial two parts. Editing/count/paid drafts remain reviewed
 JS; rollback and stale quote fallback covered. Physical tablet acceptance pending.
+
+073: split count redistribution — native read-only decision; source golden
+fixtures, FIFO/stale/error/paid identity coverage. Amount editing and normalize
+remain JS. v13 and settlement unchanged; physical acceptance pending.

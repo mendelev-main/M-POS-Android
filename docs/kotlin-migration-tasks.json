@@ -1,0 +1,711 @@
+{
+  "schemaVersion": 1,
+  "baseline": "2026-10-06",
+  "counting": "done / (done + planned + in_progress); superseded excluded; engineering milestones, not native feature share",
+  "tasks": [
+    {
+      "id": "001",
+      "title": "Feature Specification: Android parity baseline",
+      "status": "done",
+      "spec": "specs/001-android-parity/spec.md"
+    },
+    {
+      "id": "002",
+      "title": "Feature Specification: Native Android settings boundary",
+      "status": "done",
+      "spec": "specs/002-native-settings-boundary/spec.md"
+    },
+    {
+      "id": "003",
+      "title": "Feature Specification: Core local persistence shadow foundation",
+      "status": "done",
+      "spec": "specs/003-room-shadow-persistence/spec.md"
+    },
+    {
+      "id": "004",
+      "title": "Feature Specification: Native catalog projection",
+      "status": "done",
+      "spec": "specs/004-native-catalog-projection/spec.md"
+    },
+    {
+      "id": "005",
+      "title": "Feature Specification: M POS catalog repository and parity diagnostics",
+      "status": "done",
+      "spec": "specs/005-mpos-catalog-repository/spec.md"
+    },
+    {
+      "id": "006",
+      "title": "Feature Specification: Controlled native catalog read boundary",
+      "status": "done",
+      "spec": "specs/006-native-catalog-read-boundary/spec.md"
+    },
+    {
+      "id": "007",
+      "title": "Feature Specification: Catalog cutover controller",
+      "status": "done",
+      "spec": "specs/007-catalog-cutover-controller/spec.md"
+    },
+    {
+      "id": "008",
+      "title": "Feature Specification: Native employee projection",
+      "status": "done",
+      "spec": "specs/008-native-employee-projection/spec.md"
+    },
+    {
+      "id": "009",
+      "title": "Feature Specification: Native shift and cash movement projection",
+      "status": "done",
+      "spec": "specs/009-native-shift-projection/spec.md"
+    },
+    {
+      "id": "010",
+      "title": "Feature Specification: Native order, line item and payment projection",
+      "status": "done",
+      "spec": "specs/010-native-order-projection/spec.md"
+    },
+    {
+      "id": "011",
+      "title": "Feature Specification: Native held-check projection",
+      "status": "done",
+      "spec": "specs/011-native-held-check-projection/spec.md"
+    },
+    {
+      "id": "012",
+      "title": "Feature Specification: Native warehouse stock-event projection",
+      "status": "done",
+      "spec": "specs/012-native-stock-event-projection/spec.md"
+    },
+    {
+      "id": "013",
+      "title": "Feature Specification: Native network transport boundary",
+      "status": "done",
+      "spec": "specs/013-native-network-transport/spec.md"
+    },
+    {
+      "id": "014",
+      "title": "Feature Specification: Native shadow SSE",
+      "status": "done",
+      "spec": "specs/014-native-shadow-sse/spec.md"
+    },
+    {
+      "id": "015",
+      "title": "Feature Specification: SSE parity diagnostics\\n\\n## Goal\\nCompare the legacy browser SSE stream with the native shadow stream without processing an order twice.\\n\\n## Contract\\n- Legacy EventSource remains authoritative.\\n- Legacy raw event.data is SHA-256 fingerprinted before JSON parsing.\\n- Native shadow fingerprints the raw assembled SSE data frame.\\n- Diagnostics expose counts, last hashes, matches and mismatches only.\\n- No native fingerprint event may invoke order, acceptance, payment, storage or printing business handlers.\\n\\n## Acceptance\\nAutomated architecture/build verification plus physical same-stream comparison and reconnect testing are required before transport cutover.\\n",
+      "status": "done",
+      "spec": "specs/015-sse-parity-diagnostics/spec.md"
+    },
+    {
+      "id": "016",
+      "title": "Feature Specification: Shadow SSE lifecycle\\n\\n## Goal\\nKeep diagnostic native SSE bounded to the foreground Activity while preserving legacy WEB-order behavior.\\n\\n## Rules\\n- Backgrounding cancels only the native shadow call/job.\\n- Explicit shadow intent/config is retained across background/foreground.\\n- Foreground resumes shadow observation when previously requested.\\n- Explicit stop and Activity destroy clear/cancel shadow state.\\n- Legacy EventSource remains untouched and authoritative.\\n\\n## Acceptance\\nAutomated build plus physical background/foreground and network interruption verification before any cutover.\\n",
+      "status": "done",
+      "spec": "specs/016-shadow-sse-lifecycle/spec.md"
+    },
+    {
+      "id": "017",
+      "title": "Feature Specification: Continuous SSE diagnostics\\n\\n## Goal\\nPreserve shadow SSE diagnostic evidence across Activity background/foreground reconnects.\\n\\n## Rules\\n- Explicit fresh start resets counters and last hash.\\n- Lifecycle resume does not reset event count, reconnect count, or last hash.\\n- SHA-256 input encoding is explicitly UTF-8.\\n- No business payload is persisted or replayed.\\n- Legacy EventSource remains authoritative.\\n\\n## Acceptance\\nAutomated build plus physical background/reconnect comparison before cutover.\\n",
+      "status": "done",
+      "spec": "specs/017-continuous-sse-diagnostics/spec.md"
+    },
+    {
+      "id": "018",
+      "title": "Feature Specification: WEB acceptance recovery projection",
+      "status": "done",
+      "spec": "specs/018-web-acceptance-recovery-projection/spec.md"
+    },
+    {
+      "id": "019",
+      "title": "WEB acceptance recovery parity",
+      "status": "done",
+      "spec": "specs/019-web-acceptance-recovery-parity/spec.md"
+    },
+    {
+      "id": "020",
+      "title": "Current order session recovery projection",
+      "status": "done",
+      "spec": "specs/020-current-order-session-recovery/spec.md"
+    },
+    {
+      "id": "021",
+      "title": "WEB ready durable recovery",
+      "status": "done",
+      "spec": "specs/021-web-ready-durable-recovery/spec.md"
+    },
+    {
+      "id": "022",
+      "title": "Loyalty recovery shadow status",
+      "status": "done",
+      "spec": "specs/022-loyalty-recovery-shadow/spec.md"
+    },
+    {
+      "id": "023",
+      "title": "WEB ready recovery Room projection",
+      "status": "done",
+      "spec": "specs/023-web-ready-room-projection/spec.md"
+    },
+    {
+      "id": "024",
+      "title": "WEB ready recovery parity diagnostics",
+      "status": "done",
+      "spec": "specs/024-web-ready-recovery-parity/spec.md"
+    },
+    {
+      "id": "025",
+      "title": "WEB ready durable local-state gate",
+      "status": "done",
+      "spec": "specs/025-web-ready-local-durability-gate/spec.md"
+    },
+    {
+      "id": "026",
+      "title": "Critical storage journal Room shadow",
+      "status": "done",
+      "spec": "specs/026-critical-storage-journal-shadow/spec.md"
+    },
+    {
+      "id": "027",
+      "title": "Critical storage journal parity diagnostics",
+      "status": "done",
+      "spec": "specs/027-critical-storage-journal-parity/spec.md"
+    },
+    {
+      "id": "028",
+      "title": "Loyalty durable retry-state boundary",
+      "status": "done",
+      "spec": "specs/028-loyalty-durable-retry-state/spec.md"
+    },
+    {
+      "id": "029",
+      "title": "Loyalty interrupted-send restart recovery",
+      "status": "done",
+      "spec": "specs/029-loyalty-interrupted-send-recovery/spec.md"
+    },
+    {
+      "id": "030",
+      "title": "Availability restart and reconnect recovery",
+      "status": "superseded",
+      "spec": "specs/030-availability-restart-reconnect-recovery/spec.md"
+    },
+    {
+      "id": "031",
+      "title": "Spec 031 — Native diagnostic breadcrumbs",
+      "status": "done",
+      "spec": "specs/031-native-diagnostic-breadcrumbs/spec.md"
+    },
+    {
+      "id": "032",
+      "title": "Spec 032 — Native diagnostic export",
+      "status": "done",
+      "spec": "specs/032-native-diagnostic-export/spec.md"
+    },
+    {
+      "id": "033",
+      "title": "Spec 033 — Availability retry after the next payment",
+      "status": "done",
+      "spec": "specs/033-availability-payment-retry-policy/spec.md"
+    },
+    {
+      "id": "034",
+      "title": "Spec 034 — Telegram shift-close receipt image",
+      "status": "done",
+      "spec": "specs/034-telegram-shift-receipt-image/spec.md"
+    },
+    {
+      "id": "035",
+      "title": "Spec 035 — Transactional ordered native shadow storage",
+      "status": "done",
+      "spec": "specs/035-transactional-native-shadow-storage/spec.md"
+    },
+    {
+      "id": "036",
+      "title": "Spec 036 — Bounded Kotlin backup input",
+      "status": "done",
+      "spec": "specs/036-bounded-native-backup-input/spec.md"
+    },
+    {
+      "id": "037",
+      "title": "Spec 037 — Kotlin backup image preparation boundary",
+      "status": "done",
+      "spec": "specs/037-native-backup-image-preparation/spec.md"
+    },
+    {
+      "id": "038",
+      "title": "Spec 038 — Bounded Kotlin SSE message reader",
+      "status": "done",
+      "spec": "specs/038-bounded-kotlin-sse-reader/spec.md"
+    },
+    {
+      "id": "039",
+      "title": "Spec 039 — Durable ordered Kotlin platform settings mirror",
+      "status": "done",
+      "spec": "specs/039-durable-kotlin-settings-mirror/spec.md"
+    },
+    {
+      "id": "040",
+      "title": "Spec 040 — Authoritative Kotlin catalog persistence",
+      "status": "done",
+      "spec": "specs/040-authoritative-kotlin-catalog/spec.md"
+    },
+    {
+      "id": "041",
+      "title": "Spec 041 — Authoritative Kotlin workspace persistence",
+      "status": "done",
+      "spec": "specs/041-authoritative-kotlin-workspace/spec.md"
+    },
+    {
+      "id": "042",
+      "title": "Spec 042 — Authoritative Kotlin employees persistence",
+      "status": "done",
+      "spec": "specs/042-authoritative-kotlin-employees/spec.md"
+    },
+    {
+      "id": "043",
+      "title": "Spec 043 — Authoritative Kotlin shifts persistence",
+      "status": "done",
+      "spec": "specs/043-authoritative-kotlin-shifts/spec.md"
+    },
+    {
+      "id": "044",
+      "title": "Spec 044 — Authoritative Kotlin paid-receipt persistence",
+      "status": "done",
+      "spec": "specs/044-authoritative-kotlin-receipts/spec.md"
+    },
+    {
+      "id": "045",
+      "title": "Spec 045 — Authoritative Kotlin parked-order persistence",
+      "status": "done",
+      "spec": "specs/045-authoritative-kotlin-parked-orders/spec.md"
+    },
+    {
+      "id": "046",
+      "title": "Spec 046 — Authoritative Kotlin session and recovery persistence",
+      "status": "done",
+      "spec": "specs/046-authoritative-kotlin-session-recovery/spec.md"
+    },
+    {
+      "id": "047",
+      "title": "Spec 047 — Incremental native receipts and paginated history",
+      "status": "done",
+      "spec": "specs/047-incremental-native-receipts/spec.md"
+    },
+    {
+      "id": "048",
+      "title": "Spec 048 — Atomic native local payment completion",
+      "status": "done",
+      "spec": "specs/048-atomic-native-payment-command/spec.md"
+    },
+    {
+      "id": "049",
+      "title": "049 — Shift accounting and cross-shift refunds",
+      "status": "done",
+      "spec": "specs/049-cross-shift-refund-accounting/spec.md"
+    },
+    {
+      "id": "050",
+      "title": "050 — Atomic Kotlin full return",
+      "status": "done",
+      "spec": "specs/050-atomic-kotlin-full-return/spec.md"
+    },
+    {
+      "id": "051",
+      "title": "051 — Atomic Kotlin manual cash movements",
+      "status": "done",
+      "spec": "specs/051-atomic-kotlin-cash-movements/spec.md"
+    },
+    {
+      "id": "052",
+      "title": "052 — Atomic Kotlin shift opening / closing",
+      "status": "done",
+      "spec": "specs/052-atomic-kotlin-shift-lifecycle/spec.md"
+    },
+    {
+      "id": "053",
+      "title": "053 — Native shift summary / report read model",
+      "status": "done",
+      "spec": "specs/053-native-shift-report-model/spec.md"
+    },
+    {
+      "id": "054",
+      "title": "054 — Native Kotlin shift summary screen",
+      "status": "done",
+      "spec": "specs/054-native-shift-screen/spec.md"
+    },
+    {
+      "id": "055",
+      "title": "055 — First-run shift storage and Android error presentation",
+      "status": "done",
+      "spec": "specs/055-first-run-shift-storage/spec.md"
+    },
+    {
+      "id": "056",
+      "title": "056 — Native cash deposit / withdrawal input forms",
+      "status": "done",
+      "spec": "specs/056-native-cash-movement-forms/spec.md"
+    },
+    {
+      "id": "057",
+      "title": "057 — Native shift closing form",
+      "status": "done",
+      "spec": "specs/057-native-shift-closing-form/spec.md"
+    },
+    {
+      "id": "058",
+      "title": "058 — Native shift opening / employee input",
+      "status": "done",
+      "spec": "specs/058-native-shift-opening-form/spec.md"
+    },
+    {
+      "id": "059",
+      "title": "059 — оформление нативного экрана кассовой смены",
+      "status": "done",
+      "spec": "specs/059-native-shift-theme/spec.md"
+    },
+    {
+      "id": "060",
+      "title": "060 — Kotlin pricing at settlement",
+      "status": "done",
+      "spec": "specs/060-native-settlement-pricing/spec.md"
+    },
+    {
+      "id": "061",
+      "title": "061 — Native loyalty gift allocation at settlement",
+      "status": "done",
+      "spec": "specs/061-native-loyalty-reward-allocation/spec.md"
+    },
+    {
+      "id": "062",
+      "title": "062 — Kotlin formation of configured unit prices",
+      "status": "done",
+      "spec": "specs/062-native-configured-unit-prices/spec.md"
+    },
+    {
+      "id": "063",
+      "title": "063 — Native recipe consumption at settlement",
+      "status": "done",
+      "spec": "specs/063-native-recipe-consumption/spec.md"
+    },
+    {
+      "id": "064",
+      "title": "064 — Room stock preflight before cart addition",
+      "status": "done",
+      "spec": "specs/064-native-cart-stock-preflight/spec.md"
+    },
+    {
+      "id": "065",
+      "title": "065 — Native quantity decision and stock preflight",
+      "status": "done",
+      "spec": "specs/065-native-cart-quantity/spec.md"
+    },
+    {
+      "id": "066",
+      "title": "066 — Проверка остатков перед оплатой через Kotlin/Room",
+      "status": "done",
+      "spec": "specs/066-native-payment-preflight/spec.md"
+    },
+    {
+      "id": "067",
+      "title": "067 — Единый расчёт Kotlin для открытия и подтверждения оплаты",
+      "status": "done",
+      "spec": "specs/067-native-payment-totals/spec.md"
+    },
+    {
+      "id": "068",
+      "title": "068 — Нативное подтверждение оплаты картой",
+      "status": "done",
+      "spec": "specs/068-native-card-confirmation/spec.md"
+    },
+    {
+      "id": "069",
+      "title": "069 — Нативный ввод наличных для смешанной части",
+      "status": "done",
+      "spec": "specs/069-native-split-cash/spec.md"
+    },
+    {
+      "id": "070",
+      "title": "070 — Обычная наличная оплата: нативный ввод и tender",
+      "status": "done",
+      "spec": "specs/070-native-ordinary-cash/spec.md"
+    },
+    {
+      "id": "071",
+      "title": "071 — Единый нативный визуальный стиль M POS",
+      "status": "done",
+      "spec": "specs/071-native-pos-design/spec.md"
+    },
+    {
+      "id": "072",
+      "title": "072 — первоначальное распределение смешанной оплаты",
+      "status": "done",
+      "spec": "specs/072-native-initial-split-plans/spec.md"
+    },
+    {
+      "id": "073",
+      "title": "073 — изменение количества частей смешанной оплаты",
+      "status": "done",
+      "spec": "specs/073-native-split-count/spec.md"
+    },
+    {
+      "id": "074",
+      "title": "Редактирование суммы смешанной части и парсер ввода",
+      "status": "planned",
+      "area": "P7",
+      "dependencies": "073"
+    },
+    {
+      "id": "075",
+      "title": "Нормализация/возобновление mixed draft и его проверки",
+      "status": "planned",
+      "area": "P7",
+      "dependencies": "074"
+    },
+    {
+      "id": "076",
+      "title": "Нативные итоговые preview корзины при всех изменениях",
+      "status": "planned",
+      "area": "P6/P7",
+      "dependencies": "075"
+    },
+    {
+      "id": "077",
+      "title": "Выбор доставки, тариф и проверки заказа",
+      "status": "planned",
+      "area": "P7",
+      "dependencies": "076"
+    },
+    {
+      "id": "078",
+      "title": "Команды контекста заказа: тип, клиент, комментарий",
+      "status": "planned",
+      "area": "P6",
+      "dependencies": "077"
+    },
+    {
+      "id": "079",
+      "title": "Жизненный цикл отложенного заказа: hold/resume/delete",
+      "status": "planned",
+      "area": "P6",
+      "dependencies": "078"
+    },
+    {
+      "id": "080",
+      "title": "Правила редактирования товаров и категорий",
+      "status": "planned",
+      "area": "P9",
+      "dependencies": "040"
+    },
+    {
+      "id": "081",
+      "title": "Правила редактирования рецептов и модификаторов",
+      "status": "planned",
+      "area": "P9",
+      "dependencies": "080"
+    },
+    {
+      "id": "082",
+      "title": "Папки, порядок, перенос плиток и навигация — бизнес-команды",
+      "status": "planned",
+      "area": "P6/P9",
+      "dependencies": "081"
+    },
+    {
+      "id": "083",
+      "title": "Сотрудники, роли и авторизация без изменения политики",
+      "status": "planned",
+      "area": "P2/P8",
+      "dependencies": "042"
+    },
+    {
+      "id": "084",
+      "title": "Клиенты: локальные команды и хранение",
+      "status": "planned",
+      "area": "P11",
+      "dependencies": "078"
+    },
+    {
+      "id": "085",
+      "title": "Онлайн-проверка доступности подарка и offline policy",
+      "status": "planned",
+      "area": "P11",
+      "dependencies": "084"
+    },
+    {
+      "id": "086",
+      "title": "Начисление/отмена лояльности и разрешённые durable retry",
+      "status": "planned",
+      "area": "P4/P11",
+      "dependencies": "085"
+    },
+    {
+      "id": "087",
+      "title": "WEB acceptance/ready: нативный основной журнал и ACK",
+      "status": "planned",
+      "area": "P4",
+      "dependencies": "046"
+    },
+    {
+      "id": "088",
+      "title": "Переключение WEB SSE на нативную доставку/восстановление",
+      "status": "planned",
+      "area": "P3",
+      "dependencies": "087"
+    },
+    {
+      "id": "089",
+      "title": "Ручная синхронизация каталога и media transport",
+      "status": "planned",
+      "area": "P3",
+      "dependencies": "088"
+    },
+    {
+      "id": "090",
+      "title": "Публикация доступности в Kotlin: только после оплаты",
+      "status": "planned",
+      "area": "P3/P4",
+      "dependencies": "033"
+    },
+    {
+      "id": "091",
+      "title": "Поставщики: бизнес-команды и локальное хранение",
+      "status": "planned",
+      "area": "P10",
+      "dependencies": "080"
+    },
+    {
+      "id": "092",
+      "title": "Заказы поставщику: расчёты, статусы и сохранение",
+      "status": "planned",
+      "area": "P10",
+      "dependencies": "091"
+    },
+    {
+      "id": "093",
+      "title": "Приёмка: расчёт, себестоимость и атомарное подтверждение",
+      "status": "planned",
+      "area": "P10",
+      "dependencies": "092"
+    },
+    {
+      "id": "094",
+      "title": "Черновики приёмки и восстановление",
+      "status": "planned",
+      "area": "P10",
+      "dependencies": "093"
+    },
+    {
+      "id": "095",
+      "title": "Инвентаризация: пересчёт, расхождения и атомарное применение",
+      "status": "planned",
+      "area": "P10",
+      "dependencies": "094"
+    },
+    {
+      "id": "096",
+      "title": "Складские отчёты по периодам и источники данных",
+      "status": "planned",
+      "area": "P10",
+      "dependencies": "093,095"
+    },
+    {
+      "id": "097",
+      "title": "Аналитика продаж/возвратов: Room aggregates и периоды",
+      "status": "planned",
+      "area": "P12",
+      "dependencies": "044,050"
+    },
+    {
+      "id": "098",
+      "title": "Зал, столы, бронирования: нативные бизнес-команды",
+      "status": "planned",
+      "area": "P6",
+      "dependencies": "078"
+    },
+    {
+      "id": "099",
+      "title": "Нативное управление заданиями печати и business triggers",
+      "status": "planned",
+      "area": "P7/P8",
+      "dependencies": "053,087"
+    },
+    {
+      "id": "100",
+      "title": "Нативные настройки и управление сотрудниками",
+      "status": "planned",
+      "area": "UI",
+      "dependencies": "083,039"
+    },
+    {
+      "id": "101",
+      "title": "Нативное рабочее место: каталог, папки, корзина",
+      "status": "planned",
+      "area": "P6/UI",
+      "dependencies": "076,078,082"
+    },
+    {
+      "id": "102",
+      "title": "Нативный редактор товара/рецепта/модификаторов",
+      "status": "planned",
+      "area": "P9/UI",
+      "dependencies": "080,081"
+    },
+    {
+      "id": "103",
+      "title": "Нативный основной экран оплаты",
+      "status": "planned",
+      "area": "P7/UI",
+      "dependencies": "074,075,077"
+    },
+    {
+      "id": "104",
+      "title": "Нативная история чеков, детали и возвраты",
+      "status": "planned",
+      "area": "P7/UI",
+      "dependencies": "050,097"
+    },
+    {
+      "id": "105",
+      "title": "Нативные отложенные заказы, клиенты и лояльность",
+      "status": "planned",
+      "area": "P6/P11/UI",
+      "dependencies": "079,084,085,086"
+    },
+    {
+      "id": "106",
+      "title": "Нативные экраны склада/закупок/приёмки/инвентаризации",
+      "status": "planned",
+      "area": "P10/UI",
+      "dependencies": "091,092,093,094,095,096"
+    },
+    {
+      "id": "107",
+      "title": "Нативные экраны аналитики",
+      "status": "planned",
+      "area": "P12/UI",
+      "dependencies": "097"
+    },
+    {
+      "id": "108",
+      "title": "Нативный зал/столы/бронирования",
+      "status": "planned",
+      "area": "P6/UI",
+      "dependencies": "098"
+    },
+    {
+      "id": "109",
+      "title": "Удаление активного WebView runtime и legacy мостов",
+      "status": "planned",
+      "area": "UI/architecture",
+      "dependencies": "100,101,102,103,104,105,106,107,108"
+    },
+    {
+      "id": "110",
+      "title": "Комплексная планшетная приёмка: parity, offline/restart, backup, производительность",
+      "status": "planned",
+      "area": "acceptance",
+      "dependencies": "109,111"
+    },
+    {
+      "id": "111",
+      "title": "Нативные метаданные обновления APK и проверки подписи/версии",
+      "status": "planned",
+      "area": "P5",
+      "dependencies": "032"
+    }
+  ]
+}

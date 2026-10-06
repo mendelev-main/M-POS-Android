@@ -1,5 +1,13 @@
 # Native Migration Roadmap
 
+## Актуальный план и счётчик
+
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **72/110 выполнено (65,45%)**
+после 073. Source of truth: `kotlin-migration-tasks.json` и
+`python scripts/migration-progress.py`. Это инженерные этапы; физическая
+приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
+читаются с учётом последующих спецификаций и current authority policy.
+
 ## Purpose
 
 Move M POS Android toward a native Kotlin/Jetpack architecture only where native ownership materially improves reliability, data safety, device integration, performance or maintainability.
@@ -38,7 +46,7 @@ This is an incremental migration, not a rewrite. Until a migrated boundary is ac
 
 ## Current authority and acceptance policy
 
-Spec 040 supersedes historical manual cutover gates below: `products` reads/writes now use Kotlin/Room with one-time durable migration; `room` is the catalog default. Full JSON remains the native source; product/category indexes are supporting structures. Spec 041 also moves layout/category ordering and posNavigation documents to Kotlin/Room. Employees and shifts are also authoritative (042–043); other business storage remains legacy. Historical descriptions of false catalog flags below describe the prior stages, not current runtime configuration. Physical checks are deferred to final comprehensive acceptance by user authorization.
+Spec 040 supersedes historical manual cutover gates below: `products` reads/writes now use Kotlin/Room with one-time durable migration; `room` is the catalog default. Full JSON remains the native source; product/category indexes are supporting structures. Spec 041 also moves layout/category ordering and posNavigation documents to Kotlin/Room. Employees/shifts (042–043), receipts/parked (044–045) and current session/critical journal (046) are also authoritative. Warehouse/customer and remaining operational storage still require separate boundaries. Historical descriptions of false catalog flags below describe the prior stages, not current runtime configuration. Physical checks are deferred to final comprehensive acceptance by user authorization.
 
 ## Planned migration order
 
@@ -178,7 +186,7 @@ Benefits:
 - removal of browser text-selection/context behavior.
 
 ### P7 — Payment domain + Compose payment screen
-**Status: 🟢 Partial (070)**
+**Status: 🟢 Partial (073)**
 
 Atomic settlement, product-discount arithmetic, gift allocation and configured unit-price
 formation and settlement recipe expansion are native. Cart additions await Room stock
@@ -186,7 +194,8 @@ preflight, quantity edits use native decisions/Room preflight, and payment entry
 confirmation reads stock from Room. Payment entry/confirmation also awaits a combined
 Kotlin pricing/reward quote. External card confirmation is native Android UI (068); split cash input/change
 calculation is native (069). Ordinary tender input and confirmation arithmetic
-are native (070); the main payment shell still renders in WebView.
+are native (070); initial split plans and count redistribution are native (072–073).
+Split amount editing/normalization remain JS; the main payment shell still renders in WebView.
 Main cart/payment UI and invalidated-preview recomputation,
 online gift eligibility and stock availability display
 remain reviewed JS; physical acceptance is pending.
@@ -204,7 +213,7 @@ Must preserve:
 - restart safety.
 
 ### P8 — Shift domain + screen
-**Status: 🟢 Partial (049)**
+**Status: 🟢 Native shift commands/report/screen/forms (052–058, 071); physical acceptance pending**
 
 Move shift/cash movement calculations and UI after orders/payments persistence is native.
 
@@ -439,3 +448,6 @@ forms получили тот же стиль. Presentation-only: финансо
 072: начальное деление смешанной оплаты — Kotlin quote (две части без
 дополнительного запроса). Далее перенести normalize/edit/count с точным
 сохранением оплаченных частей; затем нативный экран оплаты в общей теме.
+
+073: количество mixed parts — native read-only FIFO, paid invariants;
+074/075: ввод суммы и normalize. После каждого этапа обновлять task registry.

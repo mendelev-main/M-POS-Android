@@ -57,6 +57,19 @@ class MPosStorageMirrorTest {
         return result
     }
 
+    @Test fun splitCountReadIsPureAndWorkerSurvivesInvalidInput() = runBlocking {
+        send("splitCountRead", "bad-split", value = "{}")
+        assertFalse(reply("bad-split").getBoolean("ok"))
+        send("splitCountRead", "split-count", value = """{"version":1,"total":10.01,"delta":1,"parts":[{"amount":5.01,"paid":true,"method":"card"},{"amount":5,"paid":false,"method":"cash"}]}""")
+        val response = replies.poll(10, TimeUnit.SECONDS)
+        assertNotNull(response); assertEquals("split-count", response!!.getString("requestId"))
+        assertTrue(response.getBoolean("authoritative")); assertTrue(response.getBoolean("allowed"))
+        assertEquals(3, response.getInt("count"))
+        assertEquals(5.01, response.getJSONArray("parts").getJSONObject(0).getDouble("amount"), 0.0)
+        assertEquals(2.5, response.getJSONArray("parts").getJSONObject(1).getDouble("amount"), 0.0)
+        assertNull(database.legacyStorageShadowDao().get("currentOrderSession"))
+    }
+
     @Test fun quantityReadUsesProtocolAndLeavesCatalogueUntouched() = runBlocking {
         MPosCatalogStorage(database).initialize(products("Synthetic"))
         send("cartQuantityRead", "quantity", value = """{"version":1,"items":[{"productId":"product-1","qty":1}],"targetIndex":0,"matchingIndices":[0],"delta":1}""")

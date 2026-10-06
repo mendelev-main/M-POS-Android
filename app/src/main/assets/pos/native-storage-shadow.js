@@ -135,6 +135,11 @@
 
   const mposCore=global.MPosCore=global.MPosCore||{};
   mposCore.Storage=mposStorage;
+  mposCore.SplitCount=Object.freeze({
+    async calculate(input){
+      return requireNative(await request('splitCountRead',{payload:JSON.stringify(input)}),true);
+    }
+  });
   mposCore.CartTotals=Object.freeze({
     async calculate(input){
       return requireNative(await request('cartTotalsRead',{payload:JSON.stringify(input)}),true);

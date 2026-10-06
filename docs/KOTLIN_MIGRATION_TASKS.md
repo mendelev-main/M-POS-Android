@@ -1,0 +1,153 @@
+# Реестр задач миграции на Kotlin
+
+Базовый план v1, 6 октября 2026 года. **72/110 задач выполнено (65.45%)**.
+Осталось 38. Номера 001–073 — история инженерных этапов со спецификациями;
+074–111 — оставшиеся границы из P1–P12 и существующих feature-модулей.
+030 отменена решением пользователя и заменена 033, поэтому исключена из знаменателя.
+
+Это доля завершённых **инженерных задач плана**, включая foundation/проверки/
+платформенные границы, а не процент функций, уже полностью работающих на Kotlin,
+не доля кода и не оценка трудозатрат. Задачи разного размера. Диагностический SSE,
+shadow проекции и частичные переключения считаются завершёнными только в своей
+ограниченной спецификации; целые домены и экраны ими не закрываются.
+Основной POS/payment shell ещё WebView. Физическая приёмка отдельная задача 110,
+сейчас ожидается; автоматическая готовность не означает её прохождения.
+
+Критерий done: scope реализован, source/business/v13 совместимость и rollback
+документированы, подходящие JS/JVM/lint проверки прошли, результат опубликован
+в main. После каждого этапа обновляются spec, status/parity/tablet cases и этот
+реестр. IDs не переиспользуются. Изменение общего числа допускается только с
+описанием нового/исключённого scope, а не для улучшения процента. План не обещает
+новые business features: сохраняем текущие операции и правила. Уточнения политики
+пишем в spec отдельно, не меняем молча.
+
+Машиночитаемый источник: [kotlin-migration-tasks.json](kotlin-migration-tasks.json).
+Счётчик: `python scripts/migration-progress.py`; последовательность определяется
+зависимостями и приоритетом, номера будущих задач — устойчивые IDs, не сроки.
+
+## Реализованные этапы и отменённый этап
+
+| ID | Статус | Спецификация / ограниченный scope |
+|---|---|---|
+| 001 | выполнено | [Feature Specification: Android parity baseline](../specs/001-android-parity/spec.md) |
+| 002 | выполнено | [Feature Specification: Native Android settings boundary](../specs/002-native-settings-boundary/spec.md) |
+| 003 | выполнено | [Feature Specification: Core local persistence shadow foundation](../specs/003-room-shadow-persistence/spec.md) |
+| 004 | выполнено | [Feature Specification: Native catalog projection](../specs/004-native-catalog-projection/spec.md) |
+| 005 | выполнено | [Feature Specification: M POS catalog repository and parity diagnostics](../specs/005-mpos-catalog-repository/spec.md) |
+| 006 | выполнено | [Feature Specification: Controlled native catalog read boundary](../specs/006-native-catalog-read-boundary/spec.md) |
+| 007 | выполнено | [Feature Specification: Catalog cutover controller](../specs/007-catalog-cutover-controller/spec.md) |
+| 008 | выполнено | [Feature Specification: Native employee projection](../specs/008-native-employee-projection/spec.md) |
+| 009 | выполнено | [Feature Specification: Native shift and cash movement projection](../specs/009-native-shift-projection/spec.md) |
+| 010 | выполнено | [Feature Specification: Native order, line item and payment projection](../specs/010-native-order-projection/spec.md) |
+| 011 | выполнено | [Feature Specification: Native held-check projection](../specs/011-native-held-check-projection/spec.md) |
+| 012 | выполнено | [Feature Specification: Native warehouse stock-event projection](../specs/012-native-stock-event-projection/spec.md) |
+| 013 | выполнено | [Feature Specification: Native network transport boundary](../specs/013-native-network-transport/spec.md) |
+| 014 | выполнено | [Feature Specification: Native shadow SSE](../specs/014-native-shadow-sse/spec.md) |
+| 015 | выполнено | [Feature Specification: SSE parity diagnostics\n\n## Goal\nCompare the legacy browser SSE stream with the native shadow stream without processing an order twice.\n\n## Contract\n- Legacy EventSource remains authoritative.\n- Legacy raw event.data is SHA-256 fingerprinted before JSON parsing.\n- Native shadow fingerprints the raw assembled SSE data frame.\n- Diagnostics expose counts, last hashes, matches and mismatches only.\n- No native fingerprint event may invoke order, acceptance, payment, storage or printing business handlers.\n\n## Acceptance\nAutomated architecture/build verification plus physical same-stream comparison and reconnect testing are required before transport cutover.\n](../specs/015-sse-parity-diagnostics/spec.md) |
+| 016 | выполнено | [Feature Specification: Shadow SSE lifecycle\n\n## Goal\nKeep diagnostic native SSE bounded to the foreground Activity while preserving legacy WEB-order behavior.\n\n## Rules\n- Backgrounding cancels only the native shadow call/job.\n- Explicit shadow intent/config is retained across background/foreground.\n- Foreground resumes shadow observation when previously requested.\n- Explicit stop and Activity destroy clear/cancel shadow state.\n- Legacy EventSource remains untouched and authoritative.\n\n## Acceptance\nAutomated build plus physical background/foreground and network interruption verification before any cutover.\n](../specs/016-shadow-sse-lifecycle/spec.md) |
+| 017 | выполнено | [Feature Specification: Continuous SSE diagnostics\n\n## Goal\nPreserve shadow SSE diagnostic evidence across Activity background/foreground reconnects.\n\n## Rules\n- Explicit fresh start resets counters and last hash.\n- Lifecycle resume does not reset event count, reconnect count, or last hash.\n- SHA-256 input encoding is explicitly UTF-8.\n- No business payload is persisted or replayed.\n- Legacy EventSource remains authoritative.\n\n## Acceptance\nAutomated build plus physical background/reconnect comparison before cutover.\n](../specs/017-continuous-sse-diagnostics/spec.md) |
+| 018 | выполнено | [Feature Specification: WEB acceptance recovery projection](../specs/018-web-acceptance-recovery-projection/spec.md) |
+| 019 | выполнено | [WEB acceptance recovery parity](../specs/019-web-acceptance-recovery-parity/spec.md) |
+| 020 | выполнено | [Current order session recovery projection](../specs/020-current-order-session-recovery/spec.md) |
+| 021 | выполнено | [WEB ready durable recovery](../specs/021-web-ready-durable-recovery/spec.md) |
+| 022 | выполнено | [Loyalty recovery shadow status](../specs/022-loyalty-recovery-shadow/spec.md) |
+| 023 | выполнено | [WEB ready recovery Room projection](../specs/023-web-ready-room-projection/spec.md) |
+| 024 | выполнено | [WEB ready recovery parity diagnostics](../specs/024-web-ready-recovery-parity/spec.md) |
+| 025 | выполнено | [WEB ready durable local-state gate](../specs/025-web-ready-local-durability-gate/spec.md) |
+| 026 | выполнено | [Critical storage journal Room shadow](../specs/026-critical-storage-journal-shadow/spec.md) |
+| 027 | выполнено | [Critical storage journal parity diagnostics](../specs/027-critical-storage-journal-parity/spec.md) |
+| 028 | выполнено | [Loyalty durable retry-state boundary](../specs/028-loyalty-durable-retry-state/spec.md) |
+| 029 | выполнено | [Loyalty interrupted-send restart recovery](../specs/029-loyalty-interrupted-send-recovery/spec.md) |
+| 030 | заменена 033 | [Availability restart and reconnect recovery](../specs/030-availability-restart-reconnect-recovery/spec.md) |
+| 031 | выполнено | [Spec 031 — Native diagnostic breadcrumbs](../specs/031-native-diagnostic-breadcrumbs/spec.md) |
+| 032 | выполнено | [Spec 032 — Native diagnostic export](../specs/032-native-diagnostic-export/spec.md) |
+| 033 | выполнено | [Spec 033 — Availability retry after the next payment](../specs/033-availability-payment-retry-policy/spec.md) |
+| 034 | выполнено | [Spec 034 — Telegram shift-close receipt image](../specs/034-telegram-shift-receipt-image/spec.md) |
+| 035 | выполнено | [Spec 035 — Transactional ordered native shadow storage](../specs/035-transactional-native-shadow-storage/spec.md) |
+| 036 | выполнено | [Spec 036 — Bounded Kotlin backup input](../specs/036-bounded-native-backup-input/spec.md) |
+| 037 | выполнено | [Spec 037 — Kotlin backup image preparation boundary](../specs/037-native-backup-image-preparation/spec.md) |
+| 038 | выполнено | [Spec 038 — Bounded Kotlin SSE message reader](../specs/038-bounded-kotlin-sse-reader/spec.md) |
+| 039 | выполнено | [Spec 039 — Durable ordered Kotlin platform settings mirror](../specs/039-durable-kotlin-settings-mirror/spec.md) |
+| 040 | выполнено | [Spec 040 — Authoritative Kotlin catalog persistence](../specs/040-authoritative-kotlin-catalog/spec.md) |
+| 041 | выполнено | [Spec 041 — Authoritative Kotlin workspace persistence](../specs/041-authoritative-kotlin-workspace/spec.md) |
+| 042 | выполнено | [Spec 042 — Authoritative Kotlin employees persistence](../specs/042-authoritative-kotlin-employees/spec.md) |
+| 043 | выполнено | [Spec 043 — Authoritative Kotlin shifts persistence](../specs/043-authoritative-kotlin-shifts/spec.md) |
+| 044 | выполнено | [Spec 044 — Authoritative Kotlin paid-receipt persistence](../specs/044-authoritative-kotlin-receipts/spec.md) |
+| 045 | выполнено | [Spec 045 — Authoritative Kotlin parked-order persistence](../specs/045-authoritative-kotlin-parked-orders/spec.md) |
+| 046 | выполнено | [Spec 046 — Authoritative Kotlin session and recovery persistence](../specs/046-authoritative-kotlin-session-recovery/spec.md) |
+| 047 | выполнено | [Spec 047 — Incremental native receipts and paginated history](../specs/047-incremental-native-receipts/spec.md) |
+| 048 | выполнено | [Spec 048 — Atomic native local payment completion](../specs/048-atomic-native-payment-command/spec.md) |
+| 049 | выполнено | [049 — Shift accounting and cross-shift refunds](../specs/049-cross-shift-refund-accounting/spec.md) |
+| 050 | выполнено | [050 — Atomic Kotlin full return](../specs/050-atomic-kotlin-full-return/spec.md) |
+| 051 | выполнено | [051 — Atomic Kotlin manual cash movements](../specs/051-atomic-kotlin-cash-movements/spec.md) |
+| 052 | выполнено | [052 — Atomic Kotlin shift opening / closing](../specs/052-atomic-kotlin-shift-lifecycle/spec.md) |
+| 053 | выполнено | [053 — Native shift summary / report read model](../specs/053-native-shift-report-model/spec.md) |
+| 054 | выполнено | [054 — Native Kotlin shift summary screen](../specs/054-native-shift-screen/spec.md) |
+| 055 | выполнено | [055 — First-run shift storage and Android error presentation](../specs/055-first-run-shift-storage/spec.md) |
+| 056 | выполнено | [056 — Native cash deposit / withdrawal input forms](../specs/056-native-cash-movement-forms/spec.md) |
+| 057 | выполнено | [057 — Native shift closing form](../specs/057-native-shift-closing-form/spec.md) |
+| 058 | выполнено | [058 — Native shift opening / employee input](../specs/058-native-shift-opening-form/spec.md) |
+| 059 | выполнено | [059 — оформление нативного экрана кассовой смены](../specs/059-native-shift-theme/spec.md) |
+| 060 | выполнено | [060 — Kotlin pricing at settlement](../specs/060-native-settlement-pricing/spec.md) |
+| 061 | выполнено | [061 — Native loyalty gift allocation at settlement](../specs/061-native-loyalty-reward-allocation/spec.md) |
+| 062 | выполнено | [062 — Kotlin formation of configured unit prices](../specs/062-native-configured-unit-prices/spec.md) |
+| 063 | выполнено | [063 — Native recipe consumption at settlement](../specs/063-native-recipe-consumption/spec.md) |
+| 064 | выполнено | [064 — Room stock preflight before cart addition](../specs/064-native-cart-stock-preflight/spec.md) |
+| 065 | выполнено | [065 — Native quantity decision and stock preflight](../specs/065-native-cart-quantity/spec.md) |
+| 066 | выполнено | [066 — Проверка остатков перед оплатой через Kotlin/Room](../specs/066-native-payment-preflight/spec.md) |
+| 067 | выполнено | [067 — Единый расчёт Kotlin для открытия и подтверждения оплаты](../specs/067-native-payment-totals/spec.md) |
+| 068 | выполнено | [068 — Нативное подтверждение оплаты картой](../specs/068-native-card-confirmation/spec.md) |
+| 069 | выполнено | [069 — Нативный ввод наличных для смешанной части](../specs/069-native-split-cash/spec.md) |
+| 070 | выполнено | [070 — Обычная наличная оплата: нативный ввод и tender](../specs/070-native-ordinary-cash/spec.md) |
+| 071 | выполнено | [071 — Единый нативный визуальный стиль M POS](../specs/071-native-pos-design/spec.md) |
+| 072 | выполнено | [072 — первоначальное распределение смешанной оплаты](../specs/072-native-initial-split-plans/spec.md) |
+| 073 | выполнено | [073 — изменение количества частей смешанной оплаты](../specs/073-native-split-count/spec.md) |
+
+## Оставшиеся задачи
+
+| ID | Статус | Область | Что переносим | Зависимости |
+|---|---|---|---|---|
+| 074 | запланировано | P7 | Редактирование суммы смешанной части и парсер ввода | 073 |
+| 075 | запланировано | P7 | Нормализация/возобновление mixed draft и его проверки | 074 |
+| 076 | запланировано | P6/P7 | Нативные итоговые preview корзины при всех изменениях | 075 |
+| 077 | запланировано | P7 | Выбор доставки, тариф и проверки заказа | 076 |
+| 078 | запланировано | P6 | Команды контекста заказа: тип, клиент, комментарий | 077 |
+| 079 | запланировано | P6 | Жизненный цикл отложенного заказа: hold/resume/delete | 078 |
+| 080 | запланировано | P9 | Правила редактирования товаров и категорий | 040 |
+| 081 | запланировано | P9 | Правила редактирования рецептов и модификаторов | 080 |
+| 082 | запланировано | P6/P9 | Папки, порядок, перенос плиток и навигация — бизнес-команды | 081 |
+| 083 | запланировано | P2/P8 | Сотрудники, роли и авторизация без изменения политики | 042 |
+| 084 | запланировано | P11 | Клиенты: локальные команды и хранение | 078 |
+| 085 | запланировано | P11 | Онлайн-проверка доступности подарка и offline policy | 084 |
+| 086 | запланировано | P4/P11 | Начисление/отмена лояльности и разрешённые durable retry | 085 |
+| 087 | запланировано | P4 | WEB acceptance/ready: нативный основной журнал и ACK | 046 |
+| 088 | запланировано | P3 | Переключение WEB SSE на нативную доставку/восстановление | 087 |
+| 089 | запланировано | P3 | Ручная синхронизация каталога и media transport | 088 |
+| 090 | запланировано | P3/P4 | Публикация доступности в Kotlin: только после оплаты | 033 |
+| 091 | запланировано | P10 | Поставщики: бизнес-команды и локальное хранение | 080 |
+| 092 | запланировано | P10 | Заказы поставщику: расчёты, статусы и сохранение | 091 |
+| 093 | запланировано | P10 | Приёмка: расчёт, себестоимость и атомарное подтверждение | 092 |
+| 094 | запланировано | P10 | Черновики приёмки и восстановление | 093 |
+| 095 | запланировано | P10 | Инвентаризация: пересчёт, расхождения и атомарное применение | 094 |
+| 096 | запланировано | P10 | Складские отчёты по периодам и источники данных | 093,095 |
+| 097 | запланировано | P12 | Аналитика продаж/возвратов: Room aggregates и периоды | 044,050 |
+| 098 | запланировано | P6 | Зал, столы, бронирования: нативные бизнес-команды | 078 |
+| 099 | запланировано | P7/P8 | Нативное управление заданиями печати и business triggers | 053,087 |
+| 100 | запланировано | UI | Нативные настройки и управление сотрудниками | 083,039 |
+| 101 | запланировано | P6/UI | Нативное рабочее место: каталог, папки, корзина | 076,078,082 |
+| 102 | запланировано | P9/UI | Нативный редактор товара/рецепта/модификаторов | 080,081 |
+| 103 | запланировано | P7/UI | Нативный основной экран оплаты | 074,075,077 |
+| 104 | запланировано | P7/UI | Нативная история чеков, детали и возвраты | 050,097 |
+| 105 | запланировано | P6/P11/UI | Нативные отложенные заказы, клиенты и лояльность | 079,084,085,086 |
+| 106 | запланировано | P10/UI | Нативные экраны склада/закупок/приёмки/инвентаризации | 091,092,093,094,095,096 |
+| 107 | запланировано | P12/UI | Нативные экраны аналитики | 097 |
+| 108 | запланировано | P6/UI | Нативный зал/столы/бронирования | 098 |
+| 109 | запланировано | UI/architecture | Удаление активного WebView runtime и legacy мостов | 100,101,102,103,104,105,106,107,108 |
+| 110 | запланировано | acceptance | Комплексная планшетная приёмка: parity, offline/restart, backup, производительность | 109,111 |
+| 111 | запланировано | P5 | Нативные метаданные обновления APK и проверки подписи/версии | 032 |
+
+## Последний этап
+
+073: количество частей перенесено; ввод суммы и normalize пока JS.
+Следующие 074/075 закрывают эти расчёты, затем preview/delivery/context.
+Нативные экраны идут после стабилизации соответствующих бизнес-команд.

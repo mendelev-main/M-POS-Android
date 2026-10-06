@@ -30,7 +30,7 @@
       const valid=typeof payload.cashGiven==='number'&&Number.isFinite(payload.cashGiven)&&payload.cashGiven>=form.amount&&typeof payload.change==='number'&&Number.isFinite(payload.change)&&payload.change>=0&&Math.abs(payload.change-(payload.cashGiven-form.amount))<=0.001;
       const unchanged=form.cart===state.cart&&state._splitPayments?.[form.index]===form.part&&form.stamp===stamp();
       global.closeModal();
-      if(!valid||!unchanged||state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||global.MPosCore.CartOperations?.hasPending()){flash('Платёж изменился. Повторите оплату части.');return;}
+      if(!valid||!unchanged||state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||(global.MPosCore.CartOperations?.hasPending()||global.MPosCore.SplitPayments?.hasPending())){flash('Платёж изменился. Повторите оплату части.');return;}
       // Preserve reviewed mutation timing: tender is assigned before progress commit;
       // completeSplitPayment alone marks paid after its successful persistence.
       form.part.cashGiven=payload.cashGiven;form.part.change=payload.change;
