@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
+import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,6 +29,7 @@ import com.mendelev.mpos.network.MPosNetworkTransport
 import com.mendelev.mpos.media.ProductPhotoManager
 import com.mendelev.mpos.print.EscPosPrinter
 import com.mendelev.mpos.share.ReportShareManager
+import com.mendelev.mpos.shift.MPosShiftScreenController
 import com.mendelev.mpos.settings.MPosSettingsStore
 import com.mendelev.mpos.telegram.TelegramClient
 import com.mendelev.mpos.web.LocalContentWebViewClient
@@ -42,6 +44,7 @@ class MainActivity : AppCompatActivity() {
         private const val START_URL = "$APP_ORIGIN/assets/pos/pos.html"
     }
 
+    private lateinit var shiftScreen: MPosShiftScreenController
     private lateinit var webView: WebView
     private lateinit var imageStore: ProductImageStore
     private lateinit var photos: ProductPhotoManager
@@ -127,7 +130,12 @@ class MainActivity : AppCompatActivity() {
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
             .build()
         webView.webViewClient = LocalContentWebViewClient(this, loader, imageStore)
-        setContentView(webView)
+        val root = FrameLayout(this)
+        root.addView(webView)
+        shiftScreen = MPosShiftScreenController(this, root, nativeStorageMirror::handle) { action ->
+            callJavaScript("window.__mposShiftScreenAction&&window.__mposShiftScreenAction($action);")
+        }
+        setContentView(root)
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
             WebViewCompat.addWebMessageListener(webView, "MPosNative", setOf(APP_ORIGIN)) { _, message, sourceOrigin, isMainFrame, _ ->
@@ -214,6 +222,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun handleShiftScreen(payload: JSONObject) = runOnUiThread { if (::shiftScreen.isInitialized) shiftScreen.handle(payload) }
+
     fun handleTelegram(payload: JSONObject) = telegram.handle(payload)
 
     fun recreateAfterRendererExit() = runOnUiThread {
@@ -235,7 +245,9 @@ class MainActivity : AppCompatActivity() {
     private fun nativeSettingsResult(result: JSONObject) = callJavaScript("window.__nativeSettingsResult&&window.__nativeSettingsResult($result);")
     private fun nativeStorageResult(result: JSONObject) {
         diagnostics.record("storage", "result", result.optBoolean("ok", false) && result.optBoolean("projectionOk", true))
-        callJavaScript("window.__nativeStorageResult&&window.__nativeStorageResult($result);")
+        if (result.optString("requestId").startsWith("native-shift-screen-")) {
+            runOnUiThread { if (::shiftScreen.isInitialized) shiftScreen.result(result) }
+        } else callJavaScript("window.__nativeStorageResult&&window.__nativeStorageResult($result);")
     }
     private fun nativeNetworkResult(result: JSONObject) {
         diagnostics.record("network", "result", result.optBoolean("ok", false))

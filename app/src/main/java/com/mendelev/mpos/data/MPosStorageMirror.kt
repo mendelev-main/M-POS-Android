@@ -108,13 +108,17 @@ class MPosStorageMirror(
             }
         }
         when (command.action) {
+            "shiftScreenRead" -> {
+                readAttempt(command.action) { MPosShiftReportRepository(database).readScreen(requireNotNull(command.serialized)).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, "native shift screen unavailable") }
+            }
             "shiftReportRead" -> {
                 readAttempt(command.action) { MPosShiftReportRepository(database).read(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native shift report unavailable") }
             }
             "shiftLifecycleCommit" -> {
                 attempt { MPosShiftLifecycleCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
-                    .onSuccess(::emitResult).onFailure { result(requestId, false, "local shift lifecycle transaction failed") }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, MPosShiftLifecycleCommand.failureMessage(it)) }
             }
             "cashMovementCommit" -> {
                 attempt { MPosCashMovementCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }

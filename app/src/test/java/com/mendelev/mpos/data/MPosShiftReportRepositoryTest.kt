@@ -119,4 +119,38 @@ class MPosShiftReportRepositoryTest {
         val zero = MPosShiftReportRepository.build(JSONObject().put("id", "zero").put("openingCash", 0).put("countedCash", -0.0), JSONArray(), "BYN", "Тестовая касса").getJSONObject("report")
         assertEquals("0.00 BYN", MPosShiftReceipt.rows(zero).single { it.label == "Фактически в кассе" }.value)
     }
+    @Test fun screenUsesPersistedTotalsAndLatestTwentyClosedShiftsWithoutReceipts() = runBlocking {
+        val shifts = JSONArray()
+        for (i in 1..22) shifts.put(JSONObject().put("id", "old$i").put("status", "closed").put("closedAt", i))
+        shifts.put(JSONObject().put("id", "s1").put("status", "open").put("openingCash", 100))
+        MPosShiftStorage(database).write(shifts.toString())
+        val orders = """[{"id":"r1","shiftId":"old1","method":"cash","total":20,"returnedAt":2000,"returnedShiftId":"s1","returnAmount":20},{"id":"r2","shiftId":"s1","method":"card","total":10,"items":[{"qty":2,"price":10,"discountName":"Promo","discountType":"percent","discountValue":25},{"qty":2,"price":10,"discountName":"Fixed","discountValue":3},{"qty":2,"price":10,"discountValue":100}]}]"""
+        MPosOrderStorage(database).write(orders)
+        val screen = MPosShiftReportRepository(database).readScreen(request().put("cash", 9999).toString())
+        val active = screen.getJSONObject("active")
+        assertEquals(23, active.getInt("number"))
+        assertEquals(80.0, active.getJSONObject("report").getDouble("expectedCash"), 0.0)
+        assertEquals(11.0, active.getJSONObject("summary").getDouble("discountsTotal"), 0.0)
+        assertFalse(active.getJSONObject("report").has("orders"))
+        val history = screen.getJSONArray("history")
+        assertEquals(20, history.length()); assertEquals("old22", history.getJSONObject(0).getJSONObject("report").getString("id"))
+        assertEquals(orders, MPosOrderStorage(database).read().getString("payload"))
+        assertEquals(shifts.toString(), MPosShiftStorage(database).read().getString("payload"))
+        MPosRecoveryStorage(database).write("criticalStorageJournal", """{"version":1,"writes":[]}""")
+        var failed = false
+        try { MPosShiftReportRepository(database).readScreen(request().toString()) } catch (_: Exception) { failed = true }
+        assertTrue(failed)
+    }
+
+    @Test fun emptyFirstRunAndNullRestoreShowClosedScreenWithoutWritingSyntheticShift() = runBlocking {
+        for (empty in listOf<String?>(null, "null")) {
+            MPosShiftStorage(database).remove()
+            if (empty != null) MPosShiftStorage(database).write(empty)
+            val before = MPosShiftStorage(database).read().toString()
+            val model = MPosShiftReportRepository(database).readScreen(request().toString())
+            assertTrue(model.isNull("active")); assertEquals(0, model.getJSONArray("history").length())
+            assertEquals(before, MPosShiftStorage(database).read().toString())
+        }
+    }
+
 }

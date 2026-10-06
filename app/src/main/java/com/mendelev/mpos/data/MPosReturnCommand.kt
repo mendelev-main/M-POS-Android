@@ -38,7 +38,7 @@ class MPosReturnCommand(private val database: MPosDatabase) {
         val original = JSONObject(requireNotNull(orders.get(id)) { "receipt not found" }.payload)
         check(original.optLong("returnedAt") == 0L && same(original, command.getJSONObject("expectedReceipt"))) { "receipt already returned or changed" }
         val beforeProducts = JSONArray(catalog.read().getString("payload"))
-        val beforeShifts = JSONArray(shifts.read().getString("payload"))
+        val beforeShifts = shifts.readRecords()
         val expected = command.getJSONObject("expected")
         check(same(beforeProducts, expected.getJSONArray("products")) && same(beforeShifts, expected.getJSONArray("shifts"))) { "return data changed" }
         val shiftId = receipt.getString("returnedShiftId")

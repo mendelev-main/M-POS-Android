@@ -31,6 +31,16 @@ class MPosShiftStorage(private val database: MPosDatabase) {
 
     }
 
+    /** Missing/null legacy documents mean no shifts, just as Storage.get("shifts", []). */
+    suspend fun readRecords(): JSONArray {
+        val envelope = read()
+        if (!envelope.getBoolean("found")) return JSONArray()
+        val parser = JSONTokener(envelope.getString("payload"))
+        val parsed = parser.nextValue()
+        require(parser.nextClean() == '\u0000' && (parsed is JSONArray || parsed === JSONObject.NULL)) { "invalid shifts document" }
+        return parsed as? JSONArray ?: JSONArray()
+    }
+
     suspend fun write(serialized: String): JSONObject = database.withTransaction {
         check(isAuthoritative()) { "native shifts is not initialized" }
         replace(serialized)

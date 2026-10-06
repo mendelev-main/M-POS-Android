@@ -14,7 +14,8 @@
     settings:handler('settings'),
     storage:handler('storage'),
     network:handler('network'),
-    diagnostics:handler('diagnostics')
+    diagnostics:handler('diagnostics'),
+    shiftScreen:handler('shiftScreen')
   });
   global.__MPOS_PLATFORM__='android';
   global.__MPOS_VERSION__='0.1.0';

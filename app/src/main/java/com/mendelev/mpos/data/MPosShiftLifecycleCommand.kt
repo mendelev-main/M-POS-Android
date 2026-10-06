@@ -24,7 +24,7 @@ class MPosShiftLifecycleCommand(private val database: MPosDatabase) {
         val shifts = MPosShiftStorage(database)
         val recovery = MPosRecoveryStorage(database)
         check(shifts.isAuthoritative() && recovery.isAuthoritative("criticalStorageJournal"))
-        val before = JSONArray(shifts.read().getString("payload"))
+        val before = shifts.readRecords()
         val records = (0 until before.length()).map { before.getJSONObject(it) }
         val marker = "mpos_shift_lifecycle_v1:$operation:$id:$at"
         val hash = MessageDigest.getInstance("SHA-256").digest(raw.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
@@ -82,6 +82,17 @@ class MPosShiftLifecycleCommand(private val database: MPosDatabase) {
         documents.upsert(LegacyStorageShadowEntity(marker, hash, System.currentTimeMillis()))
         acknowledgement(id, operation, false).also { result ->
             expectedCash?.let { result.put("expectedCash", it).put("difference", difference) }
+        }
+    }
+
+    companion object {
+        /** Only fixed messages leave this boundary; parser/SQL text may contain source records. */
+        fun failureMessage(error: Throwable): String = when (error.message) {
+            "shift state changed", "employee state changed", "receipt archive changed", "closing cash changed" -> "Данные смены изменились. Перезапустите приложение перед повтором."
+            "shift already open", "target is not the current open shift" -> "Текущая смена изменилась. Перезапустите приложение."
+            "pending critical operation" -> "Есть незавершённая операция хранения. Перезапустите приложение для восстановления."
+            "invalid previous counted cash", "invalid closing drawer", "invalid counted cash" -> "Некорректная сумма наличных в смене. Проверьте данные кассы."
+            else -> "Не удалось сохранить смену в локальной базе. Перезапустите приложение; если ошибка повторяется, сообщите в поддержку."
         }
     }
 

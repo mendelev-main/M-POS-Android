@@ -40,7 +40,7 @@ class MPosPaymentCommand(private val database: MPosDatabase) {
         check(orders.get(id) == null && orders.orderCount() == command.getInt("expectedOrderCount")) { "stale receipt archive" }
         val expected = command.getJSONObject("expected")
         val beforeProducts = JSONArray(catalog.read().getString("payload"))
-        val beforeShifts = JSONArray(shifts.read().getString("payload"))
+        val beforeShifts = shifts.readRecords()
         check(same(beforeProducts, expected.getJSONArray("products")) && same(beforeShifts, expected.getJSONArray("shifts"))) { "local data changed before payment" }
         val shiftId = order.getString("shiftId")
         val shift = (0 until beforeShifts.length()).map { beforeShifts.getJSONObject(it) }.single { it.optString("id") == shiftId }

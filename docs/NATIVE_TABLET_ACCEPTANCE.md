@@ -133,3 +133,22 @@ Status: physical tablet / Telegram / printer evidence pending until final migrat
 - Exercise a representative large archive and record report latency/memory. No benchmark is accepted from cloud synthetic fixtures alone.
 
 Status: pending comprehensive physical testing.
+
+## Native shift screen (054)
+
+- Open/close shift, deposit/withdraw cash and view historical reports. Compare all fields with legacy session rollback; include discounts, split and same/cross-shift refunds, delivery, movement comments and 20+ closed shifts.
+- Navigate rapidly between tabs and open/dismiss forms/reports; native content must never cover navigation or a modal, nor reappear from late replies.
+- Rotate/change window size and font scaling. Check scrolling, buttons, long employee/comment text, keyboard and Android Back without model-specific assumptions.
+- Simulate read failure: error contains retry/explicit legacy screen; no invented zero/stale totals. Restart returns native screen. Import synthetic v13 and verify fresh finance/history.
+- Record latency/memory with a representative large archive. Read does not publish availability or sync catalogue.
+
+Status: pending comprehensive physical testing.
+
+## First-run fix (055)
+
+- Update/restart the APK. On a fresh installation open the first shift with a cashier and then with an administrator (existing password rule), starting cash 0; each operation must save once.
+- Restart and verify employees and shift persist. Deposit, take a cash payment, close with counted cash, restart and reopen with the previous counted carryover.
+- A reported save failure must remain visible with Android guidance; successful first opening must not raise Safari/"all data will reset" warning.
+- Repeat for a synthetic v13 backup with absent/null shifts; check explicit empty [] and existing populated history too.
+
+Status: pending physical verification of updated APK.

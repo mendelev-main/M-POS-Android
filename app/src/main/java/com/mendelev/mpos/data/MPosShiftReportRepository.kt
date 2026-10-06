@@ -7,27 +7,47 @@ import org.json.JSONTokener
 
 /** One consistent persisted snapshot for shift totals and all report output formats. */
 class MPosShiftReportRepository(private val database: MPosDatabase) {
-    suspend fun read(raw: String): JSONObject = database.withTransaction {
-        val parser = JSONTokener(raw)
-        val request = parser.nextValue()
-        require(request is JSONObject && parser.nextClean() == '\u0000')
-        val id = request.getString("shiftId")
-        require(request.opt("shiftId") is String && id.isNotBlank())
+    private data class Snapshot(val shifts: JSONArray, val orders: JSONArray, val revision: Long)
+    private suspend fun snapshot(): Snapshot {
         val shifts = MPosShiftStorage(database)
         val orders = MPosOrderStorage(database)
         val recovery = MPosRecoveryStorage(database)
         check(shifts.isAuthoritative() && orders.isAuthoritative() && recovery.isAuthoritative("criticalStorageJournal"))
         val journal = recovery.read("criticalStorageJournal")
         check(!journal.getBoolean("found") || JSONTokener(journal.getString("payload")).nextValue() === JSONObject.NULL) { "pending critical operation" }
-        val shiftRows = JSONArray(shifts.read().getString("payload"))
-        val shift = (0 until shiftRows.length()).map { shiftRows.getJSONObject(it) }.single { it.optString("id") == id }
-        if (request.optBoolean("closedOnly")) check(shift.optString("status") == "closed") { "shift is not durably closed" }
+        val shiftRows = shifts.readRecords()
         val envelope = orders.read()
-        val payload = if (envelope.getBoolean("found")) envelope.getString("payload") else "null"
-        val parsed = JSONTokener(payload).nextValue()
+        val parsed = JSONTokener(if (envelope.getBoolean("found")) envelope.getString("payload") else "null").nextValue()
         require(parsed is JSONArray || parsed === JSONObject.NULL)
-        val model = build(shift, parsed as? JSONArray ?: JSONArray(), request.optString("currency"), request.optString("establishmentName"))
-        model.put("ok", true).put("authoritative", true).put("source", "room-shift-report").put("ordersRevision", envelope.getLong("revision"))
+        return Snapshot(shiftRows, parsed as? JSONArray ?: JSONArray(), envelope.getLong("revision"))
+    }
+    private fun parse(raw: String): JSONObject {
+        val parser = JSONTokener(raw)
+        val request = parser.nextValue()
+        require(request is JSONObject && parser.nextClean() == '\u0000')
+        return request
+    }
+    suspend fun read(raw: String): JSONObject = database.withTransaction {
+        val request = parse(raw)
+        val id = request.getString("shiftId")
+        require(request.opt("shiftId") is String && id.isNotBlank())
+        val source = snapshot()
+        val shift = (0 until source.shifts.length()).map { source.shifts.getJSONObject(it) }.single { it.optString("id") == id }
+        if (request.optBoolean("closedOnly")) check(shift.optString("status") == "closed") { "shift is not durably closed" }
+        build(shift, source.orders, request.optString("currency"), request.optString("establishmentName"))
+            .put("ok", true).put("authoritative", true).put("source", "room-shift-report").put("ordersRevision", source.revision)
+    }
+    suspend fun readScreen(raw: String): JSONObject = database.withTransaction {
+        val request = parse(raw)
+        val source = snapshot()
+        val indexed = (0 until source.shifts.length()).map { it to source.shifts.getJSONObject(it) }
+        fun model(entry: Pair<Int, JSONObject>): JSONObject = build(entry.second, source.orders, request.optString("currency"), request.optString("establishmentName"))
+            .put("number", entry.first + 1).also { it.getJSONObject("report").remove("orders") }
+        val active = indexed.firstOrNull { it.second.optString("status") == "open" }
+        val closed = indexed.filter { it.second.optString("status") == "closed" }.sortedByDescending { MPosJsonNumbers.amount(it.second, "closedAt") }.take(20)
+        JSONObject().put("ok", true).put("authoritative", true).put("source", "room-shift-screen")
+            .put("active", active?.let(::model) ?: JSONObject.NULL).put("history", JSONArray(closed.map(::model)))
+            .put("ordersRevision", source.revision)
     }
 
     companion object {
@@ -73,6 +93,20 @@ class MPosShiftReportRepository(private val database: MPosDatabase) {
             val summary = JSONObject(t.toString()).put("expectedCash", expected).put("countedCash", counted).put("difference", difference)
                 .put("grossSales", records.sumOf { MPosJsonNumbers.amount(it, "total") })
             summary.put("netRevenue", summary.getDouble("grossSales") - summary.getDouble("refunds"))
+            val discounts = records.sumOf { order ->
+                val items = order.optJSONArray("items") ?: JSONArray()
+                (0 until items.length()).sumOf { i ->
+                    val item = items.getJSONObject(i)
+                    if (!MPosJsonNumbers.truthy(item.opt("discountName"))) 0.0 else {
+                        val qty = MPosJsonNumbers.amount(item, "qty")
+                        val base = MPosJsonNumbers.amount(item, "price") * qty
+                        val value = MPosJsonNumbers.reportAmount(item, "discountValue")
+                        if (item.optString("discountType") == "percent") base * value.coerceIn(0.0, 100.0) / 100
+                        else kotlin.math.min(base, kotlin.math.max(0.0, value) * qty)
+                    }
+                }
+            }
+            summary.put("discountsTotal", discounts)
             return JSONObject().put("report", report).put("summary", summary)
         }
     }

@@ -98,3 +98,11 @@ Native lifecycle persistence validates most-recent counted carryover, employee s
 ## Native shift report read model (053)
 
 Compatible report payload now reads native persisted shifts/receipts atomically; legacy duplicate-ID documents/null archives retained. Active PNG Telegram, LAN receipt, PDF and report modal share native financial data, not caller snapshots. Pending output reads coalesce; failure never sends stale fallback. Goldens cover 14 scenarios; actual runtime tests cover close → read → outputs, copies/routing, fresh reads and cancellation. Main dashboard remains JS mirror and physical output evidence remains pending.
+
+## Native shift screen (054)
+
+Kotlin renders authoritative active totals, item discounts, movements and latest 20 closed shifts. Read-only source/v13 preserved. Existing forms/actions remain with whitelist/current-shift/modal guards. Geometry/visibility, stale-result cancellation and explicit rollback covered by JS/Robolectric tests; native SQLite checks finance/history/pending recovery. Physical navigation/rotation/font size/keyboard/performance acceptance pending.
+
+## First-run empty shift document (055)
+
+Missing/null native shift documents now retain reviewed empty-list semantics for lifecycle and derived screens/commands. No read-time writes/schema/v13 changes. Reproduced failing native regression before fix; opening/replay/closure for both roles and no-mutation empty-screen checks added. Android warning now reports operation failure without Safari/blanket loss claim; source hashes preserved. Physical updated-APK acceptance pending.

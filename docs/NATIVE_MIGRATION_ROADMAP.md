@@ -288,3 +288,11 @@ MPosShiftLifecycleCommand owns opening carryover/employee snapshot validation, c
 ## Native shift summary / report data (053)
 
 MPosShiftReportRepository builds compatible report/summary from one persisted Room snapshot. Active Telegram image, LAN receipt, PDF print and report dialog use native reads; pending automatic outputs coalesce and subsequent manual requests remain fresh. Existing formatters, printer copies/routing and notification gates are preserved. Scalar numeric conversion is shared with native accounting; source records stay untouched. The main shift dashboard and administrator authentication remain JS. Next: native shift screen with explicit navigation/callback/rollback integration.
+
+## Native shift screen (054)
+
+Kotlin Android Views now render current shift summary/movements and latest 20 history from a transactional Room model. Geometry-only WebView adapter retains navigation and delegates approved forms; no new dependency, Compose or authentication migration claimed. Obsolete replies cannot reopen a hidden screen; failed reads offer retry/explicit session rollback. P8 remains partial. Next: native cash movement and closing forms; preserve administrator opening verification and post-commit report rules.
+
+## First-run correction (055)
+
+Resolve absent/null shift document parity before further form migration. Lifecycle previously assumed a populated/explicit [] document; readRecords now supplies compatible empty-state semantics across native shift readers. Safe lifecycle errors and Android-only visible storage warning added. Comprehensive physical acceptance remains pending.

@@ -23,13 +23,13 @@ test('every local script referenced by POS is bundled',()=>{
 
 test('Android bridge preserves all native iPad channels',()=>{
  const bridge=fs.readFileSync(path.join(assets,'android-bridge.js'),'utf8');
- for(const channel of ['printer','telegram','photoPicker','backup','settings','storage','network'])assert.match(bridge,new RegExp(`${channel}:handler\\('${channel}'\\)`));
+ for(const channel of ['printer','telegram','photoPicker','backup','settings','storage','network','shiftScreen'])assert.match(bridge,new RegExp(`${channel}:handler\\('${channel}'\\)`));
  assert.match(bridge,/window\.__MPOS_PLATFORM__|global\.__MPOS_PLATFORM__/);
 });
 
 test('Android POS differs from source HTML only by platform scripts',()=>{
  const manifest=JSON.parse(fs.readFileSync(path.join(root,'web-source-manifest.json')));
- const restored=html.replace('<script src="native-shift-reports.js"></script>\n','').replace('<script src="native-shift-lifecycle-command.js"></script>\n','').replace('<script src="native-cash-movement-command.js"></script>\n','').replace('<script src="native-return-command.js"></script>\n','').replace('<script src="native-shift-accounting.js"></script>\n','').replace('<script src="native-payment-command.js"></script>\n','').replace('<script src="native-receipts-history.js"></script>\n','').replace('<script src="android-bridge.js"></script>\n','').replace('\n<script src="native-storage-shadow.js"></script>','').replace('\n<script src="native-catalog-cutover.js"></script>','').replace('\n<script src="native-network-shadow.js"></script>','').replace('\n<script src="native-settings.js"></script>','').replace('\n<script src="notification-native.js"></script>','').replace('<script src="native-availability.js"></script>\n','');
+ const restored=html.replace('<script src="native-storage-warning.js"></script>\n','').replace('<script src="native-shift-screen.js"></script>\n','').replace('<script src="native-shift-reports.js"></script>\n','').replace('<script src="native-shift-lifecycle-command.js"></script>\n','').replace('<script src="native-cash-movement-command.js"></script>\n','').replace('<script src="native-return-command.js"></script>\n','').replace('<script src="native-shift-accounting.js"></script>\n','').replace('<script src="native-payment-command.js"></script>\n','').replace('<script src="native-receipts-history.js"></script>\n','').replace('<script src="android-bridge.js"></script>\n','').replace('\n<script src="native-storage-shadow.js"></script>','').replace('\n<script src="native-catalog-cutover.js"></script>','').replace('\n<script src="native-network-shadow.js"></script>','').replace('\n<script src="native-settings.js"></script>','').replace('\n<script src="notification-native.js"></script>','').replace('<script src="native-availability.js"></script>\n','');
  assert.equal(sha(restored),manifest.files['pos.html']);
  for(const [file,expected] of Object.entries(manifest.files)){
    if(file==='pos.html')continue;

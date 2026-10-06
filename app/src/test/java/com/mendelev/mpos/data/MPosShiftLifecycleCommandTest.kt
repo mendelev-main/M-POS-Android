@@ -150,4 +150,31 @@ class MPosShiftLifecycleCommandTest {
         val result = MPosShiftLifecycleCommand(database).commit(closing(counted = 80.001).toString())
         assertEquals(0.001, result.getDouble("difference"), 0.00000001)
     }
+    @Test fun firstRunMissingAndNullShiftDocumentsOpenCloseAndReplayForBothRoles() = runBlocking {
+        for ((index, empty) in listOf<String?>(null, "null").withIndex()) {
+            MPosShiftStorage(database).remove()
+            database.legacyStorageShadowDao().delete(MPosShiftStorage.AUTHORITY_KEY)
+            MPosShiftStorage(database).initialize(empty)
+            val employee = staff.getJSONObject(index)
+            val request = opening(JSONArray(), "", 0.0)
+            val shift = request.getJSONObject("shift")
+            shift.put("id", "fresh$index").put("openedAt", 200 + index)
+                .put("employeeId", employee.getString("id")).put("employeeName", employee.getString("name"))
+                .put("employeePhone", employee.optString("phone", ""))
+            val raw = request.toString()
+            assertTrue(MPosShiftLifecycleCommand(database).commit(raw).getBoolean("ok"))
+            assertTrue(MPosShiftLifecycleCommand(database).commit(raw).getBoolean("replayed"))
+            val stored = JSONArray(MPosShiftStorage(database).read().getString("payload"))
+            assertEquals(1, stored.length()); assertEquals(0.0, stored.getJSONObject(0).getDouble("openingCash"), 0.0)
+            assertTrue(MPosShiftLifecycleCommand(database).commit(closing(0.0, 0.0).toString()).getBoolean("ok"))
+        }
+    }
+
+    @Test fun lifecycleFailureMessagesDoNotExposeSourceRecords() {
+        assertTrue(MPosShiftLifecycleCommand.failureMessage(IllegalStateException("pending critical operation")).contains("восстановления"))
+        assertTrue(MPosShiftLifecycleCommand.failureMessage(IllegalStateException("employee state changed")).contains("изменились"))
+        val message = MPosShiftLifecycleCommand.failureMessage(IllegalArgumentException("synthetic-private-record"))
+        assertFalse(message.contains("synthetic-private-record")); assertTrue(message.contains("локальной базе"))
+    }
+
 }

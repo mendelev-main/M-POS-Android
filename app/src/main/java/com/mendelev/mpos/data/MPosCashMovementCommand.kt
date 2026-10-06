@@ -31,7 +31,7 @@ class MPosCashMovementCommand(private val database: MPosDatabase) {
         val archive = MPosOrderStorage(database)
         val recovery = MPosRecoveryStorage(database)
         check(shifts.isAuthoritative() && archive.isAuthoritative() && recovery.isAuthoritative("criticalStorageJournal"))
-        val before = JSONArray(shifts.read().getString("payload"))
+        val before = shifts.readRecords()
         val marker = "mpos_cash_movement_v1:$id:$at"
         val hash = MessageDigest.getInstance("SHA-256").digest(raw.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
         documents.get(marker)?.let {
