@@ -1,0 +1,560 @@
+[
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": "",
+        "name": "",
+        "phone": "",
+        "address": ""
+      }
+    },
+    "expected": {
+      "orderLabel": "",
+      "name": "",
+      "phone": "",
+      "address": ""
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": "  text  ",
+        "name": "  text  ",
+        "phone": "  text  ",
+        "address": "  text  "
+      }
+    },
+    "expected": {
+      "orderLabel": "text",
+      "name": "text",
+      "phone": "text",
+      "address": "text"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": "﻿  Тест 　",
+        "name": "﻿  Тест 　",
+        "phone": "﻿  Тест 　",
+        "address": "﻿  Тест 　"
+      }
+    },
+    "expected": {
+      "orderLabel": "Тест",
+      "name": "Тест",
+      "phone": "Тест",
+      "address": "Тест"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": "data",
+        "name": "data",
+        "phone": "data",
+        "address": "data"
+      }
+    },
+    "expected": {
+      "orderLabel": "data",
+      "name": "data",
+      "phone": "data",
+      "address": "data"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": "\u0000data\u0000",
+        "name": "\u0000data\u0000",
+        "phone": "\u0000data\u0000",
+        "address": "\u0000data\u0000"
+      }
+    },
+    "expected": {
+      "orderLabel": "\u0000data\u0000",
+      "name": "\u0000data\u0000",
+      "phone": "\u0000data\u0000",
+      "address": "\u0000data\u0000"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " name\n inside ",
+        "name": " name\n inside ",
+        "phone": " name\n inside ",
+        "address": " name\n inside "
+      }
+    },
+    "expected": {
+      "orderLabel": "name\n inside",
+      "name": "name\n inside",
+      "phone": "name\n inside",
+      "address": "name\n inside"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": "\tТелефон +7 (123)\t",
+        "name": "\tТелефон +7 (123)\t",
+        "phone": "\tТелефон +7 (123)\t",
+        "address": "\tТелефон +7 (123)\t"
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": "\nТелефон +7 (123)\n",
+        "name": "\nТелефон +7 (123)\n",
+        "phone": "\nТелефон +7 (123)\n",
+        "address": "\nТелефон +7 (123)\n"
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": "\u000bТелефон +7 (123)\u000b",
+        "name": "\u000bТелефон +7 (123)\u000b",
+        "phone": "\u000bТелефон +7 (123)\u000b",
+        "address": "\u000bТелефон +7 (123)\u000b"
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": "\fТелефон +7 (123)\f",
+        "name": "\fТелефон +7 (123)\f",
+        "phone": "\fТелефон +7 (123)\f",
+        "address": "\fТелефон +7 (123)\f"
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": "\rТелефон +7 (123)\r",
+        "name": "\rТелефон +7 (123)\r",
+        "phone": "\rТелефон +7 (123)\r",
+        "address": "\rТелефон +7 (123)\r"
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": " Телефон +7 (123) ",
+        "name": " Телефон +7 (123) ",
+        "phone": " Телефон +7 (123) ",
+        "address": " Телефон +7 (123) "
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": "　Телефон +7 (123)　",
+        "name": "　Телефон +7 (123)　",
+        "phone": "　Телефон +7 (123)　",
+        "address": "　Телефон +7 (123)　"
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "fields": {
+        "label": "﻿Телефон +7 (123)﻿",
+        "name": "﻿Телефон +7 (123)﻿",
+        "phone": "﻿Телефон +7 (123)﻿",
+        "address": "﻿Телефон +7 (123)﻿"
+      }
+    },
+    "expected": {
+      "orderLabel": "Телефон +7 (123)",
+      "name": "Телефон +7 (123)",
+      "phone": "Телефон +7 (123)",
+      "address": "Телефон +7 (123)"
+    }
+  }
+]

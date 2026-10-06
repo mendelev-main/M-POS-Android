@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **76/110 выполнено (69,09%)**
-после 077. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **77/110 выполнено (70,00%)**
+после 078. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -466,3 +466,9 @@ matching-only money node updates; synchronous source preview fallback retained.
 077: delivery selection/type/gate native with shared quote status and ordered
 context commands. Rate CRUD (100), customer backend (084/085) remain pending;
 078 follows local order settings fields. Physical acceptance pending.
+
+### 078 — завершён локальный контекст формы
+
+Одно сохранение → native command → state/session/close/render. Identity/loyalty
+не пересвязываются; тип/доставка завершены 077, comment только сохраняется.
+Следующий 079 — hold/resume/delete; 084/085 отдельно покрывают backend клиентов.

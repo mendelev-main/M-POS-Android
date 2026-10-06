@@ -1,7 +1,7 @@
 # Статус миграции M POS Android и проверки на планшете
 
-Актуальный срез: этап 077. Основной счётчик и полный план находятся в
-[реестре задач](KOTLIN_MIGRATION_TASKS.md): **76/110 выполнено — 69,09%**.
+Актуальный срез: этап 078. Основной счётчик и полный план находятся в
+[реестре задач](KOTLIN_MIGRATION_TASKS.md): **77/110 выполнено — 70,00%**.
 Это инженерные задачи, не процент функций/кода; физическая приёмка ожидается.
 Исторические таблицы ниже описывают срез 040–053; более поздние изменения
 перечислены по спецификациям в конце, актуальный scope каждого этапа — в реестре.
@@ -359,3 +359,10 @@ Rollback MPosNativeCartPreviewEnabled=false; физическая приёмка
 context FIFO и payment/confirmation pending guards. Exact fee/zero/selected и
 save/render/modal порядок сохранены. Rate CRUD/backend остаются source.
 Rollback MPosNativeDeliveryEnabled=false; physical pending.
+
+## Этап 078 — локальные поля заказа
+
+Kotlin нормализует название заказа, имя, телефон и адрес по точным правилам
+исходной формы. Привязка клиента, бонусы, comment и WEB/split metadata сохранены.
+FIFO и проверки формы отменяют поздние ответы; основная форма пока WebView.
+Customer backend lookup/attach остаётся 084/085. [Спецификация](../specs/078-native-order-context/spec.md).

@@ -260,3 +260,9 @@ retained. Physical response/performance pending, v13 unchanged.
 077: delivery check/select/type source fixtures, FIFO continuity/external stale,
 quote-integrated gate and pending-payment protocol; strict zero tariff preserved.
 Rate CRUD and backend source, v13 unchanged; physical pending.
+
+### 078: локальное сохранение настроек заказа
+
+ECMAScript trim в Kotlin, 31 fixture + source parity; customer object/id/extensions,
+бонусы, orderComment и WEB/split metadata сохранены. Form/queue stale guards,
+rollback, bridge failure, double save проверены автоматически. Физически pending.

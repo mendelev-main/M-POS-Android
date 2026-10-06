@@ -475,10 +475,11 @@
     },
     {
       "id": "078",
-      "title": "Команды контекста заказа: тип, клиент, комментарий",
-      "status": "planned",
+      "title": "Локальные настройки заказа и клиента; сохранение комментария",
+      "status": "done",
       "area": "P6",
-      "dependencies": "077"
+      "dependencies": "077",
+      "spec": "specs/078-native-order-context/spec.md"
     },
     {
       "id": "079",

@@ -137,6 +137,9 @@
 
   const mposCore=global.MPosCore=global.MPosCore||{};
   mposCore.Storage=mposStorage;
+  mposCore.OrderContextRead=Object.freeze({
+    async calculate(input){return requireNative(await request('orderContextRead',{payload:JSON.stringify(input)}),true);}
+  });
   mposCore.DeliveryRead=Object.freeze({
     async calculate(input){return requireNative(await request('deliveryRead',{payload:JSON.stringify(input)}),true);}
   });
