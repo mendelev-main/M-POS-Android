@@ -135,6 +135,11 @@
 
   const mposCore=global.MPosCore=global.MPosCore||{};
   mposCore.Storage=mposStorage;
+  mposCore.CartTotals=Object.freeze({
+    async calculate(input){
+      return requireNative(await request('cartTotalsRead',{payload:JSON.stringify(input)}),true);
+    }
+  });
   mposCore.CartQuantity=Object.freeze({
     async check(input){
       return requireNative(await request('cartQuantityRead',{payload:JSON.stringify(input)}),true);

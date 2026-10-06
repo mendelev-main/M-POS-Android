@@ -28,10 +28,13 @@
       let verdict;
       try{
         verdict=await global.MPosCore.StockPreflight.check({version:1,items:cart.map(i=>({productId:i.productId,qty:i.qty,selectedModifiers:(i.selectedModifiers||[]).map(m=>({productId:m.productId,qty:m.qty}))}))});
-      }catch(_error){if(!stale())flash('Не удалось проверить остатки. Повторите оплату.');return;}
+        if(!stale()&&verdict?.allowed===true&&global.MPosCore.PaymentTotals?.enabled()){
+          if(!await global.MPosCore.PaymentTotals.prepare())return;
+        }
+      }catch(_error){if(!stale())flash('Не удалось проверить заказ. Повторите оплату.');return;}
       finally{pending=false;}
       if(stale())return;
-      if(typeof verdict?.allowed!=='boolean'){flash('Не удалось проверить остатки. Повторите оплату.');return;}
+      if(typeof verdict?.allowed!=='boolean'){flash('Не удалось проверить заказ. Повторите оплату.');return;}
       if(!verdict.allowed){flash(verdict.reason||'Недостаточно остатка');return;}
       // These reviewed handlers are synchronous. Loyalty callbacks re-enter this wrapper
       // after awaiting the server and therefore obtain a fresh Room decision.

@@ -78,6 +78,17 @@ class MPosStorageMirrorTest {
         assertEquals(products("Synthetic"), MPosCatalogStorage(database).read().getString("payload"))
         assertNull(database.legacyStorageShadowDao().get("currentOrderSession"))
     }
+    @Test fun cartTotalsReadIsCorrelatedPureAndRejectsMalformedInput() = runBlocking {
+        send("cartTotalsRead", "bad-totals", value = "{}")
+        assertFalse(reply("bad-totals").getBoolean("ok"))
+        send("cartTotalsRead", "totals", value = """{"version":1,"items":[{"productId":"p","price":10,"qty":2}],"discounts":[],"programs":[],"redemptions":{},"orderType":"Доставка","deliveryFee":3}""")
+        val response = replies.poll(10, TimeUnit.SECONDS)
+        assertNotNull(response); assertEquals("totals", response!!.getString("requestId"))
+        assertTrue(response.getBoolean("ok")); assertTrue(response.getBoolean("authoritative"))
+        assertEquals(23.0, response.getJSONObject("pricing").getDouble("total"), 0.0)
+        assertNull(database.legacyStorageShadowDao().get("products"))
+        assertNull(database.legacyStorageShadowDao().get("currentOrderSession"))
+    }
     @Test fun configuredPriceReadIsPureAndWorkerSurvivesInvalidInput() = runBlocking {
         send("configuredPriceRead", "bad", value = """{"version":1,"catalogPrice":10,"modifiers":[{"priceDelta":"bad"}]}""")
         assertFalse(reply("bad").getBoolean("ok"))
