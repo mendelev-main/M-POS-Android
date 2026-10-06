@@ -144,6 +144,10 @@ class MPosStorageMirror(
                 readAttempt(command.action) { MPosStockPreflightRepository(database).read(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native stock preflight unavailable") }
             }
+            "parkedCommit" -> {
+                attempt { MPosParkedCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, "local parked transaction failed") }
+            }
             "orderContextRead" -> {
                 attempt { com.mendelev.mpos.payment.MPosOrderContextEngine.calculate(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native order context unavailable") }

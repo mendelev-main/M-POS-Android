@@ -266,3 +266,10 @@ Rate CRUD and backend source, v13 unchanged; physical pending.
 ECMAScript trim в Kotlin, 31 fixture + source parity; customer object/id/extensions,
 бонусы, orderComment и WEB/split metadata сохранены. Form/queue stale guards,
 rollback, bridge failure, double save проверены автоматически. Физически pending.
+
+### 079 — отложенные заказы
+
+Actual source hold/resume/delete flow сохранён вокруг native commit. Atomic
+rollback второго документа, stale expected/journal/print patch, full metadata,
+ack-before-print/loyalty, failed hold, rollback и uncertain state проверены.
+Physical acceptance pending; UI/receipt builder ещё WebView/source.

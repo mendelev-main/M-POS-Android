@@ -484,9 +484,10 @@
     {
       "id": "079",
       "title": "Жизненный цикл отложенного заказа: hold/resume/delete",
-      "status": "planned",
+      "status": "done",
       "area": "P6",
-      "dependencies": "078"
+      "dependencies": "078",
+      "spec": "specs/079-native-parked-commands/spec.md"
     },
     {
       "id": "080",

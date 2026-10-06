@@ -45,3 +45,6 @@ customer id и бонусы. Это исходное поведение; воз�
 
 Название 078 уточнено по фактическому source scope: локальные настройки и
 сохранение comment, без нового setter. ID и знаменатель 110 не меняются.
+
+079 защищает parked commit от pending OrderContext и атомарно сохраняет
+parked/currentOrderSession. Локальная форма 078 и её metadata остаются совместимы.
