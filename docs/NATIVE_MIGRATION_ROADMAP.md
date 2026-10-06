@@ -178,11 +178,11 @@ Benefits:
 - removal of browser text-selection/context behavior.
 
 ### P7 — Payment domain + Compose payment screen
-**Status: 🟢 Partial (062)**
+**Status: 🟢 Partial (063)**
 
 Atomic settlement, product-discount arithmetic, gift allocation and configured unit-price
-formation are native. Cart/payment UI, online gift eligibility and recipe expansion
-remain reviewed JS; physical acceptance is pending.
+formation and settlement recipe expansion are native. Cart/payment UI, online gift
+eligibility and stock preview/preflight remain reviewed JS; physical acceptance is pending.
 
 Extract a tested PaymentEngine before moving UI.
 
@@ -346,3 +346,13 @@ Room supplies minimal sorted staff and last-closed counted carryover without rec
 v13 без изменений. Откат: MPosNativeConfiguredPricesEnabled=false.
 Спецификация: `specs/062-native-configured-unit-prices/spec.md`; физические
 кейсы ручной цены, модификаторов, повторных нажатий/отмены/остатков/импорта ожидаются.
+
+
+063: Kotlin разворачивает рецептуры/модификаторы по каталогу Room внутри
+транзакции оплаты, проверяет исторический снимок и использует свой расчёт
+при списании. Общие ингредиенты/дроби/порядок/допуск/циклы сохранены.
+Предварительные проверки корзины, доступность и себестоимость пока JS.
+v13 без изменений; rollback: MPosNativeRecipeConsumptionEnabled=false.
+Спецификация: `specs/063-native-recipe-consumption/spec.md`.
+Проверки на планшете ожидаются. Локальные APK не собираются по указанию
+пользователя; сборку после коммита выполняет GitHub.

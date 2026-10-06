@@ -16,3 +16,5 @@
 14. Native migration order is documented in `docs/NATIVE_MIGRATION_ROADMAP.md`; completed parity work remains documented in `docs/PARITY_MATRIX.md`.
 15. All new or rewritten code uses M POS naming: Kotlin/Compose classes use `MPos...`, new JS/runtime namespaces use `MPosCore`, and new docs/UI must not introduce `Prilavok`. Existing `PrilavokCore` / `prilavok_` are temporary compatibility surfaces only and must disappear as their legacy modules are migrated.
 16. The user authorizes commits and pushes to `main`. After completing and validating requested changes, publish them to `main` so GitHub stays up to date. Preserve unrelated user changes and never force-push.
+
+17. The user requests no local APK assembly: GitHub automation builds APKs after commits. Run relevant JS/JVM tests and lint for each stage; omit assembleDebug/assembleRelease unless the user requests a local APK build.

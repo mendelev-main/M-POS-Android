@@ -111,6 +111,45 @@ class MPosPaymentCommandTest {
         assertEquals(0, JSONArray(MPosShiftStorage(database).read().getString("payload")).getJSONObject(0).getJSONArray("cashMovements").length())
         assertEquals(1, JSONObject(MPosRecoveryStorage(database).read("currentOrderSession").getString("payload")).getJSONArray("items").length())
     }
+    private suspend fun recipeCommand(): JSONObject {
+        val request = command().put("recipeConsumption", JSONObject().put("version", 1))
+        val catalogue = JSONArray(products.toString()).put(JSONObject("""{"id":"recipe","type":"composite","components":[{"productId":"p1","qty":0.1}]}"""))
+            .put(JSONObject("""{"id":"addon","type":"composite","components":[{"productId":"p1","qty":0.025}]}"""))
+        MPosCatalogStorage(database).write(catalogue.toString())
+        request.getJSONObject("expected").put("products", JSONArray(catalogue.toString()))
+        request.put("products", JSONArray(catalogue.toString()).also { it.getJSONObject(0).put("stock", 5.0) })
+        request.getJSONObject("order").getJSONArray("items").getJSONObject(0).put("productId", "recipe")
+            .put("selectedModifiers", JSONArray("""[{"productId":"addon","qty":1}]"""))
+        return request
+    }
+    @Test fun nativeRecipeAndModifierExpansionSettlesAndRetainsHistoricalSnapshotAfterRecipeChange() = runBlocking {
+        val request = recipeCommand()
+        assertTrue(MPosPaymentCommand(database).commit(request.toString()).getBoolean("ok"))
+        val receipt = JSONArray(MPosOrderStorage(database).read().getString("payload")).getJSONObject(0)
+        assertEquals(0.125, receipt.getJSONObject("stockConsumption").getJSONArray("items").getJSONObject(0).getDouble("qty"), 0.0)
+        val changed = JSONArray(MPosCatalogStorage(database).read().getString("payload"))
+        changed.getJSONObject(1).getJSONArray("components").getJSONObject(0).put("qty", 4)
+        MPosCatalogStorage(database).write(changed.toString())
+        assertTrue(MPosPaymentCommand(database).commit(request.toString()).getBoolean("replayed"))
+        assertEquals(receipt.toString(), JSONArray(MPosOrderStorage(database).read().getString("payload")).getJSONObject(0).toString())
+        assertEquals(5.0, changed.getJSONObject(0).getDouble("stock"), 0.0)
+        assertFalse(receipt.has("recipeConsumption"))
+    }
+    @Test fun wrongConsumptionOrInvalidRecipeRejectsWithoutFinancialWrites() = runBlocking {
+        val request = recipeCommand()
+        request.getJSONObject("order").getJSONObject("stockConsumption").getJSONArray("items").getJSONObject(0).put("qty", 0.1)
+        reject(request)
+        request.getJSONObject("order").getJSONObject("stockConsumption").getJSONArray("items").getJSONObject(0).put("qty", 0.125)
+        reject(request.put("recipeConsumption", JSONObject.NULL))
+        request.put("recipeConsumption", JSONObject().put("version", 1))
+        val cycle = JSONArray(request.getJSONObject("expected").getJSONArray("products").toString())
+        cycle.getJSONObject(1).getJSONArray("components").getJSONObject(0).put("productId", "recipe")
+        MPosCatalogStorage(database).write(cycle.toString()); request.getJSONObject("expected").put("products", cycle)
+        reject(request)
+        assertEquals(0, database.orderProjectionDao().orderCount())
+        assertEquals(5.125, JSONArray(MPosCatalogStorage(database).read().getString("payload")).getJSONObject(0).getDouble("stock"), 0.0)
+        assertEquals(1, JSONObject(MPosRecoveryStorage(database).read("currentOrderSession").getString("payload")).getJSONArray("items").length())
+    }
     @Test fun configuredUnitPriceIsPersistedUsingFrozenBaseAndModifiers() = runBlocking {
         val request = withLoyalty(withPricing(command())).put("configuredPrices", JSONObject().put("version", 1))
         request.getJSONObject("order").getJSONArray("items").getJSONObject(0).put("basePrice", 10).put("manualPrice", false)

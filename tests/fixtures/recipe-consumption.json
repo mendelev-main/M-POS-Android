@@ -1,0 +1,819 @@
+[
+  {
+    "name": "simple fractional quantity",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 100
+      }
+    ],
+    "items": [
+      {
+        "productId": "a",
+        "qty": 0.125
+      }
+    ],
+    "expected": {
+      "version": 1,
+      "items": [
+        {
+          "productId": "a",
+          "qty": 0.125
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "nested recipe sums shared branches",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 100
+      },
+      {
+        "id": "b",
+        "name": "b",
+        "type": "simple",
+        "stock": 100
+      },
+      {
+        "id": "sub",
+        "name": "sub",
+        "type": "composite",
+        "components": [
+          {
+            "productId": "a",
+            "qty": 0.2
+          },
+          {
+            "productId": "b",
+            "qty": 2
+          }
+        ]
+      },
+      {
+        "id": "root",
+        "name": "root",
+        "type": "composite",
+        "components": [
+          {
+            "productId": "a",
+            "qty": 0.1
+          },
+          {
+            "productId": "sub",
+            "qty": 3
+          },
+          {
+            "productId": "a",
+            "qty": 0.3
+          }
+        ]
+      }
+    ],
+    "items": [
+      {
+        "productId": "root",
+        "qty": 2
+      }
+    ],
+    "expected": {
+      "version": 1,
+      "items": [
+        {
+          "productId": "a",
+          "qty": 2
+        },
+        {
+          "productId": "b",
+          "qty": 12
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "multiple cart lines preserve first ingredient order",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 100
+      },
+      {
+        "id": "b",
+        "name": "b",
+        "type": "simple",
+        "stock": 100
+      }
+    ],
+    "items": [
+      {
+        "productId": "b",
+        "qty": 0.1
+      },
+      {
+        "productId": "a",
+        "qty": 0.2
+      },
+      {
+        "productId": "b",
+        "qty": 0.3
+      }
+    ],
+    "expected": {
+      "version": 1,
+      "items": [
+        {
+          "productId": "b",
+          "qty": 0.4
+        },
+        {
+          "productId": "a",
+          "qty": 0.2
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "modifier quantities multiply sale quantity",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 100
+      },
+      {
+        "id": "b",
+        "name": "b",
+        "type": "simple",
+        "stock": 100
+      },
+      {
+        "id": "mod",
+        "name": "mod",
+        "type": "composite",
+        "components": [
+          {
+            "productId": "a",
+            "qty": 0.025
+          },
+          {
+            "productId": "b",
+            "qty": 0.1
+          }
+        ]
+      }
+    ],
+    "items": [
+      {
+        "productId": "a",
+        "qty": 2,
+        "selectedModifiers": [
+          {
+            "productId": "mod",
+            "qty": 3
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "version": 1,
+      "items": [
+        {
+          "productId": "a",
+          "qty": 2.15
+        },
+        {
+          "productId": "b",
+          "qty": 0.6000000000000001
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "repeated recipe is not a cycle",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 100
+      },
+      {
+        "id": "sub",
+        "name": "sub",
+        "type": "composite",
+        "components": [
+          {
+            "productId": "a",
+            "qty": 0.1
+          }
+        ]
+      },
+      {
+        "id": "root",
+        "name": "root",
+        "type": "composite",
+        "components": [
+          {
+            "productId": "sub",
+            "qty": 2
+          },
+          {
+            "productId": "sub",
+            "qty": 3
+          }
+        ]
+      }
+    ],
+    "items": [
+      {
+        "productId": "root",
+        "qty": 1
+      }
+    ],
+    "expected": {
+      "version": 1,
+      "items": [
+        {
+          "productId": "a",
+          "qty": 0.5
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "untracked simple removed after expansion",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 100
+      },
+      {
+        "id": "b",
+        "name": "b",
+        "type": "simple",
+        "stock": 0,
+        "noStockTracking": true
+      },
+      {
+        "id": "root",
+        "name": "root",
+        "type": "composite",
+        "components": [
+          {
+            "productId": "b",
+            "qty": 5
+          },
+          {
+            "productId": "a",
+            "qty": 0.25
+          }
+        ]
+      }
+    ],
+    "items": [
+      {
+        "productId": "root",
+        "qty": 1
+      }
+    ],
+    "expected": {
+      "version": 1,
+      "items": [
+        {
+          "productId": "a",
+          "qty": 0.25
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "composite noStockTracking flag does not suppress ingredients",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 100
+      },
+      {
+        "id": "root",
+        "name": "root",
+        "type": "composite",
+        "components": [
+          {
+            "productId": "a",
+            "qty": 1
+          }
+        ],
+        "noStockTracking": true
+      }
+    ],
+    "items": [
+      {
+        "productId": "root",
+        "qty": 1
+      }
+    ],
+    "expected": {
+      "version": 1,
+      "items": [
+        {
+          "productId": "a",
+          "qty": 1
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "truthy legacy flag",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 0,
+        "noStockTracking": "false"
+      }
+    ],
+    "items": [
+      {
+        "productId": "a",
+        "qty": 1
+      }
+    ],
+    "expected": {
+      "version": 1,
+      "items": []
+    },
+    "valid": true
+  },
+  {
+    "name": "numeric string and radix quantities",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": "0x10"
+      },
+      {
+        "id": "root",
+        "name": "root",
+        "type": "composite",
+        "components": [
+          {
+            "productId": "a",
+            "qty": "0.25"
+          }
+        ]
+      }
+    ],
+    "items": [
+      {
+        "productId": "root",
+        "qty": "0x2"
+      }
+    ],
+    "expected": {
+      "version": 1,
+      "items": [
+        {
+          "productId": "a",
+          "qty": 0.5
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "floating point stock tolerance",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 0.3
+      }
+    ],
+    "items": [
+      {
+        "productId": "a",
+        "qty": 0.1
+      },
+      {
+        "productId": "a",
+        "qty": 0.2
+      }
+    ],
+    "expected": {
+      "version": 1,
+      "items": [
+        {
+          "productId": "a",
+          "qty": 0.30000000000000004
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "insufficient stock outside tolerance",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 0.2999
+      }
+    ],
+    "items": [
+      {
+        "productId": "a",
+        "qty": 0.3
+      }
+    ],
+    "expected": {
+      "version": 1,
+      "items": [
+        {
+          "productId": "a",
+          "qty": 0.3
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "negative stock rejected",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": -1
+      }
+    ],
+    "items": [
+      {
+        "productId": "a",
+        "qty": 0.1
+      }
+    ],
+    "expected": {
+      "version": 1,
+      "items": [
+        {
+          "productId": "a",
+          "qty": 0.1
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "invalid stock numeric text acts as zero",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": "invalid"
+      }
+    ],
+    "items": [
+      {
+        "productId": "a",
+        "qty": 1
+      }
+    ],
+    "expected": {
+      "version": 1,
+      "items": [
+        {
+          "productId": "a",
+          "qty": 1
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "missing main product",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 100
+      }
+    ],
+    "items": [
+      {
+        "productId": "missing",
+        "qty": 1
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "missing recipe component",
+    "products": [
+      {
+        "id": "root",
+        "name": "root",
+        "type": "composite",
+        "components": [
+          {
+            "productId": "missing",
+            "qty": 1
+          }
+        ]
+      }
+    ],
+    "items": [
+      {
+        "productId": "root",
+        "qty": 1
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "missing modifier",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 100
+      }
+    ],
+    "items": [
+      {
+        "productId": "a",
+        "qty": 1,
+        "selectedModifiers": [
+          {
+            "productId": "missing",
+            "qty": 1
+          }
+        ]
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "cycle direct",
+    "products": [
+      {
+        "id": "root",
+        "name": "root",
+        "type": "composite",
+        "components": [
+          {
+            "productId": "root",
+            "qty": 1
+          }
+        ]
+      }
+    ],
+    "items": [
+      {
+        "productId": "root",
+        "qty": 1
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "cycle indirect",
+    "products": [
+      {
+        "id": "root",
+        "name": "root",
+        "type": "composite",
+        "components": [
+          {
+            "productId": "sub",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "id": "sub",
+        "name": "sub",
+        "type": "composite",
+        "components": [
+          {
+            "productId": "root",
+            "qty": 1
+          }
+        ]
+      }
+    ],
+    "items": [
+      {
+        "productId": "root",
+        "qty": 1
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "empty recipe",
+    "products": [
+      {
+        "id": "root",
+        "name": "root",
+        "type": "composite",
+        "components": []
+      }
+    ],
+    "items": [
+      {
+        "productId": "root",
+        "qty": 1
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "zero ingredient quantity even if untracked",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 0,
+        "noStockTracking": true
+      },
+      {
+        "id": "root",
+        "name": "root",
+        "type": "composite",
+        "components": [
+          {
+            "productId": "a",
+            "qty": 0
+          }
+        ]
+      }
+    ],
+    "items": [
+      {
+        "productId": "root",
+        "qty": 1
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "negative quantity",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 100
+      }
+    ],
+    "items": [
+      {
+        "productId": "a",
+        "qty": -1
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "bad modifier quantity",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 100
+      }
+    ],
+    "items": [
+      {
+        "productId": "a",
+        "qty": 1,
+        "selectedModifiers": [
+          {
+            "productId": "a",
+            "qty": "bad"
+          }
+        ]
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "strict numeric versus string identifiers",
+    "products": [
+      {
+        "id": "1",
+        "name": "1",
+        "type": "simple",
+        "stock": 100
+      }
+    ],
+    "items": [
+      {
+        "productId": 1,
+        "qty": 1
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "duplicate catalogue IDs use first match",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 0
+      },
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 10
+      }
+    ],
+    "items": [
+      {
+        "productId": "a",
+        "qty": 1
+      }
+    ],
+    "expected": {
+      "version": 1,
+      "items": [
+        {
+          "productId": "a",
+          "qty": 1
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "overflow in shared quantity",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 1e+308
+      }
+    ],
+    "items": [
+      {
+        "productId": "a",
+        "qty": 1e+308
+      },
+      {
+        "productId": "a",
+        "qty": 1e+308
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "empty cart consumes nothing",
+    "products": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "simple",
+        "stock": 100
+      }
+    ],
+    "items": [],
+    "expected": {
+      "version": 1,
+      "items": []
+    },
+    "valid": true
+  }
+]

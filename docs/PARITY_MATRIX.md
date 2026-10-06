@@ -152,3 +152,13 @@ Kotlin staff picker/conditional password input and Room carryover, no new auth d
 v13 без изменений. Откат: MPosNativeConfiguredPricesEnabled=false.
 Спецификация: `specs/062-native-configured-unit-prices/spec.md`; физические
 кейсы ручной цены, модификаторов, повторных нажатий/отмены/остатков/импорта ожидаются.
+
+
+063: Kotlin разворачивает рецептуры/модификаторы по каталогу Room внутри
+транзакции оплаты, проверяет исторический снимок и использует свой расчёт
+при списании. Общие ингредиенты/дроби/порядок/допуск/циклы сохранены.
+Предварительные проверки корзины, доступность и себестоимость пока JS.
+v13 без изменений; rollback: MPosNativeRecipeConsumptionEnabled=false.
+Спецификация: `specs/063-native-recipe-consumption/spec.md`.
+Проверки на планшете ожидаются. Локальные APK не собираются по указанию
+пользователя; сборку после коммита выполняет GitHub.

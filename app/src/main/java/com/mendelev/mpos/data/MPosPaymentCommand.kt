@@ -9,7 +9,7 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
 
-/** Atomic local settlement; configured prices and recipe expansion remain parity inputs. */
+/** Atomic local settlement with native price, gift and recipe verification. */
 class MPosPaymentCommand(private val database: MPosDatabase) {
     private val documents = database.legacyStorageShadowDao()
     private val orders = database.orderProjectionDao()
@@ -54,7 +54,9 @@ class MPosPaymentCommand(private val database: MPosDatabase) {
         if (command.has("pricing")) MPosPricingEngine.validate(order, command.getJSONObject("pricing"))
         validatePayments(order)
         val afterProducts = JSONArray(beforeProducts.toString())
-        val consumption = order.getJSONObject("stockConsumption")
+        val consumption = if (command.has("recipeConsumption"))
+            MPosRecipeConsumptionEngine.validate(beforeProducts, order, command.getJSONObject("recipeConsumption"))
+            else order.getJSONObject("stockConsumption")
         require(consumption.getInt("version") == 1)
         val consumed = consumption.getJSONArray("items")
         val seen = mutableSetOf<String>()
