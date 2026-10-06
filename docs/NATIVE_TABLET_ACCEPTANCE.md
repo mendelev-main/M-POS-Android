@@ -74,3 +74,14 @@ Limits: shared business runtime still loads/submits full arrays, native reconcil
 Actual payment finalization now uses Kotlin validation/stock deduction/delivery cash checks and one Room transaction for catalog, shifts, one receipt, cleared session and idempotency marker. No full order archive is sent or copied to a payment journal. Exact retry is locally idempotent; stale/conflicting commands fail. Pricing, discounts/rewards and recipe expansion remain reviewed JS; external effects run after native acknowledgement. Nonpayment journal recovery remains unchanged. This partially implements P7, not the whole financial engine. Physical cash/card/split/delivery/reward/force-stop and v13 cases remain pending.
 
 Business issue for separate refactor: existing cross-shift refund drawer calculation (100 opening minus 20 refunded from prior shift reports 100 instead of physical 80) is reproduced and retained, including native delivery cash parity. Return attribution and historical reports need a coordinated business fix.
+
+## 049 — Refund attribution / cash drawer
+
+- In shift A sell a cash receipt for 20, close A; open B with 100. Return that receipt in B: expected cash 80, refund 20, net revenue -20; A retains the sale and its original expected cash.
+- Repeat for card and split (cash 8/card 12): card return leaves cash unchanged; split reduces B cash by 8 and card revenue by 12.
+- Same-shift return restores stock and deducts the refund exactly once. A second return must be blocked.
+- With only 1 cash left after a cross-shift refund, delivery requiring cash withdrawal 2 must be blocked without stock or receipt changes.
+- Close B and compare the screen, PNG receipt sent to Telegram, print and PDF expected cash/difference/net totals. Negative revenue must remain visible.
+- Restart and export/import v13; verify attributed returns remain. Old records without return shift use original-shift fallback and must not be guessed into another shift.
+
+Status: pending physical tablet execution; automated coverage is not physical acceptance.

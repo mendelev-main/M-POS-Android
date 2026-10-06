@@ -149,4 +149,25 @@ class MPosPaymentCommandTest {
         assertEquals(2, database.orderProjectionDao().orderCount())
     }
 
+    @Test fun crossShiftRefundReducesCashAvailableForDelivery() = runBlocking {
+        val baseline = JSONArray(shifts.toString())
+        val movement = JSONObject().put("id", "refund1").put("type", "withdrawal").put("subtype", "refund").put("amount", 20).put("timestamp", 2000)
+        baseline.getJSONObject(0).put("openingCash", 21).getJSONArray("cashMovements").put(movement)
+        MPosShiftStorage(database).write(baseline.toString())
+        MPosOrderStorage(database).write("""[{"id":"old","shiftId":"previous","total":20,"method":"cash","returnedAt":2000,"returnedShiftId":"s1","returnAmount":20}]""")
+        val request = command(true).also {
+            it.put("expectedOrderCount", 1)
+            it.getJSONObject("expected").put("shifts", baseline)
+            val next = JSONArray(baseline.toString())
+            next.getJSONObject(0).getJSONArray("cashMovements").put(it.getJSONObject("deliveryMovement"))
+            it.put("shifts", next)
+            it.getJSONObject("order").getJSONArray("payments").getJSONObject(0).put("amount", 0).put("change", 10)
+            it.getJSONObject("order").getJSONArray("payments").getJSONObject(1).put("amount", 14.35)
+        }
+        reject(request)
+        assertEquals(1, database.orderProjectionDao().orderCount())
+        assertEquals(1, database.shiftProjectionDao().allMovements().size)
+        assertEquals(5.125, JSONArray(MPosCatalogStorage(database).read().getString("payload")).getJSONObject(0).getDouble("stock"), 0.0)
+    }
+
 }

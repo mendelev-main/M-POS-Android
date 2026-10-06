@@ -33,7 +33,7 @@ anchors = ['<script src="Web/js/core/storage.js"></script>',
 if any(source_html.count(anchor) != 1 for anchor in anchors):
     raise SystemExit("Reviewed source initialization changed; inspect Android adapters before synchronization")
 adapters = ["android-bridge.js", "native-storage-shadow.js", "native-catalog-cutover.js",
-            "native-network-shadow.js", "native-settings.js", "native-availability.js", "native-receipts-history.js", "native-payment-command.js"]
+            "native-network-shadow.js", "native-settings.js", "native-availability.js", "native-receipts-history.js", "native-payment-command.js", "native-shift-accounting.js"]
 if any(not (target / name).is_file() for name in adapters):
     raise SystemExit("Required Android adapter is missing; no source files were changed")
 
@@ -55,7 +55,7 @@ android_html = source_html.replace(
     '<script src="notification-native.js"></script>',
 ).replace(
     '<script>loadAll().then(()=>startAvailabilityRecovery());</script>',
-    '<script src="native-payment-command.js"></script>\n<script src="native-receipts-history.js"></script>\n<script src="native-availability.js"></script>\n<script>loadAll().then(()=>startAvailabilityRecovery());</script>',
+    '<script src="native-shift-accounting.js"></script>\n<script src="native-payment-command.js"></script>\n<script src="native-receipts-history.js"></script>\n<script src="native-availability.js"></script>\n<script>loadAll().then(()=>startAvailabilityRecovery());</script>',
 )
 (target / "pos.html").write_text(android_html)
 (target / "android-bridge.js").write_bytes(bridge)

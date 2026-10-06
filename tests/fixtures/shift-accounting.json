@@ -1,0 +1,606 @@
+[
+  {
+    "name": "cross cash",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "new"
+      }
+    ],
+    "shifts": [
+      {
+        "id": "old",
+        "openingCash": 100,
+        "cashMovements": []
+      },
+      {
+        "id": "new",
+        "openingCash": 100,
+        "cashMovements": [
+          {
+            "type": "withdrawal",
+            "subtype": "refund",
+            "amount": 20,
+            "timestamp": 2000
+          }
+        ]
+      }
+    ],
+    "expected": [
+      {
+        "balance": 120,
+        "cash": 20,
+        "card": 0,
+        "count": 1,
+        "refunds": 0
+      },
+      {
+        "balance": 80,
+        "cash": -20,
+        "card": 0,
+        "count": 0,
+        "refunds": 20
+      }
+    ]
+  },
+  {
+    "name": "same cash",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "old"
+      }
+    ],
+    "shifts": [
+      {
+        "id": "old",
+        "openingCash": 100,
+        "cashMovements": [
+          {
+            "type": "withdrawal",
+            "subtype": "refund",
+            "amount": 20,
+            "timestamp": 2000
+          }
+        ]
+      },
+      {
+        "id": "new",
+        "openingCash": 100,
+        "cashMovements": []
+      }
+    ],
+    "expected": [
+      {
+        "balance": 100,
+        "cash": 0,
+        "card": 0,
+        "count": 0,
+        "refunds": 20
+      },
+      {
+        "balance": 100,
+        "cash": 0,
+        "card": 0,
+        "count": 0,
+        "refunds": 0
+      }
+    ]
+  },
+  {
+    "name": "cross card",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "card",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "card",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "new"
+      }
+    ],
+    "shifts": [
+      {
+        "id": "old",
+        "openingCash": 100,
+        "cashMovements": []
+      },
+      {
+        "id": "new",
+        "openingCash": 100,
+        "cashMovements": []
+      }
+    ],
+    "expected": [
+      {
+        "balance": 100,
+        "cash": 0,
+        "card": 20,
+        "count": 1,
+        "refunds": 0
+      },
+      {
+        "balance": 100,
+        "cash": 0,
+        "card": -20,
+        "count": 0,
+        "refunds": 20
+      }
+    ]
+  },
+  {
+    "name": "same card",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "card",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "card",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "old"
+      }
+    ],
+    "shifts": [
+      {
+        "id": "old",
+        "openingCash": 100,
+        "cashMovements": []
+      },
+      {
+        "id": "new",
+        "openingCash": 100,
+        "cashMovements": []
+      }
+    ],
+    "expected": [
+      {
+        "balance": 100,
+        "cash": 0,
+        "card": 0,
+        "count": 0,
+        "refunds": 20
+      },
+      {
+        "balance": 100,
+        "cash": 0,
+        "card": 0,
+        "count": 0,
+        "refunds": 0
+      }
+    ]
+  },
+  {
+    "name": "cross split",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "split",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 8
+          },
+          {
+            "method": "card",
+            "amount": 12
+          }
+        ],
+        "returnedShiftId": "new"
+      }
+    ],
+    "shifts": [
+      {
+        "id": "old",
+        "openingCash": 100,
+        "cashMovements": []
+      },
+      {
+        "id": "new",
+        "openingCash": 100,
+        "cashMovements": [
+          {
+            "type": "withdrawal",
+            "subtype": "refund",
+            "amount": 8,
+            "timestamp": 2000
+          }
+        ]
+      }
+    ],
+    "expected": [
+      {
+        "balance": 108,
+        "cash": 8,
+        "card": 12,
+        "count": 1,
+        "refunds": 0
+      },
+      {
+        "balance": 92,
+        "cash": -8,
+        "card": -12,
+        "count": 0,
+        "refunds": 20
+      }
+    ]
+  },
+  {
+    "name": "same split",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "split",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 8
+          },
+          {
+            "method": "card",
+            "amount": 12
+          }
+        ],
+        "returnedShiftId": "old"
+      }
+    ],
+    "shifts": [
+      {
+        "id": "old",
+        "openingCash": 100,
+        "cashMovements": [
+          {
+            "type": "withdrawal",
+            "subtype": "refund",
+            "amount": 8,
+            "timestamp": 2000
+          }
+        ]
+      },
+      {
+        "id": "new",
+        "openingCash": 100,
+        "cashMovements": []
+      }
+    ],
+    "expected": [
+      {
+        "balance": 100,
+        "cash": 0,
+        "card": 0,
+        "count": 0,
+        "refunds": 20
+      },
+      {
+        "balance": 100,
+        "cash": 0,
+        "card": 0,
+        "count": 0,
+        "refunds": 0
+      }
+    ]
+  },
+  {
+    "name": "legacy missing return shift",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ]
+      }
+    ],
+    "shifts": [
+      {
+        "id": "old",
+        "openingCash": 100,
+        "cashMovements": [
+          {
+            "type": "withdrawal",
+            "subtype": "refund",
+            "amount": 20,
+            "timestamp": 2000
+          }
+        ]
+      },
+      {
+        "id": "new",
+        "openingCash": 100,
+        "cashMovements": []
+      }
+    ],
+    "expected": [
+      {
+        "balance": 100,
+        "cash": 0,
+        "card": 0,
+        "count": 0,
+        "refunds": 20
+      },
+      {
+        "balance": 100,
+        "cash": 0,
+        "card": 0,
+        "count": 0,
+        "refunds": 0
+      }
+    ]
+  },
+  {
+    "name": "legacy missing movement",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ]
+      }
+    ],
+    "shifts": [
+      {
+        "id": "old",
+        "openingCash": 100,
+        "cashMovements": []
+      },
+      {
+        "id": "new",
+        "openingCash": 100,
+        "cashMovements": []
+      }
+    ],
+    "expected": [
+      {
+        "balance": 100,
+        "cash": 0,
+        "card": 0,
+        "count": 0,
+        "refunds": 20
+      },
+      {
+        "balance": 100,
+        "cash": 0,
+        "card": 0,
+        "count": 0,
+        "refunds": 0
+      }
+    ]
+  },
+  {
+    "name": "cross missing movement",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "new"
+      }
+    ],
+    "shifts": [
+      {
+        "id": "old",
+        "openingCash": 100,
+        "cashMovements": []
+      },
+      {
+        "id": "new",
+        "openingCash": 100,
+        "cashMovements": []
+      }
+    ],
+    "expected": [
+      {
+        "balance": 120,
+        "cash": 20,
+        "card": 0,
+        "count": 1,
+        "refunds": 0
+      },
+      {
+        "balance": 80,
+        "cash": -20,
+        "card": 0,
+        "count": 0,
+        "refunds": 20
+      }
+    ]
+  },
+  {
+    "name": "orphan withdrawal",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "new"
+      }
+    ],
+    "shifts": [
+      {
+        "id": "old",
+        "openingCash": 100,
+        "cashMovements": []
+      },
+      {
+        "id": "new",
+        "openingCash": 100,
+        "cashMovements": [
+          {
+            "type": "withdrawal",
+            "subtype": "refund",
+            "amount": 20,
+            "timestamp": 2000
+          },
+          {
+            "type": "withdrawal",
+            "subtype": "refund",
+            "amount": 7,
+            "timestamp": 3000
+          }
+        ]
+      }
+    ],
+    "expected": [
+      {
+        "balance": 120,
+        "cash": 20,
+        "card": 0,
+        "count": 1,
+        "refunds": 0
+      },
+      {
+        "balance": 73,
+        "cash": -20,
+        "card": 0,
+        "count": 0,
+        "refunds": 20
+      }
+    ]
+  },
+  {
+    "name": "same timestamp unique matching",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "new"
+      },
+      {
+        "id": "r2",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "new"
+      }
+    ],
+    "shifts": [
+      {
+        "id": "old",
+        "openingCash": 100,
+        "cashMovements": []
+      },
+      {
+        "id": "new",
+        "openingCash": 100,
+        "cashMovements": [
+          {
+            "type": "withdrawal",
+            "subtype": "refund",
+            "amount": 20,
+            "timestamp": 2000
+          }
+        ]
+      }
+    ],
+    "expected": [
+      {
+        "balance": 140,
+        "cash": 40,
+        "card": 0,
+        "count": 2,
+        "refunds": 0
+      },
+      {
+        "balance": 60,
+        "cash": -40,
+        "card": 0,
+        "count": 0,
+        "refunds": 40
+      }
+    ]
+  }
+]

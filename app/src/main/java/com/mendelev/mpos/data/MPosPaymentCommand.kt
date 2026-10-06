@@ -125,18 +125,7 @@ class MPosPaymentCommand(private val database: MPosDatabase) {
     }
 
     private suspend fun cashDrawer(shift: JSONObject): Double {
-        val receipts = orders.forShift(shift.getString("id")).map { JSONObject(it.payload) }
-        val movements = shift.optJSONArray("cashMovements") ?: JSONArray()
-        val cash = receipts.filter { it.optLong("returnedAt") == 0L }.sumOf { cashPayments(it) }
-        var deposits = 0.0; var withdrawals = 0.0; var refunds = 0.0
-        for (index in 0 until movements.length()) {
-            val movement = movements.getJSONObject(index); val amount = optionalNumber(movement, "amount")
-            if (movement.optString("type") == "deposit") deposits += amount
-            if (movement.optString("type") == "withdrawal") withdrawals += amount
-            if (movement.optString("type") == "withdrawal" && movement.optString("subtype") == "refund") refunds += amount
-        }
-        val balance = optionalNumber(shift, "openingCash") + cash + (deposits - withdrawals) + refunds
-        return balance
+        return MPosShiftAccounting.balance(shift, JSONArray(orders.allOrders().map { JSONObject(it.payload) }))
     }
 
     private fun same(a: Any?, b: Any?): Boolean = when {
