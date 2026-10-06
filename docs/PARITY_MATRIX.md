@@ -94,3 +94,7 @@ Native deposits/withdrawals preserve current positive-amount rules, unrounded de
 ## Shift opening / closing (052)
 
 Native lifecycle persistence validates most-recent counted carryover, employee snapshots, current shift and closing drawer/receipt count. Full shift JSON/extensions/movements survive; counted cash/difference remain unrounded and mismatch allowed. Reviewed administrator check unchanged; no credential copied. Telegram/monthly/print run only after ack. SQLite rollback/replay/restore and actual JS handler tests automated; image/printer/tablet acceptance pending. Unpaid cart/session and parked orders remain unchanged.
+
+## Native shift report read model (053)
+
+Compatible report payload now reads native persisted shifts/receipts atomically; legacy duplicate-ID documents/null archives retained. Active PNG Telegram, LAN receipt, PDF and report modal share native financial data, not caller snapshots. Pending output reads coalesce; failure never sends stale fallback. Goldens cover 14 scenarios; actual runtime tests cover close → read → outputs, copies/routing, fresh reads and cancellation. Main dashboard remains JS mirror and physical output evidence remains pending.

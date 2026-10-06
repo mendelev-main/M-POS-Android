@@ -284,3 +284,7 @@ MPosCashMovementCommand owns deposit/withdrawal drawer validation and a transact
 ## Atomic shift lifecycle (052)
 
 MPosShiftLifecycleCommand owns opening carryover/employee snapshot validation, closing drawer/count/counting validation and shift/projection/marker transaction. Opening uses last closed counted cash; closure accepts either sign of cash difference. Exact replay and restore guards protect lifecycle writes. Password UI, report payload generation, Telegram/print triggers and shift screen remain reviewed runtime boundaries; no new auth or network policy. Next: native shift summary/report read model, then Compose screen.
+
+## Native shift summary / report data (053)
+
+MPosShiftReportRepository builds compatible report/summary from one persisted Room snapshot. Active Telegram image, LAN receipt, PDF print and report dialog use native reads; pending automatic outputs coalesce and subsequent manual requests remain fresh. Existing formatters, printer copies/routing and notification gates are preserved. Scalar numeric conversion is shared with native accounting; source records stay untouched. The main shift dashboard and administrator authentication remain JS. Next: native shift screen with explicit navigation/callback/rollback integration.

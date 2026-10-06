@@ -1,0 +1,1032 @@
+[
+  {
+    "name": "cross cash",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "new"
+      }
+    ],
+    "shift": {
+      "id": "new",
+      "openingCash": 100,
+      "cashMovements": [
+        {
+          "type": "withdrawal",
+          "subtype": "refund",
+          "amount": 20,
+          "timestamp": 2000
+        }
+      ],
+      "status": "closed",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "countedCash": 79
+    },
+    "currency": "BYN",
+    "establishmentName": "Тестовая касса",
+    "expected": {
+      "id": "new",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "openingCash": 100,
+      "countedCash": 79,
+      "expectedCash": 80,
+      "difference": -1,
+      "cash": -20,
+      "card": 0,
+      "total": -20,
+      "count": 0,
+      "deposits": 0,
+      "withdrawals": 20,
+      "netMovements": -20,
+      "currency": "BYN",
+      "establishmentName": "Тестовая касса",
+      "cashMovements": [
+        {
+          "type": "withdrawal",
+          "subtype": "refund",
+          "amount": 20,
+          "timestamp": 2000,
+          "note": ""
+        }
+      ],
+      "orders": []
+    }
+  },
+  {
+    "name": "same cash",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "old"
+      }
+    ],
+    "shift": {
+      "id": "new",
+      "openingCash": 100,
+      "cashMovements": [],
+      "status": "closed",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "countedCash": 99
+    },
+    "currency": "BYN",
+    "establishmentName": "Тестовая касса",
+    "expected": {
+      "id": "new",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "openingCash": 100,
+      "countedCash": 99,
+      "expectedCash": 100,
+      "difference": -1,
+      "cash": 0,
+      "card": 0,
+      "total": 0,
+      "count": 0,
+      "deposits": 0,
+      "withdrawals": 0,
+      "netMovements": 0,
+      "currency": "BYN",
+      "establishmentName": "Тестовая касса",
+      "cashMovements": [],
+      "orders": []
+    }
+  },
+  {
+    "name": "cross card",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "card",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "card",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "new"
+      }
+    ],
+    "shift": {
+      "id": "new",
+      "openingCash": 100,
+      "cashMovements": [],
+      "status": "closed",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "countedCash": 99
+    },
+    "currency": "BYN",
+    "establishmentName": "Тестовая касса",
+    "expected": {
+      "id": "new",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "openingCash": 100,
+      "countedCash": 99,
+      "expectedCash": 100,
+      "difference": -1,
+      "cash": 0,
+      "card": -20,
+      "total": -20,
+      "count": 0,
+      "deposits": 0,
+      "withdrawals": 0,
+      "netMovements": 0,
+      "currency": "BYN",
+      "establishmentName": "Тестовая касса",
+      "cashMovements": [],
+      "orders": []
+    }
+  },
+  {
+    "name": "same card",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "card",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "card",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "old"
+      }
+    ],
+    "shift": {
+      "id": "new",
+      "openingCash": 100,
+      "cashMovements": [],
+      "status": "closed",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "countedCash": 99
+    },
+    "currency": "BYN",
+    "establishmentName": "Тестовая касса",
+    "expected": {
+      "id": "new",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "openingCash": 100,
+      "countedCash": 99,
+      "expectedCash": 100,
+      "difference": -1,
+      "cash": 0,
+      "card": 0,
+      "total": 0,
+      "count": 0,
+      "deposits": 0,
+      "withdrawals": 0,
+      "netMovements": 0,
+      "currency": "BYN",
+      "establishmentName": "Тестовая касса",
+      "cashMovements": [],
+      "orders": []
+    }
+  },
+  {
+    "name": "cross split",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "split",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 8
+          },
+          {
+            "method": "card",
+            "amount": 12
+          }
+        ],
+        "returnedShiftId": "new"
+      }
+    ],
+    "shift": {
+      "id": "new",
+      "openingCash": 100,
+      "cashMovements": [
+        {
+          "type": "withdrawal",
+          "subtype": "refund",
+          "amount": 8,
+          "timestamp": 2000
+        }
+      ],
+      "status": "closed",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "countedCash": 91
+    },
+    "currency": "BYN",
+    "establishmentName": "Тестовая касса",
+    "expected": {
+      "id": "new",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "openingCash": 100,
+      "countedCash": 91,
+      "expectedCash": 92,
+      "difference": -1,
+      "cash": -8,
+      "card": -12,
+      "total": -20,
+      "count": 0,
+      "deposits": 0,
+      "withdrawals": 8,
+      "netMovements": -8,
+      "currency": "BYN",
+      "establishmentName": "Тестовая касса",
+      "cashMovements": [
+        {
+          "type": "withdrawal",
+          "subtype": "refund",
+          "amount": 8,
+          "timestamp": 2000,
+          "note": ""
+        }
+      ],
+      "orders": []
+    }
+  },
+  {
+    "name": "same split",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "split",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 8
+          },
+          {
+            "method": "card",
+            "amount": 12
+          }
+        ],
+        "returnedShiftId": "old"
+      }
+    ],
+    "shift": {
+      "id": "new",
+      "openingCash": 100,
+      "cashMovements": [],
+      "status": "closed",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "countedCash": 99
+    },
+    "currency": "BYN",
+    "establishmentName": "Тестовая касса",
+    "expected": {
+      "id": "new",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "openingCash": 100,
+      "countedCash": 99,
+      "expectedCash": 100,
+      "difference": -1,
+      "cash": 0,
+      "card": 0,
+      "total": 0,
+      "count": 0,
+      "deposits": 0,
+      "withdrawals": 0,
+      "netMovements": 0,
+      "currency": "BYN",
+      "establishmentName": "Тестовая касса",
+      "cashMovements": [],
+      "orders": []
+    }
+  },
+  {
+    "name": "legacy missing return shift",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ]
+      }
+    ],
+    "shift": {
+      "id": "new",
+      "openingCash": 100,
+      "cashMovements": [],
+      "status": "closed",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "countedCash": 99
+    },
+    "currency": "BYN",
+    "establishmentName": "Тестовая касса",
+    "expected": {
+      "id": "new",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "openingCash": 100,
+      "countedCash": 99,
+      "expectedCash": 100,
+      "difference": -1,
+      "cash": 0,
+      "card": 0,
+      "total": 0,
+      "count": 0,
+      "deposits": 0,
+      "withdrawals": 0,
+      "netMovements": 0,
+      "currency": "BYN",
+      "establishmentName": "Тестовая касса",
+      "cashMovements": [],
+      "orders": []
+    }
+  },
+  {
+    "name": "legacy missing movement",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ]
+      }
+    ],
+    "shift": {
+      "id": "new",
+      "openingCash": 100,
+      "cashMovements": [],
+      "status": "closed",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "countedCash": 99
+    },
+    "currency": "BYN",
+    "establishmentName": "Тестовая касса",
+    "expected": {
+      "id": "new",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "openingCash": 100,
+      "countedCash": 99,
+      "expectedCash": 100,
+      "difference": -1,
+      "cash": 0,
+      "card": 0,
+      "total": 0,
+      "count": 0,
+      "deposits": 0,
+      "withdrawals": 0,
+      "netMovements": 0,
+      "currency": "BYN",
+      "establishmentName": "Тестовая касса",
+      "cashMovements": [],
+      "orders": []
+    }
+  },
+  {
+    "name": "cross missing movement",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "new"
+      }
+    ],
+    "shift": {
+      "id": "new",
+      "openingCash": 100,
+      "cashMovements": [],
+      "status": "closed",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "countedCash": 79
+    },
+    "currency": "BYN",
+    "establishmentName": "Тестовая касса",
+    "expected": {
+      "id": "new",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "openingCash": 100,
+      "countedCash": 79,
+      "expectedCash": 80,
+      "difference": -1,
+      "cash": -20,
+      "card": 0,
+      "total": -20,
+      "count": 0,
+      "deposits": 0,
+      "withdrawals": 0,
+      "netMovements": 0,
+      "currency": "BYN",
+      "establishmentName": "Тестовая касса",
+      "cashMovements": [],
+      "orders": []
+    }
+  },
+  {
+    "name": "orphan withdrawal",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "new"
+      }
+    ],
+    "shift": {
+      "id": "new",
+      "openingCash": 100,
+      "cashMovements": [
+        {
+          "type": "withdrawal",
+          "subtype": "refund",
+          "amount": 20,
+          "timestamp": 2000
+        },
+        {
+          "type": "withdrawal",
+          "subtype": "refund",
+          "amount": 7,
+          "timestamp": 3000
+        }
+      ],
+      "status": "closed",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "countedCash": 72
+    },
+    "currency": "BYN",
+    "establishmentName": "Тестовая касса",
+    "expected": {
+      "id": "new",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "openingCash": 100,
+      "countedCash": 72,
+      "expectedCash": 73,
+      "difference": -1,
+      "cash": -20,
+      "card": 0,
+      "total": -20,
+      "count": 0,
+      "deposits": 0,
+      "withdrawals": 27,
+      "netMovements": -27,
+      "currency": "BYN",
+      "establishmentName": "Тестовая касса",
+      "cashMovements": [
+        {
+          "type": "withdrawal",
+          "subtype": "refund",
+          "amount": 20,
+          "timestamp": 2000,
+          "note": ""
+        },
+        {
+          "type": "withdrawal",
+          "subtype": "refund",
+          "amount": 7,
+          "timestamp": 3000,
+          "note": ""
+        }
+      ],
+      "orders": []
+    }
+  },
+  {
+    "name": "same timestamp unique matching",
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "new"
+      },
+      {
+        "id": "r2",
+        "shiftId": "old",
+        "total": 20,
+        "method": "cash",
+        "returnedAt": 2000,
+        "returnAmount": 20,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 20
+          }
+        ],
+        "returnedShiftId": "new"
+      }
+    ],
+    "shift": {
+      "id": "new",
+      "openingCash": 100,
+      "cashMovements": [
+        {
+          "type": "withdrawal",
+          "subtype": "refund",
+          "amount": 20,
+          "timestamp": 2000
+        }
+      ],
+      "status": "closed",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "countedCash": 59
+    },
+    "currency": "BYN",
+    "establishmentName": "Тестовая касса",
+    "expected": {
+      "id": "new",
+      "employeeName": "Кассир",
+      "employeePhone": "test-phone",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "openingCash": 100,
+      "countedCash": 59,
+      "expectedCash": 60,
+      "difference": -1,
+      "cash": -40,
+      "card": 0,
+      "total": -40,
+      "count": 0,
+      "deposits": 0,
+      "withdrawals": 20,
+      "netMovements": -20,
+      "currency": "BYN",
+      "establishmentName": "Тестовая касса",
+      "cashMovements": [
+        {
+          "type": "withdrawal",
+          "subtype": "refund",
+          "amount": 20,
+          "timestamp": 2000,
+          "note": ""
+        }
+      ],
+      "orders": []
+    }
+  },
+  {
+    "name": "ordering, item aliases, zero values and extensions",
+    "shift": {
+      "id": "s1",
+      "status": "closed",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "openingCash": 100,
+      "countedCash": 107,
+      "cashMovements": [
+        {
+          "type": "withdrawal",
+          "subtype": "delivery",
+          "amount": 3,
+          "timestamp": 2000,
+          "note": "Доставка",
+          "secretExtension": "excluded"
+        },
+        {
+          "type": "deposit",
+          "amount": 10,
+          "timestamp": 1000,
+          "note": "Внесение"
+        }
+      ],
+      "custom": "preserved"
+    },
+    "orders": [
+      {
+        "id": "r2",
+        "shiftId": "s1",
+        "timestamp": 2000,
+        "total": 12.35,
+        "method": "split",
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 5
+          },
+          {
+            "method": "card",
+            "amount": 7.35
+          }
+        ],
+        "orderLabel": "Стол 1",
+        "orderType": "На месте",
+        "items": [
+          {
+            "productName": "Чай",
+            "qty": 2,
+            "price": 4
+          },
+          {
+            "name": "",
+            "qty": 0,
+            "price": 0
+          }
+        ],
+        "custom": "excluded"
+      },
+      {
+        "id": "r1",
+        "shiftId": "s1",
+        "timestamp": 1000,
+        "total": 0,
+        "method": "card",
+        "items": [
+          {
+            "name": "Подарок",
+            "qty": 1,
+            "price": 0
+          }
+        ]
+      },
+      {
+        "id": "other",
+        "shiftId": "other",
+        "total": 900,
+        "method": "cash"
+      }
+    ],
+    "currency": "BYN",
+    "establishmentName": "Тестовая касса",
+    "expected": {
+      "id": "s1",
+      "employeeName": "",
+      "employeePhone": "",
+      "openedAt": 100,
+      "closedAt": 3000,
+      "openingCash": 100,
+      "countedCash": 107,
+      "expectedCash": 112,
+      "difference": -5,
+      "cash": 5,
+      "card": 7.35,
+      "total": 12.35,
+      "count": 2,
+      "deposits": 10,
+      "withdrawals": 3,
+      "netMovements": 7,
+      "currency": "BYN",
+      "establishmentName": "Тестовая касса",
+      "cashMovements": [
+        {
+          "type": "withdrawal",
+          "subtype": "delivery",
+          "amount": 3,
+          "timestamp": 2000,
+          "note": "Доставка"
+        },
+        {
+          "type": "deposit",
+          "subtype": "",
+          "amount": 10,
+          "timestamp": 1000,
+          "note": "Внесение"
+        }
+      ],
+      "orders": [
+        {
+          "timestamp": 1000,
+          "total": 0,
+          "method": "card",
+          "orderLabel": "",
+          "orderType": "",
+          "items": [
+            {
+              "name": "Подарок",
+              "qty": 1,
+              "price": 0
+            }
+          ]
+        },
+        {
+          "timestamp": 2000,
+          "total": 12.35,
+          "method": "split",
+          "orderLabel": "Стол 1",
+          "orderType": "На месте",
+          "items": [
+            {
+              "name": "Чай",
+              "qty": 2,
+              "price": 4
+            },
+            {
+              "name": "Товар",
+              "qty": 0,
+              "price": 0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "legacy scalar number conversion",
+    "shift": {
+      "id": "s1",
+      "status": "closed",
+      "openingCash": " 100 ",
+      "countedCash": "0x70",
+      "cashMovements": [
+        {
+          "type": "deposit",
+          "amount": true
+        },
+        {
+          "type": "withdrawal",
+          "amount": "0b10"
+        }
+      ]
+    },
+    "orders": [
+      {
+        "id": "r1",
+        "shiftId": "s1",
+        "total": "0o10",
+        "method": "cash",
+        "items": [
+          {
+            "name": "Товар",
+            "qty": "2",
+            "price": "4"
+          }
+        ]
+      },
+      {
+        "id": "r2",
+        "shiftId": "s1",
+        "total": 5,
+        "method": "split",
+        "payments": [
+          {
+            "method": "cash",
+            "amount": true
+          },
+          {
+            "method": "card",
+            "amount": "4"
+          }
+        ]
+      }
+    ],
+    "currency": "BYN",
+    "establishmentName": "Тестовая касса",
+    "expected": {
+      "id": "s1",
+      "employeeName": "",
+      "employeePhone": "",
+      "openedAt": 0,
+      "closedAt": 0,
+      "openingCash": 100,
+      "countedCash": 112,
+      "expectedCash": 108,
+      "difference": 4,
+      "cash": 9,
+      "card": 4,
+      "total": 13,
+      "count": 2,
+      "deposits": 1,
+      "withdrawals": 2,
+      "netMovements": -1,
+      "currency": "BYN",
+      "establishmentName": "Тестовая касса",
+      "cashMovements": [
+        {
+          "type": "deposit",
+          "subtype": "",
+          "amount": 1,
+          "timestamp": 0,
+          "note": ""
+        },
+        {
+          "type": "withdrawal",
+          "subtype": "",
+          "amount": 2,
+          "timestamp": 0,
+          "note": ""
+        }
+      ],
+      "orders": [
+        {
+          "timestamp": 0,
+          "total": 8,
+          "method": "cash",
+          "orderLabel": "",
+          "orderType": "",
+          "items": [
+            {
+              "name": "Товар",
+              "qty": 2,
+              "price": 4
+            }
+          ]
+        },
+        {
+          "timestamp": 0,
+          "total": 5,
+          "method": "split",
+          "orderLabel": "",
+          "orderType": "",
+          "items": []
+        }
+      ]
+    }
+  },
+  {
+    "name": "legacy duplicate IDs retain all receipt entries",
+    "shift": {
+      "id": "s1",
+      "status": "closed",
+      "openingCash": 0,
+      "countedCash": 3
+    },
+    "orders": [
+      {
+        "id": "same",
+        "shiftId": "s1",
+        "total": 1,
+        "method": "cash"
+      },
+      {
+        "id": "same",
+        "shiftId": "s1",
+        "total": 2,
+        "method": "cash"
+      }
+    ],
+    "currency": "BYN",
+    "establishmentName": "Тестовая касса",
+    "expected": {
+      "id": "s1",
+      "employeeName": "",
+      "employeePhone": "",
+      "openedAt": 0,
+      "closedAt": 0,
+      "openingCash": 0,
+      "countedCash": 3,
+      "expectedCash": 3,
+      "difference": 0,
+      "cash": 3,
+      "card": 0,
+      "total": 3,
+      "count": 2,
+      "deposits": 0,
+      "withdrawals": 0,
+      "netMovements": 0,
+      "currency": "BYN",
+      "establishmentName": "Тестовая касса",
+      "cashMovements": [],
+      "orders": [
+        {
+          "timestamp": 0,
+          "total": 1,
+          "method": "cash",
+          "orderLabel": "",
+          "orderType": "",
+          "items": []
+        },
+        {
+          "timestamp": 0,
+          "total": 2,
+          "method": "cash",
+          "orderLabel": "",
+          "orderType": "",
+          "items": []
+        }
+      ]
+    }
+  }
+]

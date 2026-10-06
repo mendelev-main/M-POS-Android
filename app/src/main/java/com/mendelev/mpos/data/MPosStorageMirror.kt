@@ -108,6 +108,10 @@ class MPosStorageMirror(
             }
         }
         when (command.action) {
+            "shiftReportRead" -> {
+                readAttempt(command.action) { MPosShiftReportRepository(database).read(requireNotNull(command.serialized)).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, "native shift report unavailable") }
+            }
             "shiftLifecycleCommit" -> {
                 attempt { MPosShiftLifecycleCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "local shift lifecycle transaction failed") }

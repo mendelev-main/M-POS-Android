@@ -121,3 +121,15 @@ Status: pending physical testing at the end of migration.
 - Opening Telegram/monthly report and closing PNG/print start after local save. No availability retry is introduced.
 
 Status: physical tablet / Telegram / printer evidence pending until final migration testing.
+
+## 053 — Native report values / output consistency
+
+- Close a synthetic shift with same/cross cash/card/split returns. Compare report dialog, Telegram PNG, LAN receipt and PDF: cash/card, expected/count/difference and movements must agree.
+- After cross-shift return, old shift retains the sale; return shift carries refund/negative net revenue. Test same-shift returned receipt: image keeps all sale receipt entries as on iPad, while "Заказов" retains the current net count.
+- Verify receipt sorting, item name/productName aliases, notes, currencies/establishment header, configured printer routing and copies.
+- Interrupt native report read after closure: closure stays saved, no stale image/print is emitted. Reopen a manual report after recovery, restart and synthetic v13 import; values must refresh.
+- Rapidly switch report windows or close loading modal; late responses must not restore dismissed/replaced views.
+- Disabled Telegram notification does not send; report/model does not trigger catalogue sync or availability retry. Native read failure must not add a network retry loop.
+- Exercise a representative large archive and record report latency/memory. No benchmark is accepted from cloud synthetic fixtures alone.
+
+Status: pending comprehensive physical testing.

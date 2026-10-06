@@ -33,7 +33,7 @@ anchors = ['<script src="Web/js/core/storage.js"></script>',
 if any(source_html.count(anchor) != 1 for anchor in anchors):
     raise SystemExit("Reviewed source initialization changed; inspect Android adapters before synchronization")
 adapters = ["android-bridge.js", "native-storage-shadow.js", "native-catalog-cutover.js",
-            "native-network-shadow.js", "native-settings.js", "native-availability.js", "native-receipts-history.js", "native-payment-command.js", "native-shift-accounting.js", "native-return-command.js", "native-cash-movement-command.js", "native-shift-lifecycle-command.js"]
+            "native-network-shadow.js", "native-settings.js", "native-availability.js", "native-receipts-history.js", "native-payment-command.js", "native-shift-accounting.js", "native-return-command.js", "native-cash-movement-command.js", "native-shift-lifecycle-command.js", "native-shift-reports.js"]
 if any(not (target / name).is_file() for name in adapters):
     raise SystemExit("Required Android adapter is missing; no source files were changed")
 
@@ -52,7 +52,7 @@ android_html = source_html.replace(
 ).replace(
     '<script src="network-printer.js"></script>',
     '<script src="network-printer.js"></script>\n<script src="native-settings.js"></script>\n'
-    '<script src="notification-native.js"></script>',
+    '<script src="notification-native.js"></script>\n<script src="native-shift-reports.js"></script>',
 ).replace(
     '<script>loadAll().then(()=>startAvailabilityRecovery());</script>',
     '<script src="native-shift-accounting.js"></script>\n<script src="native-payment-command.js"></script>\n<script src="native-return-command.js"></script>\n<script src="native-cash-movement-command.js"></script>\n<script src="native-shift-lifecycle-command.js"></script>\n<script src="native-receipts-history.js"></script>\n<script src="native-availability.js"></script>\n<script>loadAll().then(()=>startAvailabilityRecovery());</script>',

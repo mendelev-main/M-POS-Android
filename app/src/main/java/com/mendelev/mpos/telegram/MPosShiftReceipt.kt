@@ -7,7 +7,7 @@ import java.util.Locale
 import java.util.TimeZone
 import kotlin.math.abs
 
-/** Presentation only: all financial values come from the committed shared-runtime report. */
+/** Presentation only: all financial values come from the native persisted shift report. */
 object MPosShiftReceipt {
     enum class Kind { CENTER, TEXT, PAIR, RIGHT, SEPARATOR }
     data class Row(val label: String, val value: String = "", val kind: Kind = Kind.PAIR, val bold: Boolean = false, val size: Float = 16f)

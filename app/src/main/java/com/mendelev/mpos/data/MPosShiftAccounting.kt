@@ -5,7 +5,7 @@ import org.json.JSONObject
 
 /** Attribute sales to their original shift and refunds to their execution shift. */
 object MPosShiftAccounting {
-    fun amount(record: JSONObject, key: String): Double = record.optDouble(key, 0.0)
+    fun amount(record: JSONObject, key: String): Double = MPosJsonNumbers.amount(record, key)
     fun paid(order: JSONObject, method: String): Double {
         val parts = order.optJSONArray("payments") ?: return if (order.optString("method") == method) amount(order, "total") else 0.0
         return (0 until parts.length()).map { parts.getJSONObject(it) }.filter { it.optString("method") == method }.sumOf { amount(it, "amount") }

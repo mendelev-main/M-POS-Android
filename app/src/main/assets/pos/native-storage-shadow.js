@@ -209,6 +209,15 @@
       return result;
     }
   });
+  mposCore.ShiftReports=Object.freeze({
+    async read(shiftId,presentation={},closedOnly=false){
+      const payload=JSON.stringify({shiftId,currency:presentation.currency||'',establishmentName:presentation.establishmentName||'',closedOnly});
+      await Promise.all(['shifts','orders','criticalStorageJournal'].map(initializeNative));
+      const result=requireNative(await request('shiftReportRead',{payload}),true);
+      if(!result.report||result.report.id!==shiftId||!result.summary)throw new Error('Invalid native shift report');
+      return result;
+    }
+  });
   mposCore.Receipts=Object.freeze({
     async page(offset=0,limit=50){
       await initializeNative('orders');
