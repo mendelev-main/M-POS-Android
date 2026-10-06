@@ -18,7 +18,7 @@ function host({data=new Map(),room={initialized:false,found:false,payload:null},
  const calls=[],timers=new Map();let timerId=0,held,sequence=0;
  const legacy={
   async get(key,fallback){calls.push('legacy-get:'+key);return data.has(key)?clone(data.get(key)):fallback;},
-  async set(key,value){calls.push('legacy-set:'+key);if(cacheFails&&['products','layout','posNavigation','employees','shifts'].includes(key))throw new Error('cache disk failure');data.set(key,clone(value));},
+  async set(key,value){calls.push('legacy-set:'+key);if(cacheFails&&['products','layout','posNavigation','employees','shifts','orders'].includes(key))throw new Error('cache disk failure');data.set(key,clone(value));},
   remove(key){calls.push('legacy-remove:'+key);data.delete(key);},
   describe:()=>({mode:'localStorage',sourceOfTruth:'local-pos'})
  };
@@ -43,9 +43,9 @@ function host({data=new Map(),room={initialized:false,found:false,payload:null},
    case 'catalogRemove':room.found=false;room.payload=null;break;
    case 'catalogParity':result={ok:true,matches:true,shadowCaughtUp:true};break;
   }
-  if((command.action.startsWith('workspace')||command.action.startsWith('employee')||command.action.startsWith('shift'))&&!fail.has(command.action)){
+  if((command.action.startsWith('workspace')||command.action.startsWith('employee')||command.action.startsWith('shift')||command.action.startsWith('order'))&&!fail.has(command.action)){
    const entry=room.workspace[command.key]??={initialized:false,found:false,payload:null};
-   switch(command.action.replace(/^(employee|shift)/,'workspace')){
+   switch(command.action.replace(/^(employee|shift|order)/,'workspace')){
     case 'workspaceStatus':result.initialized=entry.initialized;break;
     case 'workspaceInitialize':if(!entry.initialized){entry.initialized=true;entry.found=typeof command.payload==='string';entry.payload=entry.found?command.payload:null;}break;
     case 'workspaceWrite':entry.found=true;entry.payload=command.payload;break;
@@ -54,7 +54,7 @@ function host({data=new Map(),room={initialized:false,found:false,payload:null},
    }
   }
   const reply=()=>context.__nativeStorageResult({...result,requestId:command.requestId});
-  if(holdWrite&&(command.action==='catalogWrite'||command.action==='workspaceWrite')&&(command.key||'products')===holdKey)held=reply;else reply();
+  if(holdWrite&&(command.action==='catalogWrite'||command.action==='workspaceWrite'||command.action==='orderWrite')&&(command.key||'products')===holdKey)held=reply;else reply();
   return true;
  }}}};
  vm.createContext(context);vm.runInContext(adapter,context);vm.runInContext(cutover,context);
@@ -135,7 +135,7 @@ test('absence null and removal preserve fallback semantics without resurrecting 
 });
 
 test('startup shadow mirroring excludes the authoritative products key',async()=>{
- const h=host({data:new Map([['products',products('Old')],['orders',[]]])});
+ const h=host({data:new Map([['products',products('Old')],['parked',[]]])});
  const startup=[...h.timers.values()].find(timer=>timer.delay===0);startup.fn();
  assert.equal(h.calls.filter(x=>x==='native:put').length,1);
  assert.equal(h.room.initialized,false);
@@ -268,4 +268,61 @@ test('shifts preserve cash movements and backup replay after a native write fail
  assert.deepEqual(JSON.parse(h.room.workspace.shifts.payload),doc.shifts);
  const restarted=host({room:h.room,data:new Map([['shifts',[]]])});
  assert.deepEqual(clone(await restarted.context.MPosCore.Storage.get('shifts',[])),doc.shifts);
+});
+
+const paidReceipt=()=>({id:'o1',shiftId:'s1',receiptNumber:42,employeeId:'e1',method:'split',total:12.35,
+ items:[{productId:'p1',name:'Кофе',qty:1,price:12.35,custom:true}],
+ payments:[{method:'cash',amount:5,cashGiven:10,change:5},{method:'card',amount:7.35}],
+ stockConsumption:{version:1,items:[{productId:'p1',qty:1}]},loyaltySync:{status:'pending'},custom:{preserved:true}});
+
+test('paid receipt waits for native commit before updating cache and preserves split payments',async()=>{
+ const h=host({holdWrite:true,holdKey:'orders'}),receipt=paidReceipt();
+ const saving=h.context.MPosCore.Storage.set('orders',[receipt]);receipt.total=999;
+ await flushUntil(()=>h.held);
+ assert.equal(h.calls.includes('legacy-set:orders'),false);
+ h.release();await saving;
+ assert.equal(JSON.parse(h.room.workspace.orders.payload)[0].total,12.35);
+ assert.deepEqual(JSON.parse(h.room.workspace.orders.payload)[0].payments,paidReceipt().payments);
+});
+
+test('failed native receipt persistence leaves payment journal and replays all business documents',async()=>{
+ const h=host(),receipt=paidReceipt();h.fail.add('orderWrite');
+ const writes={products:products('After sale'),orders:[receipt],shifts:[{id:'s1',status:'open'}]};
+ await assert.rejects(h.context.commitCriticalStorage('payment',writes));
+ assert.equal(h.data.get('criticalStorageJournal').type,'payment');
+ assert.equal(h.data.has('orders'),false);assert.equal(h.data.has('shifts'),false);
+ const restarted=host({room:h.room,data:h.data});
+ assert.equal(await restarted.context.recoverCriticalStorageJournal(),true);
+ assert.deepEqual(JSON.parse(h.room.workspace.orders.payload),[receipt]);
+ assert.deepEqual(JSON.parse(h.room.workspace.shifts.payload),writes.shifts);
+ assert.equal(h.data.get('criticalStorageJournal'),null);
+});
+
+test('actual v13 backup restores returned receipts without losing original sale and payment fields',async()=>{
+ const h=host({cacheFails:true}),doc=fullBackup(products('Backup'));
+ doc.orders=[{...paidReceipt(),returnedAt:2000,returnedShiftId:'s2',returnAmount:12.35,loyaltyReversal:{status:'pending'}}];
+ await h.context.applyBackupData(doc);
+ assert.deepEqual(JSON.parse(h.room.workspace.orders.payload),doc.orders);
+ const restarted=host({room:h.room,data:new Map([['orders',[]]])});
+ assert.deepEqual(clone(await restarted.context.MPosCore.Storage.get('orders',[])),doc.orders);
+ assert.ok(h.context.MPosCore.Storage.describe().nativeCacheFailuresByKey.orders>0);
+});
+
+test('actual full return commits native receipt, stock and shift; repeated return cannot refund again',async()=>{
+ const h=host();
+ Object.assign(h.context,{criticalOperationBusy:false,currentShift:()=>h.context.state.shifts[0],
+  shiftTotals:()=>({}),cashDrawerBalance:()=>100,roundStockQty:v=>Math.round(v*1000)/1000,
+  flash:message=>h.calls.push('flash:'+message),publishAvailability:()=>h.calls.push('availability'),
+  closeModal(){},showModal(){},render(){},fullMoney:String,escapeAttr:String});
+ h.context.state={products:[{id:'p1',type:'simple',stock:4}],orders:[paidReceipt()],shifts:[{id:'s1',status:'open',cashMovements:[]}]};
+ vm.runInContext(fs.readFileSync(path.join(root,'Web/js/features/receipts.js'),'utf8'),h.context);
+ await h.context.processFullReturn('o1');
+ const returned=JSON.parse(h.room.workspace.orders.payload)[0];
+ assert.equal(returned.total,12.35);assert.equal(returned.returnAmount,12.35);assert.ok(returned.returnedAt>0);
+ assert.equal(JSON.parse(h.room.payload)[0].stock,5);
+ assert.equal(JSON.parse(h.room.workspace.shifts.payload)[0].cashMovements[0].amount,5);
+ const saves=h.calls.filter(v=>v==='native:orderWrite').length;
+ await h.context.processFullReturn('o1');
+ assert.equal(h.calls.filter(v=>v==='native:orderWrite').length,saves);
+ assert.ok(h.calls.includes('flash:Этот чек уже возвращён'));
 });

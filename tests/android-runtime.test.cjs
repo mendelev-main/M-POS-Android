@@ -218,7 +218,7 @@ test('orders, lines and payments project through explicit Room migration and rem
  assert.match(repository,/class MPosOrderRepository/);
  assert.match(repository,/mismatchedOrderIds/);
  assert.match(repository,/authoritative", false/);
- assert.match(mirror,/"orders"\s*->\s*projectOrders\(serialized\)/);
+ assert.match(mirror,/"orders"\s*->\s*orderStorage.project\(serialized\)/);
  assert.match(mirror,/"orderParity"/);
  assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
 });
@@ -340,8 +340,9 @@ test('P4 loyalty recovery status is shadow-projected without native retry author
  const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/OrderProjectionEntity.kt'),'utf8');
  const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
  const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
+ const storage=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosOrderStorage.kt'),'utf8');
  const loyalty=fs.readFileSync(path.join(assets,'Web/js/features/loyalty.js'),'utf8');
- assert.match(entity,/loyaltySyncStatus/);assert.match(entity,/loyaltyReversalStatus/);assert.match(db,/version\s*=\s*\d+/);assert.match(db,/Migration\(9, 10\)/);assert.match(db,/ALTER TABLE order_projection ADD COLUMN loyaltySyncStatus/);assert.match(mirror,/optJSONObject\("loyaltySync"\)/);assert.match(mirror,/optJSONObject\("loyaltyReversal"\)/);
+ assert.match(entity,/loyaltySyncStatus/);assert.match(entity,/loyaltyReversalStatus/);assert.match(db,/version\s*=\s*\d+/);assert.match(db,/Migration\(9, 10\)/);assert.match(db,/ALTER TABLE order_projection ADD COLUMN loyaltySyncStatus/);assert.match(storage,/optJSONObject\("loyaltySync"\)/);assert.match(storage,/optJSONObject\("loyaltyReversal"\)/);
  assert.match(loyalty,/function retryPendingLoyalty/);assert.match(loyalty,/\/api\/loyalty\/sales/);assert.doesNotMatch(mirror,/api\/loyalty\/sales|retryPendingLoyalty/);
 });
 
