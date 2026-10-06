@@ -60,6 +60,42 @@ class MPosPaymentCommandTest {
         assertTrue("invalid payment must fail", failed)
     }
 
+    private fun withPricing(request: JSONObject): JSONObject {
+        val order = request.getJSONObject("order")
+        order.put("productDiscountTotal", 0.0).put("subtotalBeforeDiscounts", 12.35).put("loyaltyDiscount", 0.0)
+        return request.put("pricing", JSONObject().put("version", 1).put("discounts", JSONArray()).put("loyaltyDiscount", 0.0))
+    }
+    @Test fun nativePricingCommitsAndExactReplayDoesNotDuplicateReceipt() = runBlocking {
+        val request = withPricing(command(true))
+        assertTrue(MPosPaymentCommand(database).commit(request.toString()).getBoolean("ok"))
+        assertTrue(MPosPaymentCommand(database).commit(request.toString()).getBoolean("replayed"))
+        assertEquals(1, database.orderProjectionDao().orderCount())
+    }
+    @Test fun discountDeliveryAndAllocatedGiftSettleTogetherWithoutChangingStockRules() = runBlocking {
+        val request = withPricing(command(true)); val order = request.getJSONObject("order")
+        order.getJSONArray("items").getJSONObject(0).put("price", 10).put("discountId", "d1")
+        order.put("total", 7).put("productDiscountTotal", 2).put("subtotalBeforeDiscounts", 10).put("loyaltyDiscount", 3)
+        order.getJSONArray("payments").getJSONObject(1).put("amount", 2)
+        request.getJSONObject("pricing").put("loyaltyDiscount", 3).put("discounts", JSONArray().put(JSONObject().put("id", "d1").put("type", "percent").put("value", 20)))
+        assertTrue(MPosPaymentCommand(database).commit(request.toString()).getBoolean("ok"))
+        val receipt = JSONArray(MPosOrderStorage(database).read().getString("payload")).getJSONObject(0)
+        assertEquals(7.0, receipt.getDouble("total"), 0.0)
+        assertFalse(receipt.has("pricing"))
+        assertEquals(5.0, JSONArray(MPosCatalogStorage(database).read().getString("payload")).getJSONObject(0).getDouble("stock"), 0.0)
+    }
+    @Test fun malformedPresentPricingCannotUseCompatibilityBypass() = runBlocking {
+        reject(command().put("pricing", JSONObject.NULL))
+        reject(withPricing(command()).also { it.getJSONObject("pricing").put("version", 2) })
+        assertEquals(0, database.orderProjectionDao().orderCount())
+    }
+    @Test fun pricingMismatchRollsBackStockReceiptAndCart() = runBlocking {
+        val request = withPricing(command())
+        request.getJSONObject("order").getJSONArray("items").getJSONObject(0).put("price", 20)
+        reject(request)
+        assertEquals(0, database.orderProjectionDao().orderCount())
+        assertEquals(5.125, JSONArray(MPosCatalogStorage(database).read().getString("payload")).getJSONObject(0).getDouble("stock"), 0.0)
+        assertEquals(1, JSONObject(MPosRecoveryStorage(database).read("currentOrderSession").getString("payload")).getJSONArray("items").length())
+    }
     @Test fun mixedPaymentAtomicallyPersistsStockReceiptSessionAndPreservesUnknownFields() = runBlocking {
         val request = command(); assertTrue(MPosPaymentCommand(database).commit(request.toString()).getBoolean("ok"))
         assertEquals(5.0, JSONArray(MPosCatalogStorage(database).read().getString("payload")).getJSONObject(0).getDouble("stock"), 0.0)

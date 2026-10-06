@@ -39,7 +39,7 @@ test('actual finalization sends one receipt without archive and external effects
  const h=host({archiveSize:500});const saving=h.context.finalizePayment(parts);
  await flushUntil(()=>h.events.includes('native-command'));
  const command=JSON.parse(h.commands.find(c=>c.action==='paymentCommit').payload);
- assert.equal(command.expectedOrderCount,500);assert.equal(command.order.receiptNumber,1);
+ assert.equal(command.pricing.version,1);assert.deepEqual(command.pricing.discounts,[]);assert.equal(command.pricing.loyaltyDiscount,0);assert.equal(command.expectedOrderCount,500);assert.equal(command.order.receiptNumber,1);
  assert.equal(command.products[0].stock,5);assert.equal(command.order.payments.length,2);
  assert.equal(Object.hasOwn(command,'orders'),false);assert.equal(Object.hasOwn(command,'writes'),false);
  assert.equal(h.events.includes('legacy-commit'),false);assert.equal(h.events.includes('availability'),false);assert.equal(h.events.includes('reset'),false);
@@ -68,3 +68,5 @@ test('nonpayment journal operations retain prior provider and pending recovery b
  h.context.criticalStorageRecoveryPending=true;
  await h.context.finalizePayment(parts);assert.equal(h.commands.some(c=>c.action==='paymentCommit'),false);
 });
+
+test('pricing rollback keeps original settlement compatibility',async()=>{const h=host();h.context.MPosNativePricingEnabled=false;const saving=h.context.finalizePayment(parts);await flushUntil(()=>h.events.includes('native-command'));const command=JSON.parse(h.commands.find(c=>c.action==='paymentCommit').payload);assert.equal(Object.hasOwn(command,'pricing'),false);h.reply();await saving;assert.equal(h.context.state.orders.length,1);});

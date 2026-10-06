@@ -13,6 +13,9 @@
     const order=writes.orders.at(-1);
     const command={order,products:writes.products,shifts:writes.shifts,session:writes.currentOrderSession,
       expected:{products:current.products,shifts:current.shifts},expectedOrderCount:current.orders.length};
+    if(global.MPosNativePricingEnabled!==false){
+      command.pricing={version:1,discounts:JSON.parse(JSON.stringify(current.discounts||[])),loyaltyDiscount:Number(order.loyaltyDiscount||0)};
+    }
     if(Number(order.deliveryFee)>0){
       const before=current.shifts.find(s=>s.id===order.shiftId),after=writes.shifts.find(s=>s.id===order.shiftId);
       const count=Array.isArray(before?.cashMovements)?before.cashMovements.length:0;
