@@ -178,12 +178,13 @@ Benefits:
 - removal of browser text-selection/context behavior.
 
 ### P7 — Payment domain + Compose payment screen
-**Status: 🟢 Partial (064)**
+**Status: 🟢 Partial (065)**
 
 Atomic settlement, product-discount arithmetic, gift allocation and configured unit-price
 formation and settlement recipe expansion are native. Cart additions await Room stock
-preflight. Cart/payment UI, online gift eligibility, quantity/payment preflight and
-stock availability display remain reviewed JS; physical acceptance is pending.
+preflight, and quantity edits use native decisions/Room preflight. Cart/payment UI,
+online gift eligibility, payment entry preflight and stock availability display
+remain reviewed JS; physical acceptance is pending.
 
 Extract a tested PaymentEngine before moving UI.
 
@@ -367,3 +368,13 @@ canFulfillCart caller/preview пока JS. v13 сохранён; rollback:
 MPosNativeStockPreflightEnabled=false. Спецификация:
 `specs/064-native-cart-stock-preflight/spec.md`. Физические кейсы ожидаются.
 Локальные APK не собираются, тесты и lint обязательны.
+
+
+065: qty + delta, удаление по <=0 и проверка всей корзины выполняются
+Kotlin/Room. Изменения количества и добавление идут в одной FIFO; оплата ждёт.
+Просроченные/отклонённые ответы не меняют строки. Контекст заказа после
+удаления последней строки степпером сохранён, как в исходнике; спорные
+правила уменьшения/legacy ключей описаны в спецификации. v13 без изменений.
+Rollback: MPosNativeCartQuantityEnabled=false.
+`specs/065-native-cart-quantity/spec.md`; физические кейсы ожидаются.
+Локальная APK не собирается; обязательны тесты и lint.

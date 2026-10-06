@@ -136,6 +136,10 @@ class MPosStorageMirror(
                 attempt { MPosReturnCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "local return transaction failed") }
             }
+            "cartQuantityRead" -> {
+                readAttempt(command.action) { MPosCartQuantityRepository(database).read(requireNotNull(command.serialized)).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, "native cart quantity unavailable") }
+            }
             "stockPreflightRead" -> {
                 readAttempt(command.action) { MPosStockPreflightRepository(database).read(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native stock preflight unavailable") }

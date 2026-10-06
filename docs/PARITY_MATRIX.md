@@ -172,3 +172,13 @@ canFulfillCart caller/preview пока JS. v13 сохранён; rollback:
 MPosNativeStockPreflightEnabled=false. Спецификация:
 `specs/064-native-cart-stock-preflight/spec.md`. Физические кейсы ожидаются.
 Локальные APK не собираются, тесты и lint обязательны.
+
+
+065: qty + delta, удаление по <=0 и проверка всей корзины выполняются
+Kotlin/Room. Изменения количества и добавление идут в одной FIFO; оплата ждёт.
+Просроченные/отклонённые ответы не меняют строки. Контекст заказа после
+удаления последней строки степпером сохранён, как в исходнике; спорные
+правила уменьшения/legacy ключей описаны в спецификации. v13 без изменений.
+Rollback: MPosNativeCartQuantityEnabled=false.
+`specs/065-native-cart-quantity/spec.md`; физические кейсы ожидаются.
+Локальная APK не собирается; обязательны тесты и lint.

@@ -57,6 +57,16 @@ class MPosStorageMirrorTest {
         return result
     }
 
+    @Test fun quantityReadUsesProtocolAndLeavesCatalogueUntouched() = runBlocking {
+        MPosCatalogStorage(database).initialize(products("Synthetic"))
+        send("cartQuantityRead", "quantity", value = """{"version":1,"items":[{"productId":"product-1","qty":1}],"targetIndex":0,"matchingIndices":[0],"delta":1}""")
+        val response = replies.poll(10, TimeUnit.SECONDS)
+        assertNotNull(response); assertEquals("quantity", response!!.getString("requestId"))
+        assertTrue(response.getBoolean("authoritative")); assertTrue(response.getBoolean("allowed"))
+        assertEquals(2.0, response.getDouble("quantity"), 0.0)
+        assertEquals(products("Synthetic"), MPosCatalogStorage(database).read().getString("payload"))
+        assertNull(database.legacyStorageShadowDao().get("currentOrderSession"))
+    }
     @Test fun stockPreflightReplyIsCorrelatedReadOnlyAndSurvivesMalformedRequest() = runBlocking {
         MPosCatalogStorage(database).initialize(products("Synthetic"))
         send("stockPreflightRead", "bad-stock", value = "{}")

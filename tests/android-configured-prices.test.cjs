@@ -72,3 +72,28 @@ test('failed stock read leaves cart and manual context intact and a later retry 
  const h=withNativeStock();h.ctx._manualPriceContext={productId:'p',mods:[]};const a=h.ctx.confirmManualPrice();await tickUntil(()=>h.requests.length===1);h.reply();await tickUntil(()=>h.checks.length===1);h.checks[0].reject(new Error('read unavailable'));await a;assert.equal(cart(h).length,0);assert.ok(h.ctx._manualPriceContext);assert.equal(h.events.at(-1),'Не удалось проверить остатки. Повторите добавление.');
  const b=h.ctx.confirmManualPrice();await tickUntil(()=>h.requests.length===2);h.reply(1);await tickUntil(()=>h.checks.length===2);h.checks[1].resolve({allowed:true});await b;assert.equal(cart(h).length,1);
 });
+function withNativeQuantity(){const h=withNativeStock(),quantities=[];h.ctx.MPosCore.CartQuantity={check:input=>new Promise((resolve,reject)=>quantities.push({input,resolve,reject}))};h.ctx.state.cart=[{cartLineId:'l',productId:'p',qty:1,price:10}];return {...h,quantities,qReply(index=0,allowed=true){const r=quantities[index],q=r.input.items[r.input.targetIndex].qty+r.input.delta;r.resolve({quantity:q,remove:q<=0,allowed,reason:'shortage'});}};}
+test('quantity taps share FIFO with additions and payment waits; complete cart matches reviewed stepper',async()=>{
+ const h=withNativeQuantity(),legacy=host(false);legacy.ctx.state.cart=structuredClone(cart(h));
+ const a=h.ctx.changeQty('l',1),b=h.ctx.changeQty('l',-1);await tickUntil(()=>h.quantities.length===1);h.ctx.finalizePayment();assert.ok(!h.events.includes('finalize'));h.qReply();await a;await tickUntil(()=>h.quantities.length===2);assert.equal(h.quantities[1].input.items[0].qty,2);h.qReply(1);await b;
+ legacy.ctx.changeQty('l',1);legacy.ctx.changeQty('l',-1);assert.deepEqual(cart(h),cart(legacy));
+ const adding=h.ctx.addConfiguredCartItem(h.products[0],[]),increase=h.ctx.changeQty('l',1);await tickUntil(()=>h.requests.length===1);h.reply();await tickUntil(()=>h.checks.length===1);h.checks[0].resolve({allowed:true});await adding;await tickUntil(()=>h.quantities.length===3);assert.equal(h.quantities[2].input.items[0].qty,2);h.qReply(2);await increase;assert.equal(cart(h)[0].qty,3);
+});
+test('native quantity refusal and read failure leave row untouched and allow subsequent retry',async()=>{
+ const h=withNativeQuantity();const a=h.ctx.changeQty('l',1);await tickUntil(()=>h.quantities.length===1);h.qReply(0,false);await a;assert.equal(cart(h)[0].qty,1);assert.ok(!h.events.includes('save'));
+ const b=h.ctx.changeQty('l',1);await tickUntil(()=>h.quantities.length===2);h.quantities[1].reject(new Error('offline native read'));await b;assert.equal(cart(h)[0].qty,1);
+ const c=h.ctx.changeQty('l',1);await tickUntil(()=>h.quantities.length===3);h.qReply(2);await c;assert.equal(cart(h)[0].qty,2);
+});
+test('removing last row through quantity preserves source order context and cancels queued stale edits',async()=>{
+ const h=withNativeQuantity();Object.assign(h.ctx.state,{orderLabel:'Synthetic',orderType:'Доставка',deliveryFee:2,customer:{id:'synthetic'}});const a=h.ctx.changeQty('l',-1),b=h.ctx.changeQty('l',1);await tickUntil(()=>h.quantities.length===1);h.qReply();await a;await b;assert.equal(cart(h).length,0);assert.equal(h.quantities.length,1);assert.equal(h.ctx.state.orderLabel,'Synthetic');assert.equal(h.ctx.state.customer.id,'synthetic');assert.equal(h.ctx.state.deliveryFee,2);
+});
+test('external removal, quantity or stock change cancels late quantity replies without resurrecting rows',async()=>{
+ for(const change of [h=>h.ctx.state.cart=[],h=>h.ctx.state.cart[0].qty=5,h=>h.products[0].stock=0]){const h=withNativeQuantity();const a=h.ctx.changeQty('l',1);await tickUntil(()=>h.quantities.length===1);change(h);const before=JSON.stringify(h.ctx.state.cart);h.qReply();await a;assert.equal(JSON.stringify(h.ctx.state.cart),before);assert.ok(!h.events.includes('save'));}
+});
+test('duplicate legacy keys and string quantity preserve original proposal semantics; rollback is synchronous',async()=>{
+ const h=withNativeQuantity();h.ctx.state.cart=[{productId:'p',qty:'1',price:10},{productId:'p',qty:1,price:10}];const a=h.ctx.changeQty('p',1);await tickUntil(()=>h.quantities.length===1);assert.deepEqual(JSON.parse(JSON.stringify(h.quantities[0].input.matchingIndices)),[0,1]);h.qReply();await a;assert.equal(h.ctx.state.cart[0].qty,'11');assert.equal(h.ctx.state.cart[1].qty,1);
+ const r=withNativeQuantity();r.ctx.MPosNativeCartQuantityEnabled=false;r.ctx.changeQty('l',1);assert.equal(cart(r)[0].qty,2);assert.equal(r.quantities.length,0);
+});
+test('stepper removal keeps same order lineage so a later queued product tap still adds',async()=>{
+ const h=withNativeQuantity();const remove=h.ctx.changeQty('l',-1),add=h.ctx.addConfiguredCartItem(h.products[0],[]);await tickUntil(()=>h.quantities.length===1);h.qReply();await remove;await tickUntil(()=>h.requests.length===1);h.reply();await tickUntil(()=>h.checks.length===1);assert.equal(h.checks[0].input.items.length,1);assert.equal(h.checks[0].input.items[0].qty,1);h.checks[0].resolve({allowed:true});await add;assert.equal(cart(h).length,1);assert.equal(cart(h)[0].qty,1);
+});

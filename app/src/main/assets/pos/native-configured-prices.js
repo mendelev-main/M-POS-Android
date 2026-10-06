@@ -4,6 +4,10 @@
   const prices=global.MPosCore?.ConfiguredPrices;
   if(!prices||typeof global.addConfiguredCartItem!=='function')return;
   const originalAdd=global.addConfiguredCartItem,originalManual=global.confirmManualPrice;
+  const originalQuantity=global.changeQty;
+  const stockState=()=>JSON.stringify((state.products||[]).map(p=>[p.id,p.name,p.type,p.stock,p.noStockTracking,p.components]));
+  const cartSuccessors=new WeakMap();
+  function currentCart(cart){while(cartSuccessors.has(cart))cart=cartSuccessors.get(cart);return state.cart===cart;}
   let tail=Promise.resolve(),pending=0;
   const enabled=()=>global.MPosNativeConfiguredPricesEnabled!==false;
   const busy=()=>!!state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy);
@@ -11,7 +15,7 @@
   function enqueue(product,mods,input,manualContext=null){
     if(busy()){flash('Дождитесь завершения текущей операции');return Promise.resolve();}
     const cart=state.cart,modal=overlay(),snapshot=JSON.parse(JSON.stringify(product)),modifiers=JSON.parse(JSON.stringify(mods||[]));
-    const stale=()=>!enabled()||busy()||state.cart!==cart||(modal&&overlay()!==modal)||(manualContext&&global._manualPriceContext!==manualContext);
+    const stale=()=>!enabled()||busy()||!currentCart(cart)||(modal&&overlay()!==modal)||(manualContext&&global._manualPriceContext!==manualContext);
     let checkingStock=false;
     pending++;
     const work=tail.then(async()=>{
@@ -28,7 +32,6 @@
       if(global.MPosNativeStockPreflightEnabled!==false){
         checkingStock=true;
         const cartBefore=JSON.stringify(state.cart);
-        const stockState=()=>JSON.stringify((state.products||[]).map(p=>[p.id,p.name,p.type,p.stock,p.noStockTracking,p.components]));
         const catalogueBefore=stockState();
         const verdict=await global.MPosCore.StockPreflight.check({version:1,items:proposed.map(i=>({productId:i.productId,qty:i.qty,selectedModifiers:(i.selectedModifiers||[]).map(m=>({productId:m.productId,qty:m.qty}))}))});
         if(stale())return;
@@ -63,8 +66,36 @@
     const product=getProduct(context.productId);if(!product){flash('Товар не найден');return;}
     return enqueue(product,context.mods||[],{manualInput:raw},context);
   };
+  global.changeQty=function(id,delta){
+    if(global.MPosNativeCartQuantityEnabled===false)return originalQuantity.apply(this,arguments);
+    if(busy()){flash('Дождитесь завершения текущей операции');return Promise.resolve();}
+    const cart=state.cart,target=cart.find(i=>cartItemKey(i)===id);
+    if(!target)return Promise.resolve();
+    const stale=()=>global.MPosNativeCartQuantityEnabled===false||busy()||!currentCart(cart)||!state.cart.includes(target);
+    pending++;
+    const work=tail.then(async()=>{
+      if(stale())return;
+      const before=JSON.stringify(state.cart),catalogueBefore=stockState();
+      const items=state.cart.map(i=>({productId:i.productId,qty:i.qty,selectedModifiers:(i.selectedModifiers||[]).map(m=>({productId:m.productId,qty:m.qty}))}));
+      const matchingIndices=state.cart.flatMap((i,index)=>cartItemKey(i)===id?[index]:[]);
+      const verdict=await global.MPosCore.CartQuantity.check({version:1,items,targetIndex:state.cart.indexOf(target),matchingIndices,delta});
+      if(stale())return;
+      if(before!==JSON.stringify(state.cart)||catalogueBefore!==stockState()){flash('Корзина или товары изменились. Повторите изменение количества.');return;}
+      if(typeof verdict.allowed!=='boolean'||typeof verdict.remove!=='boolean'||!['number','string'].includes(typeof verdict.quantity)||!Number.isFinite(Number(verdict.quantity)))throw new Error('invalid cart quantity result');
+      if(!verdict.allowed){flash(verdict.reason||'Недостаточно остатка');return;}
+      if(verdict.remove){
+        const previous=state.cart;
+        state.cart=state.cart.filter(i=>cartItemKey(i)!==id);
+        cartSuccessors.set(previous,state.cart);
+      }
+      else target.qty=verdict.quantity;
+      // Removing the last row via the stepper intentionally does not reset order context.
+      saveCurrentOrderSession();render();
+    }).catch(()=>{if(!stale())flash('Не удалось изменить количество. Повторите попытку.');}).finally(()=>{pending--;});
+    tail=work;return work;
+  };
   for(const name of ['openPaymentModal','confirmPaymentScreen','finalizePayment']){
     const original=global[name];if(typeof original!=='function')continue;
-    global[name]=function(...args){if(pending){flash('Дождитесь расчёта добавляемого товара');return;}return original.apply(this,args);};
+    global[name]=function(...args){if(pending){flash('Дождитесь завершения изменения корзины');return;}return original.apply(this,args);};
   }
 })(window);
