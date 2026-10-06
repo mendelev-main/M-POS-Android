@@ -43,8 +43,8 @@ jobs:
       - name: Verify bundled POS source
         run: node --test tests/*.test.cjs
 
-      - name: Run Android lint and build debug APK
-        run: ./gradlew --no-daemon lintDebug assembleDebug
+      - name: Run Kotlin tests, lint and build APKs
+        run: ./gradlew --no-daemon --max-workers=4 testDebugUnitTest lintDebug assembleDebug assembleRelease
 
       - uses: actions/upload-artifact@v4
         with:

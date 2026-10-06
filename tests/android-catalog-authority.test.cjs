@@ -13,11 +13,12 @@ const backup=fs.readFileSync(path.join(root,'Web/js/features/backup.js'),'utf8')
 const clone=value=>JSON.parse(JSON.stringify(value));
 const products=name=>[{id:'p1',name,price:12.35,stock:5.75,category:'Напитки',components:[{productId:'ingredient',qty:0.25}],modifierGroups:[],custom:{preserve:true}}];
 
-function host({data=new Map(),room={initialized:false,found:false,payload:null},fail=new Set(),cacheFails=false,holdWrite=false}={}){
+function host({data=new Map(),room={initialized:false,found:false,payload:null},fail=new Set(),cacheFails=false,holdWrite=false,holdKey='products'}={}){
+ room.workspace??={};
  const calls=[],timers=new Map();let timerId=0,held,sequence=0;
  const legacy={
   async get(key,fallback){calls.push('legacy-get:'+key);return data.has(key)?clone(data.get(key)):fallback;},
-  async set(key,value){calls.push('legacy-set:'+key);if(cacheFails&&key==='products')throw new Error('cache disk failure');data.set(key,clone(value));},
+  async set(key,value){calls.push('legacy-set:'+key);if(cacheFails&&['products','layout','posNavigation'].includes(key))throw new Error('cache disk failure');data.set(key,clone(value));},
   remove(key){calls.push('legacy-remove:'+key);data.delete(key);},
   describe:()=>({mode:'localStorage',sourceOfTruth:'local-pos'})
  };
@@ -42,8 +43,18 @@ function host({data=new Map(),room={initialized:false,found:false,payload:null},
    case 'catalogRemove':room.found=false;room.payload=null;break;
    case 'catalogParity':result={ok:true,matches:true,shadowCaughtUp:true};break;
   }
+  if(command.action.startsWith('workspace')&&!fail.has(command.action)){
+   const entry=room.workspace[command.key]??={initialized:false,found:false,payload:null};
+   switch(command.action){
+    case 'workspaceStatus':result.initialized=entry.initialized;break;
+    case 'workspaceInitialize':if(!entry.initialized){entry.initialized=true;entry.found=typeof command.payload==='string';entry.payload=entry.found?command.payload:null;}break;
+    case 'workspaceWrite':entry.found=true;entry.payload=command.payload;break;
+    case 'workspaceRead':result.found=entry.found;result.payload=entry.payload;break;
+    case 'workspaceRemove':entry.found=false;entry.payload=null;break;
+   }
+  }
   const reply=()=>context.__nativeStorageResult({...result,requestId:command.requestId});
-  if(holdWrite&&command.action==='catalogWrite')held=reply;else reply();
+  if(holdWrite&&(command.action==='catalogWrite'||command.action==='workspaceWrite')&&(command.key||'products')===holdKey)held=reply;else reply();
   return true;
  }}}};
  vm.createContext(context);vm.runInContext(adapter,context);vm.runInContext(cutover,context);
@@ -159,4 +170,64 @@ test('actual v13 validator and restore replace authoritative catalog through exi
  assert.equal(h.context.state.products[0].name,'Imported v13');assert.equal(h.data.get('criticalStorageJournal'),null);
  assert.ok(h.calls.indexOf('native:catalogWrite')<h.calls.indexOf('restore-printers'));
  const restarted=host({room:h.room,data:h.data});assert.equal((await restarted.context.MPosCore.Storage.get('products',[]))[0].name,'Imported v13');
+});
+
+test('layout and navigation migrate independently and survive stale caches on restart',async()=>{
+ const layout={categoryOrder:['Кофе','Еда'],categoryColors:{'Кофе':'#123456'},categoryOnlineOrder:{'Кофе':false},tiles:[{type:'product',id:'p1'}],custom:null};
+ const navigation={folders:[{id:'folder',name:'Кофе ☕'}],extension:{zero:0,enabled:false}};
+ const h=host({data:new Map([['layout',layout],['posNavigation',navigation]])});
+ assert.deepEqual(clone(await h.context.MPosCore.Storage.get('layout',{})),layout);
+ assert.deepEqual(clone(await h.context.MPosCore.Storage.get('posNavigation',{})),navigation);
+ h.data.set('layout',{stale:true});h.data.set('posNavigation',{stale:true});
+ const restarted=host({room:h.room,data:h.data});
+ assert.deepEqual(clone(await restarted.context.MPosCore.Storage.get('layout',{})),layout);
+ assert.deepEqual(clone(await restarted.context.MPosCore.Storage.get('posNavigation',{})),navigation);
+ assert.equal(restarted.calls.includes('legacy-get:layout'),false);
+ assert.equal(restarted.context.MPosCore.Storage.describe().workspaceSourceOfTruth,'room');
+});
+
+test('workspace initialization acknowledgements precede cache and capture submitted snapshot',async()=>{
+ const h=host({holdWrite:true,holdKey:'layout'});const layout={categoryOrder:['Captured']};
+ const saving=h.context.MPosCore.Storage.set('layout',layout);layout.categoryOrder.push('Mutated');
+ await flushUntil(()=>h.held);assert.equal(h.data.has('layout'),false);h.release();await saving;
+ assert.deepEqual(JSON.parse(h.room.workspace.layout.payload),{categoryOrder:['Captured']});
+ assert.deepEqual(h.data.get('layout'),{categoryOrder:['Captured']});
+});
+
+test('workspace native failure retains old data and cache failure does not undo durable write',async()=>{
+ const h=host({data:new Map([['layout',{old:true}]])});await h.context.MPosCore.Storage.get('layout',{});
+ h.fail.add('workspaceWrite');await assert.rejects(h.context.MPosCore.Storage.set('layout',{rejected:true}),/synthetic native failure/);
+ assert.deepEqual(JSON.parse(h.room.workspace.layout.payload),{old:true});assert.deepEqual(h.data.get('layout'),{old:true});
+ const failedCache=host({room:h.room,data:h.data,cacheFails:true});await failedCache.context.MPosCore.Storage.set('layout',{durable:true});
+ assert.deepEqual(JSON.parse(h.room.workspace.layout.payload),{durable:true});
+ assert.equal(failedCache.context.MPosCore.Storage.describe().nativeCacheFailuresByKey.layout,1);
+ assert.equal(failedCache.context.MPosCore.Storage.describe().catalogCacheFailures,0);
+});
+
+test('workspace absence null and removal remain distinct from stale legacy cache',async()=>{
+ const h=host();assert.equal(await h.context.MPosCore.Storage.get('layout','missing'),'missing');
+ await h.context.MPosCore.Storage.set('layout',null);assert.equal(await h.context.MPosCore.Storage.get('layout','missing'),null);
+ await h.context.MPosCore.Storage.remove('layout');
+ const restarted=host({room:h.room,data:new Map([['layout',{stale:true}]])});
+ assert.equal(await restarted.context.MPosCore.Storage.get('layout','missing'),'missing');
+});
+
+test('v13 restore persists products layout and navigation in native storage and preserves other domains',async()=>{
+ const h=host();const backup=fullBackup(products('Backup'));
+ backup.layout.categoryColors={'Напитки':'#123456'};backup.posNavigation={folders:[{id:'folder',name:'Folder'}]};
+ await h.context.applyBackupData(backup);
+ assert.deepEqual(JSON.parse(h.room.workspace.layout.payload).categoryColors,backup.layout.categoryColors);
+ assert.deepEqual(JSON.parse(h.room.workspace.posNavigation.payload),backup.posNavigation);
+ assert.deepEqual(h.data.get('orders'),[]);assert.equal(h.data.get('criticalStorageJournal'),null);
+ const restarted=host({room:h.room,data:h.data});
+ assert.deepEqual(clone(await restarted.context.MPosCore.Storage.get('posNavigation',{})),backup.posNavigation);
+});
+
+test('failed workspace stage of actual backup journal replays after restart',async()=>{
+ const h=host({fail:new Set(['workspaceWrite'])});const backup=fullBackup(products('Backup'));
+ await assert.rejects(h.context.applyBackupData(backup),/восстановления/);
+ assert.equal(h.data.get('criticalStorageJournal').type,'backup-import');
+ const restarted=host({room:h.room,data:h.data});assert.equal(await restarted.context.recoverCriticalStorageJournal(),true);
+ assert.deepEqual(JSON.parse(h.room.workspace.layout.payload).categoryOrder,['Напитки']);
+ assert.equal(h.data.get('criticalStorageJournal'),null);
 });

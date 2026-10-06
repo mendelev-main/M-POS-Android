@@ -38,7 +38,7 @@ This is an incremental migration, not a rewrite. Until a migrated boundary is ac
 
 ## Current authority and acceptance policy
 
-Spec 040 supersedes historical manual cutover gates below: `products` reads/writes now use Kotlin/Room with one-time durable migration; `room` is the catalog default. Full JSON remains the native source; product/category indexes are supporting structures. Layout ordering and other business storage remain legacy. Historical descriptions of false catalog flags below describe the prior stages, not current runtime configuration. Physical checks are deferred to final comprehensive acceptance by user authorization.
+Spec 040 supersedes historical manual cutover gates below: `products` reads/writes now use Kotlin/Room with one-time durable migration; `room` is the catalog default. Full JSON remains the native source; product/category indexes are supporting structures. Spec 041 also moves layout/category ordering and posNavigation documents to Kotlin/Room. Other business storage remains legacy. Historical descriptions of false catalog flags below describe the prior stages, not current runtime configuration. Physical checks are deferred to final comprehensive acceptance by user authorization.
 
 ## Planned migration order
 
@@ -121,7 +121,7 @@ Native networking must not imply automatic catalogue synchronization.
 Current first step: Android owns a non-authoritative OkHttp transport boundary exposed through `MPosCore.Network`. It can describe/probe the configured HTTPS backend. Second step adds opt-in shadow SSE observation with bounded exponential reconnect backoff and event hashes/counters; observed payloads are not forwarded into WEB-order business handlers. Legacy `EventSource` remains authoritative until parity/reconnect tests are complete. Android diagnostics now fingerprint the raw legacy `event.data` and native shadow frame with SHA-256 so parity can be observed without replaying the event into business logic. Shadow SSE is paused when the Activity backgrounds and resumes from its saved diagnostic configuration on foreground; lifecycle resume preserves the diagnostic event/reconnect counters and last hash so physical parity observation remains continuous. This lifecycle behavior does not control the legacy EventSource.
 
 #
-**P3 automated gate:** specs 013–017 are now build/lint/source-test verified. Native SSE remains diagnostic-only and non-authoritative. The remaining P3 gates are physical same-stream parity, network interruption/reconnect, and background/foreground verification on an Android device; no SSE authority cutover is permitted before those pass.
+**P3 automated gate:** specs 013–017 are now build/lint/source-test verified. Native SSE remains diagnostic-only and non-authoritative. The remaining P3 gates are physical same-stream parity, network interruption/reconnect, and background/foreground verification on an Android device; these physical cases are deferred to final acceptance; a future SSE cutover must first implement and automatically verify delivery/recovery compatibility.
 
 Spec 038 extracts bounded Kotlin SSE framing with EventSource-compatible whitespace, line endings, empty data and default/message filtering. Only diagnostic observation changes; legacy business delivery remains authoritative. Native line/frame limits prevent unbounded accumulation. Same-stream/reconnect/physical gates remain open.
 
@@ -137,7 +137,7 @@ Implemented automated recovery groundwork:
 - loyalty sale/reversal recovery statuses are projected from paid orders; existing idempotent JS/backend retry remains authoritative.
 - native recovery projections are diagnostic-only: they do not send ACK/ready/loyalty requests or mutate operational order state.
 
-Automated source/build coverage is complete through specs 018–030. WEB ready additionally uses a two-phase `prepared → pending → confirmed` journal so backend confirmation cannot start until the local current-order session and retry state are durably stored; physical offline/restart/online recovery scenarios remain required before any authority cutover.
+Automated source/build coverage is complete through specs 018–030. WEB ready additionally uses a two-phase `prepared → pending → confirmed` journal so backend confirmation cannot start until the local current-order session and retry state are durably stored; physical offline/restart/online recovery scenarios remain required for final comprehensive acceptance; per-domain automated migration checks govern immediate cutovers.
 
 **Availability policy correction (spec 033):** user decision supersedes automatic start/online/foreground publication from spec 030 on Android. After an unsuccessful or interrupted send, only the next successfully persisted payment permits another attempt. Existing stock-change/manual-sync triggers cannot bypass that gate. The Android adapter preserves shared-source checksums and existing snapshot/revision/settlement contracts; it adds no automatic catalog sync.
 
@@ -230,3 +230,7 @@ Move last. Prefer Room aggregate queries over scanning large JSON order arrays i
 - Introducing Flutter/React Native/another cross-platform runtime — ⛔
 - Changing catalogue sync semantics as part of native migration — ⛔
 - Breaking iPad backup compatibility without an explicit migration project — ⛔
+
+## Workspace persistence (041)
+
+Kotlin owns layout and posNavigation documents through independent atomic migration markers. The common JS facade routes products/layout/navigation to native reads/writes and updates secondary compatibility caches after commit. Existing UI/normalization remains JS; Compose and financial engines are not implied by storage ownership. Final physical acceptance is deferred by user.

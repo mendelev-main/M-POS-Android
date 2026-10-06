@@ -1,6 +1,6 @@
 # Native tablet acceptance evidence
 
-The user defers comprehensive physical testing until the end (2026-10-06). Spec 040 already enables products Room authority after automated checks; settings/SSE remain mirrors by implementation. Record the APK commit, tablet model, Android version, scenario, expected/actual result and pass/fail. The complete [Russian status report and user checklist](MIGRATION_STATUS_RU.md) includes current scope and metrics. Use synthetic data on a test tablet. Do not commit backup documents, tokens, device keys, photos or production records as evidence.
+The user defers comprehensive physical testing until the end (2026-10-06). Specs 040–041 already enable products/layout/posNavigation Room authority after automated checks; settings/SSE remain mirrors by implementation. Record the APK commit, tablet model, Android version, scenario, expected/actual result and pass/fail. The complete [Russian status report and user checklist](MIGRATION_STATUS_RU.md) includes current scope and metrics. Use synthetic data on a test tablet. Do not commit backup documents, tokens, device keys, photos or production records as evidence.
 
 ## P2 catalog and recovery
 
@@ -10,7 +10,7 @@ The user defers comprehensive physical testing until the end (2026-10-06). Spec 
 4. Export a synthetic v13 backup, restore on a clean test installation, reopen and verify fields, recipe/modifier data, photos and catalog comparison. Check iPad-to-Android compatibility separately when an iPad is available.
 5. Exercise rapid edits, a large synthetic history, process exit during native work, and then restart/re-mirror. A known failed/pending native write must not report healthy parity; legacy data must stay usable. Record how failure was induced rather than claiming an unperformed failure test passed.
 
-Record these results for final acceptance; products authority is already implemented by spec 040, including migration and rollback. Projection comparison now checks the Room document against its indexes; separately compare full fields against the fixture/backup.
+Record these results for final acceptance; catalog/workspace authority is already implemented by specs 040–041, including migration and rollback. Projection comparison now checks the Room document against its indexes; separately compare full fields against the fixture/backup.
 
 ## P1 printer/notification settings
 
@@ -38,3 +38,7 @@ Verify export/import/confirm/cancel, missing/corrupt photographs, shared image r
 - Scenarios not run:
 
 A report must distinguish observed physical behavior from automated assertions. Physical evidence remains pending until final acceptance; products already use native authority, while other domains retain their documented source.
+
+## Workspace ownership (041)
+
+Verify category order/colors/symbols/WEB flags and tiles/folders after edits, force-stop and restore. These documents now use Kotlin/Room; their UI rules remain shared. Confirm that a stale legacy cache cannot replace native layout on restart. Include these cases in the final comprehensive acceptance rather than blocking the next migration stage.

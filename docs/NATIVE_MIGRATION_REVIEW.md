@@ -2,7 +2,7 @@
 
 ## Current boundary
 
-**User decision 2026-10-06 / spec 040:** manual acceptance is deferred to the end; per-domain native cutovers are authorized after automated checks. Products persistence and reads are now authoritative in Kotlin/Room. Other Room domains and SSE remain shadows by implementation, rather than a blanket prohibition on cutover. Business engines/UI still use reviewed JS. Previous shadow-only descriptions below are historical context.
+**User decision 2026-10-06 / spec 040:** manual acceptance is deferred to the end; per-domain native cutovers are authorized after automated checks. Products, category layout and navigation persistence/reads are now authoritative in Kotlin/Room (040–041). Other Room domains and SSE remain shadows by implementation, rather than a blanket prohibition on cutover. Business engines/UI still use reviewed JS. Previous shadow-only descriptions below are historical context.
 
 The Android app already contains a native tablet shell and native printer, image, backup, PDF/XLSX/share and Telegram transport boundaries. The reviewed bundled POS remains responsible for payments, shifts, warehouse business rules and operational network triggers. Room projections and OkHttp SSE are comparison/diagnostic boundaries; implementations are not evidence of an accepted authority cutover.
 
@@ -13,8 +13,8 @@ Specs 002–030 establish platform settings, Room projections, networking and re
 | Sector | Concrete Kotlin benefit | Conditions and preserved behavior | Decision |
 |---|---|---|---|
 | Diagnostic report/export (P5) | Inspect printer/storage/network failures after restart, sanitize report centrally, save through Android document permissions; no backend needed | No business data or secrets; diagnostics never gate sales; manual export | Implement spec 032 now |
-| Local persistence authority (P2), one domain at a time | Room transactions, consistent writes and queries, recovery outside WebView lifecycle | Existing JSON/backup v13 compatibility, migration/rollback, physical restart and large-data evidence; keep current Room shadows non-authoritative until accepted | Highest reliability priority after acceptance evidence |
-| SSE/transport (P3) | Kotlin owns connection cancellation and lifecycle, bounded reconnect, platform networking diagnostics | First compare the same stream and interruption scenarios physically; no duplicate business event delivery, no automatic catalog sync | Keep shadow observation until acceptance, then migrate transport only |
+| Local persistence authority (P2), one domain at a time | Room transactions, consistent writes and queries, recovery outside WebView lifecycle | Existing JSON/backup v13 compatibility, migration/rollback, automated restart/recovery evidence and deferred physical large-data checks; products/layout/navigation already native; migrate other domains after automated compatibility checks | Highest reliability priority; continue domain cutovers under user-authorized policy |
+| SSE/transport (P3) | Kotlin owns connection cancellation and lifecycle, bounded reconnect, platform networking diagnostics | Compare delivery/interruption semantics automatically and retain physical cases for final acceptance; no duplicate business event delivery, no automatic catalog sync | Current shadow observation remains; implement tested transport delivery/recovery next |
 | Durable outbox/retry (P4) | Native persistence can retain operation state across WebView/process loss and coordinate idempotent sends | One retry authority, local commit before network, backend idempotency; WEB acceptance/ready, loyalty and replaceable availability have different semantics | Migrate one operation type after Room/transport acceptance |
 | Update infrastructure (P5) | Android installer integration and explicit package/signature/version checks reduce accidental incompatible updates | Requires defined trusted artifact source and stable production signing; preserve installed POS data | Separate specification once release policy is defined |
 | Cart/workspace UI (P6) | Native touch/long-press, adaptive tablet layout and fewer browser interaction quirks | State/domain contract must be stable first; totals, modifiers, discounts, held checks retain current semantics | Later, after data boundary |
@@ -51,7 +51,7 @@ No payment, stock, catalog, backup or authorization calculations are refactored 
 
 ## Automated validation
 
-- `node --test tests/*.test.cjs`: 72 passed, no failures or skips. Includes reviewed source SHA-256 parity, executed adapter/request/shift-close tests and repeatable source-sync fixture checks.
+- `node --test tests/*.test.cjs`: 78 passed, no failures or skips. Includes reviewed source SHA-256 parity, executed adapter/request/shift-close tests and repeatable source-sync fixture checks.
 - `./gradlew --no-daemon --max-workers=4 testDebugUnitTest lintDebug assembleDebug assembleRelease`: successful.
-- JVM: 66 executed tests, no failures/errors/skips. Covers diagnostics isolation, shift receipt values/multipart/native PNG, FIFO/backpressure, real Room/SQLite rollback/reopen, bounded backup input, native photo round-trip/rollback, SSE framing and checked settings persistence/cancellation.
+- JVM: 72 executed tests, no failures/errors/skips. Covers diagnostics isolation, shift receipt values/multipart/native PNG, FIFO/backpressure, real Room/SQLite rollback/reopen, bounded backup input, native photo round-trip/rollback, SSE framing and checked settings persistence/cancellation.
 - Android lint: no errors; 15 warnings (including KTX style suggestions for explicit checked settings commits; KTX edit does not expose the commit success boolean). Debug APK and minified unsigned release APK produced. Production signing, actual Telegram delivery and physical tablet acceptance are not established by these checks.

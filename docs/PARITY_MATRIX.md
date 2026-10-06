@@ -5,7 +5,7 @@ User decision 2026-10-06 allows immediate native cutovers with automated compati
 | Domain | Current state | Remaining evidence |
 |---|---|---|
 | POS interface and business modules | implemented from iPad commit `44fbf37` | Screenshot and interaction comparison on multiple tablet sizes, aspect ratios and densities |
-| Local keys and JSON records | compatible shapes retained; products source is now Kotlin/Room (040), other domains legacy | Restart, storage failure and large-data checks |
+| Local keys and JSON records | compatible shapes retained; products/layout/posNavigation source is now Kotlin/Room (040–041), other domains legacy | Restart, storage failure and large-data checks |
 | Ordered transactional Room shadow | implemented, spec 035; raw/projection writes and deletes are atomic; bounded FIFO, stale diagnostic guards | Final physical rapid writes, process exit, large histories and restore parity; products authority already switched under user decision |
 | Products, recipes and stock | web runtime implemented | Full physical sale/return matrix |
 | Payments, receipts and shifts | web runtime and native shift PDF printing implemented | Cash/card/split, restart recovery and printed output |
@@ -42,3 +42,7 @@ Native tests cover checked/delayed/failed commits, immutable commands, FIFO, cor
 ## Catalog authority (spec 040)
 
 Kotlin/Room now owns the compatible products document. One-time migration imports current legacy data over stale shadows; marker/document/indexes are atomic. Reads use full JSON, preserving unknown fields/order; writes acknowledge native commit before the secondary cache. Actual JS v13 import and critical journal recovery are automated. Other domains/layout remain legacy. Physical acceptance is deferred, not claimed complete.
+
+## Workspace authority (041)
+
+Kotlin/Room owns category layout and navigation configuration. Independent migration markers, full JSON/order preservation, native SQL rollback/reopen and actual v13/journal replay are automated. Existing rendering, normalization and permission checks stay unchanged; final tablet acceptance is pending.

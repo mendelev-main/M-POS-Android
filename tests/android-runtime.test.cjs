@@ -144,7 +144,8 @@ test('native catalog primary reads retain separate projection parity diagnostics
  assert.match(adapter,/mposCore\.Catalog/);
  assert.match(adapter,/nativeReadsEnabled:true/);
  assert.match(adapter,/getNativeSnapshot/);
- assert.match(adapter,/catalogRead/);
+ assert.match(adapter,/readNative\('products'\)/);
+ assert.match(adapter,/domainAction\(key,'Read'\)/);
 });
 
 

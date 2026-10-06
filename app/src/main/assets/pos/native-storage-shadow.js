@@ -34,35 +34,37 @@
     });
   }
 
-  let catalogReady=null;
+  const nativeKeys=new Set(['products','layout','posNavigation']);
+  const ready=new Map();
   let cacheFailures=0;
+  const cacheFailuresByKey={products:0,layout:0,posNavigation:0};
   function requireNative(result,authority=false){
-    if(!result?.ok)throw new Error(result?.reason||result?.message||'M POS native catalog operation failed');
-    if(authority&&result.authoritative!==true)throw new Error('M POS native catalog authority missing');
+    if(!result?.ok)throw new Error(result?.reason||result?.message||'M POS native storage operation failed');
+    if(authority&&result.authoritative!==true)throw new Error('M POS native storage authority missing');
     return result;
   }
-  function initializeCatalog(){
-    if(!catalogReady){
-      catalogReady=(async()=>{
-        const status=requireNative(await request('catalogStatus'));
+  function domainAction(key,action){return (key==='products'?'catalog':'workspace')+action}
+  function initializeNative(key){
+    if(!ready.has(key)){
+      const promise=(async()=>{
+        const status=requireNative(await request(domainAction(key,'Status'),{key}));
         if(status.initialized)return;
         const absent={};
-        const seed=await legacyStorage.get('products',absent);
+        const seed=await legacyStorage.get(key,absent);
         const payload=seed===absent?null:JSON.stringify(seed);
-        requireNative(await request('catalogInitialize',{payload}),true);
-      })().catch(error=>{catalogReady=null;throw error});
+        requireNative(await request(domainAction(key,'Initialize'),{key,payload}),true);
+      })().catch(error=>{ready.delete(key);throw error});
+      ready.set(key,promise);
     }
-    return catalogReady;
+    return ready.get(key);
   }
-  async function cacheCatalog(value){
-    try{await legacyStorage.set('products',value)}
-    catch(error){cacheFailures++;console.error('[MPosCatalog] compatibility cache write failed',error)}
+  async function cacheNative(key,value){
+    try{await legacyStorage.set(key,value)}
+    catch(error){cacheFailures++;cacheFailuresByKey[key]++;console.error('[MPosStorage] compatibility cache write failed',key,error)}
   }
-  async function readCatalog(){
-    await initializeCatalog();
-    const result=requireNative(await request('catalogRead'));
-    if(result.authoritative!==true)throw new Error('M POS native catalog authority missing');
-    return result;
+  async function readNative(key){
+    await initializeNative(key);
+    return requireNative(await request(domainAction(key,'Read'),{key}),true);
   }
 
   function mirrorSerialized(key,serialized){
@@ -77,31 +79,31 @@
 
   const mposStorage=Object.freeze({
     async get(key,fallback,onError){
-      if(key!=='products')return legacyStorage.get(key,fallback,onError);
+      if(!nativeKeys.has(key))return legacyStorage.get(key,fallback,onError);
       try{
-        const result=await readCatalog();
+        const result=await readNative(key);
         return result.found?JSON.parse(result.payload):fallback;
       }catch(error){
-        if(onError)onError(error);else console.error('[MPosCatalog] read failed',error);
+        if(onError)onError(error);else console.error('[MPosStorage] read failed',key,error);
         return fallback;
       }
     },
     async set(key,value){
-      if(key==='products'){
+      if(nativeKeys.has(key)){
         const payload=JSON.stringify(value);
-        await initializeCatalog();
-        requireNative(await request('catalogWrite',{payload}),true);
-        await cacheCatalog(JSON.parse(payload));
+        await initializeNative(key);
+        requireNative(await request(domainAction(key,'Write'),{key,payload}),true);
+        await cacheNative(key,JSON.parse(payload));
         return;
       }
       await legacyStorage.set(key,value);
       mirrorValue(key,value);
     },
     remove(key){
-      if(key==='products')return (async()=>{
-        await initializeCatalog();
-        requireNative(await request('catalogRemove'),true);
-        try{legacyStorage.remove(key)}catch(error){cacheFailures++;console.error('[MPosCatalog] compatibility cache remove failed',error)}
+      if(nativeKeys.has(key))return (async()=>{
+        await initializeNative(key);
+        requireNative(await request(domainAction(key,'Remove'),{key}),true);
+        try{legacyStorage.remove(key)}catch(error){cacheFailures++;cacheFailuresByKey[key]++;console.error('[MPosStorage] compatibility cache remove failed',key,error)}
       })();
       const result=legacyStorage.remove(key);
       post('remove',{key});
@@ -115,9 +117,12 @@
         nativeShadow:'room',
         nativeShadowAuthoritative:false,
         sourceOfTruth:'local-pos',
-        authoritativeKeys:['products'],
+        authoritativeKeys:[...nativeKeys],
         catalogSourceOfTruth:'room',
-        catalogCacheFailures:cacheFailures
+        catalogCacheFailures:cacheFailuresByKey.products,
+        nativeCacheFailures:cacheFailures,
+        nativeCacheFailuresByKey:{...cacheFailuresByKey},
+        workspaceSourceOfTruth:'room'
       });
     }
   });
@@ -126,9 +131,9 @@
   mposCore.Storage=mposStorage;
   mposCore.Catalog=Object.freeze({
     nativeReadsEnabled:true,
-    initialize:initializeCatalog,
+    initialize:()=>initializeNative('products'),
     async getNativeSnapshot(){
-      const result=await readCatalog();
+      const result=await readNative('products');
       return {...result,products:result.found?JSON.parse(result.payload):[]};
     },
     async parity(){
@@ -147,7 +152,7 @@
     try{
       for(let i=0;i<global.localStorage.length;i++){
         const storageKey=global.localStorage.key(i);
-        if(!storageKey||!storageKey.startsWith(legacyPrefix)||storageKey===legacyPrefix+'products')continue;
+        if(!storageKey||!storageKey.startsWith(legacyPrefix)||nativeKeys.has(storageKey.slice(legacyPrefix.length)))continue;
         const serialized=global.localStorage.getItem(storageKey);
         if(serialized!==null)mirrorSerialized(storageKey.slice(legacyPrefix.length),serialized);
       }
