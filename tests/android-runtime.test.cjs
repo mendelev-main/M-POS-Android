@@ -172,7 +172,7 @@ test('employee projection uses M POS naming and explicit Room migration',()=>{
  assert.match(repository,/mismatchedEmployeeIds/);
  assert.match(repository,/authoritative", false/);
  assert.match(mirror,/key\) \{/);
- assert.match(mirror,/"employees" -> projectEmployees/);
+ assert.match(mirror,/"employees" -> employeeStorage.project/);
  assert.match(mirror,/"employeeParity"/);
  assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
 });
@@ -195,7 +195,7 @@ test('shift and cash movement projections use explicit Room migration and remain
  assert.match(repository,/mismatchedShiftIds/);
  assert.match(repository,/mismatchedMovementIds/);
  assert.match(repository,/authoritative", false/);
- assert.match(mirror,/"shifts"\s*->\s*projectShifts\(serialized\)/);
+ assert.match(mirror,/"shifts"\s*->\s*shiftStorage.project\(serialized\)/);
  assert.match(mirror,/"shiftParity"/);
  assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
 });

@@ -34,16 +34,16 @@
     });
   }
 
-  const nativeKeys=new Set(['products','layout','posNavigation']);
+  const nativeKeys=new Set(['products','layout','posNavigation','employees','shifts']);
   const ready=new Map();
   let cacheFailures=0;
-  const cacheFailuresByKey={products:0,layout:0,posNavigation:0};
+  const cacheFailuresByKey={products:0,layout:0,posNavigation:0,employees:0,shifts:0};
   function requireNative(result,authority=false){
     if(!result?.ok)throw new Error(result?.reason||result?.message||'M POS native storage operation failed');
     if(authority&&result.authoritative!==true)throw new Error('M POS native storage authority missing');
     return result;
   }
-  function domainAction(key,action){return (key==='products'?'catalog':'workspace')+action}
+  function domainAction(key,action){return (key==='products'?'catalog':key==='employees'?'employee':key==='shifts'?'shift':'workspace')+action}
   function initializeNative(key){
     if(!ready.has(key)){
       const promise=(async()=>{
@@ -122,7 +122,7 @@
         catalogCacheFailures:cacheFailuresByKey.products,
         nativeCacheFailures:cacheFailures,
         nativeCacheFailuresByKey:{...cacheFailuresByKey},
-        workspaceSourceOfTruth:'room'
+        workspaceSourceOfTruth:'room',employeeSourceOfTruth:'room',shiftSourceOfTruth:'room'
       });
     }
   });

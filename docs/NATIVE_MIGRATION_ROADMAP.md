@@ -38,7 +38,7 @@ This is an incremental migration, not a rewrite. Until a migrated boundary is ac
 
 ## Current authority and acceptance policy
 
-Spec 040 supersedes historical manual cutover gates below: `products` reads/writes now use Kotlin/Room with one-time durable migration; `room` is the catalog default. Full JSON remains the native source; product/category indexes are supporting structures. Spec 041 also moves layout/category ordering and posNavigation documents to Kotlin/Room. Other business storage remains legacy. Historical descriptions of false catalog flags below describe the prior stages, not current runtime configuration. Physical checks are deferred to final comprehensive acceptance by user authorization.
+Spec 040 supersedes historical manual cutover gates below: `products` reads/writes now use Kotlin/Room with one-time durable migration; `room` is the catalog default. Full JSON remains the native source; product/category indexes are supporting structures. Spec 041 also moves layout/category ordering and posNavigation documents to Kotlin/Room. Employees and shifts are also authoritative (042–043); other business storage remains legacy. Historical descriptions of false catalog flags below describe the prior stages, not current runtime configuration. Physical checks are deferred to final comprehensive acceptance by user authorization.
 
 ## Planned migration order
 
@@ -57,7 +57,7 @@ This stage must not change payment, order, stock or receipt persistence.
 Spec 039 makes the native platform mirror ordered and disk-confirmed: a bounded Kotlin IO queue preserves accepted command order, checks commit results and closes with the Activity. Existing preferences/schema and legacy settings authority are retained. Failed mirror persistence does not fail a completed local settings save; physical restart/printer/notification parity remains pending.
 
 ### P2 — Core local persistence (Room)
-**Status: 🟢 In progress — products document authoritative in Kotlin/Room (040); other domains are shadows**
+**Status: 🟢 In progress — products document authoritative in Kotlin/Room (040); employees/shifts/layout/navigation also authoritative (041–043); remaining domains are shadows**
 
 Introduce a transactional Kotlin persistence layer using Room/SQLite.
 
@@ -234,3 +234,7 @@ Move last. Prefer Room aggregate queries over scanning large JSON order arrays i
 ## Workspace persistence (041)
 
 Kotlin owns layout and posNavigation documents through independent atomic migration markers. The common JS facade routes products/layout/navigation to native reads/writes and updates secondary compatibility caches after commit. Existing UI/normalization remains JS; Compose and financial engines are not implied by storage ownership. Final physical acceptance is deferred by user.
+
+## Employee and shift ownership (042–043)
+
+Employees and shifts (including cash movements) now use authoritative Kotlin/Room persistence, alongside products/layout/posNavigation/employees/shifts. Full compatible documents remain the source; typed indexes are supporting structures. Atomic migrations and failed-write rollback, stale shadow protection, restart, actual v13 import and journal recovery are covered automatically. Employee authorization and shift financial engines remain reviewed JS. Other business documents remain on legacy storage; final physical checks remain pending.

@@ -18,7 +18,7 @@ function host({data=new Map(),room={initialized:false,found:false,payload:null},
  const calls=[],timers=new Map();let timerId=0,held,sequence=0;
  const legacy={
   async get(key,fallback){calls.push('legacy-get:'+key);return data.has(key)?clone(data.get(key)):fallback;},
-  async set(key,value){calls.push('legacy-set:'+key);if(cacheFails&&['products','layout','posNavigation'].includes(key))throw new Error('cache disk failure');data.set(key,clone(value));},
+  async set(key,value){calls.push('legacy-set:'+key);if(cacheFails&&['products','layout','posNavigation','employees','shifts'].includes(key))throw new Error('cache disk failure');data.set(key,clone(value));},
   remove(key){calls.push('legacy-remove:'+key);data.delete(key);},
   describe:()=>({mode:'localStorage',sourceOfTruth:'local-pos'})
  };
@@ -43,9 +43,9 @@ function host({data=new Map(),room={initialized:false,found:false,payload:null},
    case 'catalogRemove':room.found=false;room.payload=null;break;
    case 'catalogParity':result={ok:true,matches:true,shadowCaughtUp:true};break;
   }
-  if(command.action.startsWith('workspace')&&!fail.has(command.action)){
+  if((command.action.startsWith('workspace')||command.action.startsWith('employee')||command.action.startsWith('shift'))&&!fail.has(command.action)){
    const entry=room.workspace[command.key]??={initialized:false,found:false,payload:null};
-   switch(command.action){
+   switch(command.action.replace(/^(employee|shift)/,'workspace')){
     case 'workspaceStatus':result.initialized=entry.initialized;break;
     case 'workspaceInitialize':if(!entry.initialized){entry.initialized=true;entry.found=typeof command.payload==='string';entry.payload=entry.found?command.payload:null;}break;
     case 'workspaceWrite':entry.found=true;entry.payload=command.payload;break;
@@ -135,7 +135,7 @@ test('absence null and removal preserve fallback semantics without resurrecting 
 });
 
 test('startup shadow mirroring excludes the authoritative products key',async()=>{
- const h=host({data:new Map([['products',products('Old')],['employees',[]]])});
+ const h=host({data:new Map([['products',products('Old')],['orders',[]]])});
  const startup=[...h.timers.values()].find(timer=>timer.delay===0);startup.fn();
  assert.equal(h.calls.filter(x=>x==='native:put').length,1);
  assert.equal(h.room.initialized,false);
@@ -230,4 +230,42 @@ test('failed workspace stage of actual backup journal replays after restart',asy
  const restarted=host({room:h.room,data:h.data});assert.equal(await restarted.context.recoverCriticalStorageJournal(),true);
  assert.deepEqual(JSON.parse(h.room.workspace.layout.payload).categoryOrder,['Напитки']);
  assert.equal(h.data.get('criticalStorageJournal'),null);
+});
+
+
+test('employees migrate once including roles and credentials, native failure preserves committed data',async()=>{
+ const employees=[{id:'e1',name:'Кассир',role:'employee',phone:'fixture',pinHash:'synthetic-hash',custom:{permissions:['sell']}}];
+ const h=host({data:new Map([['employees',employees]])});
+ assert.deepEqual(clone(await h.context.MPosCore.Storage.get('employees',[])),employees);
+ assert.equal(h.room.workspace.employees.payload,JSON.stringify(employees));
+ h.data.set('employees',[{id:'stale'}]);
+ assert.deepEqual(clone(await h.context.MPosCore.Storage.get('employees',[])),employees);
+ h.fail.add('employeeWrite');
+ await assert.rejects(h.context.MPosCore.Storage.set('employees',[]));
+ assert.deepEqual(clone(await h.context.MPosCore.Storage.get('employees',[])),employees);
+});
+
+test('backup v13 employee write failure leaves replayable journal and restores native employees',async()=>{
+ const h=host(),doc=fullBackup(products('Backup'));
+ doc.employees=[{id:'e1',name:'Администратор',role:'admin',custom:{preserved:true}}];
+ h.fail.add('employeeWrite');
+ await assert.rejects(vm.runInContext('applyBackupData('+JSON.stringify(doc)+')',h.context));
+ assert.ok(h.data.has('criticalStorageJournal'));
+ h.fail.delete('employeeWrite');
+ await vm.runInContext('recoverCriticalStorageJournal()',h.context);
+ assert.deepEqual(JSON.parse(h.room.workspace.employees.payload),doc.employees);
+ assert.equal(h.data.get('criticalStorageJournal'),null);
+});
+
+
+test('shifts preserve cash movements and backup replay after a native write failure',async()=>{
+ const h=host(),doc=fullBackup(products('Backup'));
+ doc.shifts=[{id:'s1',status:'closed',openingCash:12.35,countedCash:25.75,cashMovements:[{id:'m1',amount:0.25,type:'expense',note:'fixture'}],report:{extra:true}}];
+ h.fail.add('shiftWrite');
+ await assert.rejects(h.context.applyBackupData(doc));
+ h.fail.delete('shiftWrite');
+ assert.equal(await h.context.recoverCriticalStorageJournal(),true);
+ assert.deepEqual(JSON.parse(h.room.workspace.shifts.payload),doc.shifts);
+ const restarted=host({room:h.room,data:new Map([['shifts',[]]])});
+ assert.deepEqual(clone(await restarted.context.MPosCore.Storage.get('shifts',[])),doc.shifts);
 });
