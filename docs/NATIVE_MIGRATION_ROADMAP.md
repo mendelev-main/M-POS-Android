@@ -95,6 +95,8 @@ Spec 035 adds the transactional native storage foundation: one bounded Kotlin FI
 
 Spec 036 strengthens the backup recovery boundary: Kotlin enforces the existing 500 MB input limit during document-provider reads, before JSON parsing or image staging. Byte representation and v13 restoration semantics remain unchanged. Accepted-file memory usage and physical provider/restore testing remain open acceptance work.
 
+Spec 037 isolates Kotlin backup image preparation from Activity/file-picker orchestration. Actual PNG decoding, v13 round-trip fields, missing/shared image behavior and staged-file rollback are automated; existing JS restoration/confirmation and Room authority remain unchanged. Physical import/cancel/finish and restart acceptance is still required.
+
 ### P3 — Native network/SSE infrastructure
 **Status: 🟢 In progress — non-authoritative OkHttp transport boundary**
 
