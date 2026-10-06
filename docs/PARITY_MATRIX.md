@@ -1,12 +1,12 @@
 # Android parity matrix
 
-`implemented` means code exists. Only `accepted` means it passed the physical Android tablet cases.
+User decision 2026-10-06 allows immediate native cutovers with automated compatibility checks and defers comprehensive physical acceptance to the end. `implemented` means code exists. Only `accepted` means it passed the physical Android tablet cases.
 
 | Domain | Current state | Remaining evidence |
 |---|---|---|
 | POS interface and business modules | implemented from iPad commit `44fbf37` | Screenshot and interaction comparison on multiple tablet sizes, aspect ratios and densities |
-| Local keys and JSON records | implemented unchanged | Restart, storage failure and large-data checks |
-| Ordered transactional Room shadow | implemented, spec 035; raw/projection writes and deletes are atomic; bounded FIFO, stale diagnostic guards | Physical rapid writes, process exit during projection, backpressure/large histories and restore/re-mirror parity; no authority cutover |
+| Local keys and JSON records | compatible shapes retained; products source is now Kotlin/Room (040), other domains legacy | Restart, storage failure and large-data checks |
+| Ordered transactional Room shadow | implemented, spec 035; raw/projection writes and deletes are atomic; bounded FIFO, stale diagnostic guards | Final physical rapid writes, process exit, large histories and restore parity; products authority already switched under user decision |
 | Products, recipes and stock | web runtime implemented | Full physical sale/return matrix |
 | Payments, receipts and shifts | web runtime and native shift PDF printing implemented | Cash/card/split, restart recovery and printed output |
 | Purchasing, receiving and inventory | web runtime implemented | Weighted cost, draft restart and reports |
@@ -38,3 +38,7 @@ Functional JVM tests cover exact whitespace/UTF-8 data, fragmented CR/LF/CRLF, B
 ## Ordered settings persistence (spec 039)
 
 Native tests cover checked/delayed/failed commits, immutable commands, FIFO, corrupt snapshots, bounded backpressure and cancellation. Executed JS tests preserve completed local saves despite native failure. Physical process restart, low storage and printer/notification UI/native parity remain pending; native settings are not authoritative.
+
+## Catalog authority (spec 040)
+
+Kotlin/Room now owns the compatible products document. One-time migration imports current legacy data over stale shadows; marker/document/indexes are atomic. Reads use full JSON, preserving unknown fields/order; writes acknowledge native commit before the secondary cache. Actual JS v13 import and critical journal recovery are automated. Other domains/layout remain legacy. Physical acceptance is deferred, not claimed complete.

@@ -12,7 +12,7 @@ This is an incremental migration, not a rewrite. Until a migrated boundary is ac
 2. Preserve offline-first behavior and existing business semantics.
 3. Preserve `prilavok_` JSON compatibility and backup schema v13 until a dedicated data migration is accepted.
 4. Every stage must define compatibility/rollback behavior.
-5. Automated build/tests do not replace physical Android acceptance.
+5. User decision 2026-10-06 authorizes immediate native authority cutovers after automated verification; comprehensive manual Android testing is deferred to the end. Keep physical evidence pending and preserve business/backup compatibility.
 6. UI should not be moved to Compose before its state/domain boundary is stable unless the UI itself is the primary problem.
 7. Do not move business logic merely to increase the percentage of Kotlin.
 8. All new/reworked modules use `M POS` / `MPos` naming. `PrilavokCore` and `prilavok_` are compatibility-only legacy surfaces and are removed as the corresponding module is migrated.
@@ -36,6 +36,10 @@ This is an incremental migration, not a rewrite. Until a migrated boundary is ac
 | PDF/XLSX/share | ✅ | Visual/physical checks remain |
 | Telegram transport | ✅ | Business trigger logic still lives in shared runtime |
 
+## Current authority and acceptance policy
+
+Spec 040 supersedes historical manual cutover gates below: `products` reads/writes now use Kotlin/Room with one-time durable migration; `room` is the catalog default. Full JSON remains the native source; product/category indexes are supporting structures. Layout ordering and other business storage remain legacy. Historical descriptions of false catalog flags below describe the prior stages, not current runtime configuration. Physical checks are deferred to final comprehensive acceptance by user authorization.
+
 ## Planned migration order
 
 ### P1 — Android platform settings boundary
@@ -53,7 +57,7 @@ This stage must not change payment, order, stock or receipt persistence.
 Spec 039 makes the native platform mirror ordered and disk-confirmed: a bounded Kotlin IO queue preserves accepted command order, checks commit results and closes with the Activity. Existing preferences/schema and legacy settings authority are retained. Failed mirror persistence does not fail a completed local settings save; physical restart/printer/notification parity remains pending.
 
 ### P2 — Core local persistence (Room)
-**Status: 🟢 In progress — shadow persistence foundation**
+**Status: 🟢 In progress — products document authoritative in Kotlin/Room (040); other domains are shadows**
 
 Introduce a transactional Kotlin persistence layer using Room/SQLite.
 
@@ -91,7 +95,7 @@ Ninth step: held/parked checks are projected into `parked_order_projection` and 
 
 Tenth step: warehouse stock-event history is projected from the existing `receivings` and `inventoryHistory` sources into `stock_event_projection` and `stock_event_line_projection`. The legacy POS has no standalone `stockMovements` ledger; sale-side movement evidence is already covered by order lines. Product stock remains authoritative in the existing runtime until the warehouse domain is migrated.
 
-Room must become authoritative only after migration and physical restart/recovery tests pass.
+Under the user decision of 2026-10-06, Room may become authoritative per domain after automated migration/recovery checks; comprehensive physical testing is deferred to the end.
 
 Spec 035 adds the transactional native storage foundation: one bounded Kotlin FIFO processes bridge operations; raw shadow and projections commit or roll back together; reads follow writes in Room transactions. Failed/rejected/pending shadow changes are explicitly reflected in catch-up metadata, and cannot produce healthy catalog diagnostics. Local POS storage remains authoritative; physical restart, large-history and backup recovery evidence is still required.
 

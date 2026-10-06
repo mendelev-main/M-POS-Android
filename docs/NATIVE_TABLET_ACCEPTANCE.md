@@ -1,16 +1,16 @@
 # Native tablet acceptance evidence
 
-Automated results establish the implemented boundaries; they do not enable Room/settings/SSE authority. Record the APK commit, tablet model, Android version, scenario, expected/actual result and pass/fail. The complete [Russian status report and user checklist](MIGRATION_STATUS_RU.md) includes current scope and metrics. Use synthetic data on a test tablet. Do not commit backup documents, tokens, device keys, photos or production records as evidence.
+The user defers comprehensive physical testing until the end (2026-10-06). Spec 040 already enables products Room authority after automated checks; settings/SSE remain mirrors by implementation. Record the APK commit, tablet model, Android version, scenario, expected/actual result and pass/fail. The complete [Russian status report and user checklist](MIGRATION_STATUS_RU.md) includes current scope and metrics. Use synthetic data on a test tablet. Do not commit backup documents, tokens, device keys, photos or production records as evidence.
 
 ## P2 catalog and recovery
 
 1. Start with a synthetic catalog containing Unicode names, several categories, products without a category, recipes/modifiers and photo references. Record counts and expected ordering.
-2. Add, edit and delete products/categories through the existing UI. Wait for initial mirroring and compare after each completed operation. In the debug WebView console, `await MPosCore.CatalogCutover.health()` exposes mode, source and aggregate comparison. Expect `comparison.ok:true`, `comparison.matches:true`, equal counts, `activeSource:'legacy'` and `roomCutoverAllowed:false`.
+2. Add, edit and delete products/categories through the existing UI. Wait for initial mirroring and compare after each completed operation. In the debug WebView console, `await MPosCore.CatalogCutover.health()` exposes mode, source and aggregate comparison. Expect `comparison.ok:true`, `comparison.matches:true`, equal counts, `activeSource:'room'` and `roomCutoverAllowed:true`.
 3. Force-stop and reopen the app. Expect unchanged UI data and ordering; repeat comparison after mirroring. A merely green comparison is not proof of snapshot/order/business parity: inspect product data and category ordering against the test fixture too.
 4. Export a synthetic v13 backup, restore on a clean test installation, reopen and verify fields, recipe/modifier data, photos and catalog comparison. Check iPad-to-Android compatibility separately when an iPad is available.
 5. Exercise rapid edits, a large synthetic history, process exit during native work, and then restart/re-mirror. A known failed/pending native write must not report healthy parity; legacy data must stay usable. Record how failure was induced rather than claiming an unperformed failure test passed.
 
-Acceptance requires actual results for these scenarios and a reviewed migration/rollback plan; toggling the blocked room mode or changing only its flag is not a cutover implementation.
+Record these results for final acceptance; products authority is already implemented by spec 040, including migration and rollback. Projection comparison now checks the Room document against its indexes; separately compare full fields against the fixture/backup.
 
 ## P1 printer/notification settings
 
@@ -37,4 +37,4 @@ Verify export/import/confirm/cancel, missing/corrupt photographs, shared image r
 - Failures and reproduction steps:
 - Scenarios not run:
 
-A report must distinguish observed physical behavior from automated assertions. Until reviewed physical evidence is available, existing legacy authority remains enabled.
+A report must distinguish observed physical behavior from automated assertions. Physical evidence remains pending until final acceptance; products already use native authority, while other domains retain their documented source.

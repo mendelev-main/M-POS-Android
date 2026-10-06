@@ -35,18 +35,12 @@ test('failed local persistence is never mirrored as a committed operation',async
  assert.deepEqual(h.calls,['local']);assert.equal(h.data.has('orders'),false);
 });
 
-test('catalog snapshot refuses a consistent but behind native shadow',async()=>{
- const h=host();const snapshot=h.context.MPosCore.Catalog.getNativeSnapshot();
- const request=h.calls.at(-1);
- h.context.__nativeStorageResult({requestId:request.requestId,ok:true,shadowCaughtUp:false,products:[]});
- await assert.rejects(snapshot,/not caught up/);
-});
-
 test('comparison cannot report healthy parity while pending shadow changes exist',async()=>{
  const h=host();const comparison=h.context.MPosCore.CatalogCutover.compare();
  const request=h.calls.at(-1);
  h.context.__nativeStorageResult({requestId:request.requestId,ok:true,matches:true,shadowCaughtUp:false});
  const result=await comparison;assert.equal(result.ok,false);assert.equal(result.matches,false);
- assert.equal(h.context.MPosCore.CatalogCutover.activeSource(),'legacy');
- assert.throws(()=>h.context.MPosCore.CatalogCutover.setMode('room'),/physical acceptance/);
+ assert.equal(h.context.MPosCore.CatalogCutover.activeSource(),'room');
+ assert.equal(h.context.MPosCore.CatalogCutover.setMode('room'),'room');
+ assert.throws(()=>h.context.MPosCore.CatalogCutover.setMode('legacy'),/explicit code rollback/);
 });

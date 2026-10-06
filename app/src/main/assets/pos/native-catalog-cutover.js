@@ -5,11 +5,11 @@
   if(!core?.Catalog)return;
 
   const MODES=Object.freeze({
-    LEGACY:'legacy',
+    ROOM:'room',
     COMPARE:'compare'
   });
 
-  let mode=MODES.COMPARE;
+  let mode=MODES.ROOM;
   let lastComparison=null;
 
   async function compare(){
@@ -28,26 +28,23 @@
   }
 
   function setMode(nextMode){
-    if(nextMode==='room'){
-      throw new Error('M POS native catalog cutover is blocked until physical acceptance');
-    }
-    if(nextMode!==MODES.LEGACY&&nextMode!==MODES.COMPARE){
-      throw new Error('Unknown M POS catalog mode');
+    if(nextMode!==MODES.ROOM&&nextMode!==MODES.COMPARE){
+      throw new Error('Legacy catalog authority requires an explicit code rollback');
     }
     mode=nextMode;
     return mode;
   }
 
   async function health(){
-    if(mode===MODES.COMPARE){
+    if(mode===MODES.COMPARE||mode===MODES.ROOM){
       try{await compare()}catch(error){
         lastComparison={at:Date.now(),ok:false,matches:false,reason:error?.message||String(error)};
       }
     }
     return Object.freeze({
       mode,
-      roomCutoverAllowed:false,
-      activeSource:'legacy',
+      roomCutoverAllowed:true,
+      activeSource:'room',
       comparison:lastComparison?{...lastComparison}:null
     });
   }
@@ -58,8 +55,8 @@
     setMode,
     compare,
     health,
-    activeSource(){return 'legacy'},
-    roomCutoverAllowed:false
+    activeSource(){return 'room'},
+    roomCutoverAllowed:true
   });
 
   global.__mposCatalogCutoverHealth=()=>core.CatalogCutover.health();

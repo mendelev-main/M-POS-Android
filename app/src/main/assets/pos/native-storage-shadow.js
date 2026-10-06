@@ -22,14 +22,47 @@
 
   function request(action,payload){
     return new Promise((resolve,reject)=>{
-      const requestId=post(action,payload);
-      if(!requestId){reject(new Error('M POS native storage bridge unavailable'));return}
+      const requestId='storage-'+(++sequence);
       const timer=setTimeout(()=>{
         pending.delete(requestId);
-        reject(new Error('M POS native storage request timed out'));
-      },3000);
+        reject(new Error('M POS native storage request timed out; commit status is uncertain'));
+      },15000);
       pending.set(requestId,{resolve,reject,timer});
+      try{
+        if(bridge.postMessage({action,requestId,...(payload||{})})===false)throw new Error('M POS native storage bridge unavailable');
+      }catch(error){pending.delete(requestId);clearTimeout(timer);reject(error)}
     });
+  }
+
+  let catalogReady=null;
+  let cacheFailures=0;
+  function requireNative(result,authority=false){
+    if(!result?.ok)throw new Error(result?.reason||result?.message||'M POS native catalog operation failed');
+    if(authority&&result.authoritative!==true)throw new Error('M POS native catalog authority missing');
+    return result;
+  }
+  function initializeCatalog(){
+    if(!catalogReady){
+      catalogReady=(async()=>{
+        const status=requireNative(await request('catalogStatus'));
+        if(status.initialized)return;
+        const absent={};
+        const seed=await legacyStorage.get('products',absent);
+        const payload=seed===absent?null:JSON.stringify(seed);
+        requireNative(await request('catalogInitialize',{payload}),true);
+      })().catch(error=>{catalogReady=null;throw error});
+    }
+    return catalogReady;
+  }
+  async function cacheCatalog(value){
+    try{await legacyStorage.set('products',value)}
+    catch(error){cacheFailures++;console.error('[MPosCatalog] compatibility cache write failed',error)}
+  }
+  async function readCatalog(){
+    await initializeCatalog();
+    const result=requireNative(await request('catalogRead'));
+    if(result.authoritative!==true)throw new Error('M POS native catalog authority missing');
+    return result;
   }
 
   function mirrorSerialized(key,serialized){
@@ -44,13 +77,32 @@
 
   const mposStorage=Object.freeze({
     async get(key,fallback,onError){
-      return legacyStorage.get(key,fallback,onError);
+      if(key!=='products')return legacyStorage.get(key,fallback,onError);
+      try{
+        const result=await readCatalog();
+        return result.found?JSON.parse(result.payload):fallback;
+      }catch(error){
+        if(onError)onError(error);else console.error('[MPosCatalog] read failed',error);
+        return fallback;
+      }
     },
     async set(key,value){
+      if(key==='products'){
+        const payload=JSON.stringify(value);
+        await initializeCatalog();
+        requireNative(await request('catalogWrite',{payload}),true);
+        await cacheCatalog(JSON.parse(payload));
+        return;
+      }
       await legacyStorage.set(key,value);
       mirrorValue(key,value);
     },
     remove(key){
+      if(key==='products')return (async()=>{
+        await initializeCatalog();
+        requireNative(await request('catalogRemove'),true);
+        try{legacyStorage.remove(key)}catch(error){cacheFailures++;console.error('[MPosCatalog] compatibility cache remove failed',error)}
+      })();
       const result=legacyStorage.remove(key);
       post('remove',{key});
       return result;
@@ -62,7 +114,10 @@
         runtimeNamespace:'MPosCore',
         nativeShadow:'room',
         nativeShadowAuthoritative:false,
-        sourceOfTruth:'local-pos'
+        sourceOfTruth:'local-pos',
+        authoritativeKeys:['products'],
+        catalogSourceOfTruth:'room',
+        catalogCacheFailures:cacheFailures
       });
     }
   });
@@ -70,11 +125,11 @@
   const mposCore=global.MPosCore=global.MPosCore||{};
   mposCore.Storage=mposStorage;
   mposCore.Catalog=Object.freeze({
-    nativeReadsEnabled:false,
+    nativeReadsEnabled:true,
+    initialize:initializeCatalog,
     async getNativeSnapshot(){
-      const result=await request('catalogSnapshot');
-      if(!result?.ok||result?.shadowCaughtUp===false)throw new Error(result?.reason||result?.message||'M POS native catalog unavailable or not caught up');
-      return result;
+      const result=await readCatalog();
+      return {...result,products:result.found?JSON.parse(result.payload):[]};
     },
     async parity(){
       return request('catalogParity');
@@ -92,7 +147,7 @@
     try{
       for(let i=0;i<global.localStorage.length;i++){
         const storageKey=global.localStorage.key(i);
-        if(!storageKey||!storageKey.startsWith(legacyPrefix))continue;
+        if(!storageKey||!storageKey.startsWith(legacyPrefix)||storageKey===legacyPrefix+'products')continue;
         const serialized=global.localStorage.getItem(storageKey);
         if(serialized!==null)mirrorSerialized(storageKey.slice(legacyPrefix.length),serialized);
       }

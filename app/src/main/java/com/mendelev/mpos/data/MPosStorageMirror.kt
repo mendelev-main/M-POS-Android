@@ -18,9 +18,9 @@ class MPosStorageMirror(
 
     fun handle(payload: JSONObject) {
         val action = payload.optString("action")
-        val key = payload.optString("key")
+        val key = if (action.startsWith("catalog") && action in setOf("catalogInitialize", "catalogWrite", "catalogRemove")) "products" else payload.optString("key")
         val command = Command(action, payload.optString("requestId"), key, payload.opt("payload") as? String, payload.optString("sourceKey"),
-            if (key.isNotBlank() && action in setOf("put", "remove")) writeState.request(key) else null)
+            if (key.isNotBlank() && action in setOf("put", "remove", "catalogInitialize", "catalogWrite", "catalogRemove")) writeState.request(key) else null)
         if (!queue.submit({ result(command.requestId, false, "native shadow command failed") }) { dispatch(command) }) {
             result(command.requestId, false, "native shadow queue is full or closed")
         }
@@ -67,6 +67,7 @@ class MPosStorageMirror(
     }
     private val shadowDao = database.legacyStorageShadowDao()
     private val catalogDao = database.catalogProjectionDao()
+    private val catalogStorage = MPosCatalogStorage(database)
     private val catalogRepository = MPosCatalogRepository(database)
     private val employeeDao = database.employeeProjectionDao()
     private val employeeRepository = MPosEmployeeRepository(database)
@@ -91,7 +92,29 @@ class MPosStorageMirror(
             result(requestId, false, "native shadow has unapplied changes")
             return
         }
+        if (command.key == "products" && command.action in setOf("put", "remove")) {
+            val owned = attempt { catalogStorage.isAuthoritative() }
+            if (owned.isFailure) { result(requestId, false, "native catalog ownership check failed"); return }
+            if (owned.getOrThrow()) {
+                command.version?.let { writeState.commit("products", it) }
+                emitResult(JSONObject().put("requestId", requestId).put("ok", true).put("authoritative", true).put("ignored", true))
+                return
+            }
+        }
         when (command.action) {
+            "catalogStatus", "catalogInitialize", "catalogRead", "catalogWrite", "catalogRemove" -> {
+                attempt {
+                    val value = when (command.action) {
+                        "catalogStatus" -> JSONObject().put("ok", true).put("initialized", catalogStorage.isAuthoritative()).put("source", "room-catalog")
+                        "catalogInitialize" -> catalogStorage.initialize(command.serialized)
+                        "catalogWrite" -> catalogStorage.write(requireNotNull(command.serialized))
+                        "catalogRemove" -> catalogStorage.remove()
+                        else -> catalogStorage.read()
+                    }
+                    command.version?.let { writeState.commit("products", it) }
+                    value.put("requestId", requestId)
+                }.onSuccess(::emitResult).onFailure { result(requestId, false, "native catalog operation failed") }
+            }
             "put" -> {
                 val key = command.key
                 val serialized = command.serialized
@@ -377,49 +400,7 @@ class MPosStorageMirror(
         }
     }
 
-    private suspend fun projectCatalog(serialized: String) {
-        val source = JSONArray(serialized)
-        val now = System.currentTimeMillis()
-        val products = ArrayList<ProductProjectionEntity>(source.length())
-        val categoryOrder = linkedMapOf<String, Int>()
-        val categoryCounts = linkedMapOf<String, Int>()
-
-        for (index in 0 until source.length()) {
-            val product = source.optJSONObject(index) ?: continue
-            val id = product.optString("id").trim()
-            if (id.isEmpty()) continue
-
-            val category = product.optString("category").trim().ifEmpty { "Без категории" }
-            if (!categoryOrder.containsKey(category)) categoryOrder[category] = categoryOrder.size
-            categoryCounts[category] = (categoryCounts[category] ?: 0) + 1
-
-            products += ProductProjectionEntity(
-                id = id,
-                name = product.optString("name"),
-                category = category,
-                type = product.optString("type", "simple"),
-                sortIndex = index,
-                payload = product.toString(),
-                updatedAt = now,
-            )
-        }
-
-        val categories = categoryOrder.map { (name, sortIndex) ->
-            CategoryProjectionEntity(
-                name = name,
-                sortIndex = sortIndex,
-                productCount = categoryCounts[name] ?: 0,
-                updatedAt = now,
-            )
-        }
-
-        database.withTransaction {
-            catalogDao.clearProducts()
-            catalogDao.clearCategories()
-            if (products.isNotEmpty()) catalogDao.insertProducts(products)
-            if (categories.isNotEmpty()) catalogDao.insertCategories(categories)
-        }
-    }
+    private suspend fun projectCatalog(serialized: String) = catalogStorage.project(serialized)
 
     private suspend fun projectEmployees(serialized: String) {
         val source = JSONArray(serialized)

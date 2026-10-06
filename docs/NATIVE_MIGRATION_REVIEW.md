@@ -2,6 +2,8 @@
 
 ## Current boundary
 
+**User decision 2026-10-06 / spec 040:** manual acceptance is deferred to the end; per-domain native cutovers are authorized after automated checks. Products persistence and reads are now authoritative in Kotlin/Room. Other Room domains and SSE remain shadows by implementation, rather than a blanket prohibition on cutover. Business engines/UI still use reviewed JS. Previous shadow-only descriptions below are historical context.
+
 The Android app already contains a native tablet shell and native printer, image, backup, PDF/XLSX/share and Telegram transport boundaries. The reviewed bundled POS remains responsible for payments, shifts, warehouse business rules and operational network triggers. Room projections and OkHttp SSE are comparison/diagnostic boundaries; implementations are not evidence of an accepted authority cutover.
 
 Specs 002–030 establish platform settings, Room projections, networking and recovery groundwork. Spec 031 starts a 200-entry metadata breadcrumb trail. The parity matrix still requires physical recovery, printer and tablet interaction evidence. Proceed by completing a useful boundary, rather than replacing working business logic solely because Kotlin is available.
@@ -49,7 +51,7 @@ No payment, stock, catalog, backup or authorization calculations are refactored 
 
 ## Automated validation
 
-- `node --test tests/*.test.cjs`: 61 passed, no failures or skips. Includes reviewed source SHA-256 parity, executed adapter/request/shift-close tests and repeatable source-sync fixture checks.
+- `node --test tests/*.test.cjs`: 72 passed, no failures or skips. Includes reviewed source SHA-256 parity, executed adapter/request/shift-close tests and repeatable source-sync fixture checks.
 - `./gradlew --no-daemon --max-workers=4 testDebugUnitTest lintDebug assembleDebug assembleRelease`: successful.
-- JVM: 58 executed tests, no failures/errors/skips. Covers diagnostics isolation, shift receipt values/multipart/native PNG, FIFO/backpressure, real Room/SQLite rollback/reopen, bounded backup input, native photo round-trip/rollback, SSE framing and checked settings persistence/cancellation.
+- JVM: 66 executed tests, no failures/errors/skips. Covers diagnostics isolation, shift receipt values/multipart/native PNG, FIFO/backpressure, real Room/SQLite rollback/reopen, bounded backup input, native photo round-trip/rollback, SSE framing and checked settings persistence/cancellation.
 - Android lint: no errors; 15 warnings (including KTX style suggestions for explicit checked settings commits; KTX edit does not expose the commit success boolean). Debug APK and minified unsigned release APK produced. Production signing, actual Telegram delivery and physical tablet acceptance are not established by these checks.

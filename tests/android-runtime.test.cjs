@@ -70,7 +70,7 @@ test('native Android settings boundary is isolated from POS business storage',()
 });
 
 
-test('Room shadow storage preserves legacy keys without becoming authoritative',()=>{
+test('hybrid local storage makes products native while preserving other legacy domains',()=>{
  const appBuild=fs.readFileSync(path.join(root,'app/build.gradle.kts'),'utf8');
  const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
  const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/LegacyStorageShadowEntity.kt'),'utf8');
@@ -89,7 +89,7 @@ test('Room shadow storage preserves legacy keys without becoming authoritative',
 });
 
 
-test('native catalog projection is structured, migrated, and non-authoritative',()=>{
+test('native catalog storage owns its document and preserves structured indexes',()=>{
  const db=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosDatabase.kt'),'utf8');
  const product=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/ProductProjectionEntity.kt'),'utf8');
  const category=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/CategoryProjectionEntity.kt'),'utf8');
@@ -102,7 +102,7 @@ test('native catalog projection is structured, migrated, and non-authoritative',
  assert.match(dao,/clearProducts/);
  assert.match(mirror,/"products"\s*->\s*projectCatalog\(serialized\)/);
  assert.match(mirror,/projectCatalog/);
- assert.match(mirror,/"Без категории"/);
+ assert.match(fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosCatalogStorage.kt'),'utf8'),/"Без категории"/);
  assert.match(mirror,/authoritative", false/);
 });
 
@@ -133,7 +133,7 @@ test('new migration rules enforce M POS naming while retaining explicit compatib
 });
 
 
-test('native catalog read contract is feature-gated and parity-protected',()=>{
+test('native catalog primary reads retain separate projection parity diagnostics',()=>{
  const repository=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosCatalogRepository.kt'),'utf8');
  const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  const adapter=fs.readFileSync(path.join(assets,'native-storage-shadow.js'),'utf8');
@@ -142,21 +142,19 @@ test('native catalog read contract is feature-gated and parity-protected',()=>{
  assert.match(repository,/source", "room-projection"/);
  assert.match(mirror,/"catalogSnapshot"/);
  assert.match(adapter,/mposCore\.Catalog/);
- assert.match(adapter,/nativeReadsEnabled:false/);
+ assert.match(adapter,/nativeReadsEnabled:true/);
  assert.match(adapter,/getNativeSnapshot/);
- assert.match(adapter,/catalogSnapshot/);
+ assert.match(adapter,/catalogRead/);
 });
 
 
-test('catalog cutover controller defaults to compare and blocks Room activation',()=>{
+test('catalog authority defaults to Room under deferred comprehensive tablet acceptance',()=>{
  const controller=fs.readFileSync(path.join(assets,'native-catalog-cutover.js'),'utf8');
- assert.match(controller,/COMPARE:'compare'/);
- assert.match(controller,/let mode=MODES\.COMPARE/);
- assert.match(controller,/activeSource:'legacy'/);
- assert.match(controller,/roomCutoverAllowed:false/);
- assert.match(controller,/nextMode==='room'/);
- assert.match(controller,/blocked until physical acceptance/);
- assert.doesNotMatch(controller,/activeSource:'room'/);
+ assert.match(controller,/ROOM:'room'/);
+ assert.match(controller,/let mode=MODES\.ROOM/);
+ assert.match(controller,/activeSource:'room'/);
+ assert.match(controller,/roomCutoverAllowed:true/);
+ assert.match(controller,/explicit code rollback/);
 });
 
 
