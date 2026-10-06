@@ -85,3 +85,15 @@ Business issue for separate refactor: existing cross-shift refund drawer calcula
 - Restart and export/import v13; verify attributed returns remain. Old records without return shift use original-shift fallback and must not be guessed into another shift.
 
 Status: pending physical tablet execution; automated coverage is not physical acceptance.
+
+## 050 — Atomic return persistence
+
+- Cash/card/split full returns: stock equals historical stockConsumption even after changing the recipe; card money is returned separately through the bank terminal.
+- Return with changed noStockTracking: historical tracked quantities still restore; deleted historical stock product rejects the entire operation.
+- Attempt a duplicate return; confirm no second stock restoration/movement. Restart after a return and compare drawer, history and v13 export/import.
+- Interrupt acknowledgement/storage during return; reload before further critical actions if result is uncertain. Confirm either the full return persisted or none of it did; never mixed receipt/stock/cash state.
+- Import a pre-return synthetic backup, return again; old command markers must not suppress the new return.
+- Legacy receipt without stockConsumption uses the old restoration path. After recipe edits the original ingredient mix cannot be reconstructed; flag this business limitation for later review.
+- Verify loyalty reversal after persisted return and no availability send/retry from the return itself. Failed availability retry remains gated by the next persisted payment.
+
+Physical status: pending, deferred by user instruction.

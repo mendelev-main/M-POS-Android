@@ -154,6 +154,25 @@
       return result;
     }
   });
+  mposCore.Returns=Object.freeze({
+    async commit(command){
+      const payload=JSON.stringify(command);
+      await Promise.all(['products','shifts','orders','criticalStorageJournal'].map(initializeNative));
+      let result;
+      try{result=await request('returnCommit',{payload})}
+      catch(error){
+        if(!String(error?.message).includes('commit status is uncertain'))throw error;
+        result=await request('returnCommit',{payload});
+      }
+      requireNative(result,true);
+      // Native commit owns these documents; obsolete secondary caches must not be reimported.
+      for(const key of ['products','shifts','orders']){
+        try{legacyStorage.remove(key)}catch(error){cacheFailures++;cacheFailuresByKey[key]++;console.error('[MPosStorage] return cache invalidation failed',key,error)}
+      }
+      global.MPosCore?.ReceiptsHistory?.invalidate();
+      return result;
+    }
+  });
   mposCore.Receipts=Object.freeze({
     async page(offset=0,limit=50){
       await initializeNative('orders');

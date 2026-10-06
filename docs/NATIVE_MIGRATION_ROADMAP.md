@@ -270,3 +270,9 @@ Business issue for separate refactor: existing cross-shift refund drawer calcula
 ## Shift accounting correction and partial P8 migration (049)
 
 MPosShiftAccounting now supplies native delivery cash validation. Android shift totals, return cash guards, history and print/Telegram report payloads use the same tested rules through an adapter. Sales stay in their sale shift; refunds reduce the execution shift. Full-return persistence and shift open/close commands remain JS/journal boundaries. Next: atomic Kotlin full return; retain historical stockConsumption and documented legacy fallback. Spec 049 corrects the cross-shift defect intentionally preserved in 048.
+
+## Atomic full return (050)
+
+Historical stockConsumption receipts now return through MPosReturnCommand: native snapshot/receipt/cash validation, historical stock restoration and one transactional product/shift/receipt/marker commit. Exact retries do not duplicate the return; restored pre-return archives reject stale acknowledgements. Legacy receipts retain the reviewed journal/current-recipe path. P7 remains partial: price/discount/recipe expansion, legacy returns, loyalty transport and UI are still outside this command.
+
+Next boundary: native deposit/withdrawal commands, then shift open/close. Keep the 049 accounting fixtures and v13 compatibility throughout.

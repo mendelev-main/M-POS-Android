@@ -82,3 +82,7 @@ Business issue for separate refactor: existing cross-shift refund drawer calcula
 ## Shift accounting (049)
 
 Approved business correction: cross-shift refunds reduce the return shift's cash/card revenue and preserve the closed sale shift's totals. Kotlin native delivery guard and Android JS UI/report/return guards share synthetic fixtures. Backup v13 and existing records unchanged. Older records without returnedShiftId use their original shift; no inferred repair. Physical same/cross-shift cash/card/split return, closing report image and print acceptance remain pending.
+
+## Atomic full return (050)
+
+Historical receipts use Kotlin transactional return with original stockConsumption, original payment parts, current return shift and preserved JSON extensions/position. Unknown acknowledgement retries the identical command once; unresolved status requires reload. Legacy no-consumption receipts retain current-recipe restoration and journal. No new backend/availability effects; loyalty starts after local acknowledgement. SQLite rollback/reopen/restored-backup and actual JS workflow tests are automated; tablet/terminal/Telegram/print checks remain pending.
