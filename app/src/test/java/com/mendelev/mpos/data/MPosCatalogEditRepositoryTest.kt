@@ -27,4 +27,18 @@ class MPosCatalogEditRepositoryTest {
             assertEquals(products,MPosCatalogStorage(db).read().getString("payload"))
         }finally{db.close()}
     }
+    @Test fun recipeEditorResolvesAuthoritativeCatalogueAndDoesNotPersistDraft()=runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(),MPosDatabase::class.java).build()
+        try{
+            val products="""[{"id":"p","type":"simple","name":"Milk"}]"""
+            MPosCatalogStorage(db).initialize(products)
+            val input=JSONObject("""{"version":1,"operation":"recipe","draft":{"id":"d","name":"Drink","type":"composite","components":[{"productId":"fake","qty":1}]},"products":[{"id":"fake","type":"simple"}]}""")
+            assertFalse(MPosRecipeEditRepository(db).calculate(input.toString()).getBoolean("allowed"))
+            input.getJSONObject("draft").getJSONArray("components").getJSONObject(0).put("productId","p")
+            val result=MPosRecipeEditRepository(db).calculate(input.toString());assertTrue(result.getBoolean("allowed"))
+            assertEquals("p",result.getJSONArray("ingredients").getJSONObject(0).getString("productId"))
+            assertEquals(products,MPosCatalogStorage(db).read().getString("payload"))
+        }finally{db.close()}
+    }
+
 }

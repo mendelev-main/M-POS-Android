@@ -1,0 +1,2479 @@
+[
+  {
+    "input": {
+      "version": 1,
+      "operation": "recipe",
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "draft": {
+        "id": "draft",
+        "type": "composite",
+        "name": "New",
+        "components": []
+      }
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Проверьте состав товара: New"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "recipe",
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "draft": {
+        "id": "draft",
+        "type": "composite",
+        "name": "New",
+        "components": [
+          {
+            "productId": "a",
+            "qty": 2
+          }
+        ]
+      }
+    },
+    "expected": {
+      "allowed": true,
+      "ingredients": [
+        {
+          "productId": "a",
+          "qty": 2
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "recipe",
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "draft": {
+        "id": "draft",
+        "type": "composite",
+        "name": "New",
+        "components": [
+          {
+            "productId": "b",
+            "qty": 0.5
+          },
+          {
+            "productId": "a",
+            "qty": 0.25
+          }
+        ]
+      }
+    },
+    "expected": {
+      "allowed": true,
+      "ingredients": [
+        {
+          "productId": "a",
+          "qty": 1.25
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "recipe",
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "draft": {
+        "id": "draft",
+        "type": "composite",
+        "name": "New",
+        "components": [
+          {
+            "productId": "missing",
+            "qty": 1
+          }
+        ]
+      }
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Товар или ингредиент не найден"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "recipe",
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "draft": {
+        "id": "draft",
+        "type": "composite",
+        "name": "New",
+        "components": [
+          {
+            "productId": "cycle",
+            "qty": 1
+          }
+        ]
+      }
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Циклический состав: Loop"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "recipe",
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "draft": {
+        "id": "draft",
+        "type": "composite",
+        "name": "New",
+        "components": [
+          {
+            "productId": "a",
+            "qty": 0
+          }
+        ]
+      }
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Количество ингредиента должно быть больше нуля"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "recipe",
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "draft": {
+        "id": "draft",
+        "type": "composite",
+        "name": "New",
+        "components": [
+          {
+            "productId": "a",
+            "qty": -1
+          }
+        ]
+      }
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Количество ингредиента должно быть больше нуля"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "recipe",
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "draft": {
+        "id": "draft",
+        "type": "composite",
+        "name": "New",
+        "components": [
+          {
+            "productId": "a",
+            "qty": "2"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "allowed": true,
+      "ingredients": [
+        {
+          "productId": "a",
+          "qty": 2
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "recipe",
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "draft": {
+        "id": "draft",
+        "type": "composite",
+        "name": "New",
+        "components": [
+          {
+            "productId": "a",
+            "qty": [
+              2
+            ]
+          }
+        ]
+      }
+    },
+    "expected": {
+      "allowed": true,
+      "ingredients": [
+        {
+          "productId": "a",
+          "qty": 2
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "recipe",
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "draft": {
+        "id": "draft",
+        "type": "composite",
+        "name": "New",
+        "components": [
+          {
+            "productId": "a",
+            "qty": "\u001f2"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Количество ингредиента должно быть больше нуля"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "recipe",
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "draft": {
+        "id": "draft",
+        "type": "composite",
+        "name": "New",
+        "components": [
+          {
+            "productId": "a",
+            "qty": " 2﻿"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "allowed": true,
+      "ingredients": [
+        {
+          "productId": "a",
+          "qty": 2
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "recipe",
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "draft": {
+        "id": "draft",
+        "type": "composite",
+        "name": "New",
+        "components": [
+          {
+            "productId": "missing",
+            "qty": 1
+          },
+          null
+        ]
+      }
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Товар или ингредиент не найден"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "recipe",
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "draft": {
+        "id": "draft",
+        "type": "composite",
+        "name": "New",
+        "components": [
+          {
+            "productId": "a",
+            "qty": 2
+          },
+          null
+        ]
+      }
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Некорректный ингредиент: New"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 0,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 0,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": true,
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 0,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 1,
+              "priceDelta": -2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 0,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 1,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": true,
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 0,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 1,
+              "priceDelta": -2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 0,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": -1,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Количество модификатора должно быть больше нуля"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 0,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": "2",
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": true,
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 0,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 2,
+              "priceDelta": -2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 1,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 0,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": true,
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 1,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 1,
+              "priceDelta": -2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 1,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 1,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": true,
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 1,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 1,
+              "priceDelta": -2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 1,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": -1,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Количество модификатора должно быть больше нуля"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 1,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": "2",
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": true,
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 1,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 2,
+              "priceDelta": -2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 2,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 0,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Проверьте минимум и максимум группы: Size"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 2,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 1,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Проверьте минимум и максимум группы: Size"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 2,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": -1,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Проверьте минимум и максимум группы: Size"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 2,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": "2",
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Проверьте минимум и максимум группы: Size"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": "2",
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 0,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Проверьте минимум и максимум группы: Size"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": "2",
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 1,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Проверьте минимум и максимум группы: Size"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": "2",
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": -1,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Проверьте минимум и максимум группы: Size"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": "2",
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": "2",
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Проверьте минимум и максимум группы: Size"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": -1,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 0,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": true,
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 0,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 1,
+              "priceDelta": -2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": -1,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 1,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": true,
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 0,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 1,
+              "priceDelta": -2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": -1,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": -1,
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Количество модификатора должно быть больше нуля"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": -1,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": "2",
+              "priceDelta": -2,
+              "default": true
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": true,
+      "groups": [
+        {
+          "id": "g",
+          "name": "Size",
+          "min": 0,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "posName": "Milk",
+              "qty": 2,
+              "priceDelta": -2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Group",
+          "min": 0,
+          "max": 2,
+          "options": []
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": []
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Добавьте варианты в группу: Group"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Group",
+          "min": 0,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "missing",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Выберите существующий товар для каждого модификатора"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Group",
+          "min": 0,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "b",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Выберите существующий товар для каждого модификатора"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "modifiers",
+      "editingId": "b",
+      "type": "simple",
+      "recipeYield": 1,
+      "products": [
+        {
+          "id": "a",
+          "type": "simple",
+          "name": "Milk",
+          "noStockTracking": true
+        },
+        {
+          "id": "b",
+          "type": "composite",
+          "name": "Latte",
+          "components": [
+            {
+              "productId": "a",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "id": "cycle",
+          "type": "composite",
+          "name": "Loop",
+          "components": [
+            {
+              "productId": "cycle",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "id": "g",
+          "name": "Group",
+          "min": 0,
+          "max": 2,
+          "options": [
+            {
+              "id": "o",
+              "productId": "a",
+              "qty": 1
+            },
+            {
+              "id": "o2",
+              "productId": "a",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "generatedIds": [
+        {
+          "id": "g",
+          "options": [
+            "o",
+            "o2"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Товар повторяется в группе: Group"
+    }
+  }
+]

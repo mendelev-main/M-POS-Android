@@ -357,3 +357,7 @@ Cancel/modal replacement/pending checkout, restart/backup v13.
 ## Этап 080
 
 080 pending: категории add/rename/color/symbol/menu/order; duplicate/used delete; type edit с units/dependencies/unreturned/returned receipt; фото offline; rapid modal/form changes; restart/v13; без availability от редактирования.
+
+## Этап 081
+
+081 pending: nested/shared/cycle/missing recipes, units/yield, modifier name/min/max/self/duplicate/negative qty; 0→1 и default omission source rules; new IDs/reopen/v13; delta price/stock/return; rapid edit/close/double save; фото offline, без новых network triggers.

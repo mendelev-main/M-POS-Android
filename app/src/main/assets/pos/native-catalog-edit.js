@@ -9,7 +9,7 @@
   const busy=()=>state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||global.MPosCore.OrderContext?.hasPending()||global.MPosCore.CartOperations?.hasPending()||global.MPosCore.SplitPayments?.hasPending();
   const root=()=>document.getElementById('modal-root');
   const value=id=>document.getElementById(id)?.value||'';
-  const form=()=>JSON.stringify([Array.from(root()?.querySelectorAll?.('input,select,textarea')||[],n=>[n.id,n.value,n.checked]),global._pmType,global._pmComponents,global._pmModifierGroups,global._cmOnlineMenu,global._cmOnlineOrder]);
+  const form=()=>JSON.stringify([Array.from(root()?.querySelectorAll?.('input,select,textarea')||[],n=>[n.id,n.value,n.checked]),global._pmEditingId,global._pmType,global._pmComponents,global._pmModifierGroups,global._cmOnlineMenu,global._cmOnlineOrder]);
   async function decide(request,apply){
     if(pending||busy()){flash('Дождитесь завершения изменения данных');return;}
     pending=true;const before=stamp(),modal=root(),fields=form(),generation=global.MPosCore.OrderContext?.generation();
@@ -30,7 +30,7 @@
     if(type==='composite'&&components.length&&value('pf-name').trim()){
       try{productIngredients({id:editingId||null,name:value('pf-name').trim(),type,components});}catch(error){flash(error.message);return;}
     }
-    return decide({version:1,operation:'product',editingId:editingId??null,name:value('pf-name'),type,components},()=>originalSave(editingId));
+    return decide({version:1,operation:'product',editingId:editingId??null,name:value('pf-name'),type,components},async()=>{if(global.MPosCore.ProductRecipes?.enabled()&&!await global.MPosCore.ProductRecipes.prepareModifiers(editingId))return;return originalSave(editingId);});
   };
   const originalCategory=global.saveCategory,originalChannel=global.toggleCategoryChannel,originalDelete=global.deleteCategory;
   function patch(result){

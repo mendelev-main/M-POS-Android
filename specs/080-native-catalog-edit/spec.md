@@ -46,3 +46,7 @@ category final writes не объединены в transaction. Эти прав�
 молча. Recipe/modifier validation переходит в 081, остальные формы — 102.
 
 После публикации: 79/110 (71,82%), остаётся 31. Следующий 081 — рецепт/модификаторы.
+
+## Этап 081
+
+081 ставит native recipe gate перед 080 policy и native modifier gate после него; matching cache исключает повторное source вычисление. Editor auth/media/write handler остаётся прежним.

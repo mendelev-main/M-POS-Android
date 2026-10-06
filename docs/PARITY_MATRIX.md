@@ -277,3 +277,7 @@ Physical acceptance pending; UI/receipt builder ещё WebView/source.
 ## Этап 080
 
 080: 45 actual category source fixture, history/returned/units/dependency и Room authority, object references/save order/stale/protocol/failure проверены. Physical pending, product form/media и category write plumbing остаются source.
+
+## Этап 081
+
+081: 37 source fixtures, generated IDs/yield, authoritative Room catalogue, save decision order/cache bypass, source rollback/Infinity compatibility и stale/protocol/failure проверены автоматически. Physical pending; полный editor/native UI не заявлен.
