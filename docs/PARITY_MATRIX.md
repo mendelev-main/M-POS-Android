@@ -226,3 +226,11 @@ Tender и сдача обычной оплаты рассчитаны Kotlin в 
 buttons пока WebView, Compose не подключён. Backup v13 без изменений.
 Rollback: MPosNativeCashPaymentEnabled=false.
 `specs/070-native-ordinary-cash/spec.md`; физическая приёмка ожидается.
+
+
+071: по запросу дизайна подключены repo frontend-design и mpos-native-design
+(AGENTS.md). MPosNativeTheme централизует палитру, offline Manrope, веса, кнопки
+и окна. Переработаны текущая смена, история, выбор сотрудника; cash/card/close
+forms получили тот же стиль. Presentation-only: финансовые/auth/storage/v13
+контракты сохранены. `docs/NATIVE_DESIGN_SYSTEM.md` и
+`specs/071-native-pos-design/spec.md`; физическая приёмка ожидается.

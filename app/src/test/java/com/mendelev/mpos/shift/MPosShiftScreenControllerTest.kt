@@ -40,7 +40,7 @@ class MPosShiftScreenControllerTest {
         controller.result(response)
         assertFalse(descendants(host).filterIsInstance<TextView>().any { it.text.toString() == "Закрыть смену" })
         controller.result(response.put("requestId", second))
-        assertTrue(descendants(host).filterIsInstance<TextView>().any { it.text.toString() == "80.00 BYN" })
+        assertTrue(descendants(host).filterIsInstance<TextView>().any { it.text.toString() == "80,00 BYN" })
         descendants(host).filterIsInstance<Button>().single { it.text.toString() == "Закрыть смену" }.performClick()
         assertEquals("close", actions.single().getString("action")); assertEquals("s1", actions.single().getString("shiftId"))
         assertEquals(View.GONE, host.getChildAt(0).visibility)

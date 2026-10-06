@@ -2,11 +2,11 @@ package com.mendelev.mpos.payment
 
 import com.mendelev.mpos.R
 import com.mendelev.mpos.data.MPosJsonNumbers
+import com.mendelev.mpos.ui.MPosNativeTheme
 import android.app.AlertDialog
 import android.content.Context
 import android.text.InputType
 import android.text.InputFilter
-import android.view.ContextThemeWrapper
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -31,7 +31,8 @@ class MPosSplitCashDialog(private val context: Context, private val action: (JSO
         if (!amount.isFinite() || amount < 0 || (!editing && amount == 0.0) || !initial.isFinite() || initial < 0) return
         dismiss(); token = next
         val dark = payload.optString("theme") == "dark"
-        val themed = ContextThemeWrapper(context, if (dark) android.R.style.Theme_Material_Dialog_Alert else android.R.style.Theme_Material_Light_Dialog_Alert)
+        val theme = MPosNativeTheme(context, dark)
+        val themed = theme.uiContext
         val currency = payload.optString("currency")
         fun money(value: Double) = String.format(Locale.US, "%.2f", MPosJsonNumbers.roundMoney(value)).replace('.', ',') + " " + currency
         val fields = LinearLayout(themed).apply {
@@ -67,7 +68,6 @@ class MPosSplitCashDialog(private val context: Context, private val action: (JSO
         current.setOnShowListener {
             current.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener { cancel() }
             current.getButton(AlertDialog.BUTTON_POSITIVE).apply {
-                setTextColor((if (dark) "#31B98D" else "#0E8F6F").toColorInt())
                 setOnClickListener {
                     if (token != next) return@setOnClickListener
                     val given = MPosCashTender.parse(input.text.toString())
@@ -84,7 +84,7 @@ class MPosSplitCashDialog(private val context: Context, private val action: (JSO
             }
             input.requestFocus(); input.selectAll()
         }
-        current.show()
+        current.show(); theme.dialog(current)
     }
     fun dismiss() { token = null; dialog?.setOnCancelListener(null); dialog?.dismiss(); dialog = null }
 }

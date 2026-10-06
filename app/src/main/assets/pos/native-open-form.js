@@ -16,7 +16,7 @@
     const select=document.getElementById('sf-employee'),password=document.getElementById('sf-admin-password');
     if(!select||!password||currentShift())return result;
     const token='native-open-form-'+(++generation);active={token,select,password,busy:false};
-    if(bridge.postMessage({action:'openFormShow',token,currency:state.currency||''})===false){active=null;return result;}
+    if(bridge.postMessage({action:'openFormShow',token,currency:state.currency||'',theme:document.documentElement?.dataset?.theme||'light'})===false){active=null;return result;}
     const overlay=document.querySelector('#modal-root .modal-overlay');if(overlay)overlay.style.visibility='hidden';
     return result;
   };

@@ -1,5 +1,6 @@
 package com.mendelev.mpos.shift
 
+import com.mendelev.mpos.ui.MPosNativeTheme
 import android.app.AlertDialog
 import android.content.Context
 import android.text.InputType
@@ -7,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.ScrollView
 import com.mendelev.mpos.data.MPosJsonNumbers
 import org.json.JSONObject
 import java.util.Locale
@@ -14,6 +16,7 @@ import kotlin.math.floor
 
 /** Native input surface; the existing acknowledged command path remains the commit owner. */
 class MPosCashMovementDialog(private val context: Context, private val action: (JSONObject) -> Unit) {
+    private var theme = MPosNativeTheme(context, false)
     private var dialog: AlertDialog? = null
     private var token = ""
     private var busy = false
@@ -40,8 +43,9 @@ class MPosCashMovementDialog(private val context: Context, private val action: (
         if (type !in setOf("deposit", "withdrawal", "close") || nextToken.isBlank() || payload.optString("shiftId").isBlank()) return
         if (busy) return
         dismiss(); token = nextToken
-        val fields = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(24), dp(8), dp(24), dp(8)) }
-        fun label(text: String) { fields.addView(TextView(context).apply { this.text = text; textSize = 16f }) }
+        theme = MPosNativeTheme(context, payload.optString("theme") == "dark")
+        val fields = LinearLayout(theme.uiContext).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(24), dp(8), dp(24), dp(8)) }
+        fun label(text: String) { fields.addView(TextView(theme.uiContext).apply { this.text = text; textSize = 16f }) }
         val closing = type == "close"
         if (closing) {
             val expected = payload.optDouble("expectedCash")
@@ -50,20 +54,20 @@ class MPosCashMovementDialog(private val context: Context, private val action: (
             label(String.format(Locale.US, "%.2f", floor(expected * 100 + 0.5) / 100).replace('.', ',') + " " + payload.optString("currency"))
         }
         label(if (closing) "Фактически пересчитано" else "Сумма")
-        val amount = EditText(context).apply {
+        val amount = EditText(theme.uiContext).apply {
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
             hint = "0,00"; contentDescription = "Сумма наличных"
         }
         if (closing) amount.setText(JSONObject.numberToString(payload.getDouble("expectedCash")))
         fields.addView(amount, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         if (!closing) label("Комментарий")
-        val note = EditText(context).apply { hint = "Необязательно"; inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES; contentDescription = "Комментарий движения наличных" }
+        val note = EditText(theme.uiContext).apply { hint = "Необязательно"; inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES; contentDescription = "Комментарий движения наличных" }
         if (!closing) fields.addView(note)
         inputs = if (closing) listOf(amount) else listOf(amount, note)
-        error = TextView(context).apply { setTextColor(android.graphics.Color.rgb(176, 32, 32)); textSize = 15f }
+        error = TextView(theme.uiContext).apply { setTextColor(android.graphics.Color.rgb(176, 32, 32)); textSize = 15f }
         fields.addView(error)
-        val current = AlertDialog.Builder(context).setTitle(if (closing) "Закрыть смену" else if (type == "deposit") "Внести наличные" else "Изъять наличные")
-            .setView(fields).setNegativeButton("Отмена", null)
+        val current = AlertDialog.Builder(theme.uiContext).setTitle(if (closing) "Закрыть смену" else if (type == "deposit") "Внести наличные" else "Изъять наличные")
+            .setView(ScrollView(theme.uiContext).apply { addView(fields) }).setNegativeButton("Отмена", null)
             .setPositiveButton(if (closing) "Закрыть смену" else if (type == "deposit") "Внести" else "Изъять", null).create()
         dialog = current
         current.setOnCancelListener { cancel() }
@@ -78,9 +82,14 @@ class MPosCashMovementDialog(private val context: Context, private val action: (
                     .put("type", type).put("amount", value).put("note", note.text.toString().trim { it.isWhitespace() || it == '\uFEFF' }))
             }
         }
-        current.show()
+        current.show(); theme.dialog(current); error?.setTextColor(theme.danger)
+        inputs.forEach { field ->
+            theme.text(field); field.background = theme.shape(theme.bg, 12, true)
+            field.minHeight = dp(52); field.setPadding(dp(16), dp(12), dp(16), dp(12))
+        }
     }
     private fun updateControls() {
+        error?.setTextColor(if (busy) theme.muted else theme.danger)
         inputs.forEach { it.isEnabled = !busy && !blocked }
         dialog?.let {
             it.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = !busy && !blocked

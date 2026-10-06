@@ -1,9 +1,8 @@
 package com.mendelev.mpos.shift
 
+import com.mendelev.mpos.ui.MPosNativeTheme
 import android.content.Context
 import android.graphics.Color
-import android.graphics.Typeface
-import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -26,15 +25,11 @@ class MPosShiftScreenController(
     private val action: (JSONObject) -> Unit,
 ) {
     private val scroll = ScrollView(context).apply { visibility = View.GONE; setBackgroundColor(Color.rgb(246, 247, 249)) }
-    private val content = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(12), dp(16), dp(20)) }
-    private var dark = false
-    private fun color(light: String, night: String) = Color.parseColor(if (dark) night else light)
-    private val ink get() = color("#1B1F2A", "#F4F6FA")
-    private val accent get() = color("#0E8F6F", "#31B98D")
-    private fun shape(fill: Int, radius: Int = 12, border: Boolean = false) = GradientDrawable().apply {
-        setColor(fill); cornerRadius = dp(radius).toFloat()
-        if (border) setStroke(dp(1), color("#E7E4DD", "#353B49"))
-    }
+    private val content = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(24), dp(20), dp(24), dp(24)) }
+    private var theme = MPosNativeTheme(context, false)
+    private val ink get() = theme.ink
+    private val accent get() = theme.accent
+    private fun shape(fill: Int, radius: Int = 12, border: Boolean = false) = theme.shape(fill, radius, border)
     private var generation = 0L
     private var pendingId: String? = null
     private var lastPayload: JSONObject? = null
@@ -48,8 +43,8 @@ class MPosShiftScreenController(
         if (payload.optString("action") == "hide") { hide(); return }
         if (payload.optString("action") != "show") return
         val bounds = bounds(payload, host.width, host.height) ?: run { hide(); return }
-        dark = payload.optString("theme") == "dark"
-        scroll.setBackgroundColor(color("#F5F4F0", "#171A21"))
+        theme = MPosNativeTheme(context, payload.optString("theme") == "dark")
+        scroll.setBackgroundColor(theme.bg)
         lastPayload = JSONObject(payload.toString())
         scroll.layoutParams = FrameLayout.LayoutParams(bounds.width, bounds.height).apply { leftMargin = bounds.left; topMargin = bounds.top }
         scroll.visibility = View.VISIBLE
@@ -85,19 +80,25 @@ class MPosShiftScreenController(
         if (history.length() == 0) text(content, "Ещё нет закрытых смен")
         for (i in 0 until history.length()) {
             val report = history.getJSONObject(i).getJSONObject("report")
-            button(content, "${date(report.optLong("openedAt"))} — ${date(report.optLong("closedAt"))}\n${report.optString("employeeName").ifBlank { "Сотрудник не указан" }} · Заказов: ${report.optInt("count")}\nНаличные ${money(report, "cash")} · Карта ${money(report, "card")}\nРасхожд.: ${money(report, "difference")}") { emit("report", report.getString("id")) }
+            val historyCard = card()
+            heading(historyCard, report.optString("employeeName").ifBlank { "Сотрудник не указан" }, 17f)
+            text(historyCard, "${date(report.optLong("openedAt"))} — ${date(report.optLong("closedAt"))}", 13f, true)
+            pair(historyCard, "Заказов", report.optInt("count").toString())
+            pair(historyCard, "Наличные", money(report, "cash")); pair(historyCard, "Карта", money(report, "card"))
+            pair(historyCard, "Расхождение", money(report, "difference"))
+            button(historyCard, "Сменный отчёт") { emit("report", report.getString("id")) }
         }
         button(content, "Обновить") { refresh() }
     }
     private fun renderActive(model: JSONObject) {
         val r = model.getJSONObject("report"); val s = model.getJSONObject("summary"); val id = r.getString("id")
         val card = card()
+        heading(card, "Кассовая смена №${model.getInt("number")}")
+        text(card, "Смена открыта: ${date(r.optLong("openedAt"))} · ${r.optString("employeeName").ifBlank { "Сотрудник не указан" }}", 14f, true)
         val actions = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
-        card.addView(actions)
+        card.addView(actions, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(12); bottomMargin = dp(16) })
         button(actions, "Внести наличные", true) { emit("deposit", id) }
         button(actions, "Изъять наличные", true) { emit("withdrawal", id) }
-        heading(card, "Кассовая смена №${model.getInt("number")}")
-        text(card, "Смена открыта: ${date(r.optLong("openedAt"))} · ${r.optString("employeeName").ifBlank { "Сотрудник не указан" }}")
         heading(card, "Наличные в кассе")
         pair(card, "Наличные на начало смены", money(r, "openingCash"))
         pair(card, "Оплата наличными", moneyValue(r.getDouble("cash") + s.getDouble("cashRefunds"), r))
@@ -127,42 +128,37 @@ class MPosShiftScreenController(
     }
     private fun emit(name: String, id: String = "") { hide(); action(JSONObject().put("action", name).put("shiftId", id)) }
     private fun title(label: String) { heading(content, label, 24f) }
-    private fun heading(parent: LinearLayout, label: String, size: Float = 19f) { text(parent, label, size).setTypeface(null, Typeface.BOLD) }
-    private fun text(parent: LinearLayout, label: String, size: Float = 15f): TextView = TextView(context).apply {
-        text = label; textSize = size; setTextColor(ink); setPadding(dp(4), dp(8), dp(4), dp(8))
+    private fun heading(parent: LinearLayout, label: String, size: Float = 19f) { text(parent, label, size).apply { theme.text(this, size, 700) } }
+    private fun text(parent: LinearLayout, label: String, size: Float = 15f, secondary: Boolean = false): TextView = TextView(context).apply {
+        text = label; theme.text(this, size, secondary = secondary); setPadding(dp(4), dp(8), dp(4), dp(8))
         parent.addView(this, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
     }
     private fun pair(parent: LinearLayout, label: String, value: String, bold: Boolean = false) {
-        val row = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
+        val narrow = scroll.layoutParams.width < dp(600) || context.resources.configuration.fontScale > 1.3f
+        val row = LinearLayout(context).apply { orientation = if (narrow) LinearLayout.VERTICAL else LinearLayout.HORIZONTAL }
         parent.addView(row)
         val left = text(row, label)
-        left.layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        val right = text(row, value)
-        right.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        left.layoutParams = if (narrow) LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) else LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        val right = text(row, value).apply { textAlignment = View.TEXT_ALIGNMENT_VIEW_END; theme.text(this, 16f, 600) }
+        right.layoutParams = LinearLayout.LayoutParams(if (narrow) ViewGroup.LayoutParams.MATCH_PARENT else ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         if (bold) {
-            row.background = shape(color("#E4F3EE", "#173B31"))
+            row.background = shape(theme.soft)
             left.setTextColor(accent); right.setTextColor(accent)
-            left.setTypeface(null, Typeface.BOLD); right.setTypeface(null, Typeface.BOLD) }
+            theme.text(left, 15f, 700); theme.text(right, 18f, 700); left.setTextColor(accent); right.setTextColor(accent) }
     }
     private fun button(parent: LinearLayout, label: String, weighted: Boolean = false, onClick: () -> Unit) {
         parent.addView(Button(context).apply {
-            text = label; isAllCaps = false; minHeight = dp(48)
-            val primary = label == "Открыть смену"
-            val danger = label == "Закрыть смену" || label == "Изъять наличные"
-            val tint = if (danger) color("#E0483E", "#FF6B61") else accent
-            backgroundTintList = null
-            background = shape(if (primary) accent else if (danger) color("#FBE7E5", "#432522") else color("#E4F3EE", "#173B31"))
-            setTextColor(if (primary) color("#FFFFFF", "#07140F") else tint)
-            setPadding(dp(12), dp(10), dp(12), dp(10))
+            text = label
+            theme.button(this, primary = label == "Открыть смену", destructive = label == "Закрыть смену" || label == "Изъять наличные")
             setOnClickListener { onClick() }
-        }, if (weighted) LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f) else LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8); bottomMargin = dp(4) })
+        }, if (weighted) LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(8) } else LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8); bottomMargin = dp(4) })
     }
     private fun card(): LinearLayout = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL; background = shape(color("#FFFFFF", "#222631"), 22, true); setPadding(dp(12), dp(8), dp(12), dp(12))
+        orientation = LinearLayout.VERTICAL; background = shape(theme.surface, 22, true); setPadding(dp(20), dp(16), dp(20), dp(20))
         content.addView(this, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(12) })
     }
     private fun money(report: JSONObject, key: String) = moneyValue(report.optDouble(key), report)
-    private fun moneyValue(value: Double, report: JSONObject) = String.format(Locale.US, "%.2f %s", value, report.optString("currency"))
+    private fun moneyValue(value: Double, report: JSONObject) = String.format(Locale.US, "%.2f", value).replace('.', ',') + " " + report.optString("currency")
     private fun date(value: Long) = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("ru", "RU")).format(Date(value))
 
     data class Bounds(val left: Int, val top: Int, val width: Int, val height: Int)

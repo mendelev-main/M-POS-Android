@@ -18,7 +18,7 @@
     if(!shift||!amount||!note)return result;
     const token='native-cash-form-'+(++generation);
     active={token,type,shiftId:shift.id,busy:false,amount,note};
-    if(bridge.postMessage({action:'cashFormShow',token,type,shiftId:shift.id})===false){active=null;return result;}
+    if(bridge.postMessage({action:'cashFormShow',token,type,shiftId:shift.id,theme:document.documentElement?.dataset?.theme||'light'})===false){active=null;return result;}
     // Keep real legacy fields as compatibility inputs; native dialog owns visible editing.
     const overlay=document.querySelector('#modal-root .modal-overlay');
     if(overlay)overlay.style.visibility='hidden';

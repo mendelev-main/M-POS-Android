@@ -17,7 +17,7 @@
     if(!shift||!counted)return result;
     const token='native-close-form-'+(++generation);
     active={token,shiftId:shift.id,counted,busy:false};
-    if(bridge.postMessage({action:'closeFormShow',token,shiftId:shift.id,currency:state.currency||''})===false){active=null;return result;}
+    if(bridge.postMessage({action:'closeFormShow',token,shiftId:shift.id,currency:state.currency||'',theme:document.documentElement?.dataset?.theme||'light'})===false){active=null;return result;}
     const overlay=document.querySelector('#modal-root .modal-overlay');if(overlay)overlay.style.visibility='hidden';
     return result;
   };

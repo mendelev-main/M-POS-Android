@@ -1,9 +1,9 @@
 package com.mendelev.mpos.payment
 
+import com.mendelev.mpos.ui.MPosNativeTheme
 import android.app.AlertDialog
 import android.content.Context
 import androidx.core.graphics.toColorInt
-import android.view.ContextThemeWrapper
 import android.widget.LinearLayout
 import android.widget.TextView
 import org.json.JSONObject
@@ -20,7 +20,8 @@ class MPosCardConfirmationDialog(private val context: Context, private val actio
         if (!amount.isFinite() || amount < 0 || payload.optString("amountLabel").isBlank()) return
         dismiss(); token = next
         val dark = payload.optString("theme") == "dark"
-        val themed = ContextThemeWrapper(context, if (dark) android.R.style.Theme_Material_Dialog_Alert else android.R.style.Theme_Material_Light_Dialog_Alert)
+        val theme = MPosNativeTheme(context, dark)
+        val themed = theme.uiContext
         val fields = LinearLayout(themed).apply {
             orientation = LinearLayout.VERTICAL
             val padding = (24 * context.resources.displayMetrics.density).toInt()
@@ -38,11 +39,10 @@ class MPosCardConfirmationDialog(private val context: Context, private val actio
         current.setOnShowListener {
             current.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener { finish(next, "cancel") }
             current.getButton(AlertDialog.BUTTON_POSITIVE).apply {
-                setTextColor((if (dark) "#31B98D" else "#0E8F6F").toColorInt())
                 setOnClickListener { finish(next, "confirm") }
             }
         }
-        current.show()
+        current.show(); theme.dialog(current)
     }
     private fun finish(expected: String, kind: String) {
         if (token != expected) return

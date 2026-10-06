@@ -1,5 +1,6 @@
 package com.mendelev.mpos.shift
 
+import com.mendelev.mpos.ui.MPosNativeTheme
 import android.app.AlertDialog
 import android.content.Context
 import android.text.InputType
@@ -10,6 +11,8 @@ import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
+import android.widget.ScrollView
+import androidx.core.widget.doAfterTextChanged
 import android.widget.TextView
 import org.json.JSONArray
 import org.json.JSONObject
@@ -18,6 +21,7 @@ import kotlin.math.floor
 
 /** Native selection/password input; no verifier or persisted authentication data is introduced. */
 class MPosShiftOpenDialog(private val context: Context, private val request: (JSONObject) -> Unit, private val action: (JSONObject) -> Unit) {
+    private var theme = MPosNativeTheme(context, false)
     private var token = ""
     private var currency = ""
     private var generation = 0L
@@ -35,8 +39,8 @@ class MPosShiftOpenDialog(private val context: Context, private val request: (JS
         when (payload.optString("action")) {
             "openFormShow" -> {
                 if (busy || payload.optString("token").isBlank()) return
-                dismiss(); token = payload.getString("token"); currency = payload.optString("currency")
-                val view = AlertDialog.Builder(context).setTitle("Открыть смену").setMessage("Чтение сохранённых данных…")
+                dismiss(); theme = MPosNativeTheme(context, payload.optString("theme") == "dark"); token = payload.getString("token"); currency = payload.optString("currency")
+                val view = AlertDialog.Builder(theme.uiContext).setTitle("Открыть смену").setMessage("Чтение сохранённых данных…")
                     .setNegativeButton("Отмена", null).setNeutralButton("Повторить", null).setPositiveButton("Прежняя форма", null).create()
                 loading = view
                 view.setOnCancelListener { cancel("cancel") }
@@ -47,7 +51,7 @@ class MPosShiftOpenDialog(private val context: Context, private val request: (JS
                     view.getButton(AlertDialog.BUTTON_NEUTRAL).isEnabled = pending == null
                     view.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = pending == null
                 }
-                view.show(); refresh()
+                view.show(); theme.dialog(view); refresh()
             }
             "openFormHide" -> if (payload.optString("token") == token) dismiss()
             "openFormResult" -> {
@@ -79,17 +83,34 @@ class MPosShiftOpenDialog(private val context: Context, private val request: (JS
     private fun showInput(staff: JSONArray, opening: Double) {
         employeeCount = staff.length()
         val rows = (0 until staff.length()).map { staff.getJSONObject(it) }
-        val fields = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(24), dp(8), dp(24), dp(8)) }
-        fun label(value: String): TextView = TextView(context).apply { text = value; textSize = 16f; fields.addView(this) }
+        val fields = LinearLayout(theme.uiContext).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(24), dp(16), dp(24), dp(24)) }
+        fun label(value: String): TextView = TextView(theme.uiContext).apply {
+            text = value; theme.text(this); setPadding(0, dp(8), 0, dp(8)); fields.addView(this)
+        }
         label("Сотрудник")
-        val select = Spinner(context).apply { contentDescription = "Выбор сотрудника" }
+        val select = Spinner(theme.uiContext, Spinner.MODE_DROPDOWN).apply {
+            contentDescription = "Выбор сотрудника"; minimumHeight = dp(52)
+            background = theme.shape(theme.bg, 12, true); setPadding(dp(12), dp(4), dp(12), dp(4))
+        }
         picker = select
-        val names = listOf("Выберите сотрудника") + rows.map { it.getString("name") + if (it.optString("role") == "admin") " · АДМИНИСТРАТОР" else "" }
-        select.adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, names).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+        val names = listOf("Выберите сотрудника") + rows.map { it.getString("name") + if (it.optString("role") == "admin") " · Администратор" else "" }
+        select.adapter = object : ArrayAdapter<String>(theme.uiContext, android.R.layout.simple_spinner_item, names) {
+            private fun row(position: Int, selected: Boolean): View = LinearLayout(theme.uiContext).apply {
+                orientation = LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER_VERTICAL
+                minimumHeight = dp(48); setPadding(dp(8), dp(8), dp(8), dp(8))
+                addView(TextView(theme.uiContext).apply {
+                    text = names[position]; theme.text(this, 16f, if (position == 0) 400 else 600, position == 0)
+                }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+                if (selected) addView(TextView(theme.uiContext).apply { text = "⌄"; theme.text(this, 22f, secondary = true) })
+                else background = theme.shape(if (position == select.selectedItemPosition) theme.soft else theme.surface, 0)
+            }
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View = row(position, true)
+            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View = row(position, false)
+        }
         fields.addView(select, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         val caption = label("Пароль администратора")
-        val secret = EditText(context).apply { inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD; isSaveEnabled = false; contentDescription = "Пароль администратора" }
-        password = secret; fields.addView(secret)
+        val secret = EditText(theme.uiContext).apply { theme.text(this); background = theme.shape(theme.bg, 12, true); minHeight = dp(52); setPadding(dp(16), dp(12), dp(16), dp(12)); inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD; isSaveEnabled = false; contentDescription = "Пароль администратора" }
+        theme.text(secret); password = secret; fields.addView(secret)
         caption.visibility = View.GONE; secret.visibility = View.GONE
         select.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
@@ -99,11 +120,14 @@ class MPosShiftOpenDialog(private val context: Context, private val request: (JS
             }
         }
         if (rows.isEmpty()) label("Сотрудников нет. Добавьте сотрудника в разделе сотрудников.")
-        label("Наличные при открытии смены")
-        label(String.format(Locale.US, "%.2f", floor(opening * 100 + 0.5) / 100).replace('.', ',') + " " + currency)
-        label("Проверьте наличные в кассе. Сумма перенесена с прошлой смены.")
-        error = label("").apply { setTextColor(android.graphics.Color.rgb(176, 32, 32)) }
-        val view = AlertDialog.Builder(context).setTitle("Открыть смену").setView(fields).setNegativeButton("Отмена", null).setPositiveButton("Открыть", null).create()
+        label("Наличные при открытии смены").apply { theme.text(this, 14f, secondary = true) }
+        label(String.format(Locale.US, "%.2f", floor(opening * 100 + 0.5) / 100).replace('.', ',') + " " + currency).apply { theme.text(this, 28f, 700); setTextColor(theme.accent) }
+        label("Проверьте наличные в кассе. Сумма перенесена с прошлой смены.").apply { theme.text(this, 14f, secondary = true) }
+        error = label("").apply {
+            setTextColor(theme.danger); visibility = View.GONE
+            doAfterTextChanged { visibility = if (it.isNullOrEmpty()) View.GONE else View.VISIBLE }
+        }
+        val view = AlertDialog.Builder(theme.uiContext).setTitle("Открыть смену").setView(ScrollView(theme.uiContext).apply { addView(fields) }).setNegativeButton("Отмена", null).setPositiveButton("Открыть", null).create()
         dialog = view; view.setOnCancelListener { cancel("cancel") }
         view.setOnShowListener {
             view.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener { cancel("cancel") }
@@ -119,9 +143,10 @@ class MPosShiftOpenDialog(private val context: Context, private val request: (JS
             }
             controls()
         }
-        view.show()
+        view.show(); theme.dialog(view); error?.setTextColor(theme.danger)
     }
     private fun controls() {
+        error?.setTextColor(if (busy) theme.muted else theme.danger)
         picker?.isEnabled = !busy && !blocked; password?.isEnabled = !busy && !blocked
         dialog?.let { it.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = !busy && !blocked && employeeCount > 0; it.getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled = !busy; it.setCancelable(!busy); it.setCanceledOnTouchOutside(!busy) }
     }

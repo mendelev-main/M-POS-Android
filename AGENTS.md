@@ -18,3 +18,5 @@
 16. The user authorizes commits and pushes to `main`. After completing and validating requested changes, publish them to `main` so GitHub stays up to date. Preserve unrelated user changes and never force-push.
 
 17. The user requests no local APK assembly: GitHub automation builds APKs after commits. Run relevant JS/JVM tests and lint for each stage; omit assembleDebug/assembleRelease unless the user requests a local APK build.
+
+18. For UI/design work, read `.agents/skills/mpos-native-design/SKILL.md` and its referenced `.agents/skills/frontend-design/SKILL.md`. Match `docs/NATIVE_DESIGN_SYSTEM.md` and the existing POS visual tokens using shared native theme primitives; preserve business behavior.

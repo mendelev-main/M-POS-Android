@@ -1,11 +1,13 @@
 package com.mendelev.mpos.shift
 
+import com.mendelev.mpos.ui.MPosNativeTheme
 import android.app.AlertDialog
 import android.content.Context
 import org.json.JSONObject
 
 /** Reads expected cash through the storage FIFO; no financial value is trusted from WebView. */
 class MPosShiftCloseDialog(private val context: Context, private val request: (JSONObject) -> Unit, private val action: (JSONObject) -> Unit) {
+    private var theme = MPosNativeTheme(context, false)
     private var token = ""
     private var shiftId = ""
     private var currency = ""
@@ -17,8 +19,8 @@ class MPosShiftCloseDialog(private val context: Context, private val request: (J
         when (payload.optString("action")) {
             "closeFormShow" -> {
                 if (payload.optString("token").isBlank() || payload.optString("shiftId").isBlank()) return
-                dismiss(); token = payload.getString("token"); shiftId = payload.getString("shiftId"); currency = payload.optString("currency")
-                val view = AlertDialog.Builder(context).setTitle("Закрыть смену").setMessage("Чтение сохранённых данных смены…")
+                dismiss(); theme = MPosNativeTheme(context, payload.optString("theme") == "dark"); token = payload.getString("token"); shiftId = payload.getString("shiftId"); currency = payload.optString("currency")
+                val view = AlertDialog.Builder(theme.uiContext).setTitle("Закрыть смену").setMessage("Чтение сохранённых данных смены…")
                     .setNegativeButton("Отмена", null).setNeutralButton("Повторить", null).setPositiveButton("Прежняя форма", null).create()
                 loading = view
                 view.setOnCancelListener { cancel("cancel") }
@@ -29,7 +31,7 @@ class MPosShiftCloseDialog(private val context: Context, private val request: (J
                     view.getButton(AlertDialog.BUTTON_NEUTRAL).isEnabled = pending == null
                     view.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = pending == null
                 }
-                view.show(); refresh()
+                view.show(); theme.dialog(view); refresh()
             }
             "closeFormHide" -> if (payload.optString("token") == token) dismiss()
             "closeFormResult" -> if (payload.optString("token") == token) input.handle(JSONObject(payload.toString()).put("action", "cashFormResult"))
@@ -58,7 +60,7 @@ class MPosShiftCloseDialog(private val context: Context, private val request: (J
             return
         }
         loading?.setOnCancelListener(null); loading?.dismiss(); loading = null
-        input.handle(JSONObject().put("action", "cashFormShow").put("token", token).put("type", "close").put("shiftId", shiftId).put("expectedCash", expected).put("currency", currency))
+        input.handle(JSONObject().put("action", "cashFormShow").put("token", token).put("type", "close").put("shiftId", shiftId).put("expectedCash", expected).put("currency", currency).put("theme", if (theme.dark) "dark" else "light"))
     }
     private fun cancel(name: String) { val previous = token; dismiss(); action(JSONObject().put("action", name).put("token", previous)) }
     fun dismiss() { pending = null; generation++; loading?.setOnCancelListener(null); loading?.dismiss(); loading = null; input.dismiss(); token = ""; shiftId = "" }
