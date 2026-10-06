@@ -1,0 +1,5044 @@
+[
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": null,
+      "name": "",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Введите название категории"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": null,
+      "name": "",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Введите название категории"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": null,
+      "name": " coffee ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Такая категория уже существует"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": null,
+      "name": " coffee ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Такая категория уже существует"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": null,
+      "name": " New ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other",
+          "New"
+        ],
+        "categoryColors": {
+          "Coffee": "blue",
+          "New": "#abc"
+        },
+        "categorySymbols": {
+          "Coffee": "C",
+          "New": "К"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false,
+          "New": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true,
+          "New": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": null,
+      "name": " New ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other",
+          "New"
+        ],
+        "categoryColors": {
+          "Coffee": "blue",
+          "New": "#abc"
+        },
+        "categorySymbols": {
+          "Coffee": "C",
+          "New": "К"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false,
+          "New": true
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true,
+          "New": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": null,
+      "name": "Other",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Такая категория уже существует"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": null,
+      "name": "Other",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Такая категория уже существует"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": null,
+      "name": "İ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other",
+          "İ"
+        ],
+        "categoryColors": {
+          "Coffee": "blue",
+          "İ": "#abc"
+        },
+        "categorySymbols": {
+          "Coffee": "C",
+          "İ": "К"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false,
+          "İ": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true,
+          "İ": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": null,
+      "name": "İ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other",
+          "İ"
+        ],
+        "categoryColors": {
+          "Coffee": "blue",
+          "İ": "#abc"
+        },
+        "categorySymbols": {
+          "Coffee": "C",
+          "İ": "К"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false,
+          "İ": true
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true,
+          "İ": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": null,
+      "name": "﻿ Новая  ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other",
+          "Новая"
+        ],
+        "categoryColors": {
+          "Coffee": "blue",
+          "Новая": "#abc"
+        },
+        "categorySymbols": {
+          "Coffee": "C",
+          "Новая": "К"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false,
+          "Новая": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true,
+          "Новая": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": null,
+      "name": "﻿ Новая  ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other",
+          "Новая"
+        ],
+        "categoryColors": {
+          "Coffee": "blue",
+          "Новая": "#abc"
+        },
+        "categorySymbols": {
+          "Coffee": "C",
+          "Новая": "К"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false,
+          "Новая": true
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true,
+          "Новая": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "Coffee",
+      "name": "",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Введите название категории"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "Coffee",
+      "name": "",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Введите название категории"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "Coffee",
+      "name": " coffee ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "coffee": "#abc"
+        },
+        "categorySymbols": {
+          "coffee": "К"
+        },
+        "categoryOnlineMenu": {
+          "coffee": false
+        },
+        "categoryOnlineOrder": {
+          "coffee": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "Coffee",
+      "name": " coffee ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "coffee": "#abc"
+        },
+        "categorySymbols": {
+          "coffee": "К"
+        },
+        "categoryOnlineMenu": {
+          "coffee": true
+        },
+        "categoryOnlineOrder": {
+          "coffee": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "Coffee",
+      "name": " New ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "New",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "New",
+          "Other"
+        ],
+        "categoryColors": {
+          "New": "#abc"
+        },
+        "categorySymbols": {
+          "New": "К"
+        },
+        "categoryOnlineMenu": {
+          "New": false
+        },
+        "categoryOnlineOrder": {
+          "New": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "New"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "New",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "Coffee",
+      "name": " New ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "New",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "New",
+          "Other"
+        ],
+        "categoryColors": {
+          "New": "#abc"
+        },
+        "categorySymbols": {
+          "New": "К"
+        },
+        "categoryOnlineMenu": {
+          "New": true
+        },
+        "categoryOnlineOrder": {
+          "New": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "New"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "New",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "Coffee",
+      "name": "Other",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Такая категория уже существует"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "Coffee",
+      "name": "Other",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Такая категория уже существует"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "Coffee",
+      "name": "İ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "İ",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "İ",
+          "Other"
+        ],
+        "categoryColors": {
+          "İ": "#abc"
+        },
+        "categorySymbols": {
+          "İ": "К"
+        },
+        "categoryOnlineMenu": {
+          "İ": false
+        },
+        "categoryOnlineOrder": {
+          "İ": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "İ"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "İ",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "Coffee",
+      "name": "İ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "İ",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "İ",
+          "Other"
+        ],
+        "categoryColors": {
+          "İ": "#abc"
+        },
+        "categorySymbols": {
+          "İ": "К"
+        },
+        "categoryOnlineMenu": {
+          "İ": true
+        },
+        "categoryOnlineOrder": {
+          "İ": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "İ"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "İ",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "Coffee",
+      "name": "﻿ Новая  ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Новая",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Новая",
+          "Other"
+        ],
+        "categoryColors": {
+          "Новая": "#abc"
+        },
+        "categorySymbols": {
+          "Новая": "К"
+        },
+        "categoryOnlineMenu": {
+          "Новая": false
+        },
+        "categoryOnlineOrder": {
+          "Новая": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Новая"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Новая",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "Coffee",
+      "name": "﻿ Новая  ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Новая",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Новая",
+          "Other"
+        ],
+        "categoryColors": {
+          "Новая": "#abc"
+        },
+        "categorySymbols": {
+          "Новая": "К"
+        },
+        "categoryOnlineMenu": {
+          "Новая": true
+        },
+        "categoryOnlineOrder": {
+          "Новая": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Новая"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Новая",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "missing",
+      "name": "",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Введите название категории"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "missing",
+      "name": "",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Введите название категории"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "missing",
+      "name": " coffee ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Такая категория уже существует"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "missing",
+      "name": " coffee ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Такая категория уже существует"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "missing",
+      "name": " New ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue",
+          "New": "#abc"
+        },
+        "categorySymbols": {
+          "Coffee": "C",
+          "New": "К"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false,
+          "New": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true,
+          "New": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "missing",
+      "name": " New ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue",
+          "New": "#abc"
+        },
+        "categorySymbols": {
+          "Coffee": "C",
+          "New": "К"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false,
+          "New": true
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true,
+          "New": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "missing",
+      "name": "Other",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Такая категория уже существует"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "missing",
+      "name": "Other",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Такая категория уже существует"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "missing",
+      "name": "İ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue",
+          "İ": "#abc"
+        },
+        "categorySymbols": {
+          "Coffee": "C",
+          "İ": "К"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false,
+          "İ": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true,
+          "İ": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "missing",
+      "name": "İ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue",
+          "İ": "#abc"
+        },
+        "categorySymbols": {
+          "Coffee": "C",
+          "İ": "К"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false,
+          "İ": true
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true,
+          "İ": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "missing",
+      "name": "﻿ Новая  ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": false,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue",
+          "Новая": "#abc"
+        },
+        "categorySymbols": {
+          "Coffee": "C",
+          "Новая": "К"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false,
+          "Новая": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true,
+          "Новая": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "save",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "oldName": "missing",
+      "name": "﻿ Новая  ",
+      "color": "#abc",
+      "symbol": "К",
+      "menu": true,
+      "order": false
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue",
+          "Новая": "#abc"
+        },
+        "categorySymbols": {
+          "Coffee": "C",
+          "Новая": "К"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false,
+          "Новая": true
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true,
+          "Новая": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "channel",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "channel": "menu",
+      "name": "Coffee"
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": true
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "channel",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "channel": "menu",
+      "name": "Missing"
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false,
+          "Missing": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "channel",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "channel": "order",
+      "name": "Coffee"
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "channel",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "channel": "order",
+      "name": "Missing"
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true,
+          "Missing": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "channel",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "channel": "unknown",
+      "name": "Coffee"
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "channel",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "channel": "unknown",
+      "name": "Missing"
+    },
+    "expected": {
+      "allowed": true,
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true,
+          "Missing": false
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "deleteCheck",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "name": "Coffee"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Нельзя удалить категорию: в ней есть товары"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "deleteCheck",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "name": "Other"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Нельзя удалить категорию: в ней есть товары"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "deleteCheck",
+      "state": {
+        "products": [
+          {
+            "id": "a",
+            "category": "Coffee",
+            "type": "simple",
+            "name": "Milk",
+            "stockUnit": "",
+            "extra": {
+              "keep": true
+            }
+          },
+          {
+            "id": "b",
+            "category": " Other ",
+            "type": "composite",
+            "name": "Latte",
+            "components": [
+              {
+                "productId": "a",
+                "qty": 1
+              }
+            ]
+          }
+        ],
+        "categoryOrder": [
+          "Coffee",
+          "Other"
+        ],
+        "categoryColors": {
+          "Coffee": "blue"
+        },
+        "categorySymbols": {
+          "Coffee": "C"
+        },
+        "categoryOnlineMenu": {
+          "Coffee": false
+        },
+        "categoryOnlineOrder": {
+          "Coffee": true
+        },
+        "layoutTiles": [
+          {
+            "type": "category",
+            "id": "Coffee"
+          },
+          {
+            "type": "product",
+            "id": "a"
+          }
+        ],
+        "posNavigation": {
+          "categories": [
+            {
+              "category": "Coffee",
+              "parentId": "folder"
+            }
+          ],
+          "extra": 7
+        }
+      },
+      "name": "Missing"
+    },
+    "expected": {
+      "allowed": false
+    }
+  }
+]

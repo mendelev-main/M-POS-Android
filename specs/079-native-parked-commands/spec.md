@@ -55,3 +55,7 @@ receiptDisplayNumber строится по текущему размеру parke
 printKitchenOrderNow, не подтверждение принтера. Это будущая граница 099.
 
 После публикации: 78/110 (70,91%), остаётся 32. Следующий 080 — товары/категории.
+
+## Этап 080
+
+080 добавляет native editor policy/category patch; parked lifecycle и backup shapes не меняются.

@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **78/110 выполнено (70,91%)**
-после 079. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **79/110 выполнено (71,82%)**
+после 080. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -478,3 +478,7 @@ context commands. Rate CRUD (100), customer backend (084/085) remain pending;
 Native append/remove/print patch + atomic Room parked/session. Backup v13 и
 полные JSON/проекции сохраняются. Hold builder/kitchen delta остаются source;
 printing triggers — 099, customer loyalty — 084/085. Следующий 080: товары/категории.
+
+## Этап 080
+
+080: правила типов/возвратов/dependency и category patch завершены. Recipe/modifier rules далее 081; формы/окончательный delete остаются 102/083.

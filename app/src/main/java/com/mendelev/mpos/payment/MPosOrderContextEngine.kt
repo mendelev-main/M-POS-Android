@@ -7,6 +7,7 @@ object MPosOrderContextEngine {
     private fun whitespace(c: Char) = c in '\u0009'..'\u000d' || c == '\u0020' || c == '\u00a0' || c == '\u1680' ||
         c in '\u2000'..'\u200a' || c == '\u2028' || c == '\u2029' || c == '\u202f' ||
         c == '\u205f' || c == '\u3000' || c == '\ufeff'
+    fun trim(value: String): String = value.trim(::whitespace)
     fun calculate(input: JSONObject): JSONObject {
         require(input.getInt("version") == 1)
         require(input.getString("operation") == "save")
@@ -14,7 +15,7 @@ object MPosOrderContextEngine {
         fun field(key: String): String {
             val value = fields.get(key)
             require(value is String)
-            return value.trim(::whitespace)
+            return trim(value)
         }
         return JSONObject().put("ok", true).put("authoritative", true).put("source", "native-order-context")
             .put("orderLabel", field("label")).put("name", field("name"))

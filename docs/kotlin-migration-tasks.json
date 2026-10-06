@@ -492,9 +492,10 @@
     {
       "id": "080",
       "title": "Правила редактирования товаров и категорий",
-      "status": "planned",
+      "status": "done",
       "area": "P9",
-      "dependencies": "040"
+      "dependencies": "040",
+      "spec": "specs/080-native-catalog-edit/spec.md"
     },
     {
       "id": "081",

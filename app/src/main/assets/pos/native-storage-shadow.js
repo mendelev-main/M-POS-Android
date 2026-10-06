@@ -137,6 +137,9 @@
 
   const mposCore=global.MPosCore=global.MPosCore||{};
   mposCore.Storage=mposStorage;
+  mposCore.CatalogEdit=Object.freeze({
+    async calculate(input){return requireNative(await request('catalogEditRead',{payload:JSON.stringify(input)}),true);}
+  });
   mposCore.ParkedOrders=Object.freeze({
     async commit(input){return requireNative(await request('parkedCommit',{payload:JSON.stringify(input)}),true);}
   });

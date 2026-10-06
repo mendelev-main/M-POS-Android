@@ -273,3 +273,7 @@ Actual source hold/resume/delete flow сохранён вокруг native commi
 rollback второго документа, stale expected/journal/print patch, full metadata,
 ack-before-print/loyalty, failed hold, rollback и uncertain state проверены.
 Physical acceptance pending; UI/receipt builder ещё WebView/source.
+
+## Этап 080
+
+080: 45 actual category source fixture, history/returned/units/dependency и Room authority, object references/save order/stale/protocol/failure проверены. Physical pending, product form/media и category write plumbing остаются source.

@@ -353,3 +353,7 @@ Cancel/modal replacement/pending checkout, restart/backup v13.
 - Отказ записи должен сохранить текущую корзину без печати.
 - Быстрые изменения контекста/корзины/split не должны создавать двойной заказ.
 - Проверить отдельно исходное ограничение: paid split parts не входят в parked.
+
+## Этап 080
+
+080 pending: категории add/rename/color/symbol/menu/order; duplicate/used delete; type edit с units/dependencies/unreturned/returned receipt; фото offline; rapid modal/form changes; restart/v13; без availability от редактирования.
