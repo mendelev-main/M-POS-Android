@@ -135,6 +135,11 @@
 
   const mposCore=global.MPosCore=global.MPosCore||{};
   mposCore.Storage=mposStorage;
+  mposCore.ConfiguredPrices=Object.freeze({
+    async calculate(input){
+      return requireNative(await request('configuredPriceRead',{payload:JSON.stringify(input)}),true);
+    }
+  });
   mposCore.Payments=Object.freeze({
     async commit(command){
       const payload=JSON.stringify(command);

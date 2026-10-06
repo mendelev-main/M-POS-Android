@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=path.join(__dirname,'../app/src/main/assets/pos');
 const source=name=>fs.readFileSync(path.join(root,name),'utf8');
-function host({archiveSize=0}={}){
+function host({archiveSize=0,configured=false}={}){
  const events=[],commands=[],timers=new Map(),initialized=new Set();let timerId=0,sequence=0;
  const products=[{id:'p1',type:'simple',stock:5.125,price:12.35,cost:1,category:'Напитки'}];
  const shifts=[{id:'s1',status:'open',employeeId:'e1',openingCash:100,cashMovements:[]}];
@@ -22,6 +22,7 @@ function host({archiveSize=0}={}){
   closeModal(){},showPaymentReceipt:()=>events.push('receipt'),publishPaidOrderLoyalty:()=>events.push('loyalty'),printCompletedOrder:()=>events.push('print')};
  context.window=context;
  context.webkit={messageHandlers:{storage:{postMessage(command){commands.push(command);
+  if(command.action==='configuredPriceRead'){events.push('native-price');return true;}
   if(command.action==='paymentCommit'){events.push('native-command');return true;}
   const result={requestId:command.requestId,ok:true,authoritative:true};
   if(command.action.endsWith('Status'))result.initialized=initialized.has(command.key);
@@ -29,7 +30,8 @@ function host({archiveSize=0}={}){
   context.__nativeStorageResult(result);return true;
  }}}};
  vm.createContext(context);vm.runInContext(source('native-storage-shadow.js'),context);
- vm.runInContext(source('Web/js/features/payment.js'),context);context.showPaymentReceipt=()=>events.push('receipt');vm.runInContext(source('native-payment-command.js'),context);
+ if(configured){context.document={querySelector:()=>null};const reset=context.resetCurrentOrderState;vm.runInContext(source('Web/js/features/cart-composition.js'),context);context.resetCurrentOrderState=reset;context.canFulfillCart=()=>true;context.saveCurrentOrderSession=()=>events.push('session-save');context.render=()=>events.push('render');context.cartTotal=()=>context.state.cart.reduce((sum,item)=>sum+item.price*item.qty,0);}
+ vm.runInContext(source('Web/js/features/payment.js'),context);context.showPaymentReceipt=()=>events.push('receipt');vm.runInContext(source('native-payment-command.js'),context);if(configured)vm.runInContext(source('native-configured-prices.js'),context);
  return {context,events,commands,timers,reply(ok=true){const command=commands.filter(c=>c.action==='paymentCommit').at(-1);events.push('native-ack');context.__nativeStorageResult({requestId:command.requestId,ok,authoritative:true});}};
 }
 const parts=[{method:'cash',amount:5,cashGiven:10,change:5},{method:'card',amount:7.35,cashGiven:null,change:null}];
@@ -39,7 +41,7 @@ test('actual finalization sends one receipt without archive and external effects
  const h=host({archiveSize:500});const saving=h.context.finalizePayment(parts);
  await flushUntil(()=>h.events.includes('native-command'));
  const command=JSON.parse(h.commands.find(c=>c.action==='paymentCommit').payload);
- assert.equal(command.loyalty.version,1);assert.deepEqual(command.loyalty.programs,[]);assert.equal(command.pricing.version,1);assert.deepEqual(command.pricing.discounts,[]);assert.equal(command.pricing.loyaltyDiscount,0);assert.equal(command.expectedOrderCount,500);assert.equal(command.order.receiptNumber,1);
+ assert.equal(command.configuredPrices.version,1);assert.equal(command.loyalty.version,1);assert.deepEqual(command.loyalty.programs,[]);assert.equal(command.pricing.version,1);assert.deepEqual(command.pricing.discounts,[]);assert.equal(command.pricing.loyaltyDiscount,0);assert.equal(command.expectedOrderCount,500);assert.equal(command.order.receiptNumber,1);
  assert.equal(command.products[0].stock,5);assert.equal(command.order.payments.length,2);
  assert.equal(Object.hasOwn(command,'orders'),false);assert.equal(Object.hasOwn(command,'writes'),false);
  assert.equal(h.events.includes('legacy-commit'),false);assert.equal(h.events.includes('availability'),false);assert.equal(h.events.includes('reset'),false);
@@ -73,3 +75,7 @@ test('pricing rollback keeps original settlement compatibility',async()=>{const 
 
 test('native loyalty input freezes program snapshot; rollback omits only loyalty envelope',async()=>{const h=host();h.context.state.loyaltyPrograms=[{id:'g',name:'Synthetic',loyalty_reward_products:[{product_id:'p1'}]}];const saving=h.context.finalizePayment(parts);await flushUntil(()=>h.events.includes('native-command'));const command=JSON.parse(h.commands.find(c=>c.action==='paymentCommit').payload);h.context.state.loyaltyPrograms[0].name='Changed';assert.equal(command.loyalty.programs[0].name,'Synthetic');assert.ok(!('loyalty' in command.order));h.reply();await saving;
  const r=host();r.context.MPosNativeLoyaltyRewardsEnabled=false;const fallback=r.context.finalizePayment(parts);await flushUntil(()=>r.events.includes('native-command'));const raw=JSON.parse(r.commands.find(c=>c.action==='paymentCommit').payload);assert.equal(Object.hasOwn(raw,'loyalty'),false);assert.ok(raw.pricing);r.reply();await fallback;});
+
+test('configured price settlement rollback preserves pricing and loyalty gates',async()=>{const h=host();h.context.MPosNativeConfiguredPricesEnabled=false;const saving=h.context.finalizePayment(parts);await flushUntil(()=>h.events.includes('native-command'));const command=JSON.parse(h.commands.find(c=>c.action==='paymentCommit').payload);assert.equal(Object.hasOwn(command,'configuredPrices'),false);assert.ok(command.pricing);assert.ok(command.loyalty);h.reply();await saving;});
+
+test('actual payment handler waits for configured addition and keeps external effects after settlement ack',async()=>{const h=host({configured:true});const adding=h.context.addConfiguredCartItem(h.context.state.products[0],[]);await flushUntil(()=>h.events.includes('native-price'));await h.context.finalizePayment([{method:'cash',amount:24.7,cashGiven:24.7,change:0}]);assert.equal(h.commands.some(c=>c.action==='paymentCommit'),false);const read=h.commands.find(c=>c.action==='configuredPriceRead');h.context.__nativeStorageResult({requestId:read.requestId,ok:true,authoritative:true,basePrice:12.35,price:12.35,manualPrice:false});await adding;assert.equal(h.context.state.cart[0].qty,2);const paying=h.context.finalizePayment([{method:'cash',amount:24.7,cashGiven:24.7,change:0}]);await flushUntil(()=>h.events.includes('native-command'));assert.equal(JSON.parse(h.commands.find(c=>c.action==='paymentCommit').payload).order.total,24.7);assert.equal(h.events.includes('availability'),false);h.reply();await paying;assert.equal(h.context.state.orders.length,1);assert.ok(h.events.indexOf('availability')>h.events.indexOf('native-ack'));});

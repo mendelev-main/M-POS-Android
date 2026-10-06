@@ -136,6 +136,10 @@ class MPosStorageMirror(
                 attempt { MPosReturnCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "local return transaction failed") }
             }
+            "configuredPriceRead" -> {
+                attempt { MPosConfiguredPriceEngine.calculate(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, "configured price unavailable") }
+            }
             "paymentCommit" -> {
                 attempt { MPosPaymentCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "local payment transaction failed") }

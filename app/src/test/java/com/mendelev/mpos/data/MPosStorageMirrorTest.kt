@@ -57,6 +57,17 @@ class MPosStorageMirrorTest {
         return result
     }
 
+    @Test fun configuredPriceReadIsPureAndWorkerSurvivesInvalidInput() = runBlocking {
+        send("configuredPriceRead", "bad", value = """{"version":1,"catalogPrice":10,"modifiers":[{"priceDelta":"bad"}]}""")
+        assertFalse(reply("bad").getBoolean("ok"))
+        send("configuredPriceRead", "price", value = """{"version":1,"catalogPrice":10,"modifiers":[{"priceDelta":2,"qty":3}]}""")
+        val response = replies.poll(10, TimeUnit.SECONDS)
+        assertNotNull(response); assertEquals("price", response!!.getString("requestId"))
+        assertTrue(response.getBoolean("ok")); assertTrue(response.getBoolean("authoritative"))
+        assertEquals(12.0, response.getDouble("price"), 0.0)
+        assertNull(database.legacyStorageShadowDao().get("products"))
+        assertNull(database.legacyStorageShadowDao().get("currentOrderSession"))
+    }
     @Test fun writesDeletesAndReadsCompleteInArrivalOrder() = runBlocking {
         send("put", "first", "products", products("Первый"))
         send("remove", "remove", "products")

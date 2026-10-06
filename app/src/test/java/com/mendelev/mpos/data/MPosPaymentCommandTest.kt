@@ -111,6 +111,24 @@ class MPosPaymentCommandTest {
         assertEquals(0, JSONArray(MPosShiftStorage(database).read().getString("payload")).getJSONObject(0).getJSONArray("cashMovements").length())
         assertEquals(1, JSONObject(MPosRecoveryStorage(database).read("currentOrderSession").getString("payload")).getJSONArray("items").length())
     }
+    @Test fun configuredUnitPriceIsPersistedUsingFrozenBaseAndModifiers() = runBlocking {
+        val request = withLoyalty(withPricing(command())).put("configuredPrices", JSONObject().put("version", 1))
+        request.getJSONObject("order").getJSONArray("items").getJSONObject(0).put("basePrice", 10).put("manualPrice", false)
+            .put("selectedModifiers", JSONArray("""[{"priceDelta":2.35,"qty":3}]"""))
+        assertTrue(MPosPaymentCommand(database).commit(request.toString()).getBoolean("ok"))
+        val receipt = JSONArray(MPosOrderStorage(database).read().getString("payload")).getJSONObject(0)
+        assertEquals(12.35, receipt.getJSONArray("items").getJSONObject(0).getDouble("price"), 0.0)
+        assertFalse(receipt.has("configuredPrices"))
+    }
+    @Test fun configuredPriceMismatchAndMalformedEnvelopeCannotWriteAnyPaymentData() = runBlocking {
+        val request = withPricing(command()).put("configuredPrices", JSONObject().put("version", 1))
+        request.getJSONObject("order").getJSONArray("items").getJSONObject(0).put("basePrice", 20)
+        reject(request)
+        reject(command().put("configuredPrices", JSONObject.NULL))
+        assertEquals(0, database.orderProjectionDao().orderCount())
+        assertEquals(5.125, JSONArray(MPosCatalogStorage(database).read().getString("payload")).getJSONObject(0).getDouble("stock"), 0.0)
+        assertEquals(1, JSONObject(MPosRecoveryStorage(database).read("currentOrderSession").getString("payload")).getJSONArray("items").length())
+    }
     @Test fun paymentWithoutGiftAcceptsEmptyNativeLoyaltySnapshot() = runBlocking {
         assertTrue(MPosPaymentCommand(database).commit(withLoyalty(withPricing(command())).toString()).getBoolean("ok"))
     }

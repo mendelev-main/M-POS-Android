@@ -178,7 +178,11 @@ Benefits:
 - removal of browser text-selection/context behavior.
 
 ### P7 — Payment domain + Compose payment screen
-**Status: ⚪ Later / high risk**
+**Status: 🟢 Partial (062)**
+
+Atomic settlement, product-discount arithmetic, gift allocation and configured unit-price
+formation are native. Cart/payment UI, online gift eligibility and recipe expansion
+remain reviewed JS; physical acceptance is pending.
 
 Extract a tested PaymentEngine before moving UI.
 
@@ -332,3 +336,13 @@ Room supplies minimal sorted staff and last-closed counted carryover without rec
 `specs/061-native-loyalty-reward-allocation/spec.md`.
 Физические проверки пересекающихся программ, подарка со скидкой/доставкой,
 отсутствия сети, возврата и импорта ожидаются.
+
+
+062: цена новой позиции (база, доплаты модификаторов, ручной ввод/округление)
+формируется Kotlin до добавления в корзину. Оплата проверяет базовый снимок
+и доплаты; старые позиции без basePrice не переоцениваются. При ожидании
+ответа добавления последовательны, оплата ждёт; отменённые/устаревшие ответы
+не меняют корзину. Формы выбора/preview, merge orchestration и рецептуры ещё JS.
+v13 без изменений. Откат: MPosNativeConfiguredPricesEnabled=false.
+Спецификация: `specs/062-native-configured-unit-prices/spec.md`; физические
+кейсы ручной цены, модификаторов, повторных нажатий/отмены/остатков/импорта ожидаются.

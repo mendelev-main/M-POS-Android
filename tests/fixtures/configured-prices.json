@@ -1,0 +1,329 @@
+[
+  {
+    "name": "catalogue price",
+    "input": {
+      "catalogPrice": 10,
+      "modifiers": [],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 10,
+      "extra": 0,
+      "price": 10,
+      "manualPrice": false
+    }
+  },
+  {
+    "name": "modifier deltas ignore modifier quantity",
+    "input": {
+      "catalogPrice": 10,
+      "modifiers": [
+        {
+          "priceDelta": 2,
+          "qty": 3
+        },
+        {
+          "priceDelta": 1,
+          "qty": 99
+        }
+      ],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 10,
+      "extra": 3,
+      "price": 13,
+      "manualPrice": false
+    }
+  },
+  {
+    "name": "negative modifier delta",
+    "input": {
+      "catalogPrice": 10,
+      "modifiers": [
+        {
+          "priceDelta": -3
+        }
+      ],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 10,
+      "extra": -3,
+      "price": 7,
+      "manualPrice": false
+    }
+  },
+  {
+    "name": "negative configured price remains unclamped",
+    "input": {
+      "catalogPrice": 1,
+      "modifiers": [
+        {
+          "priceDelta": -3
+        }
+      ],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 1,
+      "extra": -3,
+      "price": -2,
+      "manualPrice": false
+    }
+  },
+  {
+    "name": "fractional modifier sum is not rounded",
+    "input": {
+      "catalogPrice": 0.1,
+      "modifiers": [
+        {
+          "priceDelta": 0.2
+        },
+        {
+          "priceDelta": 0.3
+        }
+      ],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 0.1,
+      "extra": 0.5,
+      "price": 0.6,
+      "manualPrice": false
+    }
+  },
+  {
+    "name": "scalar coercion",
+    "input": {
+      "catalogPrice": "0x10",
+      "modifiers": [
+        {
+          "priceDelta": "2.5"
+        },
+        {
+          "priceDelta": true
+        },
+        {
+          "priceDelta": null
+        },
+        {}
+      ],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 16,
+      "extra": 3.5,
+      "price": 19.5,
+      "manualPrice": false
+    }
+  },
+  {
+    "name": "unknown catalogue price becomes zero in direct formation",
+    "input": {
+      "catalogPrice": "invalid",
+      "modifiers": [],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 0,
+      "extra": 0,
+      "price": 0,
+      "manualPrice": false
+    }
+  },
+  {
+    "name": "missing catalogue price",
+    "input": {
+      "modifiers": [],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 0,
+      "extra": 0,
+      "price": 0,
+      "manualPrice": false
+    }
+  },
+  {
+    "name": "manual comma",
+    "input": {
+      "catalogPrice": 0,
+      "manualInput": "10,125",
+      "modifiers": [
+        {
+          "priceDelta": 2.345
+        }
+      ],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 10.13,
+      "extra": 2.345,
+      "price": 12.475000000000001,
+      "manualPrice": true
+    }
+  },
+  {
+    "name": "manual half-cent floating point",
+    "input": {
+      "catalogPrice": 0,
+      "manualInput": "1.005",
+      "modifiers": [],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 1,
+      "extra": 0,
+      "price": 1,
+      "manualPrice": true
+    }
+  },
+  {
+    "name": "manual small positive rounds to zero",
+    "input": {
+      "catalogPrice": 0,
+      "manualInput": "0.001",
+      "modifiers": [],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 0,
+      "extra": 0,
+      "price": 0,
+      "manualPrice": true
+    }
+  },
+  {
+    "name": "manual just below half cent",
+    "input": {
+      "catalogPrice": 0,
+      "manualInput": "0.004999999999999999",
+      "modifiers": [],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 0,
+      "extra": 0,
+      "price": 0,
+      "manualPrice": true
+    }
+  },
+  {
+    "name": "manual numeric scalar",
+    "input": {
+      "catalogPrice": 0,
+      "manualInput": "0x10",
+      "modifiers": [],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 16,
+      "extra": 0,
+      "price": 16,
+      "manualPrice": true
+    }
+  },
+  {
+    "name": "already configured manual base is not rounded again",
+    "input": {
+      "catalogPrice": 0,
+      "manualBasePrice": 12.345,
+      "modifiers": [
+        {
+          "priceDelta": 0.005
+        }
+      ],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 12.345,
+      "extra": 0.005,
+      "price": 12.350000000000001,
+      "manualPrice": true
+    }
+  },
+  {
+    "name": "explicit null manual base selects catalogue",
+    "input": {
+      "catalogPrice": 5,
+      "manualBasePrice": null,
+      "modifiers": [],
+      "version": 1
+    },
+    "valid": true,
+    "expected": {
+      "basePrice": 5,
+      "extra": 0,
+      "price": 5,
+      "manualPrice": false
+    }
+  },
+  {
+    "name": "zero manual input rejected",
+    "input": {
+      "catalogPrice": 0,
+      "manualInput": "0",
+      "modifiers": [],
+      "version": 1
+    },
+    "valid": false
+  },
+  {
+    "name": "negative manual input rejected",
+    "input": {
+      "catalogPrice": 0,
+      "manualInput": "-1",
+      "modifiers": [],
+      "version": 1
+    },
+    "valid": false
+  },
+  {
+    "name": "empty manual input rejected",
+    "input": {
+      "catalogPrice": 0,
+      "manualInput": "",
+      "modifiers": [],
+      "version": 1
+    },
+    "valid": false
+  },
+  {
+    "name": "multiple commas rejected",
+    "input": {
+      "catalogPrice": 0,
+      "manualInput": "1,2,3",
+      "modifiers": [],
+      "version": 1
+    },
+    "valid": false
+  },
+  {
+    "name": "nonfinite modifier cannot form persisted price",
+    "input": {
+      "catalogPrice": 10,
+      "modifiers": [
+        {
+          "priceDelta": "invalid"
+        }
+      ],
+      "version": 1
+    },
+    "valid": false
+  }
+]

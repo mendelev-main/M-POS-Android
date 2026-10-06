@@ -49,6 +49,7 @@ class MPosPaymentCommand(private val database: MPosDatabase) {
         check(order.getInt("receiptNumber") == orders.countForShift(shiftId) + 1) { "receipt sequence changed" }
         require(order.getJSONArray("items").length() > 0) { "empty receipt" }
         require(order.optLong("returnedAt") == 0L) { "new payment cannot be a returned receipt" }
+        if (command.has("configuredPrices")) MPosConfiguredPriceEngine.validate(order, command.getJSONObject("configuredPrices"))
         if (command.has("loyalty")) MPosLoyaltyRewardEngine.validate(order, command.getJSONObject("loyalty"))
         if (command.has("pricing")) MPosPricingEngine.validate(order, command.getJSONObject("pricing"))
         validatePayments(order)

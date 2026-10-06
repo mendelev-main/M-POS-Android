@@ -19,6 +19,7 @@
     if(global.MPosNativeLoyaltyRewardsEnabled!==false){
       command.loyalty={version:1,programs:JSON.parse(JSON.stringify(current.loyaltyPrograms||[]))};
     }
+    if(global.MPosNativeConfiguredPricesEnabled!==false)command.configuredPrices={version:1};
     if(Number(order.deliveryFee)>0){
       const before=current.shifts.find(s=>s.id===order.shiftId),after=writes.shifts.find(s=>s.id===order.shiftId);
       const count=Array.isArray(before?.cashMovements)?before.cashMovements.length:0;

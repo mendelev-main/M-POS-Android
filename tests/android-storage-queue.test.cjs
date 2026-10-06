@@ -44,3 +44,5 @@ test('comparison cannot report healthy parity while pending shadow changes exist
  assert.equal(h.context.MPosCore.CatalogCutover.setMode('room'),'room');
  assert.throws(()=>h.context.MPosCore.CatalogCutover.setMode('legacy'),/explicit code rollback/);
 });
+
+test('configured price request is correlated read-only and freezes inputs without storage initialization',async()=>{const h=host();const input={version:1,catalogPrice:10,modifiers:[{priceDelta:2,qty:3}]};const work=h.context.MPosCore.ConfiguredPrices.calculate(input);const request=h.calls.at(-1);assert.equal(request.action,'configuredPriceRead');input.modifiers[0].priceDelta=9;assert.equal(JSON.parse(request.payload).modifiers[0].priceDelta,2);assert.equal(h.calls.length,1);h.context.__nativeStorageResult({requestId:request.requestId,ok:true,authoritative:true,price:12,basePrice:10,manualPrice:false});assert.equal((await work).price,12);assert.equal(h.data.size,0);});
