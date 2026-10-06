@@ -86,3 +86,7 @@ Approved business correction: cross-shift refunds reduce the return shift's cash
 ## Atomic full return (050)
 
 Historical receipts use Kotlin transactional return with original stockConsumption, original payment parts, current return shift and preserved JSON extensions/position. Unknown acknowledgement retries the identical command once; unresolved status requires reload. Legacy no-consumption receipts retain current-recipe restoration and journal. No new backend/availability effects; loyalty starts after local acknowledgement. SQLite rollback/reopen/restored-backup and actual JS workflow tests are automated; tablet/terminal/Telegram/print checks remain pending.
+
+## Manual cash movements (051)
+
+Native deposits/withdrawals preserve current positive-amount rules, unrounded decimal values, nonnegative-drawer requirement for both types and 0.0001 withdrawal tolerance. JS applies state after ack; native errors roll back full shift/projection/marker writes. 049 cross-shift refunds limit available cash. Source JSON/v13 unchanged. Native reopening/replay/restored-backup and actual handler tests automated; physical acceptance pending.

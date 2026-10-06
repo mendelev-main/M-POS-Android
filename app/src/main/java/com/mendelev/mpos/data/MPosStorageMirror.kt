@@ -108,6 +108,10 @@ class MPosStorageMirror(
             }
         }
         when (command.action) {
+            "cashMovementCommit" -> {
+                attempt { MPosCashMovementCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, "local cash movement transaction failed") }
+            }
             "returnCommit" -> {
                 attempt { MPosReturnCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "local return transaction failed") }

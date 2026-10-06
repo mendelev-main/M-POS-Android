@@ -97,3 +97,14 @@ Status: pending physical tablet execution; automated coverage is not physical ac
 - Verify loyalty reversal after persisted return and no availability send/retry from the return itself. Failed availability retry remains gated by the next persisted payment.
 
 Physical status: pending, deferred by user instruction.
+
+## 051 — Manual deposit / withdrawal
+
+- Open with 100; deposit 20 with a comment: expected cash 120; withdraw 20: expected 100. Confirm note, movement order and history after restart.
+- Withdraw exactly the available amount; reject more than available, zero/negative/invalid input. With cross-shift return leaving 80, withdrawing 81 must fail without a new movement.
+- Repeat a save tap while acknowledgement is pending; confirm one movement. Interrupt storage/ack, reload on unresolved status, confirm one complete operation or none.
+- Import a pre-operation synthetic v13 backup and repeat a new operation; verify old markers do not suppress it. Export/import full history and extension fields.
+- Preserved current cases: amount 0.001 is not rounded; negative drawer blocks deposits too. Record these for a later business precision/recovery decision.
+- Close shift and compare expected cash/difference on screen, image/Telegram and printed report.
+
+Status: pending physical testing at the end of migration.

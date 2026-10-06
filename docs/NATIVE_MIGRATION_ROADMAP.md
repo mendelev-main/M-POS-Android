@@ -276,3 +276,7 @@ MPosShiftAccounting now supplies native delivery cash validation. Android shift 
 Historical stockConsumption receipts now return through MPosReturnCommand: native snapshot/receipt/cash validation, historical stock restoration and one transactional product/shift/receipt/marker commit. Exact retries do not duplicate the return; restored pre-return archives reject stale acknowledgements. Legacy receipts retain the reviewed journal/current-recipe path. P7 remains partial: price/discount/recipe expansion, legacy returns, loyalty transport and UI are still outside this command.
 
 Next boundary: native deposit/withdrawal commands, then shift open/close. Keep the 049 accounting fixtures and v13 compatibility throughout.
+
+## Atomic manual cash movements (051)
+
+MPosCashMovementCommand owns deposit/withdrawal drawer validation and a transactional shift/movement/marker commit. Manual movements preserve amounts, notes and existing JSON. Exact retry/reopen/backup guards prevent duplicate writes or false acknowledgements. UI stays reviewed JS; no new network effects. Current negative-drawer deposit restriction and arbitrary fractional amounts are documented for future business review. Next: shift open/close lifecycle, then native screen.
