@@ -10,7 +10,10 @@ class MPosOrderRepository(
     private val orderDao = database.orderProjectionDao()
 
     suspend fun parityReport(): JSONObject {
-        val legacy = shadowDao.get("orders")
+        val legacy = (if (shadowDao.get(MPosOrderStorage.ROWS_KEY) != null) {
+            val snapshot = MPosOrderStorage(database).read()
+            if (snapshot.getBoolean("found")) LegacyStorageShadowEntity("orders", snapshot.getString("payload"), 0) else null
+        } else shadowDao.get("orders"))
             ?: return JSONObject()
                 .put("ok", false)
                 .put("authoritative", false)

@@ -62,6 +62,10 @@
     try{await legacyStorage.set(key,value)}
     catch(error){cacheFailures++;cacheFailuresByKey[key]++;console.error('[MPosStorage] compatibility cache write failed',key,error)}
   }
+  function invalidateReceiptCache(){
+    try{legacyStorage.remove('orders')}
+    catch(error){cacheFailures++;cacheFailuresByKey.orders++;console.error('[MPosStorage] receipt cache invalidation failed',error)}
+  }
   async function readNative(key){
     await initializeNative(key);
     return requireNative(await request(domainAction(key,'Read'),{key}),true);
@@ -94,7 +98,8 @@
         const payload=JSON.stringify(value);
         await initializeNative(key);
         requireNative(await request(domainAction(key,'Write'),{key,payload}),true);
-        await cacheNative(key,JSON.parse(payload));
+        if(key==='orders')invalidateReceiptCache();else await cacheNative(key,JSON.parse(payload));
+        if(key==='orders')global.MPosCore?.ReceiptsHistory?.invalidate();
         return;
       }
       await legacyStorage.set(key,value);
@@ -130,6 +135,21 @@
 
   const mposCore=global.MPosCore=global.MPosCore||{};
   mposCore.Storage=mposStorage;
+  mposCore.Receipts=Object.freeze({
+    async page(offset=0,limit=50){
+      await initializeNative('orders');
+      return requireNative(await request('orderPage',{key:'orders',payload:JSON.stringify({offset,limit})}),true);
+    },
+    async save(receipt,expectedRevision){
+      const payload=JSON.stringify({receipt,expectedRevision});
+      await initializeNative('orders');
+      const result=requireNative(await request('orderUpsert',{key:'orders',payload}),true);
+      invalidateReceiptCache();
+      global.MPosCore?.ReceiptsHistory?.invalidate();
+      // Individual writes invalidate the secondary archive cache; full native reads remain authoritative.
+      return result;
+    }
+  });
   mposCore.Catalog=Object.freeze({
     nativeReadsEnabled:true,
     initialize:()=>initializeNative('products'),

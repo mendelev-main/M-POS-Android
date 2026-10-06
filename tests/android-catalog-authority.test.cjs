@@ -19,7 +19,7 @@ function host({data=new Map(),room={initialized:false,found:false,payload:null},
  const legacy={
   async get(key,fallback){calls.push('legacy-get:'+key);return data.has(key)?clone(data.get(key)):fallback;},
   async set(key,value){calls.push('legacy-set:'+key);if(cacheFails&&['products','layout','posNavigation','employees','shifts','orders','parked','currentOrderSession','criticalStorageJournal'].includes(key))throw new Error('cache disk failure');data.set(key,clone(value));},
-  remove(key){calls.push('legacy-remove:'+key);data.delete(key);},
+  remove(key){calls.push('legacy-remove:'+key);if(cacheFails)throw new Error('cache remove failure');data.delete(key);},
   describe:()=>({mode:'localStorage',sourceOfTruth:'local-pos'})
  };
  const context={PrilavokCore:{Storage:legacy},state:{},criticalStorageRecoveryPending:false,
@@ -149,7 +149,7 @@ test('existing payment journal retains failed native product write and recovers 
  assert.equal(h.data.has('orders'),false);assert.equal(h.data.get('criticalStorageJournal').type,'payment');
  const restarted=host({room:h.room,data:h.data});
  assert.equal(await restarted.context.recoverCriticalStorageJournal(),true);
- assert.equal(JSON.parse(h.room.payload)[0].name,'Stock after sale');assert.equal(h.data.get('orders')[0].id,'paid');
+ assert.equal(JSON.parse(h.room.payload)[0].name,'Stock after sale');assert.equal(JSON.parse(h.room.workspace.orders.payload)[0].id,'paid');
  assert.equal(h.data.get('criticalStorageJournal'),null);
 });
 
@@ -161,7 +161,7 @@ test('lost acknowledgement is reported as uncertain and existing journal can rep
  await assert.rejects(saving,/commit status is uncertain/);h.release();
  assert.equal(h.data.has('orders'),false);
  const restarted=host({room:h.room,data:h.data});assert.equal(await restarted.context.recoverCriticalStorageJournal(),true);
- assert.equal(h.data.get('orders')[0].id,'paid');assert.equal(h.data.get('criticalStorageJournal'),null);
+ assert.equal(JSON.parse(h.room.workspace.orders.payload)[0].id,'paid');assert.equal(h.data.get('criticalStorageJournal'),null);
 });
 
 test('actual v13 validator and restore replace authoritative catalog through existing journal',async()=>{
@@ -219,7 +219,7 @@ test('v13 restore persists products layout and navigation in native storage and 
  await h.context.applyBackupData(backup);
  assert.deepEqual(JSON.parse(h.room.workspace.layout.payload).categoryColors,backup.layout.categoryColors);
  assert.deepEqual(JSON.parse(h.room.workspace.posNavigation.payload),backup.posNavigation);
- assert.deepEqual(h.data.get('orders'),[]);assert.equal(h.data.get('criticalStorageJournal'),null);
+ assert.deepEqual(JSON.parse(h.room.workspace.orders.payload),[]);assert.equal(h.data.get('criticalStorageJournal'),null);
  const restarted=host({room:h.room,data:h.data});
  assert.deepEqual(clone(await restarted.context.MPosCore.Storage.get('posNavigation',{})),backup.posNavigation);
 });
@@ -283,6 +283,7 @@ test('paid receipt waits for native commit before updating cache and preserves s
  assert.equal(h.calls.includes('legacy-set:orders'),false);
  h.release();await saving;
  assert.equal(JSON.parse(h.room.workspace.orders.payload)[0].total,12.35);
+ assert.equal(h.calls.includes('legacy-set:orders'),false);assert.equal(h.calls.includes('legacy-remove:orders'),true);
  assert.deepEqual(JSON.parse(h.room.workspace.orders.payload)[0].payments,paidReceipt().payments);
 });
 

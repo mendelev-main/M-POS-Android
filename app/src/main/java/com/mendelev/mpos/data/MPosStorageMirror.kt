@@ -18,9 +18,9 @@ class MPosStorageMirror(
 
     fun handle(payload: JSONObject) {
         val action = payload.optString("action")
-        val key = if (action.startsWith("catalog") && action in setOf("catalogInitialize", "catalogWrite", "catalogRemove")) "products" else if (action in setOf("employeeInitialize", "employeeWrite", "employeeRemove")) "employees" else if (action in setOf("shiftInitialize", "shiftWrite", "shiftRemove")) "shifts" else if (action in setOf("orderInitialize", "orderWrite", "orderRemove")) "orders" else if (action in setOf("parkedInitialize", "parkedWrite", "parkedRemove")) "parked" else payload.optString("key")
+        val key = if (action.startsWith("catalog") && action in setOf("catalogInitialize", "catalogWrite", "catalogRemove")) "products" else if (action in setOf("employeeInitialize", "employeeWrite", "employeeRemove")) "employees" else if (action in setOf("shiftInitialize", "shiftWrite", "shiftRemove")) "shifts" else if (action in setOf("orderInitialize", "orderWrite", "orderRemove", "orderUpsert")) "orders" else if (action in setOf("parkedInitialize", "parkedWrite", "parkedRemove")) "parked" else payload.optString("key")
         val command = Command(action, payload.optString("requestId"), key, payload.opt("payload") as? String, payload.optString("sourceKey"),
-            if (key.isNotBlank() && action in setOf("put", "remove", "catalogInitialize", "catalogWrite", "catalogRemove", "workspaceInitialize", "workspaceWrite", "workspaceRemove", "employeeInitialize", "employeeWrite", "employeeRemove", "shiftInitialize", "shiftWrite", "shiftRemove", "orderInitialize", "orderWrite", "orderRemove", "parkedInitialize", "parkedWrite", "parkedRemove", "recoveryInitialize", "recoveryWrite", "recoveryRemove")) writeState.request(key) else null)
+            if (key.isNotBlank() && action in setOf("put", "remove", "catalogInitialize", "catalogWrite", "catalogRemove", "workspaceInitialize", "workspaceWrite", "workspaceRemove", "employeeInitialize", "employeeWrite", "employeeRemove", "shiftInitialize", "shiftWrite", "shiftRemove", "orderInitialize", "orderWrite", "orderRemove", "orderUpsert", "parkedInitialize", "parkedWrite", "parkedRemove", "recoveryInitialize", "recoveryWrite", "recoveryRemove")) writeState.request(key) else null)
         if (!queue.submit({ result(command.requestId, false, "native shadow command failed") }) { dispatch(command) }) {
             result(command.requestId, false, "native shadow queue is full or closed")
         }
@@ -175,13 +175,15 @@ class MPosStorageMirror(
                     value.put("requestId", requestId)
                 }.onSuccess(::emitResult).onFailure { result(requestId, false, "native shift operation failed") }
             }
-            "orderStatus", "orderInitialize", "orderRead", "orderWrite", "orderRemove" -> {
+            "orderStatus", "orderInitialize", "orderRead", "orderWrite", "orderRemove", "orderPage", "orderUpsert" -> {
                 attempt {
                     val value = when (command.action) {
                         "orderStatus" -> JSONObject().put("ok", true).put("initialized", orderStorage.isAuthoritative()).put("source", "room-orders")
                         "orderInitialize" -> orderStorage.initialize(command.serialized)
                         "orderWrite" -> orderStorage.write(requireNotNull(command.serialized))
                         "orderRemove" -> orderStorage.remove()
+                        "orderPage" -> orderStorage.page(requireNotNull(command.serialized))
+                        "orderUpsert" -> orderStorage.upsert(requireNotNull(command.serialized))
                         else -> orderStorage.read()
                     }
                     command.version?.let { writeState.commit("orders", it) }

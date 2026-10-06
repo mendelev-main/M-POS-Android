@@ -169,4 +169,71 @@ class MPosOrderAuthorityTest {
         assertEquals(2, database.orderProjectionDao().allPayments().size)
     }
 
+    @Test fun appendingOrChangingOneReceiptDoesNotRewriteOtherReceiptRows() = runBlocking {
+        val first = JSONArray(orders("Первый"))
+        call("orderInitialize", first.toString())
+        database.openHelper.writableDatabase.execSQL("CREATE TRIGGER reject_unchanged BEFORE DELETE ON order_projection WHEN OLD.id = 'o1' BEGIN SELECT RAISE(ABORT, 'unchanged receipt rewritten'); END")
+        val second = JSONObject(first.getJSONObject(0).toString()).put("id", "o2")
+        val archive = JSONArray(first.toString()).put(second)
+        assertTrue(call("orderWrite", archive.toString()).getBoolean("ok"))
+        assertTrue(call("orderWrite", archive.toString()).getBoolean("ok"))
+        archive.getJSONObject(1).put("returnedAt", 2000L).put("returnAmount", 12.35)
+        assertTrue(call("orderWrite", archive.toString()).getBoolean("ok"))
+        assertEquals(2, database.orderProjectionDao().allOrders().size)
+        assertNull(database.legacyStorageShadowDao().get("orders"))
+        assertEquals("Первый", database.orderProjectionDao().get("o1")!!.employeeName)
+        database.openHelper.writableDatabase.execSQL("DROP TRIGGER reject_unchanged")
+    }
+
+    @Test fun individualReceiptWriteChecksRevisionAndKeepsOtherReceipts() {
+        call("orderInitialize", orders("Первый"))
+        val revision = call("orderRead").getLong("revision")
+        val receipt = JSONArray(orders("Второй")).getJSONObject(0).put("id", "o2")
+        val envelope = JSONObject().put("receipt", receipt).put("expectedRevision", revision).toString()
+        assertTrue(call("orderUpsert", envelope).getBoolean("ok"))
+        assertFalse(call("orderUpsert", envelope).getBoolean("ok"))
+        val archive = JSONArray(call("orderRead").getString("payload"))
+        assertEquals(2, archive.length()); assertEquals("o1", archive.getJSONObject(0).getString("id"))
+    }
+
+    @Test fun nativePagesHaveStableTimestampOrderingBoundsAndNoLegacyThreeHundredLimit() {
+        val rows = JSONArray()
+        for (index in 0 until 325) rows.put(JSONObject().put("id", "receipt-$index").put("timestamp", index / 2).put("custom", index))
+        call("orderInitialize", rows.toString())
+        val ids = mutableListOf<String>()
+        for (offset in 0 until 325 step 50) {
+            val page = call("orderPage", JSONObject().put("offset", offset).put("limit", 50).toString())
+            assertTrue(page.getBoolean("ok")); assertEquals(325, page.getInt("total"))
+            val records = page.getJSONArray("rows")
+            for (index in 0 until records.length()) ids += records.getJSONObject(index).getString("id")
+        }
+        assertEquals(325, ids.size); assertEquals(325, ids.toSet().size)
+        assertEquals("receipt-324", ids.first()); assertEquals("receipt-0", ids[323]); assertEquals("receipt-1", ids.last())
+        for ((offset, limit) in listOf(-1 to 50, 0 to 0, 0 to 101))
+            assertFalse(call("orderPage", JSONObject().put("offset", offset).put("limit", limit).toString()).getBoolean("ok"))
+    }
+
+    @Test fun previouslyOwnedV13DocumentMigratesLazilyAndReconstructsCompatibleArchive() = runBlocking {
+        val source = orders("Из прежней версии")
+        database.legacyStorageShadowDao().upsert(LegacyStorageShadowEntity("orders", source, 0))
+        database.legacyStorageShadowDao().upsert(LegacyStorageShadowEntity(MPosOrderStorage.AUTHORITY_KEY, "{}", 0))
+        assertEquals(source, call("orderRead").getString("payload"))
+        assertNotNull(database.legacyStorageShadowDao().get(MPosOrderStorage.ROWS_KEY))
+        assertNull(database.legacyStorageShadowDao().get("orders"))
+        assertTrue(MPosOrderRepository(database).parityReport().getBoolean("ok"))
+    }
+
+    @Test fun failedLazyFormatMigrationKeepsPreviousOwnedDocumentAndCanRetry() = runBlocking {
+        val source = orders("Старая версия")
+        database.legacyStorageShadowDao().upsert(LegacyStorageShadowEntity("orders", source, 0))
+        database.legacyStorageShadowDao().upsert(LegacyStorageShadowEntity(MPosOrderStorage.AUTHORITY_KEY, "{}", 0))
+        database.openHelper.writableDatabase.execSQL("CREATE TRIGGER reject_format BEFORE INSERT ON legacy_storage_shadow WHEN NEW.key = 'mpos_orders_rows_v1' BEGIN SELECT RAISE(ABORT, 'synthetic failure'); END")
+        assertFalse(call("orderRead").getBoolean("ok"))
+        assertEquals(source, database.legacyStorageShadowDao().get("orders")!!.payload)
+        assertNull(database.legacyStorageShadowDao().get(MPosOrderStorage.ROWS_KEY))
+        assertTrue(database.orderProjectionDao().allOrders().isEmpty())
+        database.openHelper.writableDatabase.execSQL("DROP TRIGGER reject_format")
+        assertEquals(source, call("orderRead").getString("payload"))
+    }
+
 }

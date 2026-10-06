@@ -42,4 +42,11 @@ interface OrderProjectionDao {
 
     @Query("SELECT COUNT(*) FROM payment_projection")
     suspend fun paymentCount(): Int
+
+    @Query("DELETE FROM payment_projection WHERE orderId = :id") suspend fun deletePayments(id: String)
+    @Query("DELETE FROM order_line_projection WHERE orderId = :id") suspend fun deleteLines(id: String)
+    @Query("DELETE FROM order_projection WHERE id = :id") suspend fun deleteOrder(id: String)
+    @Query("SELECT * FROM order_projection WHERE id = :id") suspend fun get(id: String): OrderProjectionEntity?
+    @Query("SELECT * FROM order_projection ORDER BY timestamp DESC, sortIndex ASC, id ASC LIMIT :limit OFFSET :offset")
+    suspend fun page(limit: Int, offset: Int): List<OrderProjectionEntity>
 }
