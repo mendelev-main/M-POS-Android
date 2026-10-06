@@ -256,3 +256,7 @@ raw v13/session and progress/settlement unchanged. Physical pending.
 076: matching native cart preview refresh for financial input changes, DOM
 identity/scroll and stale/failure/rollback coverage; source pending preview
 retained. Physical response/performance pending, v13 unchanged.
+
+077: delivery check/select/type source fixtures, FIFO continuity/external stale,
+quote-integrated gate and pending-payment protocol; strict zero tariff preserved.
+Rate CRUD and backend source, v13 unchanged; physical pending.

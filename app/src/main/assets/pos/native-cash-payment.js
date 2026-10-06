@@ -23,7 +23,7 @@
       const form=active;if(!form||payload?.token!==form.token||!['cancel','confirm'].includes(payload.action))return;
       const unchanged=form.cart===state.cart&&form.stamp===stamp();global.closeModal();
       if(payload.action==='cancel')return;
-      if(!unchanged||state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||(global.MPosCore.CartOperations?.hasPending()||global.MPosCore.SplitPayments?.hasPending())||typeof payload.cashGiven!=='number'||!Number.isFinite(payload.cashGiven)||payload.cashGiven<0){flash('Заказ изменился. Повторите ввод суммы.');return;}
+      if(!unchanged||state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||(global.MPosCore.CartOperations?.hasPending()||(global.MPosCore.SplitPayments?.hasPending()||global.MPosCore.OrderContext?.hasPending()))||typeof payload.cashGiven!=='number'||!Number.isFinite(payload.cashGiven)||payload.cashGiven<0){flash('Заказ изменился. Повторите ввод суммы.');return;}
       state._paymentCashGiven=payload.cashGiven;renderPaymentAmount(form.total);
     },
     confirm(loyaltyValidated,given){

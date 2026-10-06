@@ -27,7 +27,7 @@
       const unchanged=form.cart===state.cart&&form.stamp===stamp();
       active=null;bridge.postMessage({action:'hide',token:form.token});global.closeModal();
       if(payload.action==='cancel'){renderSplitPayment();return;}
-      if(!unchanged||state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||(global.MPosCore.CartOperations?.hasPending()||global.MPosCore.SplitPayments?.hasPending())){
+      if(!unchanged||state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||(global.MPosCore.CartOperations?.hasPending()||(global.MPosCore.SplitPayments?.hasPending()||global.MPosCore.OrderContext?.hasPending()))){
         flash('Заказ изменился. Повторите подтверждение оплаты.');return;
       }
       return form.onSuccess();

@@ -3,7 +3,7 @@
   'use strict';
   if(!global.MPosCore?.CartTotals)return;
   const enabled=()=>global.MPosNativeCartTotalsEnabled!==false;
-  const input=()=>({version:1,items:state.cart.map(i=>({productId:i.productId,price:i.price,qty:i.qty,discountId:i.discountId})),discounts:state.discounts||[],orderType:state.orderType,deliveryFee:state.deliveryFee,programs:state.loyaltyPrograms||[],redemptions:state.loyaltyRedemptions||{}});
+  const input=()=>({version:1,items:state.cart.map(i=>({productId:i.productId,price:i.price,qty:i.qty,discountId:i.discountId})),discounts:state.discounts||[],orderType:state.orderType,deliveryFee:state.deliveryFee,programs:state.loyaltyPrograms||[],redemptions:state.loyaltyRedemptions||{},...(global.MPosCore.NativeDelivery?.enabled()?{deliveryState:{selected:state.deliveryTariffSelected,rates:(state.deliveryRates||[]).map(r=>({amount:r.amount}))}}:{})});
   const stamp=()=>JSON.stringify(input(),(_key,value)=>{if(typeof value==='number'&&!Number.isFinite(value))throw new Error('non-finite cart amount');return value;});
   let cached=null;
   const inflight=new Map();
@@ -18,6 +18,7 @@
   global.MPosCore.PaymentTotals=Object.freeze({
     enabled,
     current:()=>!!quote(),
+    delivery:()=>quote()?.delivery?.allowed??null,
     presentation(){const value=quote();return value?{lines:value.pricing.lines.map(line=>({...line})),total:value.pricing.total,loyaltyDiscount:value.loyalty.discount}:null;},
     split(count,total){
       if(global.MPosNativeSplitPlansEnabled===false)return null;
@@ -36,6 +37,7 @@
       if(!inflight.has(key))inflight.set(key,Promise.resolve(global.MPosCore.CartTotals.calculate(request)).finally(()=>inflight.delete(key)));
       const value=await inflight.get(key);
       if(!valid(value,request.items.length))throw new Error('invalid native cart totals');
+      if(request.deliveryState&&typeof value.delivery?.allowed!=='boolean')throw new Error('invalid native delivery status');
       if(given!==undefined&&(typeof value.cash?.allowed!=='boolean'||(value.cash.allowed&&(!Number.isFinite(value.cash.cashGiven)||!Number.isFinite(value.cash.change)))))throw new Error('invalid native cash totals');
       if(!enabled()||serialized!==stamp())return false;
       // A late plain preview must not evict tender needed by a concurrent cash confirmation.

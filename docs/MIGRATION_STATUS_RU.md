@@ -1,7 +1,7 @@
 # Статус миграции M POS Android и проверки на планшете
 
-Актуальный срез: этап 076. Основной счётчик и полный план находятся в
-[реестре задач](KOTLIN_MIGRATION_TASKS.md): **75/110 выполнено — 68,18%**.
+Актуальный срез: этап 077. Основной счётчик и полный план находятся в
+[реестре задач](KOTLIN_MIGRATION_TASKS.md): **76/110 выполнено — 69,09%**.
 Это инженерные задачи, не процент функций/кода; физическая приёмка ожидается.
 Исторические таблицы ниже описывают срез 040–053; более поздние изменения
 перечислены по спецификациям в конце, актуальный scope каждого этапа — в реестре.
@@ -354,3 +354,8 @@ Rollback: MPosNativeSplitRecoveryEnabled=false.
 обновляются только денежные DOM nodes. Root/modal/scroll/ввод сохранены.
 Identical in-flight quote shared; source preview остаётся до ответа/при read failure.
 Rollback MPosNativeCartPreviewEnabled=false; физическая приёмка pending.
+
+077: check/select/type доставки — pure Kotlin; gate в существующем quote,
+context FIFO и payment/confirmation pending guards. Exact fee/zero/selected и
+save/render/modal порядок сохранены. Rate CRUD/backend остаются source.
+Rollback MPosNativeDeliveryEnabled=false; physical pending.

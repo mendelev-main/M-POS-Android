@@ -57,6 +57,16 @@ class MPosStorageMirrorTest {
         return result
     }
 
+    @Test fun deliveryReadIsPureCorrelatedAndWorkerSurvivesMalformedInput() = runBlocking {
+        send("deliveryRead", "bad-delivery", value = "{}")
+        assertFalse(reply("bad-delivery").getBoolean("ok"))
+        send("deliveryRead", "delivery", value = """{"version":1,"operation":"select","amount":2,"state":{"orderType":"Доставка","fee":0,"selected":false,"rates":[{"amount":2}]}}""")
+        val response = replies.poll(10, TimeUnit.SECONDS)
+        assertNotNull(response); assertEquals("delivery", response!!.getString("requestId"))
+        assertTrue(response.getBoolean("authoritative")); assertEquals(2.0, response.getDouble("fee"), 0.0)
+        assertNull(database.legacyStorageShadowDao().get("currentOrderSession"))
+    }
+
     @Test fun splitAmountReadIsPureAndWorkerSurvivesInvalidInput() = runBlocking {
         send("splitAmountRead", "bad-amount", value = "{}")
         assertFalse(reply("bad-amount").getBoolean("ok"))

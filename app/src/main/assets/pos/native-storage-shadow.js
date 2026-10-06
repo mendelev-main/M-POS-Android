@@ -137,6 +137,9 @@
 
   const mposCore=global.MPosCore=global.MPosCore||{};
   mposCore.Storage=mposStorage;
+  mposCore.DeliveryRead=Object.freeze({
+    async calculate(input){return requireNative(await request('deliveryRead',{payload:JSON.stringify(input)}),true);}
+  });
   mposCore.SplitRecoveryRead=Object.freeze({
     async calculate(input){
       return requireNative(await request('splitRecoveryRead',{payload:JSON.stringify(input)}),true);

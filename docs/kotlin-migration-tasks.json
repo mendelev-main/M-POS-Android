@@ -468,9 +468,10 @@
     {
       "id": "077",
       "title": "Выбор доставки, тариф и проверки заказа",
-      "status": "planned",
+      "status": "done",
       "area": "P7",
-      "dependencies": "076"
+      "dependencies": "076",
+      "spec": "specs/077-native-delivery/spec.md"
     },
     {
       "id": "078",

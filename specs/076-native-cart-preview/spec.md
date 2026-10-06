@@ -36,3 +36,6 @@ rollback. Native UI дизайн не меняется, synthetic DOM tests не
 
 После публикации: 75/110 задач выполнено (68,18%), осталось 35. Далее 077 —
 выбор и проверки тарифа доставки, затем 078 — context заказа.
+
+Обновление 077: quote включает delivery status при NativeDelivery enabled;
+selector/type очередь и gate native, без дополнительного payment read.

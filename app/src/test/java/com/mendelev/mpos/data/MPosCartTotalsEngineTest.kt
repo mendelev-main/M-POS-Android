@@ -51,6 +51,17 @@ class MPosCartTotalsEngineTest {
         assertTrue(result.getJSONObject("cash").getBoolean("allowed"))
         input.put("cashGiven", 12.49); assertFalse(MPosCartTotalsEngine.calculate(input).getJSONObject("cash").getBoolean("allowed"))
     }
+    @Test fun deliveryGateSharesThePricingQuoteWithoutChangingTheAmount() {
+        val input = JSONObject("""{"version":1,"items":[{"productId":"p","price":10,"qty":1}],"discounts":[],"programs":[],"redemptions":{},"orderType":"Доставка","deliveryFee":2,"deliveryState":{"selected":false,"rates":[{"amount":2}]}}""")
+        assertFalse(MPosCartTotalsEngine.calculate(input).getJSONObject("delivery").getBoolean("allowed"))
+        input.getJSONObject("deliveryState").put("selected", true)
+        val result = MPosCartTotalsEngine.calculate(input)
+        assertTrue(result.getJSONObject("delivery").getBoolean("allowed"))
+        assertEquals(12.0, result.getJSONObject("pricing").getDouble("total"), 0.0)
+        input.put("deliveryFee", 3)
+        assertFalse(MPosCartTotalsEngine.calculate(input).getJSONObject("delivery").getBoolean("allowed"))
+    }
+
     @Test fun invalidProtocolAndAmountsFailWithoutAQuote() {
         for (raw in listOf("{}", """{"version":2}""", """{"version":1,"items":[{"qty":1}],"discounts":[],"programs":[],"redemptions":{}}""")) {
             assertThrows(Exception::class.java) { MPosCartTotalsEngine.calculate(JSONObject(raw)) }

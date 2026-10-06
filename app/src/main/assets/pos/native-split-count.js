@@ -5,7 +5,7 @@
   const original=global.adjustSplitCount;
   const enabled=()=>global.MPosNativeSplitCountEnabled!==false;
   let tail=Promise.resolve(),pending=0,epoch=0;
-  const busy=()=>state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||global.MPosCore.CartOperations?.hasPending();
+  const busy=()=>state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||global.MPosCore.CartOperations?.hasPending()||global.MPosCore.OrderContext?.hasPending();
   const canonical=value=>JSON.stringify(value,(_key,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
   const stamp=()=>JSON.stringify([state.cart,state._splitPayments,state._splitPaymentTotalCents,state.paymentPage,state.discounts,state.customer,state.loyaltyPrograms,state.loyaltyRedemptions,state.orderType,state.deliveryFee,typeof currentShift==='function'?currentShift()?.id:null]);
   const context=()=>JSON.stringify([state.cart,state._splitPaymentTotalCents,state.paymentPage,state.discounts,state.customer,state.loyaltyPrograms,state.loyaltyRedemptions,state.orderType,state.deliveryFee,typeof currentShift==='function'?currentShift()?.id:null]);

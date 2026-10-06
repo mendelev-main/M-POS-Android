@@ -15,6 +15,11 @@ object MPosCartTotalsEngine {
         val result = JSONObject().put("ok", true).put("authoritative", true).put("source", "native-cart-totals")
             .put("pricing", pricing).put("loyalty", loyalty)
         MPosSplitPaymentPlans.calculate(pricing.getDouble("total"))?.let { result.put("splitPlans", it) }
+        if (input.has("deliveryState")) {
+            val state = JSONObject(input.getJSONObject("deliveryState").toString()).put("orderType", input.opt("orderType"))
+            if (input.has("deliveryFee")) state.put("fee", input.opt("deliveryFee"))
+            result.put("delivery", JSONObject().put("allowed", com.mendelev.mpos.payment.MPosDeliveryEngine.allowed(state)))
+        }
         if (input.has("cashGiven")) {
             val payment = MPosCashTender.confirmWhole(pricing.getDouble("total"), input.getDouble("cashGiven"))
             val cash = JSONObject().put("allowed", payment != null)

@@ -14,7 +14,7 @@
     global[name]=async function(...args){
       if(!enabled())return original.apply(this,args);
       if(state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)){flash('Дождитесь завершения текущей операции');return;}
-      if(global.MPosCore.CartOperations?.hasPending()||global.MPosCore.SplitPayments?.hasPending()){flash('Дождитесь завершения изменения заказа');return;}
+      if(global.MPosCore.CartOperations?.hasPending()||(global.MPosCore.SplitPayments?.hasPending()||global.MPosCore.OrderContext?.hasPending())){flash('Дождитесь завершения изменения заказа');return;}
       if(pending){flash('Дождитесь проверки остатков');return;}
       if(name==='confirmPaymentScreen'&&typeof loyaltyPaymentGuardBusy!=='undefined'&&loyaltyPaymentGuardBusy){flash('Дождитесь проверки подарка');return;}
       // Preserve reviewed guards that precede the stock decision.
@@ -24,7 +24,7 @@
         if(!currentShift()){flash('Смена не открыта');return;}
       }
       const cart=state.cart,before=fingerprint(),generation=epoch;
-      const stale=()=>state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||!enabled()||generation!==epoch||cart!==state.cart||before!==fingerprint()||global.MPosCore.CartOperations?.hasPending()||global.MPosCore.SplitPayments?.hasPending();
+      const stale=()=>state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||!enabled()||generation!==epoch||cart!==state.cart||before!==fingerprint()||global.MPosCore.CartOperations?.hasPending()||(global.MPosCore.SplitPayments?.hasPending()||global.MPosCore.OrderContext?.hasPending());
       const cashGiven=name==='confirmPaymentScreen'&&args[0]==='cash'&&global.MPosCore.NativeCashPayment?.enabled()?paymentGivenValue():undefined;
       pending=true;
       let verdict;
@@ -38,6 +38,7 @@
       if(stale())return;
       if(typeof verdict?.allowed!=='boolean'){flash('Не удалось проверить заказ. Повторите оплату.');return;}
       if(!verdict.allowed){flash(verdict.reason||'Недостаточно остатка');return;}
+      if(name!=='paySplitPart'&&global.MPosCore.NativeDelivery?.enabled()&&!requireDeliveryTariff())return;
       if(cashGiven!==undefined)return global.MPosCore.NativeCashPayment.confirm(args[1]===true,cashGiven);
       // These reviewed handlers are synchronous. Loyalty callbacks re-enter this wrapper
       // after awaiting the server and therefore obtain a fresh Room decision.

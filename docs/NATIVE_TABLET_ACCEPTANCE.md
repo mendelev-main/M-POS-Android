@@ -333,3 +333,7 @@ Rollback: MPosNativeCartQuantityEnabled=false.
 076 — cart preview (pending): qty/price/discount/gift/delivery, быстрый add/delete,
 scroll/swipe/open comment/keypad при ответе; суммы строк/корзины/оплаты/чека.
 Dark/light/large font и длинный чек; замер отзывчивости. Source preview до ответа.
+
+077 — доставка (pending): без тарифа checkout запрещён; явно выбрать 0/2/5,
+сверить чек/итог; type туда/обратно, удаление тарифа, быстрые select/type,
+Cancel/modal replacement/pending checkout, restart/backup v13.
