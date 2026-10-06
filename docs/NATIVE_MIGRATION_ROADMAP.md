@@ -178,13 +178,14 @@ Benefits:
 - removal of browser text-selection/context behavior.
 
 ### P7 — Payment domain + Compose payment screen
-**Status: 🟢 Partial (067)**
+**Status: 🟢 Partial (068)**
 
 Atomic settlement, product-discount arithmetic, gift allocation and configured unit-price
 formation and settlement recipe expansion are native. Cart additions await Room stock
 preflight, quantity edits use native decisions/Room preflight, and payment entry/cash/card/split
 confirmation reads stock from Room. Payment entry/confirmation also awaits a combined
-Kotlin pricing/reward quote. Cart/payment UI and invalidated-preview recomputation,
+Kotlin pricing/reward quote. External card confirmation is native Android UI (068).
+Main cart/payment UI and invalidated-preview recomputation,
 online gift eligibility and stock availability display
 remain reviewed JS; physical acceptance is pending.
 
@@ -398,3 +399,12 @@ quote. Открытие и подтверждение оплаты/части ж
 Суммы финальной транзакции проверяются теми же движками Kotlin. Backup v13
 не меняется. Rollback: MPosNativeCartTotalsEnabled=false.
 Спецификация: `specs/067-native-payment-totals/spec.md`.
+
+
+068: подтверждение внешней оплаты картой (включая смешанную часть) теперь
+нативный MPosCardConfirmationDialog. HTML этого окна не строится. Android
+Views/AlertDialog, светлая/тёмная тема, отмена/Back, один callback на token.
+Основной payment UI пока WebView; Compose не подключён. Запись оплаты и
+внешние эффекты остаются на прежнем проверенном пути. Backup v13 без изменений.
+Rollback: MPosNativeCardConfirmationEnabled=false.
+`specs/068-native-card-confirmation/spec.md`; физические проверки ожидаются.

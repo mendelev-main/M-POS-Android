@@ -19,6 +19,7 @@ import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.mendelev.mpos.backup.MPosBackupManager
+import com.mendelev.mpos.payment.MPosCardConfirmationDialog
 import com.mendelev.mpos.bridge.NativeBridgeRouter
 import com.mendelev.mpos.data.MPosDatabase
 import com.mendelev.mpos.data.MPosStorageMirror
@@ -47,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         private const val START_URL = "$APP_ORIGIN/assets/pos/pos.html"
     }
 
+    private lateinit var cardConfirmationDialog: MPosCardConfirmationDialog
     private lateinit var shiftOpenDialog: MPosShiftOpenDialog
     private lateinit var shiftCloseDialog: MPosShiftCloseDialog
     private lateinit var cashMovementDialog: MPosCashMovementDialog
@@ -150,6 +152,9 @@ class MainActivity : AppCompatActivity() {
         shiftOpenDialog = MPosShiftOpenDialog(this, nativeStorageMirror::handle) { action ->
             callJavaScript("window.MPosCore&&window.MPosCore.NativeOpenForm&&window.MPosCore.NativeOpenForm.handleAction($action);")
         }
+        cardConfirmationDialog = MPosCardConfirmationDialog(this) { action ->
+            callJavaScript("window.MPosCore&&window.MPosCore.NativeCardConfirmation&&window.MPosCore.NativeCardConfirmation.handleAction($action);")
+        }
         setContentView(root)
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
@@ -186,6 +191,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        if (::cardConfirmationDialog.isInitialized) cardConfirmationDialog.dismiss()
         if (::shiftOpenDialog.isInitialized) shiftOpenDialog.dismiss()
         if (::shiftCloseDialog.isInitialized) shiftCloseDialog.dismiss()
         if (::cashMovementDialog.isInitialized) cashMovementDialog.dismiss()
@@ -238,6 +244,10 @@ class MainActivity : AppCompatActivity() {
             "sharePurchaseOrder" -> payload.optJSONObject("order")?.let(shares::purchaseOrder)
             "printShiftReport" -> payload.optJSONObject("report")?.let(shares::printShiftReport)
         }
+    }
+
+    fun handlePaymentScreen(payload: JSONObject) = runOnUiThread {
+        if (::cardConfirmationDialog.isInitialized) cardConfirmationDialog.handle(payload)
     }
 
     fun handleShiftScreen(payload: JSONObject) = runOnUiThread {

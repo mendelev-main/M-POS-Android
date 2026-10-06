@@ -27,6 +27,7 @@ class NativeBridgeRouter(
                 "telegram" -> activity.handleTelegram(payload)
                 "settings" -> settings.handle(payload)
                 "storage" -> storageMirror.handle(payload)
+                "paymentScreen" -> activity.handlePaymentScreen(payload)
                 "shiftScreen" -> activity.handleShiftScreen(payload)
                 "network" -> networkTransport.handle(payload)
                 "diagnostics" -> if (payload.optString("action") == "export") activity.exportDiagnostics()

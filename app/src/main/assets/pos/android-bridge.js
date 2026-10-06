@@ -15,6 +15,7 @@
     storage:handler('storage'),
     network:handler('network'),
     diagnostics:handler('diagnostics'),
+    paymentScreen:handler('paymentScreen'),
     shiftScreen:handler('shiftScreen')
   });
   global.__MPOS_PLATFORM__='android';
