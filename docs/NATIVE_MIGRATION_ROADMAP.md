@@ -117,6 +117,8 @@ Current first step: Android owns a non-authoritative OkHttp transport boundary e
 #
 **P3 automated gate:** specs 013–017 are now build/lint/source-test verified. Native SSE remains diagnostic-only and non-authoritative. The remaining P3 gates are physical same-stream parity, network interruption/reconnect, and background/foreground verification on an Android device; no SSE authority cutover is permitted before those pass.
 
+Spec 038 extracts bounded Kotlin SSE framing with EventSource-compatible whitespace, line endings, empty data and default/message filtering. Only diagnostic observation changes; legacy business delivery remains authoritative. Native line/frame limits prevent unbounded accumulation. Same-stream/reconnect/physical gates remain open.
+
 ## P4 — Operational outbox and recovery
 **Status: 🟢 In progress — legacy recovery journal shadow projection**
 

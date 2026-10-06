@@ -14,7 +14,7 @@ import java.net.URLEncoder
 import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 
-class NativeNetworkTransport(
+class MPosNetworkTransport(
     private val scope: LifecycleCoroutineScope,
     private val onResult: (JSONObject) -> Unit,
     private val onEvent: (JSONObject) -> Unit,
@@ -69,11 +69,10 @@ class NativeNetworkTransport(
                         if(!response.isSuccessful) throw IllegalStateException("SSE HTTP "+response.code)
                         shadowConnected=true; attempt=0; emitState("connected")
                         val source=response.body?.source() ?: throw IllegalStateException("SSE body missing")
-                        val data=StringBuilder()
-                        while(isActive&&!source.exhausted()){
-                            val line=source.readUtf8Line() ?: break
-                            if(line.isEmpty()){ if(data.isNotEmpty()){ observeEvent(data.toString()); data.setLength(0) } }
-                            else if(line.startsWith("data:")){ if(data.isNotEmpty()) data.append('\n'); data.append(line.removePrefix("data:").trimStart()) }
+                        val frames=MPosSseReader(source)
+                        while(isActive){
+                            val data=frames.nextMessage() ?: break
+                            observeEvent(data)
                         }
                     }
                 }catch(_:Throwable){ if(!isActive) break } finally { shadowConnected=false; shadowCall=null }

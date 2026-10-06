@@ -33,6 +33,8 @@ Spec 036 moves document-provider byte ingestion into a tested bounded Kotlin rea
 
 Spec 037 extracts existing native photo packaging/staging into a testable Kotlin recovery module. It preserves v13 business fields and image mapping, while failed preparation attempts to remove every successfully staged file and preserves the original error. The manager retains provider IO and shared JS confirmation/restoration. Existing export deduplication and separate per-product import files are retained; physical recovery acceptance is pending.
 
+Spec 038 completes a bounded Kotlin SSE message reader for P3 diagnostics. It corrects payload whitespace and line/empty-frame handling to match the legacy message listener, with native-only resource bounds. No WEB business event, ACK, availability or synchronization trigger moves. Physical stream acceptance is still required.
+
 ## Business questions for a separate decision
 
 These are unresolved policy questions, not changes made by this implementation.
@@ -47,5 +49,5 @@ No payment, stock, catalog, backup or authorization calculations are refactored 
 
 - `node --test tests/*.test.cjs`: 58 passed, no failures or skips. Includes reviewed source SHA-256 parity, executed adapter/request/shift-close tests and repeatable source-sync fixture checks.
 - `./gradlew --no-daemon --max-workers=4 testDebugUnitTest lintDebug assembleDebug assembleRelease`: successful.
-- JVM: 41 executed tests, no failures/errors/skips. Covers diagnostics sanitization/bounds/failure isolation, iPad shift receipt values, photo multipart and real Android-native graphics PNG generation at API 28, plus FIFO/backpressure and file-backed Room/SQLite transaction rollback and reopen tests, and bounded backup input/provider-failure tests, and native backup image round-trip/rollback tests.
+- JVM: 51 executed tests, no failures/errors/skips. Covers diagnostics sanitization/bounds/failure isolation, iPad shift receipt values, photo multipart and real Android-native graphics PNG generation at API 28, plus FIFO/backpressure and file-backed Room/SQLite transaction rollback and reopen tests, and bounded backup input/provider-failure tests, and native backup image round-trip/rollback tests, and bounded EventSource-compatible SSE framing tests.
 - Android lint: no errors; 14 warnings (13 previous warnings plus a KTX style suggestion in the new image renderer). Debug APK and minified unsigned release APK produced. Production signing, actual Telegram delivery and physical tablet acceptance are not established by these checks.

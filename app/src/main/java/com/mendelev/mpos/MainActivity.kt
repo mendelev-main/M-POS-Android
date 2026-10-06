@@ -24,7 +24,7 @@ import com.mendelev.mpos.data.MPosStorageMirror
 import com.mendelev.mpos.diagnostics.MPosDiagnosticBreadcrumbStore
 import com.mendelev.mpos.diagnostics.MPosDiagnosticExporter
 import com.mendelev.mpos.media.ProductImageStore
-import com.mendelev.mpos.network.NativeNetworkTransport
+import com.mendelev.mpos.network.MPosNetworkTransport
 import com.mendelev.mpos.media.ProductPhotoManager
 import com.mendelev.mpos.print.EscPosPrinter
 import com.mendelev.mpos.share.ReportShareManager
@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var telegram: TelegramClient
     private lateinit var nativeSettings: NativeSettingsStore
     private lateinit var nativeStorageMirror: MPosStorageMirror
-    private lateinit var nativeNetworkTransport: NativeNetworkTransport
+    private lateinit var nativeNetworkTransport: MPosNetworkTransport
     private lateinit var diagnostics: MPosDiagnosticBreadcrumbStore
     private var diagnosticExportPending = false
 
@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
         telegram = TelegramClient(shares::createWarehousePdf, ::telegramResult, ::telegramMonthlyResult, ::telegramShiftResult)
         nativeSettings = NativeSettingsStore(this, ::nativeSettingsResult)
         nativeStorageMirror = MPosStorageMirror(MPosDatabase.get(this), lifecycleScope, ::nativeStorageResult)
-        nativeNetworkTransport = NativeNetworkTransport(lifecycleScope, ::nativeNetworkResult, ::nativeNetworkEvent)
+        nativeNetworkTransport = MPosNetworkTransport(lifecycleScope, ::nativeNetworkResult, ::nativeNetworkEvent)
         router = NativeBridgeRouter(this, photos, backup, nativeSettings, nativeStorageMirror, nativeNetworkTransport)
 
         webView = WebView(this).apply {
