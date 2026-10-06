@@ -8,7 +8,7 @@ import com.mendelev.mpos.media.ProductImageStore
 import org.json.JSONArray
 import org.json.JSONObject
 
-class BackupManager(
+class MPosBackupManager(
     private val activity: MainActivity,
     private val images: ProductImageStore,
 ) {
@@ -36,9 +36,7 @@ class BackupManager(
         val staged = mutableListOf<String>()
         runCatching {
             val raw = activity.contentResolver.openInputStream(uri)!!.use { input ->
-                val bytes = input.readBytes()
-                require(bytes.size <= 500_000_000) { "Файл резервной копии больше 500 МБ" }
-                bytes
+                MPosBackupInput.read(input)
             }
             val document = JSONObject(raw.toString(Charsets.UTF_8))
             val products = document.optJSONArray("products") ?: error("Некорректный файл резервной копии")

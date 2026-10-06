@@ -17,7 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
-import com.mendelev.mpos.backup.BackupManager
+import com.mendelev.mpos.backup.MPosBackupManager
 import com.mendelev.mpos.bridge.NativeBridgeRouter
 import com.mendelev.mpos.data.MPosDatabase
 import com.mendelev.mpos.data.MPosStorageMirror
@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var imageStore: ProductImageStore
     private lateinit var photos: ProductPhotoManager
-    private lateinit var backup: BackupManager
+    private lateinit var backup: MPosBackupManager
     private lateinit var router: NativeBridgeRouter
     private lateinit var printer: EscPosPrinter
     private lateinit var shares: ReportShareManager
@@ -92,7 +92,7 @@ class MainActivity : AppCompatActivity() {
         diagnostics.record("lifecycle", "created")
         imageStore = ProductImageStore(this)
         photos = ProductPhotoManager(this, imageStore)
-        backup = BackupManager(this, imageStore)
+        backup = MPosBackupManager(this, imageStore)
         printer = EscPosPrinter(::printerEvent)
         shares = ReportShareManager(this)
         telegram = TelegramClient(shares::createWarehousePdf, ::telegramResult, ::telegramMonthlyResult, ::telegramShiftResult)

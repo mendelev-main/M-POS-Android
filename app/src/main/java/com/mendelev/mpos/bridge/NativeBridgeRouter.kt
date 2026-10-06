@@ -1,7 +1,7 @@
 package com.mendelev.mpos.bridge
 
 import com.mendelev.mpos.MainActivity
-import com.mendelev.mpos.backup.BackupManager
+import com.mendelev.mpos.backup.MPosBackupManager
 import com.mendelev.mpos.data.MPosStorageMirror
 import com.mendelev.mpos.media.ProductPhotoManager
 import com.mendelev.mpos.network.NativeNetworkTransport
@@ -11,7 +11,7 @@ import org.json.JSONObject
 class NativeBridgeRouter(
     private val activity: MainActivity,
     private val photos: ProductPhotoManager,
-    private val backup: BackupManager,
+    private val backup: MPosBackupManager,
     private val settings: NativeSettingsStore,
     private val storageMirror: MPosStorageMirror,
     private val networkTransport: NativeNetworkTransport,

@@ -93,6 +93,8 @@ Room must become authoritative only after migration and physical restart/recover
 
 Spec 035 adds the transactional native storage foundation: one bounded Kotlin FIFO processes bridge operations; raw shadow and projections commit or roll back together; reads follow writes in Room transactions. Failed/rejected/pending shadow changes are explicitly reflected in catch-up metadata, and cannot produce healthy catalog diagnostics. Local POS storage remains authoritative; physical restart, large-history and backup recovery evidence is still required.
 
+Spec 036 strengthens the backup recovery boundary: Kotlin enforces the existing 500 MB input limit during document-provider reads, before JSON parsing or image staging. Byte representation and v13 restoration semantics remain unchanged. Accepted-file memory usage and physical provider/restore testing remain open acceptance work.
+
 ### P3 — Native network/SSE infrastructure
 **Status: 🟢 In progress — non-authoritative OkHttp transport boundary**
 

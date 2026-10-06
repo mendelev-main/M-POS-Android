@@ -29,6 +29,8 @@ Rollback removes the export adapter/action and Kotlin report/export classes; no 
 
 Spec 035 completes the next P2 foundation: one bounded Kotlin FIFO processes native shadow commands, and Room commits raw JSON and structured projections in the same transaction. Forced SQLite insert/delete failures prove rollback; requested/committed versions prevent failed or rejected updates from producing a green catalog comparison. The authoritative local write remains independent. Room authority and physical recovery/backup/large-history acceptance remain pending.
 
+Spec 036 moves document-provider byte ingestion into a tested bounded Kotlin reader. The existing 500 MB check now runs during reading, before accumulation exceeds the limit; v13 bytes and restoration rules are preserved. Interrupted input cannot return a partial backup. Accepted large-file memory usage and physical provider/restore acceptance remain unresolved technical limits, not new business decisions.
+
 ## Business questions for a separate decision
 
 These are unresolved policy questions, not changes made by this implementation.
@@ -43,5 +45,5 @@ No payment, stock, catalog, backup or authorization calculations are refactored 
 
 - `node --test tests/*.test.cjs`: 58 passed, no failures or skips. Includes reviewed source SHA-256 parity, executed adapter/request/shift-close tests and repeatable source-sync fixture checks.
 - `./gradlew --no-daemon --max-workers=4 testDebugUnitTest lintDebug assembleDebug assembleRelease`: successful.
-- JVM: 28 executed tests, no failures/errors/skips. Covers diagnostics sanitization/bounds/failure isolation, iPad shift receipt values, photo multipart and real Android-native graphics PNG generation at API 28, plus FIFO/backpressure and file-backed Room/SQLite transaction rollback and reopen tests.
+- JVM: 33 executed tests, no failures/errors/skips. Covers diagnostics sanitization/bounds/failure isolation, iPad shift receipt values, photo multipart and real Android-native graphics PNG generation at API 28, plus FIFO/backpressure and file-backed Room/SQLite transaction rollback and reopen tests, and bounded backup input/provider-failure tests.
 - Android lint: no errors; 14 warnings (13 previous warnings plus a KTX style suggestion in the new image renderer). Debug APK and minified unsigned release APK produced. Production signing, actual Telegram delivery and physical tablet acceptance are not established by these checks.
