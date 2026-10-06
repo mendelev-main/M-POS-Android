@@ -110,3 +110,7 @@ Missing/null native shift documents now retain reviewed empty-list semantics for
 ## Native cash forms (056)
 
 Native amount/comment/confirm/cancel with finite-positive parsing, comma/fraction preservation, acknowledgement lock and token cancellation. Existing native drawer/atomic/replay validator and original JS submit flow retained. JS actual-handler integration and Robolectric dialog controls verify deposit/withdrawal, errors/retry/unknown status, rollback and no premature close/state. User confirms first opening and backup import after 055; comprehensive/new-form device cases remain pending.
+
+## Native closing form (057)
+
+Room-derived expected cash, prefill and native counted input; blank/negative/nonfinite reject, zero/fraction/shortage/surplus allowed. Original lifecycle transaction and post-ack Telegram PNG/print preserved. JS actual-handler integration, SQLite fresh/cross-refund/closed/recovery cases and Robolectric loading/cancellation/fallback/locks automated. Physical form/output checks pending.

@@ -73,3 +73,19 @@ test('cross-shift refunds and comma fractional counted cash feed the closing rep
  assert.ok(h.events.includes('report:60'));assert.ok(h.events.some(e=>e.startsWith('difference:5.001')));
  await h.ctx.commitCriticalStorage('cash-movement',{shifts:[]});assert.ok(h.events.includes('legacy-commit'));
 });
+
+for(const counted of [0,75.001,100.0])test('native closing form retains actual lifecycle and post-ack reports for counted '+counted,async()=>{
+ const h=host({opened:true}),forms=[],field={value:'80'};
+ h.ctx.state.loaded=true;h.ctx.showModal=()=>h.events.push('modal');h.ctx.fullMoney=v=>String(v);
+ h.ctx.document={getElementById:id=>id==='sf-counted'?field:{value:''},querySelector:()=>({style:{}})};
+ h.ctx.webkit.messageHandlers.shiftScreen={postMessage:p=>{forms.push(p);return true}};
+ vm.runInContext(source('native-close-form.js'),h.ctx);h.ctx.openCloseShiftModal();const form=forms.at(-1);
+ const saving=h.ctx.MPosCore.NativeCloseForm.handleAction({action:'submit',token:form.token,type:'close',shiftId:'s1',amount:counted});
+ await flushUntil(()=>h.events.includes('native-command'));
+ const command=JSON.parse(h.commands.find(c=>c.action==='shiftLifecycleCommit').payload);
+ assert.equal(command.shift.countedCash,counted);assert.equal(command.expectedCash,80);
+ assert.equal(h.ctx.state.shifts[1].status,'open');assert.equal(h.events.includes('telegram-close'),false);assert.equal(h.events.includes('print'),false);
+ h.reply();await saving;assert.equal(h.ctx.state.shifts[1].status,'closed');assert.equal(h.events.filter(e=>e==='close').length,1);
+ assert.ok(h.events.indexOf('telegram-close')>h.events.indexOf('ack'));assert.ok(h.events.indexOf('print')>h.events.indexOf('ack'));
+ assert.ok(forms.some(p=>p.action==='closeFormResult'&&p.ok));
+});

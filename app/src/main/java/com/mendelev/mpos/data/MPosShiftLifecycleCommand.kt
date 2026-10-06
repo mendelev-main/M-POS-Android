@@ -63,8 +63,12 @@ class MPosShiftLifecycleCommand(private val database: MPosDatabase) {
             check(target != null && target.optString("id") == id) { "target is not the current open shift" }
             val orders = MPosOrderStorage(database)
             check(orders.isAuthoritative())
-            check(database.orderProjectionDao().orderCount() == command.getInt("expectedOrderCount")) { "receipt archive changed" }
-            expectedCash = MPosShiftAccounting.balance(target, JSONArray(database.orderProjectionDao().allOrders().map { JSONObject(it.payload) }))
+            val envelope = orders.read()
+            val parsed = JSONTokener(if (envelope.getBoolean("found")) envelope.getString("payload") else "null").nextValue()
+            require(parsed is JSONArray || parsed === JSONObject.NULL)
+            val archive = parsed as? JSONArray ?: JSONArray()
+            check(archive.length() == command.getInt("expectedOrderCount")) { "receipt archive changed" }
+            expectedCash = MPosShiftAccounting.balance(target, archive)
             require(expectedCash.isFinite() && expectedCash >= 0) { "invalid closing drawer" }
             val offeredExpected = command.getDouble("expectedCash")
             require(offeredExpected.isFinite() && kotlin.math.abs(expectedCash - offeredExpected) <= 0.000001) { "closing cash changed" }

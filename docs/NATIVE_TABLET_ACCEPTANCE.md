@@ -165,3 +165,13 @@ User confirms on the Android tablet that an employee can now open a shift, and t
 - Simulate known rejection and uncertain acknowledgement: editing allowed only for known rejection, reload required for uncertainty. No new availability publication or catalogue sync.
 
 Status: pending physical verification of 056.
+
+## Native closing form (057)
+
+- Close with expected cash unchanged, zero counted, shortage/surplus and comma/fraction; inspect saved counted cash/difference and next opening carryover after restart/import.
+- Compare expected cash after same/cross-shift cash/card/split refunds with drawer/report. New sale while form is open keeps original recalculation behavior.
+- Check Telegram PNG and configured receipt printer run after successful close only; disabled gates/copies and unpaid cart/parked orders remain.
+- Loading read failure: retry or explicit legacy fallback, no automatic stale financial model. Cancel/replaced form/rapid repeated taps/Back/keyboard/rotation/font scale must not duplicate or reopen stale forms.
+- Interrupt acknowledgement/restart: recorded close exists once; unknown status requires reload before another operation.
+
+Status: pending comprehensive physical verification of 057.

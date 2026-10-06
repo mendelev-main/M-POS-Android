@@ -177,4 +177,17 @@ class MPosShiftLifecycleCommandTest {
         assertFalse(message.contains("synthetic-private-record")); assertTrue(message.contains("локальной базе"))
     }
 
+    @Test fun closingCountsLegacyDuplicateReceiptsFromCompatibleArchiveAndPreservesThem() = runBlocking {
+        MPosShiftLifecycleCommand(database).commit(opening().toString())
+        val archive = """[{"id":"legacy-duplicate","shiftId":"s1","method":"cash","total":10},{"id":"legacy-duplicate","shiftId":"s1","method":"cash","total":20}]"""
+        MPosOrderStorage(database).write(archive)
+        val form = MPosShiftReportRepository(database).readCloseForm(JSONObject().put("shiftId", "s1").toString())
+        assertEquals(110.0, form.getDouble("expectedCash"), 0.0)
+        val request = closing(109.0, 110.0).put("expectedOrderCount", 2)
+        val result = MPosShiftLifecycleCommand(database).commit(request.toString())
+        assertEquals(110.0, result.getDouble("expectedCash"), 0.0); assertEquals(-1.0, result.getDouble("difference"), 0.0)
+        assertEquals(archive, MPosOrderStorage(database).read().getString("payload"))
+        assertTrue(MPosShiftLifecycleCommand(database).commit(request.toString()).getBoolean("replayed"))
+    }
+
 }

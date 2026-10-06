@@ -300,3 +300,7 @@ Resolve absent/null shift document parity before further form migration. Lifecyc
 ## Native cash input forms (056)
 
 Visible deposit/withdrawal UI moves to Kotlin platform dialogs; typed inputs rejoin the original submitCashMovement/native command path through hidden real compatibility fields. Confirm/cancel/inputs lock pending acknowledgement, generation tokens guard replacements and unknown status requires reload. No new financial policy or network effects. JS command orchestration remains; session rollback preserves legacy forms. User reports successful first shift and backup restoration after 055. Next: closing form.
+
+## Native shift closing input (057)
+
+Kotlin reads a minimal current-open drawer model from Room and renders counted-cash input/loading/error/retry/fallback. Zero/fractions/difference policy retained; existing lifecycle commit and post-ack outputs remain. Cash/close/report wrappers coexist through token/dismissal guards. P8 remains partial: original submission orchestration and opening/admin UI retained. Next: review remaining P8 opening/auth boundary and native business command orchestration before declaring the domain complete.

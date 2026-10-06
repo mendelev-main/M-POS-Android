@@ -153,4 +153,21 @@ class MPosShiftReportRepositoryTest {
         }
     }
 
+    @Test fun closingFormReadsFreshNativeDrawerWithoutAcceptingCallerBalanceOrClosedShift() = runBlocking {
+        val shifts = """[{"id":"old","status":"closed","openingCash":100},{"id":"s1","status":"open","openingCash":100}]"""
+        val orders = """[{"id":"r1","shiftId":"old","method":"cash","total":20,"returnedAt":2000,"returnedShiftId":"s1","returnAmount":20}]"""
+        MPosShiftStorage(database).write(shifts); MPosOrderStorage(database).write(orders)
+        val query = request().put("expectedCash", 9999)
+        val model = MPosShiftReportRepository(database).readCloseForm(query.toString())
+        assertEquals(80.0, model.getDouble("expectedCash"), 0.0)
+        assertFalse(model.has("orders")); assertFalse(model.has("history"))
+        assertEquals(shifts, MPosShiftStorage(database).read().getString("payload"))
+        assertEquals(orders, MPosOrderStorage(database).read().getString("payload"))
+        MPosOrderStorage(database).write(JSONArray(orders).put(JSONObject().put("id", "r2").put("shiftId", "s1").put("method", "cash").put("total", 10)).toString())
+        assertEquals(90.0, MPosShiftReportRepository(database).readCloseForm(query.toString()).getDouble("expectedCash"), 0.0)
+        suspend fun rejects() { var failed = false; try { MPosShiftReportRepository(database).readCloseForm(query.toString()) } catch (_: Exception) { failed = true }; assertTrue(failed) }
+        query.put("shiftId", "old"); rejects(); query.put("shiftId", "s1")
+        MPosRecoveryStorage(database).write("criticalStorageJournal", """{"version":1,"writes":[]}"""); rejects()
+    }
+
 }

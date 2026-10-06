@@ -37,6 +37,20 @@ class MPosShiftReportRepository(private val database: MPosDatabase) {
         build(shift, source.orders, request.optString("currency"), request.optString("establishmentName"))
             .put("ok", true).put("authoritative", true).put("source", "room-shift-report").put("ordersRevision", source.revision)
     }
+    /** Minimal form model: no historical report construction or receipt lists. */
+    suspend fun readCloseForm(raw: String): JSONObject = database.withTransaction {
+        val request = parse(raw)
+        val id = request.getString("shiftId")
+        require(request.opt("shiftId") is String && id.isNotBlank())
+        val source = snapshot()
+        val shift = (0 until source.shifts.length()).map { source.shifts.getJSONObject(it) }.firstOrNull { it.optString("status") == "open" }
+        check(shift != null && shift.optString("id") == id) { "target is not the current open shift" }
+        val expected = MPosShiftAccounting.balance(shift, source.orders)
+        require(expected.isFinite() && expected >= 0) { "invalid closing drawer" }
+        JSONObject().put("ok", true).put("authoritative", true).put("source", "room-shift-close-form")
+            .put("shiftId", id).put("expectedCash", expected).put("ordersRevision", source.revision)
+    }
+
     suspend fun readScreen(raw: String): JSONObject = database.withTransaction {
         val request = parse(raw)
         val source = snapshot()

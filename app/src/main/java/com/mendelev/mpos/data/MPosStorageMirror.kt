@@ -108,6 +108,10 @@ class MPosStorageMirror(
             }
         }
         when (command.action) {
+            "shiftCloseFormRead" -> {
+                readAttempt(command.action) { MPosShiftReportRepository(database).readCloseForm(requireNotNull(command.serialized)).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, "native shift closing form unavailable") }
+            }
             "shiftScreenRead" -> {
                 readAttempt(command.action) { MPosShiftReportRepository(database).readScreen(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native shift screen unavailable") }
