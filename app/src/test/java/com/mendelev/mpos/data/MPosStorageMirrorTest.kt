@@ -57,6 +57,19 @@ class MPosStorageMirrorTest {
         return result
     }
 
+    @Test fun splitAmountReadIsPureAndWorkerSurvivesInvalidInput() = runBlocking {
+        send("splitAmountRead", "bad-amount", value = "{}")
+        assertFalse(reply("bad-amount").getBoolean("ok"))
+        send("splitAmountRead", "split-amount", value = """{"version":1,"total":10,"index":1,"raw":"3,00","parts":[{"amount":2,"paid":true,"method":"card"},{"amount":4,"paid":false,"method":"cash","cashGiven":5,"change":1},{"amount":4,"paid":false,"method":"card"}]}""")
+        val response = replies.poll(10, TimeUnit.SECONDS)
+        assertNotNull(response); assertEquals("split-amount", response!!.getString("requestId"))
+        assertTrue(response.getBoolean("authoritative")); assertTrue(response.getBoolean("changed"))
+        assertEquals(3.0, response.getJSONArray("parts").getJSONObject(1).getDouble("amount"), 0.0)
+        assertEquals(5.0, response.getJSONArray("parts").getJSONObject(2).getDouble("amount"), 0.0)
+        assertTrue(response.getJSONArray("parts").getJSONObject(1).isNull("cashGiven"))
+        assertNull(database.legacyStorageShadowDao().get("currentOrderSession"))
+    }
+
     @Test fun splitCountReadIsPureAndWorkerSurvivesInvalidInput() = runBlocking {
         send("splitCountRead", "bad-split", value = "{}")
         assertFalse(reply("bad-split").getBoolean("ok"))

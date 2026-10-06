@@ -59,3 +59,7 @@ invalid paid row и rollback; общий bridge/preflight контур покр�
 может оставить ноль у всех unpaid, если paid >= total. Paid-части переезжают
 в начало списка. Эти правила сохранены, но для будущей доработки стоит
 отдельно решить, нужно ли очищать tender и сохранять визуальные номера частей.
+
+Обновление 074: amount использует общую очередь SplitPayments; count создаёт
+barrier между группами ввода. Authoritative ввод/перераспределение теперь Kotlin,
+HTML keypad/первичный gate остаются JS. Следующая 075 — normalize/resume draft.

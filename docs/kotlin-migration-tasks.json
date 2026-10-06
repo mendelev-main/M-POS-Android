@@ -444,9 +444,10 @@
     {
       "id": "074",
       "title": "Редактирование суммы смешанной части и парсер ввода",
-      "status": "planned",
+      "status": "done",
       "area": "P7",
-      "dependencies": "073"
+      "dependencies": "073",
+      "spec": "specs/074-native-split-amount/spec.md"
     },
     {
       "id": "075",

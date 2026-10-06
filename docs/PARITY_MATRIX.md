@@ -242,3 +242,8 @@ JS; rollback and stale quote fallback covered. Physical tablet acceptance pendin
 073: split count redistribution — native read-only decision; source golden
 fixtures, FIFO/stale/error/paid identity coverage. Amount editing and normalize
 remain JS. v13 and settlement unchanged; physical acceptance pending.
+
+074: split amount editing — authoritative native parsing/arithmetic; reviewed
+145 source fixtures, shared FIFO/coalescing/count barrier, paid identity,
+protocol/stale/rollback. Presentation keypad/gate and normalize remain JS;
+physical acceptance pending, v13/settlement/effects unchanged.

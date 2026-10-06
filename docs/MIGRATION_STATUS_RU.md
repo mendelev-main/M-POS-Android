@@ -1,7 +1,7 @@
 # Статус миграции M POS Android и проверки на планшете
 
-Актуальный срез: этап 073. Основной счётчик и полный план находятся в
-[реестре задач](KOTLIN_MIGRATION_TASKS.md): **72/110 выполнено — 65,45%**.
+Актуальный срез: этап 074. Основной счётчик и полный план находятся в
+[реестре задач](KOTLIN_MIGRATION_TASKS.md): **73/110 выполнено — 66,36%**.
 Это инженерные задачи, не процент функций/кода; физическая приёмка ожидается.
 Исторические таблицы ниже описывают срез 040–053; более поздние изменения
 перечислены по спецификациям в конце, актуальный scope каждого этапа — в реестре.
@@ -336,3 +336,9 @@ Rollback: MPosNativeSplitPlansEnabled=false.
 совместимы с source. Нажатия FIFO, оплата ждёт, поздние ответы отбрасываются.
 Ввод суммы и normalize ещё JS. Rollback: MPosNativeSplitCountEnabled=false.
 `specs/073-native-split-count/spec.md`; физическая приёмка ожидается.
+
+074: редактирование суммы mixed части — authoritative Kotlin parser/rounding/
+redistribution, общая FIFO с count и объединение ещё не начатых вводов.
+Paid/order/identity и tender соседних строк сохранены. HTML keypad/gate и
+normalize пока JS. Rollback: MPosNativeSplitAmountEnabled=false.
+`specs/074-native-split-amount/spec.md`; физическая приёмка ожидается.

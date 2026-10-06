@@ -8,7 +8,15 @@
   const busy=()=>state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||global.MPosCore.CartOperations?.hasPending();
   const canonical=value=>JSON.stringify(value,(_key,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
   const stamp=()=>JSON.stringify([state.cart,state._splitPayments,state._splitPaymentTotalCents,state.paymentPage,state.discounts,state.customer,state.loyaltyPrograms,state.loyaltyRedemptions,state.orderType,state.deliveryFee,typeof currentShift==='function'?currentShift()?.id:null]);
-  global.MPosCore.SplitPayments=Object.freeze({hasPending:()=>pending>0});
+  const context=()=>JSON.stringify([state.cart,state._splitPaymentTotalCents,state.paymentPage,state.discounts,state.customer,state.loyaltyPrograms,state.loyaltyRedemptions,state.orderType,state.deliveryFee,typeof currentShift==='function'?currentShift()?.id:null]);
+  const enqueue=task=>{
+    if(busy()||pending>=32){flash('Дождитесь завершения текущей операции');return;}
+    const generation=epoch,cart=state.cart,before=context();
+    pending++;
+    const work=tail.then(()=>{if(generation===epoch&&cart===state.cart&&before===context()&&!busy())return task();}).finally(()=>pending--);
+    tail=work.catch(()=>{});return work;
+  };
+  global.MPosCore.SplitPayments=Object.freeze({hasPending:()=>pending>0,enqueue,context,generation:()=>epoch});
   for(const name of ['closePaymentPage','closeModal','returnFromSplitPayment']){
     const fn=global[name];if(typeof fn!=='function')continue;
     global[name]=function(...args){epoch++;return fn.apply(this,args);};
@@ -18,7 +26,7 @@
     if(delta!==1&&delta!==-1)return original.apply(this,arguments);
     if(busy()||pending>=32){flash('Дождитесь завершения текущей операции');return;}
     const generation=epoch,cart=state.cart;
-    pending++;
+    global.MPosCore.SplitAmount?.seal();
     const task=async()=>{
       if(!enabled()||generation!==epoch||cart!==state.cart||busy())return;
       const parts=state._splitPayments,before=stamp();
@@ -46,6 +54,6 @@
         state._splitPayments=rows;state._splitCount=next;renderSplitPayment();
       }catch(_error){if(!stale())flash('Не удалось изменить части оплаты. Повторите действие.');}
     };
-    const work=tail.then(task).finally(()=>pending--);tail=work.catch(()=>{});return work;
+    return enqueue(task);
   };
 })(window);
