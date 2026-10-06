@@ -2,7 +2,7 @@
 
 ## Current boundary
 
-**User decision 2026-10-06 / spec 040:** manual acceptance is deferred to the end; per-domain native cutovers are authorized after automated checks. Products, category layout, navigation, employees and shifts persistence/reads are now authoritative in Kotlin/Room (040–044). Other Room domains and SSE remain shadows by implementation, rather than a blanket prohibition on cutover. Business engines/UI still use reviewed JS. Previous shadow-only descriptions below are historical context.
+**User decision 2026-10-06 / spec 040:** manual acceptance is deferred to the end; per-domain native cutovers are authorized after automated checks. Products, category layout, navigation, employees and shifts persistence/reads are now authoritative in Kotlin/Room (040–045). Other Room domains and SSE remain shadows by implementation, rather than a blanket prohibition on cutover. Business engines/UI still use reviewed JS. Previous shadow-only descriptions below are historical context.
 
 The Android app already contains a native tablet shell and native printer, image, backup, PDF/XLSX/share and Telegram transport boundaries. The reviewed bundled POS remains responsible for payments, shifts, warehouse business rules and operational network triggers. Room projections and OkHttp SSE are comparison/diagnostic boundaries; implementations are not evidence of an accepted authority cutover.
 
@@ -58,8 +58,14 @@ No payment, stock, catalog, backup or authorization calculations are refactored 
 
 ## Employee and shift ownership (042–043)
 
-Employees and shifts (including cash movements) now use authoritative Kotlin/Room persistence, alongside products/layout/posNavigation/employees/shifts/orders. Full compatible documents remain the source; typed indexes are supporting structures. Atomic migrations and failed-write rollback, stale shadow protection, restart, actual v13 import and journal recovery are covered automatically. Employee authorization and shift financial engines remain reviewed JS. Other business documents remain on legacy storage; final physical checks remain pending.
+Employees and shifts (including cash movements) now use authoritative Kotlin/Room persistence, alongside products/layout/posNavigation/employees/shifts/orders/parked. Full compatible documents remain the source; typed indexes are supporting structures. Atomic migrations and failed-write rollback, stale shadow protection, restart, actual v13 import and journal recovery are covered automatically. Employee authorization and shift financial engines remain reviewed JS. Other business documents remain on legacy storage; final physical checks remain pending.
 
 ## Paid receipt ownership (044)
 
 Orders now use Kotlin/Room document authority with transactional receipt/line/payment indexes. Original sale, split payments, historical consumption and full-return/loyalty fields remain compatible. Actual JS payment-journal recovery, v13 import and full return are tested. Financial engines remain reviewed JS; full-array writes/index refresh remain a performance limitation. See [receipt storage model](RECEIPT_STORAGE_RU.md) for the proposed per-receipt repository and return ledger, which are not yet implemented. Final physical acceptance remains pending.
+
+## Parked-order ownership (045)
+
+Parked orders now use authoritative Kotlin/Room persistence. Complete delivery/customer/modifier/WEB/printing JSON is retained; document and header/line indexes commit atomically. Actual park/resume flows, delayed acknowledgement and failed-resume journal replay are automated. CurrentOrderSession and recovery journal remain legacy at this boundary; no single cross-document SQL transaction is claimed. Business commands and physical printing semantics are unchanged. Full-array refresh remains a limit.
+
+Final tablet cases: park a delivery/WEB order with modifiers/customer and kitchen-printed items, force-stop, resume and compare fields; resume must disappear from parked history without losing the current cart after restart; verify delete and v13 round-trip. Final physical evidence remains pending.

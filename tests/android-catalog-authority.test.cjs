@@ -18,7 +18,7 @@ function host({data=new Map(),room={initialized:false,found:false,payload:null},
  const calls=[],timers=new Map();let timerId=0,held,sequence=0;
  const legacy={
   async get(key,fallback){calls.push('legacy-get:'+key);return data.has(key)?clone(data.get(key)):fallback;},
-  async set(key,value){calls.push('legacy-set:'+key);if(cacheFails&&['products','layout','posNavigation','employees','shifts','orders'].includes(key))throw new Error('cache disk failure');data.set(key,clone(value));},
+  async set(key,value){calls.push('legacy-set:'+key);if(cacheFails&&['products','layout','posNavigation','employees','shifts','orders','parked'].includes(key))throw new Error('cache disk failure');data.set(key,clone(value));},
   remove(key){calls.push('legacy-remove:'+key);data.delete(key);},
   describe:()=>({mode:'localStorage',sourceOfTruth:'local-pos'})
  };
@@ -43,9 +43,9 @@ function host({data=new Map(),room={initialized:false,found:false,payload:null},
    case 'catalogRemove':room.found=false;room.payload=null;break;
    case 'catalogParity':result={ok:true,matches:true,shadowCaughtUp:true};break;
   }
-  if((command.action.startsWith('workspace')||command.action.startsWith('employee')||command.action.startsWith('shift')||command.action.startsWith('order'))&&!fail.has(command.action)){
+  if((command.action.startsWith('workspace')||command.action.startsWith('employee')||command.action.startsWith('shift')||command.action.startsWith('order')||command.action.startsWith('parked'))&&!fail.has(command.action)){
    const entry=room.workspace[command.key]??={initialized:false,found:false,payload:null};
-   switch(command.action.replace(/^(employee|shift|order)/,'workspace')){
+   switch(command.action.replace(/^(employee|shift|order|parked)/,'workspace')){
     case 'workspaceStatus':result.initialized=entry.initialized;break;
     case 'workspaceInitialize':if(!entry.initialized){entry.initialized=true;entry.found=typeof command.payload==='string';entry.payload=entry.found?command.payload:null;}break;
     case 'workspaceWrite':entry.found=true;entry.payload=command.payload;break;
@@ -54,7 +54,7 @@ function host({data=new Map(),room={initialized:false,found:false,payload:null},
    }
   }
   const reply=()=>context.__nativeStorageResult({...result,requestId:command.requestId});
-  if(holdWrite&&(command.action==='catalogWrite'||command.action==='workspaceWrite'||command.action==='orderWrite')&&(command.key||'products')===holdKey)held=reply;else reply();
+  if(holdWrite&&(command.action==='catalogWrite'||command.action==='workspaceWrite'||command.action==='orderWrite'||command.action==='parkedWrite')&&(command.key||'products')===holdKey)held=reply;else reply();
   return true;
  }}}};
  vm.createContext(context);vm.runInContext(adapter,context);vm.runInContext(cutover,context);
@@ -135,7 +135,7 @@ test('absence null and removal preserve fallback semantics without resurrecting 
 });
 
 test('startup shadow mirroring excludes the authoritative products key',async()=>{
- const h=host({data:new Map([['products',products('Old')],['parked',[]]])});
+ const h=host({data:new Map([['products',products('Old')],['suppliers',[]]])});
  const startup=[...h.timers.values()].find(timer=>timer.delay===0);startup.fn();
  assert.equal(h.calls.filter(x=>x==='native:put').length,1);
  assert.equal(h.room.initialized,false);
@@ -325,4 +325,62 @@ test('actual full return commits native receipt, stock and shift; repeated retur
  await h.context.processFullReturn('o1');
  assert.equal(h.calls.filter(v=>v==='native:orderWrite').length,saves);
  assert.ok(h.calls.includes('flash:Этот чек уже возвращён'));
+});
+
+const parkedReceipt=()=>({id:'parked1',items:[{productId:'p1',name:'Кофе',qty:1,price:12.35,modifiers:[{fixture:true}]}],
+ total:14.35,subtotal:12.35,orderLabel:'Доставка 1',orderType:'Доставка',deliveryFee:2,deliveryTariffSelected:true,
+ customer:{name:'Клиент',phone:'fixture',address:'fixture'},comment:'Не звонить',source:'web',webOrderId:'web1',webOrderStatus:'ready',
+ kitchenPrinted:true,printedItems:[{fixture:true}],custom:{preserved:true}});
+function setupParked(h){
+ Object.assign(h.context,{criticalOperationBusy:false,flash:message=>h.calls.push('flash:'+message),closeModal(){},render(){}});
+ vm.runInContext(fs.readFileSync(path.join(root,'Web/js/features/parked-orders.js'),'utf8'),h.context);
+ h.context.state={cart:[],parked:[parkedReceipt()]};
+}
+
+test('actual parked resume preserves delivery/customer/printing data and removes persisted parked record',async()=>{
+ const h=host();setupParked(h);
+ await h.context.MPosCore.Storage.set('parked',h.context.state.parked);
+ assert.equal(await h.context.resumeParked('parked1'),true);
+ assert.deepEqual(JSON.parse(h.room.workspace.parked.payload),[]);
+ const session=h.data.get('currentOrderSession');
+ assert.deepEqual(session.items,parkedReceipt().items);assert.deepEqual(session.customer,parkedReceipt().customer);
+ assert.equal(session.deliveryFee,2);assert.equal(session.webOrderId,'web1');
+ assert.equal(session.kitchenPrinted,true);assert.deepEqual(session.printedItems,parkedReceipt().printedItems);
+ assert.equal(h.context.state.cart[0].modifiers[0].fixture,true);
+});
+
+test('failed native removal during actual parked resume retains UI order and recovery journal',async()=>{
+ const h=host();setupParked(h);
+ await h.context.MPosCore.Storage.set('parked',h.context.state.parked);h.fail.add('parkedWrite');
+ assert.equal(await h.context.resumeParked('parked1'),false);
+ assert.equal(h.context.state.parked.length,1);assert.equal(h.context.state.cart.length,0);
+ assert.equal(h.data.get('criticalStorageJournal').type,'resume-parked');
+ assert.deepEqual(JSON.parse(h.room.workspace.parked.payload),[parkedReceipt()]);
+ const restarted=host({room:h.room,data:h.data});
+ assert.equal(await restarted.context.recoverCriticalStorageJournal(),true);
+ assert.deepEqual(JSON.parse(h.room.workspace.parked.payload),[]);
+ assert.deepEqual(h.data.get('currentOrderSession').items,parkedReceipt().items);
+ assert.equal(h.data.get('criticalStorageJournal'),null);
+});
+
+test('v13 parked import and native restart retain exact unprojected fields despite cache failure',async()=>{
+ const h=host({cacheFails:true}),doc=fullBackup(products('Backup'));doc.parked=[parkedReceipt()];
+ await h.context.applyBackupData(doc);
+ const restarted=host({room:h.room,data:new Map([['parked',[]]])});
+ assert.deepEqual(clone(await restarted.context.MPosCore.Storage.get('parked',[])),doc.parked);
+ assert.ok(h.context.MPosCore.Storage.describe().nativeCacheFailuresByKey.parked>0);
+});
+
+test('actual parking cannot clear cart before native commit; delayed save preserves snapshot',async()=>{
+ const h=host({holdWrite:true,holdKey:'parked'});setupParked(h);
+ const source=parkedReceipt();h.context.state={...source,cart:clone(source.items),parked:[],employees:[],orderComment:source.comment};
+ Object.assign(h.context,{currentShift:()=>null,getProduct:()=>({category:'Напитки'}),cartTotal:()=>14.35,cartSubtotal:()=>12.35,
+  kitchenPrintDelta:()=>[],resetCurrentOrderState:()=>{h.context.state.cart=[];}});
+ const saving=h.context.parkOrderNow();await flushUntil(()=>h.held);
+ assert.equal(h.context.state.cart.length,1);assert.equal(h.context.state.parked.length,0);
+ assert.equal(h.data.has('currentOrderSession'),false);
+ h.release();assert.equal(await saving,true);
+ assert.equal(h.context.state.cart.length,0);assert.equal(h.context.state.parked.length,1);
+ const saved=JSON.parse(h.room.workspace.parked.payload)[0];
+ assert.deepEqual(saved.items[0].modifiers,source.items[0].modifiers);assert.equal(saved.deliveryFee,2);
 });

@@ -244,7 +244,7 @@ test('parked orders project through explicit Room migration and remain non-autho
  assert.match(repository,/class MPosParkedOrderRepository/);
  assert.match(repository,/mismatchedParkedOrderIds/);
  assert.match(repository,/authoritative", false/);
- assert.match(mirror,/"parked"\s*->\s*projectParkedOrders\(serialized\)/);
+ assert.match(mirror,/"parked"\s*->\s*parkedStorage.project\(serialized\)/);
  assert.match(mirror,/"parkedOrderParity"/);
  assert.doesNotMatch(db,/fallbackToDestructiveMigration/);
 });

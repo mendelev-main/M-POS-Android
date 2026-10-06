@@ -18,9 +18,9 @@ class MPosStorageMirror(
 
     fun handle(payload: JSONObject) {
         val action = payload.optString("action")
-        val key = if (action.startsWith("catalog") && action in setOf("catalogInitialize", "catalogWrite", "catalogRemove")) "products" else if (action in setOf("employeeInitialize", "employeeWrite", "employeeRemove")) "employees" else if (action in setOf("shiftInitialize", "shiftWrite", "shiftRemove")) "shifts" else if (action in setOf("orderInitialize", "orderWrite", "orderRemove")) "orders" else payload.optString("key")
+        val key = if (action.startsWith("catalog") && action in setOf("catalogInitialize", "catalogWrite", "catalogRemove")) "products" else if (action in setOf("employeeInitialize", "employeeWrite", "employeeRemove")) "employees" else if (action in setOf("shiftInitialize", "shiftWrite", "shiftRemove")) "shifts" else if (action in setOf("orderInitialize", "orderWrite", "orderRemove")) "orders" else if (action in setOf("parkedInitialize", "parkedWrite", "parkedRemove")) "parked" else payload.optString("key")
         val command = Command(action, payload.optString("requestId"), key, payload.opt("payload") as? String, payload.optString("sourceKey"),
-            if (key.isNotBlank() && action in setOf("put", "remove", "catalogInitialize", "catalogWrite", "catalogRemove", "workspaceInitialize", "workspaceWrite", "workspaceRemove", "employeeInitialize", "employeeWrite", "employeeRemove", "shiftInitialize", "shiftWrite", "shiftRemove", "orderInitialize", "orderWrite", "orderRemove")) writeState.request(key) else null)
+            if (key.isNotBlank() && action in setOf("put", "remove", "catalogInitialize", "catalogWrite", "catalogRemove", "workspaceInitialize", "workspaceWrite", "workspaceRemove", "employeeInitialize", "employeeWrite", "employeeRemove", "shiftInitialize", "shiftWrite", "shiftRemove", "orderInitialize", "orderWrite", "orderRemove", "parkedInitialize", "parkedWrite", "parkedRemove")) writeState.request(key) else null)
         if (!queue.submit({ result(command.requestId, false, "native shadow command failed") }) { dispatch(command) }) {
             result(command.requestId, false, "native shadow queue is full or closed")
         }
@@ -72,6 +72,7 @@ class MPosStorageMirror(
     private val employeeStorage = MPosEmployeeStorage(database)
     private val shiftStorage = MPosShiftStorage(database)
     private val orderStorage = MPosOrderStorage(database)
+    private val parkedStorage = MPosParkedOrderStorage(database)
     private val catalogRepository = MPosCatalogRepository(database)
     private val employeeDao = database.employeeProjectionDao()
     private val employeeRepository = MPosEmployeeRepository(database)
@@ -96,8 +97,8 @@ class MPosStorageMirror(
             result(requestId, false, "native shadow has unapplied changes")
             return
         }
-        if ((command.key == "products" || command.key == "employees" || command.key == "shifts" || command.key == "orders" || command.key in MPosWorkspaceStorage.KEYS) && command.action in setOf("put", "remove")) {
-            val owned = attempt { if (command.key == "products") catalogStorage.isAuthoritative() else if (command.key == "employees") employeeStorage.isAuthoritative() else if (command.key == "shifts") shiftStorage.isAuthoritative() else if (command.key == "orders") orderStorage.isAuthoritative() else workspaceStorage.isAuthoritative(command.key) }
+        if ((command.key == "products" || command.key == "employees" || command.key == "shifts" || command.key == "orders" || command.key == "parked" || command.key in MPosWorkspaceStorage.KEYS) && command.action in setOf("put", "remove")) {
+            val owned = attempt { if (command.key == "products") catalogStorage.isAuthoritative() else if (command.key == "employees") employeeStorage.isAuthoritative() else if (command.key == "shifts") shiftStorage.isAuthoritative() else if (command.key == "orders") orderStorage.isAuthoritative() else if (command.key == "parked") parkedStorage.isAuthoritative() else workspaceStorage.isAuthoritative(command.key) }
             if (owned.isFailure) { result(requestId, false, "native catalog ownership check failed"); return }
             if (owned.getOrThrow()) {
                 command.version?.let { writeState.commit(command.key, it) }
@@ -172,6 +173,19 @@ class MPosStorageMirror(
                     value.put("requestId", requestId)
                 }.onSuccess(::emitResult).onFailure { result(requestId, false, "native order operation failed") }
             }
+            "parkedStatus", "parkedInitialize", "parkedRead", "parkedWrite", "parkedRemove" -> {
+                attempt {
+                    val value = when (command.action) {
+                        "parkedStatus" -> JSONObject().put("ok", true).put("initialized", parkedStorage.isAuthoritative()).put("source", "room-parked")
+                        "parkedInitialize" -> parkedStorage.initialize(command.serialized)
+                        "parkedWrite" -> parkedStorage.write(requireNotNull(command.serialized))
+                        "parkedRemove" -> parkedStorage.remove()
+                        else -> parkedStorage.read()
+                    }
+                    command.version?.let { writeState.commit("parked", it) }
+                    value.put("requestId", requestId)
+                }.onSuccess(::emitResult).onFailure { result(requestId, false, "native parked operation failed") }
+            }
             "put" -> {
                 val key = command.key
                 val serialized = command.serialized
@@ -190,7 +204,7 @@ class MPosStorageMirror(
                                 "employees" -> employeeStorage.project(serialized)
                                 "shifts" -> shiftStorage.project(serialized)
                                 "orders" -> orderStorage.project(serialized)
-                                "parked" -> projectParkedOrders(serialized)
+                                "parked" -> parkedStorage.project(serialized)
                                 "receivings", "inventoryHistory" -> projectStockEvents(key, serialized)
                                 "webOrderAcceptances" -> projectWebAcceptances(serialized)
                                 "currentOrderSession" -> projectCurrentOrderSession(serialized)
@@ -458,68 +472,6 @@ class MPosStorageMirror(
     }
 
     private suspend fun projectCatalog(serialized: String) = catalogStorage.project(serialized)
-
-    private suspend fun projectParkedOrders(serialized: String) {
-        val source = JSONArray(serialized)
-        val now = System.currentTimeMillis()
-        val orders = ArrayList<ParkedOrderProjectionEntity>(source.length())
-        val lines = ArrayList<ParkedOrderLineProjectionEntity>()
-
-        for (orderIndex in 0 until source.length()) {
-            val order = source.optJSONObject(orderIndex) ?: continue
-            val orderId = order.optString("id").trim()
-            if (orderId.isEmpty()) continue
-            val customer = order.optJSONObject("customer") ?: JSONObject()
-
-            orders += ParkedOrderProjectionEntity(
-                id = orderId,
-                receiptDisplayNumber = order.optString("receiptDisplayNumber"),
-                total = order.optDouble("total"),
-                subtotal = order.optDouble("subtotal"),
-                orderLabel = order.optString("orderLabel"),
-                orderType = order.optString("orderType"),
-                deliveryFee = order.optDouble("deliveryFee"),
-                comment = order.optString("comment"),
-                source = order.optString("source"),
-                webOrderId = order.optString("webOrderId"),
-                webOrderStatus = order.optString("webOrderStatus"),
-                employeeName = order.optString("employeeName"),
-                customerId = customer.optString("id"),
-                customerName = customer.optString("name"),
-                customerPhone = customer.optString("phone"),
-                createdAt = order.optLong("createdAt"),
-                kitchenPrinted = order.optBoolean("kitchenPrinted"),
-                sortIndex = orderIndex,
-                payload = order.toString(),
-                updatedAt = now,
-            )
-
-            val items = order.optJSONArray("items") ?: JSONArray()
-            for (lineIndex in 0 until items.length()) {
-                val line = items.optJSONObject(lineIndex) ?: continue
-                lines += ParkedOrderLineProjectionEntity(
-                    id = MPosParkedOrderRepository.lineKey(orderId, lineIndex),
-                    parkedOrderId = orderId,
-                    productId = line.optString("productId"),
-                    name = line.optString("name"),
-                    category = line.optString("category"),
-                    qty = line.optDouble("qty"),
-                    price = line.optDouble("price"),
-                    comment = line.optString("comment"),
-                    sortIndex = lineIndex,
-                    payload = line.toString(),
-                    updatedAt = now,
-                )
-            }
-        }
-
-        database.withTransaction {
-            parkedDao.clearLines()
-            parkedDao.clearOrders()
-            if (orders.isNotEmpty()) parkedDao.insertOrders(orders)
-            if (lines.isNotEmpty()) parkedDao.insertLines(lines)
-        }
-    }
 
     private suspend fun projectStockEvents(sourceKey:String, serialized:String) {
         val source=JSONArray(serialized); val now=System.currentTimeMillis()

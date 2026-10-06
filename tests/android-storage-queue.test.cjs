@@ -22,17 +22,17 @@ function host({localFails=false,nativeFails=false}={}){
  return {context,calls,data};
 }
 
-test('native failure cannot turn successful local storage write into failed parked-order persistence',async()=>{
- const h=host({nativeFails:true});await h.context.MPosCore.Storage.set('parked',[{id:'parked-1'}]);
+test('native failure cannot turn successful local storage write into failed supplier persistence',async()=>{
+ const h=host({nativeFails:true});await h.context.MPosCore.Storage.set('suppliers',[{id:'supplier-1'}]);
  assert.equal(h.calls[0],'local');assert.equal(h.calls[1].action,'put');
- assert.equal(h.data.get('parked')[0].id,'parked-1');
+ assert.equal(h.data.get('suppliers')[0].id,'supplier-1');
  assert.equal(h.context.MPosCore.Storage.describe().nativeShadowAuthoritative,false);
 });
 
 test('failed local persistence is never mirrored as a committed operation',async()=>{
  const h=host({localFails:true});
- await assert.rejects(h.context.MPosCore.Storage.set('parked',[]),/local failure/);
- assert.deepEqual(h.calls,['local']);assert.equal(h.data.has('parked'),false);
+ await assert.rejects(h.context.MPosCore.Storage.set('suppliers',[]),/local failure/);
+ assert.deepEqual(h.calls,['local']);assert.equal(h.data.has('suppliers'),false);
 });
 
 test('comparison cannot report healthy parity while pending shadow changes exist',async()=>{
