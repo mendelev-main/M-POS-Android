@@ -108,3 +108,16 @@ Physical status: pending, deferred by user instruction.
 - Close shift and compare expected cash/difference on screen, image/Telegram and printed report.
 
 Status: pending physical testing at the end of migration.
+
+## 052 — Open / close lifecycle
+
+- First shift opens at zero. After closing with expected 100 and counted 95, next opening carries 95 from that closed shift, preserving employee name/phone.
+- Validate ordinary staff selection and existing administrator password rejection/acceptance. Missing/stale employee or already-open shift must not add another shift.
+- Close with zero, less/more than expected and fractional comma input; reject empty/negative/invalid counted cash. Difference can have either sign.
+- Cross-shift refund: opening 80 less old cash refund 20 gives expected 60; closing counted 65 reports +5 consistently on screen/PNG Telegram/print/PDF.
+- Interrupt storage/ack for open/close; unresolved status requires reload. Confirm exactly one local state change and no partial shift/projection record. Network failure must not undo locally saved closure.
+- Restart and restore synthetic backup from before opening/closing; stale replay must not falsely acknowledge the restored state; new lifecycle can proceed.
+- An unpaid cart and parked orders survive closing and opening the next shift; record this existing behavior for business review.
+- Opening Telegram/monthly report and closing PNG/print start after local save. No availability retry is introduced.
+
+Status: physical tablet / Telegram / printer evidence pending until final migration testing.

@@ -90,3 +90,7 @@ Historical receipts use Kotlin transactional return with original stockConsumpti
 ## Manual cash movements (051)
 
 Native deposits/withdrawals preserve current positive-amount rules, unrounded decimal values, nonnegative-drawer requirement for both types and 0.0001 withdrawal tolerance. JS applies state after ack; native errors roll back full shift/projection/marker writes. 049 cross-shift refunds limit available cash. Source JSON/v13 unchanged. Native reopening/replay/restored-backup and actual handler tests automated; physical acceptance pending.
+
+## Shift opening / closing (052)
+
+Native lifecycle persistence validates most-recent counted carryover, employee snapshots, current shift and closing drawer/receipt count. Full shift JSON/extensions/movements survive; counted cash/difference remain unrounded and mismatch allowed. Reviewed administrator check unchanged; no credential copied. Telegram/monthly/print run only after ack. SQLite rollback/replay/restore and actual JS handler tests automated; image/printer/tablet acceptance pending. Unpaid cart/session and parked orders remain unchanged.

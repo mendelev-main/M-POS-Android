@@ -108,6 +108,10 @@ class MPosStorageMirror(
             }
         }
         when (command.action) {
+            "shiftLifecycleCommit" -> {
+                attempt { MPosShiftLifecycleCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, "local shift lifecycle transaction failed") }
+            }
             "cashMovementCommit" -> {
                 attempt { MPosCashMovementCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "local cash movement transaction failed") }

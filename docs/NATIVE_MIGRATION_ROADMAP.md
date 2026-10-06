@@ -280,3 +280,7 @@ Next boundary: native deposit/withdrawal commands, then shift open/close. Keep t
 ## Atomic manual cash movements (051)
 
 MPosCashMovementCommand owns deposit/withdrawal drawer validation and a transactional shift/movement/marker commit. Manual movements preserve amounts, notes and existing JSON. Exact retry/reopen/backup guards prevent duplicate writes or false acknowledgements. UI stays reviewed JS; no new network effects. Current negative-drawer deposit restriction and arbitrary fractional amounts are documented for future business review. Next: shift open/close lifecycle, then native screen.
+
+## Atomic shift lifecycle (052)
+
+MPosShiftLifecycleCommand owns opening carryover/employee snapshot validation, closing drawer/count/counting validation and shift/projection/marker transaction. Opening uses last closed counted cash; closure accepts either sign of cash difference. Exact replay and restore guards protect lifecycle writes. Password UI, report payload generation, Telegram/print triggers and shift screen remain reviewed runtime boundaries; no new auth or network policy. Next: native shift summary/report read model, then Compose screen.
