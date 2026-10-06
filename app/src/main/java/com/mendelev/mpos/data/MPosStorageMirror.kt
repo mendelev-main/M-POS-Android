@@ -108,6 +108,10 @@ class MPosStorageMirror(
             }
         }
         when (command.action) {
+            "paymentCommit" -> {
+                attempt { MPosPaymentCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, "local payment transaction failed") }
+            }
             "workspaceStatus", "workspaceInitialize", "workspaceRead", "workspaceWrite", "workspaceRemove" -> {
                 attempt {
                     val key = command.key

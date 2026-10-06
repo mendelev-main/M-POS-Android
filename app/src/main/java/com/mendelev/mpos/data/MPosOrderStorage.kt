@@ -127,6 +127,18 @@ class MPosOrderStorage(private val database: MPosDatabase) {
         acknowledgement().put("revision", state.getLong("revision") + 1)
     }
 
+    suspend fun appendPayment(receipt: JSONObject) = database.withTransaction {
+        check(isAuthoritative()); ensureRows()
+        val state = rowState()
+        check(state.getString("mode") in setOf("rows", "null", "absent")) { "receipt archive requires compatible repair" }
+        val id = receipt.getString("id")
+        require(id.isNotBlank() && id == id.trim())
+        check(orderDao.get(id) == null) { "receipt ID already exists" }
+        val index = (orderDao.lastPosition() ?: -1) + 1
+        projectArray(JSONArray().put(receipt), false, mapOf(id to index))
+        saveState("rows", state.optLong("revision") + 1)
+    }
+
     // Missing/non-finite values are normalized only in diagnostic indexes, never in the document.
     private fun indexAmount(record: JSONObject, key: String): Double =
         record.optDouble(key, 0.0).takeIf { it.isFinite() } ?: 0.0

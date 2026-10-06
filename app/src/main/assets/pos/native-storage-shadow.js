@@ -135,6 +135,25 @@
 
   const mposCore=global.MPosCore=global.MPosCore||{};
   mposCore.Storage=mposStorage;
+  mposCore.Payments=Object.freeze({
+    async commit(command){
+      const payload=JSON.stringify(command);
+      await Promise.all(['products','shifts','orders','currentOrderSession','criticalStorageJournal'].map(initializeNative));
+      let result;
+      try{result=await request('paymentCommit',{payload})}
+      catch(error){
+        if(!String(error?.message).includes('commit status is uncertain'))throw error;
+        result=await request('paymentCommit',{payload});
+      }
+      requireNative(result,true);
+      // Native commit owns these documents; obsolete secondary caches must not be reimported.
+      for(const key of ['products','shifts','orders','currentOrderSession']){
+        try{legacyStorage.remove(key)}catch(error){cacheFailures++;cacheFailuresByKey[key]++;console.error('[MPosStorage] payment cache invalidation failed',key,error)}
+      }
+      global.MPosCore?.ReceiptsHistory?.invalidate();
+      return result;
+    }
+  });
   mposCore.Receipts=Object.freeze({
     async page(offset=0,limit=50){
       await initializeNative('orders');

@@ -49,4 +49,8 @@ interface OrderProjectionDao {
     @Query("SELECT * FROM order_projection WHERE id = :id") suspend fun get(id: String): OrderProjectionEntity?
     @Query("SELECT * FROM order_projection ORDER BY timestamp DESC, sortIndex ASC, id ASC LIMIT :limit OFFSET :offset")
     suspend fun page(limit: Int, offset: Int): List<OrderProjectionEntity>
+
+    @Query("SELECT MAX(sortIndex) FROM order_projection") suspend fun lastPosition(): Int?
+    @Query("SELECT * FROM order_projection WHERE shiftId = :id ORDER BY sortIndex ASC") suspend fun forShift(id: String): List<OrderProjectionEntity>
+    @Query("SELECT COUNT(*) FROM order_projection WHERE shiftId = :id") suspend fun countForShift(id: String): Int
 }
