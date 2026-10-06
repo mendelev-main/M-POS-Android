@@ -305,3 +305,11 @@ Views/AlertDialog, светлая/тёмная тема, отмена/Back, од
 внешние эффекты остаются на прежнем проверенном пути. Backup v13 без изменений.
 Rollback: MPosNativeCardConfirmationEnabled=false.
 `specs/068-native-card-confirmation/spec.md`; физические проверки ожидаются.
+
+
+069: окно наличной части смешанной оплаты заменено MPosSplitCashDialog;
+ввод/номиналы/preview/округление и проверка tender выполняются Kotlin локально,
+без моста на каждое нажатие. Paid=true только после прежнего progress commit.
+Backup v13 без изменений. Основной наличный keypad и экран оплаты пока WebView.
+Rollback: MPosNativeSplitCashEnabled=false.
+`specs/069-native-split-cash/spec.md`; физическая приёмка ожидается.

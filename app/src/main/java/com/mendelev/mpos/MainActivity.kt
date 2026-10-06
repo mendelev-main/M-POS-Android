@@ -19,6 +19,7 @@ import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.mendelev.mpos.backup.MPosBackupManager
+import com.mendelev.mpos.payment.MPosSplitCashDialog
 import com.mendelev.mpos.payment.MPosCardConfirmationDialog
 import com.mendelev.mpos.bridge.NativeBridgeRouter
 import com.mendelev.mpos.data.MPosDatabase
@@ -48,6 +49,7 @@ class MainActivity : AppCompatActivity() {
         private const val START_URL = "$APP_ORIGIN/assets/pos/pos.html"
     }
 
+    private lateinit var splitCashDialog: MPosSplitCashDialog
     private lateinit var cardConfirmationDialog: MPosCardConfirmationDialog
     private lateinit var shiftOpenDialog: MPosShiftOpenDialog
     private lateinit var shiftCloseDialog: MPosShiftCloseDialog
@@ -155,6 +157,9 @@ class MainActivity : AppCompatActivity() {
         cardConfirmationDialog = MPosCardConfirmationDialog(this) { action ->
             callJavaScript("window.MPosCore&&window.MPosCore.NativeCardConfirmation&&window.MPosCore.NativeCardConfirmation.handleAction($action);")
         }
+        splitCashDialog = MPosSplitCashDialog(this) { action ->
+            callJavaScript("window.MPosCore&&window.MPosCore.NativeSplitCash&&window.MPosCore.NativeSplitCash.handleAction($action);")
+        }
         setContentView(root)
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
@@ -191,6 +196,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        if (::splitCashDialog.isInitialized) splitCashDialog.dismiss()
         if (::cardConfirmationDialog.isInitialized) cardConfirmationDialog.dismiss()
         if (::shiftOpenDialog.isInitialized) shiftOpenDialog.dismiss()
         if (::shiftCloseDialog.isInitialized) shiftCloseDialog.dismiss()
@@ -247,7 +253,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun handlePaymentScreen(payload: JSONObject) = runOnUiThread {
-        if (::cardConfirmationDialog.isInitialized) cardConfirmationDialog.handle(payload)
+        if (payload.optString("action").startsWith("cash")) {
+            if (::splitCashDialog.isInitialized) splitCashDialog.handle(payload)
+        } else if (::cardConfirmationDialog.isInitialized) cardConfirmationDialog.handle(payload)
     }
 
     fun handleShiftScreen(payload: JSONObject) = runOnUiThread {

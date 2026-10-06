@@ -1,0 +1,714 @@
+[
+  {
+    "amount": 0.01,
+    "raw": "",
+    "allowed": false,
+    "denominations": [
+      0.01,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 0.01,
+    "raw": "0",
+    "allowed": false,
+    "denominations": [
+      0.01,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 0.01,
+    "raw": "0.009",
+    "allowed": true,
+    "cashGiven": 0.01,
+    "change": 0,
+    "denominations": [
+      0.01,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 0.01,
+    "raw": "1.005",
+    "allowed": true,
+    "cashGiven": 1,
+    "change": 0.99,
+    "denominations": [
+      0.01,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 0.01,
+    "raw": "2.675",
+    "allowed": true,
+    "cashGiven": 2.68,
+    "change": 2.67,
+    "denominations": [
+      0.01,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 0.01,
+    "raw": "12.494",
+    "allowed": true,
+    "cashGiven": 12.49,
+    "change": 12.48,
+    "denominations": [
+      0.01,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 0.01,
+    "raw": "12.495",
+    "allowed": true,
+    "cashGiven": 12.5,
+    "change": 12.49,
+    "denominations": [
+      0.01,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 0.01,
+    "raw": "20",
+    "allowed": true,
+    "cashGiven": 20,
+    "change": 19.99,
+    "denominations": [
+      0.01,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 0.01,
+    "raw": "500.015",
+    "allowed": true,
+    "cashGiven": 500.02,
+    "change": 500.01,
+    "denominations": [
+      0.01,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 0.01,
+    "raw": "1000.999",
+    "allowed": true,
+    "cashGiven": 1001,
+    "change": 1000.99,
+    "denominations": [
+      0.01,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 1.005,
+    "raw": "",
+    "allowed": false,
+    "denominations": [
+      1,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 1.005,
+    "raw": "0",
+    "allowed": false,
+    "denominations": [
+      1,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 1.005,
+    "raw": "0.009",
+    "allowed": false,
+    "denominations": [
+      1,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 1.005,
+    "raw": "1.005",
+    "allowed": false,
+    "denominations": [
+      1,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 1.005,
+    "raw": "2.675",
+    "allowed": true,
+    "cashGiven": 2.68,
+    "change": 1.68,
+    "denominations": [
+      1,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 1.005,
+    "raw": "12.494",
+    "allowed": true,
+    "cashGiven": 12.49,
+    "change": 11.49,
+    "denominations": [
+      1,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 1.005,
+    "raw": "12.495",
+    "allowed": true,
+    "cashGiven": 12.5,
+    "change": 11.5,
+    "denominations": [
+      1,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 1.005,
+    "raw": "20",
+    "allowed": true,
+    "cashGiven": 20,
+    "change": 19,
+    "denominations": [
+      1,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 1.005,
+    "raw": "500.015",
+    "allowed": true,
+    "cashGiven": 500.02,
+    "change": 499.02,
+    "denominations": [
+      1,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 1.005,
+    "raw": "1000.999",
+    "allowed": true,
+    "cashGiven": 1001,
+    "change": 1000,
+    "denominations": [
+      1,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 2.67,
+    "raw": "",
+    "allowed": false,
+    "denominations": [
+      2.67,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 2.67,
+    "raw": "0",
+    "allowed": false,
+    "denominations": [
+      2.67,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 2.67,
+    "raw": "0.009",
+    "allowed": false,
+    "denominations": [
+      2.67,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 2.67,
+    "raw": "1.005",
+    "allowed": false,
+    "denominations": [
+      2.67,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 2.67,
+    "raw": "2.675",
+    "allowed": true,
+    "cashGiven": 2.68,
+    "change": 0.01,
+    "denominations": [
+      2.67,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 2.67,
+    "raw": "12.494",
+    "allowed": true,
+    "cashGiven": 12.49,
+    "change": 9.82,
+    "denominations": [
+      2.67,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 2.67,
+    "raw": "12.495",
+    "allowed": true,
+    "cashGiven": 12.5,
+    "change": 9.83,
+    "denominations": [
+      2.67,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 2.67,
+    "raw": "20",
+    "allowed": true,
+    "cashGiven": 20,
+    "change": 17.33,
+    "denominations": [
+      2.67,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 2.67,
+    "raw": "500.015",
+    "allowed": true,
+    "cashGiven": 500.02,
+    "change": 497.35,
+    "denominations": [
+      2.67,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 2.67,
+    "raw": "1000.999",
+    "allowed": true,
+    "cashGiven": 1001,
+    "change": 998.33,
+    "denominations": [
+      2.67,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 12.5,
+    "raw": "",
+    "allowed": false,
+    "denominations": [
+      12.5,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 12.5,
+    "raw": "0",
+    "allowed": false,
+    "denominations": [
+      12.5,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 12.5,
+    "raw": "0.009",
+    "allowed": false,
+    "denominations": [
+      12.5,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 12.5,
+    "raw": "1.005",
+    "allowed": false,
+    "denominations": [
+      12.5,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 12.5,
+    "raw": "2.675",
+    "allowed": false,
+    "denominations": [
+      12.5,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 12.5,
+    "raw": "12.494",
+    "allowed": false,
+    "denominations": [
+      12.5,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 12.5,
+    "raw": "12.495",
+    "allowed": true,
+    "cashGiven": 12.5,
+    "change": 0,
+    "denominations": [
+      12.5,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 12.5,
+    "raw": "20",
+    "allowed": true,
+    "cashGiven": 20,
+    "change": 7.5,
+    "denominations": [
+      12.5,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 12.5,
+    "raw": "500.015",
+    "allowed": true,
+    "cashGiven": 500.02,
+    "change": 487.52,
+    "denominations": [
+      12.5,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 12.5,
+    "raw": "1000.999",
+    "allowed": true,
+    "cashGiven": 1001,
+    "change": 988.5,
+    "denominations": [
+      12.5,
+      20,
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  {
+    "amount": 500.01,
+    "raw": "",
+    "allowed": false,
+    "denominations": [
+      500.01
+    ]
+  },
+  {
+    "amount": 500.01,
+    "raw": "0",
+    "allowed": false,
+    "denominations": [
+      500.01
+    ]
+  },
+  {
+    "amount": 500.01,
+    "raw": "0.009",
+    "allowed": false,
+    "denominations": [
+      500.01
+    ]
+  },
+  {
+    "amount": 500.01,
+    "raw": "1.005",
+    "allowed": false,
+    "denominations": [
+      500.01
+    ]
+  },
+  {
+    "amount": 500.01,
+    "raw": "2.675",
+    "allowed": false,
+    "denominations": [
+      500.01
+    ]
+  },
+  {
+    "amount": 500.01,
+    "raw": "12.494",
+    "allowed": false,
+    "denominations": [
+      500.01
+    ]
+  },
+  {
+    "amount": 500.01,
+    "raw": "12.495",
+    "allowed": false,
+    "denominations": [
+      500.01
+    ]
+  },
+  {
+    "amount": 500.01,
+    "raw": "20",
+    "allowed": false,
+    "denominations": [
+      500.01
+    ]
+  },
+  {
+    "amount": 500.01,
+    "raw": "500.015",
+    "allowed": true,
+    "cashGiven": 500.02,
+    "change": 0.01,
+    "denominations": [
+      500.01
+    ]
+  },
+  {
+    "amount": 500.01,
+    "raw": "1000.999",
+    "allowed": true,
+    "cashGiven": 1001,
+    "change": 500.99,
+    "denominations": [
+      500.01
+    ]
+  }
+]

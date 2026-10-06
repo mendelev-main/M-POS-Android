@@ -178,13 +178,14 @@ Benefits:
 - removal of browser text-selection/context behavior.
 
 ### P7 — Payment domain + Compose payment screen
-**Status: 🟢 Partial (068)**
+**Status: 🟢 Partial (069)**
 
 Atomic settlement, product-discount arithmetic, gift allocation and configured unit-price
 formation and settlement recipe expansion are native. Cart additions await Room stock
 preflight, quantity edits use native decisions/Room preflight, and payment entry/cash/card/split
 confirmation reads stock from Room. Payment entry/confirmation also awaits a combined
-Kotlin pricing/reward quote. External card confirmation is native Android UI (068).
+Kotlin pricing/reward quote. External card confirmation is native Android UI (068); split cash input/change
+calculation is native (069).
 Main cart/payment UI and invalidated-preview recomputation,
 online gift eligibility and stock availability display
 remain reviewed JS; physical acceptance is pending.
@@ -408,3 +409,11 @@ Views/AlertDialog, светлая/тёмная тема, отмена/Back, од
 внешние эффекты остаются на прежнем проверенном пути. Backup v13 без изменений.
 Rollback: MPosNativeCardConfirmationEnabled=false.
 `specs/068-native-card-confirmation/spec.md`; физические проверки ожидаются.
+
+
+069: окно наличной части смешанной оплаты заменено MPosSplitCashDialog;
+ввод/номиналы/preview/округление и проверка tender выполняются Kotlin локально,
+без моста на каждое нажатие. Paid=true только после прежнего progress commit.
+Backup v13 без изменений. Основной наличный keypad и экран оплаты пока WebView.
+Rollback: MPosNativeSplitCashEnabled=false.
+`specs/069-native-split-cash/spec.md`; физическая приёмка ожидается.

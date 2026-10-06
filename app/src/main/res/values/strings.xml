@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">M POS</string>
+    <string name="mpos_cash_change">Сдача: %1$s</string>
 </resources>
 
