@@ -1,7 +1,7 @@
 # Статус миграции M POS Android и проверки на планшете
 
-Актуальный срез: этап 075. Основной счётчик и полный план находятся в
-[реестре задач](KOTLIN_MIGRATION_TASKS.md): **74/110 выполнено — 67,27%**.
+Актуальный срез: этап 076. Основной счётчик и полный план находятся в
+[реестре задач](KOTLIN_MIGRATION_TASKS.md): **75/110 выполнено — 68,18%**.
 Это инженерные задачи, не процент функций/кода; физическая приёмка ожидается.
 Исторические таблицы ниже описывают срез 040–053; более поздние изменения
 перечислены по спецификациям в конце, актуальный scope каждого этапа — в реестре.
@@ -349,3 +349,8 @@ normalize и готовит validation при Room session read. Paid/identity/t
 validator, не пустая сессия. Snapshot/progress/general startup ещё JS.
 Rollback: MPosNativeSplitRecoveryEnabled=false.
 `specs/075-native-split-recovery/spec.md`; физическая приёмка ожидается.
+
+076: matching Kotlin quote после qty/price/discount/delivery/gift изменений;
+обновляются только денежные DOM nodes. Root/modal/scroll/ввод сохранены.
+Identical in-flight quote shared; source preview остаётся до ответа/при read failure.
+Rollback MPosNativeCartPreviewEnabled=false; физическая приёмка pending.

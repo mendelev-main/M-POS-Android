@@ -460,9 +460,10 @@
     {
       "id": "076",
       "title": "Нативные итоговые preview корзины при всех изменениях",
-      "status": "planned",
+      "status": "done",
       "area": "P6/P7",
-      "dependencies": "075"
+      "dependencies": "075",
+      "spec": "specs/076-native-cart-preview/spec.md"
     },
     {
       "id": "077",

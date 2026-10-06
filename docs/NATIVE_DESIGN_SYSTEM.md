@@ -38,3 +38,7 @@ Skills в проекте: `.agents/skills/frontend-design/SKILL.md` (upstream/pi
 локальным агентам через AGENTS.md; это не глобальная установка плагина.
 
 Превью реализации: [светлая и тёмная темы](design/071/README.md).
+
+076: monetary preview refresh reuses existing POS DOM/classes/typography. Only
+line/total/gift text nodes update after matching native quote; root, forms and
+scroll identity remain. Physical light/dark/font-scale acceptance pending.

@@ -329,3 +329,7 @@ Rollback: MPosNativeCartQuantityEnabled=false.
 - Повторно открыть unpaid части, проверить методы/tender и ровное распределение.
 - Сохранённые подарок/доставка/скидка; изменённая скидка/повреждённый draft —
   прежняя политика несовпадения суммы. Проверить время запуска и Back при ожидании.
+
+076 — cart preview (pending): qty/price/discount/gift/delivery, быстрый add/delete,
+scroll/swipe/open comment/keypad при ответе; суммы строк/корзины/оплаты/чека.
+Dark/light/large font и длинный чек; замер отзывчивости. Source preview до ответа.

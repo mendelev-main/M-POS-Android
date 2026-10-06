@@ -252,3 +252,7 @@ physical acceptance pending, v13/settlement/effects unchanged.
 file-backed Room paid draft reopen, frozen/correlated storage reads, protocol/
 stale/rollback. Reviewed validator fallback on failed/mismatched preparation;
 raw v13/session and progress/settlement unchanged. Physical pending.
+
+076: matching native cart preview refresh for financial input changes, DOM
+identity/scroll and stale/failure/rollback coverage; source pending preview
+retained. Physical response/performance pending, v13 unchanged.

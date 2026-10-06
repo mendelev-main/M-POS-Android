@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **74/110 выполнено (67,27%)**
-после 075. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **75/110 выполнено (68,18%)**
+после 076. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -458,3 +458,7 @@ forms получили тот же стиль. Presentation-only: финансо
 
 075: normalize/draft restart validation native, compatibility validator on
 read/quote/cache failure; 076 — all-cart-change totals previews. Physical pending.
+
+076: reactive cart totals previews using 067 engine; coalesced/shared request,
+matching-only money node updates; synchronous source preview fallback retained.
+077/078 follow delivery/context. Physical response/performance pending.
