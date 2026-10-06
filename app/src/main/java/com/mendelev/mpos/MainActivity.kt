@@ -302,7 +302,7 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread { if (::shiftCloseDialog.isInitialized) shiftCloseDialog.result(result) }
         } else if (result.optString("requestId").startsWith("native-shift-screen-")) {
             runOnUiThread { if (::shiftScreen.isInitialized) shiftScreen.result(result) }
-        } else callJavaScript("window.__nativeStorageResult&&window.__nativeStorageResult($result);")
+        } else callJavaScript("window.__nativeStorageResult&&window.__nativeStorageResult(${com.mendelev.mpos.data.MPosBridgeJson.serialize(result)});")
     }
     private fun nativeNetworkResult(result: JSONObject) {
         diagnostics.record("network", "result", result.optBoolean("ok", false))

@@ -61,3 +61,7 @@ max может быть дробным в raw data; Infinity legacy path мож�
 
 После публикации: 80/110 (72,73%), остаётся 30. Следующий 082 — команды
 папок, порядка плиток, перемещения и навигации.
+
+## Этап 082
+
+082 переносит navigation mutations, не меняет product recipe, modifiers или stock. Category editor ждёт pending navigation command; source UI/theme сохранены.

@@ -1,0 +1,4245 @@
+[
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "",
+      "name": "",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Укажите название до 80 символов"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "",
+      "name": "Folder",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Папка с таким названием уже есть"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "",
+      "name": " New ",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              },
+              {
+                "type": "folder",
+                "id": "new",
+                "name": "New",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "",
+      "name": "Другой",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              },
+              {
+                "type": "folder",
+                "id": "new",
+                "name": "Другой",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "",
+      "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Укажите название до 80 символов"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "f",
+      "name": "",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Укажите название до 80 символов"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "f",
+      "name": "Folder",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "f",
+      "name": " New ",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "New",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "f",
+      "name": "Другой",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Другой",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "f",
+      "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Укажите название до 80 символов"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "missing",
+      "name": "",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Укажите название до 80 символов"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "missing",
+      "name": "Folder",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Папка с таким названием уже есть"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "missing",
+      "name": " New ",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Папка не найдена"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "missing",
+      "name": "Другой",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Папка не найдена"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "saveFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "missing",
+      "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "newId": "new"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Укажите название до 80 символов"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "removeFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "f"
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "removeFolder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "missing"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Папка не найдена"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "moveProduct",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "a",
+      "folderId": ""
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "moveProduct",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "a",
+      "folderId": "f"
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "moveProduct",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "a",
+      "folderId": "missing"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Папка не найдена"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "moveProduct",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "b",
+      "folderId": ""
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "moveProduct",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "b",
+      "folderId": "f"
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "f"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "moveProduct",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "b",
+      "folderId": "missing"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Папка не найдена"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "moveProduct",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "missing",
+      "folderId": ""
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Товар не найден в категории"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "moveProduct",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "missing",
+      "folderId": "f"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Товар не найден в категории"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "moveProduct",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "id": "missing",
+      "folderId": "missing"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Папка не найдена"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "reorder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "type": "product",
+      "id": "b",
+      "parentId": "",
+      "targetIndex": -2
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "reorder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "type": "product",
+      "id": "b",
+      "parentId": "",
+      "targetIndex": 0
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "reorder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "type": "product",
+      "id": "b",
+      "parentId": "",
+      "targetIndex": 1
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "reorder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "type": "product",
+      "id": "b",
+      "parentId": "",
+      "targetIndex": 99
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "reorder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "type": "product",
+      "id": "b",
+      "parentId": "",
+      "targetIndex": 1.9
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "reorder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "parentId": "f",
+      "targetIndex": -2
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "reorder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "parentId": "f",
+      "targetIndex": 0
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "reorder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "parentId": "f",
+      "targetIndex": 1
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "reorder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "parentId": "f",
+      "targetIndex": 99
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "reorder",
+      "category": "C",
+      "navigation": {
+        "version": 1,
+        "extension": 7,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Folder ",
+                "parentId": "bad"
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "missing",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": "unknown"
+              }
+            ]
+          },
+          {
+            "category": "C",
+            "items": []
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "a",
+          "category": " C ",
+          "sortOrder": 2
+        },
+        {
+          "id": "b",
+          "category": "C",
+          "sortOrder": 0
+        },
+        {
+          "id": "c",
+          "category": "Other",
+          "sortOrder": 1
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "parentId": "f",
+      "targetIndex": 1.9
+    },
+    "expected": {
+      "allowed": true,
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "C",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Folder",
+                "parentId": ""
+              },
+              {
+                "type": "product",
+                "id": "a",
+                "parentId": "f"
+              },
+              {
+                "type": "product",
+                "id": "b",
+                "parentId": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "addTile",
+      "tiles": [],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": 0,
+          "row": 0
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "removeTile",
+      "tiles": [],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": []
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "normalizeTiles",
+      "tiles": [],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": []
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "moveTile",
+      "tiles": [],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": []
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "addTile",
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "category",
+          "id": "C",
+          "col": 0,
+          "row": 0
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "category",
+          "id": "C",
+          "col": 1,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "a",
+          "col": 2,
+          "row": 0
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "removeTile",
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "category",
+          "id": "C",
+          "col": 0,
+          "row": 0
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": [
+        {
+          "type": "category",
+          "id": "C",
+          "col": 0,
+          "row": 0
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "normalizeTiles",
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "category",
+          "id": "C",
+          "col": 0,
+          "row": 0
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "category",
+          "id": "C",
+          "col": 1,
+          "row": 0
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "moveTile",
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "category",
+          "id": "C",
+          "col": 0,
+          "row": 0
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": 1,
+          "row": 0
+        },
+        {
+          "type": "category",
+          "id": "C",
+          "col": 0,
+          "row": 0
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "addTile",
+      "tiles": [
+        {
+          "type": "product",
+          "id": "p0",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p1",
+          "col": 1,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p2",
+          "col": 2,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p3",
+          "col": 3,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p4",
+          "col": 4,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p5",
+          "col": 0,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p6",
+          "col": 1,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p7",
+          "col": 2,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p8",
+          "col": 3,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p9",
+          "col": 4,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p10",
+          "col": 0,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p11",
+          "col": 1,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p12",
+          "col": 2,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p13",
+          "col": 3,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p14",
+          "col": 4,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p15",
+          "col": 0,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p16",
+          "col": 1,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p17",
+          "col": 2,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p18",
+          "col": 3,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p19",
+          "col": 4,
+          "row": 3
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": false,
+      "message": "В рабочей зоне можно разместить максимум 20 плиток"
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "removeTile",
+      "tiles": [
+        {
+          "type": "product",
+          "id": "p0",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p1",
+          "col": 1,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p2",
+          "col": 2,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p3",
+          "col": 3,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p4",
+          "col": 4,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p5",
+          "col": 0,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p6",
+          "col": 1,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p7",
+          "col": 2,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p8",
+          "col": 3,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p9",
+          "col": 4,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p10",
+          "col": 0,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p11",
+          "col": 1,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p12",
+          "col": 2,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p13",
+          "col": 3,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p14",
+          "col": 4,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p15",
+          "col": 0,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p16",
+          "col": 1,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p17",
+          "col": 2,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p18",
+          "col": 3,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p19",
+          "col": 4,
+          "row": 3
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": [
+        {
+          "type": "product",
+          "id": "p1",
+          "col": 1,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p2",
+          "col": 2,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p3",
+          "col": 3,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p4",
+          "col": 4,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p5",
+          "col": 0,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p6",
+          "col": 1,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p7",
+          "col": 2,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p8",
+          "col": 3,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p9",
+          "col": 4,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p10",
+          "col": 0,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p11",
+          "col": 1,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p12",
+          "col": 2,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p13",
+          "col": 3,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p14",
+          "col": 4,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p15",
+          "col": 0,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p16",
+          "col": 1,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p17",
+          "col": 2,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p18",
+          "col": 3,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p19",
+          "col": 4,
+          "row": 3
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "normalizeTiles",
+      "tiles": [
+        {
+          "type": "product",
+          "id": "p0",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p1",
+          "col": 1,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p2",
+          "col": 2,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p3",
+          "col": 3,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p4",
+          "col": 4,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p5",
+          "col": 0,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p6",
+          "col": 1,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p7",
+          "col": 2,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p8",
+          "col": 3,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p9",
+          "col": 4,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p10",
+          "col": 0,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p11",
+          "col": 1,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p12",
+          "col": 2,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p13",
+          "col": 3,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p14",
+          "col": 4,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p15",
+          "col": 0,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p16",
+          "col": 1,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p17",
+          "col": 2,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p18",
+          "col": 3,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p19",
+          "col": 4,
+          "row": 3
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": [
+        {
+          "type": "product",
+          "id": "p0",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p1",
+          "col": 1,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p2",
+          "col": 2,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p3",
+          "col": 3,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p4",
+          "col": 4,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p5",
+          "col": 0,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p6",
+          "col": 1,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p7",
+          "col": 2,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p8",
+          "col": 3,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p9",
+          "col": 4,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p10",
+          "col": 0,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p11",
+          "col": 1,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p12",
+          "col": 2,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p13",
+          "col": 3,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p14",
+          "col": 4,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p15",
+          "col": 0,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p16",
+          "col": 1,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p17",
+          "col": 2,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p18",
+          "col": 3,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p19",
+          "col": 4,
+          "row": 3
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "moveTile",
+      "tiles": [
+        {
+          "type": "product",
+          "id": "p0",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p1",
+          "col": 1,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p2",
+          "col": 2,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p3",
+          "col": 3,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p4",
+          "col": 4,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p5",
+          "col": 0,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p6",
+          "col": 1,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p7",
+          "col": 2,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p8",
+          "col": 3,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p9",
+          "col": 4,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p10",
+          "col": 0,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p11",
+          "col": 1,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p12",
+          "col": 2,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p13",
+          "col": 3,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p14",
+          "col": 4,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p15",
+          "col": 0,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p16",
+          "col": 1,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p17",
+          "col": 2,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p18",
+          "col": 3,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p19",
+          "col": 4,
+          "row": 3
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": [
+        {
+          "type": "product",
+          "id": "p0",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p1",
+          "col": 1,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p2",
+          "col": 2,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p3",
+          "col": 3,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p4",
+          "col": 4,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "p5",
+          "col": 0,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p6",
+          "col": 1,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p7",
+          "col": 2,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p8",
+          "col": 3,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p9",
+          "col": 4,
+          "row": 1
+        },
+        {
+          "type": "product",
+          "id": "p10",
+          "col": 0,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p11",
+          "col": 1,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p12",
+          "col": 2,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p13",
+          "col": 3,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p14",
+          "col": 4,
+          "row": 2
+        },
+        {
+          "type": "product",
+          "id": "p15",
+          "col": 0,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p16",
+          "col": 1,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p17",
+          "col": 2,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p18",
+          "col": 3,
+          "row": 3
+        },
+        {
+          "type": "product",
+          "id": "p19",
+          "col": 4,
+          "row": 3
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "addTile",
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": "1",
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "b",
+          "col": -1,
+          "row": 0
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "b",
+          "col": 1,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "a",
+          "col": 2,
+          "row": 0
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "removeTile",
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": "1",
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "b",
+          "col": -1,
+          "row": 0
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": [
+        {
+          "type": "product",
+          "id": "b",
+          "col": -1,
+          "row": 0
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "normalizeTiles",
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": "1",
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "b",
+          "col": -1,
+          "row": 0
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "b",
+          "col": 1,
+          "row": 0
+        }
+      ]
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "moveTile",
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": "1",
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "b",
+          "col": -1,
+          "row": 0
+        }
+      ],
+      "type": "product",
+      "id": "a",
+      "index": 0,
+      "col": 0,
+      "row": 0,
+      "cols": 5
+    },
+    "expected": {
+      "allowed": true,
+      "tiles": [
+        {
+          "type": "product",
+          "id": "a",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "type": "product",
+          "id": "b",
+          "col": -1,
+          "row": 0
+        }
+      ]
+    }
+  }
+]

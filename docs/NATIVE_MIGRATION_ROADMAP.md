@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **80/110 выполнено (72,73%)**
-после 081. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **81/110 выполнено (73,64%)**
+после 082. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -486,3 +486,7 @@ printing triggers — 099, customer loyalty — 084/085. Следующий 080:
 ## Этап 081
 
 081: recipe cycle/quantities/first-error + modifier normalization/check/yield gate завершены. Editor source builder/units/UI ещё 102; следующий 082 — folders/order/move/navigation commands.
+
+## Этап 082
+
+082: бизнес-команды navigation/layout завершены с 52 source fixtures, UTF-16 и ack/stale/failure tests. Workspace UI/query rendering остаются 101; следующий 083 — staff/roles/auth policy.

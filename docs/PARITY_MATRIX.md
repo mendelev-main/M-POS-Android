@@ -281,3 +281,7 @@ Physical acceptance pending; UI/receipt builder ещё WebView/source.
 ## Этап 081
 
 081: 37 source fixtures, generated IDs/yield, authoritative Room catalogue, save decision order/cache bypass, source rollback/Infinity compatibility и stale/protocol/failure проверены автоматически. Physical pending; полный editor/native UI не заявлен.
+
+## Этап 082
+
+082: 52 reviewed folder/root command fixtures, stable order/20-limit/nearest cells, strict normalize/UTF-16/bridge escaping, FIFO/ack/failure/stale/cancel/rollback проверены. Physical pending; renderer/query runtime ещё source.

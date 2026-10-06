@@ -1,7 +1,7 @@
 # Статус миграции M POS Android и проверки на планшете
 
-Актуальный срез: этап 081. Основной счётчик и полный план находятся в
-[реестре задач](KOTLIN_MIGRATION_TASKS.md): **80/110 выполнено — 72,73%**.
+Актуальный срез: этап 082. Основной счётчик и полный план находятся в
+[реестре задач](KOTLIN_MIGRATION_TASKS.md): **81/110 выполнено — 73,64%**.
 Это инженерные задачи, не процент функций/кода; физическая приёмка ожидается.
 Исторические таблицы ниже описывают срез 040–053; более поздние изменения
 перечислены по спецификациям в конце, актуальный scope каждого этапа — в реестре.
@@ -381,3 +381,7 @@ Kotlin управляет append/filter списка и атомарно зап�
 ## Этап 081
 
 081: Kotlin проверяет draft recipe и нормализует/проверяет modifiers перед сохранением товара. Matching caches заменяют sync validators для save gesture. Room catalogue authority, no writes; source units/configuration/media/UI и explicit legacy Infinity compatibility сохранены. Spec: ../specs/081-native-recipe-edit/spec.md.
+
+## Этап 082
+
+082: Kotlin mutation model folder/save/remove/move/reorder и root tile add/remove/nearest move. Matching result сохраняется через действующий Room Storage.set до UI patch. Queries/render/pointer geometry/passive repair ещё JS; surrogate-safe bridge сохраняет UTF-16. Spec: ../specs/082-native-navigation/spec.md.

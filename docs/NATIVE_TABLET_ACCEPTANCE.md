@@ -361,3 +361,7 @@ Cancel/modal replacement/pending checkout, restart/backup v13.
 ## Этап 081
 
 081 pending: nested/shared/cycle/missing recipes, units/yield, modifier name/min/max/self/duplicate/negative qty; 0→1 и default omission source rules; new IDs/reopen/v13; delta price/stock/return; rapid edit/close/double save; фото offline, без новых network triggers.
+
+## Этап 082
+
+082 pending: folder create/rename/delete/move/root/reorder; root duplicate tiles/20-limit/occupied-cell drag/cancel; rapid gestures/close/field edit/storage fail; restart/v13 order/coords; Cyrillic/emoji 80 UTF-16 boundary; no backend catalogue/availability effect.

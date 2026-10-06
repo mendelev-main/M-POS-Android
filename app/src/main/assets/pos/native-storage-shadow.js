@@ -137,6 +137,9 @@
 
   const mposCore=global.MPosCore=global.MPosCore||{};
   mposCore.Storage=mposStorage;
+  mposCore.NavigationRead=Object.freeze({
+    async calculate(input){return requireNative(await request('navigationRead',{payload:JSON.stringify(input)}),true);}
+  });
   mposCore.RecipeEdit=Object.freeze({
     async calculate(input){return requireNative(await request('recipeEditRead',{payload:JSON.stringify(input)}),true);}
   });

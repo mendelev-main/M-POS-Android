@@ -144,6 +144,10 @@ class MPosStorageMirror(
                 readAttempt(command.action) { MPosStockPreflightRepository(database).read(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native stock preflight unavailable") }
             }
+            "navigationRead" -> {
+                attempt { MPosNavigationEngine.calculate(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, "native navigation unavailable") }
+            }
             "recipeEditRead" -> {
                 attempt { MPosRecipeEditRepository(database).calculate(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native recipe edit unavailable") }
