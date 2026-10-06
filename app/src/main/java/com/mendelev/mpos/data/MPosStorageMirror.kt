@@ -144,6 +144,10 @@ class MPosStorageMirror(
                 readAttempt(command.action) { MPosStockPreflightRepository(database).read(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native stock preflight unavailable") }
             }
+            "splitRecoveryRead" -> {
+                attempt { com.mendelev.mpos.payment.MPosSplitRecoveryEngine.calculate(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, "native split recovery unavailable") }
+            }
             "splitAmountRead" -> {
                 attempt { com.mendelev.mpos.payment.MPosSplitAmountEngine.calculate(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native split amount unavailable") }

@@ -96,6 +96,20 @@ class MPosRecoveryAuthorityTest {
         assertEquals(layout, call("recoveryRead", "currentOrderSession").getString("payload"))
     }
 
+    @Test fun paidDraftSurvivesReopenAndNativeReadDoesNotRewriteOrRepayIt() {
+        val document = """{"items":[{"productId":"p","price":10.01,"qty":1}],"paymentDraft":{"version":1,"totalCents":1001,"updatedAt":42,"parts":[{"method":"card","amount":5.01,"paid":true},{"method":"card","amount":5,"paid":false}]}}"""
+        call("recoveryInitialize", "currentOrderSession", document)
+        mirror.close(); scope.cancel(); database.close(); open()
+        val restored = JSONObject(call("recoveryRead", "currentOrderSession").getString("payload"))
+        val input = JSONObject().put("version", 1).put("operation", "restore").put("expectedTotal", 10.01)
+            .put("now", 123456).put("draft", restored.getJSONObject("paymentDraft"))
+        val result = call("splitRecoveryRead", "", input.toString())
+        assertTrue(result.getBoolean("authoritative")); assertTrue(result.getBoolean("valid"))
+        assertTrue(result.getJSONObject("draft").getJSONArray("parts").getJSONObject(0).getBoolean("paid"))
+        assertEquals(5.01, result.getJSONObject("draft").getJSONArray("parts").getJSONObject(0).getDouble("amount"), 0.0)
+        assertEquals(document, call("recoveryRead", "currentOrderSession").getString("payload"))
+    }
+
     @Test fun fileBackedWorkspaceAndMarkersSurviveDatabaseReopen() {
         call("recoveryInitialize", "currentOrderSession", layout)
         call("recoveryInitialize", "criticalStorageJournal", navigation)

@@ -452,9 +452,10 @@
     {
       "id": "075",
       "title": "Нормализация/возобновление mixed draft и его проверки",
-      "status": "planned",
+      "status": "done",
       "area": "P7",
-      "dependencies": "074"
+      "dependencies": "074",
+      "spec": "specs/075-native-split-recovery/spec.md"
     },
     {
       "id": "076",

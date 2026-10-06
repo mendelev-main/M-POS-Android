@@ -247,3 +247,8 @@ remain JS. v13 and settlement unchanged; physical acceptance pending.
 145 source fixtures, shared FIFO/coalescing/count barrier, paid identity,
 protocol/stale/rollback. Presentation keypad/gate and normalize remain JS;
 physical acceptance pending, v13/settlement/effects unchanged.
+
+075: native split normalization and restart draft validation — 145 goldens,
+file-backed Room paid draft reopen, frozen/correlated storage reads, protocol/
+stale/rollback. Reviewed validator fallback on failed/mismatched preparation;
+raw v13/session and progress/settlement unchanged. Physical pending.

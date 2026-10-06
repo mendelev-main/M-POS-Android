@@ -67,3 +67,7 @@ coalescing, count barrier, identity/paid, stale/error/protocol/rollback.
 
 После публикации 074: 73/110 инженерных задач выполнено (66,36%), осталось 37.
 Физическая приёмка не завершена. Следующая задача 075 — normalize/resume draft.
+
+Обновление 075: normalize/restore используют pure Kotlin и общую FIFO,
+read-only compatibility validator сохранён для ошибок restart подготовки.
+Следующая граница 076 — preview итогов при всех изменениях корзины.

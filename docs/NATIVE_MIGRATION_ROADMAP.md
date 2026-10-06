@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **73/110 выполнено (66,36%)**
-после 074. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **74/110 выполнено (67,27%)**
+после 075. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -186,7 +186,7 @@ Benefits:
 - removal of browser text-selection/context behavior.
 
 ### P7 — Payment domain + Compose payment screen
-**Status: 🟢 Partial (074)**
+**Status: 🟢 Partial (075)**
 
 Atomic settlement, product-discount arithmetic, gift allocation and configured unit-price
 formation and settlement recipe expansion are native. Cart additions await Room stock
@@ -195,7 +195,8 @@ confirmation reads stock from Room. Payment entry/confirmation also awaits a com
 Kotlin pricing/reward quote. External card confirmation is native Android UI (068); split cash input/change
 calculation is native (069). Ordinary tender input and confirmation arithmetic
 are native (070); initial split plans and count redistribution are native (072–073).
-Split amount editing arithmetic/parser are native (074); normalization remains JS; the main payment shell still renders in WebView.
+Split amount editing arithmetic/parser (074) and normalization/restart draft validation (075)
+are native, with reviewed restart validation fallback on read/cache failure; the main payment shell still renders in WebView.
 Main cart/payment UI and invalidated-preview recomputation,
 online gift eligibility and stock availability display
 remain reviewed JS; physical acceptance is pending.
@@ -454,3 +455,6 @@ forms получили тот же стиль. Presentation-only: финансо
 
 074: amount parser/redistribution — Kotlin, shared count/amount FIFO;
 075 остаётся следующим normalize/resume draft boundary. UI keypad ещё JS.
+
+075: normalize/draft restart validation native, compatibility validator on
+read/quote/cache failure; 076 — all-cart-change totals previews. Physical pending.

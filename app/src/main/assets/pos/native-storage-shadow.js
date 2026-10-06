@@ -86,7 +86,9 @@
       if(!nativeKeys.has(key))return legacyStorage.get(key,fallback,onError);
       try{
         const result=await readNative(key);
-        return result.found?JSON.parse(result.payload):fallback;
+        const value=result.found?JSON.parse(result.payload):fallback;
+        if(key==='currentOrderSession'){try{await global.MPosCore?.SplitRecovery?.prepare(value);}catch(_error){global.console?.warn?.('[MPosStorage] split recovery compatibility path retained');}}
+        return value;
       }catch(error){
         if(onError)onError(error);else console.error('[MPosStorage] read failed',key,error);
         if(key==='criticalStorageJournal')throw error;
@@ -135,6 +137,11 @@
 
   const mposCore=global.MPosCore=global.MPosCore||{};
   mposCore.Storage=mposStorage;
+  mposCore.SplitRecoveryRead=Object.freeze({
+    async calculate(input){
+      return requireNative(await request('splitRecoveryRead',{payload:JSON.stringify(input)}),true);
+    }
+  });
   mposCore.SplitAmountRead=Object.freeze({
     async calculate(input){
       return requireNative(await request('splitAmountRead',{payload:JSON.stringify(input)}),true);
