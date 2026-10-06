@@ -4,6 +4,8 @@ Android tablet port of the production M POS with a native Kotlin shell and a bun
 
 The current application deliberately keeps the reviewed HTML/CSS/JavaScript business runtime inside the APK while Kotlin owns Android-specific work. The project is being migrated incrementally toward a more native architecture where doing so improves reliability, maintainability or device integration. The migration plan lives in [docs/NATIVE_MIGRATION_ROADMAP.md](docs/NATIVE_MIGRATION_ROADMAP.md).
 
+Текущий [статус миграции, проценты и проверки на планшете](docs/MIGRATION_STATUS_RU.md) — полный отчёт на русском.
+
 ## Architecture
 
 - One hardware-accelerated `WebView`; no remote UI and no cross-platform runtime.
