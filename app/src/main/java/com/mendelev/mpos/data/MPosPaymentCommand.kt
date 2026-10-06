@@ -9,7 +9,7 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
 
-/** Atomic local settlement; configured prices, recipe expansion and loyalty allocation remain parity inputs. */
+/** Atomic local settlement; configured prices and recipe expansion remain parity inputs. */
 class MPosPaymentCommand(private val database: MPosDatabase) {
     private val documents = database.legacyStorageShadowDao()
     private val orders = database.orderProjectionDao()
@@ -49,6 +49,7 @@ class MPosPaymentCommand(private val database: MPosDatabase) {
         check(order.getInt("receiptNumber") == orders.countForShift(shiftId) + 1) { "receipt sequence changed" }
         require(order.getJSONArray("items").length() > 0) { "empty receipt" }
         require(order.optLong("returnedAt") == 0L) { "new payment cannot be a returned receipt" }
+        if (command.has("loyalty")) MPosLoyaltyRewardEngine.validate(order, command.getJSONObject("loyalty"))
         if (command.has("pricing")) MPosPricingEngine.validate(order, command.getJSONObject("pricing"))
         validatePayments(order)
         val afterProducts = JSONArray(beforeProducts.toString())

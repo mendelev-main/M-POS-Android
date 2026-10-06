@@ -24,6 +24,10 @@ object MPosJsonNumbers {
         }
         else -> Double.NaN
     }
+    fun roundMoney(value: Double): Double {
+        val scaled = value * 100; val lower = kotlin.math.floor(scaled)
+        return (if (scaled - lower >= 0.5) lower + 1 else lower) / 100
+    }
     fun truthy(value: Any?): Boolean = when (value) {
         null, JSONObject.NULL -> false
         is Boolean -> value

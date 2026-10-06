@@ -65,6 +65,55 @@ class MPosPaymentCommandTest {
         order.put("productDiscountTotal", 0.0).put("subtotalBeforeDiscounts", 12.35).put("loyaltyDiscount", 0.0)
         return request.put("pricing", JSONObject().put("version", 1).put("discounts", JSONArray()).put("loyaltyDiscount", 0.0))
     }
+    private fun withLoyalty(request: JSONObject, programs: JSONArray = JSONArray(), redemptions: JSONObject = JSONObject()): JSONObject {
+        val order = request.getJSONObject("order")
+        val allocation = MPosLoyaltyRewardEngine.calculate(order.getJSONArray("items"), programs, redemptions)
+        order.put("loyaltyRedemptions", redemptions).put("loyaltyRewardAllocations", allocation.getJSONObject("allocations"))
+            .put("loyaltyDiscount", allocation.getJSONObject("snapshot").getDouble("discount"))
+            .put("loyaltyProgramsApplied", allocation.getJSONObject("snapshot").getJSONArray("programs"))
+        return request.put("loyalty", JSONObject().put("version", 1).put("programs", programs))
+    }
+    private fun giftPrograms() = JSONArray("""[{"id":"gift","name":"Synthetic gift","loyalty_reward_products":[{"product_id":"p1"}]}]""")
+    private fun giftCommand(): JSONObject {
+        val request = withPricing(command(true)); val order = request.getJSONObject("order")
+        order.getJSONArray("items").getJSONObject(0).put("price", 10).put("discountId", "sale")
+        withLoyalty(request, giftPrograms(), JSONObject("""{"gift":1}"""))
+        order.put("total", 0).put("productDiscountTotal", 2).put("subtotalBeforeDiscounts", 10)
+        order.getJSONArray("payments").getJSONObject(0).put("amount", 0).put("cashGiven", 0).put("change", 0)
+        order.getJSONArray("payments").getJSONObject(1).put("amount", 0)
+        request.getJSONObject("pricing").put("loyaltyDiscount", 10).put("discounts", JSONArray("""[{"id":"sale","type":"percent","value":20}]"""))
+        return request
+    }
+    @Test fun nativeGiftAndDiscountPreserveDeliveryAndReplayAtomicity() = runBlocking {
+        val request = giftCommand()
+        assertTrue(MPosPaymentCommand(database).commit(request.toString()).getBoolean("ok"))
+        assertTrue(MPosPaymentCommand(database).commit(request.toString()).getBoolean("replayed"))
+        val receipt = JSONArray(MPosOrderStorage(database).read().getString("payload")).getJSONObject(0)
+        assertEquals(0.0, receipt.getDouble("total"), 0.0)
+        assertEquals(10.0, receipt.getDouble("loyaltyDiscount"), 0.0)
+        assertEquals("p1", receipt.getJSONObject("loyaltyRewardAllocations").getJSONArray("gift").getJSONObject(0).getString("productId"))
+        assertFalse(receipt.has("loyalty")); assertFalse(receipt.has("pricing"))
+        assertTrue(receipt.getJSONObject("custom").getBoolean("preserved"))
+        assertEquals(1, database.orderProjectionDao().orderCount())
+        assertEquals(5.0, JSONArray(MPosCatalogStorage(database).read().getString("payload")).getJSONObject(0).getDouble("stock"), 0.0)
+        assertEquals(1, JSONArray(MPosShiftStorage(database).read().getString("payload")).getJSONObject(0).getJSONArray("cashMovements").length())
+    }
+    @Test fun incorrectNativeGiftFailsBeforeAnyStockReceiptSessionOrShiftWrites() = runBlocking {
+        reject(giftCommand().also { it.getJSONObject("order").put("loyaltyDiscount", 9) })
+        reject(giftCommand().also { it.getJSONObject("order").getJSONObject("loyaltyRewardAllocations").getJSONArray("gift").getJSONObject(0).put("productId", "different") })
+        reject(giftCommand().also { it.getJSONObject("order").getJSONArray("loyaltyProgramsApplied").getJSONObject(0).put("name", "changed") })
+        reject(giftCommand().also { it.getJSONObject("order").getJSONObject("loyaltyRedemptions").put("gift", 2) })
+        reject(giftCommand().also { it.getJSONObject("loyalty").getJSONArray("programs").getJSONObject(0).put("loyalty_reward_products", JSONArray()) })
+        reject(giftCommand().put("loyalty", JSONObject.NULL))
+        reject(giftCommand().also { it.getJSONObject("loyalty").put("version", 2) })
+        assertEquals(0, database.orderProjectionDao().orderCount())
+        assertEquals(5.125, JSONArray(MPosCatalogStorage(database).read().getString("payload")).getJSONObject(0).getDouble("stock"), 0.0)
+        assertEquals(0, JSONArray(MPosShiftStorage(database).read().getString("payload")).getJSONObject(0).getJSONArray("cashMovements").length())
+        assertEquals(1, JSONObject(MPosRecoveryStorage(database).read("currentOrderSession").getString("payload")).getJSONArray("items").length())
+    }
+    @Test fun paymentWithoutGiftAcceptsEmptyNativeLoyaltySnapshot() = runBlocking {
+        assertTrue(MPosPaymentCommand(database).commit(withLoyalty(withPricing(command())).toString()).getBoolean("ok"))
+    }
     @Test fun nativePricingCommitsAndExactReplayDoesNotDuplicateReceipt() = runBlocking {
         val request = withPricing(command(true))
         assertTrue(MPosPaymentCommand(database).commit(request.toString()).getBoolean("ok"))

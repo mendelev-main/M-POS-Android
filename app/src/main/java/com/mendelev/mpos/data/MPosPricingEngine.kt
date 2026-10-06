@@ -2,17 +2,12 @@ package com.mendelev.mpos.data
 
 import org.json.JSONArray
 import org.json.JSONObject
-import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
 /** Settlement arithmetic; configured prices already include manual prices/modifiers. */
 object MPosPricingEngine {
-    private fun rounded(value: Double): Double {
-        val scaled = value * 100; val lower = floor(scaled)
-        // Adding 0.5 first can round a value just below the tie upward in IEEE 754.
-        return (if (scaled - lower >= 0.5) lower + 1 else lower) / 100
-    }
+    private fun rounded(value: Double) = MPosJsonNumbers.roundMoney(value)
     private fun numeric(value: Any?) = MPosJsonNumbers.number(value)
     private fun fallbackNumber(value: Any?) = numeric(MPosJsonNumbers.fallback(value, 0))
     private fun numberOrZero(value: Any?) = numeric(value).let { if (it.isNaN() || it == 0.0) 0.0 else it }

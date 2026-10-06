@@ -1,0 +1,1204 @@
+[
+  {
+    "name": "cheapest eligible",
+    "items": [
+      {
+        "productId": "a",
+        "price": 10,
+        "qty": 1
+      },
+      {
+        "productId": "b",
+        "price": 5,
+        "qty": 1
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          },
+          {
+            "product_id": "b"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 1
+    },
+    "expected": {
+      "discount": 5,
+      "allocations": {
+        "g": [
+          {
+            "productId": "b",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "g": 5
+      },
+      "snapshot": {
+        "discount": 5,
+        "programs": [
+          {
+            "id": "g",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 5
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "stable equal-price cart order",
+    "items": [
+      {
+        "productId": "b",
+        "price": 5,
+        "qty": 1
+      },
+      {
+        "productId": "a",
+        "price": 5,
+        "qty": 1
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          },
+          {
+            "product_id": "b"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 1
+    },
+    "expected": {
+      "discount": 5,
+      "allocations": {
+        "g": [
+          {
+            "productId": "b",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "g": 5
+      },
+      "snapshot": {
+        "discount": 5,
+        "programs": [
+          {
+            "id": "g",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 5
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "units reserved across programs",
+    "items": [
+      {
+        "productId": "a",
+        "price": 5,
+        "qty": 2
+      },
+      {
+        "productId": "b",
+        "price": 10,
+        "qty": 1
+      }
+    ],
+    "programs": [
+      {
+        "id": "g1",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          },
+          {
+            "product_id": "b"
+          }
+        ]
+      },
+      {
+        "id": "g2",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      },
+      {
+        "id": "g3",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          },
+          {
+            "product_id": "b"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g1": 1,
+      "g2": 1,
+      "g3": 1
+    },
+    "expected": {
+      "discount": 20,
+      "allocations": {
+        "g1": [
+          {
+            "productId": "a",
+            "quantity": 1
+          }
+        ],
+        "g2": [
+          {
+            "productId": "a",
+            "quantity": 1
+          }
+        ],
+        "g3": [
+          {
+            "productId": "b",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "g1": 5,
+        "g2": 5,
+        "g3": 10
+      },
+      "snapshot": {
+        "discount": 20,
+        "programs": [
+          {
+            "id": "g1",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 5
+          },
+          {
+            "id": "g2",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 5
+          },
+          {
+            "id": "g3",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 10
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "program order preserves first claim",
+    "items": [
+      {
+        "productId": "a",
+        "price": 5,
+        "qty": 1
+      },
+      {
+        "productId": "b",
+        "price": 10,
+        "qty": 1
+      }
+    ],
+    "programs": [
+      {
+        "id": "broad",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          },
+          {
+            "product_id": "b"
+          }
+        ]
+      },
+      {
+        "id": "narrow",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "broad": 1,
+      "narrow": 1
+    },
+    "expected": {
+      "discount": 5,
+      "allocations": {
+        "broad": [
+          {
+            "productId": "a",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "broad": 5
+      },
+      "snapshot": {
+        "discount": 5,
+        "programs": [
+          {
+            "id": "broad",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 5
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "reverse program order allows both",
+    "items": [
+      {
+        "productId": "a",
+        "price": 5,
+        "qty": 1
+      },
+      {
+        "productId": "b",
+        "price": 10,
+        "qty": 1
+      }
+    ],
+    "programs": [
+      {
+        "id": "narrow",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      },
+      {
+        "id": "broad",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          },
+          {
+            "product_id": "b"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "broad": 1,
+      "narrow": 1
+    },
+    "expected": {
+      "discount": 15,
+      "allocations": {
+        "narrow": [
+          {
+            "productId": "a",
+            "quantity": 1
+          }
+        ],
+        "broad": [
+          {
+            "productId": "b",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "narrow": 5,
+        "broad": 10
+      },
+      "snapshot": {
+        "discount": 15,
+        "programs": [
+          {
+            "id": "narrow",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 5
+          },
+          {
+            "id": "broad",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 10
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "fractional quantities floor",
+    "items": [
+      {
+        "productId": "a",
+        "price": 5,
+        "qty": 0.9
+      },
+      {
+        "productId": "b",
+        "price": 10,
+        "qty": 1.9
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          },
+          {
+            "product_id": "b"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 1
+    },
+    "expected": {
+      "discount": 10,
+      "allocations": {
+        "g": [
+          {
+            "productId": "b",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "g": 10
+      },
+      "snapshot": {
+        "discount": 10,
+        "programs": [
+          {
+            "id": "g",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 10
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "zero-price allocation has no receipt discount row",
+    "items": [
+      {
+        "productId": "a",
+        "price": 0,
+        "qty": 1
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 1
+    },
+    "expected": {
+      "discount": 0,
+      "allocations": {
+        "g": [
+          {
+            "productId": "a",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "g": 0
+      },
+      "snapshot": {
+        "discount": 0,
+        "programs": []
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "negative unit price clamps zero",
+    "items": [
+      {
+        "productId": "a",
+        "price": -10,
+        "qty": 1
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 1
+    },
+    "expected": {
+      "discount": 0,
+      "allocations": {
+        "g": [
+          {
+            "productId": "a",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "g": 0
+      },
+      "snapshot": {
+        "discount": 0,
+        "programs": []
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "missing invalid quantity has no units",
+    "items": [
+      {
+        "productId": "a",
+        "price": 5
+      },
+      {
+        "productId": "a",
+        "price": 5,
+        "qty": "invalid"
+      },
+      {
+        "productId": "a",
+        "price": 5,
+        "qty": -1
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 1
+    },
+    "expected": {
+      "discount": 0,
+      "allocations": {},
+      "programDiscounts": {},
+      "snapshot": {
+        "discount": 0,
+        "programs": []
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown redemption cannot finalize",
+    "items": [
+      {
+        "productId": "a",
+        "price": 5,
+        "qty": 1
+      }
+    ],
+    "programs": [],
+    "redemptions": {
+      "unknown": 1
+    },
+    "expected": {
+      "discount": 0,
+      "allocations": {},
+      "programDiscounts": {},
+      "snapshot": {
+        "discount": 0,
+        "programs": []
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "two gifts requested still allocates one and rejects",
+    "items": [
+      {
+        "productId": "a",
+        "price": 5,
+        "qty": 3
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 2
+    },
+    "expected": {
+      "discount": 5,
+      "allocations": {
+        "g": [
+          {
+            "productId": "a",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "g": 5
+      },
+      "snapshot": {
+        "discount": 5,
+        "programs": [
+          {
+            "id": "g",
+            "name": "Подарок",
+            "rewards": 2,
+            "discount": 5
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "fractional request below one rejects mismatch",
+    "items": [
+      {
+        "productId": "a",
+        "price": 5,
+        "qty": 1
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 0.5
+    },
+    "expected": {
+      "discount": 5,
+      "allocations": {
+        "g": [
+          {
+            "productId": "a",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "g": 5
+      },
+      "snapshot": {
+        "discount": 5,
+        "programs": []
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "fractional request above one accepted as one",
+    "items": [
+      {
+        "productId": "a",
+        "price": 5,
+        "qty": 1
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 1.9
+    },
+    "expected": {
+      "discount": 5,
+      "allocations": {
+        "g": [
+          {
+            "productId": "a",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "g": 5
+      },
+      "snapshot": {
+        "discount": 5,
+        "programs": [
+          {
+            "id": "g",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 5
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "unselected and invalid redemptions",
+    "items": [
+      {
+        "productId": "a",
+        "price": 5,
+        "qty": 1
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      },
+      {
+        "id": "h",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 0,
+      "h": "invalid",
+      "negative": -1
+    },
+    "expected": {
+      "discount": 0,
+      "allocations": {},
+      "programDiscounts": {},
+      "snapshot": {
+        "discount": 0,
+        "programs": []
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "numeric string IDs and coercion",
+    "items": [
+      {
+        "productId": 1,
+        "price": "0x10",
+        "qty": "2"
+      }
+    ],
+    "programs": [
+      {
+        "id": 7,
+        "name": "",
+        "loyalty_reward_products": [
+          {
+            "product_id": "1"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "7": "1"
+    },
+    "expected": {
+      "discount": 16,
+      "allocations": {
+        "7": [
+          {
+            "productId": "1",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "7": 16
+      },
+      "snapshot": {
+        "discount": 16,
+        "programs": [
+          {
+            "id": "7",
+            "name": "Программа лояльности",
+            "rewards": 1,
+            "discount": 16
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "duplicate program IDs preserve legacy accumulation",
+    "items": [
+      {
+        "productId": "a",
+        "price": 5,
+        "qty": 1
+      },
+      {
+        "productId": "b",
+        "price": 10,
+        "qty": 1
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          },
+          {
+            "product_id": "b"
+          }
+        ]
+      },
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          },
+          {
+            "product_id": "b"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 1
+    },
+    "expected": {
+      "discount": 15,
+      "allocations": {
+        "g": [
+          {
+            "productId": "b",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "g": 10
+      },
+      "snapshot": {
+        "discount": 15,
+        "programs": [
+          {
+            "id": "g",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 10
+          },
+          {
+            "id": "g",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 10
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "independent programme rounding and sum rounding",
+    "items": [
+      {
+        "productId": "a",
+        "price": 0.004,
+        "qty": 1
+      },
+      {
+        "productId": "b",
+        "price": 0.004,
+        "qty": 1
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      },
+      {
+        "id": "h",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "b"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 1,
+      "h": 1
+    },
+    "expected": {
+      "discount": 0.01,
+      "allocations": {
+        "g": [
+          {
+            "productId": "a",
+            "quantity": 1
+          }
+        ],
+        "h": [
+          {
+            "productId": "b",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "g": 0,
+        "h": 0
+      },
+      "snapshot": {
+        "discount": 0.01,
+        "programs": []
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "price just below half cent",
+    "items": [
+      {
+        "productId": "a",
+        "price": 0.004999999999999999,
+        "qty": 1
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 1
+    },
+    "expected": {
+      "discount": 0,
+      "allocations": {
+        "g": [
+          {
+            "productId": "a",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "g": 0
+      },
+      "snapshot": {
+        "discount": 0,
+        "programs": []
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "gift price ignores product discount",
+    "items": [
+      {
+        "productId": "a",
+        "price": 10,
+        "qty": 1,
+        "discountId": "sale"
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 1
+    },
+    "expected": {
+      "discount": 10,
+      "allocations": {
+        "g": [
+          {
+            "productId": "a",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "g": 10
+      },
+      "snapshot": {
+        "discount": 10,
+        "programs": [
+          {
+            "id": "g",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 10
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "manual price includes modifiers",
+    "items": [
+      {
+        "productId": "a",
+        "price": 12.35,
+        "basePrice": 10,
+        "manualPrice": true,
+        "qty": 1,
+        "selectedModifiers": [
+          {
+            "priceDelta": 2.35
+          }
+        ]
+      }
+    ],
+    "programs": [
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": "a"
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "g": 1
+    },
+    "expected": {
+      "discount": 12.35,
+      "allocations": {
+        "g": [
+          {
+            "productId": "a",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "g": 12.35
+      },
+      "snapshot": {
+        "discount": 12.35,
+        "programs": [
+          {
+            "id": "g",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 12.35
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "missing and null ID scalar conversion",
+    "items": [
+      {
+        "price": 3,
+        "qty": 1
+      },
+      {
+        "productId": null,
+        "price": 4,
+        "qty": 1
+      }
+    ],
+    "programs": [
+      {
+        "loyalty_reward_products": [
+          {}
+        ]
+      },
+      {
+        "id": "g",
+        "name": "Подарок",
+        "loyalty_reward_products": [
+          {
+            "product_id": null
+          }
+        ]
+      }
+    ],
+    "redemptions": {
+      "undefined": 1,
+      "g": 1
+    },
+    "expected": {
+      "discount": 7,
+      "allocations": {
+        "undefined": [
+          {
+            "productId": "undefined",
+            "quantity": 1
+          }
+        ],
+        "g": [
+          {
+            "productId": "null",
+            "quantity": 1
+          }
+        ]
+      },
+      "programDiscounts": {
+        "undefined": 3,
+        "g": 4
+      },
+      "snapshot": {
+        "discount": 7,
+        "programs": [
+          {
+            "id": "undefined",
+            "name": "Программа лояльности",
+            "rewards": 1,
+            "discount": 3
+          },
+          {
+            "id": "g",
+            "name": "Подарок",
+            "rewards": 1,
+            "discount": 4
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "empty configuration",
+    "items": [],
+    "programs": [],
+    "redemptions": {},
+    "expected": {
+      "discount": 0,
+      "allocations": {},
+      "programDiscounts": {},
+      "snapshot": {
+        "discount": 0,
+        "programs": []
+      }
+    },
+    "valid": true
+  }
+]

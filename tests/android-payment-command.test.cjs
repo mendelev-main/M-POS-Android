@@ -39,7 +39,7 @@ test('actual finalization sends one receipt without archive and external effects
  const h=host({archiveSize:500});const saving=h.context.finalizePayment(parts);
  await flushUntil(()=>h.events.includes('native-command'));
  const command=JSON.parse(h.commands.find(c=>c.action==='paymentCommit').payload);
- assert.equal(command.pricing.version,1);assert.deepEqual(command.pricing.discounts,[]);assert.equal(command.pricing.loyaltyDiscount,0);assert.equal(command.expectedOrderCount,500);assert.equal(command.order.receiptNumber,1);
+ assert.equal(command.loyalty.version,1);assert.deepEqual(command.loyalty.programs,[]);assert.equal(command.pricing.version,1);assert.deepEqual(command.pricing.discounts,[]);assert.equal(command.pricing.loyaltyDiscount,0);assert.equal(command.expectedOrderCount,500);assert.equal(command.order.receiptNumber,1);
  assert.equal(command.products[0].stock,5);assert.equal(command.order.payments.length,2);
  assert.equal(Object.hasOwn(command,'orders'),false);assert.equal(Object.hasOwn(command,'writes'),false);
  assert.equal(h.events.includes('legacy-commit'),false);assert.equal(h.events.includes('availability'),false);assert.equal(h.events.includes('reset'),false);
@@ -70,3 +70,6 @@ test('nonpayment journal operations retain prior provider and pending recovery b
 });
 
 test('pricing rollback keeps original settlement compatibility',async()=>{const h=host();h.context.MPosNativePricingEnabled=false;const saving=h.context.finalizePayment(parts);await flushUntil(()=>h.events.includes('native-command'));const command=JSON.parse(h.commands.find(c=>c.action==='paymentCommit').payload);assert.equal(Object.hasOwn(command,'pricing'),false);h.reply();await saving;assert.equal(h.context.state.orders.length,1);});
+
+test('native loyalty input freezes program snapshot; rollback omits only loyalty envelope',async()=>{const h=host();h.context.state.loyaltyPrograms=[{id:'g',name:'Synthetic',loyalty_reward_products:[{product_id:'p1'}]}];const saving=h.context.finalizePayment(parts);await flushUntil(()=>h.events.includes('native-command'));const command=JSON.parse(h.commands.find(c=>c.action==='paymentCommit').payload);h.context.state.loyaltyPrograms[0].name='Changed';assert.equal(command.loyalty.programs[0].name,'Synthetic');assert.ok(!('loyalty' in command.order));h.reply();await saving;
+ const r=host();r.context.MPosNativeLoyaltyRewardsEnabled=false;const fallback=r.context.finalizePayment(parts);await flushUntil(()=>r.events.includes('native-command'));const raw=JSON.parse(r.commands.find(c=>c.action==='paymentCommit').payload);assert.equal(Object.hasOwn(raw,'loyalty'),false);assert.ok(raw.pricing);r.reply();await fallback;});
