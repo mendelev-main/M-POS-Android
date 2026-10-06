@@ -9,6 +9,7 @@
   const cartSuccessors=new WeakMap();
   function currentCart(cart){while(cartSuccessors.has(cart))cart=cartSuccessors.get(cart);return state.cart===cart;}
   let tail=Promise.resolve(),pending=0;
+  global.MPosCore.CartOperations={hasPending:()=>pending>0};
   const enabled=()=>global.MPosNativeConfiguredPricesEnabled!==false;
   const busy=()=>!!state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy);
   const overlay=()=>document.querySelector('#modal-root .modal-overlay');

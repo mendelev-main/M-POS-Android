@@ -178,12 +178,13 @@ Benefits:
 - removal of browser text-selection/context behavior.
 
 ### P7 — Payment domain + Compose payment screen
-**Status: 🟢 Partial (065)**
+**Status: 🟢 Partial (066)**
 
 Atomic settlement, product-discount arithmetic, gift allocation and configured unit-price
 formation and settlement recipe expansion are native. Cart additions await Room stock
-preflight, and quantity edits use native decisions/Room preflight. Cart/payment UI,
-online gift eligibility, payment entry preflight and stock availability display
+preflight, quantity edits use native decisions/Room preflight, and payment entry/cash/card/split
+confirmation reads stock from Room. Cart/payment UI,
+online gift eligibility and stock availability display
 remain reviewed JS; physical acceptance is pending.
 
 Extract a tested PaymentEngine before moving UI.
@@ -378,3 +379,12 @@ Kotlin/Room. Изменения количества и добавление и�
 Rollback: MPosNativeCartQuantityEnabled=false.
 `specs/065-native-cart-quantity/spec.md`; физические кейсы ожидаются.
 Локальная APK не собирается; обязательны тесты и lint.
+
+
+066: проверки остатков при открытии оплаты, подтверждении наличных/карты и
+оплате части переведены на Kotlin/Room. Подарки и подтверждение карты сохраняют
+порядок; отменённые/устаревшие ответы не запускают оплату. Проверка read-only,
+финальное списание по-прежнему в атомарной транзакции. Backup v13 без изменений.
+Rollback: MPosNativePaymentPreflightEnabled=false.
+Спецификация: `specs/066-native-payment-preflight/spec.md`.
+Автотесты и lint обязательны; локальная APK не собирается.
