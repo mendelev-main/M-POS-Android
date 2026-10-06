@@ -57,6 +57,17 @@ class MPosStorageMirrorTest {
         return result
     }
 
+    @Test fun stockPreflightReplyIsCorrelatedReadOnlyAndSurvivesMalformedRequest() = runBlocking {
+        MPosCatalogStorage(database).initialize(products("Synthetic"))
+        send("stockPreflightRead", "bad-stock", value = "{}")
+        assertFalse(reply("bad-stock").getBoolean("ok"))
+        send("stockPreflightRead", "stock", value = """{"version":1,"items":[{"productId":"product-1","qty":6}]}""")
+        val response = replies.poll(10, TimeUnit.SECONDS)
+        assertNotNull(response); assertEquals("stock", response!!.getString("requestId"))
+        assertTrue(response.getBoolean("authoritative")); assertTrue(response.getBoolean("ok")); assertFalse(response.getBoolean("allowed"))
+        assertEquals(products("Synthetic"), MPosCatalogStorage(database).read().getString("payload"))
+        assertNull(database.legacyStorageShadowDao().get("currentOrderSession"))
+    }
     @Test fun configuredPriceReadIsPureAndWorkerSurvivesInvalidInput() = runBlocking {
         send("configuredPriceRead", "bad", value = """{"version":1,"catalogPrice":10,"modifiers":[{"priceDelta":"bad"}]}""")
         assertFalse(reply("bad").getBoolean("ok"))

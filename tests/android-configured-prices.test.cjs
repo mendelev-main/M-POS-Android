@@ -5,7 +5,7 @@ const fixtures=JSON.parse(fs.readFileSync('tests/fixtures/configured-prices.json
 function host(native=true){
  const events=[],requests=[];let sequence=0,modal=null,stock=true;
  const products=[{id:'p',name:'Synthetic',price:10}],input={value:'10,125',focus(){events.push('focus')}};
- const ctx={state:{cart:[],busy:false},criticalOperationBusy:false,getProduct:id=>products.find(p=>p.id===id),uid:()=> 'line'+(++sequence),canFulfillCart:()=>stock,saveCurrentOrderSession(){events.push('save')},closeModal(){modal=null;events.push('close')},render(){events.push('render')},flash:m=>events.push(m),document:{querySelector:()=>modal,getElementById:()=>input},openPaymentModal:()=>events.push('payment'),confirmPaymentScreen:()=>events.push('confirm'),finalizePayment:()=>events.push('finalize'),MPosCore:{ConfiguredPrices:{calculate:payload=>new Promise((resolve,reject)=>requests.push({payload,resolve,reject}))}}};
+ const ctx={MPosNativeStockPreflightEnabled:false,state:{cart:[],busy:false},criticalOperationBusy:false,getProduct:id=>products.find(p=>p.id===id),uid:()=> 'line'+(++sequence),canFulfillCart:()=>stock,saveCurrentOrderSession(){events.push('save')},closeModal(){modal=null;events.push('close')},render(){events.push('render')},flash:m=>events.push(m),document:{querySelector:()=>modal,getElementById:()=>input},openPaymentModal:()=>events.push('payment'),confirmPaymentScreen:()=>events.push('confirm'),finalizePayment:()=>events.push('finalize'),MPosCore:{ConfiguredPrices:{calculate:payload=>new Promise((resolve,reject)=>requests.push({payload,resolve,reject}))}}};
  ctx.window=ctx;vm.createContext(ctx);vm.runInContext(reference,ctx);if(native)vm.runInContext(adapter,ctx);
  return {ctx,products,input,events,requests,stock:v=>stock=v,modal:v=>modal=v,reply(index=0){const r=requests[index],i=r.payload;const raw='manualInput'in i?Number(i.manualInput.replace(',','.')):i.manualBasePrice!==null&&i.manualBasePrice!==undefined?Number(i.manualBasePrice):(Number(i.catalogPrice)||0),manual='manualInput'in i||i.manualBasePrice!==null&&i.manualBasePrice!==undefined,base='manualInput'in i?Math.round(raw*100)/100:raw;const extra=i.modifiers.reduce((s,m)=>s+Number(m.priceDelta||0),0);r.resolve({basePrice:base,price:base+extra,manualPrice:manual});}};
 }
@@ -51,4 +51,24 @@ test('stock refusal, native error and changed product never save a priced line; 
 test('explicit rollback uses original synchronous add and manual forms; adapter follows payment runtime',()=>{
  const h=host();h.ctx.MPosNativeConfiguredPricesEnabled=false;h.ctx.addConfiguredCartItem(h.products[0],[]);assert.equal(cart(h).length,1);assert.equal(h.requests.length,0);
  const html=fs.readFileSync(root+'pos.html','utf8');assert.ok(html.indexOf('src="native-configured-prices.js"')>html.indexOf('src="native-payment-command.js"'));
+});
+function withNativeStock(){const h=host(),checks=[];h.ctx.MPosNativeStockPreflightEnabled=true;h.ctx.state.products=h.products;h.ctx.MPosCore.StockPreflight={check:input=>new Promise((resolve,reject)=>checks.push({input,resolve,reject}))};return {...h,checks};}
+test('native stock verdict gates additions and preserves FIFO merging without JS fallback',async()=>{
+ const h=withNativeStock();h.ctx.canFulfillCart=()=>{throw new Error('legacy stock check must not run')};
+ const a=h.ctx.addConfiguredCartItem(h.products[0],[]),b=h.ctx.addConfiguredCartItem(h.products[0],[]);
+ await tickUntil(()=>h.requests.length===1);h.reply();await tickUntil(()=>h.checks.length===1);assert.equal(cart(h).length,0);h.ctx.openPaymentModal();assert.ok(!h.events.includes('payment'));assert.equal(h.checks[0].input.items[0].qty,1);
+ h.checks[0].resolve({allowed:true});await a;await tickUntil(()=>h.requests.length===2);h.reply(1);await tickUntil(()=>h.checks.length===2);assert.equal(h.checks[1].input.items[0].qty,2);h.checks[1].resolve({allowed:false,reason:'Недостаточно остатка: Synthetic'});await b;assert.equal(cart(h)[0].qty,1);assert.equal(h.events.at(-1),'Недостаточно остатка: Synthetic');
+});
+test('modifier quantities and manual raw input reach native stock check without receipt or price data',async()=>{
+ const h=withNativeStock();h.ctx._manualPriceContext={productId:'p',mods:[{productId:'m',qty:3,priceDelta:2}]};const a=h.ctx.confirmManualPrice();await tickUntil(()=>h.requests.length===1);h.reply();await tickUntil(()=>h.checks.length===1);
+ const proposal=JSON.parse(JSON.stringify(h.checks[0].input));assert.deepEqual(proposal.items,[{productId:'p',qty:1,selectedModifiers:[{productId:'m',qty:3}]}]);assert.ok(h.ctx._manualPriceContext);h.checks[0].resolve({allowed:true});await a;assert.equal(cart(h).length,1);assert.equal(h.ctx._manualPriceContext,null);
+});
+test('quantity, recipe, stock, session or modal changes invalidate late native stock approval',async()=>{
+ for(const change of [h=>h.ctx.state.cart[0].qty++,h=>h.products[0].stock=0,h=>h.products[0].components=[{productId:'changed',qty:1}],h=>h.ctx.state.cart=[],h=>h.modal(null)]){
+  const h=withNativeStock();h.ctx.state.cart=[{productId:'p',qty:1,price:10}];h.modal({});const a=h.ctx.addConfiguredCartItem(h.products[0],[]);await tickUntil(()=>h.requests.length===1);h.reply();await tickUntil(()=>h.checks.length===1);change(h);const before=JSON.stringify(h.ctx.state.cart);h.checks[0].resolve({allowed:true});await a;assert.equal(JSON.stringify(h.ctx.state.cart),before);assert.ok(!h.events.includes('save'));
+ }
+});
+test('failed stock read leaves cart and manual context intact and a later retry succeeds',async()=>{
+ const h=withNativeStock();h.ctx._manualPriceContext={productId:'p',mods:[]};const a=h.ctx.confirmManualPrice();await tickUntil(()=>h.requests.length===1);h.reply();await tickUntil(()=>h.checks.length===1);h.checks[0].reject(new Error('read unavailable'));await a;assert.equal(cart(h).length,0);assert.ok(h.ctx._manualPriceContext);assert.equal(h.events.at(-1),'Не удалось проверить остатки. Повторите добавление.');
+ const b=h.ctx.confirmManualPrice();await tickUntil(()=>h.requests.length===2);h.reply(1);await tickUntil(()=>h.checks.length===2);h.checks[1].resolve({allowed:true});await b;assert.equal(cart(h).length,1);
 });

@@ -7,6 +7,7 @@ import kotlin.math.max
 
 /** Recipe expansion at settlement; stock units and unrounded consumption snapshots stay unchanged. */
 object MPosRecipeConsumptionEngine {
+    class StockShortage(val productName: String) : IllegalArgumentException("insufficient ingredient stock")
     private data class Id(val type: String, val value: Any?)
     private fun id(record: JSONObject, key: String): Id = when (val value = record.opt(key)) {
         null -> Id("missing", null)
@@ -66,7 +67,7 @@ object MPosRecipeConsumptionEngine {
             if (checkStock) {
                 val stock = MPosJsonNumbers.reportAmount(p, "stock")
                 val tolerance = Math.ulp(1.0) * 8 * max(abs(stock), quantity)
-                require(stock.isFinite() && stock + tolerance >= quantity) { "insufficient ingredient stock" }
+                if (!stock.isFinite() || stock + tolerance < quantity) throw StockShortage(p.optString("name"))
             }
             result.put(JSONObject().put("productId", p.opt("id") ?: JSONObject.NULL).put("qty", quantity))
         }

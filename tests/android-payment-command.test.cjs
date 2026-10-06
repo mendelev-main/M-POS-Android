@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=path.join(__dirname,'../app/src/main/assets/pos');
 const source=name=>fs.readFileSync(path.join(root,name),'utf8');
-function host({archiveSize=0,configured=false}={}){
+function host({archiveSize=0,configured=false,nativeStock=false}={}){
  const events=[],commands=[],timers=new Map(),initialized=new Set();let timerId=0,sequence=0;
  const products=[{id:'p1',type:'simple',stock:5.125,price:12.35,cost:1,category:'Напитки'}];
  const shifts=[{id:'s1',status:'open',employeeId:'e1',openingCash:100,cashMovements:[]}];
@@ -22,6 +22,7 @@ function host({archiveSize=0,configured=false}={}){
   closeModal(){},showPaymentReceipt:()=>events.push('receipt'),publishPaidOrderLoyalty:()=>events.push('loyalty'),printCompletedOrder:()=>events.push('print')};
  context.window=context;
  context.webkit={messageHandlers:{storage:{postMessage(command){commands.push(command);
+  if(command.action==='stockPreflightRead'){events.push('native-stock');return true;}
   if(command.action==='configuredPriceRead'){events.push('native-price');return true;}
   if(command.action==='paymentCommit'){events.push('native-command');return true;}
   const result={requestId:command.requestId,ok:true,authoritative:true};
@@ -30,7 +31,8 @@ function host({archiveSize=0,configured=false}={}){
   context.__nativeStorageResult(result);return true;
  }}}};
  vm.createContext(context);vm.runInContext(source('native-storage-shadow.js'),context);
- if(configured){context.document={querySelector:()=>null};const reset=context.resetCurrentOrderState;vm.runInContext(source('Web/js/features/cart-composition.js'),context);context.resetCurrentOrderState=reset;context.canFulfillCart=()=>true;context.saveCurrentOrderSession=()=>events.push('session-save');context.render=()=>events.push('render');context.cartTotal=()=>context.state.cart.reduce((sum,item)=>sum+item.price*item.qty,0);}
+ if(configured){context.MPosNativeStockPreflightEnabled=nativeStock;context.document={querySelector:()=>null};const reset=context.resetCurrentOrderState;vm.runInContext(source('Web/js/features/cart-composition.js'),context);context.resetCurrentOrderState=reset;context.canFulfillCart=()=>true;context.saveCurrentOrderSession=()=>events.push('session-save');context.render=()=>events.push('render');context.cartTotal=()=>context.state.cart.reduce((sum,item)=>sum+item.price*item.qty,0);}
+ if(nativeStock){const html=source('pos.html');vm.runInContext(html.slice(html.indexOf('function productIngredients('),html.indexOf('function hasUnreturnedStockConsumption('))+'\n'+html.match(/function productTracksStock\(p\)\{[\s\S]*?\n\}/)[0],context);}
  vm.runInContext(source('Web/js/features/payment.js'),context);context.showPaymentReceipt=()=>events.push('receipt');vm.runInContext(source('native-payment-command.js'),context);if(configured)vm.runInContext(source('native-configured-prices.js'),context);
  return {context,events,commands,timers,reply(ok=true){const command=commands.filter(c=>c.action==='paymentCommit').at(-1);events.push('native-ack');context.__nativeStorageResult({requestId:command.requestId,ok,authoritative:true});}};
 }
@@ -81,3 +83,5 @@ test('configured price settlement rollback preserves pricing and loyalty gates',
 test('actual payment handler waits for configured addition and keeps external effects after settlement ack',async()=>{const h=host({configured:true});const adding=h.context.addConfiguredCartItem(h.context.state.products[0],[]);await flushUntil(()=>h.events.includes('native-price'));await h.context.finalizePayment([{method:'cash',amount:24.7,cashGiven:24.7,change:0}]);assert.equal(h.commands.some(c=>c.action==='paymentCommit'),false);const read=h.commands.find(c=>c.action==='configuredPriceRead');h.context.__nativeStorageResult({requestId:read.requestId,ok:true,authoritative:true,basePrice:12.35,price:12.35,manualPrice:false});await adding;assert.equal(h.context.state.cart[0].qty,2);const paying=h.context.finalizePayment([{method:'cash',amount:24.7,cashGiven:24.7,change:0}]);await flushUntil(()=>h.events.includes('native-command'));assert.equal(JSON.parse(h.commands.find(c=>c.action==='paymentCommit').payload).order.total,24.7);assert.equal(h.events.includes('availability'),false);h.reply();await paying;assert.equal(h.context.state.orders.length,1);assert.ok(h.events.indexOf('availability')>h.events.indexOf('native-ack'));});
 
 test('recipe rollback omits only recipe envelope and preserves other native gates',async()=>{const h=host();h.context.MPosNativeRecipeConsumptionEnabled=false;const paying=h.context.finalizePayment(parts);await flushUntil(()=>h.events.includes('native-command'));const command=JSON.parse(h.commands.find(c=>c.action==='paymentCommit').payload);assert.equal(Object.hasOwn(command,'recipeConsumption'),false);assert.ok(command.configuredPrices&&command.loyalty&&command.pricing);h.reply();await paying;});
+
+test('actual payment waits for Room stock preflight and settles the exact proposed whole-cart consumption',async()=>{const h=host({configured:true,nativeStock:true});const adding=h.context.addConfiguredCartItem(h.context.state.products[0],[]);await flushUntil(()=>h.events.includes('native-price'));const price=h.commands.find(c=>c.action==='configuredPriceRead');h.context.__nativeStorageResult({requestId:price.requestId,ok:true,authoritative:true,basePrice:12.35,price:12.35,manualPrice:false});await flushUntil(()=>h.events.includes('native-stock'));assert.equal(h.context.state.cart[0].qty,1);await h.context.finalizePayment([{method:'cash',amount:24.7,cashGiven:24.7,change:0}]);assert.equal(h.commands.some(c=>c.action==='paymentCommit'),false);const stock=h.commands.find(c=>c.action==='stockPreflightRead');assert.equal(JSON.parse(stock.payload).items[0].qty,2);h.context.__nativeStorageResult({requestId:stock.requestId,ok:true,authoritative:true,allowed:true});await adding;const paying=h.context.finalizePayment([{method:'cash',amount:24.7,cashGiven:24.7,change:0}]);await flushUntil(()=>h.events.includes('native-command'));const command=JSON.parse(h.commands.find(c=>c.action==='paymentCommit').payload);assert.equal(command.order.stockConsumption.items[0].qty,2);assert.equal(command.products[0].stock,3.125);assert.equal(h.events.includes('availability'),false);h.reply();await paying;assert.ok(h.events.indexOf('availability')>h.events.indexOf('native-ack'));});
