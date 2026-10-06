@@ -175,3 +175,13 @@ Status: pending physical verification of 056.
 - Interrupt acknowledgement/restart: recorded close exists once; unknown status requires reload before another operation.
 
 Status: pending comprehensive physical verification of 057.
+
+## Native opening form (058)
+
+- Fresh zero-cash installation and imported populated history: select cashier, inspect initial cash from the latest closed counted sum, open/restart and verify one saved shift with correct employee/phone/source.
+- Select administrator: password field appears. Missing/wrong password must not write; current correct password follows existing policy. Switch to cashier/cancel/reopen: no prior password remains.
+- Empty staff, long/full Russian names, selection ordering, keyboard/IME, font scaling, rotation and Back behave without hardware assumptions.
+- Read error supports retry or explicit legacy form; cancelled/replaced loading reply cannot reopen. Double taps/uncertain ack prevent another write until recovery.
+- Opening Telegram/monthly gates run after local save only. No availability retry/catalogue sync. Backup import preserves employees, roles and carryover.
+
+Status: pending comprehensive physical verification of 058.

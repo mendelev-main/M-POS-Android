@@ -114,3 +114,7 @@ Native amount/comment/confirm/cancel with finite-positive parsing, comma/fractio
 ## Native closing form (057)
 
 Room-derived expected cash, prefill and native counted input; blank/negative/nonfinite reject, zero/fraction/shortage/surplus allowed. Original lifecycle transaction and post-ack Telegram PNG/print preserved. JS actual-handler integration, SQLite fresh/cross-refund/closed/recovery cases and Robolectric loading/cancellation/fallback/locks automated. Physical form/output checks pending.
+
+## Native opening form (058)
+
+Kotlin staff picker/conditional password input and Room carryover, no new auth decision or password constant. Original admin verifier rejects before transaction; state/opening notifications after ack only. Empty/null/read-error/ambiguous staff/recovery, scalar carryover, password clearing/no saved View state, token/busy/rollback and actual-handler/native command paths tested. Original shared source hashes retained. Current real admin password/device keyboard/long names/rotation/notifications are pending physical checks.

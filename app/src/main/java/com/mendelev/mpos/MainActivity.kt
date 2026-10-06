@@ -32,6 +32,7 @@ import com.mendelev.mpos.share.ReportShareManager
 import com.mendelev.mpos.shift.MPosShiftScreenController
 import com.mendelev.mpos.shift.MPosCashMovementDialog
 import com.mendelev.mpos.shift.MPosShiftCloseDialog
+import com.mendelev.mpos.shift.MPosShiftOpenDialog
 import com.mendelev.mpos.settings.MPosSettingsStore
 import com.mendelev.mpos.telegram.TelegramClient
 import com.mendelev.mpos.web.LocalContentWebViewClient
@@ -46,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         private const val START_URL = "$APP_ORIGIN/assets/pos/pos.html"
     }
 
+    private lateinit var shiftOpenDialog: MPosShiftOpenDialog
     private lateinit var shiftCloseDialog: MPosShiftCloseDialog
     private lateinit var cashMovementDialog: MPosCashMovementDialog
     private lateinit var shiftScreen: MPosShiftScreenController
@@ -145,6 +147,9 @@ class MainActivity : AppCompatActivity() {
         shiftCloseDialog = MPosShiftCloseDialog(this, nativeStorageMirror::handle) { action ->
             callJavaScript("window.MPosCore&&window.MPosCore.NativeCloseForm&&window.MPosCore.NativeCloseForm.handleAction($action);")
         }
+        shiftOpenDialog = MPosShiftOpenDialog(this, nativeStorageMirror::handle) { action ->
+            callJavaScript("window.MPosCore&&window.MPosCore.NativeOpenForm&&window.MPosCore.NativeOpenForm.handleAction($action);")
+        }
         setContentView(root)
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
@@ -181,6 +186,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        if (::shiftOpenDialog.isInitialized) shiftOpenDialog.dismiss()
         if (::shiftCloseDialog.isInitialized) shiftCloseDialog.dismiss()
         if (::cashMovementDialog.isInitialized) cashMovementDialog.dismiss()
         nativeNetworkTransport.close()
@@ -235,7 +241,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun handleShiftScreen(payload: JSONObject) = runOnUiThread {
-        if (payload.optString("action").startsWith("closeForm")) {
+        if (payload.optString("action").startsWith("openForm")) {
+            if (::shiftOpenDialog.isInitialized) shiftOpenDialog.handle(payload)
+        } else if (payload.optString("action").startsWith("closeForm")) {
             if (::shiftCloseDialog.isInitialized) shiftCloseDialog.handle(payload)
         } else if (payload.optString("action").startsWith("cashForm")) {
             if (::cashMovementDialog.isInitialized) cashMovementDialog.handle(payload)
@@ -263,7 +271,9 @@ class MainActivity : AppCompatActivity() {
     private fun nativeSettingsResult(result: JSONObject) = callJavaScript("window.__nativeSettingsResult&&window.__nativeSettingsResult($result);")
     private fun nativeStorageResult(result: JSONObject) {
         diagnostics.record("storage", "result", result.optBoolean("ok", false) && result.optBoolean("projectionOk", true))
-        if (result.optString("requestId").startsWith("native-shift-close-")) {
+        if (result.optString("requestId").startsWith("native-shift-open-")) {
+            runOnUiThread { if (::shiftOpenDialog.isInitialized) shiftOpenDialog.result(result) }
+        } else if (result.optString("requestId").startsWith("native-shift-close-")) {
             runOnUiThread { if (::shiftCloseDialog.isInitialized) shiftCloseDialog.result(result) }
         } else if (result.optString("requestId").startsWith("native-shift-screen-")) {
             runOnUiThread { if (::shiftScreen.isInitialized) shiftScreen.result(result) }

@@ -304,3 +304,7 @@ Visible deposit/withdrawal UI moves to Kotlin platform dialogs; typed inputs rej
 ## Native shift closing input (057)
 
 Kotlin reads a minimal current-open drawer model from Room and renders counted-cash input/loading/error/retry/fallback. Zero/fractions/difference policy retained; existing lifecycle commit and post-ack outputs remain. Cash/close/report wrappers coexist through token/dismissal guards. P8 remains partial: original submission orchestration and opening/admin UI retained. Next: review remaining P8 opening/auth boundary and native business command orchestration before declaring the domain complete.
+
+## Native opening / employee input (058)
+
+Room supplies minimal sorted staff and last-closed counted carryover without receipt reconstruction; native dialog owns selection/conditional transient password input. Existing administrator verifier and native lifecycle commit remain on their accepted path; no verifier/credential store added. Missing/null first-run and shared scalar carryover covered. Cash/close/open visible forms are native; P8 is still partial because shared auth/submission orchestration remains. Next high-value candidate: review P7 pricing/discount/cart totals with golden fixtures before native cutover. Physical acceptance remains pending.

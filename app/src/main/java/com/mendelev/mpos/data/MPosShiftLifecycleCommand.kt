@@ -109,13 +109,7 @@ class MPosShiftLifecycleCommand(private val database: MPosDatabase) {
         is String -> value.isNotEmpty()
         else -> true
     }
-    private fun numberOrZero(record: JSONObject, key: String): Double {
-        val value = record.opt(key)
-        if (!truthy(value)) return 0.0
-        if (value is Boolean) return 1.0
-        if (value is String && value.isBlank()) return 0.0
-        return record.optDouble(key, Double.NaN)
-    }
+    private fun numberOrZero(record: JSONObject, key: String): Double = MPosJsonNumbers.amount(record, key)
     private fun same(a: Any?, b: Any?): Boolean = when {
         a is JSONObject && b is JSONObject -> a.keys().asSequence().toSet() == b.keys().asSequence().toSet() && a.keys().asSequence().all { same(a.opt(it), b.opt(it)) }
         a is JSONArray && b is JSONArray -> a.length() == b.length() && (0 until a.length()).all { same(a.opt(it), b.opt(it)) }
