@@ -50,6 +50,8 @@ Initial scope:
 
 This stage must not change payment, order, stock or receipt persistence.
 
+Spec 039 makes the native platform mirror ordered and disk-confirmed: a bounded Kotlin IO queue preserves accepted command order, checks commit results and closes with the Activity. Existing preferences/schema and legacy settings authority are retained. Failed mirror persistence does not fail a completed local settings save; physical restart/printer/notification parity remains pending.
+
 ### P2 — Core local persistence (Room)
 **Status: 🟢 In progress — shadow persistence foundation**
 

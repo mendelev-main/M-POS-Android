@@ -28,7 +28,7 @@ import com.mendelev.mpos.network.MPosNetworkTransport
 import com.mendelev.mpos.media.ProductPhotoManager
 import com.mendelev.mpos.print.EscPosPrinter
 import com.mendelev.mpos.share.ReportShareManager
-import com.mendelev.mpos.settings.NativeSettingsStore
+import com.mendelev.mpos.settings.MPosSettingsStore
 import com.mendelev.mpos.telegram.TelegramClient
 import com.mendelev.mpos.web.LocalContentWebViewClient
 import kotlinx.coroutines.Dispatchers
@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var printer: EscPosPrinter
     private lateinit var shares: ReportShareManager
     private lateinit var telegram: TelegramClient
-    private lateinit var nativeSettings: NativeSettingsStore
+    private lateinit var nativeSettings: MPosSettingsStore
     private lateinit var nativeStorageMirror: MPosStorageMirror
     private lateinit var nativeNetworkTransport: MPosNetworkTransport
     private lateinit var diagnostics: MPosDiagnosticBreadcrumbStore
@@ -96,7 +96,7 @@ class MainActivity : AppCompatActivity() {
         printer = EscPosPrinter(::printerEvent)
         shares = ReportShareManager(this)
         telegram = TelegramClient(shares::createWarehousePdf, ::telegramResult, ::telegramMonthlyResult, ::telegramShiftResult)
-        nativeSettings = NativeSettingsStore(this, ::nativeSettingsResult)
+        nativeSettings = MPosSettingsStore(this, lifecycleScope, ::nativeSettingsResult)
         nativeStorageMirror = MPosStorageMirror(MPosDatabase.get(this), lifecycleScope, ::nativeStorageResult)
         nativeNetworkTransport = MPosNetworkTransport(lifecycleScope, ::nativeNetworkResult, ::nativeNetworkEvent)
         router = NativeBridgeRouter(this, photos, backup, nativeSettings, nativeStorageMirror, nativeNetworkTransport)
@@ -165,6 +165,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         nativeNetworkTransport.close()
         if (::nativeStorageMirror.isInitialized) nativeStorageMirror.close()
+        if (::nativeSettings.isInitialized) nativeSettings.close()
         if (::webView.isInitialized) {
             webView.stopLoading()
             webView.loadUrl("about:blank")

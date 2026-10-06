@@ -58,9 +58,9 @@ test('native report routes preserve shift printing and monthly Telegram delivery
 test('native Android settings boundary is isolated from POS business storage',()=>{
  const activity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/MainActivity.kt'),'utf8');
  const router=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/bridge/NativeBridgeRouter.kt'),'utf8');
- const store=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/settings/NativeSettingsStore.kt'),'utf8');
+ const store=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/settings/MPosSettingsStore.kt'),'utf8');
  const adapter=fs.readFileSync(path.join(assets,'native-settings.js'),'utf8');
- assert.match(activity,/NativeSettingsStore/);
+ assert.match(activity,/MPosSettingsStore/);
  assert.match(router,/"settings" -> settings\.handle/);
  assert.match(store,/PREFS_NAME\s*=\s*"mpos_native_settings"/);
  assert.match(store,/getSharedPreferences\(PREFS_NAME,\s*Context\.MODE_PRIVATE\)/);

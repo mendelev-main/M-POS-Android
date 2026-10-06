@@ -4,6 +4,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
 /** FIFO shadow work; never suspends the bridge or accumulates unlimited commands. */
@@ -17,6 +19,7 @@ class MPosStorageQueue(scope: CoroutineScope, capacity: Int = 64) {
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
+                currentCoroutineContext().ensureActive()
                 // A failed command/callback cannot kill processing of the next command.
                 runCatching { command.failed(error) }
             }

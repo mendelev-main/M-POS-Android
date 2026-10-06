@@ -11,7 +11,7 @@
 | Payments, receipts and shifts | web runtime and native shift PDF printing implemented | Cash/card/split, restart recovery and printed output |
 | Purchasing, receiving and inventory | web runtime implemented | Weighted cost, draft restart and reports |
 | Product photos | native implementation | Picker, rotation, large image, restart and backup |
-| Android platform settings mirror | native implementation; compatibility cache remains in WebView | Change printer/notification settings, restart app, verify UI + native snapshot parity |
+| Android platform settings mirror | ordered disk-confirmed Kotlin mirror, spec 039; legacy settings remain authoritative | Change printer/notification settings, restart app, verify UI + native snapshot parity |
 | Complete backup v13 | native implementation | iPad → Android and Android → clean Android restore |
 | LAN ESC/POS | native raster implementation | 58/80 mm printers, routing, copies and timeouts |
 | Warehouse PDF/XLSX | native implementation | Exact values and visual comparison with iPad |
@@ -21,7 +21,7 @@
 | Release/update installation | pending | Stable signing key and `adb install -r` data retention |
 | Native diagnostic report | implemented; manual metadata-only JSON export, spec 032 | Offline save, cancellation/recreation/provider failure, 200-event retention and private-data exclusion on a tablet |
 
-The iPad application remains the production source of truth until every critical row is accepted.
+The iPad application remains the production source of truth until every critical row is accepted. Record physical results using [native tablet acceptance scenarios](NATIVE_TABLET_ACCEPTANCE.md).
 
 ## Bounded backup input (spec 036)
 
@@ -34,3 +34,7 @@ Native API 28 tests cover real PNG round-trip, untouched business/extension fiel
 ## Kotlin SSE framing (spec 038)
 
 Functional JVM tests cover exact whitespace/UTF-8 data, fragmented CR/LF/CRLF, BOM, empty and named messages, EOF discard, line/frame limits and interrupted reads. Native observation is still diagnostic-only; same-stream parity, reconnect and lifecycle acceptance remain physical gates.
+
+## Ordered settings persistence (spec 039)
+
+Native tests cover checked/delayed/failed commits, immutable commands, FIFO, corrupt snapshots, bounded backpressure and cancellation. Executed JS tests preserve completed local saves despite native failure. Physical process restart, low storage and printer/notification UI/native parity remain pending; native settings are not authoritative.

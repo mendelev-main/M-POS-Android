@@ -1,0 +1,40 @@
+# Native tablet acceptance evidence
+
+Automated results establish the implemented boundaries; they do not enable Room/settings/SSE authority. Record the APK commit, tablet model, Android version, scenario, expected/actual result and pass/fail. Use synthetic data on a test tablet. Do not commit backup documents, tokens, device keys, photos or production records as evidence.
+
+## P2 catalog and recovery
+
+1. Start with a synthetic catalog containing Unicode names, several categories, products without a category, recipes/modifiers and photo references. Record counts and expected ordering.
+2. Add, edit and delete products/categories through the existing UI. Wait for initial mirroring and compare after each completed operation. In the debug WebView console, `await MPosCore.CatalogCutover.health()` exposes mode, source and aggregate comparison. Expect `ok:true`, `matches:true`, equal counts, `activeSource:'legacy'` and `roomCutoverAllowed:false`.
+3. Force-stop and reopen the app. Expect unchanged UI data and ordering; repeat comparison after mirroring. A merely green comparison is not proof of snapshot/order/business parity: inspect product data and category ordering against the test fixture too.
+4. Export a synthetic v13 backup, restore on a clean test installation, reopen and verify fields, recipe/modifier data, photos and catalog comparison. Check iPad-to-Android compatibility separately when an iPad is available.
+5. Exercise rapid edits, a large synthetic history, process exit during native work, and then restart/re-mirror. A known failed/pending native write must not report healthy parity; legacy data must stay usable. Record how failure was induced rather than claiming an unperformed failure test passed.
+
+Acceptance requires actual results for these scenarios and a reviewed migration/rollback plan; toggling the blocked room mode or changing only its flag is not a cutover implementation.
+
+## P1 printer/notification settings
+
+1. Change printer and notification settings through the UI, verify their native snapshot, reopen and compare again. Keep all existing printer routing/notification expectations.
+2. Repeat during offline operation. Local saves must not depend on backend availability.
+3. Exercise storage failure and Activity destruction during native writes where practical. Native errors must not undo a successful legacy save; no native callback should target a destroyed Activity. Record tests not performed as pending.
+
+## P3 diagnostic SSE
+
+1. Observe the same test stream with legacy EventSource and native shadow enabled explicitly. Compare known message payload fingerprints and counts, including Unicode, multiline/empty data and permitted whitespace.
+2. Verify named events are excluded from both message observers. Disconnect/reconnect and background/foreground; shared business events must not be delivered twice.
+3. Send a test frame over the native diagnostic line/frame bound. The shadow should reconnect without affecting authoritative browser dispatch. Do not infer native reconnect/Last-Event-ID business equivalence from parser tests alone.
+
+## Backup image staging
+
+Verify export/import/confirm/cancel, missing/corrupt photographs, shared image references, low storage and restart. Confirm cancellation removes staged files without pruning active photos; final pruning happens only after the existing finishImport protocol. Keep the 500 MB document and 2 MB decoded-image limits unchanged.
+
+## Report template
+
+- APK commit / variant:
+- Tablet / Android version:
+- Test fixture description (no attached private data):
+- Scenarios actually run and results:
+- Failures and reproduction steps:
+- Scenarios not run:
+
+A report must distinguish observed physical behavior from automated assertions. Until reviewed physical evidence is available, existing legacy authority remains enabled.
