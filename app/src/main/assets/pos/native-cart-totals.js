@@ -16,6 +16,15 @@
   }
   global.MPosCore.PaymentTotals=Object.freeze({
     enabled,
+    split(count,total){
+      if(global.MPosNativeSplitPlansEnabled===false)return null;
+      const result=quote(),bounded=Math.max(2,Math.min(10,count));
+      if(!result||!Number.isInteger(bounded)||total!==result.pricing.total)return null;
+      const parts=result.splitPlans?.[bounded];
+      if(!Array.isArray(parts)||parts.length!==bounded||parts.some(p=>p.method!=='cash'||p.paid!==false||p.cashGiven!==null||p.change!==null||!Number.isFinite(p.amount)||p.amount<0))return null;
+      if(parts.reduce((n,p)=>n+Math.round(p.amount*100),0)!==Math.round(total*100))return null;
+      return JSON.parse(JSON.stringify(parts));
+    },
     cash(given){const result=quote();return result&&cached.given===given&&result.cash?JSON.parse(JSON.stringify(result.cash)):null;},
     async prepare(given){
       const serialized=stamp(),request=JSON.parse(serialized);
@@ -27,6 +36,10 @@
       cached={stamp:serialized,value,given};return true;
     }
   });
+  const build=global.buildSplitPayments;
+  if(typeof build==='function')global.buildSplitPayments=function(count,total){
+    return global.MPosCore.PaymentTotals.split(count,total)??build.apply(this,arguments);
+  };
   const helpers={cartTotal:()=>quote()?.pricing.total,cartSubtotal:()=>quote()?.pricing.subtotal,
     discountValue:item=>line(item)?.discount,itemTotal:item=>line(item)?.total,
     loyaltyRewardDiscount:()=>quote()?.loyalty.discount,

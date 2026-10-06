@@ -2,6 +2,7 @@ package com.mendelev.mpos.data
 
 import org.json.JSONObject
 import com.mendelev.mpos.payment.MPosCashTender
+import com.mendelev.mpos.payment.MPosSplitPaymentPlans
 
 /** One read-only quote shared by payment presentation and settlement engines. */
 object MPosCartTotalsEngine {
@@ -13,6 +14,7 @@ object MPosCartTotalsEngine {
             input.opt("deliveryFee"), loyalty.getDouble("discount"))
         val result = JSONObject().put("ok", true).put("authoritative", true).put("source", "native-cart-totals")
             .put("pricing", pricing).put("loyalty", loyalty)
+        MPosSplitPaymentPlans.calculate(pricing.getDouble("total"))?.let { result.put("splitPlans", it) }
         if (input.has("cashGiven")) {
             val payment = MPosCashTender.confirmWhole(pricing.getDouble("total"), input.getDouble("cashGiven"))
             val cash = JSONObject().put("allowed", payment != null)

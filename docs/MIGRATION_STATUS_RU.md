@@ -330,3 +330,12 @@ Rollback: MPosNativeCashPaymentEnabled=false.
 forms получили тот же стиль. Presentation-only: финансовые/auth/storage/v13
 контракты сохранены. `docs/NATIVE_DESIGN_SYSTEM.md` и
 `specs/071-native-pos-design/spec.md`; физическая приёмка ожидается.
+
+
+072: начальный план смешанной оплаты на две части рассчитывает Kotlin в
+существующем quote без дополнительного bridge вызова; движок проверен для
+2–10 частей. При несовпадающем снимке/количестве работает reviewed fallback.
+Изменение количества, редактирование и оплаченные drafts пока прежние;
+полная миграция смешанной оплаты не заявляется. v13 без изменений.
+Rollback: MPosNativeSplitPlansEnabled=false.
+`specs/072-native-initial-split-plans/spec.md`; физическая приёмка ожидается.

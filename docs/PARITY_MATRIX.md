@@ -234,3 +234,7 @@ Rollback: MPosNativeCashPaymentEnabled=false.
 forms получили тот же стиль. Presentation-only: финансовые/auth/storage/v13
 контракты сохранены. `docs/NATIVE_DESIGN_SYSTEM.md` и
 `specs/071-native-pos-design/spec.md`; физическая приёмка ожидается.
+
+072: initial split plan — native engine/source fixtures, current payment
+quote cutover for initial two parts. Editing/count/paid drafts remain reviewed
+JS; rollback and stale quote fallback covered. Physical tablet acceptance pending.

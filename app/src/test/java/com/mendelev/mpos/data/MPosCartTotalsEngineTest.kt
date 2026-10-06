@@ -44,6 +44,8 @@ class MPosCartTotalsEngineTest {
     @Test fun cashTenderUsesTheCalculatedTotalInTheSameQuote() {
         val input = JSONObject("""{"version":1,"items":[{"productId":"p","price":10,"qty":1}],"discounts":[],"programs":[],"redemptions":{},"orderType":"Доставка","deliveryFee":2.5,"cashGiven":20}""")
         val result = MPosCartTotalsEngine.calculate(input)
+        assertEquals(setOf("2"), result.getJSONObject("splitPlans").keys().asSequence().toSet())
+        assertEquals(6.25, result.getJSONObject("splitPlans").getJSONArray("2").getJSONObject(0).getDouble("amount"), 0.0)
         assertEquals(12.5, result.getJSONObject("pricing").getDouble("total"), 0.0)
         assertEquals(7.5, result.getJSONObject("cash").getDouble("change"), 0.0)
         assertTrue(result.getJSONObject("cash").getBoolean("allowed"))

@@ -435,3 +435,7 @@ Rollback: MPosNativeCashPaymentEnabled=false.
 forms получили тот же стиль. Presentation-only: финансовые/auth/storage/v13
 контракты сохранены. `docs/NATIVE_DESIGN_SYSTEM.md` и
 `specs/071-native-pos-design/spec.md`; физическая приёмка ожидается.
+
+072: начальное деление смешанной оплаты — Kotlin quote (две части без
+дополнительного запроса). Далее перенести normalize/edit/count с точным
+сохранением оплаченных частей; затем нативный экран оплаты в общей теме.
