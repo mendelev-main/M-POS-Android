@@ -324,7 +324,7 @@ test('P4 current order session is shadow-projected for crash recovery evidence',
  const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  const payment=fs.readFileSync(path.join(root,'app/src/main/assets/pos/Web/js/features/payment.js'),'utf8');
  assert.match(db,/CurrentOrderSessionProjectionEntity::class/);assert.match(db,/version\s*=\s*\d+/);assert.match(db,/Migration\(8, 9\)/);
- assert.match(mirror,/"currentOrderSession"/);assert.match(mirror,/projectCurrentOrderSession/);
+ assert.match(mirror,/"currentOrderSession"/);assert.match(mirror,/recoveryStorage.project/);
  assert.match(payment,/split-payment-progress/);assert.match(payment,/currentOrderSession:currentOrderSessionSnapshot/);
 });
 
@@ -376,7 +376,7 @@ test('P4 critical storage journal is shadow-projected without native replay auth
  const mirror=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt'),'utf8');
  const entity=fs.readFileSync(path.join(root,'app/src/main/java/com/mendelev/mpos/data/CriticalStorageJournalProjectionEntity.kt'),'utf8');
  const html=fs.readFileSync(path.join(root,'app/src/main/assets/pos/pos.html'),'utf8');
- assert.match(entity,/critical_storage_journal_projection/);assert.match(db,/version = 12/);assert.match(db,/Migration\(11, 12\)/);assert.match(db,/CriticalStorageJournalProjectionEntity::class/);assert.match(mirror,/"criticalStorageJournal"/);assert.match(mirror,/projectCriticalStorageJournal/);assert.match(mirror,/writeKeys/);assert.match(html,/recoverCriticalStorageJournal\(\)/);assert.match(html,/commitCriticalStorage\(type,writes\)/);assert.doesNotMatch(mirror,/recoverCriticalStorageJournal|commitCriticalStorage/);
+ assert.match(entity,/critical_storage_journal_projection/);assert.match(db,/version = 12/);assert.match(db,/Migration\(11, 12\)/);assert.match(db,/CriticalStorageJournalProjectionEntity::class/);assert.match(mirror,/"criticalStorageJournal"/);assert.match(mirror,/recoveryStorage.project/);assert.match(mirror,/writeKeys/);assert.match(html,/recoverCriticalStorageJournal\(\)/);assert.match(html,/commitCriticalStorage\(type,writes\)/);assert.doesNotMatch(mirror,/recoverCriticalStorageJournal|commitCriticalStorage/);
 });
 
 

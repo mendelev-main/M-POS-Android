@@ -34,16 +34,16 @@
     });
   }
 
-  const nativeKeys=new Set(['products','layout','posNavigation','employees','shifts','orders','parked']);
+  const nativeKeys=new Set(['products','layout','posNavigation','employees','shifts','orders','parked','currentOrderSession','criticalStorageJournal']);
   const ready=new Map();
   let cacheFailures=0;
-  const cacheFailuresByKey={products:0,layout:0,posNavigation:0,employees:0,shifts:0,orders:0,parked:0};
+  const cacheFailuresByKey={products:0,layout:0,posNavigation:0,employees:0,shifts:0,orders:0,parked:0,currentOrderSession:0,criticalStorageJournal:0};
   function requireNative(result,authority=false){
     if(!result?.ok)throw new Error(result?.reason||result?.message||'M POS native storage operation failed');
     if(authority&&result.authoritative!==true)throw new Error('M POS native storage authority missing');
     return result;
   }
-  function domainAction(key,action){return (key==='products'?'catalog':key==='employees'?'employee':key==='shifts'?'shift':key==='orders'?'order':key==='parked'?'parked':'workspace')+action}
+  function domainAction(key,action){return (key==='products'?'catalog':key==='employees'?'employee':key==='shifts'?'shift':key==='orders'?'order':key==='parked'?'parked':(key==='currentOrderSession'||key==='criticalStorageJournal')?'recovery':'workspace')+action}
   function initializeNative(key){
     if(!ready.has(key)){
       const promise=(async()=>{
@@ -85,6 +85,7 @@
         return result.found?JSON.parse(result.payload):fallback;
       }catch(error){
         if(onError)onError(error);else console.error('[MPosStorage] read failed',key,error);
+        if(key==='criticalStorageJournal')throw error;
         return fallback;
       }
     },
@@ -122,7 +123,7 @@
         catalogCacheFailures:cacheFailuresByKey.products,
         nativeCacheFailures:cacheFailures,
         nativeCacheFailuresByKey:{...cacheFailuresByKey},
-        workspaceSourceOfTruth:'room',employeeSourceOfTruth:'room',shiftSourceOfTruth:'room',orderSourceOfTruth:'room',parkedSourceOfTruth:'room'
+        workspaceSourceOfTruth:'room',employeeSourceOfTruth:'room',shiftSourceOfTruth:'room',orderSourceOfTruth:'room',parkedSourceOfTruth:'room',recoverySourceOfTruth:'room'
       });
     }
   });
