@@ -106,3 +106,7 @@ Kotlin renders authoritative active totals, item discounts, movements and latest
 ## First-run empty shift document (055)
 
 Missing/null native shift documents now retain reviewed empty-list semantics for lifecycle and derived screens/commands. No read-time writes/schema/v13 changes. Reproduced failing native regression before fix; opening/replay/closure for both roles and no-mutation empty-screen checks added. Android warning now reports operation failure without Safari/blanket loss claim; source hashes preserved. Physical updated-APK acceptance pending.
+
+## Native cash forms (056)
+
+Native amount/comment/confirm/cancel with finite-positive parsing, comma/fraction preservation, acknowledgement lock and token cancellation. Existing native drawer/atomic/replay validator and original JS submit flow retained. JS actual-handler integration and Robolectric dialog controls verify deposit/withdrawal, errors/retry/unknown status, rollback and no premature close/state. User confirms first opening and backup import after 055; comprehensive/new-form device cases remain pending.

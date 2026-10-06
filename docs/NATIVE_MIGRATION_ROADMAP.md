@@ -296,3 +296,7 @@ Kotlin Android Views now render current shift summary/movements and latest 20 hi
 ## First-run correction (055)
 
 Resolve absent/null shift document parity before further form migration. Lifecycle previously assumed a populated/explicit [] document; readRecords now supplies compatible empty-state semantics across native shift readers. Safe lifecycle errors and Android-only visible storage warning added. Comprehensive physical acceptance remains pending.
+
+## Native cash input forms (056)
+
+Visible deposit/withdrawal UI moves to Kotlin platform dialogs; typed inputs rejoin the original submitCashMovement/native command path through hidden real compatibility fields. Confirm/cancel/inputs lock pending acknowledgement, generation tokens guard replacements and unknown status requires reload. No new financial policy or network effects. JS command orchestration remains; session rollback preserves legacy forms. User reports successful first shift and backup restoration after 055. Next: closing form.

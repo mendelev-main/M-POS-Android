@@ -57,3 +57,20 @@ test('cross-shift refund and old operation delegation retain reviewed boundaries
  assert.equal(await h.ctx.submitCashMovement('withdrawal'),false);assert.equal(h.commands.some(c=>c.action==='cashMovementCommit'),false);
  await h.ctx.commitCriticalStorage('close-shift',{shifts:[]});assert.ok(h.events.includes('legacy-commit'));
 });
+
+for(const type of ['deposit','withdrawal'])test('native cash form uses actual handler and acknowledged Kotlin command for '+type,async()=>{
+ const h=host(),forms=[],inputs={amount:{value:''},note:{value:''}};
+ h.ctx.state.loaded=true;h.ctx.showModal=()=>h.events.push('modal');
+ h.ctx.document={getElementById:id=>id==='cash-movement-amount'?inputs.amount:inputs.note,querySelector:()=>({style:{}})};
+ h.ctx.webkit.messageHandlers.shiftScreen={postMessage:p=>{forms.push(p);return true}};
+ vm.runInContext(source('native-cash-forms.js'),h.ctx);
+ h.ctx.openCashMovementModal(type);const form=forms.at(-1);
+ const saving=h.ctx.MPosCore.NativeCashForms.handleAction({action:'submit',token:form.token,type,shiftId:'s1',amount:0.001,note:'  native note  '});
+ await flushUntil(()=>h.events.includes('native-command'));
+ const command=JSON.parse(h.commands.find(c=>c.action==='cashMovementCommit').payload);
+ assert.equal(command.movement.amount,0.001);assert.equal(command.movement.note,'native note');assert.equal(command.movement.type,type);
+ assert.equal(h.ctx.state.shifts[1].cashMovements.length,0);assert.equal(h.events.includes('close'),false);
+ h.reply();await saving;
+ assert.equal(h.ctx.state.shifts[1].cashMovements.length,1);assert.equal(h.events.filter(e=>e==='close').length,1);
+ assert.ok(forms.some(p=>p.action==='cashFormResult'&&p.ok));assert.equal(h.events.includes('legacy-commit'),false);
+});

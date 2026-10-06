@@ -30,6 +30,7 @@ import com.mendelev.mpos.media.ProductPhotoManager
 import com.mendelev.mpos.print.EscPosPrinter
 import com.mendelev.mpos.share.ReportShareManager
 import com.mendelev.mpos.shift.MPosShiftScreenController
+import com.mendelev.mpos.shift.MPosCashMovementDialog
 import com.mendelev.mpos.settings.MPosSettingsStore
 import com.mendelev.mpos.telegram.TelegramClient
 import com.mendelev.mpos.web.LocalContentWebViewClient
@@ -44,6 +45,7 @@ class MainActivity : AppCompatActivity() {
         private const val START_URL = "$APP_ORIGIN/assets/pos/pos.html"
     }
 
+    private lateinit var cashMovementDialog: MPosCashMovementDialog
     private lateinit var shiftScreen: MPosShiftScreenController
     private lateinit var webView: WebView
     private lateinit var imageStore: ProductImageStore
@@ -135,6 +137,9 @@ class MainActivity : AppCompatActivity() {
         shiftScreen = MPosShiftScreenController(this, root, nativeStorageMirror::handle) { action ->
             callJavaScript("window.__mposShiftScreenAction&&window.__mposShiftScreenAction($action);")
         }
+        cashMovementDialog = MPosCashMovementDialog(this) { action ->
+            callJavaScript("window.MPosCore&&window.MPosCore.NativeCashForms&&window.MPosCore.NativeCashForms.handleAction($action);")
+        }
         setContentView(root)
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
@@ -171,6 +176,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        if (::cashMovementDialog.isInitialized) cashMovementDialog.dismiss()
         nativeNetworkTransport.close()
         if (::nativeStorageMirror.isInitialized) nativeStorageMirror.close()
         if (::nativeSettings.isInitialized) nativeSettings.close()
@@ -222,7 +228,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun handleShiftScreen(payload: JSONObject) = runOnUiThread { if (::shiftScreen.isInitialized) shiftScreen.handle(payload) }
+    fun handleShiftScreen(payload: JSONObject) = runOnUiThread {
+        if (payload.optString("action").startsWith("cashForm")) {
+            if (::cashMovementDialog.isInitialized) cashMovementDialog.handle(payload)
+        } else if (::shiftScreen.isInitialized) shiftScreen.handle(payload)
+    }
 
     fun handleTelegram(payload: JSONObject) = telegram.handle(payload)
 

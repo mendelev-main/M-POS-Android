@@ -152,3 +152,16 @@ Status: pending comprehensive physical testing.
 - Repeat for a synthetic v13 backup with absent/null shifts; check explicit empty [] and existing populated history too.
 
 Status: pending physical verification of updated APK.
+
+## User-reported physical evidence after 055 — 2026-10-06
+
+User confirms on the Android tablet that an employee can now open a shift, and that export/import of their backup into the new Android POS restored products, employees and other data. This confirms the reported first-opening defect and that import flow at this scope works. No backup/production data retained in Git. Detailed field-by-field comparisons, payment/return/print and interrupted writes remain pending; this is not blanket acceptance of every physical case.
+
+## Native cash forms (056)
+
+- Deposit/withdraw with decimal comma, 0.001, optional/long comments; inspect exactly one preserved movement after restart.
+- Insufficient withdrawal, negative drawer, same/cross-shift cash refunds, force-stop during save and repeated taps retain existing command behavior.
+- Confirm/cancel/Back/outside, keyboard, font scaling, rotation and rapid modal replacement: one visible form, no stale acknowledgement or duplicate movement.
+- Simulate known rejection and uncertain acknowledgement: editing allowed only for known rejection, reload required for uncertainty. No new availability publication or catalogue sync.
+
+Status: pending physical verification of 056.
