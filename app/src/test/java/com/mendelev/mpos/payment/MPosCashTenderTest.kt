@@ -18,6 +18,17 @@ class MPosCashTenderTest {
             assertEquals((0 until values.length()).map { values.getDouble(it) }, MPosCashTender.denominations(amount))
         }
     }
+    @Test fun wholeCashPreservesSourceEpsilonZeroAndUnroundedTotals() {
+        val file = listOf(File("../tests/fixtures/whole-cash-tender.json"), File("tests/fixtures/whole-cash-tender.json")).first { it.exists() }
+        val cases = JSONArray(file.readText())
+        for (i in 0 until cases.length()) {
+            val c = cases.getJSONObject(i); val payment = MPosCashTender.confirmWhole(c.getDouble("amount"), c.getDouble("given"))
+            assertEquals(c.toString(), c.getBoolean("allowed"), payment != null)
+            if (payment != null) { assertEquals(c.getDouble("cashGiven"), payment.cashGiven, 0.0); assertEquals(c.getDouble("change"), payment.change, 0.0) }
+            val quick = c.getJSONArray("quickValues")
+            assertEquals((0 until quick.length()).map { quick.getDouble(it) }, MPosCashTender.quickValues(c.getDouble("amount")))
+        }
+    }
     @Test fun localeInputAndInvalidNumbersDoNotBecomeConfirmedPayments() {
         assertEquals(20.5, MPosCashTender.parse("20,50")!!, 0.0)
         for (raw in listOf("bad", "Infinity", "NaN", "-1", "1,2,3")) assertNull(MPosCashTender.parse(raw))

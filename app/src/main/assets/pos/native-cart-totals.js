@@ -16,12 +16,15 @@
   }
   global.MPosCore.PaymentTotals=Object.freeze({
     enabled,
-    async prepare(){
+    cash(given){const result=quote();return result&&cached.given===given&&result.cash?JSON.parse(JSON.stringify(result.cash)):null;},
+    async prepare(given){
       const serialized=stamp(),request=JSON.parse(serialized);
+      if(given!==undefined){if(typeof given!=='number'||!Number.isFinite(given))throw new Error('invalid cash given');request.cashGiven=given;}
       const value=await global.MPosCore.CartTotals.calculate(request);
       if(!valid(value,request.items.length))throw new Error('invalid native cart totals');
+      if(given!==undefined&&(typeof value.cash?.allowed!=='boolean'||(value.cash.allowed&&(!Number.isFinite(value.cash.cashGiven)||!Number.isFinite(value.cash.change)))))throw new Error('invalid native cash totals');
       if(!enabled()||serialized!==stamp())return false;
-      cached={stamp:serialized,value};return true;
+      cached={stamp:serialized,value,given};return true;
     }
   });
   const helpers={cartTotal:()=>quote()?.pricing.total,cartSubtotal:()=>quote()?.pricing.subtotal,

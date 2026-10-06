@@ -1,6 +1,7 @@
 package com.mendelev.mpos.data
 
 import org.json.JSONObject
+import com.mendelev.mpos.payment.MPosCashTender
 
 /** One read-only quote shared by payment presentation and settlement engines. */
 object MPosCartTotalsEngine {
@@ -10,7 +11,14 @@ object MPosCartTotalsEngine {
         val loyalty = MPosLoyaltyRewardEngine.calculate(items, input.getJSONArray("programs"), input.getJSONObject("redemptions"))
         val pricing = MPosPricingEngine.calculate(items, input.getJSONArray("discounts"), input.optString("orderType"),
             input.opt("deliveryFee"), loyalty.getDouble("discount"))
-        return JSONObject().put("ok", true).put("authoritative", true).put("source", "native-cart-totals")
+        val result = JSONObject().put("ok", true).put("authoritative", true).put("source", "native-cart-totals")
             .put("pricing", pricing).put("loyalty", loyalty)
+        if (input.has("cashGiven")) {
+            val payment = MPosCashTender.confirmWhole(pricing.getDouble("total"), input.getDouble("cashGiven"))
+            val cash = JSONObject().put("allowed", payment != null)
+            payment?.let { cash.put("cashGiven", it.cashGiven).put("change", it.change) }
+            result.put("cash", cash)
+        }
+        return result
     }
 }

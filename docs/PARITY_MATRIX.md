@@ -217,3 +217,12 @@ Rollback: MPosNativeCardConfirmationEnabled=false.
 Backup v13 без изменений. Основной наличный keypad и экран оплаты пока WebView.
 Rollback: MPosNativeSplitCashEnabled=false.
 `specs/069-native-split-cash/spec.md`; физическая приёмка ожидается.
+
+
+070: основной cash keypad открывает нативный редактор суммы (Done не оплачивает).
+Tender и сдача обычной оплаты рассчитаны Kotlin в существующем cartTotalsRead,
+без дополнительного запроса. Сохраняются zero total/epsilon 0.0001 и gift guard;
+после обновления подарка выполняется свежий quote. Shell оплаты/inline quick
+buttons пока WebView, Compose не подключён. Backup v13 без изменений.
+Rollback: MPosNativeCashPaymentEnabled=false.
+`specs/070-native-ordinary-cash/spec.md`; физическая приёмка ожидается.

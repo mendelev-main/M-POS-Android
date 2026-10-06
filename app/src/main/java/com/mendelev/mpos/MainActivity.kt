@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
         private const val START_URL = "$APP_ORIGIN/assets/pos/pos.html"
     }
 
+    private lateinit var cashInputDialog: MPosSplitCashDialog
     private lateinit var splitCashDialog: MPosSplitCashDialog
     private lateinit var cardConfirmationDialog: MPosCardConfirmationDialog
     private lateinit var shiftOpenDialog: MPosShiftOpenDialog
@@ -160,6 +161,9 @@ class MainActivity : AppCompatActivity() {
         splitCashDialog = MPosSplitCashDialog(this) { action ->
             callJavaScript("window.MPosCore&&window.MPosCore.NativeSplitCash&&window.MPosCore.NativeSplitCash.handleAction($action);")
         }
+        cashInputDialog = MPosSplitCashDialog(this) { action ->
+            callJavaScript("window.MPosCore&&window.MPosCore.NativeCashPayment&&window.MPosCore.NativeCashPayment.handleAction($action);")
+        }
         setContentView(root)
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
@@ -196,6 +200,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        if (::cashInputDialog.isInitialized) cashInputDialog.dismiss()
         if (::splitCashDialog.isInitialized) splitCashDialog.dismiss()
         if (::cardConfirmationDialog.isInitialized) cardConfirmationDialog.dismiss()
         if (::shiftOpenDialog.isInitialized) shiftOpenDialog.dismiss()
@@ -253,7 +258,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun handlePaymentScreen(payload: JSONObject) = runOnUiThread {
-        if (payload.optString("action").startsWith("cash")) {
+        if (payload.optString("action").startsWith("input")) {
+            if (::cashInputDialog.isInitialized) cashInputDialog.handle(payload)
+        } else if (payload.optString("action").startsWith("cash")) {
             if (::splitCashDialog.isInitialized) splitCashDialog.handle(payload)
         } else if (::cardConfirmationDialog.isInitialized) cardConfirmationDialog.handle(payload)
     }

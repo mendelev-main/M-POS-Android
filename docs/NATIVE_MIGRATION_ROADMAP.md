@@ -178,14 +178,15 @@ Benefits:
 - removal of browser text-selection/context behavior.
 
 ### P7 — Payment domain + Compose payment screen
-**Status: 🟢 Partial (069)**
+**Status: 🟢 Partial (070)**
 
 Atomic settlement, product-discount arithmetic, gift allocation and configured unit-price
 formation and settlement recipe expansion are native. Cart additions await Room stock
 preflight, quantity edits use native decisions/Room preflight, and payment entry/cash/card/split
 confirmation reads stock from Room. Payment entry/confirmation also awaits a combined
 Kotlin pricing/reward quote. External card confirmation is native Android UI (068); split cash input/change
-calculation is native (069).
+calculation is native (069). Ordinary tender input and confirmation arithmetic
+are native (070); the main payment shell still renders in WebView.
 Main cart/payment UI and invalidated-preview recomputation,
 online gift eligibility and stock availability display
 remain reviewed JS; physical acceptance is pending.
@@ -417,3 +418,12 @@ Rollback: MPosNativeCardConfirmationEnabled=false.
 Backup v13 без изменений. Основной наличный keypad и экран оплаты пока WebView.
 Rollback: MPosNativeSplitCashEnabled=false.
 `specs/069-native-split-cash/spec.md`; физическая приёмка ожидается.
+
+
+070: основной cash keypad открывает нативный редактор суммы (Done не оплачивает).
+Tender и сдача обычной оплаты рассчитаны Kotlin в существующем cartTotalsRead,
+без дополнительного запроса. Сохраняются zero total/epsilon 0.0001 и gift guard;
+после обновления подарка выполняется свежий quote. Shell оплаты/inline quick
+buttons пока WebView, Compose не подключён. Backup v13 без изменений.
+Rollback: MPosNativeCashPaymentEnabled=false.
+`specs/070-native-ordinary-cash/spec.md`; физическая приёмка ожидается.

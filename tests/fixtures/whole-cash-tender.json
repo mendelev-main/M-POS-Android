@@ -1,0 +1,754 @@
+[
+  {
+    "amount": 0,
+    "given": 0,
+    "allowed": true,
+    "cashGiven": 0,
+    "change": 0,
+    "quickValues": []
+  },
+  {
+    "amount": 0,
+    "given": 0.01,
+    "allowed": true,
+    "cashGiven": 0.01,
+    "change": 0.01,
+    "quickValues": []
+  },
+  {
+    "amount": 0,
+    "given": 1,
+    "allowed": true,
+    "cashGiven": 1,
+    "change": 1,
+    "quickValues": []
+  },
+  {
+    "amount": 0,
+    "given": 1.005,
+    "allowed": true,
+    "cashGiven": 1,
+    "change": 1,
+    "quickValues": []
+  },
+  {
+    "amount": 0,
+    "given": 12.344,
+    "allowed": true,
+    "cashGiven": 12.34,
+    "change": 12.34,
+    "quickValues": []
+  },
+  {
+    "amount": 0,
+    "given": 12.345,
+    "allowed": true,
+    "cashGiven": 12.35,
+    "change": 12.35,
+    "quickValues": []
+  },
+  {
+    "amount": 0,
+    "given": 20,
+    "allowed": true,
+    "cashGiven": 20,
+    "change": 20,
+    "quickValues": []
+  },
+  {
+    "amount": 0,
+    "given": 1000.999,
+    "allowed": true,
+    "cashGiven": 1001,
+    "change": 1001,
+    "quickValues": []
+  },
+  {
+    "amount": 0.00009,
+    "given": 0,
+    "allowed": true,
+    "cashGiven": 0,
+    "change": 0,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00009,
+    "given": 0.01,
+    "allowed": true,
+    "cashGiven": 0.01,
+    "change": 0.01,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00009,
+    "given": 1,
+    "allowed": true,
+    "cashGiven": 1,
+    "change": 1,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00009,
+    "given": 1.005,
+    "allowed": true,
+    "cashGiven": 1,
+    "change": 1,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00009,
+    "given": 12.344,
+    "allowed": true,
+    "cashGiven": 12.34,
+    "change": 12.34,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00009,
+    "given": 12.345,
+    "allowed": true,
+    "cashGiven": 12.35,
+    "change": 12.35,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00009,
+    "given": 20,
+    "allowed": true,
+    "cashGiven": 20,
+    "change": 20,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00009,
+    "given": 1000.999,
+    "allowed": true,
+    "cashGiven": 1001,
+    "change": 1001,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.0001,
+    "given": 0,
+    "allowed": true,
+    "cashGiven": 0,
+    "change": 0,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.0001,
+    "given": 0.01,
+    "allowed": true,
+    "cashGiven": 0.01,
+    "change": 0.01,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.0001,
+    "given": 1,
+    "allowed": true,
+    "cashGiven": 1,
+    "change": 1,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.0001,
+    "given": 1.005,
+    "allowed": true,
+    "cashGiven": 1,
+    "change": 1,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.0001,
+    "given": 12.344,
+    "allowed": true,
+    "cashGiven": 12.34,
+    "change": 12.34,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.0001,
+    "given": 12.345,
+    "allowed": true,
+    "cashGiven": 12.35,
+    "change": 12.35,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.0001,
+    "given": 20,
+    "allowed": true,
+    "cashGiven": 20,
+    "change": 20,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.0001,
+    "given": 1000.999,
+    "allowed": true,
+    "cashGiven": 1001,
+    "change": 1001,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00011,
+    "given": 0,
+    "allowed": false,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00011,
+    "given": 0.01,
+    "allowed": true,
+    "cashGiven": 0.01,
+    "change": 0.01,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00011,
+    "given": 1,
+    "allowed": true,
+    "cashGiven": 1,
+    "change": 1,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00011,
+    "given": 1.005,
+    "allowed": true,
+    "cashGiven": 1,
+    "change": 1,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00011,
+    "given": 12.344,
+    "allowed": true,
+    "cashGiven": 12.34,
+    "change": 12.34,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00011,
+    "given": 12.345,
+    "allowed": true,
+    "cashGiven": 12.35,
+    "change": 12.35,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00011,
+    "given": 20,
+    "allowed": true,
+    "cashGiven": 20,
+    "change": 20,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 0.00011,
+    "given": 1000.999,
+    "allowed": true,
+    "cashGiven": 1001,
+    "change": 1001,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 1.005,
+    "given": 0,
+    "allowed": false,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 1.005,
+    "given": 0.01,
+    "allowed": false,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 1.005,
+    "given": 1,
+    "allowed": false,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 1.005,
+    "given": 1.005,
+    "allowed": false,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 1.005,
+    "given": 12.344,
+    "allowed": true,
+    "cashGiven": 12.34,
+    "change": 11.34,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 1.005,
+    "given": 12.345,
+    "allowed": true,
+    "cashGiven": 12.35,
+    "change": 11.35,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 1.005,
+    "given": 20,
+    "allowed": true,
+    "cashGiven": 20,
+    "change": 19,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 1.005,
+    "given": 1000.999,
+    "allowed": true,
+    "cashGiven": 1001,
+    "change": 1000,
+    "quickValues": [
+      5,
+      10,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.345,
+    "given": 0,
+    "allowed": false,
+    "quickValues": [
+      12.35,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.345,
+    "given": 0.01,
+    "allowed": false,
+    "quickValues": [
+      12.35,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.345,
+    "given": 1,
+    "allowed": false,
+    "quickValues": [
+      12.35,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.345,
+    "given": 1.005,
+    "allowed": false,
+    "quickValues": [
+      12.35,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.345,
+    "given": 12.344,
+    "allowed": false,
+    "quickValues": [
+      12.35,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.345,
+    "given": 12.345,
+    "allowed": true,
+    "cashGiven": 12.35,
+    "change": 0,
+    "quickValues": [
+      12.35,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.345,
+    "given": 20,
+    "allowed": true,
+    "cashGiven": 20,
+    "change": 7.65,
+    "quickValues": [
+      12.35,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.345,
+    "given": 1000.999,
+    "allowed": true,
+    "cashGiven": 1001,
+    "change": 988.66,
+    "quickValues": [
+      12.35,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.5,
+    "given": 0,
+    "allowed": false,
+    "quickValues": [
+      12.5,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.5,
+    "given": 0.01,
+    "allowed": false,
+    "quickValues": [
+      12.5,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.5,
+    "given": 1,
+    "allowed": false,
+    "quickValues": [
+      12.5,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.5,
+    "given": 1.005,
+    "allowed": false,
+    "quickValues": [
+      12.5,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.5,
+    "given": 12.344,
+    "allowed": false,
+    "quickValues": [
+      12.5,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.5,
+    "given": 12.345,
+    "allowed": false,
+    "quickValues": [
+      12.5,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.5,
+    "given": 20,
+    "allowed": true,
+    "cashGiven": 20,
+    "change": 7.5,
+    "quickValues": [
+      12.5,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  },
+  {
+    "amount": 12.5,
+    "given": 1000.999,
+    "allowed": true,
+    "cashGiven": 1001,
+    "change": 988.5,
+    "quickValues": [
+      12.5,
+      15,
+      20,
+      50,
+      100,
+      200
+    ]
+  }
+]

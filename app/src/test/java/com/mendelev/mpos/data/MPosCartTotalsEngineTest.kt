@@ -41,6 +41,14 @@ class MPosCartTotalsEngineTest {
             assertEquals(before, input.toString())
         }
     }
+    @Test fun cashTenderUsesTheCalculatedTotalInTheSameQuote() {
+        val input = JSONObject("""{"version":1,"items":[{"productId":"p","price":10,"qty":1}],"discounts":[],"programs":[],"redemptions":{},"orderType":"Доставка","deliveryFee":2.5,"cashGiven":20}""")
+        val result = MPosCartTotalsEngine.calculate(input)
+        assertEquals(12.5, result.getJSONObject("pricing").getDouble("total"), 0.0)
+        assertEquals(7.5, result.getJSONObject("cash").getDouble("change"), 0.0)
+        assertTrue(result.getJSONObject("cash").getBoolean("allowed"))
+        input.put("cashGiven", 12.49); assertFalse(MPosCartTotalsEngine.calculate(input).getJSONObject("cash").getBoolean("allowed"))
+    }
     @Test fun invalidProtocolAndAmountsFailWithoutAQuote() {
         for (raw in listOf("{}", """{"version":2}""", """{"version":1,"items":[{"qty":1}],"discounts":[],"programs":[],"redemptions":{}}""")) {
             assertThrows(Exception::class.java) { MPosCartTotalsEngine.calculate(JSONObject(raw)) }

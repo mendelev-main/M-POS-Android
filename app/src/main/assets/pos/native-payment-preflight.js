@@ -16,6 +16,7 @@
       if(state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)){flash('Дождитесь завершения текущей операции');return;}
       if(global.MPosCore.CartOperations?.hasPending()){flash('Дождитесь завершения изменения корзины');return;}
       if(pending){flash('Дождитесь проверки остатков');return;}
+      if(name==='confirmPaymentScreen'&&typeof loyaltyPaymentGuardBusy!=='undefined'&&loyaltyPaymentGuardBusy){flash('Дождитесь проверки подарка');return;}
       // Preserve reviewed guards that precede the stock decision.
       if(name!=='paySplitPart'&&!requireDeliveryTariff())return;
       if(name==='openPaymentModal'){
@@ -24,18 +25,20 @@
       }
       const cart=state.cart,before=fingerprint(),generation=epoch;
       const stale=()=>state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||!enabled()||generation!==epoch||cart!==state.cart||before!==fingerprint()||global.MPosCore.CartOperations?.hasPending();
+      const cashGiven=name==='confirmPaymentScreen'&&args[0]==='cash'&&global.MPosCore.NativeCashPayment?.enabled()?paymentGivenValue():undefined;
       pending=true;
       let verdict;
       try{
         verdict=await global.MPosCore.StockPreflight.check({version:1,items:cart.map(i=>({productId:i.productId,qty:i.qty,selectedModifiers:(i.selectedModifiers||[]).map(m=>({productId:m.productId,qty:m.qty}))}))});
         if(!stale()&&verdict?.allowed===true&&global.MPosCore.PaymentTotals?.enabled()){
-          if(!await global.MPosCore.PaymentTotals.prepare())return;
+          if(!await global.MPosCore.PaymentTotals.prepare(cashGiven))return;
         }
       }catch(_error){if(!stale())flash('Не удалось проверить заказ. Повторите оплату.');return;}
       finally{pending=false;}
       if(stale())return;
       if(typeof verdict?.allowed!=='boolean'){flash('Не удалось проверить заказ. Повторите оплату.');return;}
       if(!verdict.allowed){flash(verdict.reason||'Недостаточно остатка');return;}
+      if(cashGiven!==undefined)return global.MPosCore.NativeCashPayment.confirm(args[1]===true,cashGiven);
       // These reviewed handlers are synchronous. Loyalty callbacks re-enter this wrapper
       // after awaiting the server and therefore obtain a fresh Room decision.
       const legacy=global.canFulfillCart;

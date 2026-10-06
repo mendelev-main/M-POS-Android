@@ -5,6 +5,7 @@ import com.mendelev.mpos.data.MPosJsonNumbers
 import android.app.AlertDialog
 import android.content.Context
 import android.text.InputType
+import android.text.InputFilter
 import android.view.ContextThemeWrapper
 import android.widget.Button
 import android.widget.EditText
@@ -22,11 +23,12 @@ class MPosSplitCashDialog(private val context: Context, private val action: (JSO
     private var token: String? = null
     fun handle(payload: JSONObject) {
         val next = payload.optString("token")
-        if (payload.optString("action") == "cashHide") { if (next == token) dismiss(); return }
-        if (payload.optString("action") != "cashShow" || next.isBlank()) return
+        if (payload.optString("action") in setOf("cashHide", "inputHide")) { if (next == token) dismiss(); return }
+        if (payload.optString("action") !in setOf("cashShow", "inputShow") || next.isBlank()) return
+        val editing = payload.optString("action") == "inputShow"
         val amount = payload.optDouble("amount", Double.NaN)
         val initial = payload.optDouble("given", amount)
-        if (!amount.isFinite() || amount <= 0 || !initial.isFinite() || initial < 0) return
+        if (!amount.isFinite() || amount < 0 || (!editing && amount == 0.0) || !initial.isFinite() || initial < 0) return
         dismiss(); token = next
         val dark = payload.optString("theme") == "dark"
         val themed = ContextThemeWrapper(context, if (dark) android.R.style.Theme_Material_Dialog_Alert else android.R.style.Theme_Material_Light_Dialog_Alert)
@@ -38,23 +40,27 @@ class MPosSplitCashDialog(private val context: Context, private val action: (JSO
             setPadding(padding, padding, padding, padding)
         }
         fun label(value: String) = TextView(themed).apply { text = value; textSize = 18f; fields.addView(this) }
-        label("Платёж ${payload.optInt("index") + 1}")
+        if (!editing) label("Платёж ${payload.optInt("index") + 1}")
         label(payload.optString("amountLabel", money(amount)))
         label("Внесено наличными")
         val input = EditText(themed).apply {
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+            if (editing) filters = arrayOf(InputFilter { source, start, end, dest, dstart, dend ->
+                val nextText = dest.subSequence(0, dstart).toString() + source.subSequence(start, end) + dest.subSequence(dend, dest.length)
+                if (Regex("[0-9]*(?:[.,][0-9]{0,2})?").matches(nextText)) null else ""
+            })
             contentDescription = "Внесено наличными"; setSingleLine(); setText(payload.optString("givenInput", String.format(Locale.US, "%.2f", initial)))
         }
         fields.addView(input)
         val quick = LinearLayout(themed).apply { orientation = LinearLayout.VERTICAL }; fields.addView(quick)
-        for (value in MPosCashTender.denominations(amount)) quick.addView(Button(themed).apply {
+        for (value in (if (editing) MPosCashTender.quickValues(amount) else MPosCashTender.denominations(amount))) quick.addView(Button(themed).apply {
             text = money(value); setOnClickListener { input.setText(String.format(Locale.US, "%.2f", MPosJsonNumbers.roundMoney(value))); input.setSelection(input.text.length) }
         })
         val change = label(context.getString(R.string.mpos_cash_change, money(MPosCashTender.preview(amount, MPosCashTender.parse(input.text.toString()) ?: 0.0)))).apply { contentDescription = "Сдача" }
         input.doAfterTextChanged { change.text = context.getString(R.string.mpos_cash_change, money(MPosCashTender.preview(amount, MPosCashTender.parse(it.toString()) ?: 0.0))) }
         val scroll = ScrollView(themed).apply { addView(fields) }
         val current = AlertDialog.Builder(themed).setTitle("Оплата наличными").setView(scroll)
-            .setNegativeButton("Отмена", null).setPositiveButton("Оплатить", null).create()
+            .setNegativeButton("Отмена", null).setPositiveButton(if (editing) "Готово" else "Оплатить", null).create()
         dialog = current
         fun cancel() { if (token == next) { dismiss(); action(JSONObject().put("token", next).put("action", "cancel")) } }
         current.setOnCancelListener { cancel() }
@@ -64,6 +70,12 @@ class MPosSplitCashDialog(private val context: Context, private val action: (JSO
                 setTextColor((if (dark) "#31B98D" else "#0E8F6F").toColorInt())
                 setOnClickListener {
                     if (token != next) return@setOnClickListener
+                    val given = MPosCashTender.parse(input.text.toString())
+                    if (editing) {
+                        if (given == null) { input.error = "Введите корректную сумму"; return@setOnClickListener }
+                        dismiss(); action(JSONObject().put("token", next).put("action", "confirm").put("cashGiven", given))
+                        return@setOnClickListener
+                    }
                     val payment = MPosCashTender.parse(input.text.toString())?.let { MPosCashTender.confirm(amount, it) }
                     if (payment == null) { input.error = "Недостаточно внесённой суммы или некорректная сумма"; return@setOnClickListener }
                     dismiss()

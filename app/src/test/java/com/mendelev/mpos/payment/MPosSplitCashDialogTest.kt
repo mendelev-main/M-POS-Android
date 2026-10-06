@@ -46,6 +46,19 @@ class MPosSplitCashDialogTest {
         dialog.cancel(); ShadowLooper.idleMainLooper(); assertEquals("cancel", actions.single().getString("action")); assertEquals("cash2", actions.single().getString("token"))
         controller.handle(payload("cash3")); controller.dismiss(); assertEquals(1, actions.size); activity.finish()
     }
+    @Test fun wholeCashEditingAllowsInsufficientAmountAndDoesNotSubmitPayment() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val actions = mutableListOf<JSONObject>(); val controller = MPosSplitCashDialog(activity) { actions.add(it) }
+        controller.handle(payload().put("action", "inputShow").put("givenInput", "")); ShadowLooper.idleMainLooper()
+        val dialog = ShadowAlertDialog.getLatestAlertDialog()
+        val input = descendants(dialog.window!!.decorView).filterIsInstance<EditText>().single()
+        input.setText("1,20"); assertEquals("1,20", input.text.toString())
+        input.append("5"); assertEquals("1,20", input.text.toString())
+        val done = dialog.getButton(AlertDialog.BUTTON_POSITIVE); assertEquals("Готово", done.text.toString())
+        done.performClick(); done.performClick(); assertEquals(1, actions.size)
+        assertEquals(1.2, actions.single().getDouble("cashGiven"), 0.0); assertFalse(actions.single().has("change"))
+        activity.finish()
+    }
     @Test fun initialInputPreservesReviewedToFixedResult() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
         val controller = MPosSplitCashDialog(activity) {}
