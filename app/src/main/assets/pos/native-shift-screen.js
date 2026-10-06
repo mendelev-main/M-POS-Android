@@ -17,7 +17,8 @@
     if(!root){hide();return;}
     const r=root.getBoundingClientRect(),width=window.innerWidth,height=window.innerHeight;
     if(![r.left,r.top,r.width,r.height,width,height].every(Number.isFinite)||r.width<=0||r.height<=0||width<=0||height<=0){hide();return;}
-    const payload={action:'show',rect:{left:r.left,top:r.top,width:r.width,height:r.height},viewportWidth:width,viewportHeight:height,currency:state.currency||'',establishmentName:state.company?.establishmentName||''};
+    const theme=document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';
+    const payload={theme,action:'show',rect:{left:r.left,top:r.top,width:r.width,height:r.height},viewportWidth:width,viewportHeight:height,currency:state.currency||'',establishmentName:state.company?.establishmentName||''};
     const key=JSON.stringify([payload,identity(state.shifts),identity(state.orders),renderRevision]);
     if(key===lastKey)return;
     lastKey=key;visible=true;bridge.postMessage(payload);
@@ -39,6 +40,7 @@
   function observe(){
     const observer=new MutationObserver(schedule);
     for(const id of ['app','modal-root']){const node=document.getElementById(id);if(node)observer.observe(node,{childList:true,subtree:true});}
+    observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
     window.addEventListener('resize',()=>{lastKey='';schedule();});
     document.addEventListener('visibilitychange',schedule);
     schedule();

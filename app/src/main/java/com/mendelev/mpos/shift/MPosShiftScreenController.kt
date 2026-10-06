@@ -3,6 +3,7 @@ package com.mendelev.mpos.shift
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -26,6 +27,14 @@ class MPosShiftScreenController(
 ) {
     private val scroll = ScrollView(context).apply { visibility = View.GONE; setBackgroundColor(Color.rgb(246, 247, 249)) }
     private val content = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(12), dp(16), dp(20)) }
+    private var dark = false
+    private fun color(light: String, night: String) = Color.parseColor(if (dark) night else light)
+    private val ink get() = color("#1B1F2A", "#F4F6FA")
+    private val accent get() = color("#0E8F6F", "#31B98D")
+    private fun shape(fill: Int, radius: Int = 12, border: Boolean = false) = GradientDrawable().apply {
+        setColor(fill); cornerRadius = dp(radius).toFloat()
+        if (border) setStroke(dp(1), color("#E7E4DD", "#353B49"))
+    }
     private var generation = 0L
     private var pendingId: String? = null
     private var lastPayload: JSONObject? = null
@@ -39,6 +48,8 @@ class MPosShiftScreenController(
         if (payload.optString("action") == "hide") { hide(); return }
         if (payload.optString("action") != "show") return
         val bounds = bounds(payload, host.width, host.height) ?: run { hide(); return }
+        dark = payload.optString("theme") == "dark"
+        scroll.setBackgroundColor(color("#F5F4F0", "#171A21"))
         lastPayload = JSONObject(payload.toString())
         scroll.layoutParams = FrameLayout.LayoutParams(bounds.width, bounds.height).apply { leftMargin = bounds.left; topMargin = bounds.top }
         scroll.visibility = View.VISIBLE
@@ -118,7 +129,7 @@ class MPosShiftScreenController(
     private fun title(label: String) { heading(content, label, 24f) }
     private fun heading(parent: LinearLayout, label: String, size: Float = 19f) { text(parent, label, size).setTypeface(null, Typeface.BOLD) }
     private fun text(parent: LinearLayout, label: String, size: Float = 15f): TextView = TextView(context).apply {
-        text = label; textSize = size; setTextColor(Color.rgb(24, 32, 44)); setPadding(dp(4), dp(8), dp(4), dp(8))
+        text = label; textSize = size; setTextColor(ink); setPadding(dp(4), dp(8), dp(4), dp(8))
         parent.addView(this, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
     }
     private fun pair(parent: LinearLayout, label: String, value: String, bold: Boolean = false) {
@@ -128,15 +139,26 @@ class MPosShiftScreenController(
         left.layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         val right = text(row, value)
         right.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        if (bold) { left.setTypeface(null, Typeface.BOLD); right.setTypeface(null, Typeface.BOLD) }
+        if (bold) {
+            row.background = shape(color("#E4F3EE", "#173B31"))
+            left.setTextColor(accent); right.setTextColor(accent)
+            left.setTypeface(null, Typeface.BOLD); right.setTypeface(null, Typeface.BOLD) }
     }
     private fun button(parent: LinearLayout, label: String, weighted: Boolean = false, onClick: () -> Unit) {
         parent.addView(Button(context).apply {
-            text = label; isAllCaps = false; minHeight = dp(48); setOnClickListener { onClick() }
-        }, if (weighted) LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f) else LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+            text = label; isAllCaps = false; minHeight = dp(48)
+            val primary = label == "Открыть смену"
+            val danger = label == "Закрыть смену" || label == "Изъять наличные"
+            val tint = if (danger) color("#E0483E", "#FF6B61") else accent
+            backgroundTintList = null
+            background = shape(if (primary) accent else if (danger) color("#FBE7E5", "#432522") else color("#E4F3EE", "#173B31"))
+            setTextColor(if (primary) color("#FFFFFF", "#07140F") else tint)
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            setOnClickListener { onClick() }
+        }, if (weighted) LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f) else LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8); bottomMargin = dp(4) })
     }
     private fun card(): LinearLayout = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL; setBackgroundColor(Color.WHITE); setPadding(dp(12), dp(8), dp(12), dp(12))
+        orientation = LinearLayout.VERTICAL; background = shape(color("#FFFFFF", "#222631"), 22, true); setPadding(dp(12), dp(8), dp(12), dp(12))
         content.addView(this, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(12) })
     }
     private fun money(report: JSONObject, key: String) = moneyValue(report.optDouble(key), report)

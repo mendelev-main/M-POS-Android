@@ -185,3 +185,9 @@ Status: pending comprehensive physical verification of 057.
 - Opening Telegram/monthly gates run after local save only. No availability retry/catalogue sync. Backup import preserves employees, roles and carryover.
 
 Status: pending comprehensive physical verification of 058.
+
+
+059: исправлено оформление нативного экрана смены: палитра POS, карточки,
+акценты и переключение light/dark. Бизнес-логика не изменена.
+Спецификация: `specs/059-native-shift-theme/spec.md`. На планшете проверить
+обе темы, читаемость и кнопки смены; физическая проверка пока ожидается.

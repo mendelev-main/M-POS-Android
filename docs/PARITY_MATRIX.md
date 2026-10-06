@@ -118,3 +118,9 @@ Room-derived expected cash, prefill and native counted input; blank/negative/non
 ## Native opening form (058)
 
 Kotlin staff picker/conditional password input and Room carryover, no new auth decision or password constant. Original admin verifier rejects before transaction; state/opening notifications after ack only. Empty/null/read-error/ambiguous staff/recovery, scalar carryover, password clearing/no saved View state, token/busy/rollback and actual-handler/native command paths tested. Original shared source hashes retained. Current real admin password/device keyboard/long names/rotation/notifications are pending physical checks.
+
+
+059: исправлено оформление нативного экрана смены: палитра POS, карточки,
+акценты и переключение light/dark. Бизнес-логика не изменена.
+Спецификация: `specs/059-native-shift-theme/spec.md`. На планшете проверить
+обе темы, читаемость и кнопки смены; физическая проверка пока ожидается.

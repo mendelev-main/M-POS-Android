@@ -46,6 +46,19 @@ class MPosShiftScreenControllerTest {
         assertEquals(View.GONE, host.getChildAt(0).visibility)
         controller.result(response); assertEquals(View.GONE, host.getChildAt(0).visibility)
     }
+    @Test fun themeSwitchUsesPosPaletteInsteadOfSystemMonochrome() {
+        val host = FrameLayout(RuntimeEnvironment.getApplication()); host.layout(0, 0, 1000, 800)
+        val requests = mutableListOf<JSONObject>()
+        val controller = MPosShiftScreenController(host.context, host, { requests.add(it) }, {})
+        fun render(theme: String): TextView {
+            controller.handle(payload().put("theme", theme))
+            controller.result(JSONObject().put("requestId", requests.last().getString("requestId")).put("ok", true).put("history", JSONArray()))
+            return descendants(host).filterIsInstance<Button>().single { it.text.toString() == "Открыть смену" }
+        }
+        assertEquals(android.graphics.Color.WHITE, render("light").currentTextColor)
+        assertEquals(android.graphics.Color.parseColor("#07140F"), render("dark").currentTextColor)
+        assertEquals(android.graphics.Color.WHITE, render("light").currentTextColor)
+    }
     @Test fun errorOffersRetryAndExplicitRollbackWithoutDisplayingStaleTotals() {
         val host = FrameLayout(RuntimeEnvironment.getApplication()); host.layout(0, 0, 1000, 800)
         val requests = mutableListOf<JSONObject>(); val actions = mutableListOf<JSONObject>()
