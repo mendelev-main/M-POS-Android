@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **98/110 выполнено (89,09%)**
-после 099. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **99/110 выполнено (90,00%)**
+после 100. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -581,3 +581,7 @@ Hall tables/bookings now use Room-owned full JSON and native commands with curre
 ## 099 — native print jobs and routing
 
 Kotlin owns routing, exact category/flag rules, copies, per-endpoint FIFO and bounded admission/concurrency. Room stores compact outcomes before/after send; the TCP transport closes on lifecycle teardown. Completed payment prints read authoritative receipts. Reviewed trigger timings and manual reprints remain; settings still come from the authoritative compatibility snapshot until 100. User explicitly excludes automatic retry after connection breaks. Restart/import never replay queued/uncertain jobs; physical confirmation is not inferred from flush. Rollback routes through legacy planning with the new native direct transport. Next 100: native settings/employees UI. [099](../specs/099-native-print-jobs/spec.md). Physical pending.
+
+## 100 — native settings/employee surfaces
+
+Native hubs/forms use shared Manrope palettes and compact wrapping actions. Printer/notification authority cutover compares full expected snapshots and acknowledges disk persistence before memory/UI/test printing; delayed mirrors cannot overwrite it. v13 restore awaits this boundary. Mounted reviewed field/button tokens preserve employee auth/rights and other settings handlers without evaluating code or copying verifier constants. Presentation rollback retains native preference ownership. The reviewed DOM/auth runtime and fire-and-forget company/delivery/discount writes remain explicit compatibility boundaries; independent native auth is required before 109. This is a transitional UI architecture, with no measured performance claim. Next 101: native POS workspace/catalog/folders/cart. [100](../specs/100-native-settings-employees/spec.md). Physical pending.

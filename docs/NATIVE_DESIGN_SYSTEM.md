@@ -45,3 +45,5 @@ scroll identity remain. Physical light/dark/font-scale acceptance pending.
 
 
 097: analytics loading/error uses existing Web card/analytics-title/center-note/btn-primary tokens and bundled Manrope in both themes. Successful rendering retains reviewed chart/KPI layout. Async replacement retains screen scroll and waits for date-input blur. This is a Web presentation adapter, not native analytics UI acceptance; full UI remains 107. Physical theme/font-scale checks pending.
+
+100: native settings/network cards and settings/employee forms reuse MPosNativeTheme and offline Manrope. Compact actions wrap at large font scales; long forms scroll with a keyboard-height cap, short forms fit their content. Source cancel/back is represented once. Both palettes, primary/secondary/danger hierarchy and credential clearing are covered by native view tests. [Synthetic previews](design/100/README.md); tablet keyboard/landscape/font-scale acceptance is pending.

@@ -288,7 +288,7 @@ Physical acceptance pending; UI/receipt builder ещё WebView/source.
 
 ## Этап 083 — команды сотрудников
 
-Создание, редактирование и удаление проходят через Kotlin/Room: проверка ожидаемого списка, разрешённых изменений и актуальной смены, атомарная запись JSON и индексов. Обработчики обновляют экран только после подтверждения сохранения. Импорт v13 и откат сохранены. Проверка пароля остаётся в исходном обработчике; маркер шлюза не является самостоятельной нативной авторизацией. Завершение авторизации и нативного интерфейса сотрудников остаётся в 100 перед 109.
+Создание, редактирование и удаление проходят через Kotlin/Room: проверка ожидаемого списка, разрешённых изменений и актуальной смены, атомарная запись JSON и индексов. Обработчики обновляют экран только после подтверждения сохранения. Импорт v13 и откат сохранены. Проверка пароля остаётся в исходном обработчике; маркер шлюза не является самостоятельной нативной авторизацией. Нативные формы сотрудников реализованы в 100; независимая нативная авторизация остаётся обязательной границей перед удалением runtime в 109.
 
 Сохранены правила: можно снять права с последнего администратора; сохранение сотрудника не требует смены; удаление другого обычного сотрудника требует открытой смены и исходного пароля. Физическая приёмка ожидается. Следующий этап — 084, команды клиентов. См. [спецификацию 083](../specs/083-native-employee-commands/spec.md).
 
@@ -392,3 +392,9 @@ Actual reviewed source fixtures compare native commands and Room persistence: nu
 ## 099 — print job management
 
 Independent actual-source fixtures compare every copy/payload for manual/automatic receipt/kitchen/shift prints, category/role/strict boolean flags, kitchenPrinted truthiness, legacy defaults, fractional/negative/zero copies and missing items/printers. JS captures one immutable intent, retains async receipt/shift APIs, handles admission/timeout/failure without retry and supports rollback. JVM queue tests cover endpoint FIFO, parallel endpoints, maximum four workers, whole-batch overflow, close and non-poisoning failures. Room verifies admission and sending persistence before TCP, read-only authoritative paid receipts, outcome/recovery transitions, bounded compact history and injected admission/sending/final-write failures. A loopback TCP test verifies exact retained test-page bytes and closed-transport refusal. Physical LAN/format/copies remain pending. [099](../specs/099-native-print-jobs/spec.md).
+
+## 100 — settings and employee presentation
+
+Original mounted handlers retain employee role/delete authorization, current shifts and compatible Room commands; native fields/passwords never introduce a second verifier. Stale action tokens, detached/disabled buttons, duplicate taps, role visibility, result acknowledgement, cancellation, credential clearing and blocked recovery are verified. Settings cutover imports current snapshot once, preserves full compatible JSON, CAS-checks before disk commit and ignores old mirrors; source validation/defaults/extensions and test-print timing remain. v13 full application now waits for native settings restoration. Larger import and preferences commits remain separate boundaries. Company/delivery/discount handlers keep their existing asynchronous persistence semantics. Source checksums/refresh and runtime rollback remain verified. Native light/dark previews are synthetic; physical tests pending. See [100](../specs/100-native-settings-employees/spec.md).
+
+Verification 100: 453 JS tests and 379 JVM tests passed; 0 failed/skipped. Android lint: 0 errors / 15 existing warnings. No product APK assembled. Synthetic light/dark native previews inspected; physical tablet/printing acceptance pending.

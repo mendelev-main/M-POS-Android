@@ -153,4 +153,86 @@ class MPosSettingsStoreTest {
             } finally { release.countDown() }
         }
     }
+    @Test fun cutoverIgnoresOldMirrorAndImportsCurrentReviewedSnapshotOnlyOnce() {
+        val store = store()
+        store.handle(command("replacePlatformSettings", "old-mirror", settings("stale")))
+        assertTrue(reply().getBoolean("ok"))
+        store.handle(command("platformSettingsStatus", "before"))
+        assertFalse(reply().getBoolean("authoritative"))
+        store.handle(command("platformSettingsInitialize", "init", settings("reviewed")))
+        val initialized = reply()
+        assertTrue(initialized.getBoolean("authoritative"))
+        assertEquals("reviewed", initialized.getJSONObject("snapshot").getJSONObject("settings").getJSONArray("printers").getJSONObject(0).getString("name"))
+        assertEquals("1", preferences.getString("mpos_platform_settings_authority_v1", null))
+        store.handle(command("platformSettingsInitialize", "again", settings("stale-browser")))
+        assertEquals(initialized.getJSONObject("snapshot").toString(), reply().getJSONObject("snapshot").toString())
+        store().handle(command("platformSettingsRead", "reopen"))
+        assertEquals(initialized.getJSONObject("snapshot").toString(), reply().getJSONObject("snapshot").toString())
+    }
+
+    @Test fun legacyWritesClearAndReadsCannotOverwriteOrExposeOwnedSnapshot() {
+        val store = store()
+        store.handle(command("platformSettingsInitialize", "init", settings("owned"))); reply()
+        for (action in listOf("replacePlatformSettings", "clearPlatformSettings", "getPlatformSettings")) {
+            store.handle(command(action, action, settings("stale")))
+            val result = reply(); assertTrue(result.getBoolean("ok")); assertTrue(result.getBoolean("ignored"))
+            assertFalse(result.getBoolean("authoritative")); assertTrue(result.isNull("snapshot"))
+        }
+        store.handle(command("platformSettingsRead", "read"))
+        assertEquals(settings("owned").toString(), reply().getJSONObject("snapshot").getJSONObject("settings").toString())
+    }
+
+    @Test fun fullSnapshotCompareRejectsStaleStateAndPreservesExtensions() {
+        val store = store()
+        store.handle(command("platformSettingsInitialize", "init", settings("old"))); reply()
+        store.handle(command("platformSettingsWrite", "save", settings("new")).put("expected", settings("old")))
+        assertTrue(reply().getBoolean("ok"))
+        store.handle(command("platformSettingsWrite", "stale", settings("lost")).put("expected", settings("old")))
+        assertFalse(reply().getBoolean("ok"))
+        store.handle(command("platformSettingsRead", "read"))
+        assertEquals(settings("new").toString(), reply().getJSONObject("snapshot").getJSONObject("settings").toString())
+    }
+
+    @Test fun ownedCommandsRejectMissingAuthorityAndInvalidBothKeyPayloads() {
+        val store = store()
+        store.handle(command("platformSettingsRead", "read")); assertFalse(reply().getBoolean("ok"))
+        store.handle(command("platformSettingsInitialize", "bad", JSONObject().put("printers", JSONArray())))
+        assertFalse(reply().getBoolean("ok"))
+        assertNull(preferences.getString("mpos_platform_settings_authority_v1", null))
+        store.handle(command("platformSettingsInitialize", "good", settings("old"))); reply()
+        store.handle(command("platformSettingsWrite", "bad-next", JSONObject().put("printers", JSONArray())).put("expected", settings("old")))
+        assertFalse(reply().getBoolean("ok"))
+        store.handle(command("platformSettingsWrite", "no-expected", settings("new"))); assertFalse(reply().getBoolean("ok"))
+        store.handle(command("platformSettingsRead", "after"))
+        assertEquals(settings("old").toString(), reply().getJSONObject("snapshot").getJSONObject("settings").toString())
+    }
+
+    @Test fun uncertainDiskFailureBlocksOwnedReadsAndWritesEvenIfPreferenceMemoryChanged() {
+        store().handle(command("platformSettingsInitialize", "init", settings("old"))); reply()
+        val store = store(interceptedCommit { editor -> editor.commit(); false })
+        store.handle(command("platformSettingsWrite", "failed", settings("new")).put("expected", settings("old")))
+        val failed = reply(); assertFalse(failed.getBoolean("ok")); assertTrue(failed.getBoolean("uncertain"))
+        assertFalse(failed.toString().contains("preserved"))
+        for (action in listOf("platformSettingsRead", "platformSettingsStatus", "platformSettingsInitialize", "platformSettingsWrite")) {
+            store.handle(command(action, action, settings("later")).put("expected", settings("new")))
+            val result = reply(); assertFalse(result.getBoolean("ok")); assertTrue(result.getBoolean("uncertain"))
+        }
+    }
+
+    @Test fun ownedWriteAcknowledgementWaitsForAtomicSnapshotAndMarkerCommit() {
+        val started = CountDownLatch(1); val release = CountDownLatch(1)
+        val store = store(interceptedCommit { editor -> started.countDown(); check(release.await(5, TimeUnit.SECONDS)); editor.commit() })
+        try {
+            val value = settings("current")
+            store.handle(command("platformSettingsInitialize", "init", value))
+            assertTrue(started.await(5, TimeUnit.SECONDS)); assertTrue(replies.isEmpty())
+            assertNull(preferences.getString("mpos_platform_settings_authority_v1", null))
+            value.put("extension", "mutated")
+            release.countDown()
+            val result = reply(); assertTrue(result.getBoolean("ok")); assertTrue(result.getBoolean("authoritative"))
+            assertEquals("preserved", result.getJSONObject("snapshot").getJSONObject("settings").getString("extension"))
+            assertEquals("1", preferences.getString("mpos_platform_settings_authority_v1", null))
+        } finally { release.countDown() }
+    }
+
 }

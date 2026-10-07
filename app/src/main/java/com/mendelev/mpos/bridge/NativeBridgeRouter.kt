@@ -29,6 +29,7 @@ class NativeBridgeRouter(
                 "storage" -> storageMirror.handle(payload)
                 "paymentScreen" -> activity.handlePaymentScreen(payload)
                 "shiftScreen" -> activity.handleShiftScreen(payload)
+                "settingsScreen" -> activity.handleSettingsScreen(payload)
                 "network" -> networkTransport.handle(payload)
                 "diagnostics" -> if (payload.optString("action") == "export") activity.exportDiagnostics()
             }

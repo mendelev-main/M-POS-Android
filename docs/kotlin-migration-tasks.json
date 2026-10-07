@@ -652,9 +652,10 @@
     {
       "id": "100",
       "title": "Нативные настройки и управление сотрудниками",
-      "status": "planned",
+      "status": "done",
       "area": "UI",
-      "dependencies": "083,039"
+      "dependencies": "083,039",
+      "spec": "specs/100-native-settings-employees/spec.md"
     },
     {
       "id": "101",

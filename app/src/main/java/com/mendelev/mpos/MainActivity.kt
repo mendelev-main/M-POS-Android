@@ -37,6 +37,7 @@ import com.mendelev.mpos.shift.MPosCashMovementDialog
 import com.mendelev.mpos.shift.MPosShiftCloseDialog
 import com.mendelev.mpos.shift.MPosShiftOpenDialog
 import com.mendelev.mpos.settings.MPosSettingsStore
+import com.mendelev.mpos.settings.MPosSettingsScreenController
 import com.mendelev.mpos.telegram.TelegramClient
 import com.mendelev.mpos.web.LocalContentWebViewClient
 import kotlinx.coroutines.Dispatchers
@@ -56,6 +57,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var shiftOpenDialog: MPosShiftOpenDialog
     private lateinit var shiftCloseDialog: MPosShiftCloseDialog
     private lateinit var cashMovementDialog: MPosCashMovementDialog
+    private lateinit var settingsScreen: MPosSettingsScreenController
     private lateinit var shiftScreen: MPosShiftScreenController
     private lateinit var webView: WebView
     private lateinit var imageStore: ProductImageStore
@@ -148,6 +150,10 @@ class MainActivity : AppCompatActivity() {
         shiftScreen = MPosShiftScreenController(this, root, nativeStorageMirror::handle) { action ->
             callJavaScript("window.__mposShiftScreenAction&&window.__mposShiftScreenAction($action);")
         }
+        settingsScreen = MPosSettingsScreenController(this, root) { action ->
+            val serialized = com.mendelev.mpos.data.MPosBridgeJson.serialize(action)
+            callJavaScript("window.__nativeSettingsAction&&window.__nativeSettingsAction($serialized);")
+        }
         cashMovementDialog = MPosCashMovementDialog(this) { action ->
             callJavaScript("window.MPosCore&&window.MPosCore.NativeCashForms&&window.MPosCore.NativeCashForms.handleAction($action);")
         }
@@ -179,6 +185,7 @@ class MainActivity : AppCompatActivity() {
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                if (::settingsScreen.isInitialized && settingsScreen.consumeBack()) return
                 webView.evaluateJavascript(
                     "(()=>{if(window._pendingBackupImport){cancelBackupImport();return true}if(document.querySelector('.modal-overlay')){closeModal();return true}if(document.getElementById('warehouse-root')?.children.length){closeWarehousePage();return true}if(document.getElementById('receiving-page-root')?.children.length){finishReceivingPage();return true}return false})()"
                 ) { handled -> if (handled != "true") moveTaskToBack(true) }
@@ -202,6 +209,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        if (::settingsScreen.isInitialized) settingsScreen.dismiss()
         if (::cashInputDialog.isInitialized) cashInputDialog.dismiss()
         if (::splitCashDialog.isInitialized) splitCashDialog.dismiss()
         if (::cardConfirmationDialog.isInitialized) cardConfirmationDialog.dismiss()
@@ -266,6 +274,10 @@ class MainActivity : AppCompatActivity() {
         } else if (payload.optString("action").startsWith("cash")) {
             if (::splitCashDialog.isInitialized) splitCashDialog.handle(payload)
         } else if (::cardConfirmationDialog.isInitialized) cardConfirmationDialog.handle(payload)
+    }
+
+    fun handleSettingsScreen(payload: JSONObject) = runOnUiThread {
+        if (::settingsScreen.isInitialized) settingsScreen.handle(payload)
     }
 
     fun handleShiftScreen(payload: JSONObject) = runOnUiThread {
