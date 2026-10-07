@@ -39,10 +39,10 @@ class MPosNativeTheme(private val context: Context, val dark: Boolean) {
         view.setTextColor(if (secondary) muted else ink)
         view.setLineSpacing(dp(3).toFloat(), 1f)
     }
-    fun button(view: Button, primary: Boolean = false, destructive: Boolean = false) {
-        text(view, 15f, 600); view.isAllCaps = false; view.minHeight = dp(48); view.minimumHeight = dp(48)
+    fun button(view: Button, primary: Boolean = false, destructive: Boolean = false, selected: Boolean = false) {
+        text(view, 15f, 600); view.isSelected = selected; view.isAllCaps = false; view.minHeight = dp(48); view.minimumHeight = dp(48)
         view.minWidth = 0; view.minimumWidth = 0; view.backgroundTintList = null
-        val fill = if (primary) accent else if (destructive) dangerSoft else surface
+        val fill = if (primary) accent else if (destructive) dangerSoft else if (selected) soft else surface
         val normal = shape(fill, 12, !primary)
         val states = StateListDrawable().apply {
             addState(intArrayOf(-android.R.attr.state_enabled), shape(bg, 12, true))
@@ -50,7 +50,7 @@ class MPosNativeTheme(private val context: Context, val dark: Boolean) {
             addState(intArrayOf(), RippleDrawable(ColorStateList.valueOf(0x201B1F2A), normal, shape(0xFFFFFFFF.toInt())))
         }
         view.background = states
-        view.setTextColor(ColorStateList(arrayOf(intArrayOf(-android.R.attr.state_enabled), intArrayOf()), intArrayOf(muted, if (primary) accentInk else if (destructive) danger else ink)))
+        view.setTextColor(ColorStateList(arrayOf(intArrayOf(-android.R.attr.state_enabled), intArrayOf()), intArrayOf(muted, if (primary) accentInk else if (destructive) danger else if (selected) accent else ink)))
         view.setPadding(dp(16), dp(12), dp(16), dp(12))
     }
     fun dialog(view: AlertDialog) {

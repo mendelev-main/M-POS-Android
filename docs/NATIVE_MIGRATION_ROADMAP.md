@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **100/110 выполнено (90,91%)**
-после 101. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **101/110 выполнено (91,82%)**
+после 102. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -591,3 +591,7 @@ Native hubs/forms use shared Manrope palettes and compact wrapping actions. Prin
 Native Kotlin tiles, source grid coordinates/spans, toolbar, folder browsing and cart/total/actions use shared palettes/Manrope. Reviewed mounted targets and known handlers retain native business command ownership; old/detached/disabled/forged callbacks cannot alter a new context. Matching native quote updates replace presentation without redoing money formulas; catalogue/cart scroll is retained where context matches. Layout drag/edit and configuration/customer/modifier/manual-price/payment/parked modal boundaries explicitly keep reviewed presentation and hide the overlay. Removal keeps cart-line identity. These residual presentation/DOM/auth boundaries must be resolved before 109; no measured speed/physical acceptance claim. Next 102 product/recipe/modifier editor. [101](../specs/101-native-workspace/spec.md).
 
 101 verification: 463 JS / 384 full JVM passed; final workspace checks 5/5 after recovery-caption adjustment. Lint 0 errors / 15 existing warnings. No product APK assembled; physical acceptance pending.
+
+## 102 — native product, recipe and modifier editor
+
+Kotlin expanded editor/contextual forms cover all reviewed sections and mounted actions. Stable node identities, whole-draft assignment before events, native patches retaining focus/cursor/scroll, live search and sampled cancellable photo previews preserve editor interaction. Existing native 080/081 validation is retained. Dirty-exit saving locks follow modal replacement and propagate recovery feedback. Shared selected-section styling and both palettes match POS. Reviewed units/configuration/auth/delete/saveKey/photo runtime remains explicit compatibility until 109; no measured performance or physical-acceptance claim. Next 103: main payment surface. [102](../specs/102-native-product-editor/spec.md).

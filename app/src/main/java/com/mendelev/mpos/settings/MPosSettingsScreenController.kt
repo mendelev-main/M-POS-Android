@@ -3,6 +3,9 @@ package com.mendelev.mpos.settings
 import android.app.AlertDialog
 import android.content.Context
 import android.text.InputType
+import android.text.Editable
+import android.text.TextWatcher
+import com.mendelev.mpos.product.MPosProductPreviewLoader
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -24,10 +27,18 @@ class MPosSettingsScreenController(
     private var dialog: AlertDialog? = null
     private var token = ""
     private var busy = false
+    private var externalBusy = false
     private var blocked = false
     private var form = false
     private var updating = false
     private var error: TextView? = null
+    private var content: LinearLayout? = null
+    private var formScroll: ScrollView? = null
+    private var reuseFields: Map<String, View> = emptyMap()
+    private val dirtyFields = mutableSetOf<String>()
+    private val previewLoader = MPosProductPreviewLoader(context)
+    private var imageSource: String? = null
+    private var imageView: ImageView? = null
     private val controls = mutableListOf<View>()
     private val immutableControls = mutableSetOf<View>()
     private val fields = linkedMapOf<String, View>()
@@ -39,6 +50,7 @@ class MPosSettingsScreenController(
         when (payload.optString("action")) {
             "show", "formShow" -> show(payload)
             "hide", "formHide" -> if (payload.optString("token") == token) dismiss()
+            "formPatch" -> if (payload.optString("token") == token && form && !busy) patch(payload)
             "formUpdate" -> if (payload.optString("token") == token) update(payload.optJSONArray("fields"))
             "formResult" -> if (payload.optString("token") == token) {
                 busy = false; blocked = payload.optBoolean("blocked")
@@ -59,15 +71,18 @@ class MPosSettingsScreenController(
         if (next.isBlank()) return
         val nativeForm = payload.optString("action") == "formShow"
         val bounds = if (!nativeForm) MPosShiftScreenController.bounds(payload, host.width, host.height) ?: return else null
-        dismiss(); token = next; form = nativeForm
+        dismiss(); token = next; form = nativeForm; externalBusy = payload.optBoolean("pending")
         theme = MPosNativeTheme(context, payload.optString("theme") == "dark")
-        val content = column(24)
+        updating = true
+        val content = column(24); this.content = content
         content.setBackgroundColor(if (form) theme.surface else theme.bg)
         render(payload.optJSONArray("items") ?: JSONArray(), content)
+        updating = false
         if (form) {
             error = TextView(theme.uiContext).apply { theme.text(this, 14f); setTextColor(theme.danger) }
             content.addView(error, params())
             val scroll = MPosSettingsScrollView(theme.uiContext, (context.resources.displayMetrics.heightPixels * .85).toInt() - theme.dp(80)).apply { isFillViewport = false; addView(content) }
+            formScroll = scroll
             // Custom action buttons above retain reviewed labels and primary/danger hierarchy.
             val current = AlertDialog.Builder(theme.uiContext).setView(scroll).setNegativeButton(payload.optString("cancelLabel", "Отмена"), null).create()
             dialog = current
@@ -79,7 +94,7 @@ class MPosSettingsScreenController(
             current.window?.setBackgroundDrawable(theme.shape(theme.surface, 22, true))
             current.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             val metrics = context.resources.displayMetrics
-            current.window?.setLayout(minOf(metrics.widthPixels - theme.dp(32), theme.dp(640)),
+            current.window?.setLayout(minOf(metrics.widthPixels - theme.dp(32), theme.dp(if (payload.optBoolean("expanded")) 1120 else 640)),
                 ViewGroup.LayoutParams.WRAP_CONTENT)
             theme.button(current.getButton(AlertDialog.BUTTON_NEGATIVE))
             updateControls()
@@ -111,15 +126,38 @@ class MPosSettingsScreenController(
                     val key = item.optString("key")
                     val button = Button(theme.uiContext).apply {
                         text = item.optString("label"); contentDescription = text
-                        theme.button(this, item.optBoolean("primary"), item.optBoolean("danger"))
+                        theme.button(this, item.optBoolean("primary"), item.optBoolean("danger"), item.optBoolean("selected"))
                         isEnabled = !item.optBoolean("disabled")
-                        setOnClickListener { if (!busy && !blocked) submit(key) }
+                        setOnClickListener { if (!busy && !externalBusy && !blocked) submit(key) }
                     }
                     if (item.optBoolean("disabled")) immutableControls += button
                     controls += button
                     val row = (if (parent.isNotEmpty()) parent.getChildAt(parent.childCount - 1) else null) as? MPosSettingsActionRow
                         ?: MPosSettingsActionRow(theme.uiContext, theme.dp(8)).also { parent.addView(it, params()) }
                     row.addView(button)
+                }
+                "metric" -> {
+                    val row = LinearLayout(theme.uiContext).apply { orientation = LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER_VERTICAL }
+                    row.addView(TextView(theme.uiContext).apply { text = item.optString("label"); theme.text(this, 14f, 400, true) }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+                    row.addView(TextView(theme.uiContext).apply { text = item.optString("value"); theme.text(this, if (item.optBoolean("primary")) 24f else 16f, 700); gravity = android.view.Gravity.END }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+                    parent.addView(row, params())
+                }
+                "image" -> {
+                    val source = item.optString("source")
+                    val preview = if (source == imageSource && imageView != null) requireNotNull(imageView).also {
+                        (it.parent as? ViewGroup)?.removeView(it)
+                    } else ImageView(theme.uiContext).apply {
+                        contentDescription = item.optString("label"); scaleType = ImageView.ScaleType.FIT_CENTER
+                        imageSource = source; imageView = this
+                        previewLoader.load(source) { bitmap ->
+                            if (imageView === this && imageSource == source) {
+                                setImageBitmap(bitmap)
+                                if (bitmap == null) visibility = View.GONE
+                            }
+                        }
+                    }
+                    parent.addView(preview, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, theme.dp(160)))
+                    if (source.isBlank()) parent.addView(TextView(theme.uiContext).apply { text = item.optString("label"); theme.text(this, 14f, 400, true) }, params())
                 }
                 "field" -> addField(item, parent)
             }
@@ -130,7 +168,15 @@ class MPosSettingsScreenController(
         val row = column().apply { visibility = if (item.optBoolean("visible", true)) View.VISIBLE else View.GONE }
         val label = TextView(theme.uiContext).apply { text = item.optString("label"); theme.text(this, 14f, 600) }
         row.addView(label, params()); fieldLabels[key] = label
-        val field: View = when (item.optString("type")) {
+        val old = reuseFields[key]
+        val field: View = if (old is EditText && item.optString("type") !in setOf("checkbox", "select")) {
+            (old.parent as? ViewGroup)?.removeView(old)
+            if (key !in dirtyFields && old.text.toString() != item.optString("value")) old.setText(item.optString("value"))
+            val desired = inputType(item.optString("type"))
+            if (old.inputType != desired) old.inputType = desired
+            old.hint = item.optString("hint")
+            old
+        } else when (item.optString("type")) {
             "checkbox" -> CheckBox(theme.uiContext).apply {
                 theme.text(this); buttonTintList = android.content.res.ColorStateList.valueOf(theme.accent)
                 text = item.optString("label"); minHeight = theme.dp(48)
@@ -162,8 +208,29 @@ class MPosSettingsScreenController(
                 theme.text(this); minHeight = theme.dp(52); background = theme.shape(theme.bg, 12, true)
                 setPadding(theme.dp(16), theme.dp(12), theme.dp(16), theme.dp(12))
                 inputType = inputType(item.optString("type")); hint = item.optString("hint")
+                if (item.optInt("maxLength") > 0) filters = arrayOf(android.text.InputFilter.LengthFilter(item.getInt("maxLength")))
                 setText(item.optString("value")); setHintTextColor(theme.muted)
                 if (item.optString("type") == "multiline") minLines = 3
+                if (item.optBoolean("live")) {
+                    val input = this
+                    var pending: Runnable? = null
+                    addTextChangedListener(object : TextWatcher {
+                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+                        override fun afterTextChanged(s: Editable?) {
+                            if (updating || busy || externalBusy || blocked) return
+                            dirtyFields += key
+                            pending?.let { input.removeCallbacks(it) }
+                            // Keep intermediate decimal input until the number is complete or the next gesture flushes it.
+                            val draft = s?.toString().orEmpty()
+                            if ((input.inputType and InputType.TYPE_MASK_CLASS) == InputType.TYPE_CLASS_NUMBER &&
+                                (draft.isBlank() || draft == "-" || draft.endsWith(".") || draft.endsWith(","))) return
+                            val epoch = token
+                            pending = Runnable { if (token == epoch && fields[key] === input) changed() }
+                            input.postDelayed(requireNotNull(pending), 180)
+                        }
+                    })
+                }
                 // Prevent keyboard learning/autofill of credentials; these never enter preferences/logs.
                 importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
                 if (item.optString("type") == "password") imeOptions = imeOptions or android.view.inputmethod.EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING
@@ -195,11 +262,31 @@ class MPosSettingsScreenController(
         }
     }
     private fun changed() {
-        if (!updating && !busy && !blocked && token.isNotBlank()) action(JSONObject().put("action", "change").put("token", token).put("fields", values()))
+        if (!updating && !busy && !externalBusy && !blocked && token.isNotBlank()) { dirtyFields.clear(); action(JSONObject().put("action", "change").put("token", token).put("fields", values())) }
     }
     private fun submit(key: String) {
-        busy = true; error?.text = "Выполнение…"; error?.setTextColor(theme.muted); updateControls()
+        dirtyFields.clear(); busy = true; error?.text = "Выполнение…"; error?.setTextColor(theme.muted); updateControls()
         action(JSONObject().put("action", "click").put("token", token).put("key", key).put("fields", values()))
+    }
+    private fun patch(payload: JSONObject) {
+        val root = content ?: return
+        externalBusy = payload.optBoolean("pending")
+        val focused = fields.entries.firstOrNull { it.value.hasFocus() }
+        val selection = (focused?.value as? EditText)?.selectionStart ?: 0
+        val scrollY = formScroll?.scrollY ?: 0
+        updating = true
+        try {
+            reuseFields = fields.toMap()
+            root.removeAllViews(); fields.clear(); fieldRows.clear(); fieldLabels.clear(); controls.clear(); immutableControls.clear()
+            render(payload.optJSONArray("items") ?: JSONArray(), root)
+            // Removed credentials/drafts cannot remain addressable by an old callback.
+            reuseFields.filterKeys { it !in fields }.values.filterIsInstance<EditText>().forEach { it.setText("") }
+            dirtyFields.retainAll(fields.keys)
+            error?.let { (it.parent as? ViewGroup)?.removeView(it); root.addView(it, params()) }
+            focused?.key?.let { fields[it] }?.let { view -> view.requestFocus(); if (view is EditText) view.setSelection(selection.coerceIn(0, view.length())) }
+            formScroll?.post { formScroll?.scrollTo(0, scrollY) }
+        } finally { reuseFields = emptyMap(); updating = false }
+        updateControls()
     }
     private fun update(items: JSONArray?) {
         updating = true
@@ -219,12 +306,12 @@ class MPosSettingsScreenController(
         } finally { updating = false }
     }
     private fun updateControls() {
-        controls.forEach { it.isEnabled = !busy && !blocked && it !in immutableControls }
-        dialog?.let { it.setCancelable(!busy); it.setCanceledOnTouchOutside(false); it.getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled = !busy }
+        controls.forEach { it.isEnabled = !busy && !externalBusy && !blocked && it !in immutableControls }
+        dialog?.let { it.setCancelable(!busy && !externalBusy); it.setCanceledOnTouchOutside(false); it.getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled = !busy && !externalBusy }
     }
     private fun cancel() {
-        if (busy) return
-        val old = token; dismiss(); action(JSONObject().put("action", "cancel").put("token", old))
+        if (busy || externalBusy) return
+        val old = token; val draft = values(); dismiss(); action(JSONObject().put("action", "cancel").put("token", old).put("fields", draft))
     }
     fun consumeBack(): Boolean { if (!form || dialog == null) return false; cancel(); return true }
     fun dismiss() {
@@ -234,7 +321,9 @@ class MPosSettingsScreenController(
         dialog?.setOnCancelListener(null); dialog?.dismiss(); dialog = null
         overlay.visibility = View.GONE; overlay.removeAllViews()
         fields.clear(); controls.clear(); immutableControls.clear(); fieldRows.clear(); fieldLabels.clear(); error = null
-        token = ""; busy = false; blocked = false; form = false; updating = false
+        previewLoader.clear(); imageSource = null; imageView = null
+        content = null; formScroll = null; reuseFields = emptyMap(); dirtyFields.clear()
+        token = ""; busy = false; externalBusy = false; blocked = false; form = false; updating = false
     }
 }
 
