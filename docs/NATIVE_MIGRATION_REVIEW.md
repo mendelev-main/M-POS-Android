@@ -1,5 +1,8 @@
 # Native migration review
 
+> Детализация 109 (07.10.2026): **5/20 — 25,00%**, осталось 15. Общий детальный план: **112/129 — 86,82%**, осталось 17. Крупные этапы: **107/110 — 97,27%**. [Подэтапы, критерии и правила подсчёта](../specs/109-native-runtime/tasks.md). Проценты относятся к количеству задач; физическая приёмка 110 ещё не выполнена.
+
+
 ## Current runtime increment (109, 7 October 2026)
 
 The authoritative current scope is specs/109-native-runtime/spec.md and

@@ -41,16 +41,7 @@ The production session read now uses MPosSessionRestoreRepository: it checks exi
 
 ## Internal checklist (does not add engineering task IDs)
 
-- [x] Transactional read-only document snapshot and concurrent consistency test.
-- [x] Production current-order field projection from owned Room data, with reviewed rollback.
-- [x] Native workspace category/folder/Back/edit transition decisions.
-- [x] Native opening-form administrator verification, live employee selection and transactional shift creation.
-- [ ] Native session/shift selection, remaining navigation and complete bootstrap state orchestration.
-- [ ] Domain read models replacing DOM screen extraction.
-- [ ] Direct native command dispatch replacing mounted JS handlers.
-- [ ] Post-commit and recovery orchestration without JS lifecycle.
-- [ ] Remaining settings/authentication/import lifecycle.
-- [ ] Remove WebView and legacy bridges after parity verification.
+Detailed stable checklist: [109.01–109.20](tasks.md). Completed **5/20 (25.00%)**, remaining 15. Expanded whole-program progress **112/129 (86.82%)**; milestone progress **107/110 (97.27%)**. Parent 109 remains in progress until all children pass their acceptance criteria.
 
 ## Verification of production session increment
 

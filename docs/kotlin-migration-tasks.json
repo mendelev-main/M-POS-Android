@@ -728,7 +728,229 @@
       "area": "UI/architecture",
       "dependencies": "100,101,102,103,104,105,106,107,108",
       "spec": "specs/109-native-runtime/spec.md",
-      "summary": "In progress: Room snapshot, order restore, workspace routes, paired shift/employee bootstrap and native opening authentication/transaction. DOM models, direct remaining dispatch, full root/recovery/effects lifecycle and WebView removal pending."
+      "summary": "In progress: Room snapshot, order restore, workspace routes, paired shift/employee bootstrap and native opening authentication/transaction. DOM models, direct remaining dispatch, full root/recovery/effects lifecycle and WebView removal pending.",
+      "subtasks": [
+        {
+          "id": "109.01",
+          "title": "Согласованный snapshot Room",
+          "status": "done",
+          "dependencies": [],
+          "acceptance": "Чтение связанных документов согласовано при конкурентной записи.",
+          "evidence": [
+            "app/src/main/java/com/mendelev/mpos/data/MPosRuntimeSnapshot.kt",
+            "specs/109-native-runtime/spec.md"
+          ]
+        },
+        {
+          "id": "109.02",
+          "title": "Восстановление текущего заказа",
+          "status": "done",
+          "dependencies": [
+            "109.01"
+          ],
+          "acceptance": "Проекция заказа из Room; совместимый split validator и rollback сохранены.",
+          "evidence": [
+            "app/src/main/java/com/mendelev/mpos/data/MPosSessionRestoreEngine.kt",
+            "specs/109-native-runtime/spec.md"
+          ]
+        },
+        {
+          "id": "109.03",
+          "title": "Маршруты категории, папки, Back и edit",
+          "status": "done",
+          "dependencies": [
+            "109.01"
+          ],
+          "acceptance": "Решения переходов выполняет Kotlin с FIFO и stale guards; поиск и tabs входят в 08.",
+          "evidence": [
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceRouteEngine.kt",
+            "specs/109-native-runtime/spec.md"
+          ]
+        },
+        {
+          "id": "109.04",
+          "title": "Совместная загрузка смен и сотрудников",
+          "status": "done",
+          "dependencies": [
+            "109.01"
+          ],
+          "acceptance": "Парная загрузка и нормализация из Room; полная корневая сессия входит в 06.",
+          "evidence": [
+            "app/src/main/java/com/mendelev/mpos/data/MPosActiveSessionEngine.kt",
+            "specs/109-native-runtime/spec.md"
+          ]
+        },
+        {
+          "id": "109.05",
+          "title": "Авторизация и команда открытия смены",
+          "status": "done",
+          "dependencies": [
+            "109.04"
+          ],
+          "acceptance": "Пароль проверяется нативно, live employee и запись смены защищены транзакцией; JS post-commit входит в 17.",
+          "evidence": [
+            "app/src/main/java/com/mendelev/mpos/data/MPosShiftOpenCommand.kt",
+            "specs/109-native-runtime/spec.md"
+          ]
+        },
+        {
+          "id": "109.06",
+          "title": "Корневая сессия и bootstrap",
+          "status": "planned",
+          "dependencies": [
+            "109.02",
+            "109.04",
+            "109.05"
+          ],
+          "acceptance": "Kotlin владеет currentShift, выбранным сотрудником и порядком старта; restart/import не оставляют устаревшее состояние."
+        },
+        {
+          "id": "109.07",
+          "title": "Оставшаяся авторизация и права",
+          "status": "planned",
+          "dependencies": [
+            "109.06"
+          ],
+          "acceptance": "Edit/delete/settings и смена ролей проверяют актуальные права нативно без JS authority; пароль не попадает в bridge или журнал."
+        },
+        {
+          "id": "109.08",
+          "title": "Навигация разделов и состояние workspace",
+          "status": "planned",
+          "dependencies": [
+            "109.03",
+            "109.06"
+          ],
+          "acceptance": "Tabs, поиск, выбор и Back работают из нативного состояния без DOM route targets."
+        },
+        {
+          "id": "109.09",
+          "title": "Каталог, корзина и редактор товара",
+          "status": "planned",
+          "dependencies": [
+            "109.07",
+            "109.08"
+          ],
+          "acceptance": "Read models, черновики и все действия workspace/product editor обходятся без HTML extraction и mounted JS handlers."
+        },
+        {
+          "id": "109.10",
+          "title": "Оплата и split",
+          "status": "planned",
+          "dependencies": [
+            "109.09"
+          ],
+          "acceptance": "Нативные модели и direct commands для наличных/карты/split/скидок/подарков/доставки сохраняют суммы, busy/ack и локальный commit."
+        },
+        {
+          "id": "109.11",
+          "title": "Чеки и возвраты",
+          "status": "planned",
+          "dependencies": [
+            "109.07",
+            "109.10"
+          ],
+          "acceptance": "История, детали и возвраты используют репозитории и нативные команды; повтор не создаёт второй возврат."
+        },
+        {
+          "id": "109.12",
+          "title": "Смены и сотрудники",
+          "status": "planned",
+          "dependencies": [
+            "109.05",
+            "109.07"
+          ],
+          "acceptance": "Выбор, редактирование, закрытие смен и сотрудники работают без DOM models/JS handlers с действующими правами."
+        },
+        {
+          "id": "109.13",
+          "title": "Клиенты, лояльность и отложенные заказы",
+          "status": "planned",
+          "dependencies": [
+            "109.09",
+            "109.10"
+          ],
+          "acceptance": "Модели и пользовательские команды полностью нативные; восстановление/выбор не теряют связь клиента и заказа."
+        },
+        {
+          "id": "109.14",
+          "title": "Склад, аналитика и зал",
+          "status": "planned",
+          "dependencies": [
+            "109.07",
+            "109.08"
+          ],
+          "acceptance": "Все модели, фильтры, черновики и команды этих разделов работают без скрытого DOM; складские транзакции и брони сохраняют parity."
+        },
+        {
+          "id": "109.15",
+          "title": "Журнал и восстановление критических операций",
+          "status": "planned",
+          "dependencies": [
+            "109.10",
+            "109.11",
+            "109.12",
+            "109.13",
+            "109.14"
+          ],
+          "acceptance": "Нативный replay/bootstrap сохраняет paid parts и split drafts; force-stop и неопределённый исход не дублируют чек/списание."
+        },
+        {
+          "id": "109.16",
+          "title": "Печать после commit",
+          "status": "planned",
+          "dependencies": [
+            "109.15"
+          ],
+          "acceptance": "Нативная orchestration запускает печать после сохранения, обрабатывает отказ и явную допечатку; автоматической допечатки нет."
+        },
+        {
+          "id": "109.17",
+          "title": "WEB, availability, лояльность и уведомления",
+          "status": "planned",
+          "dependencies": [
+            "109.15"
+          ],
+          "acceptance": "Нативный lifecycle для WEB ACK/readiness, loyalty, Telegram/monthly; availability после ошибки повторяется только при следующей сохранённой оплате."
+        },
+        {
+          "id": "109.18",
+          "title": "Настройки, backup/import/export и lifecycle",
+          "status": "planned",
+          "dependencies": [
+            "109.06",
+            "109.07",
+            "109.15"
+          ],
+          "acceptance": "Нативное подтверждение/применение v13, credentials и настроек; отказ/отмена/ошибка не меняют данные, restart/import обновляют сессию."
+        },
+        {
+          "id": "109.19",
+          "title": "Удаление активного WebView и legacy bridges",
+          "status": "planned",
+          "dependencies": [
+            "109.09",
+            "109.10",
+            "109.11",
+            "109.12",
+            "109.13",
+            "109.14",
+            "109.16",
+            "109.17",
+            "109.18"
+          ],
+          "acceptance": "Удалены runtime WebView/JavascriptInterface/DOM adapters и ненужные production ресурсы после parity всех перенесённых границ."
+        },
+        {
+          "id": "109.20",
+          "title": "Итоговая автоматическая проверка 109",
+          "status": "planned",
+          "dependencies": [
+            "109.19"
+          ],
+          "acceptance": "Полный reference/JVM/lint и проверка production зависимостей подтверждают запуск и все сценарии без WebView; pending физические кейсы переданы в 110."
+        }
+      ]
     },
     {
       "id": "110",
@@ -744,5 +966,6 @@
       "area": "P5",
       "dependencies": "032"
     }
-  ]
+  ],
+  "subtaskCounting": "Nested tasks count separately. Expanded progress replaces a decomposed parent with its non-superseded children; do not count parent twice. Counts are unweighted, not effort or native code coverage."
 }

@@ -1,5 +1,8 @@
 # Native tablet acceptance evidence
 
+> Детализация 109 (07.10.2026): **5/20 — 25,00%**, осталось 15. Общий детальный план: **112/129 — 86,82%**, осталось 17. Крупные этапы: **107/110 — 97,27%**. [Подэтапы, критерии и правила подсчёта](../specs/109-native-runtime/tasks.md). Проценты относятся к количеству задач; физическая приёмка 110 ещё не выполнена.
+
+
 The user defers comprehensive physical testing until the end (2026-10-06). Specs 040–048 already enable products/layout/posNavigation/employees/shifts/orders/parked/currentOrderSession/criticalStorageJournal Room authority after automated checks; settings/SSE remain mirrors by implementation. Record the APK commit, tablet model, Android version, scenario, expected/actual result and pass/fail. The complete [Russian status report and user checklist](MIGRATION_STATUS_RU.md) includes current scope and metrics. Use synthetic data on a test tablet. Do not commit backup documents, tokens, device keys, photos or production records as evidence.
 
 ## P2 catalog and recovery
