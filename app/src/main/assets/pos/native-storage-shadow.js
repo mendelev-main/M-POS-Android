@@ -140,6 +140,10 @@
   mposCore.WebJournal=Object.freeze({
     async execute(input){return requireNative(await request('webJournalCommand',{payload:JSON.stringify(input)}),true);}
   });
+  mposCore.AvailabilityGate=Object.freeze({
+    async prepare(input){return requireNative(await request('availabilityPrepare',{payload:JSON.stringify(input)}),true);},
+    async consume(input){return requireNative(await request('availabilityConsume',{payload:JSON.stringify(input)}),true);}
+  });
   mposCore.LoyaltyJournal=Object.freeze({
     async execute(input){return requireNative(await request('loyaltyJournal',{payload:JSON.stringify(input)}),true);}
   });

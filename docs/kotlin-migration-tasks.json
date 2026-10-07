@@ -572,9 +572,10 @@
     {
       "id": "090",
       "title": "Публикация доступности в Kotlin: только после оплаты",
-      "status": "planned",
+      "status": "done",
       "area": "P3/P4",
-      "dependencies": "033"
+      "dependencies": "033",
+      "spec": "specs/090-native-payment-availability/spec.md"
     },
     {
       "id": "091",

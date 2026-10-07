@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **88/110 выполнено (80,00%)**
-после 089. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **89/110 выполнено (80,91%)**
+после 090. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -532,3 +532,7 @@ Configured WEB EventSource now uses Kotlin framing, reconnect, IDs/retry, cancel
 ## 089 — manual catalogue/media transport
 
 Kotlin owns exact configured menu/media HTTP routes, unchanged JSON bytes, status/strict parsing, cancellation and bounded no-retry transport. Reviewed payload/business/UI and local-image update conditions remain. Next 090: availability publication and durable payment-only gate; reconcile older 033 ordinary-success triggers with current AGENTS 7. See [089](../specs/089-native-catalog-transport/spec.md).
+
+## 090 — native availability, durable payment gate
+
+Native Room catalogue calculations and one-use per-receipt permit precede OkHttp publication. Current AGENTS 7 replaces historical 033 ordinary-success stock/manual triggers; only post-commit payments publish, with no restart/online/foreground replay. Internal revision/ticket metadata remains outside v13, compatible revision is retained. Next 091: suppliers business commands and local storage. See [090](../specs/090-native-payment-availability/spec.md).

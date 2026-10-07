@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import okhttp3.Call
 import okhttp3.OkHttpClient
@@ -18,8 +19,11 @@ class MPosNetworkTransport(
     private val scope: LifecycleCoroutineScope,
     private val onResult: (JSONObject) -> Unit,
     private val onEvent: (JSONObject) -> Unit,
+    private val database: com.mendelev.mpos.data.MPosDatabase,
 ) {
     private val webSse = MPosWebSse(scope, onEvent)
+    private val availability = MPosAvailabilityHttp()
+    private val availabilityJobs = java.util.concurrent.ConcurrentHashMap<String, Job>()
     private val catalog = MPosCatalogHttp()
     private val webAcks = MPosWebAckHttp()
     private val loyaltyProfiles = MPosLoyaltyProfileHttp()
@@ -41,6 +45,8 @@ class MPosNetworkTransport(
             "startWebSse" -> webSse.start(payload)
             "stopWebSse" -> webSse.stop(payload.optString("sessionId"))
             "webSseAck" -> webSse.acknowledge(payload.optString("sessionId"), payload.optLong("sequence"))
+            "availabilityPublish" -> availabilityPublish(requestId,payload)
+            "availabilityCancel" -> { availabilityJobs.remove(requestId)?.cancel(); profileCalls.remove(requestId)?.cancel() }
             "catalogExchange" -> catalogExchange(requestId,payload)
             "catalogCancel" -> profileCalls.remove(requestId)?.cancel()
             "webAck" -> webAck(requestId,payload)
@@ -57,6 +63,22 @@ class MPosNetworkTransport(
     }
 
     private fun status(requestId:String)=JSONObject().put("requestId",requestId).put("ok",true).put("transport","okhttp").put("authoritative",false).put("sseEnabled",shadowJob?.isActive==true).put("businessHandlers","legacy").put("connected",shadowConnected).put("events",shadowEvents).put("reconnects",reconnects).put("lastEventHash",lastEventHash)
+
+    private fun availabilityPublish(requestId:String,payload:JSONObject) {
+        val job=scope.launch(Dispatchers.IO,start=kotlinx.coroutines.CoroutineStart.LAZY) {
+            var call:Call?=null
+            try {
+                val ticket=com.mendelev.mpos.data.MPosAvailabilityJournal(database).consume(payload.getString("token"),payload.getJSONObject("body"))
+                kotlinx.coroutines.currentCoroutineContext().ensureActive()
+                call=availability.client.newCall(availability.request(ticket));profileCalls.put(requestId,call)?.cancel()
+                kotlinx.coroutines.currentCoroutineContext().ensureActive()
+                call.execute().use{onResult(JSONObject().put("requestId",requestId).put("ok",true).put("authoritative",true).put("sent",it.isSuccessful))}
+            } catch(error:kotlinx.coroutines.CancellationException){throw error}
+            catch(_:Exception){onResult(JSONObject().put("requestId",requestId).put("ok",false).put("message","Не удалось отправить остатки"))}
+            finally{call?.cancel();call?.let{profileCalls.remove(requestId,it)}}
+        }
+        availabilityJobs.put(requestId,job)?.cancel();job.invokeOnCompletion{availabilityJobs.remove(requestId,job)};job.start()
+    }
 
     private fun catalogExchange(requestId: String, payload: JSONObject) {
         val call = try { (if (payload.optString("kind") == "media") catalog.mediaClient else catalog.menuClient).newCall(catalog.request(payload)) }
@@ -143,9 +165,9 @@ class MPosNetworkTransport(
     }
     private fun emitState(state:String)=onEvent(JSONObject().put("type","shadow-state").put("state",state).put("authoritative",false).put("reconnects",reconnects))
     private fun stopShadowSse(clearRequest:Boolean){ shadowJob?.cancel(); shadowJob=null; shadowCall?.cancel(); shadowCall=null; shadowConnected=false; if(clearRequest){shadowRequested=false;shadowBackendUrl="";shadowDeviceKey=""} }
-    fun onBackground(){ webSse.background(); if(shadowRequested){ stopShadowSse(false); emitState("background-paused") } }
+    fun onBackground(){ availabilityJobs.values.forEach { it.cancel() }; webSse.background(); if(shadowRequested){ stopShadowSse(false); emitState("background-paused") } }
     fun onForeground(){ webSse.foreground(); if(shadowRequested && shadowJob?.isActive!=true && validBackend(shadowBackendUrl,shadowDeviceKey)){ startShadowSse("",JSONObject().put("backendUrl",shadowBackendUrl).put("deviceKey",shadowDeviceKey),false); emitState("foreground-resumed") } }
-    fun close(){ webSse.stop(); stopShadowSse(true); profileCalls.values.forEach { it.cancel() }; profileCalls.clear() }
+    fun close(){ availabilityJobs.values.forEach { it.cancel() }; availabilityJobs.clear(); webSse.stop(); stopShadowSse(true); profileCalls.values.forEach { it.cancel() }; profileCalls.clear() }
     private fun validBackend(url:String,key:String)=url.startsWith("https://")&&key.isNotBlank()
     private fun eventsUrl(url:String,key:String)=url+"/api/orders/events?deviceKey="+URLEncoder.encode(key,"UTF-8")
     private fun sha256(value:String)=MessageDigest.getInstance("SHA-256").digest(value.toByteArray(Charsets.UTF_8)).joinToString(""){"%02x".format(it)}

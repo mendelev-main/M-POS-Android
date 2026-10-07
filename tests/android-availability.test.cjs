@@ -13,7 +13,9 @@ function host({settings=new Map(),fetchResult=async()=>({ok:true})}={}){
  const context={
   document:{hidden:false,addEventListener(name,callback){(listeners[name]??=[]).push(callback);}},
   localStorage:{getItem:key=>settings.get(key)??null,setItem:(key,value)=>settings.set(key,value)},
-  state:{loaded:true},storageBroken:false,availableStock:p=>p.stock,
+  state:{loaded:true,orders:[{id:'receipt-1'}]},storageBroken:false,availableStock:p=>p.stock,
+  MPosCore:{AvailabilityGate:{async prepare(input){if(settings.get('native-attempt-'+input.id)==='1')return{send:false};settings.set('native-attempt-'+input.id,'1');const revision=Math.max(Date.now(),data.webAvailabilityRevision+1);return{send:true,token:'test-ticket',body:{version:1,revision,sampledAt:new Date().toISOString(),items:data.products.map(p=>({externalId:p.id,quantity:p.stock})),settledWebOrderIds:input.ids}}}}},
+  webkit:{messageHandlers:{network:{postMessage(payload){if(payload.action==='availabilityPublish'){requests.push({url:data.network.backendUrl+'/api/availability/snapshot',options:{body:JSON.stringify(payload.body)}});Promise.resolve(fetchResult()).then(response=>context.__nativeNetworkResult({requestId:payload.requestId,ok:true,authoritative:true,sent:response.ok}),()=>context.__nativeNetworkResult({requestId:payload.requestId,ok:false}));}return true}}}},
   PrilavokCore:{Storage:{async get(key){return data[key];},async set(key,value){data[key]=value;writes.push(key);}}},
   fetch:async(url,options)=>{requests.push({url,options});return fetchResult();},
   addEventListener(name,callback){(listeners[name]??=[]).push(callback);},
@@ -43,6 +45,7 @@ test('failed payment snapshot waits for next payment and sends latest durable st
  h.fire('online');h.context.onAvailabilityAppState(true);
  assert.equal(h.requests.length,1);
  succeeds=true;
+ h.context.state.orders.push({id:'receipt-2'});
  assert.equal(await h.context.publishAvailability([]),true);
  assert.equal(h.requests.length,2);
  const body=JSON.parse(h.requests[1].options.body);
@@ -59,6 +62,7 @@ test('failed or interrupted attempt remains blocked after process restart',async
  second.context.startAvailabilityRecovery();second.context.onAvailabilityAppState(true);
  assert.equal(await second.context.publishAvailability(),false);
  assert.equal(second.requests.length,0);
+ second.context.state.orders.push({id:'receipt-2'});
  assert.equal(await second.context.publishAvailability([]),true);
  assert.equal(second.requests.length,1);
 });
@@ -74,9 +78,12 @@ test('stock mutation queued during a failing request does not create an immediat
  assert.equal(h.requests.length,1);
 });
 
-test('successful stock-change publication remains supported and background aborts only network',async()=>{
+test('even successful previous sends never authorize stock/manual-sync publication',async()=>{
  const h=host();
- assert.equal(await h.context.publishAvailability(),true);
+ assert.equal(await h.context.publishAvailability(),false);
+ assert.equal(h.requests.length,0);
+ assert.equal(await h.context.publishAvailability([]),true);
+ assert.equal(await h.context.publishAvailability(),false);
  assert.equal(h.requests.length,1);
  h.context.onAvailabilityAppState(false);
  assert.equal(h.context._availabilityAppActive,false);

@@ -10,7 +10,7 @@ Manual catalogue authorization, buildMenuSyncPayload category/product/channel ma
 
 Media retains the reviewed ten-second deadline and AbortError contract. Menu sync previously had no fetch deadline; it now has a sixty-second native bound, leaving a manual error/status and permitting another explicit sync rather than indefinite waiting. JS watchdogs are 11/61 seconds and cancel the socket. No timer schedules another send. Server status and JSON are returned separately: HTTP errors are interpreted by the reviewed handlers, preserving the special media 413 branch. A shared strict MPosHttpJson response parser replaces the identical loyalty parsing implementation; loyalty/WEB ACK behavior remains covered by their existing tests.
 
-The existing availability source hook after manual menu sync is left to the separate Android availability policy; this transport never authorizes a new availability request or retries a blocked failed request. Stage 090 must resolve the older 033 allowance for ordinary successful stock/manual-sync sends against current AGENTS rule 7 (publication only after payment). This is a policy boundary outside catalogue/media transport, not permission to bypass the failed-send gate.
+The existing availability source hook after manual menu sync is left to the separate Android availability policy; this transport never authorizes a new availability request or retries a blocked failed request. [090](../090-native-payment-availability/spec.md) resolves the older 033 allowance for ordinary successful stock/manual-sync sends: current AGENTS rule 7 permits publication only after payment. This is a policy boundary outside catalogue/media transport, not permission to bypass the failed-send gate.
 
 ## Verification and rollback
 

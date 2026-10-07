@@ -1,5 +1,7 @@
 # Spec 033 — Availability retry after the next payment
 
+> Updated by [090](../090-native-payment-availability/spec.md): current AGENTS rule 7 permits publication only after saved payment. Historical ordinary-success stock/manual-sync triggers and the corresponding physical case below no longer apply; the failed-send retry decision remains in force.
+
 ## User decision
 
 If availability cannot be sent, the next attempt occurs only after the next successfully persisted payment. Startup, internet recovery and foreground are not retry triggers. This supersedes the automatic Android recovery behavior documented in spec 030.

@@ -337,3 +337,13 @@ No automatic catalogue/availability sends; existing WEB normalization/merge reta
 | Local product save then native media upload | Actual source success/413, pending local photo; abort/timeout tests | Pending |
 
 No catalogue/media scheduling or backup format change. Native menu deadline 60s, media remains 10s. See [089](../specs/089-native-catalog-transport/spec.md).
+
+## 090 — availability publication
+
+| Boundary | Automated evidence | Physical status |
+|---|---|---|
+| Native stock/recipe availability | Actual-source fixtures checked in JS/JVM: unlimited, invalid, duplicates, nested/tolerance | Pending |
+| One attempt per persisted receipt | Real Room missing/duplicate/token/body/rollback and file-backed reopen | Pending |
+| Payment-only network and native cancellation | Post-commit source trigger, JS lifecycle/no-op/failure/coalescing, HTTP route/deadline/no retry | Pending |
+
+Current AGENTS 7 supersedes 033 ordinary-success sends; failed retry remains next-payment only. Transport rollback retains native gate. See [090](../specs/090-native-payment-availability/spec.md).

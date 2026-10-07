@@ -162,6 +162,14 @@ class MPosStorageMirror(
                     command.version?.let { writeState.commit(key,it) };value.put("requestId",requestId)
                 }.onSuccess(::emitResult).onFailure { result(requestId,false,"native WEB journal operation failed") }
             }
+            "availabilityConsume" -> {
+                attempt { val input=JSONObject(requireNotNull(command.serialized));MPosAvailabilityJournal(database).consume(input.getString("token"),input.getJSONObject("body")).put("ok",true).put("authoritative",true).put("requestId",requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId,false,"native availability permit unavailable") }
+            }
+            "availabilityPrepare" -> {
+                attempt { MPosAvailabilityJournal(database).prepare(requireNotNull(command.serialized)).put("requestId",requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId,false,"native payment availability unavailable") }
+            }
             "loyaltyJournal" -> {
                 attempt { MPosLoyaltyJournal(database).execute(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "local loyalty journal transaction failed") }
