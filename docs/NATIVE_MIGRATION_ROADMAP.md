@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **92/110 выполнено (83,64%)**
-после 093. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **93/110 выполнено (84,55%)**
+после 094. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -551,3 +551,8 @@ Native purchase lines/unit rounding and authoritative create/delete candidate ve
 ## 093 — receiving confirmation
 
 Native invoice/unit/valuation/shortage arithmetic and expected-state command verification, atomic stock/cost/order/history/draft clearing in Room. Preview/form presentation remains reviewed JS; 094 migrates draft business operations. [093](../specs/093-native-receiving-command/spec.md).
+
+
+## 094 — receiving drafts
+
+Native open/save/restoration from Room, legacy quantity/total defaults and captured cart, incomplete marker before rendering. Partial drafts retain their fields without invoice validation; source form presentation/rollback remain. Next 095: inventory recount/differences/atomic application. [094](../specs/094-native-receiving-drafts/spec.md).

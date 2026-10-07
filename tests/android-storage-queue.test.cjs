@@ -83,3 +83,8 @@ test('receiving command freezes draft before initialization and requires authori
  input.draft.invoiceNumber='changed';await new Promise(r=>setImmediate(r));const statuses=h.calls.filter(r=>r&&typeof r==='object');assert.equal(statuses.length,6);assert.ok(statuses.some(r=>r.key==='receivingDraft'&&r.action==='supplyStatus'));
  for(const s of statuses)h.context.__nativeStorageResult({requestId:s.requestId,ok:true,initialized:true});await new Promise(r=>setImmediate(r));const command=h.calls.at(-1);assert.equal(command.action,'receivingCommit');assert.equal(JSON.parse(command.payload).draft.invoiceNumber,'before');h.context.__nativeStorageResult({requestId:command.requestId,ok:true,authoritative:true});await p;
 });
+test('receiving draft command freezes incomplete input and initializes authoritative documents',async()=>{
+ const h=host(),input={version:1,operation:'save',draft:{orderId:null,lines:[{qtyInput:''}]},expectedOrders:[]},p=h.context.MPosCore.ReceivingDraft.execute(input);
+ input.draft.lines[0].qtyInput='changed';await new Promise(r=>setImmediate(r));const statuses=h.calls.filter(r=>r&&typeof r==='object');assert.equal(statuses.length,4);assert.ok(statuses.some(r=>r.key==='receivingDraft'&&r.action==='supplyStatus'));
+ for(const s of statuses)h.context.__nativeStorageResult({requestId:s.requestId,ok:true,initialized:true});await new Promise(r=>setImmediate(r));const command=h.calls.at(-1);assert.equal(command.action,'receivingDraftCommand');assert.equal(JSON.parse(command.payload).draft.lines[0].qtyInput,'');h.context.__nativeStorageResult({requestId:command.requestId,ok:true,authoritative:true});await p;
+});

@@ -183,6 +183,10 @@ class MPosStorageMirror(
                 attempt { MPosCustomerEngine.calculate(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native customer context unavailable") }
             }
+            "receivingDraftCommand" -> {
+                attempt { MPosReceivingDraftCommand(database).execute(requireNotNull(command.serialized)).put("requestId",requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId,false,"local receiving draft operation failed") }
+            }
             "receivingCommit" -> {
                 attempt { MPosReceivingCommand(database).commit(requireNotNull(command.serialized)).put("requestId",requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId,false,"local receiving transaction failed") }

@@ -153,6 +153,9 @@
   mposCore.CustomerContext=Object.freeze({
     async calculate(input){return requireNative(await request('customerContextRead',{payload:JSON.stringify(input)}),true);}
   });
+  mposCore.ReceivingDraft=Object.freeze({
+    async execute(input){const payload=JSON.stringify(input);await Promise.all(['products','purchaseOrders','receivingDraft','criticalStorageJournal'].map(initializeNative));return requireNative(await request('receivingDraftCommand',{payload}),true);}
+  });
   mposCore.ReceivingCommands=Object.freeze({
     async commit(input){const payload=JSON.stringify(input);await Promise.all(['products','suppliers','purchaseOrders','receivings','receivingDraft','criticalStorageJournal'].map(initializeNative));return requireNative(await request('receivingCommit',{payload}),true);}
   });

@@ -604,9 +604,10 @@
     {
       "id": "094",
       "title": "Черновики приёмки и восстановление",
-      "status": "planned",
+      "status": "done",
       "area": "P10",
-      "dependencies": "093"
+      "dependencies": "093",
+      "spec": "specs/094-native-receiving-drafts/spec.md"
     },
     {
       "id": "095",

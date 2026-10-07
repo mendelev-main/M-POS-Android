@@ -362,3 +362,8 @@ Actual-source quantity/unit/packing fixtures + complete create/delete candidates
 ## 093 — receiving confirmation
 
 Actual-source fixtures checked independently in JS/JVM: unit packing, weighted and untracked costs, duplicate lines, negative stock, zero lines, shortage tolerance. Source tests exercise stock changing after preview, commit-before-state, failure/double tap/received guards and rollback. Room checks reject stale/tampered/duplicate commands and inject projection/final draft write failures to prove atomic rollback. Supply authority draft import/obsolete mirrors/file-backed reopen verified. [093](../specs/093-native-receiving-command/spec.md). Physical pending.
+
+
+## 094 — receiving drafts
+
+Actual-source restoration/save fixtures checked in JVM and JS, including legacy/saved/null/blank/package/cart cases. Native protocol snapshot test, ack-before-render, failed save/double tap/uncertainty/rollback, Room stale/closed orders, no-write reopen, partial save, injected SQL failure/recovery guard and file-backed reopen. Stock/cost unchanged. Physical pending. [094](../specs/094-native-receiving-drafts/spec.md).

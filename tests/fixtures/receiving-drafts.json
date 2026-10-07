@@ -1,0 +1,940 @@
+[
+  {
+    "name": "new-order",
+    "command": {
+      "version": 1,
+      "operation": "open",
+      "expectedOrders": [
+        {
+          "id": "o",
+          "status": "pending",
+          "supplierId": "s",
+          "items": [
+            {
+              "productId": "p",
+              "requestedQty": 3,
+              "requestedUnit": "bottle",
+              "packSize": 500,
+              "contentUnit": "ml",
+              "stockUnit": "l",
+              "expectedQty": 1.5,
+              "qty": 1.5
+            }
+          ],
+          "extension": 9
+        }
+      ],
+      "orderId": "o",
+      "cart": []
+    },
+    "products": [
+      {
+        "id": "p",
+        "name": "Milk",
+        "type": "simple",
+        "stockUnit": "l",
+        "stock": 5,
+        "cost": 10
+      }
+    ],
+    "saved": null,
+    "result": {
+      "draft": {
+        "version": 1,
+        "orderId": "o",
+        "supplierId": "s",
+        "invoiceNumber": "",
+        "invoiceDate": "",
+        "lines": [
+          {
+            "productId": "p",
+            "qtyInput": 3,
+            "unit": "bottle",
+            "packSize": 500,
+            "contentUnit": "ml",
+            "priceInput": "",
+            "totalInput": "",
+            "priceMode": "total"
+          }
+        ]
+      },
+      "orders": [
+        {
+          "id": "o",
+          "status": "pending",
+          "supplierId": "s",
+          "items": [
+            {
+              "productId": "p",
+              "requestedQty": 3,
+              "requestedUnit": "bottle",
+              "packSize": 500,
+              "contentUnit": "ml",
+              "stockUnit": "l",
+              "expectedQty": 1.5,
+              "qty": 1.5
+            }
+          ],
+          "extension": 9,
+          "receivingDraftV2": {
+            "version": 1,
+            "orderId": "o",
+            "supplierId": "s",
+            "invoiceNumber": "",
+            "invoiceDate": "",
+            "lines": [
+              {
+                "productId": "p",
+                "qtyInput": 3,
+                "unit": "bottle",
+                "packSize": 500,
+                "contentUnit": "ml",
+                "priceInput": "",
+                "totalInput": "",
+                "priceMode": "total"
+              }
+            ]
+          },
+          "receivingIncomplete": true
+        }
+      ],
+      "changed": true
+    }
+  },
+  {
+    "name": "legacy-order",
+    "command": {
+      "version": 1,
+      "operation": "open",
+      "expectedOrders": [
+        {
+          "id": "o",
+          "status": "pending",
+          "supplierId": "s",
+          "items": [
+            {
+              "productId": "p",
+              "requestedQty": 3,
+              "requestedUnit": "bottle",
+              "packSize": 500,
+              "contentUnit": "ml",
+              "stockUnit": "l",
+              "expectedQty": 1.5,
+              "qty": 1.5
+            }
+          ],
+          "extension": 9,
+          "receivingDraft": {
+            "p": {
+              "qty": 0,
+              "totalCost": 0
+            }
+          }
+        }
+      ],
+      "orderId": "o",
+      "cart": []
+    },
+    "products": [
+      {
+        "id": "p",
+        "name": "Milk",
+        "type": "simple",
+        "stockUnit": "l",
+        "stock": 5,
+        "cost": 10
+      }
+    ],
+    "saved": null,
+    "result": {
+      "draft": {
+        "version": 1,
+        "orderId": "o",
+        "supplierId": "s",
+        "invoiceNumber": "",
+        "invoiceDate": "",
+        "lines": [
+          {
+            "productId": "p",
+            "qtyInput": 0,
+            "unit": "bottle",
+            "packSize": 500,
+            "contentUnit": "ml",
+            "priceInput": "",
+            "totalInput": 0,
+            "priceMode": "total"
+          }
+        ]
+      },
+      "orders": [
+        {
+          "id": "o",
+          "status": "pending",
+          "supplierId": "s",
+          "items": [
+            {
+              "productId": "p",
+              "requestedQty": 3,
+              "requestedUnit": "bottle",
+              "packSize": 500,
+              "contentUnit": "ml",
+              "stockUnit": "l",
+              "expectedQty": 1.5,
+              "qty": 1.5
+            }
+          ],
+          "extension": 9,
+          "receivingDraft": {
+            "p": {
+              "qty": 0,
+              "totalCost": 0
+            }
+          },
+          "receivingDraftV2": {
+            "version": 1,
+            "orderId": "o",
+            "supplierId": "s",
+            "invoiceNumber": "",
+            "invoiceDate": "",
+            "lines": [
+              {
+                "productId": "p",
+                "qtyInput": 0,
+                "unit": "bottle",
+                "packSize": 500,
+                "contentUnit": "ml",
+                "priceInput": "",
+                "totalInput": 0,
+                "priceMode": "total"
+              }
+            ]
+          },
+          "receivingIncomplete": true
+        }
+      ],
+      "changed": true
+    }
+  },
+  {
+    "name": "unknown-package",
+    "command": {
+      "version": 1,
+      "operation": "open",
+      "expectedOrders": [
+        {
+          "id": "o",
+          "status": "pending",
+          "supplierId": "s",
+          "items": [
+            {
+              "productId": "p",
+              "requestedQty": 3,
+              "requestedUnit": "bottle",
+              "packSize": 500,
+              "contentUnit": "ml",
+              "stockUnit": "l",
+              "expectedQty": null,
+              "qty": 0
+            }
+          ],
+          "extension": 9
+        }
+      ],
+      "orderId": "o",
+      "cart": []
+    },
+    "products": [
+      {
+        "id": "p",
+        "name": "Milk",
+        "type": "simple",
+        "stockUnit": "l",
+        "stock": 5,
+        "cost": 10
+      }
+    ],
+    "saved": null,
+    "result": {
+      "draft": {
+        "version": 1,
+        "orderId": "o",
+        "supplierId": "s",
+        "invoiceNumber": "",
+        "invoiceDate": "",
+        "lines": [
+          {
+            "productId": "p",
+            "qtyInput": "",
+            "unit": "bottle",
+            "packSize": 500,
+            "contentUnit": "ml",
+            "priceInput": "",
+            "totalInput": "",
+            "priceMode": "total"
+          }
+        ]
+      },
+      "orders": [
+        {
+          "id": "o",
+          "status": "pending",
+          "supplierId": "s",
+          "items": [
+            {
+              "productId": "p",
+              "requestedQty": 3,
+              "requestedUnit": "bottle",
+              "packSize": 500,
+              "contentUnit": "ml",
+              "stockUnit": "l",
+              "expectedQty": null,
+              "qty": 0
+            }
+          ],
+          "extension": 9,
+          "receivingDraftV2": {
+            "version": 1,
+            "orderId": "o",
+            "supplierId": "s",
+            "invoiceNumber": "",
+            "invoiceDate": "",
+            "lines": [
+              {
+                "productId": "p",
+                "qtyInput": "",
+                "unit": "bottle",
+                "packSize": 500,
+                "contentUnit": "ml",
+                "priceInput": "",
+                "totalInput": "",
+                "priceMode": "total"
+              }
+            ]
+          },
+          "receivingIncomplete": true
+        }
+      ],
+      "changed": true
+    }
+  },
+  {
+    "name": "saved-order",
+    "command": {
+      "version": 1,
+      "operation": "open",
+      "expectedOrders": [
+        {
+          "id": "o",
+          "status": "pending",
+          "supplierId": "s",
+          "items": [
+            {
+              "productId": "p",
+              "requestedQty": 3,
+              "requestedUnit": "bottle",
+              "packSize": 500,
+              "contentUnit": "ml",
+              "stockUnit": "l",
+              "expectedQty": 1.5,
+              "qty": 1.5
+            }
+          ],
+          "extension": 9,
+          "receivingDraftV2": {
+            "version": 1,
+            "orderId": "old",
+            "supplierId": "s",
+            "invoiceNumber": " partial ",
+            "invoiceDate": "",
+            "lines": [
+              {
+                "productId": "p",
+                "qtyInput": "",
+                "totalInput": "",
+                "priceMode": "total",
+                "unit": "l"
+              }
+            ],
+            "extension": {
+              "v": 8
+            }
+          },
+          "receivingIncomplete": true
+        }
+      ],
+      "orderId": "o",
+      "cart": []
+    },
+    "products": [
+      {
+        "id": "p",
+        "name": "Milk",
+        "type": "simple",
+        "stockUnit": "l",
+        "stock": 5,
+        "cost": 10
+      }
+    ],
+    "saved": null,
+    "result": {
+      "draft": {
+        "version": 1,
+        "orderId": "o",
+        "supplierId": "s",
+        "invoiceNumber": " partial ",
+        "invoiceDate": "",
+        "lines": [
+          {
+            "productId": "p",
+            "qtyInput": "",
+            "totalInput": "",
+            "priceMode": "total",
+            "unit": "l"
+          }
+        ],
+        "extension": {
+          "v": 8
+        }
+      },
+      "orders": [
+        {
+          "id": "o",
+          "status": "pending",
+          "supplierId": "s",
+          "items": [
+            {
+              "productId": "p",
+              "requestedQty": 3,
+              "requestedUnit": "bottle",
+              "packSize": 500,
+              "contentUnit": "ml",
+              "stockUnit": "l",
+              "expectedQty": 1.5,
+              "qty": 1.5
+            }
+          ],
+          "extension": 9,
+          "receivingDraftV2": {
+            "version": 1,
+            "orderId": "old",
+            "supplierId": "s",
+            "invoiceNumber": " partial ",
+            "invoiceDate": "",
+            "lines": [
+              {
+                "productId": "p",
+                "qtyInput": "",
+                "totalInput": "",
+                "priceMode": "total",
+                "unit": "l"
+              }
+            ],
+            "extension": {
+              "v": 8
+            }
+          },
+          "receivingIncomplete": true
+        }
+      ],
+      "changed": false
+    }
+  },
+  {
+    "name": "saved-order-mark-incomplete",
+    "command": {
+      "version": 1,
+      "operation": "open",
+      "expectedOrders": [
+        {
+          "id": "o",
+          "status": "pending",
+          "supplierId": "s",
+          "items": [
+            {
+              "productId": "p",
+              "requestedQty": 3,
+              "requestedUnit": "bottle",
+              "packSize": 500,
+              "contentUnit": "ml",
+              "stockUnit": "l",
+              "expectedQty": 1.5,
+              "qty": 1.5
+            }
+          ],
+          "extension": 9,
+          "receivingDraftV2": {
+            "version": 1,
+            "orderId": "old",
+            "supplierId": "s",
+            "invoiceNumber": " partial ",
+            "invoiceDate": "",
+            "lines": [
+              {
+                "productId": "p",
+                "qtyInput": "",
+                "totalInput": "",
+                "priceMode": "total",
+                "unit": "l"
+              }
+            ],
+            "extension": {
+              "v": 8
+            }
+          },
+          "receivingIncomplete": false
+        }
+      ],
+      "orderId": "o",
+      "cart": []
+    },
+    "products": [
+      {
+        "id": "p",
+        "name": "Milk",
+        "type": "simple",
+        "stockUnit": "l",
+        "stock": 5,
+        "cost": 10
+      }
+    ],
+    "saved": null,
+    "result": {
+      "draft": {
+        "version": 1,
+        "orderId": "o",
+        "supplierId": "s",
+        "invoiceNumber": " partial ",
+        "invoiceDate": "",
+        "lines": [
+          {
+            "productId": "p",
+            "qtyInput": "",
+            "totalInput": "",
+            "priceMode": "total",
+            "unit": "l"
+          }
+        ],
+        "extension": {
+          "v": 8
+        }
+      },
+      "orders": [
+        {
+          "id": "o",
+          "status": "pending",
+          "supplierId": "s",
+          "items": [
+            {
+              "productId": "p",
+              "requestedQty": 3,
+              "requestedUnit": "bottle",
+              "packSize": 500,
+              "contentUnit": "ml",
+              "stockUnit": "l",
+              "expectedQty": 1.5,
+              "qty": 1.5
+            }
+          ],
+          "extension": 9,
+          "receivingDraftV2": {
+            "version": 1,
+            "orderId": "o",
+            "supplierId": "s",
+            "invoiceNumber": " partial ",
+            "invoiceDate": "",
+            "lines": [
+              {
+                "productId": "p",
+                "qtyInput": "",
+                "totalInput": "",
+                "priceMode": "total",
+                "unit": "l"
+              }
+            ],
+            "extension": {
+              "v": 8
+            }
+          },
+          "receivingIncomplete": true
+        }
+      ],
+      "changed": true
+    }
+  },
+  {
+    "name": "cart",
+    "command": {
+      "version": 1,
+      "operation": "open",
+      "expectedOrders": [],
+      "orderId": null,
+      "cart": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "totalCost": 20,
+          "stockUnit": "l"
+        }
+      ]
+    },
+    "products": [
+      {
+        "id": "p",
+        "name": "Milk",
+        "type": "simple",
+        "stockUnit": "l",
+        "stock": 5,
+        "cost": 10
+      }
+    ],
+    "saved": null,
+    "result": {
+      "draft": {
+        "version": 1,
+        "orderId": null,
+        "supplierId": "",
+        "invoiceNumber": "",
+        "invoiceDate": "",
+        "lines": [
+          {
+            "productId": "p",
+            "qtyInput": 2,
+            "unit": "l",
+            "packSize": "",
+            "contentUnit": "l",
+            "priceInput": "",
+            "totalInput": 20,
+            "priceMode": "total"
+          }
+        ]
+      },
+      "orders": [],
+      "changed": false
+    }
+  },
+  {
+    "name": "null-cart-fields",
+    "command": {
+      "version": 1,
+      "operation": "open",
+      "expectedOrders": [],
+      "orderId": null,
+      "cart": [
+        {
+          "productId": "p",
+          "qty": null,
+          "totalCost": null
+        }
+      ]
+    },
+    "products": [
+      {
+        "id": "p",
+        "name": "Milk",
+        "type": "simple",
+        "stockUnit": "l",
+        "stock": 5,
+        "cost": 10
+      }
+    ],
+    "saved": null,
+    "result": {
+      "draft": {
+        "version": 1,
+        "orderId": null,
+        "supplierId": "",
+        "invoiceNumber": "",
+        "invoiceDate": "",
+        "lines": [
+          {
+            "productId": "p",
+            "qtyInput": null,
+            "unit": "l",
+            "packSize": "",
+            "contentUnit": "l",
+            "priceInput": "",
+            "totalInput": null,
+            "priceMode": "total"
+          }
+        ]
+      },
+      "orders": [],
+      "changed": false
+    }
+  },
+  {
+    "name": "saved-standalone",
+    "command": {
+      "version": 1,
+      "operation": "open",
+      "expectedOrders": [],
+      "orderId": null,
+      "cart": []
+    },
+    "products": [
+      {
+        "id": "p",
+        "name": "Milk",
+        "type": "simple",
+        "stockUnit": "l",
+        "stock": 5,
+        "cost": 10
+      }
+    ],
+    "saved": {
+      "version": 1,
+      "orderId": "old",
+      "supplierId": "s",
+      "invoiceNumber": " partial ",
+      "invoiceDate": "",
+      "lines": [
+        {
+          "productId": "p",
+          "qtyInput": "",
+          "totalInput": "",
+          "priceMode": "total",
+          "unit": "l"
+        }
+      ],
+      "extension": {
+        "v": 8
+      }
+    },
+    "result": {
+      "draft": {
+        "version": 1,
+        "orderId": null,
+        "supplierId": "s",
+        "invoiceNumber": " partial ",
+        "invoiceDate": "",
+        "lines": [
+          {
+            "productId": "p",
+            "qtyInput": "",
+            "totalInput": "",
+            "priceMode": "total",
+            "unit": "l"
+          }
+        ],
+        "extension": {
+          "v": 8
+        }
+      },
+      "orders": [],
+      "changed": false
+    }
+  },
+  {
+    "name": "empty-standalone",
+    "command": {
+      "version": 1,
+      "operation": "open",
+      "expectedOrders": [],
+      "orderId": null,
+      "cart": []
+    },
+    "products": [
+      {
+        "id": "p",
+        "name": "Milk",
+        "type": "simple",
+        "stockUnit": "l",
+        "stock": 5,
+        "cost": 10
+      }
+    ],
+    "saved": null,
+    "result": {
+      "draft": {
+        "version": 1,
+        "orderId": null,
+        "supplierId": "",
+        "invoiceNumber": "",
+        "invoiceDate": "",
+        "lines": []
+      },
+      "orders": [],
+      "changed": false
+    }
+  },
+  {
+    "name": "save-ordered-partial",
+    "command": {
+      "version": 1,
+      "operation": "save",
+      "expectedOrders": [
+        {
+          "id": "o",
+          "status": "pending",
+          "supplierId": "s",
+          "items": [
+            {
+              "productId": "p",
+              "requestedQty": 3,
+              "requestedUnit": "bottle",
+              "packSize": 500,
+              "contentUnit": "ml",
+              "stockUnit": "l",
+              "expectedQty": 1.5,
+              "qty": 1.5
+            }
+          ],
+          "extension": 9
+        }
+      ],
+      "draft": {
+        "version": 1,
+        "orderId": "o",
+        "supplierId": "s",
+        "invoiceNumber": " partial ",
+        "invoiceDate": "",
+        "lines": [
+          {
+            "productId": "p",
+            "qtyInput": "",
+            "totalInput": "",
+            "priceMode": "total",
+            "unit": "l"
+          }
+        ],
+        "extension": {
+          "v": 8
+        }
+      }
+    },
+    "products": [
+      {
+        "id": "p",
+        "name": "Milk",
+        "type": "simple",
+        "stockUnit": "l",
+        "stock": 5,
+        "cost": 10
+      }
+    ],
+    "saved": null,
+    "result": {
+      "draft": {
+        "version": 1,
+        "orderId": "o",
+        "supplierId": "s",
+        "invoiceNumber": " partial ",
+        "invoiceDate": "",
+        "lines": [
+          {
+            "productId": "p",
+            "qtyInput": "",
+            "totalInput": "",
+            "priceMode": "total",
+            "unit": "l"
+          }
+        ],
+        "extension": {
+          "v": 8
+        }
+      },
+      "orders": [
+        {
+          "id": "o",
+          "status": "pending",
+          "supplierId": "s",
+          "items": [
+            {
+              "productId": "p",
+              "requestedQty": 3,
+              "requestedUnit": "bottle",
+              "packSize": 500,
+              "contentUnit": "ml",
+              "stockUnit": "l",
+              "expectedQty": 1.5,
+              "qty": 1.5
+            }
+          ],
+          "extension": 9,
+          "receivingDraftV2": {
+            "version": 1,
+            "orderId": "o",
+            "supplierId": "s",
+            "invoiceNumber": " partial ",
+            "invoiceDate": "",
+            "lines": [
+              {
+                "productId": "p",
+                "qtyInput": "",
+                "totalInput": "",
+                "priceMode": "total",
+                "unit": "l"
+              }
+            ],
+            "extension": {
+              "v": 8
+            }
+          },
+          "receivingIncomplete": true
+        }
+      ],
+      "changed": true
+    }
+  },
+  {
+    "name": "save-standalone-partial",
+    "command": {
+      "version": 1,
+      "operation": "save",
+      "expectedOrders": [],
+      "draft": {
+        "version": 1,
+        "orderId": null,
+        "supplierId": "s",
+        "invoiceNumber": " partial ",
+        "invoiceDate": "",
+        "lines": [
+          {
+            "productId": "p",
+            "qtyInput": "",
+            "totalInput": "",
+            "priceMode": "total",
+            "unit": "l"
+          }
+        ],
+        "extension": {
+          "v": 8
+        }
+      }
+    },
+    "products": [
+      {
+        "id": "p",
+        "name": "Milk",
+        "type": "simple",
+        "stockUnit": "l",
+        "stock": 5,
+        "cost": 10
+      }
+    ],
+    "saved": null,
+    "result": {
+      "draft": {
+        "version": 1,
+        "orderId": null,
+        "supplierId": "s",
+        "invoiceNumber": " partial ",
+        "invoiceDate": "",
+        "lines": [
+          {
+            "productId": "p",
+            "qtyInput": "",
+            "totalInput": "",
+            "priceMode": "total",
+            "unit": "l"
+          }
+        ],
+        "extension": {
+          "v": 8
+        }
+      },
+      "orders": [],
+      "changed": false
+    }
+  }
+]
