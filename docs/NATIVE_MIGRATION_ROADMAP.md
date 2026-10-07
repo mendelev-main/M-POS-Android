@@ -621,3 +621,7 @@ Native responsive KPI/chart/date/preset/loading/retry screens retain 097 Room ca
 ## 108 — native hall/tables/bookings presentation
 
 Native relative floor map, table select/edit-only drag, table forms/menu, booking date/cards/create/edit/cancel and time/guest controls retain 098 native Room commands and reviewed rules. Drag runs through the original pointer boundary, restores durable baseline before native persistence and consumes the browser-style suppressed click once. Source shape/rotation/blue/amber states and offline Manrope palettes remain. Failure/duplicate/uncertain outcomes preserve native command safeguards. [108](../specs/108-native-hall-bookings/spec.md). Next 109 removes active WebView compatibility, while 110 physical acceptance and 111 update metadata remain.
+
+## 109: native runtime — in progress
+
+Read-only transactional Room snapshot foundation added; no production cutover or WebView removal yet. See [spec](../specs/109-native-runtime/spec.md). Completion remains 107/110; physical acceptance pending.

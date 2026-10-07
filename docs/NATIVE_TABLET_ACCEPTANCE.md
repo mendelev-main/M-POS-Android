@@ -607,3 +607,7 @@ Accept online/offline/timeouts with valid estimate; prepared/local/ACK/confirmed
 - Обычный режим запрещает перемещение; редактор — drag/tap/края карты/поворот/отмена жеста. Сохранённые координаты меняются только после подтверждения; ошибка сохраняет прежние, следующая попытка не съедает первый tap. Проверить реальную точность/нагрузку touch на HONOR.
 - Дата и выбранный стол, существующие брони/нет броней, время HH:mm/очистка/длительность/гости 1–30 через stepper/имя/телефон/комментарий, ночь через полночь, касание соседних интервалов/пересечение, отменённая/сиротская бронь по правилам 098.
 - Отмена брони — прежнее прямое действие и не открывает редактор. При отсутствии выбранного ID карточка первого стола не назначает его автоматически: сначала выбрать на карте. Перезапуск/импорт v13 сохраняет зал/брони/неизвестные поля.
+
+## 109 — native runtime (pending)
+
+After the native bootstrap cutover: restart offline with imported v13 data; verify products, employees, current shift and pending order against the prior runtime. Missing documents must not become invented defaults; critical recovery must block duplicate payment/printing. Repeat after process termination and failed import. Current read-only snapshot increment does not yet change application startup.

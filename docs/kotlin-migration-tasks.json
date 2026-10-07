@@ -724,9 +724,10 @@
     {
       "id": "109",
       "title": "Удаление активного WebView runtime и legacy мостов",
-      "status": "planned",
+      "status": "in_progress",
       "area": "UI/architecture",
-      "dependencies": "100,101,102,103,104,105,106,107,108"
+      "dependencies": "100,101,102,103,104,105,106,107,108",
+      "spec": "specs/109-native-runtime/spec.md"
     },
     {
       "id": "110",

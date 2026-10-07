@@ -438,3 +438,7 @@ Actual reviewed page/modal renderers and finalizePayment verify formatted receip
 - Table create/edit/rotation/delete and booking create/edit/cancel wait for acknowledged Room commands; uncertain outcome blocks retry. Table/bookings deletion remains atomic; archived receipts/parked snapshots are untouched.
 - Time/duration/guest/name/phone/comment/date fields preserve source capture/defaults/stepper limits and all 098 overlap/status semantics. Direct cancellation does not add confirmation or also trigger editor. No new role/shift/capacity restriction.
 - Preserve first-table side-card fallback without auto-selection: booking still needs actual selected ID. Presentation flag MPosNativeHallUiEnabled=false restores DOM without undoing 098 authority or v13. Physical 110 and active DOM/runtime removal 109 pending.
+
+## 109: native runtime — in progress
+
+Read-only transactional Room snapshot foundation added; no production cutover or WebView removal yet. See [spec](../specs/109-native-runtime/spec.md). Completion remains 107/110; physical acceptance pending.
