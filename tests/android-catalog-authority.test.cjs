@@ -44,9 +44,9 @@ function host({data=new Map(),room={initialized:false,found:false,payload:null},
    case 'catalogRemove':room.found=false;room.payload=null;break;
    case 'catalogParity':result={ok:true,matches:true,shadowCaughtUp:true};break;
   }
-  if((command.action.startsWith('workspace')||command.action.startsWith('employee')||command.action.startsWith('shift')||command.action.startsWith('order')||command.action.startsWith('parked')||command.action.startsWith('recovery')||command.action.startsWith('supply')||command.action.startsWith('inventory'))&&!rejected){
+  if((command.action.startsWith('workspace')||command.action.startsWith('employee')||command.action.startsWith('shift')||command.action.startsWith('order')||command.action.startsWith('parked')||command.action.startsWith('recovery')||command.action.startsWith('supply')||command.action.startsWith('inventory')||command.action.startsWith('hall'))&&!rejected){
    const entry=room.workspace[command.key]??={initialized:false,found:false,payload:null};
-   switch(command.action.replace(/^(employee|shift|order|parked|recovery|supply|inventory)/,'workspace')){
+   switch(command.action.replace(/^(employee|shift|order|parked|recovery|supply|inventory|hall)/,'workspace')){
     case 'workspaceStatus':result.initialized=entry.initialized;break;
     case 'workspaceInitialize':if(!entry.initialized){entry.initialized=true;entry.found=typeof command.payload==='string';entry.payload=entry.found?command.payload:null;}break;
     case 'workspaceWrite':entry.found=true;entry.payload=command.payload;break;
@@ -164,6 +164,14 @@ test('lost acknowledgement is reported as uncertain and existing journal can rep
  assert.equal(JSON.parse(h.room.workspace.orders.payload)[0].id,'paid');assert.equal(h.data.get('criticalStorageJournal'),null);
 });
 
+test('actual v13 import and restart retain Room hall documents even with stale browser caches',async()=>{
+ const h=host(),backup=fullBackup(products('Backup'));
+ backup.hallTables=[{id:'t',name:'Стол ☕',number:1,x:7,y:8,extension:{nested:[null,false,2]}}];
+ backup.bookings=[{id:'b',tableId:'t',status:'cancelled',startAt:'2026-10-07T19:00:00.000Z',endAt:'2026-10-07T21:00:00.000Z',guests:2,note:'Заметка',extension:{a:7}}];
+ await h.context.applyBackupData(backup);
+ for(const key of ['hallTables','bookings']){assert.deepEqual(JSON.parse(h.room.workspace[key].payload),backup[key]);h.data.set(key,[])}
+ const restarted=host({room:h.room,data:h.data});for(const key of ['hallTables','bookings'])assert.deepEqual(clone(await restarted.context.MPosCore.Storage.get(key,[])),backup[key]);
+});
 test('actual v13 validator and restore replace authoritative catalog through existing journal',async()=>{
  const h=host({data:new Map([['products',products('Old')]])});
  const rows=products('Imported v13');await h.context.applyBackupData(fullBackup(rows));

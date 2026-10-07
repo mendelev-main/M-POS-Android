@@ -1,0 +1,1408 @@
+[
+  {
+    "name": "create",
+    "command": {
+      "operation": "table-create",
+      "id": "new",
+      "name": " Cafe ",
+      "shape": "rectangle",
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "result": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        },
+        {
+          "id": "new",
+          "number": 2,
+          "name": "Cafe",
+          "shape": "rectangle",
+          "rotation": 0,
+          "x": 30,
+          "y": 8
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "create-number",
+    "command": {
+      "operation": "table-create",
+      "id": "new",
+      "name": "Cafe",
+      "shape": "other",
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": "7",
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": []
+    },
+    "result": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": "7",
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        },
+        {
+          "id": "new",
+          "number": 8,
+          "name": "Cafe",
+          "shape": "square",
+          "rotation": 0,
+          "x": 76,
+          "y": 25
+        }
+      ],
+      "bookings": []
+    }
+  },
+  {
+    "name": "edit",
+    "command": {
+      "operation": "table-edit",
+      "id": "t",
+      "name": " Renamed ",
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "result": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Renamed",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "rotate",
+    "command": {
+      "operation": "table-rotate",
+      "id": "t",
+      "delta": -90,
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "result": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 270,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "delete",
+    "command": {
+      "operation": "table-delete",
+      "id": "t",
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "result": {
+      "hallTables": [],
+      "bookings": []
+    }
+  },
+  {
+    "name": "cancel",
+    "command": {
+      "operation": "booking-cancel",
+      "id": "b",
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "result": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "cancelled",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "booking",
+    "date": "2026-10-07",
+    "command": {
+      "operation": "booking-create",
+      "id": "new",
+      "tableId": "t",
+      "date": "2026-10-07",
+      "time": "21:00",
+      "duration": 120,
+      "guestName": " N ",
+      "phone": " 123 ",
+      "guests": "0",
+      "note": " Note ",
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "result": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "new",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T21:00:00.000Z",
+          "endAt": "2026-10-07T23:00:00.000Z",
+          "guestName": "N",
+          "phone": "123",
+          "guests": 1,
+          "note": "Note",
+          "status": "confirmed",
+          "createdAt": 123
+        }
+      ]
+    }
+  },
+  {
+    "name": "overlap",
+    "date": "2026-10-07",
+    "command": {
+      "operation": "booking-create",
+      "id": "new",
+      "tableId": "t",
+      "date": "2026-10-07",
+      "time": "20:59",
+      "duration": 30,
+      "guestName": "N",
+      "guests": 2,
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "refused": "На выбранное время стол уже забронирован"
+  },
+  {
+    "name": "cancelled-free",
+    "date": "2026-10-07",
+    "command": {
+      "operation": "booking-create",
+      "id": "new",
+      "tableId": "t",
+      "date": "2026-10-07",
+      "time": "19:00",
+      "duration": 120,
+      "guestName": "N",
+      "guests": 2,
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "cancelled",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "result": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "cancelled",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "new",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "N",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 123
+        }
+      ]
+    }
+  },
+  {
+    "name": "other-table",
+    "date": "2026-10-07",
+    "command": {
+      "operation": "booking-create",
+      "id": "new",
+      "tableId": "other",
+      "date": "2026-10-07",
+      "time": "19:00",
+      "duration": 120,
+      "guestName": "N",
+      "guests": 31,
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "result": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "new",
+          "tableId": "other",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "N",
+          "phone": "",
+          "guests": 31,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 123
+        }
+      ]
+    }
+  },
+  {
+    "name": "edit-booking",
+    "date": "2026-10-07",
+    "command": {
+      "operation": "booking-edit",
+      "id": "b",
+      "date": "2026-10-07",
+      "time": "20:00",
+      "duration": 60,
+      "guestName": " Edited ",
+      "phone": "99",
+      "guests": 4,
+      "note": "Keep",
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "result": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T20:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Edited",
+          "phone": "99",
+          "guests": 4,
+          "note": "Keep",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "edit-cancelled",
+    "date": "2026-10-07",
+    "command": {
+      "operation": "booking-edit",
+      "id": "b",
+      "date": "2026-10-07",
+      "time": "20:00",
+      "duration": 60,
+      "guestName": "Edited",
+      "guests": 2,
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "cancelled",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "result": {
+      "hallTables": [],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T20:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Edited",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "cancelled",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "cross-midnight",
+    "date": "2026-10-08",
+    "command": {
+      "operation": "booking-create",
+      "id": "new",
+      "tableId": "t",
+      "date": "2026-10-08",
+      "time": "00:00",
+      "duration": 30,
+      "guestName": "N",
+      "guests": 2,
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T23:00:00.000Z",
+          "endAt": "2026-10-08T01:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "refused": "На выбранное время стол уже забронирован"
+  },
+  {
+    "name": "moscow",
+    "date": "2026-10-07",
+    "command": {
+      "operation": "booking-create",
+      "id": "new",
+      "tableId": "t",
+      "date": "2026-10-07",
+      "time": "19:00",
+      "duration": 120,
+      "guestName": "N",
+      "guests": 2,
+      "zone": "Europe/Moscow",
+      "version": 1,
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": []
+    },
+    "result": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "new",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T16:00:00.000Z",
+          "endAt": "2026-10-07T18:00:00.000Z",
+          "guestName": "N",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 123
+        }
+      ]
+    }
+  },
+  {
+    "name": "dst-gap",
+    "date": "2026-03-29",
+    "command": {
+      "operation": "booking-create",
+      "id": "new",
+      "tableId": "t",
+      "date": "2026-03-29",
+      "time": "02:30",
+      "duration": 60,
+      "guestName": "N",
+      "guests": 2,
+      "zone": "Europe/Berlin",
+      "version": 1,
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": []
+    },
+    "result": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "new",
+          "tableId": "t",
+          "date": "2026-03-29",
+          "startAt": "2026-03-29T01:30:00.000Z",
+          "endAt": "2026-03-29T02:30:00.000Z",
+          "guestName": "N",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 123
+        }
+      ]
+    }
+  },
+  {
+    "name": "dst-repeat",
+    "date": "2026-10-25",
+    "command": {
+      "operation": "booking-create",
+      "id": "new",
+      "tableId": "t",
+      "date": "2026-10-25",
+      "time": "02:30",
+      "duration": 60,
+      "guestName": "N",
+      "guests": 2,
+      "zone": "Europe/Berlin",
+      "version": 1,
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": []
+    },
+    "result": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "new",
+          "tableId": "t",
+          "date": "2026-10-25",
+          "startAt": "2026-10-25T00:30:00.000Z",
+          "endAt": "2026-10-25T01:30:00.000Z",
+          "guestName": "N",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 123
+        }
+      ]
+    }
+  },
+  {
+    "name": "normalized-date",
+    "date": "2026-02-31",
+    "command": {
+      "operation": "booking-create",
+      "id": "new",
+      "tableId": "t",
+      "date": "2026-02-31",
+      "time": "19:00",
+      "duration": 60,
+      "guestName": "N",
+      "guests": 2,
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": []
+    },
+    "result": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "new",
+          "tableId": "t",
+          "date": "2026-02-31",
+          "startAt": "2026-03-03T19:00:00.000Z",
+          "endAt": "2026-03-03T20:00:00.000Z",
+          "guestName": "N",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 123
+        }
+      ]
+    }
+  },
+  {
+    "name": "invalid-existing-date",
+    "date": "2026-10-07",
+    "command": {
+      "operation": "booking-create",
+      "id": "new",
+      "tableId": "t",
+      "date": "2026-10-07",
+      "time": "19:00",
+      "duration": 120,
+      "guestName": "N",
+      "guests": 2,
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "bad",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "result": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "bad",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "new",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "N",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 123
+        }
+      ]
+    }
+  },
+  {
+    "name": "empty-name",
+    "date": "2026-10-07",
+    "command": {
+      "operation": "booking-create",
+      "id": "new",
+      "tableId": "t",
+      "date": "2026-10-07",
+      "time": "19:00",
+      "duration": 120,
+      "guestName": " ",
+      "guests": 2,
+      "version": 1,
+      "zone": "UTC",
+      "now": 123
+    },
+    "expected": {
+      "hallTables": [
+        {
+          "id": "t",
+          "number": 1,
+          "name": "Original",
+          "shape": "square",
+          "rotation": 0,
+          "x": 7,
+          "y": 8,
+          "extension": {
+            "keep": true
+          }
+        }
+      ],
+      "bookings": [
+        {
+          "id": "b",
+          "tableId": "t",
+          "date": "2026-10-07",
+          "startAt": "2026-10-07T19:00:00.000Z",
+          "endAt": "2026-10-07T21:00:00.000Z",
+          "guestName": "Old",
+          "phone": "",
+          "guests": 2,
+          "note": "",
+          "status": "confirmed",
+          "createdAt": 5,
+          "extension": [
+            1,
+            2
+          ]
+        }
+      ]
+    },
+    "refused": "Введите имя гостя"
+  }
+]

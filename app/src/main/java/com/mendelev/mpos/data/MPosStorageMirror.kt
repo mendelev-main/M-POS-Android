@@ -20,7 +20,7 @@ class MPosStorageMirror(
         val action = payload.optString("action")
         val key = if (action.startsWith("catalog") && action in setOf("catalogInitialize", "catalogWrite", "catalogRemove")) "products" else if (action in setOf("employeeInitialize", "employeeWrite", "employeeRemove")) "employees" else if (action in setOf("shiftInitialize", "shiftWrite", "shiftRemove")) "shifts" else if (action in setOf("orderInitialize", "orderWrite", "orderRemove", "orderUpsert")) "orders" else if (action in setOf("parkedInitialize", "parkedWrite", "parkedRemove")) "parked" else payload.optString("key")
         val command = Command(action, payload.optString("requestId"), key, payload.opt("payload") as? String, payload.optString("sourceKey"),
-            if (key.isNotBlank() && action in setOf("put", "remove", "catalogInitialize", "catalogWrite", "catalogRemove", "workspaceInitialize", "workspaceWrite", "workspaceRemove", "employeeInitialize", "employeeWrite", "employeeRemove", "shiftInitialize", "shiftWrite", "shiftRemove", "orderInitialize", "orderWrite", "orderRemove", "orderUpsert", "parkedInitialize", "parkedWrite", "parkedRemove", "recoveryInitialize", "recoveryWrite", "recoveryRemove", "webJournalInitialize", "webJournalWrite", "webJournalRemove", "supplyInitialize", "supplyWrite", "supplyRemove", "inventoryInitialize", "inventoryWrite", "inventoryRemove")) writeState.request(key) else null)
+            if (key.isNotBlank() && action in setOf("put", "remove", "catalogInitialize", "catalogWrite", "catalogRemove", "workspaceInitialize", "workspaceWrite", "workspaceRemove", "employeeInitialize", "employeeWrite", "employeeRemove", "shiftInitialize", "shiftWrite", "shiftRemove", "orderInitialize", "orderWrite", "orderRemove", "orderUpsert", "parkedInitialize", "parkedWrite", "parkedRemove", "recoveryInitialize", "recoveryWrite", "recoveryRemove", "webJournalInitialize", "webJournalWrite", "webJournalRemove", "supplyInitialize", "supplyWrite", "supplyRemove", "inventoryInitialize", "inventoryWrite", "inventoryRemove", "hallInitialize", "hallWrite", "hallRemove")) writeState.request(key) else null)
         if (!queue.submit({ result(command.requestId, false, "native shadow command failed") }) { dispatch(command) }) {
             result(command.requestId, false, "native shadow queue is full or closed")
         }
@@ -69,6 +69,7 @@ class MPosStorageMirror(
     private val catalogDao = database.catalogProjectionDao()
     private val workspaceStorage = MPosWorkspaceStorage(database)
     private val inventoryStorage = MPosInventoryStorage(database)
+    private val hallStorage = MPosHallStorage(database)
     private val supplyStorage = MPosSupplyStorage(database)
     private val webJournalStorage = MPosWebJournalStorage(database)
     private val recoveryStorage = MPosRecoveryStorage(database)
@@ -101,8 +102,8 @@ class MPosStorageMirror(
             result(requestId, false, "native shadow has unapplied changes")
             return
         }
-        if ((command.key == "products" || command.key == "employees" || command.key == "shifts" || command.key == "orders" || command.key == "parked" || command.key in MPosWorkspaceStorage.KEYS || command.key in MPosRecoveryStorage.KEYS || command.key in MPosWebJournalStorage.KEYS || command.key in MPosSupplyStorage.KEYS || command.key in MPosInventoryStorage.KEYS) && command.action in setOf("put", "remove")) {
-            val owned = attempt { if (command.key == "products") catalogStorage.isAuthoritative() else if (command.key == "employees") employeeStorage.isAuthoritative() else if (command.key == "shifts") shiftStorage.isAuthoritative() else if (command.key == "orders") orderStorage.isAuthoritative() else if (command.key == "parked") parkedStorage.isAuthoritative() else if (command.key in MPosRecoveryStorage.KEYS) recoveryStorage.isAuthoritative(command.key) else if(command.key in MPosInventoryStorage.KEYS) inventoryStorage.isAuthoritative(command.key) else if(command.key in MPosSupplyStorage.KEYS) supplyStorage.isAuthoritative(command.key) else if(command.key in MPosWebJournalStorage.KEYS) webJournalStorage.isAuthoritative(command.key) else workspaceStorage.isAuthoritative(command.key) }
+        if ((command.key == "products" || command.key == "employees" || command.key == "shifts" || command.key == "orders" || command.key == "parked" || command.key in MPosWorkspaceStorage.KEYS || command.key in MPosRecoveryStorage.KEYS || command.key in MPosWebJournalStorage.KEYS || command.key in MPosSupplyStorage.KEYS || command.key in MPosInventoryStorage.KEYS || command.key in MPosHallStorage.KEYS) && command.action in setOf("put", "remove")) {
+            val owned = attempt { if (command.key == "products") catalogStorage.isAuthoritative() else if (command.key == "employees") employeeStorage.isAuthoritative() else if (command.key == "shifts") shiftStorage.isAuthoritative() else if (command.key == "orders") orderStorage.isAuthoritative() else if (command.key == "parked") parkedStorage.isAuthoritative() else if (command.key in MPosRecoveryStorage.KEYS) recoveryStorage.isAuthoritative(command.key) else if(command.key in MPosHallStorage.KEYS) hallStorage.isAuthoritative(command.key) else if(command.key in MPosInventoryStorage.KEYS) inventoryStorage.isAuthoritative(command.key) else if(command.key in MPosSupplyStorage.KEYS) supplyStorage.isAuthoritative(command.key) else if(command.key in MPosWebJournalStorage.KEYS) webJournalStorage.isAuthoritative(command.key) else workspaceStorage.isAuthoritative(command.key) }
             if (owned.isFailure) { result(requestId, false, "native catalog ownership check failed"); return }
             if (owned.getOrThrow()) {
                 command.version?.let { writeState.commit(command.key, it) }
@@ -191,6 +192,21 @@ class MPosStorageMirror(
             "warehouseRead" -> {
                 attempt { MPosWarehouseRepository(database).read(requireNotNull(command.serialized)).put("requestId",requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId,false,"native warehouse report unavailable") }
+            }
+            "hallCommit" -> {
+                attempt { MPosHallCommand(database).commit(requireNotNull(command.serialized)).put("requestId",requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId,false,if(it is IllegalArgumentException || it is IllegalStateException) it.message?:"local hall transaction failed" else "local hall transaction failed") }
+            }
+            "hallStatus", "hallInitialize", "hallRead", "hallWrite", "hallRemove" -> {
+                attempt {
+                    val value=when(command.action){
+                        "hallStatus"->JSONObject().put("ok",true).put("initialized",hallStorage.isAuthoritative(command.key))
+                        "hallInitialize"->hallStorage.initialize(command.key,command.serialized)
+                        "hallWrite"->hallStorage.write(command.key,requireNotNull(command.serialized))
+                        "hallRemove"->hallStorage.remove(command.key)
+                        else->hallStorage.read(command.key)
+                    };command.version?.let{writeState.commit(command.key,it)};value.put("requestId",requestId)
+                }.onSuccess(::emitResult).onFailure { result(requestId,false,"native hall storage operation failed") }
             }
             "inventoryCommit" -> {
                 attempt { MPosInventoryCommand(database).commit(requireNotNull(command.serialized)).put("requestId",requestId) }

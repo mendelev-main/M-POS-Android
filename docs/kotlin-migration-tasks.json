@@ -636,9 +636,10 @@
     {
       "id": "098",
       "title": "Зал, столы, бронирования: нативные бизнес-команды",
-      "status": "planned",
+      "status": "done",
       "area": "P6",
-      "dependencies": "078"
+      "dependencies": "078",
+      "spec": "specs/098-native-hall-commands/spec.md"
     },
     {
       "id": "099",

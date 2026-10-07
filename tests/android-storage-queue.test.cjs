@@ -88,6 +88,11 @@ test('receiving draft command freezes incomplete input and initializes authorita
  input.draft.lines[0].qtyInput='changed';await new Promise(r=>setImmediate(r));const statuses=h.calls.filter(r=>r&&typeof r==='object');assert.equal(statuses.length,4);assert.ok(statuses.some(r=>r.key==='receivingDraft'&&r.action==='supplyStatus'));
  for(const s of statuses)h.context.__nativeStorageResult({requestId:s.requestId,ok:true,initialized:true});await new Promise(r=>setImmediate(r));const command=h.calls.at(-1);assert.equal(command.action,'receivingDraftCommand');assert.equal(JSON.parse(command.payload).draft.lines[0].qtyInput,'');h.context.__nativeStorageResult({requestId:command.requestId,ok:true,authoritative:true});await p;
 });
+test('hall command freezes fields before native initialization and requires an authoritative reply',async()=>{
+ const h=host(),input={version:1,operation:'table-create',id:'t',name:'Cafe',expected:{hallTables:[],bookings:[]}},p=h.context.MPosCore.HallCommands.commit(input);
+ input.name='Changed';await new Promise(r=>setImmediate(r));const statuses=h.calls.filter(r=>r&&typeof r==='object');assert.equal(statuses.length,3);assert.equal(statuses.filter(r=>r.action==='hallStatus').length,2);
+ for(const s of statuses)h.context.__nativeStorageResult({requestId:s.requestId,ok:true,initialized:true});await new Promise(r=>setImmediate(r));const command=h.calls.at(-1);assert.equal(command.action,'hallCommit');assert.equal(JSON.parse(command.payload).name,'Cafe');h.context.__nativeStorageResult({requestId:command.requestId,ok:true,authoritative:true,hallTables:[{id:'t'}],bookings:[]});assert.equal((await p).hallTables[0].id,'t');assert.equal(h.data.size,0);
+});
 test('inventory command freezes count/draft before ownership initialization and requires durability',async()=>{
  const h=host(),input={version:1,operation:'inventory-fix',id:'p',expected:{inventoryDraft:{items:[{actual:8}]}},writes:{products:[]}},p=h.context.MPosCore.InventoryCommands.commit(input);
  input.expected.inventoryDraft.items[0].actual=9;await new Promise(r=>setImmediate(r));const statuses=h.calls.filter(r=>r&&typeof r==='object');assert.equal(statuses.length,5);assert.equal(statuses.filter(r=>r.action==='inventoryStatus').length,3);

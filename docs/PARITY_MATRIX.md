@@ -382,3 +382,8 @@ Full actual-source model fixtures checked in JS/JVM: bounds, local timezone/DST/
 ## 097 — sales analytics
 
 Actual-source fixtures compare every aggregate and date bound in JS/JVM: mixed/empty/legacy payments, later returns, names/current category, missing fields, stock valuation, numeric group ties, default/Moscow/DST/reversed/invalid/future dates. Room fixture import/projection/read verifies raw fields, authority/read-only and refund-after-period policy. Native protocol omits archives; UI tests cover hidden work, stale response/tab, retry/no fallback, date blur/scroll, non-admin rendering and rollback. Physical pending. [097](../specs/097-native-sales-analytics/spec.md).
+
+
+## 098 — hall and bookings
+
+Actual reviewed source fixtures compare native commands and Room persistence: numbering/shape/rotation, deletion/cancellation, touching/conflicting windows, cancelled/orphan edit, guest count, midnight/Moscow/DST and normalized/invalid dates. JS checks immutable form capture, acknowledgement before state, double tap/failure/uncertainty, blank edit, drag restoration and rollback. Room tests inject final-booking-write failure to prove atomic deletion, guard stale/journal/duplicate/conflict commands, preserve archived receipts/extensions, and reopen null/absent/native-owned documents. FIFO tests reject obsolete shadows. Full UI 108; physical pending. [098](../specs/098-native-hall-commands/spec.md).

@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **96/110 выполнено (87,27%)**
-после 097. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **97/110 выполнено (88,18%)**
+после 098. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -571,3 +571,8 @@ Calendar periods/DST and movement/valuation/warning/supplier model read from aut
 ## 097 — native sales analytics
 
 Room-backed Kotlin aggregates and calendar bounds preserve raw receipt/payment/refund semantics, named groups and stock valuation. Read returns aggregates/count only; visible analytics updates its own screen and retains date focus/scroll, hidden tabs no longer scan receipts/prefetch loyalty. JS formatting/admin visibility/central loyalty remain; 107 owns full UI. Next 098 hall/bookings. [097](../specs/097-native-sales-analytics/spec.md).
+
+
+## 098 — authoritative hall commands
+
+Hall tables/bookings now use Room-owned full JSON and native commands with current-state conflict validation/CAS. Deleting a table cascades bookings atomically, without altering receipt/order snapshots. Reviewed permissions, cancelled statuses, local/DST windows and touching intervals remain. UI acknowledgement, temporary drag restoration, rollback handlers and v13 are preserved. Full hall UI remains 108; next business stage is 099 printing jobs/triggers. [098](../specs/098-native-hall-commands/spec.md). Physical pending.
