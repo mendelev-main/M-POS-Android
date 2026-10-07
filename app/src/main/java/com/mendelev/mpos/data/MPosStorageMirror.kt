@@ -184,6 +184,10 @@ class MPosStorageMirror(
                 attempt { MPosCustomerEngine.calculate(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native customer context unavailable") }
             }
+            "analyticsRead" -> {
+                attempt { MPosAnalyticsRepository(database).read(requireNotNull(command.serialized)).put("requestId",requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId,false,"native sales analytics unavailable") }
+            }
             "warehouseRead" -> {
                 attempt { MPosWarehouseRepository(database).read(requireNotNull(command.serialized)).put("requestId",requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId,false,"native warehouse report unavailable") }

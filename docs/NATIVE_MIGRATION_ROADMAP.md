@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **95/110 выполнено (86,36%)**
-после 096. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **96/110 выполнено (87,27%)**
+после 097. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -566,3 +566,8 @@ Authoritative native fixation/difference/loss calculation and atomic stock/draft
 ## 096 — native warehouse model
 
 Calendar periods/DST and movement/valuation/warning/supplier model read from authoritative Room sources. Existing page/export/monthly handlers await model, preserve role/send policy, capture export choices and reject stale renders. Android ICU RU ordering matches source. Presentation/unit grouping remains JS; historical estimates never mutate stock. Next 097 analytics. [096](../specs/096-native-warehouse-reports/spec.md).
+
+
+## 097 — native sales analytics
+
+Room-backed Kotlin aggregates and calendar bounds preserve raw receipt/payment/refund semantics, named groups and stock valuation. Read returns aggregates/count only; visible analytics updates its own screen and retains date focus/scroll, hidden tabs no longer scan receipts/prefetch loyalty. JS formatting/admin visibility/central loyalty remain; 107 owns full UI. Next 098 hall/bookings. [097](../specs/097-native-sales-analytics/spec.md).

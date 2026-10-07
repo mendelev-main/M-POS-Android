@@ -377,3 +377,8 @@ Actual-source candidates independently tested in JS/JVM: current-stock fixation,
 ## 096 — warehouse reports
 
 Full actual-source model fixtures checked in JS/JVM: bounds, local timezone/DST/leap days, units, prices, supplier snapshots, incomplete/invalid/legacy history, deleted/untracked products, nulls and RU collation. Room proves authoritative sources and unchanged business documents. Native protocol period capture, stale/close handling, no fallback, section/format selection freeze, PDF/monthly/admin/rollback tested. Physical pending. [096](../specs/096-native-warehouse-reports/spec.md).
+
+
+## 097 — sales analytics
+
+Actual-source fixtures compare every aggregate and date bound in JS/JVM: mixed/empty/legacy payments, later returns, names/current category, missing fields, stock valuation, numeric group ties, default/Moscow/DST/reversed/invalid/future dates. Room fixture import/projection/read verifies raw fields, authority/read-only and refund-after-period policy. Native protocol omits archives; UI tests cover hidden work, stale response/tab, retry/no fallback, date blur/scroll, non-admin rendering and rollback. Physical pending. [097](../specs/097-native-sales-analytics/spec.md).

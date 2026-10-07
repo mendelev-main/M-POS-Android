@@ -1,0 +1,1529 @@
+[
+  {
+    "label": "empty",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "orders": [],
+      "products": [
+        {
+          "id": "p",
+          "name": "Current name",
+          "type": "simple",
+          "stock": 10,
+          "cost": 2,
+          "category": "Current category"
+        }
+      ],
+      "shifts": [
+        {
+          "id": "s",
+          "employeeName": "Employee"
+        }
+      ],
+      "analyticsFrom": "2026-10-01",
+      "analyticsTo": "2026-10-02",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 0,
+      "cash": 0,
+      "card": 0,
+      "cost": 0,
+      "profit": 0,
+      "avg": 0,
+      "employees": [],
+      "categories": [],
+      "products": [],
+      "orderCount": 0,
+      "inventoryValue": 20,
+      "range": {
+        "from": 1790812800000,
+        "to": 1790985599999
+      }
+    }
+  },
+  {
+    "label": "bounds",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "orders": [
+        {
+          "id": "a",
+          "timestamp": 1790812799999,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "timestamp": 1790812800000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        },
+        {
+          "id": "c",
+          "timestamp": 1790985599999,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        },
+        {
+          "id": "d",
+          "timestamp": 1790985600000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        }
+      ],
+      "products": [
+        {
+          "id": "p",
+          "name": "Current name",
+          "type": "simple",
+          "stock": 10,
+          "cost": 2,
+          "category": "Current category"
+        }
+      ],
+      "shifts": [
+        {
+          "id": "s",
+          "employeeName": "Employee"
+        }
+      ],
+      "analyticsFrom": "2026-10-01",
+      "analyticsTo": "2026-10-02",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 200,
+      "cash": 200,
+      "card": 0,
+      "cost": 12,
+      "profit": 188,
+      "avg": 100,
+      "employees": [
+        {
+          "name": "Employee",
+          "value": 200
+        }
+      ],
+      "categories": [
+        {
+          "name": "Current category",
+          "revenue": 160,
+          "qty": 4
+        }
+      ],
+      "products": [
+        {
+          "name": "Historical name",
+          "revenue": 160,
+          "qty": 4
+        }
+      ],
+      "orderCount": 2,
+      "inventoryValue": 20,
+      "range": {
+        "from": 1790812800000,
+        "to": 1790985599999
+      }
+    }
+  },
+  {
+    "label": "payment-arrays",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "orders": [
+        {
+          "id": "a",
+          "timestamp": 1790812800000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ],
+          "payments": [
+            {
+              "method": "cash",
+              "amount": 30
+            },
+            {
+              "method": "card",
+              "amount": 70
+            },
+            {
+              "method": "other",
+              "amount": 5
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "timestamp": 1790812800001,
+          "shiftId": "s",
+          "total": 200,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ],
+          "payments": []
+        },
+        {
+          "id": "c",
+          "timestamp": 1790812800002,
+          "shiftId": "s",
+          "total": 300,
+          "method": "card",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        },
+        {
+          "id": "d",
+          "timestamp": 1790812800003,
+          "shiftId": "s",
+          "total": 400,
+          "method": "other",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ],
+          "payments": null
+        }
+      ],
+      "products": [
+        {
+          "id": "p",
+          "name": "Current name",
+          "type": "simple",
+          "stock": 10,
+          "cost": 2,
+          "category": "Current category"
+        }
+      ],
+      "shifts": [
+        {
+          "id": "s",
+          "employeeName": "Employee"
+        }
+      ],
+      "analyticsFrom": "2026-10-01",
+      "analyticsTo": "2026-10-02",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 1000,
+      "cash": 30,
+      "card": 370,
+      "cost": 24,
+      "profit": 976,
+      "avg": 250,
+      "employees": [
+        {
+          "name": "Employee",
+          "value": 1000
+        }
+      ],
+      "categories": [
+        {
+          "name": "Current category",
+          "revenue": 320,
+          "qty": 8
+        }
+      ],
+      "products": [
+        {
+          "name": "Historical name",
+          "revenue": 320,
+          "qty": 8
+        }
+      ],
+      "orderCount": 4,
+      "inventoryValue": 20,
+      "range": {
+        "from": 1790812800000,
+        "to": 1790985599999
+      }
+    }
+  },
+  {
+    "label": "returns-independent-of-date",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "orders": [
+        {
+          "id": "a",
+          "timestamp": 1790812800000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ],
+          "returnedAt": 1791374400000
+        },
+        {
+          "id": "b",
+          "timestamp": 1790812800001,
+          "shiftId": "s",
+          "total": 200,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ],
+          "returnedAt": "0"
+        },
+        {
+          "id": "c",
+          "timestamp": 1790812800002,
+          "shiftId": "s",
+          "total": 300,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ],
+          "returnedAt": 0
+        }
+      ],
+      "products": [
+        {
+          "id": "p",
+          "name": "Current name",
+          "type": "simple",
+          "stock": 10,
+          "cost": 2,
+          "category": "Current category"
+        }
+      ],
+      "shifts": [
+        {
+          "id": "s",
+          "employeeName": "Employee"
+        }
+      ],
+      "analyticsFrom": "2026-10-01",
+      "analyticsTo": "2026-10-02",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 300,
+      "cash": 300,
+      "card": 0,
+      "cost": 6,
+      "profit": 294,
+      "avg": 300,
+      "employees": [
+        {
+          "name": "Employee",
+          "value": 300
+        }
+      ],
+      "categories": [
+        {
+          "name": "Current category",
+          "revenue": 80,
+          "qty": 2
+        }
+      ],
+      "products": [
+        {
+          "name": "Historical name",
+          "revenue": 80,
+          "qty": 2
+        }
+      ],
+      "orderCount": 1,
+      "inventoryValue": 20,
+      "range": {
+        "from": 1790812800000,
+        "to": 1790985599999
+      }
+    }
+  },
+  {
+    "label": "group-names-and-current-category",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "orders": [
+        {
+          "id": "a",
+          "timestamp": 1790812800000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "gone1",
+              "productName": "Same",
+              "category": "Old",
+              "qty": 1,
+              "price": 20,
+              "cost": 2
+            },
+            {
+              "productId": "gone2",
+              "name": "Same",
+              "qty": 2,
+              "price": 30,
+              "cost": 4
+            },
+            {
+              "qty": 1,
+              "price": 10
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "timestamp": 1790812800001,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "qty": 2,
+              "price": 10
+            }
+          ]
+        }
+      ],
+      "products": [],
+      "shifts": [],
+      "analyticsFrom": "2026-10-01",
+      "analyticsTo": "2026-10-02",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 200,
+      "cash": 200,
+      "card": 0,
+      "cost": 10,
+      "profit": 190,
+      "avg": 100,
+      "employees": [
+        {
+          "name": "Без сотрудника",
+          "value": 200
+        }
+      ],
+      "categories": [
+        {
+          "name": "Без категории",
+          "revenue": 90,
+          "qty": 5
+        },
+        {
+          "name": "Old",
+          "revenue": 20,
+          "qty": 1
+        }
+      ],
+      "products": [
+        {
+          "name": "Same",
+          "revenue": 80,
+          "qty": 3
+        },
+        {
+          "name": "Товар",
+          "revenue": 30,
+          "qty": 3
+        }
+      ],
+      "orderCount": 2,
+      "inventoryValue": 0,
+      "range": {
+        "from": 1790812800000,
+        "to": 1790985599999
+      }
+    }
+  },
+  {
+    "label": "legacy-numbers-and-stock-value",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "orders": [
+        {
+          "id": "a",
+          "timestamp": 1790812800000,
+          "shiftId": "s",
+          "total": "0x64",
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "qty": "2",
+              "price": "bad",
+              "cost": null
+            },
+            {
+              "productId": "p",
+              "qty": "bad",
+              "price": 10,
+              "cost": 2
+            }
+          ]
+        }
+      ],
+      "products": [
+        {
+          "id": "p",
+          "name": "Current name",
+          "type": "simple",
+          "stock": -2,
+          "cost": 3,
+          "category": "Current category"
+        },
+        {
+          "id": "q",
+          "type": "simple",
+          "stock": 4,
+          "cost": -1
+        },
+        {
+          "id": "u",
+          "type": "simple",
+          "stock": 100,
+          "cost": 5,
+          "noStockTracking": true
+        },
+        {
+          "id": "c",
+          "type": "composite",
+          "stock": 100,
+          "cost": 5
+        },
+        {
+          "id": "ok",
+          "type": "simple",
+          "stock": "4",
+          "cost": "3"
+        }
+      ],
+      "shifts": [
+        {
+          "id": "s",
+          "employeeName": "Employee"
+        }
+      ],
+      "analyticsFrom": "2026-10-01",
+      "analyticsTo": "2026-10-02",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 100,
+      "cash": 100,
+      "card": 0,
+      "cost": 0,
+      "profit": 100,
+      "avg": 100,
+      "employees": [
+        {
+          "name": "Employee",
+          "value": 100
+        }
+      ],
+      "categories": [
+        {
+          "name": "Current category",
+          "revenue": 0,
+          "qty": 2
+        }
+      ],
+      "products": [
+        {
+          "name": "Current name",
+          "revenue": 0,
+          "qty": 2
+        }
+      ],
+      "orderCount": 1,
+      "inventoryValue": 12,
+      "range": {
+        "from": 1790812800000,
+        "to": 1790985599999
+      }
+    }
+  },
+  {
+    "label": "numeric-group-ties",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "orders": [
+        {
+          "id": "a",
+          "timestamp": 1790812800000,
+          "shiftId": "s10",
+          "total": 10,
+          "method": "cash",
+          "items": [
+            {
+              "name": "10",
+              "category": "10",
+              "qty": 1,
+              "price": 10
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "timestamp": 1790812800000,
+          "shiftId": "s2",
+          "total": 10,
+          "method": "cash",
+          "items": [
+            {
+              "name": "2",
+              "category": "2",
+              "qty": 1,
+              "price": 10
+            }
+          ]
+        }
+      ],
+      "products": [
+        {
+          "id": "p",
+          "name": "Current name",
+          "type": "simple",
+          "stock": 10,
+          "cost": 2,
+          "category": "Current category"
+        }
+      ],
+      "shifts": [
+        {
+          "id": "s10",
+          "employeeName": "10"
+        },
+        {
+          "id": "s2",
+          "employeeName": "2"
+        }
+      ],
+      "analyticsFrom": "2026-10-01",
+      "analyticsTo": "2026-10-02",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 20,
+      "cash": 20,
+      "card": 0,
+      "cost": 0,
+      "profit": 20,
+      "avg": 10,
+      "employees": [
+        {
+          "name": "2",
+          "value": 10
+        },
+        {
+          "name": "10",
+          "value": 10
+        }
+      ],
+      "categories": [
+        {
+          "name": "2",
+          "revenue": 10,
+          "qty": 1
+        },
+        {
+          "name": "10",
+          "revenue": 10,
+          "qty": 1
+        }
+      ],
+      "products": [
+        {
+          "name": "2",
+          "revenue": 10,
+          "qty": 1
+        },
+        {
+          "name": "10",
+          "revenue": 10,
+          "qty": 1
+        }
+      ],
+      "orderCount": 2,
+      "inventoryValue": 20,
+      "range": {
+        "from": 1790812800000,
+        "to": 1790985599999
+      }
+    }
+  },
+  {
+    "label": "default-today",
+    "request": {
+      "version": 1,
+      "from": "",
+      "to": "",
+      "now": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "orders": [
+        {
+          "id": "a",
+          "timestamp": 1791374400000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "timestamp": 1790812800000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        }
+      ],
+      "products": [
+        {
+          "id": "p",
+          "name": "Current name",
+          "type": "simple",
+          "stock": 10,
+          "cost": 2,
+          "category": "Current category"
+        }
+      ],
+      "shifts": [
+        {
+          "id": "s",
+          "employeeName": "Employee"
+        }
+      ],
+      "analyticsFrom": "",
+      "analyticsTo": "",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 100,
+      "cash": 100,
+      "card": 0,
+      "cost": 6,
+      "profit": 94,
+      "avg": 100,
+      "employees": [
+        {
+          "name": "Employee",
+          "value": 100
+        }
+      ],
+      "categories": [
+        {
+          "name": "Current category",
+          "revenue": 80,
+          "qty": 2
+        }
+      ],
+      "products": [
+        {
+          "name": "Historical name",
+          "revenue": 80,
+          "qty": 2
+        }
+      ],
+      "orderCount": 1,
+      "inventoryValue": 20,
+      "range": {
+        "from": 1791331200000,
+        "to": 1791417599999
+      }
+    }
+  },
+  {
+    "label": "moscow-bounds",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "zone": "Europe/Moscow"
+    },
+    "state": {
+      "orders": [
+        {
+          "id": "a",
+          "timestamp": 1790801999999,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "timestamp": 1790802000000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        },
+        {
+          "id": "c",
+          "timestamp": 1790974799999,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        },
+        {
+          "id": "d",
+          "timestamp": 1790974800000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        }
+      ],
+      "products": [
+        {
+          "id": "p",
+          "name": "Current name",
+          "type": "simple",
+          "stock": 10,
+          "cost": 2,
+          "category": "Current category"
+        }
+      ],
+      "shifts": [
+        {
+          "id": "s",
+          "employeeName": "Employee"
+        }
+      ],
+      "analyticsFrom": "2026-10-01",
+      "analyticsTo": "2026-10-02",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 200,
+      "cash": 200,
+      "card": 0,
+      "cost": 12,
+      "profit": 188,
+      "avg": 100,
+      "employees": [
+        {
+          "name": "Employee",
+          "value": 200
+        }
+      ],
+      "categories": [
+        {
+          "name": "Current category",
+          "revenue": 160,
+          "qty": 4
+        }
+      ],
+      "products": [
+        {
+          "name": "Historical name",
+          "revenue": 160,
+          "qty": 4
+        }
+      ],
+      "orderCount": 2,
+      "inventoryValue": 20,
+      "range": {
+        "from": 1790802000000,
+        "to": 1790974799999
+      }
+    }
+  },
+  {
+    "label": "dst-day",
+    "request": {
+      "version": 1,
+      "from": "2025-10-26",
+      "to": "2025-10-26",
+      "now": 1791374400000,
+      "zone": "Europe/Berlin"
+    },
+    "state": {
+      "orders": [
+        {
+          "id": "a",
+          "timestamp": 1761429600000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "timestamp": 1761519599999,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        },
+        {
+          "id": "c",
+          "timestamp": 1761519600000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        }
+      ],
+      "products": [
+        {
+          "id": "p",
+          "name": "Current name",
+          "type": "simple",
+          "stock": 10,
+          "cost": 2,
+          "category": "Current category"
+        }
+      ],
+      "shifts": [
+        {
+          "id": "s",
+          "employeeName": "Employee"
+        }
+      ],
+      "analyticsFrom": "2025-10-26",
+      "analyticsTo": "2025-10-26",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 200,
+      "cash": 200,
+      "card": 0,
+      "cost": 12,
+      "profit": 188,
+      "avg": 100,
+      "employees": [
+        {
+          "name": "Employee",
+          "value": 200
+        }
+      ],
+      "categories": [
+        {
+          "name": "Current category",
+          "revenue": 160,
+          "qty": 4
+        }
+      ],
+      "products": [
+        {
+          "name": "Historical name",
+          "revenue": 160,
+          "qty": 4
+        }
+      ],
+      "orderCount": 2,
+      "inventoryValue": 20,
+      "range": {
+        "from": 1761429600000,
+        "to": 1761519599999
+      }
+    }
+  },
+  {
+    "label": "reversed-range",
+    "request": {
+      "version": 1,
+      "from": "2026-10-03",
+      "to": "2026-10-01",
+      "now": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "orders": [
+        {
+          "id": "a",
+          "timestamp": 1790812800000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        }
+      ],
+      "products": [
+        {
+          "id": "p",
+          "name": "Current name",
+          "type": "simple",
+          "stock": 10,
+          "cost": 2,
+          "category": "Current category"
+        }
+      ],
+      "shifts": [
+        {
+          "id": "s",
+          "employeeName": "Employee"
+        }
+      ],
+      "analyticsFrom": "2026-10-03",
+      "analyticsTo": "2026-10-01",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 0,
+      "cash": 0,
+      "card": 0,
+      "cost": 0,
+      "profit": 0,
+      "avg": 0,
+      "employees": [],
+      "categories": [],
+      "products": [],
+      "orderCount": 0,
+      "inventoryValue": 20,
+      "range": {
+        "from": 1790985600000,
+        "to": 1790899199999
+      }
+    }
+  },
+  {
+    "label": "invalid-range",
+    "request": {
+      "version": 1,
+      "from": "bad",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "orders": [
+        {
+          "id": "a",
+          "timestamp": 1790812800000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        }
+      ],
+      "products": [
+        {
+          "id": "p",
+          "name": "Current name",
+          "type": "simple",
+          "stock": 10,
+          "cost": 2,
+          "category": "Current category"
+        }
+      ],
+      "shifts": [
+        {
+          "id": "s",
+          "employeeName": "Employee"
+        }
+      ],
+      "analyticsFrom": "bad",
+      "analyticsTo": "2026-10-02",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 0,
+      "cash": 0,
+      "card": 0,
+      "cost": 0,
+      "profit": 0,
+      "avg": 0,
+      "employees": [],
+      "categories": [],
+      "products": [],
+      "orderCount": 0,
+      "inventoryValue": 20,
+      "range": {
+        "from": null,
+        "to": 1790985599999
+      }
+    }
+  },
+  {
+    "label": "normalized-short-month",
+    "request": {
+      "version": 1,
+      "from": "2026-02-29",
+      "to": "2026-02-29",
+      "now": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "orders": [
+        {
+          "id": "a",
+          "timestamp": 1772366400000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        }
+      ],
+      "products": [
+        {
+          "id": "p",
+          "name": "Current name",
+          "type": "simple",
+          "stock": 10,
+          "cost": 2,
+          "category": "Current category"
+        }
+      ],
+      "shifts": [
+        {
+          "id": "s",
+          "employeeName": "Employee"
+        }
+      ],
+      "analyticsFrom": "2026-02-29",
+      "analyticsTo": "2026-02-29",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 100,
+      "cash": 100,
+      "card": 0,
+      "cost": 6,
+      "profit": 94,
+      "avg": 100,
+      "employees": [
+        {
+          "name": "Employee",
+          "value": 100
+        }
+      ],
+      "categories": [
+        {
+          "name": "Current category",
+          "revenue": 80,
+          "qty": 2
+        }
+      ],
+      "products": [
+        {
+          "name": "Historical name",
+          "revenue": 80,
+          "qty": 2
+        }
+      ],
+      "orderCount": 1,
+      "inventoryValue": 20,
+      "range": {
+        "from": 1772323200000,
+        "to": 1772409599999
+      }
+    }
+  },
+  {
+    "label": "future-range",
+    "request": {
+      "version": 1,
+      "from": "2026-10-08",
+      "to": "2026-10-08",
+      "now": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "orders": [
+        {
+          "id": "future",
+          "timestamp": 1791460800000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        }
+      ],
+      "products": [
+        {
+          "id": "p",
+          "name": "Current name",
+          "type": "simple",
+          "stock": 10,
+          "cost": 2,
+          "category": "Current category"
+        }
+      ],
+      "shifts": [
+        {
+          "id": "s",
+          "employeeName": "Employee"
+        }
+      ],
+      "analyticsFrom": "2026-10-08",
+      "analyticsTo": "2026-10-08",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 100,
+      "cash": 100,
+      "card": 0,
+      "cost": 6,
+      "profit": 94,
+      "avg": 100,
+      "employees": [
+        {
+          "name": "Employee",
+          "value": 100
+        }
+      ],
+      "categories": [
+        {
+          "name": "Current category",
+          "revenue": 80,
+          "qty": 2
+        }
+      ],
+      "products": [
+        {
+          "name": "Historical name",
+          "revenue": 80,
+          "qty": 2
+        }
+      ],
+      "orderCount": 1,
+      "inventoryValue": 20,
+      "range": {
+        "from": 1791417600000,
+        "to": 1791503999999
+      }
+    }
+  },
+  {
+    "label": "invalid-day32",
+    "request": {
+      "version": 1,
+      "from": "2026-02-32",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "orders": [
+        {
+          "id": "a",
+          "timestamp": 1790812800000,
+          "shiftId": "s",
+          "total": 100,
+          "method": "cash",
+          "items": [
+            {
+              "productId": "p",
+              "name": "Historical name",
+              "category": "Historical category",
+              "qty": 2,
+              "price": 40,
+              "cost": 3
+            }
+          ]
+        }
+      ],
+      "products": [
+        {
+          "id": "p",
+          "name": "Current name",
+          "type": "simple",
+          "stock": 10,
+          "cost": 2,
+          "category": "Current category"
+        }
+      ],
+      "shifts": [
+        {
+          "id": "s",
+          "employeeName": "Employee"
+        }
+      ],
+      "analyticsFrom": "2026-02-32",
+      "analyticsTo": "2026-10-02",
+      "tab": "analytics",
+      "loyaltyAnalytics": null
+    },
+    "expected": {
+      "revenue": 0,
+      "cash": 0,
+      "card": 0,
+      "cost": 0,
+      "profit": 0,
+      "avg": 0,
+      "employees": [],
+      "categories": [],
+      "products": [],
+      "orderCount": 0,
+      "inventoryValue": 20,
+      "range": {
+        "from": null,
+        "to": 1790985599999
+      }
+    }
+  }
+]

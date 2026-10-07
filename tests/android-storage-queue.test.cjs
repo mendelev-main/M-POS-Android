@@ -98,3 +98,8 @@ test('warehouse read freezes period and initializes only authoritative reporting
  input.from='changed';await new Promise(r=>setImmediate(r));const statuses=h.calls.filter(r=>r&&typeof r==='object');assert.equal(statuses.length,3);
  for(const s of statuses)h.context.__nativeStorageResult({requestId:s.requestId,ok:true,initialized:true});await new Promise(r=>setImmediate(r));const command=h.calls.at(-1);assert.equal(command.action,'warehouseRead');assert.equal(JSON.parse(command.payload).from,'2026-10-01');assert.equal(JSON.parse(command.payload).products,undefined);h.context.__nativeStorageResult({requestId:command.requestId,ok:true,authoritative:true,report:{}});await p;
 });
+test('sales analytics freezes period and sends no archive to native read',async()=>{
+ const h=host(),input={version:1,from:'2026-10-01',to:'2026-10-02',now:1,zone:'Europe/Moscow'},p=h.context.MPosCore.Analytics.read(input);
+ input.to='changed';await new Promise(r=>setImmediate(r));const statuses=h.calls.filter(r=>r&&typeof r==='object');assert.equal(statuses.length,3);
+ for(const s of statuses)h.context.__nativeStorageResult({requestId:s.requestId,ok:true,initialized:true});await new Promise(r=>setImmediate(r));const command=h.calls.at(-1);assert.equal(command.action,'analyticsRead');assert.equal(JSON.parse(command.payload).to,'2026-10-02');assert.equal(JSON.parse(command.payload).orders,undefined);h.context.__nativeStorageResult({requestId:command.requestId,ok:true,authoritative:true,data:{}});await p;
+});

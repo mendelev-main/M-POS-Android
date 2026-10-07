@@ -25,7 +25,7 @@
    if(!['pdf','xlsx'].includes(format))throw Error('Выберите формат отчёта');
    const from=document.getElementById('warehouse-from').value,to=document.getElementById('warehouse-to').value,report=await read(from,to),payload=warehouseSelectedPayload(report,selected);
    if(!currentShiftEmployeeIsAdmin()){flash('Экспорт доступен администратору');return false}
-   if(!global.webkit?.messageHandlers?.printer){flash('Экспорт доступен в приложении на iPad');return false}
+   if(!global.webkit?.messageHandlers?.printer){flash('Экспорт доступен в приложении M POS');return false}
    global.webkit.messageHandlers.printer.postMessage({action:format==='xlsx'?'shareWarehouseExcel':'shareWarehouseReport',report:payload});
    if(ticket===generation){generation++;global._warehouseFilters={from,to};using(report,()=>originalRender());closeModal()}return true;
   }catch(error){flash(error.message);return false}finally{exportBusy=false}
@@ -38,7 +38,7 @@
    const from=document.getElementById('warehouse-from')?.value||global._warehouseFilters.from,to=document.getElementById('warehouse-to')?.value||global._warehouseFilters.to,report=await read(from,to),payload=warehouseExportPayload(report,documentsOnly);
    if(!currentShiftEmployeeIsAdmin()){flash('Экспорт доступен администратору');return false}
    if(ticket===generation){generation++;global._warehouseFilters={from,to};using(report,()=>originalRender())}
-   if(!global.webkit?.messageHandlers?.printer){flash('Экспорт PDF доступен в приложении на iPad');return false}
+   if(!global.webkit?.messageHandlers?.printer){flash('Экспорт PDF доступен в приложении M POS');return false}
    global.webkit.messageHandlers.printer.postMessage({action:'shareWarehouseReport',report:payload});return true;
   }catch(error){flash(error.message);return false}finally{exportBusy=false}
  };

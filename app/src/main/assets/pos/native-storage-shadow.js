@@ -153,6 +153,9 @@
   mposCore.CustomerContext=Object.freeze({
     async calculate(input){return requireNative(await request('customerContextRead',{payload:JSON.stringify(input)}),true);}
   });
+  mposCore.Analytics=Object.freeze({
+    async read(input){const payload=JSON.stringify(input);await Promise.all(['products','orders','shifts'].map(initializeNative));return requireNative(await request('analyticsRead',{payload}),true);}
+  });
   mposCore.Warehouse=Object.freeze({
     async read(input){const payload=JSON.stringify(input);await Promise.all(['products','receivings','orders'].map(initializeNative));return requireNative(await request('warehouseRead',{payload}),true);}
   });

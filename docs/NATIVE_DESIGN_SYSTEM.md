@@ -42,3 +42,6 @@ Skills в проекте: `.agents/skills/frontend-design/SKILL.md` (upstream/pi
 076: monetary preview refresh reuses existing POS DOM/classes/typography. Only
 line/total/gift text nodes update after matching native quote; root, forms and
 scroll identity remain. Physical light/dark/font-scale acceptance pending.
+
+
+097: analytics loading/error uses existing Web card/analytics-title/center-note/btn-primary tokens and bundled Manrope in both themes. Successful rendering retains reviewed chart/KPI layout. Async replacement retains screen scroll and waits for date-input blur. This is a Web presentation adapter, not native analytics UI acceptance; full UI remains 107. Physical theme/font-scale checks pending.
