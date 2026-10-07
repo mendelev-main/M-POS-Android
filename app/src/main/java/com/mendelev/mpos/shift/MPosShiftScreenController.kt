@@ -10,6 +10,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.core.view.isVisible
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -31,6 +32,7 @@ class MPosShiftScreenController(
     private val accent get() = theme.accent
     private fun shape(fill: Int, radius: Int = 12, border: Boolean = false) = theme.shape(fill, radius, border)
     private var generation = 0L
+    private var sessionEpoch = 0L
     private var pendingId: String? = null
     private var lastPayload: JSONObject? = null
     init {
@@ -44,6 +46,7 @@ class MPosShiftScreenController(
         if (payload.optString("action") != "show") return
         val bounds = bounds(payload, host.width, host.height) ?: run { hide(); return }
         theme = MPosNativeTheme(context, payload.optString("theme") == "dark")
+        sessionEpoch++
         scroll.setBackgroundColor(theme.bg)
         lastPayload = JSONObject(payload.toString())
         scroll.layoutParams = FrameLayout.LayoutParams(bounds.width, bounds.height).apply { leftMargin = bounds.left; topMargin = bounds.top }
@@ -51,7 +54,14 @@ class MPosShiftScreenController(
         content.removeAllViews(); title("Кассовая смена"); text(content, "Загрузка смены…")
         refresh()
     }
-    fun hide() { generation++; pendingId = null; scroll.visibility = View.GONE }
+    fun hide() { generation++; sessionEpoch++; pendingId = null; scroll.visibility = View.GONE }
+    /** Root invalidation comes directly from Room; old controls/results must not survive it. */
+    fun rootSessionChanged() {
+        if (scroll.visibility != View.VISIBLE || lastPayload == null) return
+        sessionEpoch++
+        content.removeAllViews(); title("Кассовая смена"); text(content, "Загрузка смены…")
+        refresh()
+    }
     private fun refresh() {
         val payload = lastPayload ?: return
         pendingId = "native-shift-screen-${++generation}"
@@ -147,10 +157,11 @@ class MPosShiftScreenController(
             theme.text(left, 15f, 700); theme.text(right, 18f, 700); left.setTextColor(accent); right.setTextColor(accent) }
     }
     private fun button(parent: LinearLayout, label: String, weighted: Boolean = false, onClick: () -> Unit) {
+        val epoch = sessionEpoch
         parent.addView(Button(context).apply {
             text = label
             theme.button(this, primary = label == "Открыть смену", destructive = label == "Закрыть смену" || label == "Изъять наличные")
-            setOnClickListener { onClick() }
+            setOnClickListener { if (sessionEpoch == epoch && scroll.isVisible) onClick() }
         }, if (weighted) LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(8) } else LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8); bottomMargin = dp(4) })
     }
     private fun card(): LinearLayout = LinearLayout(context).apply {

@@ -9,8 +9,11 @@ import org.json.JSONObject
 class MPosStorageMirror(
     private val database: MPosDatabase,
     scope: CoroutineScope,
+    private val rootBootstrap: suspend () -> JSONObject,
     private val onResult: (JSONObject) -> Unit,
 ) {
+    constructor(database: MPosDatabase, scope: CoroutineScope, onResult: (JSONObject) -> Unit) :
+        this(database, scope, { MPosRootSessionRepository(database).read().bootstrap() }, onResult)
     private val queue = MPosStorageQueue(scope)
     private val writeState = MPosShadowWriteState()
 
@@ -303,7 +306,7 @@ class MPosStorageMirror(
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native active session unavailable") }
             }
             "rootSessionBootstrap" -> {
-                attempt { MPosRootSessionRepository(database).read().bootstrap().put("requestId", requestId) }
+                attempt { rootBootstrap().put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native root session unavailable") }
             }
             "splitRecoveryRead" -> {

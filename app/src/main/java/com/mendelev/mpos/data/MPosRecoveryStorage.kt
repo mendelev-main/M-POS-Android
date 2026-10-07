@@ -10,11 +10,16 @@ class MPosRecoveryStorage(private val database: MPosDatabase) {
     private val documents = database.legacyStorageShadowDao()
     private val currentOrderSessionDao = database.currentOrderSessionProjectionDao()
     private val criticalJournalDao = database.criticalStorageJournalProjectionDao()
-    companion object { val KEYS = setOf("currentOrderSession", "criticalStorageJournal") }
+    companion object {
+        val KEYS = setOf("currentOrderSession", "criticalStorageJournal")
+        internal fun authorityKey(key: String): String {
+            require(key in KEYS) { "unsupported recovery key" }
+            return "mpos_recovery_authority_v1:$key"
+        }
+    }
 
     private fun marker(key: String): String {
-        require(key in KEYS) { "unsupported recovery key" }
-        return "mpos_recovery_authority_v1:$key"
+        return authorityKey(key)
     }
 
     suspend fun isAuthoritative(key: String): Boolean = documents.get(marker(key)) != null

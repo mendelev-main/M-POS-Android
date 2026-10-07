@@ -637,3 +637,5 @@ After the native bootstrap cutover: restart offline with imported v13 data; veri
   large fonts retain the current native form. No physical pass is claimed.
 
 109.06 (pending): restart with admin/non-admin shift, change employee role and replace/import owned shift/staff data, then verify fresh native opening metadata and no stale selected employee. Pending critical journal must block opening without automatic print or extra shift. Physical full import/restart acceptance remains unrun.
+
+109.06 owner (pending physical): открыть экран смены, изменить сотрудника/роль или восстановить тестовую v13-копию и убедиться, что видимый экран перечитывает данные без повторного открытия вкладки; старые кнопки не действуют во время загрузки. Проверить foreground без изменения данных (сохранение прокрутки), force-stop/restart и пустую установку. При повреждённом/незавершённом журнале нет автоматической оплаты, печати или отправки остатков.

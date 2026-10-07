@@ -805,9 +805,13 @@
           "acceptance": "Kotlin владеет currentShift, выбранным сотрудником и порядком старта; restart/import не оставляют устаревшее состояние.",
           "evidence": [
             "app/src/main/java/com/mendelev/mpos/data/MPosRootSessionRepository.kt",
-            "app/src/test/java/com/mendelev/mpos/data/MPosRootSessionRepositoryTest.kt"
+            "app/src/main/java/com/mendelev/mpos/data/MPosRootSessionOwner.kt",
+            "app/src/main/java/com/mendelev/mpos/MainActivity.kt",
+            "app/src/test/java/com/mendelev/mpos/data/MPosRootSessionRepositoryTest.kt",
+            "app/src/test/java/com/mendelev/mpos/data/MPosRootSessionOwnerTest.kt",
+            "app/src/test/java/com/mendelev/mpos/shift/MPosShiftScreenControllerTest.kt"
           ],
-          "remaining": "Корневой Activity/session controller, полный порядок запуска и замена синхронных JS currentShift/role helpers ещё не завершены."
+          "remaining": "Нативный lifecycle/наблюдение сессии подключены; полный порядок старта и замена синхронных JS currentShift/role helpers остаются."
         },
         {
           "id": "109.07",

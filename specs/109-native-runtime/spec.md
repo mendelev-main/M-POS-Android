@@ -154,3 +154,21 @@ Opening carryover metadata reuses the command's existing root transaction snapsh
 ## Verification of 109.06 root-context increment
 
 551/551 JS tests and 442/442 JVM tests passed after final snapshot reuse; failures/errors/skips: 0. Lint: 0 errors, 15 existing warnings in this environment. No APK assembly or physical acceptance. 109.06 remains in_progress; counters: 5/20 within 109, 112/129 expanded, 107/110 major milestones.
+
+
+## 109.06 — Activity-owned live root session
+
+MPosRootSessionOwner now starts with MainActivity, observes only the three root documents and their authority markers, rechecks them on foreground and closes with the Activity. Its states are Loading, AwaitingMigration, Ready, Failed and Closed. Room supplies all six rows in one query. Missing authority does not seed or erase documents; malformed data withdraws the previous Ready state. Recovery pending is exposed without replay or network/print effects. The observer continues after malformed data is replaced and suppresses publications from cancelled lifecycle generations.
+
+Observed snapshots are detached from consumers: raw arrays, current shift/employee and bootstrap JSON cannot mutate the owner's retained model. Timestamp-only or unrelated table invalidations do not reproject root data. A foreground query that confirms unchanged payloads reuses the same snapshot/revision, so the shift surface is not reset unnecessarily. There is no measured tablet performance claim.
+
+Production rootSessionBootstrap is delegated to the owner through the existing storage FIFO; it always reads a fresh repository transaction rather than trusting an observed snapshot. Native opening and other commands retain their own transaction checks. Activity collects root revisions and invalidates a visible native shift screen directly. Old controls are removed during reload, detached button callbacks and late query results are ignored, and hidden screens stay hidden. Layout/theme are the existing MPosNativeTheme presentation.
+
+Rollback remains the existing ActiveSession and native shift-screen compatibility flags; storage ownership/schema/v13 are unchanged. The read-only observer does not dispatch payments, journal replay, availability, catalogue sync, print or notifications. Complete root startup orchestration and replacement of synchronous JS currentShift/role helpers still remain; 109.06 stays in_progress.
+
+Automated cases: empty installation awaiting migration; owned replacements and role edits without browser notifications; journal pending without replay; malformed data/follow-up repair; authority removal; foreground unchanged snapshot reuse; live bootstrap despite observer timing; consumer isolation; close/refresh/bootstrap after destruction; native surface invalidation and stale controls/results.
+
+
+## Verification of root lifecycle owner increment
+
+Full suite: 551/551 JS and 449/449 JVM passed; no failures/errors/skips. After the final KTX-only visibility adjustment, the 5 shift-controller JVM tests and lint were rerun successfully; JS 551/551 was also rechecked. Final lint: 0 errors, 15 existing warnings. No APK assembly or physical tablet acceptance. Counters remain 5/20 for 109, 112/129 expanded and 107/110 major milestones; 109.06 stays in_progress.

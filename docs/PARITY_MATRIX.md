@@ -465,3 +465,5 @@ acceptance pending, engineering progress remains 107/110 (97.27%).
 No local product APK assembly; physical acceptance pending. Progress 107/110.
 
 109.06 в работе: свежий корневой Room-контекст (смена, сотрудник, роль, critical journal) подключён к bootstrap и нативному открытию. Полный root lifecycle и JS helper cutover остаются. 5/20 внутри 109; 112/129 детально; 107/110 крупных этапов.
+
+109.06: нативный lifecycle-владелец сессии наблюдает три Room-документа и authority markers, обновляет видимый экран смены и закрывается с Activity. Fresh bootstrap и транзакционные команды не используют view-cache как проверку прав. Полный bootstrap/JS helper cutover остаются; прогресс 5/20 внутри 109, 112/129 детально.

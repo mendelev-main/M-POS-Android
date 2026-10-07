@@ -24,6 +24,7 @@ import com.mendelev.mpos.payment.MPosCardConfirmationDialog
 import com.mendelev.mpos.bridge.NativeBridgeRouter
 import com.mendelev.mpos.data.MPosDatabase
 import com.mendelev.mpos.data.MPosStorageMirror
+import com.mendelev.mpos.data.MPosRootSessionOwner
 import com.mendelev.mpos.diagnostics.MPosDiagnosticBreadcrumbStore
 import com.mendelev.mpos.diagnostics.MPosDiagnosticExporter
 import com.mendelev.mpos.media.ProductImageStore
@@ -71,6 +72,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var telegram: TelegramClient
     private lateinit var nativeSettings: MPosSettingsStore
     private lateinit var nativeStorageMirror: MPosStorageMirror
+    private lateinit var rootSession: MPosRootSessionOwner
     private lateinit var nativeNetworkTransport: MPosNetworkTransport
     private lateinit var diagnostics: MPosDiagnosticBreadcrumbStore
     private var diagnosticExportPending = false
@@ -117,7 +119,8 @@ class MainActivity : AppCompatActivity() {
         shares = ReportShareManager(this)
         telegram = TelegramClient(shares::createWarehousePdf, ::telegramResult, ::telegramMonthlyResult, ::telegramShiftResult)
         nativeSettings = MPosSettingsStore(this, lifecycleScope, ::nativeSettingsResult)
-        nativeStorageMirror = MPosStorageMirror(MPosDatabase.get(this), lifecycleScope, ::nativeStorageResult)
+        rootSession = MPosRootSessionOwner(MPosDatabase.get(this), lifecycleScope)
+        nativeStorageMirror = MPosStorageMirror(MPosDatabase.get(this), lifecycleScope, rootSession::bootstrap, ::nativeStorageResult)
         nativeNetworkTransport = MPosNetworkTransport(lifecycleScope, ::nativeNetworkResult, ::nativeNetworkEvent, MPosDatabase.get(this))
         router = NativeBridgeRouter(this, photos, backup, nativeSettings, nativeStorageMirror, nativeNetworkTransport)
 
@@ -151,6 +154,20 @@ class MainActivity : AppCompatActivity() {
         root.addView(webView)
         shiftScreen = MPosShiftScreenController(this, root, nativeStorageMirror::handle) { action ->
             callJavaScript("window.__mposShiftScreenAction&&window.__mposShiftScreenAction($action);")
+        }
+        lifecycleScope.launch {
+            var rootRevision: Long? = null
+            rootSession.state.collect { state ->
+                if (state is MPosRootSessionOwner.State.Ready) {
+                    if (rootRevision != state.revision) {
+                        rootRevision = state.revision
+                        shiftScreen.rootSessionChanged()
+                    }
+                } else if (state == MPosRootSessionOwner.State.Failed || state == MPosRootSessionOwner.State.AwaitingMigration) {
+                    rootRevision = null
+                    shiftScreen.rootSessionChanged()
+                }
+            }
         }
         workspace = MPosWorkspaceController(this, root) { action ->
             val serialized = com.mendelev.mpos.data.MPosBridgeJson.serialize(action)
@@ -204,6 +221,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         hideSystemBars()
         diagnostics.record("lifecycle", "foreground")
+        if (::rootSession.isInitialized) rootSession.refresh()
         nativeNetworkTransport.onForeground()
         if (::webView.isInitialized) callJavaScript("window._availabilityAppActive=true;window.onAvailabilityAppState&&window.onAvailabilityAppState(true);")
     }
@@ -216,6 +234,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        if (::rootSession.isInitialized) rootSession.close()
+        if (::shiftScreen.isInitialized) shiftScreen.hide()
         if (::workspace.isInitialized) workspace.hide()
         if (::settingsScreen.isInitialized) settingsScreen.dismiss()
         if (::cashInputDialog.isInitialized) cashInputDialog.dismiss()

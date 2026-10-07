@@ -69,4 +69,26 @@ class MPosShiftScreenControllerTest {
         descendants(host).filterIsInstance<Button>().single { it.text.toString() == "Открыть прежний экран" }.performClick()
         assertEquals("fallback", actions.single().getString("action"))
     }
+
+    @Test fun rootChangeInvalidatesOldControlsAndRepliesWithoutReopeningHiddenScreen() {
+        val host = FrameLayout(RuntimeEnvironment.getApplication()); host.layout(0, 0, 1000, 800)
+        val requests = mutableListOf<JSONObject>(); val actions = mutableListOf<JSONObject>()
+        val controller = MPosShiftScreenController(host.context, host, { requests.add(it) }, { actions.add(it) })
+        controller.rootSessionChanged(); assertTrue(requests.isEmpty())
+        controller.handle(payload())
+        val first = requests.last().getString("requestId")
+        val response = JSONObject().put("requestId", first).put("ok", true).put("history", JSONArray())
+        controller.result(response)
+        val oldOpen = descendants(host).filterIsInstance<Button>().single { it.text.toString() == "Открыть смену" }
+        controller.rootSessionChanged()
+        assertEquals(2, requests.size)
+        assertFalse(descendants(host).filterIsInstance<Button>().any { it.text.toString() == "Открыть смену" })
+        oldOpen.performClick(); assertTrue(actions.isEmpty())
+        controller.result(response); assertTrue(descendants(host).filterIsInstance<Button>().isEmpty())
+        controller.result(JSONObject(response.toString()).put("requestId", requests.last().getString("requestId")))
+        assertTrue(descendants(host).filterIsInstance<Button>().any { it.text.toString() == "Открыть смену" })
+        controller.hide(); controller.rootSessionChanged()
+        assertEquals(2, requests.size)
+        assertEquals(View.GONE, host.getChildAt(0).visibility)
+    }
 }
