@@ -69,3 +69,5 @@ unknown navigation extensions и stale product IDs. Их пересмотр не
 
 После публикации: 81/110 (73,64%), остаётся 29. Следующая граница 083 —
 сотрудники, роли и авторизация без молчаливого изменения политики.
+
+083 command boundary is now specified in ../083-native-employee-commands/spec.md; native credential verification remains outside that boundary.

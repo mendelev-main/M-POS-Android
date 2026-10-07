@@ -365,3 +365,7 @@ Cancel/modal replacement/pending checkout, restart/backup v13.
 ## Этап 082
 
 082 pending: folder create/rename/delete/move/root/reorder; root duplicate tiles/20-limit/occupied-cell drag/cancel; rapid gestures/close/field edit/storage fail; restart/v13 order/coords; Cyrillic/emoji 80 UTF-16 boundary; no backend catalogue/availability effect.
+
+## 083 employee commands — pending
+
+Create/edit ordinary employees offline; change roles with correct/incorrect password; preserve extension fields after v13 import/edit/export. Check demotion of the last administrator retains current policy. Delete ordinary employee with an open shift and correct/incorrect password; reject self/admin deletion and deletion without a shift. Restart and verify saved records. Confirm no availability/catalogue network publication. Record APK commit and actual results at final tablet acceptance; automated checks are not physical acceptance.

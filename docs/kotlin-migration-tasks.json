@@ -516,9 +516,10 @@
     {
       "id": "083",
       "title": "Сотрудники, роли и авторизация без изменения политики",
-      "status": "planned",
+      "status": "done",
       "area": "P2/P8",
-      "dependencies": "042"
+      "dependencies": "042",
+      "spec": "specs/083-native-employee-commands/spec.md"
     },
     {
       "id": "084",
