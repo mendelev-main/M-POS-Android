@@ -1,0 +1,3856 @@
+[
+  {
+    "name": "completed",
+    "trigger": "completed",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": true,
+        "printOrders": false
+      },
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          "Food"
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      },
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "kitchen",
+        "__networkPrinterIp": "192.168.1.20",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": false,
+          "printOrders": true,
+          "printerRole": "receipt",
+          "orderCategories": [
+            "Food"
+          ],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 1,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "k",
+          "name": "Kitchen",
+          "ip": "192.168.1.20",
+          "port": 9100
+        }
+      },
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      },
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "manual-receipt",
+    "trigger": "manual-receipt",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": true,
+        "printOrders": false
+      },
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          "Food"
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      },
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      },
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "manual-kitchen",
+    "trigger": "manual-kitchen",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": true,
+        "printOrders": false
+      },
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          "Food"
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      },
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "kitchen",
+        "__networkPrinterIp": "192.168.1.20",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": false,
+          "printOrders": true,
+          "printerRole": "receipt",
+          "orderCategories": [
+            "Food"
+          ],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 1,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "k",
+          "name": "Kitchen",
+          "ip": "192.168.1.20",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "kitchen-now",
+    "trigger": "kitchen-now",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": true,
+        "printOrders": false
+      },
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          "Food"
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      },
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "kitchen",
+        "__networkPrinterIp": "192.168.1.20",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": false,
+          "printOrders": true,
+          "printerRole": "receipt",
+          "orderCategories": [
+            "Food"
+          ],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 1,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "k",
+          "name": "Kitchen",
+          "ip": "192.168.1.20",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "printed-kitchen",
+    "trigger": "completed",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": true,
+        "printOrders": false
+      },
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          "Food"
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      },
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": true,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": true,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      },
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": true,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "truthy-printed",
+    "trigger": "completed",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": true,
+        "printOrders": false
+      },
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          "Food"
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      },
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": "false",
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": "false",
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      },
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": "false",
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "auto-off",
+    "trigger": "completed",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": true,
+        "printOrders": false,
+        "autoPrintReceipt": false
+      },
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintKitchen": false
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": false,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      },
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": false,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": []
+  },
+  {
+    "name": "manual-auto-off",
+    "trigger": "manual-kitchen",
+    "printers": [
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintKitchen": false
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": false,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "kitchen",
+        "__networkPrinterIp": "192.168.1.20",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": false,
+          "printOrders": true,
+          "printerRole": "receipt",
+          "orderCategories": [
+            "Food"
+          ],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": false,
+          "copies": 1,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "k",
+          "name": "Kitchen",
+          "ip": "192.168.1.20",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "disabled",
+    "trigger": "completed",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": true,
+        "printOrders": false,
+        "enabled": false
+      },
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "  ",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          "Food"
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": false,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      },
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": []
+  },
+  {
+    "name": "all-categories",
+    "trigger": "kitchen-now",
+    "printers": [
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": []
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "kitchen",
+        "__networkPrinterIp": "192.168.1.20",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": false,
+          "printOrders": true,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 1,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "k",
+          "name": "Kitchen",
+          "ip": "192.168.1.20",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "unknown-category",
+    "trigger": "kitchen-now",
+    "printers": [
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          "Other"
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Other"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": []
+  },
+  {
+    "name": "missing-items",
+    "trigger": "manual-kitchen",
+    "printers": [
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          "Food"
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "empty"
+    },
+    "jobs": []
+  },
+  {
+    "name": "empty-items",
+    "trigger": "manual-kitchen",
+    "printers": [
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          "Food"
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "empty",
+      "items": []
+    },
+    "jobs": []
+  },
+  {
+    "name": "missing-receipt-items",
+    "trigger": "manual-receipt",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": true,
+        "printOrders": false
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "empty"
+    },
+    "jobs": [
+      {
+        "id": "empty",
+        "currency": "BYN",
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      },
+      {
+        "id": "empty",
+        "currency": "BYN",
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "dual-role",
+    "trigger": "completed",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": true,
+        "printOrders": true,
+        "orderCategories": [
+          "Bar"
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Bar"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "kitchen",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": true,
+          "printerRole": "receipt",
+          "orderCategories": [
+            "Bar"
+          ],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      },
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "kitchen",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": true,
+          "printerRole": "receipt",
+          "orderCategories": [
+            "Bar"
+          ],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      },
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": true,
+          "printerRole": "receipt",
+          "orderCategories": [
+            "Bar"
+          ],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      },
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": true,
+          "printerRole": "receipt",
+          "orderCategories": [
+            "Bar"
+          ],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "strict-flags",
+    "trigger": "completed",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": null,
+        "printOrders": false,
+        "enabled": 0,
+        "autoPrintReceipt": 0
+      },
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": 1,
+        "orderCategories": [
+          "Food"
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": null,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": 0,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": 0,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      },
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": 1,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": null,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": 0,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": 0,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      },
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": null,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": 0,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": 0,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "negative-copies",
+    "trigger": "manual-receipt",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": -2,
+        "printReceipts": true,
+        "printOrders": false
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": -2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": -2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "fractional-copies",
+    "trigger": "manual-receipt",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": "2.3",
+        "printReceipts": true,
+        "printOrders": false
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": "2.3",
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": "2.3",
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      },
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": "2.3",
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      },
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": "2.3",
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "zero-copies",
+    "trigger": "manual-receipt",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 0,
+        "printReceipts": true,
+        "printOrders": false
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 0,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": 0,
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "BYN",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 0,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "legacy-fields",
+    "trigger": "manual-receipt",
+    "printers": [
+      {
+        "id": "r",
+        "ip": " 192.168.1.10 ",
+        "extension": {
+          "keep": 7
+        }
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "ip": "192.168.1.10",
+        "extension": {
+          "keep": 7
+        },
+        "name": "Чековый принтер",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Food",
+            "category": "Food",
+            "qty": 2,
+            "price": 10,
+            "comment": "No salt",
+            "extension": {
+              "x": 1
+            }
+          },
+          {
+            "productId": "d",
+            "name": "Drink",
+            "category": "Bar",
+            "qty": 1,
+            "price": 5
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "receipt",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 1,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "ip": "192.168.1.10",
+          "extension": {
+            "keep": 7
+          },
+          "name": "Чековый принтер",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "shift-close",
+    "trigger": "shift-close",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": true,
+        "printOrders": false,
+        "autoPrintReceipt": false
+      },
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          "Food"
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": false,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      },
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "s",
+      "closedAt": 120,
+      "employeeName": "E",
+      "total": 25,
+      "extension": {
+        "keep": true
+      }
+    },
+    "jobs": [
+      {
+        "id": "s",
+        "closedAt": 120,
+        "employeeName": "E",
+        "total": 25,
+        "extension": {
+          "keep": true
+        },
+        "timestamp": 120,
+        "__printDocumentType": "shift-close",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": false,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      },
+      {
+        "id": "s",
+        "closedAt": 120,
+        "employeeName": "E",
+        "total": 25,
+        "extension": {
+          "keep": true
+        },
+        "timestamp": 120,
+        "__printDocumentType": "shift-close",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": false,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "shift-zero-date",
+    "trigger": "shift-close",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": true,
+        "printOrders": false
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "s",
+      "closedAt": 0
+    },
+    "jobs": [
+      {
+        "id": "s",
+        "closedAt": 0,
+        "timestamp": 123,
+        "__printDocumentType": "shift-close",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      },
+      {
+        "id": "s",
+        "closedAt": 0,
+        "timestamp": 123,
+        "__printDocumentType": "shift-close",
+        "__networkPrinterIp": "192.168.1.10",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": true,
+          "printOrders": false,
+          "printerRole": "receipt",
+          "orderCategories": [],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 2,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "r",
+          "name": "Receipt",
+          "ip": "192.168.1.10",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "shift-no-printer",
+    "trigger": "shift-close",
+    "printers": [
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          "Food"
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          "Food"
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "s",
+      "closedAt": 120
+    },
+    "jobs": []
+  },
+  {
+    "name": "no-printers",
+    "trigger": "completed",
+    "printers": [],
+    "normalizedPrinters": [],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "productId": "p",
+          "name": "Food",
+          "category": "Food",
+          "qty": 2,
+          "price": 10,
+          "comment": "No salt",
+          "extension": {
+            "x": 1
+          }
+        },
+        {
+          "productId": "d",
+          "name": "Drink",
+          "category": "Bar",
+          "qty": 1,
+          "price": 5
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": []
+  },
+  {
+    "name": "null-vs-missing-category",
+    "trigger": "manual-kitchen",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": true,
+        "printOrders": false
+      },
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          null
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      },
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          null
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "name": "Null",
+          "qty": 1,
+          "category": null
+        },
+        {
+          "name": "Missing",
+          "qty": 1
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": [
+      {
+        "id": "paid",
+        "total": 25,
+        "currency": "RUB",
+        "kitchenPrinted": false,
+        "items": [
+          {
+            "name": "Null",
+            "qty": 1,
+            "category": null
+          }
+        ],
+        "extension": [
+          null,
+          7
+        ],
+        "__printDocumentType": "kitchen",
+        "__networkPrinterIp": "192.168.1.20",
+        "__networkPrinterPort": 9100,
+        "__printerConfig": {
+          "paperWidth": 80,
+          "printMode": "graphic",
+          "printWidth": "auto",
+          "dpi": 203,
+          "initCommand": "1B,40",
+          "cutCommand": "1D,56,42,00",
+          "drawerCommand": "1B,70,00,19,FA",
+          "printReceipts": false,
+          "printOrders": true,
+          "printerRole": "receipt",
+          "orderCategories": [
+            null
+          ],
+          "autoPrintReceipt": true,
+          "autoPrintKitchen": true,
+          "copies": 1,
+          "printPaymentComments": true,
+          "registerLabel": "POS 1",
+          "paymentReceiptTitle": "ПРИЛАВОК",
+          "receiptRandomPhrases": [],
+          "enabled": true,
+          "id": "k",
+          "name": "Kitchen",
+          "ip": "192.168.1.20",
+          "port": 9100
+        }
+      }
+    ]
+  },
+  {
+    "name": "object-categories-are-not-identical-references",
+    "trigger": "manual-kitchen",
+    "printers": [
+      {
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "copies": 2,
+        "printReceipts": true,
+        "printOrders": false
+      },
+      {
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "copies": 1,
+        "printReceipts": false,
+        "printOrders": true,
+        "orderCategories": [
+          {
+            "x": 1
+          }
+        ]
+      }
+    ],
+    "normalizedPrinters": [
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": true,
+        "printOrders": false,
+        "printerRole": "receipt",
+        "orderCategories": [],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 2,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "r",
+        "name": "Receipt",
+        "ip": "192.168.1.10",
+        "port": 9100
+      },
+      {
+        "paperWidth": 80,
+        "printMode": "graphic",
+        "printWidth": "auto",
+        "dpi": 203,
+        "initCommand": "1B,40",
+        "cutCommand": "1D,56,42,00",
+        "drawerCommand": "1B,70,00,19,FA",
+        "printReceipts": false,
+        "printOrders": true,
+        "printerRole": "receipt",
+        "orderCategories": [
+          {
+            "x": 1
+          }
+        ],
+        "autoPrintReceipt": true,
+        "autoPrintKitchen": true,
+        "copies": 1,
+        "printPaymentComments": true,
+        "registerLabel": "POS 1",
+        "paymentReceiptTitle": "ПРИЛАВОК",
+        "receiptRandomPhrases": [],
+        "enabled": true,
+        "id": "k",
+        "name": "Kitchen",
+        "ip": "192.168.1.20",
+        "port": 9100
+      }
+    ],
+    "order": {
+      "id": "paid",
+      "total": 25,
+      "currency": "RUB",
+      "kitchenPrinted": false,
+      "items": [
+        {
+          "name": "Object",
+          "qty": 1,
+          "category": {
+            "x": 1
+          }
+        }
+      ],
+      "extension": [
+        null,
+        7
+      ]
+    },
+    "jobs": []
+  }
+]

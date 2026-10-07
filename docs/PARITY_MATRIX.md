@@ -387,3 +387,8 @@ Actual-source fixtures compare every aggregate and date bound in JS/JVM: mixed/e
 ## 098 — hall and bookings
 
 Actual reviewed source fixtures compare native commands and Room persistence: numbering/shape/rotation, deletion/cancellation, touching/conflicting windows, cancelled/orphan edit, guest count, midnight/Moscow/DST and normalized/invalid dates. JS checks immutable form capture, acknowledgement before state, double tap/failure/uncertainty, blank edit, drag restoration and rollback. Room tests inject final-booking-write failure to prove atomic deletion, guard stale/journal/duplicate/conflict commands, preserve archived receipts/extensions, and reopen null/absent/native-owned documents. FIFO tests reject obsolete shadows. Full UI 108; physical pending. [098](../specs/098-native-hall-commands/spec.md).
+
+
+## 099 — print job management
+
+Independent actual-source fixtures compare every copy/payload for manual/automatic receipt/kitchen/shift prints, category/role/strict boolean flags, kitchenPrinted truthiness, legacy defaults, fractional/negative/zero copies and missing items/printers. JS captures one immutable intent, retains async receipt/shift APIs, handles admission/timeout/failure without retry and supports rollback. JVM queue tests cover endpoint FIFO, parallel endpoints, maximum four workers, whole-batch overflow, close and non-poisoning failures. Room verifies admission and sending persistence before TCP, read-only authoritative paid receipts, outcome/recovery transitions, bounded compact history and injected admission/sending/final-write failures. A loopback TCP test verifies exact retained test-page bytes and closed-transport refusal. Physical LAN/format/copies remain pending. [099](../specs/099-native-print-jobs/spec.md).

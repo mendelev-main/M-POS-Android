@@ -1,0 +1,20 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const source=fs.readFileSync('app/src/main/assets/pos/network-printer.js','utf8'),adapter=fs.readFileSync('app/src/main/assets/pos/native-print-jobs.js','utf8');
+const clone=x=>JSON.parse(JSON.stringify(x));
+function host(printers,native=false){const calls=[],events=[],storage=new Map([['printers',JSON.stringify(printers)]]),timers=new Map();let timer=0;
+ const context={Date:class extends Date{static now(){return 123}},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)},state:{},console,flash:s=>events.push(s),setTimeout:fn=>{timers.set(++timer,fn);return timer},clearTimeout:id=>timers.delete(id),webkit:{messageHandlers:{printer:{postMessage:p=>calls.push(clone(p))}}}};context.window=context;vm.createContext(context);vm.runInContext(source,context);if(native)vm.runInContext(adapter,context);return{context,calls,events,storage,timers};}
+function invoke(h,trigger,order){const names={'manual-receipt':'sendOrderToPrint','manual-kitchen':'sendKitchenOrderToPrint',completed:'printCompletedOrder','kitchen-now':'printKitchenOrderNow','shift-close':'printShiftCloseReceipt'};return h.context[names[trigger]](clone(order))}
+const fixtures=JSON.parse(fs.readFileSync('tests/fixtures/print-jobs.json','utf8'));
+test('independent reviewed routing reproduces every native print fixture',async()=>{for(const f of fixtures){const h=host(f.printers);await invoke(h,f.trigger,f.order);assert.deepEqual(h.calls.map(c=>c.order),f.jobs,f.name)}});
+test('native adapter sends one frozen intent with the authoritative settings snapshot and no JS copy/filter loop',async()=>{
+ const f=fixtures.find(f=>f.name==='completed'),h=host(f.printers,true),order=clone(f.order);h.context.printCompletedOrder(order);order.items[0].qty=99;h.storage.set('printers','[]');assert.equal(h.calls.length,1);const call=h.calls[0];assert.equal(call.action,'routePrint');assert.equal(call.trigger,'completed');assert.equal(call.order.items[0].qty,2);assert.equal(call.printers.length,2);assert.equal(call.now,123);assert.equal(h.events.length,0);
+ const p=h.context.sendOrderToPrint(f.order);assert.equal(typeof p.then,'function');await p;assert.equal(h.calls.at(-1).trigger,'manual-receipt');
+});
+test('shift print result waits for native admission, zero printers stays false and duplicate callback is ignored',async()=>{
+ for(const count of [0,2]){const h=host([],true),p=h.context.printShiftCloseReceipt({id:'s',closedAt:120});let done=false;p.then(()=>done=true);await Promise.resolve();assert.equal(done,false);const id=h.calls[0].requestId;h.context.__nativePrinterEvent({type:'printAdmission',requestId:id,ok:true,count});assert.equal(await p,count>0);h.context.__nativePrinterEvent({type:'printAdmission',requestId:id,ok:true,count});assert.equal(h.timers.size,0)}
+});
+test('print failure is forwarded, timeouts and bridge failures never auto-resend an uncertain request',async()=>{
+ const h=host([],true),p=h.context.printShiftCloseReceipt({id:'s'});const [timer,fire]=[...h.timers.entries()][0];h.timers.delete(timer);fire();assert.equal(await p,false);assert.equal(h.calls.length,1);h.context.__nativePrinterEvent({type:'printError',message:'offline'});assert.ok(h.events.includes('offline'));h.context.webkit.messageHandlers.printer.postMessage=()=>false;assert.equal(await h.context.printShiftCloseReceipt({id:'s'}),false);assert.equal(h.timers.size,0);assert.throws(()=>h.context.printKitchenOrderNow({}),/недоступна/);assert.equal(h.calls.length,1);
+});
+test('routing rollback restores source copies/categories/flags without replacing settings or receipt data',async()=>{const f=fixtures.find(f=>f.name==='completed'),h=host(f.printers,true);h.context.MPosNativePrintJobsEnabled=false;await invoke(h,f.trigger,f.order);assert.deepEqual(h.calls.map(c=>c.order),f.jobs);assert.ok(h.calls.every(c=>c.action==='print'));assert.equal(h.context.state.printers.length,2)});
+module.exports={host,invoke};

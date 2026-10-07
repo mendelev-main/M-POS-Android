@@ -644,9 +644,10 @@
     {
       "id": "099",
       "title": "Нативное управление заданиями печати и business triggers",
-      "status": "planned",
+      "status": "done",
       "area": "P7/P8",
-      "dependencies": "053,087"
+      "dependencies": "053,087",
+      "spec": "specs/099-native-print-jobs/spec.md"
     },
     {
       "id": "100",

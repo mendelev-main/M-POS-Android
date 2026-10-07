@@ -12,41 +12,29 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.net.InetSocketAddress
 import java.net.Socket
-import java.util.concurrent.Executors
 import kotlin.math.ceil
 import kotlin.math.max
 
 class EscPosPrinter(private val onEvent: (JSONObject) -> Unit) {
-    private val executor = Executors.newCachedThreadPool()
-
-    fun handle(payload: JSONObject) {
-        val order = payload.optJSONObject("order") ?: return
-        order.optString("__notificationSound").takeIf(String::isNotBlank)?.let {
-            ToneGenerator(AudioManager.STREAM_NOTIFICATION, 85).startTone(ToneGenerator.TONE_PROP_BEEP, 280)
-            return
-        }
-        val ip = order.optString("__networkPrinterIp").trim()
-        val port = order.optInt("__networkPrinterPort", 9100)
-        if (!validIpv4(ip) || port !in 1..65535) return event("printError", "network_error", "Неверный IP-адрес принтера")
-        executor.execute {
-            runCatching {
-                Socket().use { socket ->
-                    socket.connect(InetSocketAddress(ip, port), 10_000)
-                    socket.soTimeout = 10_000
-                    val bytes = if (order.optBoolean("__networkTest")) testPage() else EscPosRaster.encode(order)
-                    socket.getOutputStream().use { output -> output.write(bytes); output.flush() }
-                }
-            }.onSuccess {
-                event("printed", "network_printed", if (order.optBoolean("__networkTest")) "Пробная печать отправлена" else "Чек отправлен на принтер")
-            }.onFailure { error -> event("printError", "network_error", "Ошибка печати: ${error.localizedMessage ?: "принтер недоступен"}") }
+    private val sockets=mutableSetOf<Socket>()
+    @Volatile private var closed=false
+    fun notifySound(){ToneGenerator(AudioManager.STREAM_NOTIFICATION,85).also{tone->tone.startTone(ToneGenerator.TONE_PROP_BEEP,280);android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({tone.release()},300)}}
+    fun send(order:JSONObject){
+        val ip=order.optString("__networkPrinterIp").trim();val port=order.optInt("__networkPrinterPort",9100)
+        require(validIpv4(ip)&&port in 1..65535){"Неверный IP-адрес принтера"}
+        Socket().use{socket->
+            synchronized(sockets){check(!closed){"Печать остановлена"};sockets.add(socket)}
+            try{
+                socket.connect(InetSocketAddress(ip,port),10_000);socket.soTimeout=10_000
+                val bytes=if(order.optBoolean("__networkTest"))testPage() else EscPosRaster.encode(order)
+                socket.getOutputStream().use{output->output.write(bytes);output.flush()}
+            }finally{synchronized(sockets){sockets.remove(socket)}}
         }
     }
-
-    fun ready() = event("status", "network_ready", "Сетевая печать готова")
-
-    private fun event(type: String, status: String, message: String) = onEvent(JSONObject().put("type", type).put("status", status).put("message", message))
-    private fun validIpv4(value: String) = value.split('.').let { parts -> parts.size == 4 && parts.all { part -> part.toIntOrNull()?.let { it in 0..255 } == true } }
-    private fun testPage() = byteArrayOf(0x1b, 0x40) + "\nM POS\nTEST PRINT\nLAN TCP 9100 OK\n\n\n".toByteArray() + byteArrayOf(0x1d, 0x56, 0x42, 0)
+    fun close(){synchronized(sockets){closed=true;sockets.toList().forEach{runCatching{it.close()}};sockets.clear()}}
+    fun ready()=onEvent(JSONObject().put("type","status").put("status","network_ready").put("message","Сетевая печать готова"))
+    private fun validIpv4(value:String)=value.split('.').let{parts->parts.size==4&&parts.all{part->part.toIntOrNull()?.let{it in 0..255}==true}}
+    private fun testPage()=byteArrayOf(0x1b,0x40)+"\nM POS\nTEST PRINT\nLAN TCP 9100 OK\n\n\n".toByteArray()+byteArrayOf(0x1d,0x56,0x42,0)
 }
 
 private object EscPosRaster {

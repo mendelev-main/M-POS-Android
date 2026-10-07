@@ -30,6 +30,7 @@ import com.mendelev.mpos.media.ProductImageStore
 import com.mendelev.mpos.network.MPosNetworkTransport
 import com.mendelev.mpos.media.ProductPhotoManager
 import com.mendelev.mpos.print.EscPosPrinter
+import com.mendelev.mpos.print.MPosPrintService
 import com.mendelev.mpos.share.ReportShareManager
 import com.mendelev.mpos.shift.MPosShiftScreenController
 import com.mendelev.mpos.shift.MPosCashMovementDialog
@@ -61,7 +62,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var photos: ProductPhotoManager
     private lateinit var backup: MPosBackupManager
     private lateinit var router: NativeBridgeRouter
-    private lateinit var printer: EscPosPrinter
+    private lateinit var printer: MPosPrintService
     private lateinit var shares: ReportShareManager
     private lateinit var telegram: TelegramClient
     private lateinit var nativeSettings: MPosSettingsStore
@@ -107,7 +108,8 @@ class MainActivity : AppCompatActivity() {
         imageStore = ProductImageStore(this)
         photos = ProductPhotoManager(this, imageStore)
         backup = MPosBackupManager(this, imageStore)
-        printer = EscPosPrinter(::printerEvent)
+        val printTransport = EscPosPrinter(::printerEvent)
+        printer = MPosPrintService(MPosDatabase.get(this), lifecycleScope, ::printerEvent, printTransport::send, printTransport::close, printTransport::notifySound)
         shares = ReportShareManager(this)
         telegram = TelegramClient(shares::createWarehousePdf, ::telegramResult, ::telegramMonthlyResult, ::telegramShiftResult)
         nativeSettings = MPosSettingsStore(this, lifecycleScope, ::nativeSettingsResult)
@@ -206,6 +208,7 @@ class MainActivity : AppCompatActivity() {
         if (::shiftOpenDialog.isInitialized) shiftOpenDialog.dismiss()
         if (::shiftCloseDialog.isInitialized) shiftCloseDialog.dismiss()
         if (::cashMovementDialog.isInitialized) cashMovementDialog.dismiss()
+        if (::printer.isInitialized) printer.close()
         nativeNetworkTransport.close()
         if (::nativeStorageMirror.isInitialized) nativeStorageMirror.close()
         if (::nativeSettings.isInitialized) nativeSettings.close()
@@ -248,7 +251,7 @@ class MainActivity : AppCompatActivity() {
 
     fun handlePrinter(payload: JSONObject) {
         when (payload.optString("action")) {
-            "print" -> printer.handle(payload)
+            "print", "routePrint" -> printer.handle(payload)
             "status" -> printer.ready()
             "shareWarehouseReport" -> payload.optJSONObject("report")?.let(shares::warehousePdf)
             "shareWarehouseExcel" -> payload.optJSONObject("report")?.let(shares::warehouseExcel)

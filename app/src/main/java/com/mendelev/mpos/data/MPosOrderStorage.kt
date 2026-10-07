@@ -44,6 +44,16 @@ class MPosOrderStorage(private val database: MPosDatabase) {
         acknowledgement()
     }
 
+    /** Single full receipt, avoiding serialization of the archive for automatic printing. */
+    suspend fun receipt(id:Any?):JSONObject? = database.withTransaction {
+        check(isAuthoritative());ensureRows()
+        when(rowState().getString("mode")){
+            "rows"->(id as? String)?.let{orderDao.get(it)?.let{row->JSONObject(row.payload)}}
+            "document"->MPosReceivingEngine.find(JSONArray(documents.get("orders")!!.payload),id)
+            else->null
+        }
+    }
+
     suspend fun remove(): JSONObject = database.withTransaction {
         check(isAuthoritative()) { "native orders is not initialized" }
         replace(null)
