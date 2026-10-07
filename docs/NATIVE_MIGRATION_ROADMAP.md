@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **90/110 выполнено (81,82%)**
-после 091. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **91/110 выполнено (82,73%)**
+после 092. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -541,3 +541,8 @@ Native Room catalogue calculations and one-use per-receipt permit precede OkHttp
 ## 091 — suppliers
 
 Native supply JSON ownership and expected/candidate supplier commands; persisted admin/open-shift delete gate, source create/edit rights retained explicitly. Next 092 purchase-order commands. [091](../specs/091-native-supplier-commands/spec.md).
+
+
+## 092 — purchase commands
+
+Native purchase lines/unit rounding and authoritative create/delete candidate verification, atomic products/order or order/audit history, supply ownership expanded to purchaseOrders/receivings. UI preview/export remain reviewed, receiving business is 093. [092](../specs/092-native-purchase-commands/spec.md).

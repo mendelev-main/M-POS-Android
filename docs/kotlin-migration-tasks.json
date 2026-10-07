@@ -588,9 +588,10 @@
     {
       "id": "092",
       "title": "Заказы поставщику: расчёты, статусы и сохранение",
-      "status": "planned",
+      "status": "done",
       "area": "P10",
-      "dependencies": "091"
+      "dependencies": "091",
+      "spec": "specs/092-native-purchase-commands/spec.md"
     },
     {
       "id": "093",

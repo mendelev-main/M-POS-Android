@@ -7,7 +7,7 @@ import org.json.JSONTokener
 
 /** Compatible supply documents; full JSON remains authoritative, including extensions. */
 class MPosSupplyStorage(private val database:MPosDatabase) {
-    companion object {val KEYS=setOf("suppliers")}
+    companion object {val KEYS=setOf("suppliers","purchaseOrders","receivings")}
     private val documents=database.legacyStorageShadowDao()
     private fun marker(key:String):String {require(key in KEYS);return "mpos_supply_authority_v1:$key"}
     suspend fun isAuthoritative(key:String)=documents.get(marker(key))!=null
@@ -23,5 +23,6 @@ class MPosSupplyStorage(private val database:MPosDatabase) {
         val parsed=raw?.let{val p=JSONTokener(it);p.nextValue().also{require(p.nextClean()=='\u0000')}}
         require(parsed==null||parsed===JSONObject.NULL||parsed is JSONArray)
         if(raw==null)documents.delete(key) else documents.upsert(LegacyStorageShadowEntity(key,raw,System.currentTimeMillis()))
+        if(key=="receivings")MPosStockEventRepository(database).project(key,(parsed as? JSONArray?:JSONArray()).toString())
     }
 }

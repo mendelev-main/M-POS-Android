@@ -1,0 +1,154 @@
+{
+  "create": {
+    "version": 1,
+    "operation": "create-purchase-order",
+    "writes": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 9,
+          "extension": 7,
+          "purchaseUnit": "bottle",
+          "purchasePackSize": 500,
+          "purchaseContentUnit": "ml"
+        }
+      ],
+      "purchaseOrders": [
+        {
+          "id": "generated",
+          "requestVersion": 1,
+          "supplierId": "s",
+          "supplierName": "Supplier",
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Milk",
+              "qty": 1.5,
+              "requestedQty": 3,
+              "requestedUnit": "bottle",
+              "stockUnit": "l",
+              "contentUnit": "ml",
+              "expectedQty": 1.5,
+              "packSize": 500,
+              "timestamp": 1791358303648
+            }
+          ],
+          "status": "pending",
+          "timestamp": 1791358303648
+        }
+      ]
+    },
+    "expected": {
+      "purchaseOrders": [],
+      "products": [
+        {
+          "id": "p",
+          "name": "Milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": []
+    },
+    "shiftId": "shift",
+    "supplierId": "s",
+    "cart": [
+      {
+        "productId": "p",
+        "requestedQty": "3",
+        "requestedUnit": "bottle",
+        "packSize": "500",
+        "contentUnit": "ml"
+      }
+    ]
+  },
+  "delete": {
+    "version": 1,
+    "operation": "delete-purchase-order",
+    "writes": {
+      "purchaseOrders": [
+        {
+          "id": "o",
+          "supplierId": "s",
+          "supplierName": "Supplier",
+          "status": "deleted",
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Milk",
+              "qty": 2
+            }
+          ],
+          "extension": 7,
+          "deletedAt": 1791358303652,
+          "deletedByEmployeeId": "e",
+          "deletedByEmployeeName": "Admin",
+          "receivingIncomplete": false
+        }
+      ],
+      "receivings": [
+        {
+          "id": "generated",
+          "type": "purchaseOrder",
+          "purchaseOrderId": "o",
+          "supplierId": "s",
+          "supplierName": "Supplier",
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Milk",
+              "qty": 2,
+              "orderedQty": 2,
+              "unitCost": 0,
+              "totalCost": 0
+            }
+          ],
+          "totalCost": 0,
+          "shortage": false,
+          "adminDeleted": true,
+          "deletedByEmployeeName": "Admin",
+          "timestamp": 1791358303652
+        }
+      ]
+    },
+    "expected": {
+      "purchaseOrders": [
+        {
+          "id": "o",
+          "supplierId": "s",
+          "supplierName": "Supplier",
+          "status": "pending",
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Milk",
+              "qty": 2
+            }
+          ],
+          "extension": 7,
+          "receivingDraftV2": {
+            "saved": true
+          }
+        }
+      ],
+      "products": [
+        {
+          "id": "p",
+          "name": "Milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": []
+    },
+    "shiftId": "shift",
+    "id": "o"
+  }
+}

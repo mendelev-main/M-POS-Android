@@ -352,3 +352,8 @@ Current AGENTS 7 supersedes 033 ordinary-success sends; failed retry remains nex
 ## 091 — supplier boundary
 
 Create/edit/delete and bindings: actual source + Room tests; raw JSON/unknown fields/null/import/late shadows/reopen: native authority tests. No history cascade; user confirms existing rights. Physical acceptance pending. [091](../specs/091-native-supplier-commands/spec.md).
+
+
+## 092 — purchase orders
+
+Actual-source quantity/unit/packing fixtures + complete create/delete candidates checked by JVM. JS commit-before-state/rollback/errors and Room stale data/roles/received/atomic failed projection tests. Supply ownership/reopen expanded to purchaseOrders/receivings. No stock increase at order creation. Physical pending. [092](../specs/092-native-purchase-commands/spec.md).

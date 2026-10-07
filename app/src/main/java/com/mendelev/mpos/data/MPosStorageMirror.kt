@@ -183,6 +183,10 @@ class MPosStorageMirror(
                 attempt { MPosCustomerEngine.calculate(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native customer context unavailable") }
             }
+            "purchaseCommit" -> {
+                attempt { MPosPurchaseCommand(database).commit(requireNotNull(command.serialized)).put("requestId",requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId,false,"local purchase transaction failed") }
+            }
             "supplierCommit" -> {
                 attempt { MPosSupplierCommand(database).commit(requireNotNull(command.serialized)).put("requestId",requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId,false,"local supplier transaction failed") }
@@ -633,40 +637,7 @@ class MPosStorageMirror(
 
     private suspend fun projectCatalog(serialized: String) = catalogStorage.project(serialized)
 
-    private suspend fun projectStockEvents(sourceKey:String, serialized:String) {
-        val source=JSONArray(serialized); val now=System.currentTimeMillis()
-        val events=ArrayList<StockEventProjectionEntity>(); val lines=ArrayList<StockEventLineProjectionEntity>()
-        for(i in 0 until source.length()){
-            val event=source.optJSONObject(i)?:continue
-            val rawId=event.optString("id").trim()
-            val eventId=if(rawId.isNotEmpty()) "$sourceKey:$rawId" else "$sourceKey:event:$i"
-            val inventory=sourceKey=="inventoryHistory"
-            events += StockEventProjectionEntity(
-                id=eventId, sourceKey=sourceKey, eventType=if(inventory) event.optString("type","inventory") else event.optString("type","receiving"),
-                supplierId=event.optString("supplierId"), supplierName=event.optString("supplierName"),
-                referenceId=if(inventory) event.optString("id") else event.optString("purchaseOrderId"),
-                totalCost=if(inventory) event.optDouble("estimatedLoss") else event.optDouble("totalCost"),
-                timestamp=if(inventory) event.optLong("completedAt") else event.optLong("timestamp"),
-                sortIndex=i,payload=event.toString(),updatedAt=now)
-            val items=event.optJSONArray("items")?:JSONArray()
-            for(j in 0 until items.length()){
-                val item=items.optJSONObject(j)?:continue
-                lines += StockEventLineProjectionEntity(
-                    id="$eventId:line:$j", eventId=eventId, productId=item.optString("productId"),
-                    productName=item.optString("productName",item.optString("name")),
-                    quantity=if(inventory) item.optDouble("actual") else item.optDouble("qty"),
-                    unitCost=if(inventory) item.optDouble("cost") else item.optDouble("unitCost"),
-                    difference=if(inventory) item.optDouble("difference") else item.optDouble("qty"),
-                    stockUnit=if(inventory) item.optString("unit") else item.optString("stockUnit"),
-                    sortIndex=j,payload=item.toString(),updatedAt=now)
-            }
-        }
-        database.withTransaction {
-            stockEventDao.clearLines(sourceKey); stockEventDao.clearEvents(sourceKey)
-            if(events.isNotEmpty()) stockEventDao.insertEvents(events)
-            if(lines.isNotEmpty()) stockEventDao.insertLines(lines)
-        }
-    }
+    private suspend fun projectStockEvents(sourceKey:String,serialized:String)=stockEventRepository.project(sourceKey,serialized)
 
     private suspend fun projectWebAcceptances(serialized:String) {
         val source=JSONObject(serialized); val now=System.currentTimeMillis(); val rows=ArrayList<WebAcceptanceProjectionEntity>()

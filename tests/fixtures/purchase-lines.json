@@ -1,0 +1,221 @@
+[
+  {
+    "label": "litres",
+    "product": {
+      "id": "p",
+      "name": "Milk",
+      "type": "simple",
+      "stockUnit": "l"
+    },
+    "qty": "2.5",
+    "unit": "l",
+    "size": "",
+    "content": "l",
+    "expected": {
+      "allowed": true,
+      "line": {
+        "productId": "p",
+        "productName": "Milk",
+        "qty": 2.5,
+        "requestedQty": 2.5,
+        "requestedUnit": "l",
+        "stockUnit": "l",
+        "contentUnit": "l",
+        "expectedQty": 2.5,
+        "packSize": null,
+        "timestamp": 123
+      }
+    }
+  },
+  {
+    "label": "millilitres",
+    "product": {
+      "id": "p",
+      "name": "Milk",
+      "type": "simple",
+      "stockUnit": "l"
+    },
+    "qty": "333",
+    "unit": "ml",
+    "size": "",
+    "content": "l",
+    "expected": {
+      "allowed": true,
+      "line": {
+        "productId": "p",
+        "productName": "Milk",
+        "qty": 0.333,
+        "requestedQty": 333,
+        "requestedUnit": "ml",
+        "stockUnit": "l",
+        "contentUnit": "l",
+        "expectedQty": 0.333,
+        "packSize": null,
+        "timestamp": 123
+      }
+    }
+  },
+  {
+    "label": "known bottles",
+    "product": {
+      "id": "p",
+      "name": "Milk",
+      "type": "simple",
+      "stockUnit": "l"
+    },
+    "qty": "3",
+    "unit": "bottle",
+    "size": "500",
+    "content": "ml",
+    "expected": {
+      "allowed": true,
+      "line": {
+        "productId": "p",
+        "productName": "Milk",
+        "qty": 1.5,
+        "requestedQty": 3,
+        "requestedUnit": "bottle",
+        "stockUnit": "l",
+        "contentUnit": "ml",
+        "expectedQty": 1.5,
+        "packSize": 500,
+        "timestamp": 123
+      }
+    }
+  },
+  {
+    "label": "unknown box size",
+    "product": {
+      "id": "p",
+      "name": "Milk",
+      "type": "simple",
+      "stockUnit": "l"
+    },
+    "qty": "2",
+    "unit": "box",
+    "size": "",
+    "content": "l",
+    "expected": {
+      "allowed": true,
+      "line": {
+        "productId": "p",
+        "productName": "Milk",
+        "qty": 0,
+        "requestedQty": 2,
+        "requestedUnit": "box",
+        "stockUnit": "l",
+        "contentUnit": "l",
+        "expectedQty": null,
+        "packSize": null,
+        "timestamp": 123
+      }
+    }
+  },
+  {
+    "label": "unassigned base",
+    "product": {
+      "id": "p",
+      "name": "Milk",
+      "type": "simple",
+      "stockUnit": ""
+    },
+    "qty": "2",
+    "unit": "",
+    "size": "",
+    "content": "",
+    "expected": {
+      "allowed": true,
+      "line": {
+        "productId": "p",
+        "productName": "Milk",
+        "qty": 2,
+        "requestedQty": 2,
+        "requestedUnit": "",
+        "stockUnit": "",
+        "contentUnit": "",
+        "expectedQty": 2,
+        "packSize": null,
+        "timestamp": 123
+      }
+    }
+  },
+  {
+    "label": "precision",
+    "product": {
+      "id": "p",
+      "name": "Milk",
+      "type": "simple",
+      "stockUnit": "kg"
+    },
+    "qty": "123.456789012345678",
+    "unit": "g",
+    "size": "",
+    "content": "g",
+    "expected": {
+      "allowed": true,
+      "line": {
+        "productId": "p",
+        "productName": "Milk",
+        "qty": 0.123456789012346,
+        "requestedQty": 123.45678901234568,
+        "requestedUnit": "g",
+        "stockUnit": "kg",
+        "contentUnit": "g",
+        "expectedQty": 0.123456789012346,
+        "packSize": null,
+        "timestamp": 123
+      }
+    }
+  },
+  {
+    "label": "invalid quantity",
+    "product": {
+      "id": "p",
+      "name": "Milk",
+      "type": "simple",
+      "stockUnit": "l"
+    },
+    "qty": "-1",
+    "unit": "l",
+    "size": "",
+    "content": "l",
+    "expected": {
+      "allowed": false,
+      "message": "Количество заказа должно быть больше нуля"
+    }
+  },
+  {
+    "label": "invalid package",
+    "product": {
+      "id": "p",
+      "name": "Milk",
+      "type": "simple",
+      "stockUnit": "l"
+    },
+    "qty": "2",
+    "unit": "pack",
+    "size": "0",
+    "content": "l",
+    "expected": {
+      "allowed": false,
+      "message": "Количество в единице закупки должно быть больше нуля"
+    }
+  },
+  {
+    "label": "incompatible",
+    "product": {
+      "id": "p",
+      "name": "Milk",
+      "type": "simple",
+      "stockUnit": "l"
+    },
+    "qty": "2",
+    "unit": "kg",
+    "size": "",
+    "content": "l",
+    "expected": {
+      "allowed": false,
+      "message": "Несовместимые единицы измерения"
+    }
+  }
+]
