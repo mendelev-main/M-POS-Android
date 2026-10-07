@@ -596,9 +596,10 @@
     {
       "id": "093",
       "title": "Приёмка: расчёт, себестоимость и атомарное подтверждение",
-      "status": "planned",
+      "status": "done",
       "area": "P10",
-      "dependencies": "092"
+      "dependencies": "092",
+      "spec": "specs/093-native-receiving-command/spec.md"
     },
     {
       "id": "094",

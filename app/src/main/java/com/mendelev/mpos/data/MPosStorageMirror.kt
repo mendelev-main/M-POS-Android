@@ -183,6 +183,10 @@ class MPosStorageMirror(
                 attempt { MPosCustomerEngine.calculate(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native customer context unavailable") }
             }
+            "receivingCommit" -> {
+                attempt { MPosReceivingCommand(database).commit(requireNotNull(command.serialized)).put("requestId",requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId,false,"local receiving transaction failed") }
+            }
             "purchaseCommit" -> {
                 attempt { MPosPurchaseCommand(database).commit(requireNotNull(command.serialized)).put("requestId",requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId,false,"local purchase transaction failed") }

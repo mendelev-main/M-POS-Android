@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **91/110 выполнено (82,73%)**
-после 092. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **92/110 выполнено (83,64%)**
+после 093. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -546,3 +546,8 @@ Native supply JSON ownership and expected/candidate supplier commands; persisted
 ## 092 — purchase commands
 
 Native purchase lines/unit rounding and authoritative create/delete candidate verification, atomic products/order or order/audit history, supply ownership expanded to purchaseOrders/receivings. UI preview/export remain reviewed, receiving business is 093. [092](../specs/092-native-purchase-commands/spec.md).
+
+
+## 093 — receiving confirmation
+
+Native invoice/unit/valuation/shortage arithmetic and expected-state command verification, atomic stock/cost/order/history/draft clearing in Room. Preview/form presentation remains reviewed JS; 094 migrates draft business operations. [093](../specs/093-native-receiving-command/spec.md).

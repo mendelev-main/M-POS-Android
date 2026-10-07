@@ -357,3 +357,8 @@ Create/edit/delete and bindings: actual source + Room tests; raw JSON/unknown fi
 ## 092 — purchase orders
 
 Actual-source quantity/unit/packing fixtures + complete create/delete candidates checked by JVM. JS commit-before-state/rollback/errors and Room stale data/roles/received/atomic failed projection tests. Supply ownership/reopen expanded to purchaseOrders/receivings. No stock increase at order creation. Physical pending. [092](../specs/092-native-purchase-commands/spec.md).
+
+
+## 093 — receiving confirmation
+
+Actual-source fixtures checked independently in JS/JVM: unit packing, weighted and untracked costs, duplicate lines, negative stock, zero lines, shortage tolerance. Source tests exercise stock changing after preview, commit-before-state, failure/double tap/received guards and rollback. Room checks reject stale/tampered/duplicate commands and inject projection/final draft write failures to prove atomic rollback. Supply authority draft import/obsolete mirrors/file-backed reopen verified. [093](../specs/093-native-receiving-command/spec.md). Physical pending.

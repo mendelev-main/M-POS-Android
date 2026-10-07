@@ -29,14 +29,16 @@ class MPosSupplyAuthorityTest {
             mirror.handle(JSONObject().put("action",action).put("key",key).put("requestId",action).apply{if(raw!=null)put("payload",raw)})
             return requireNotNull(replies.poll(5,TimeUnit.SECONDS)).also{assertTrue("$action failed",it.getBoolean("ok"))}
         }
-        val raw="[{\"id\":\"s\",\"name\":\"Supply\",\"extra\":{\"v\":7}}]"
+        val arrayRaw="[{\"id\":\"s\",\"name\":\"Supply\",\"extra\":{\"v\":7}}]"
         try{
             for(key in MPosSupplyStorage.KEYS){
-                call("put",key,"[]");call("supplyInitialize",key,raw);call("supplyInitialize",key,"[]")
+                val raw=if(key=="receivingDraft")"{\"version\":1,\"lines\":[],\"extra\":7}" else arrayRaw
+                val initial=if(key=="receivingDraft")"null" else "[]"
+                call("put",key,initial);call("supplyInitialize",key,raw);call("supplyInitialize",key,initial)
                 assertTrue(call("put",key,"[]").getBoolean("ignored"));assertTrue(call("remove",key).getBoolean("ignored"));assertEquals(raw,call("supplyRead",key).getString("payload"))
             }
             mirror.close();db.close();db=Room.databaseBuilder(context,MPosDatabase::class.java,name).build();mirror=MPosStorageMirror(db,scope){replies.add(it)}
-            for(key in MPosSupplyStorage.KEYS)assertEquals(raw,call("supplyRead",key).getString("payload"))
+            for(key in MPosSupplyStorage.KEYS)assertEquals(if(key=="receivingDraft")"{\"version\":1,\"lines\":[],\"extra\":7}" else arrayRaw,call("supplyRead",key).getString("payload"))
         }finally{mirror.close();scope.cancel();db.close();context.deleteDatabase(name)}
     }
 }

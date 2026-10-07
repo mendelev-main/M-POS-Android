@@ -78,3 +78,8 @@ test('supplier command freezes expected/candidate before authority initializatio
  await new Promise(r=>setImmediate(r));const command=h.calls.at(-1);assert.equal(command.action,'supplierCommit');assert.equal(JSON.parse(command.payload).expected[0].id,'s');
  h.context.__nativeStorageResult({requestId:command.requestId,ok:true,authoritative:true});await p;
 });
+test('receiving command freezes draft before initialization and requires authoritative commit',async()=>{
+ const h=host(),input={version:1,draft:{invoiceNumber:'before'},writes:{products:[]}},p=h.context.MPosCore.ReceivingCommands.commit(input);
+ input.draft.invoiceNumber='changed';await new Promise(r=>setImmediate(r));const statuses=h.calls.filter(r=>r&&typeof r==='object');assert.equal(statuses.length,6);assert.ok(statuses.some(r=>r.key==='receivingDraft'&&r.action==='supplyStatus'));
+ for(const s of statuses)h.context.__nativeStorageResult({requestId:s.requestId,ok:true,initialized:true});await new Promise(r=>setImmediate(r));const command=h.calls.at(-1);assert.equal(command.action,'receivingCommit');assert.equal(JSON.parse(command.payload).draft.invoiceNumber,'before');h.context.__nativeStorageResult({requestId:command.requestId,ok:true,authoritative:true});await p;
+});
