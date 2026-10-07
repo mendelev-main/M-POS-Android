@@ -385,3 +385,12 @@ Pay with customer online/offline; restart during sending; repeated reconnect wit
 ## 087 WEB journals/ACK — pending
 
 Accept online/offline/timeouts with valid estimate; prepared/local/ACK/confirmed restart points; legacy missing-estimate prompt; kitchen printing enabled/disabled; no duplicate parked order. Mark ready, move to another session and restart/reconnect; pending remains ACK eligible, prepared never sends. Failed local confirmed save must retain native queue/event until durable confirmation. Concurrent unrelated records, read failure, v13 export/import/reopen, stock and paid split metadata. Check availability remains payment-gated.
+
+## 088 — WEB SSE transport (pending)
+
+- Open POS, create WEB order: one notification, correct persisted order after restart.
+- Switch Wi-Fi off/on and background/foreground: stream reconnects, no duplicate active stream; no catalogue/availability publication.
+- Request owner live report while foreground stream is connected; response retains current shift values.
+- Close/reconfigure backend during delivery: previous connection cannot update the new session.
+- Large/multiline payload and slow local save: events retain order, memory does not accumulate a JS message queue.
+- Server 204/wrong MIME closes; connection loss retries; replay depends on backend IDs/replay support.

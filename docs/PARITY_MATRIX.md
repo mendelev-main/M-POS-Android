@@ -319,3 +319,12 @@ webOrderAcceptances/webOrderReadyJournal стали основными доку�
 Исправлен failure-window очистки: готовность удаляется только при confirmed в Room; события приёма очищаются по свежему Room журналу, а не по изменённому лишь в памяти объекту после failed save. V13/исходные printing/estimate/stock rules и retry triggers сохранены. Приём WEB items, кухня, UI и расписание восстановления ещё используют reviewed runtime; SSE/event ownership — следующий 088. 364 JS / 287 JVM тестов прошли; lint 0 ошибок / 15 прежних предупреждений. Физическая приёмка pending. [Спецификация](../specs/087-native-web-journals/spec.md).
 
 Сохранённый бизнес-вопрос: кухня печатает до backend ACK; падение после физической печати до сохранения printed snapshot может повторить печать. Это отдельная внешняя граница 099, Room сам не гарантирует exactly-once принтер.
+
+## 088 — primary WEB events transport
+
+| Boundary | Automated evidence | Physical status |
+|---|---|---|
+| Native stream → reviewed orders/owner report handler | Actual-source JS tests; named events/rollback/late sessions | Pending |
+| Framing, backpressure, Last-Event-ID, MIME/HTTP stop, lifecycle | JVM primary-reader and injected HTTP tests | Pending network transitions |
+
+No automatic catalogue/availability sends; existing WEB normalization/merge retained. See [088](../specs/088-native-web-sse/spec.md).

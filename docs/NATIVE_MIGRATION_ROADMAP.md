@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **86/110 выполнено (78,18%)**
-после 087. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **87/110 выполнено (79,09%)**
+после 088. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -524,3 +524,7 @@ webOrderAcceptances/webOrderReadyJournal стали основными доку�
 Исправлен failure-window очистки: готовность удаляется только при confirmed в Room; события приёма очищаются по свежему Room журналу, а не по изменённому лишь в памяти объекту после failed save. V13/исходные printing/estimate/stock rules и retry triggers сохранены. Приём WEB items, кухня, UI и расписание восстановления ещё используют reviewed runtime; SSE/event ownership — следующий 088. 364 JS / 287 JVM тестов прошли; lint 0 ошибок / 15 прежних предупреждений. Физическая приёмка pending. [Спецификация](../specs/087-native-web-journals/spec.md).
 
 Сохранённый бизнес-вопрос: кухня печатает до backend ACK; падение после физической печати до сохранения printed snapshot может повторить печать. Это отдельная внешняя граница 099, Room сам не гарантирует exactly-once принтер.
+
+## 088 — native primary WEB SSE
+
+Configured WEB EventSource now uses Kotlin framing, reconnect, IDs/retry, cancellation and lifecycle, with single-event bridge backpressure. Reviewed order/owner-report handlers remain; webEvents business/storage authority is not claimed. Diagnostic shadow remains separate. Next: 089 manual catalogue/media transport. See [088](../specs/088-native-web-sse/spec.md).

@@ -19,6 +19,7 @@ class MPosNetworkTransport(
     private val onResult: (JSONObject) -> Unit,
     private val onEvent: (JSONObject) -> Unit,
 ) {
+    private val webSse = MPosWebSse(scope, onEvent)
     private val webAcks = MPosWebAckHttp()
     private val loyaltyProfiles = MPosLoyaltyProfileHttp()
     private val profileCalls = java.util.concurrent.ConcurrentHashMap<String, Call>()
@@ -36,6 +37,9 @@ class MPosNetworkTransport(
     fun handle(payload: JSONObject) {
         val requestId = payload.optString("requestId")
         when (payload.optString("action")) {
+            "startWebSse" -> webSse.start(payload)
+            "stopWebSse" -> webSse.stop(payload.optString("sessionId"))
+            "webSseAck" -> webSse.acknowledge(payload.optString("sessionId"), payload.optLong("sequence"))
             "webAck" -> webAck(requestId,payload)
             "loyaltyProfile" -> loyaltyProfile(requestId, payload)
             "loyaltyMutation" -> loyaltyProfile(requestId, payload, true)
@@ -124,9 +128,9 @@ class MPosNetworkTransport(
     }
     private fun emitState(state:String)=onEvent(JSONObject().put("type","shadow-state").put("state",state).put("authoritative",false).put("reconnects",reconnects))
     private fun stopShadowSse(clearRequest:Boolean){ shadowJob?.cancel(); shadowJob=null; shadowCall?.cancel(); shadowCall=null; shadowConnected=false; if(clearRequest){shadowRequested=false;shadowBackendUrl="";shadowDeviceKey=""} }
-    fun onBackground(){ if(shadowRequested){ stopShadowSse(false); emitState("background-paused") } }
-    fun onForeground(){ if(shadowRequested && shadowJob?.isActive!=true && validBackend(shadowBackendUrl,shadowDeviceKey)){ startShadowSse("",JSONObject().put("backendUrl",shadowBackendUrl).put("deviceKey",shadowDeviceKey),false); emitState("foreground-resumed") } }
-    fun close(){ stopShadowSse(true); profileCalls.values.forEach { it.cancel() }; profileCalls.clear() }
+    fun onBackground(){ webSse.background(); if(shadowRequested){ stopShadowSse(false); emitState("background-paused") } }
+    fun onForeground(){ webSse.foreground(); if(shadowRequested && shadowJob?.isActive!=true && validBackend(shadowBackendUrl,shadowDeviceKey)){ startShadowSse("",JSONObject().put("backendUrl",shadowBackendUrl).put("deviceKey",shadowDeviceKey),false); emitState("foreground-resumed") } }
+    fun close(){ webSse.stop(); stopShadowSse(true); profileCalls.values.forEach { it.cancel() }; profileCalls.clear() }
     private fun validBackend(url:String,key:String)=url.startsWith("https://")&&key.isNotBlank()
     private fun eventsUrl(url:String,key:String)=url+"/api/orders/events?deviceKey="+URLEncoder.encode(key,"UTF-8")
     private fun sha256(value:String)=MessageDigest.getInstance("SHA-256").digest(value.toByteArray(Charsets.UTF_8)).joinToString(""){"%02x".format(it)}

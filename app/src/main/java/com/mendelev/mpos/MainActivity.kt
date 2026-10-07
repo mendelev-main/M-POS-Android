@@ -310,7 +310,7 @@ class MainActivity : AppCompatActivity() {
     }
     private fun nativeNetworkEvent(event: JSONObject) {
         diagnostics.record("network", event.optString("state", event.optString("type", "event")))
-        callJavaScript("window.__nativeNetworkEvent&&window.__nativeNetworkEvent($event);")
+        callJavaScript("window.__nativeNetworkEvent&&window.__nativeNetworkEvent(${com.mendelev.mpos.data.MPosBridgeJson.serialize(event)});")
     }
 
     private fun hideSystemBars() {
