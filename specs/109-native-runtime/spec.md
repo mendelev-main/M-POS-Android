@@ -69,3 +69,18 @@ Shared fixtures compare actual reviewed navigation functions and the Kotlin tran
 ## Verification of workspace route increment
 
 536/536 JS tests and 425/425 JVM tests passed; failures/errors/skips: 0. Lint: 0 errors, 15 existing warnings. No APK assembly; physical route/keyboard/drag checks are documented for 110. Overall engineering completion remains 107/110.
+
+
+## Paired active-session bootstrap increment
+
+After the existing critical-journal recovery completes, loadAll uses MPosActiveSession.bootstrap. It initializes the existing shift/employee authority boundaries through their established one-time migration, then MPosActiveSessionRepository reads both owned documents in one Room transaction using MPosRuntimeSnapshot. Neither the repository nor projection writes or repairs data. Bridge/read failure or MPosNativeActiveSessionEnabled=false retains the original per-key reads.
+
+MPosActiveSessionEngine preserves missing versus stored null, record filtering/warnings, unknown employee fields and exact admin-role normalization. It prepares first-open-shift and first-matching-employee indices using reviewed strict scalar ID equality (missing differs from null; object IDs do not match by JSON equality). Existing synchronous currentShift/currentShiftEmployeeIsAdmin remain active; prepared indices are a native bootstrap model for later native handlers, not an alternative cached authorization authority. No permission policy changes or role-cache serialization per UI action.
+
+The production loadAll prefix and shared fixtures are exercised with both native and rollback paths. Repository tests cover missing/unowned authority, exact raw document retention, null warnings and concurrent paired generations. Source hash checks still verify original HTML after removing only exact reviewed native hooks. No automatic printing, payment, catalogue sync or availability action is added.
+
+Internal progress: paired shift/employee normalization is active; complete native root session/authorization/navigation lifecycle and WebView removal remain pending.
+
+## Verification of paired bootstrap increment
+
+541/541 JS tests, 430/430 JVM tests passed; failures/errors/skips: 0. Lint: 0 errors, 15 existing warnings. No local APK assembly; tablet acceptance is pending in 110. Completed tasks remain 107/110.

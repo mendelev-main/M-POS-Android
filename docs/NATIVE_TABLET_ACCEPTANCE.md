@@ -615,3 +615,5 @@ After the native bootstrap cutover: restart offline with imported v13 data; veri
 109 session cutover: restart with customer/delivery/comment/WEB/loyalty data, previously printed kitchen items and a paid split part. Verify exact values, no repeat print, and unchanged paid amount; repeat with native session restore rollback. Pending physical acceptance.
 
 109 workspace routes (pending): open category and folder, Back from modal/legacy folder/root, toggle edit and verify search reset/drag availability; rapidly open category then Back, change tab or modal while waiting, and confirm cart/paid parts remain intact. Compare native-route rollback; repeat offline and after import.
+
+109 paired bootstrap (pending): cold restart offline with admin/non-admin open shift, closed shifts and restored employees; verify selected employee and existing permissions. Restart after v13 import, compare explicit active-session rollback and verify warnings for malformed test records. No unexpected role grant, repeat print or availability send.

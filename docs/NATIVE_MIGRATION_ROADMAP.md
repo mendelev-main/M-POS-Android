@@ -629,3 +629,5 @@ Read-only transactional Room snapshot foundation added; no production cutover or
 109 session increment: Kotlin now projects restored current-order fields on production startup; existing split-draft validation and print marks preserved, no print retry. Reviewed rollback remains. WebView/navigation removal pending; 107/110 completed.
 
 109 workspace increment: Kotlin category/folder/Back/edit decisions now active; FIFO and stale-view guards preserve current state. No business document writes. Search/tab/rendering and WebView removal still pending. Engineering completion: 107/110.
+
+109 active-session bootstrap: production startup now reads owned shifts/employees together and uses Kotlin normalization. Native first-match active-session model prepared; synchronous JS role helpers still remain until native handlers replace them. Read-only, rollback and v13 retained. Overall: 107/110; WebView removal pending.

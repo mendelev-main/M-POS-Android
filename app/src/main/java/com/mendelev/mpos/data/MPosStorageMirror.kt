@@ -287,6 +287,10 @@ class MPosStorageMirror(
                 attempt { MPosSessionRestoreRepository(database).prepare(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native session restore unavailable") }
             }
+            "activeSessionBootstrap" -> {
+                attempt { MPosActiveSessionRepository(database).bootstrap().put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, "native active session unavailable") }
+            }
             "splitRecoveryRead" -> {
                 attempt { com.mendelev.mpos.payment.MPosSplitRecoveryEngine.calculate(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native split recovery unavailable") }

@@ -43,6 +43,14 @@ test('Android POS retains reviewed source outside platform scripts and session r
  const sessionHookEnd='    }\n    const previousLoyaltyPrograms=state.loyaltyPrograms,previousLoyaltyRedemptions=state.loyaltyRedemptions;';
  assert.equal(restored.split(sessionHookEnd).length,2,'exactly one reviewed hook closing boundary');
  restored=restored.replace(sessionHookEnd,'    const previousLoyaltyPrograms=state.loyaltyPrograms,previousLoyaltyRedemptions=state.loyaltyRedemptions;');
+ const activeSessionHook = '  const nativeActiveSession = await window.MPosCore?.ActiveSession?.bootstrap();\n  if(nativeActiveSession)nativeActiveSession.warnings.forEach(markStorageBroken);\n';
+ assert.equal(restored.split(activeSessionHook).length,2);
+ restored=restored.replace(activeSessionHook,'');
+ for(const key of ['shifts','employees']){
+   const hook=`    nativeActiveSession ? nativeActiveSession.${key} : loadKey('${key}', []),`;
+   assert.equal(restored.split(hook).length,2);
+   restored=restored.replace(hook,`    loadKey('${key}', []),`);
+ }
  assert.equal(sha(restored),manifest.files['pos.html']);
  for(const [file,expected] of Object.entries(manifest.files)){
    if(file==='pos.html')continue;

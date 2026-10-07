@@ -201,6 +201,18 @@
   mposCore.WorkspaceRouteRead=Object.freeze({
     async calculate(input){return requireNative(await request('workspaceRouteRead',{payload:JSON.stringify(input)}),true);}
   });
+  mposCore.ActiveSession=Object.freeze({
+    async bootstrap(){
+      if(global.MPosNativeActiveSessionEnabled===false)return null;
+      try{
+        await Promise.all(['shifts','employees'].map(initializeNative));
+        const result=requireNative(await request('activeSessionBootstrap'),true);
+        if(global.MPosNativeActiveSessionEnabled===false)return null;
+        if(!Array.isArray(result.shifts)||!Array.isArray(result.employees)||!Array.isArray(result.warnings)||typeof result.isAdmin!=='boolean')throw Error('invalid active session projection');
+        return result;
+      }catch(_error){return null;} // Reviewed per-key reads remain available on bridge/read failure.
+    }
+  });
   mposCore.SessionRestore=Object.freeze({
     async prepare(session){
       if(global.MPosNativeSessionRestoreEnabled===false)return null;

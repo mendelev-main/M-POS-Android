@@ -1387,10 +1387,12 @@ async function loadAll(){
   }
   storageCheckedOnce = true;
   await recoverCriticalStorageJournal();
+  const nativeActiveSession = await window.MPosCore?.ActiveSession?.bootstrap();
+  if(nativeActiveSession)nativeActiveSession.warnings.forEach(markStorageBroken);
   const [products, shifts, employees, orders, parked, demandOverload, operationalOutbox, operationalRevision, receivings, suppliers, purchaseOrders, discounts, layout, printer, theme, company, deliveryRates, telegram, network, currentOrderSession, hallTables, bookings, webEvents, posNavigation, inventoryConfig, inventoryHistory, inventoryDraft] = await Promise.all([
     loadKey('products', null),
-    loadKey('shifts', []),
-    loadKey('employees', []),
+    nativeActiveSession ? nativeActiveSession.shifts : loadKey('shifts', []),
+    nativeActiveSession ? nativeActiveSession.employees : loadKey('employees', []),
     loadKey('orders', []),
     loadKey('parked', []),
     loadKey('demandOverload', false),

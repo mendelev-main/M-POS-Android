@@ -1,0 +1,495 @@
+[
+  {
+    "name": "missing documents",
+    "input": {
+      "version": 1,
+      "shifts": {
+        "found": false
+      },
+      "employees": {
+        "found": false
+      }
+    },
+    "expected": {
+      "shifts": [],
+      "employees": [],
+      "warnings": [],
+      "activeShiftIndex": null,
+      "activeEmployeeIndex": null,
+      "isAdmin": false
+    }
+  },
+  {
+    "name": "stored null differs from missing",
+    "input": {
+      "version": 1,
+      "shifts": {
+        "found": true,
+        "value": null
+      },
+      "employees": {
+        "found": true,
+        "value": null
+      }
+    },
+    "expected": {
+      "shifts": [],
+      "employees": [],
+      "warnings": [
+        "Некорректный формат shifts",
+        "Некорректный формат employees"
+      ],
+      "activeShiftIndex": null,
+      "activeEmployeeIndex": null,
+      "isAdmin": false
+    }
+  },
+  {
+    "name": "first open shift and exact admin role",
+    "input": {
+      "version": 1,
+      "shifts": {
+        "found": true,
+        "value": [
+          {
+            "status": "closed",
+            "employeeId": "old"
+          },
+          {
+            "status": "open",
+            "employeeId": "a",
+            "extension": false
+          },
+          {
+            "status": "open",
+            "employeeId": "b"
+          }
+        ]
+      },
+      "employees": {
+        "found": true,
+        "value": [
+          {
+            "id": "a",
+            "role": "admin",
+            "extension": {
+              "zero": 0
+            }
+          },
+          {
+            "id": "b",
+            "role": "admin"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "shifts": [
+        {
+          "status": "closed",
+          "employeeId": "old"
+        },
+        {
+          "status": "open",
+          "employeeId": "a",
+          "extension": false
+        },
+        {
+          "status": "open",
+          "employeeId": "b"
+        }
+      ],
+      "employees": [
+        {
+          "id": "a",
+          "role": "admin",
+          "extension": {
+            "zero": 0
+          }
+        },
+        {
+          "id": "b",
+          "role": "admin"
+        }
+      ],
+      "warnings": [],
+      "activeShiftIndex": 1,
+      "activeEmployeeIndex": 0,
+      "isAdmin": true
+    }
+  },
+  {
+    "name": "first matching employee retains duplicate ID precedence",
+    "input": {
+      "version": 1,
+      "shifts": {
+        "found": true,
+        "value": [
+          {
+            "status": "open",
+            "employeeId": "a"
+          }
+        ]
+      },
+      "employees": {
+        "found": true,
+        "value": [
+          {
+            "id": "a",
+            "role": "ADMIN"
+          },
+          {
+            "id": "a",
+            "role": "admin"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "shifts": [
+        {
+          "status": "open",
+          "employeeId": "a"
+        }
+      ],
+      "employees": [
+        {
+          "id": "a",
+          "role": "employee"
+        },
+        {
+          "id": "a",
+          "role": "admin"
+        }
+      ],
+      "warnings": [],
+      "activeShiftIndex": 0,
+      "activeEmployeeIndex": 0,
+      "isAdmin": false
+    }
+  },
+  {
+    "name": "invalid records filtered and unknown roles normalized",
+    "input": {
+      "version": 1,
+      "shifts": {
+        "found": true,
+        "value": [
+          null,
+          1,
+          [],
+          {
+            "status": "open",
+            "employeeId": "a"
+          }
+        ]
+      },
+      "employees": {
+        "found": true,
+        "value": [
+          false,
+          null,
+          [],
+          {
+            "id": "a",
+            "role": null,
+            "custom": 0
+          }
+        ]
+      }
+    },
+    "expected": {
+      "shifts": [
+        {
+          "status": "open",
+          "employeeId": "a"
+        }
+      ],
+      "employees": [
+        {
+          "id": "a",
+          "role": "employee",
+          "custom": 0
+        }
+      ],
+      "warnings": [
+        "Некорректные записи shifts",
+        "Некорректные записи employees"
+      ],
+      "activeShiftIndex": 0,
+      "activeEmployeeIndex": 0,
+      "isAdmin": false
+    }
+  },
+  {
+    "name": "numeric ID does not match string",
+    "input": {
+      "version": 1,
+      "shifts": {
+        "found": true,
+        "value": [
+          {
+            "status": "open",
+            "employeeId": 1
+          }
+        ]
+      },
+      "employees": {
+        "found": true,
+        "value": [
+          {
+            "id": "1",
+            "role": "admin"
+          },
+          {
+            "id": 1,
+            "role": "employee"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "shifts": [
+        {
+          "status": "open",
+          "employeeId": 1
+        }
+      ],
+      "employees": [
+        {
+          "id": "1",
+          "role": "admin"
+        },
+        {
+          "id": 1,
+          "role": "employee"
+        }
+      ],
+      "warnings": [],
+      "activeShiftIndex": 0,
+      "activeEmployeeIndex": 1,
+      "isAdmin": false
+    }
+  },
+  {
+    "name": "absent IDs match absent not JSON null",
+    "input": {
+      "version": 1,
+      "shifts": {
+        "found": true,
+        "value": [
+          {
+            "status": "open"
+          }
+        ]
+      },
+      "employees": {
+        "found": true,
+        "value": [
+          {
+            "id": null,
+            "role": "admin"
+          },
+          {
+            "role": "employee"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "shifts": [
+        {
+          "status": "open"
+        }
+      ],
+      "employees": [
+        {
+          "id": null,
+          "role": "admin"
+        },
+        {
+          "role": "employee"
+        }
+      ],
+      "warnings": [],
+      "activeShiftIndex": 0,
+      "activeEmployeeIndex": 1,
+      "isAdmin": false
+    }
+  },
+  {
+    "name": "null IDs match null not absent",
+    "input": {
+      "version": 1,
+      "shifts": {
+        "found": true,
+        "value": [
+          {
+            "status": "open",
+            "employeeId": null
+          }
+        ]
+      },
+      "employees": {
+        "found": true,
+        "value": [
+          {
+            "role": "admin"
+          },
+          {
+            "id": null,
+            "role": "employee"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "shifts": [
+        {
+          "status": "open",
+          "employeeId": null
+        }
+      ],
+      "employees": [
+        {
+          "role": "admin"
+        },
+        {
+          "id": null,
+          "role": "employee"
+        }
+      ],
+      "warnings": [],
+      "activeShiftIndex": 0,
+      "activeEmployeeIndex": 1,
+      "isAdmin": false
+    }
+  },
+  {
+    "name": "object IDs never match by JSON equality",
+    "input": {
+      "version": 1,
+      "shifts": {
+        "found": true,
+        "value": [
+          {
+            "status": "open",
+            "employeeId": {
+              "id": "a"
+            }
+          }
+        ]
+      },
+      "employees": {
+        "found": true,
+        "value": [
+          {
+            "id": {
+              "id": "a"
+            },
+            "role": "admin"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "shifts": [
+        {
+          "status": "open",
+          "employeeId": {
+            "id": "a"
+          }
+        }
+      ],
+      "employees": [
+        {
+          "id": {
+            "id": "a"
+          },
+          "role": "admin"
+        }
+      ],
+      "warnings": [],
+      "activeShiftIndex": 0,
+      "activeEmployeeIndex": null,
+      "isAdmin": false
+    }
+  },
+  {
+    "name": "no open shift cannot grant admin",
+    "input": {
+      "version": 1,
+      "shifts": {
+        "found": true,
+        "value": [
+          {
+            "status": "OPEN",
+            "employeeId": "a"
+          },
+          {
+            "status": "closed",
+            "employeeId": "a"
+          }
+        ]
+      },
+      "employees": {
+        "found": true,
+        "value": [
+          {
+            "id": "a",
+            "role": "admin"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "shifts": [
+        {
+          "status": "OPEN",
+          "employeeId": "a"
+        },
+        {
+          "status": "closed",
+          "employeeId": "a"
+        }
+      ],
+      "employees": [
+        {
+          "id": "a",
+          "role": "admin"
+        }
+      ],
+      "warnings": [],
+      "activeShiftIndex": null,
+      "activeEmployeeIndex": null,
+      "isAdmin": false
+    }
+  },
+  {
+    "name": "malformed containers",
+    "input": {
+      "version": 1,
+      "shifts": {
+        "found": true,
+        "value": {
+          "status": "open"
+        }
+      },
+      "employees": {
+        "found": true,
+        "value": "bad"
+      }
+    },
+    "expected": {
+      "shifts": [],
+      "employees": [],
+      "warnings": [
+        "Некорректный формат shifts",
+        "Некорректный формат employees"
+      ],
+      "activeShiftIndex": null,
+      "activeEmployeeIndex": null,
+      "isAdmin": false
+    }
+  }
+]
