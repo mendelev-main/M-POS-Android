@@ -33,3 +33,5 @@ Physical pending: simple/composite create/edit/reopen; kg/g/l/ml conversion, rea
 Native light/dark previews inspected with synthetic data; physical acceptance pending.
 Engineering progress after publication: **101/110 (91.82%)**, 9 remaining.
 This ratio is not native feature coverage. Next 103: main payment UI.
+
+Publication pending: local implementation commit `6f9c31d`; GitHub rejected main updates with Internal Server Error (read access and local object integrity verified). 102 remains in_progress until successful publication; current counted progress is 100/110 (90.91%). No force push was attempted.

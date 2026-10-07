@@ -2,7 +2,7 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **101/110 выполнено (91,82%)**
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **100/110 выполнено (90,91%)**
 после 102. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
@@ -595,3 +595,5 @@ Native Kotlin tiles, source grid coordinates/spans, toolbar, folder browsing and
 ## 102 — native product, recipe and modifier editor
 
 Kotlin expanded editor/contextual forms cover all reviewed sections and mounted actions. Stable node identities, whole-draft assignment before events, native patches retaining focus/cursor/scroll, live search and sampled cancellable photo previews preserve editor interaction. Existing native 080/081 validation is retained. Dirty-exit saving locks follow modal replacement and propagate recovery feedback. Shared selected-section styling and both palettes match POS. Reviewed units/configuration/auth/delete/saveKey/photo runtime remains explicit compatibility until 109; no measured performance or physical-acceptance claim. Next 103: main payment surface. [102](../specs/102-native-product-editor/spec.md).
+
+102: реализация и автоматические проверки завершены локально, публикация ожидается. GitHub отклонил обновление main с Internal Server Error; текущая удалённая main остаётся на 101. Счётчик сохраняет 100/110 до успешной публикации 102.

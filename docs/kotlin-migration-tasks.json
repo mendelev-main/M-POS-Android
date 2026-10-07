@@ -668,10 +668,11 @@
     {
       "id": "102",
       "title": "Нативный редактор товара/рецепта/модификаторов",
-      "status": "done",
+      "status": "in_progress",
       "area": "P9/UI",
       "dependencies": "080,081",
-      "spec": "specs/102-native-product-editor/spec.md"
+      "spec": "specs/102-native-product-editor/spec.md",
+      "publication": "pending: GitHub rejected main update with Internal Server Error"
     },
     {
       "id": "103",
