@@ -613,3 +613,5 @@ Accept online/offline/timeouts with valid estimate; prepared/local/ACK/confirmed
 After the native bootstrap cutover: restart offline with imported v13 data; verify products, employees, current shift and pending order against the prior runtime. Missing documents must not become invented defaults; critical recovery must block duplicate payment/printing. Repeat after process termination and failed import. Current read-only snapshot increment does not yet change application startup.
 
 109 session cutover: restart with customer/delivery/comment/WEB/loyalty data, previously printed kitchen items and a paid split part. Verify exact values, no repeat print, and unchanged paid amount; repeat with native session restore rollback. Pending physical acceptance.
+
+109 workspace routes (pending): open category and folder, Back from modal/legacy folder/root, toggle edit and verify search reset/drag availability; rapidly open category then Back, change tab or modal while waiting, and confirm cart/paid parts remain intact. Compare native-route rollback; repeat offline and after import.

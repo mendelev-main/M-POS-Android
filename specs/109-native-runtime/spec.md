@@ -43,7 +43,8 @@ The production session read now uses MPosSessionRestoreRepository: it checks exi
 
 - [x] Transactional read-only document snapshot and concurrent consistency test.
 - [x] Production current-order field projection from owned Room data, with reviewed rollback.
-- [ ] Native session/shift selection, navigation and complete bootstrap state orchestration.
+- [x] Native workspace category/folder/Back/edit transition decisions.
+- [ ] Native session/shift selection, remaining navigation and complete bootstrap state orchestration.
 - [ ] Domain read models replacing DOM screen extraction.
 - [ ] Direct native command dispatch replacing mounted JS handlers.
 - [ ] Post-commit and recovery orchestration without JS lifecycle.
@@ -53,3 +54,18 @@ The production session read now uses MPosSessionRestoreRepository: it checks exi
 ## Verification of production session increment
 
 530/530 JS tests, 422/422 JVM tests passed; failures/errors/skips: 0. Lint: 0 errors, 15 existing warnings. Shared fixtures exercise the actual reviewed restore block and Kotlin projection; paid split restart, invalid draft warnings, bridge rollback, owned Room data/conflicts and concurrent multi-document snapshots are covered. No local APK assembly; physical acceptance remains pending in 110.
+
+
+## Workspace route authority increment
+
+MPosWorkspaceRouteEngine now decides open category, open normalized folder, Back precedence and edit-mode toggles. It reuses the reviewed Kotlin folder normalization from 082. Production native-navigation routes these calls through the existing storage queue; native workspace captures category/folder/edit promises before releasing its action lock. No cart, payment, shift, stock or stored navigation writes occur.
+
+Back preserves exact precedence: close the modal folder first; otherwise clear a legacy inline folder without leaving its category/edit mode; otherwise return to the root and reset search/edit mode. Folder opening does not invent IDs or permissions. Edit-mode entry retains the existing delayed drag initialization. Search filtering, tab navigation and rendering remain JS responsibilities for now.
+
+View requests are FIFO. Each reply is checked against the current route, tab/payment page, query, folder modal, mounted modal identity and navigation data. Stale replies cannot override a newer view. A failed/unsupported pure read falls back to the reviewed function only if the view is still current. MPosNativeWorkspaceRouteEnabled=false provides independent rollback without changing native persisted navigation authority.
+
+Shared fixtures compare actual reviewed navigation functions and the Kotlin transition engine. Integration tests cover delayed/stale replies, order-data retention, malformed replies, FIFO category/Back and explicit rollback. This is another part of 109, not an additional completed task or removal of WebView.
+
+## Verification of workspace route increment
+
+536/536 JS tests and 425/425 JVM tests passed; failures/errors/skips: 0. Lint: 0 errors, 15 existing warnings. No APK assembly; physical route/keyboard/drag checks are documented for 110. Overall engineering completion remains 107/110.

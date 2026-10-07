@@ -1,0 +1,340 @@
+[
+  {
+    "name": "trim category resets search and edit",
+    "input": {
+      "version": 1,
+      "operation": "openCategory",
+      "value": " Кофе﻿",
+      "state": {
+        "posPath": null,
+        "posFolder": "old",
+        "search": "чай",
+        "editMode": true
+      }
+    },
+    "expected": {
+      "state": {
+        "posPath": "Кофе",
+        "posFolder": "",
+        "search": "",
+        "editMode": false
+      },
+      "folderModal": null,
+      "events": [
+        "render"
+      ]
+    }
+  },
+  {
+    "name": "blank category has no effect",
+    "input": {
+      "version": 1,
+      "operation": "openCategory",
+      "value": "  ",
+      "state": {
+        "posPath": null,
+        "posFolder": "",
+        "search": "чай",
+        "editMode": false
+      }
+    },
+    "expected": {
+      "state": {
+        "posPath": null,
+        "posFolder": "",
+        "search": "чай",
+        "editMode": false
+      },
+      "folderModal": null,
+      "events": []
+    }
+  },
+  {
+    "name": "back closes folder modal first",
+    "input": {
+      "version": 1,
+      "operation": "closeCategory",
+      "state": {
+        "posPath": "Кофе",
+        "posFolder": "",
+        "search": "чай",
+        "editMode": true
+      },
+      "folderModal": {
+        "category": "Кофе",
+        "id": "f"
+      }
+    },
+    "expected": {
+      "state": {
+        "posPath": "Кофе",
+        "posFolder": "",
+        "search": "чай",
+        "editMode": true
+      },
+      "folderModal": null,
+      "events": [
+        "closeModal"
+      ]
+    }
+  },
+  {
+    "name": "back clears legacy inline folder only",
+    "input": {
+      "version": 1,
+      "operation": "closeCategory",
+      "state": {
+        "posPath": "Кофе",
+        "posFolder": "f",
+        "search": "чай",
+        "editMode": true
+      }
+    },
+    "expected": {
+      "state": {
+        "posPath": "Кофе",
+        "posFolder": "",
+        "search": "",
+        "editMode": true
+      },
+      "folderModal": null,
+      "events": [
+        "render"
+      ]
+    }
+  },
+  {
+    "name": "back returns root",
+    "input": {
+      "version": 1,
+      "operation": "closeCategory",
+      "state": {
+        "posPath": "Кофе",
+        "posFolder": "",
+        "search": "чай",
+        "editMode": true
+      }
+    },
+    "expected": {
+      "state": {
+        "posPath": null,
+        "posFolder": "",
+        "search": "",
+        "editMode": false
+      },
+      "folderModal": null,
+      "events": [
+        "render"
+      ]
+    }
+  },
+  {
+    "name": "edit clears search and enables drag",
+    "input": {
+      "version": 1,
+      "operation": "toggleEdit",
+      "state": {
+        "posPath": null,
+        "posFolder": "",
+        "search": "чай",
+        "editMode": false
+      }
+    },
+    "expected": {
+      "state": {
+        "posPath": null,
+        "posFolder": "",
+        "search": "",
+        "editMode": true
+      },
+      "folderModal": null,
+      "events": [
+        "render",
+        "drag"
+      ]
+    }
+  },
+  {
+    "name": "leaving edit does not setup drag",
+    "input": {
+      "version": 1,
+      "operation": "toggleEdit",
+      "state": {
+        "posPath": null,
+        "posFolder": "",
+        "search": "чай",
+        "editMode": true
+      }
+    },
+    "expected": {
+      "state": {
+        "posPath": null,
+        "posFolder": "",
+        "search": "",
+        "editMode": false
+      },
+      "folderModal": null,
+      "events": [
+        "render"
+      ]
+    }
+  },
+  {
+    "name": "valid folder uses normalized stored folder",
+    "input": {
+      "version": 1,
+      "operation": "openFolder",
+      "value": "f",
+      "state": {
+        "posPath": "Кофе",
+        "posFolder": "",
+        "search": "чай",
+        "editMode": false
+      },
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "Кофе",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Горячий "
+              },
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Duplicate"
+              },
+              {
+                "type": "folder",
+                "id": "bad",
+                "name": ""
+              }
+            ]
+          }
+        ]
+      },
+      "products": [
+        {
+          "id": "p",
+          "category": "Кофе"
+        }
+      ]
+    },
+    "expected": {
+      "state": {
+        "posPath": "Кофе",
+        "posFolder": "",
+        "search": "",
+        "editMode": false
+      },
+      "folderModal": {
+        "category": "Кофе",
+        "id": "f"
+      },
+      "events": [
+        "renderFolder"
+      ]
+    }
+  },
+  {
+    "name": "invalid folder is ignored",
+    "input": {
+      "version": 1,
+      "operation": "openFolder",
+      "value": "bad",
+      "state": {
+        "posPath": "Кофе",
+        "posFolder": "",
+        "search": "чай",
+        "editMode": false
+      },
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "Кофе",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Горячий "
+              },
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Duplicate"
+              },
+              {
+                "type": "folder",
+                "id": "bad",
+                "name": ""
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "expected": {
+      "state": {
+        "posPath": "Кофе",
+        "posFolder": "",
+        "search": "чай",
+        "editMode": false
+      },
+      "folderModal": null,
+      "events": []
+    }
+  },
+  {
+    "name": "folder on root is ignored",
+    "input": {
+      "version": 1,
+      "operation": "openFolder",
+      "value": "f",
+      "state": {
+        "posPath": null,
+        "posFolder": "",
+        "search": "чай",
+        "editMode": false
+      },
+      "navigation": {
+        "version": 1,
+        "categories": [
+          {
+            "category": "Кофе",
+            "items": [
+              {
+                "type": "folder",
+                "id": "f",
+                "name": " Горячий "
+              },
+              {
+                "type": "folder",
+                "id": "f",
+                "name": "Duplicate"
+              },
+              {
+                "type": "folder",
+                "id": "bad",
+                "name": ""
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "expected": {
+      "state": {
+        "posPath": null,
+        "posFolder": "",
+        "search": "чай",
+        "editMode": false
+      },
+      "folderModal": null,
+      "events": []
+    }
+  }
+]

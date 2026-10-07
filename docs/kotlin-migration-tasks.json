@@ -728,7 +728,7 @@
       "area": "UI/architecture",
       "dependencies": "100,101,102,103,104,105,106,107,108",
       "spec": "specs/109-native-runtime/spec.md",
-      "summary": "In progress: transactional Room snapshot and production Kotlin current-order restore projection; navigation/bootstrap orchestration and WebView removal pending."
+      "summary": "In progress: Room snapshot, production Kotlin current-order restore and workspace category/folder/Back/edit decisions; full bootstrap, remaining routes and WebView removal pending."
     },
     {
       "id": "110",

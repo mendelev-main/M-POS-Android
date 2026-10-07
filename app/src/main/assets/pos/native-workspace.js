@@ -69,7 +69,7 @@
     finally{capture=null;awaiting=null;bridge.postMessage({action:'result',token:current?.token||token,blocked:blocked(),message});schedule()}
   };
   const originalFlash=global.flash;if(typeof originalFlash==='function')global.flash=function(value,...args){if(awaiting)message=String(value??'');return originalFlash.call(this,value,...args)};
-  for(const name of ['addToCart','addConfiguredCartItem','removeFromCart','parkOrder','markCurrentWebOrderReady','openPaymentModal','openPosCategory','closePosCategory']){
+  for(const name of ['addToCart','addConfiguredCartItem','removeFromCart','parkOrder','markCurrentWebOrderReady','openPaymentModal','openPosCategory','closePosCategory','openPosFolder','toggleEditMode']){
     const original=global[name];if(typeof original!=='function')continue;global[name]=function(...args){const result=original.apply(this,args);if(capture&&result&&typeof result.then==='function')capture.push(result);return result};
   }
   function observe(){

@@ -198,6 +198,9 @@
   mposCore.DeliveryRead=Object.freeze({
     async calculate(input){return requireNative(await request('deliveryRead',{payload:JSON.stringify(input)}),true);}
   });
+  mposCore.WorkspaceRouteRead=Object.freeze({
+    async calculate(input){return requireNative(await request('workspaceRouteRead',{payload:JSON.stringify(input)}),true);}
+  });
   mposCore.SessionRestore=Object.freeze({
     async prepare(session){
       if(global.MPosNativeSessionRestoreEnabled===false)return null;

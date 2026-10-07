@@ -259,6 +259,10 @@ class MPosStorageMirror(
                 attempt { MPosNavigationEngine.calculate(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native navigation unavailable") }
             }
+            "workspaceRouteRead" -> {
+                attempt { com.mendelev.mpos.workspace.MPosWorkspaceRouteEngine.calculate(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, "native workspace transition unavailable") }
+            }
             "recipeEditRead" -> {
                 attempt { MPosRecipeEditRepository(database).calculate(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native recipe edit unavailable") }

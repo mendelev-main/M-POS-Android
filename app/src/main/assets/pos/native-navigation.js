@@ -71,4 +71,42 @@
     pointerUp.call(this,{pointerId:e.pointerId,clientX:e.clientX,clientY:e.clientY,type:'pointercancel',preventDefault:()=>e.preventDefault()});
     return enqueue('moveTile',args,false);
   };
+  if(global.MPosCore.WorkspaceRouteRead){
+    const routeEnabled=()=>global.MPosNativeWorkspaceRouteEnabled!==false;
+    const routeState=()=>({posPath:state.posPath,posFolder:state.posFolder,search:state.search,editMode:state.editMode});
+    const routeStamp=()=>JSON.stringify([routeState(),state.tab,state.paymentPage,global._posFolderModal,state.posNavigation,products()]);
+    const modalNode=()=>document.getElementById('modal-root')?.firstElementChild;
+    let routeTail=Promise.resolve(),routePending=0;
+    global.MPosCore.WorkspaceRoutes=Object.freeze({hasPending:()=>routePending>0});
+    for(const [name,operation]of [['openPosCategory','openCategory'],['closePosCategory','closeCategory'],['openPosFolder','openFolder'],['toggleEditMode','toggleEdit']]){
+      const original=global[name];if(typeof original!=='function')continue;
+      global[name]=function(...args){
+        if(!routeEnabled())return original.apply(this,args);
+        if(routePending>=32)return Promise.resolve(false);
+        const receiver=this,originTab=state.tab,originPage=state.paymentPage;
+        routePending++;
+        const work=routeTail.then(async()=>{
+          if(state.tab!==originTab||state.paymentPage!==originPage)return false;
+          if(!routeEnabled())return original.apply(receiver,args);
+          const stamp=routeStamp(),modal=modalNode();
+          const stale=()=>stamp!==routeStamp()||modal!==modalNode();
+          let result;
+          try{
+            result=await global.MPosCore.WorkspaceRouteRead.calculate({version:1,operation,state:routeState(),value:args[0]??null,folderModal:global._posFolderModal??null,navigation:state.posNavigation,products:products()});
+            if(stale())return false;
+            if(!routeEnabled())return original.apply(receiver,args);
+            if(typeof result?.allowed!=='boolean'||!result.patch||Array.isArray(result.patch)||Object.keys(result.patch).some(k=>!['posPath','posFolder','search','editMode'].includes(k)))throw Error('invalid workspace transition');
+            if(result.allowed===false)return false;
+            if(!['render','renderFolder','closeModal'].includes(result.effect)||result.effect==='renderFolder'&&(!result.folderModal||result.folderModal.category!==state.posPath||typeof result.folderModal.id!=='string'))throw Error('invalid workspace effect');
+          }catch(_error){if(!stale())return original.apply(receiver,args);return false;}
+          Object.assign(state,result.patch);
+          if(result.effect==='closeModal')global.closeModal();
+          else if(result.effect==='renderFolder'){global._posFolderModal=result.folderModal;global.renderPosFolderModal();}
+          else {global.render();if(result.setupDrag===true)setTimeout(global.setupLayoutGridDrag,50);}
+          return true;
+        }).catch(()=>{global.flash?.('Не удалось открыть раздел');return false;}).finally(()=>{routePending--;});
+        routeTail=work;return work;
+      };
+    }
+  }
 })(window);

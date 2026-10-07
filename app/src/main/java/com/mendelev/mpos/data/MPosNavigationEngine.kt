@@ -52,6 +52,9 @@ object MPosNavigationEngine {
         for(p in matching)if(items.none{it.opt("type")=="product"&&same(it.opt("id"),p.opt("id"))})items.add(JSONObject().put("type","product").put("id",p.opt("id")?:JSONObject.NULL).put("parentId",""))
         return items
     }
+    fun hasFolder(category: String, navigation: Any?, products: JSONArray, id: Any?): Boolean =
+        categoryItems(category, normalize(navigation), products).any { it.opt("type") == "folder" && same(it.opt("id"), id) }
+
     private fun reply()=JSONObject().put("ok",true).put("authoritative",true).put("source","native-navigation")
     private fun fail(message:String,form:Boolean=false)=reply().put("allowed",false).put("message",message).put("formError",form)
     private fun spliceIndex(n:Double,size:Int):Int {
