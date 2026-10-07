@@ -548,9 +548,10 @@
     {
       "id": "087",
       "title": "WEB acceptance/ready: нативный основной журнал и ACK",
-      "status": "planned",
+      "status": "done",
       "area": "P4",
-      "dependencies": "046"
+      "dependencies": "046",
+      "spec": "specs/087-native-web-journals/spec.md"
     },
     {
       "id": "088",

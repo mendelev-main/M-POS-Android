@@ -381,3 +381,7 @@ Available/unavailable gifts online; offline/timeout cancel and explicit continue
 ## 086 loyalty sale/reversal journal — pending
 
 Pay with customer online/offline; restart during sending; repeated reconnect with live requests; return while sale is pending/sending/synced; ensure sale completion precedes pending reversal. Simulate network success/local finish failure; reopen and verify allowed idempotent recovery. Export/import v13 and reopen. Several pending receipts plus a new sale/return must preserve all financial/stock totals, receipt history and return fields. Availability must still wait for next saved payment.
+
+## 087 WEB journals/ACK — pending
+
+Accept online/offline/timeouts with valid estimate; prepared/local/ACK/confirmed restart points; legacy missing-estimate prompt; kitchen printing enabled/disabled; no duplicate parked order. Mark ready, move to another session and restart/reconnect; pending remains ACK eligible, prepared never sends. Failed local confirmed save must retain native queue/event until durable confirmation. Concurrent unrelated records, read failure, v13 export/import/reopen, stock and paid split metadata. Check availability remains payment-gated.

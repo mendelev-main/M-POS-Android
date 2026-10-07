@@ -19,6 +19,7 @@ class MPosNetworkTransport(
     private val onResult: (JSONObject) -> Unit,
     private val onEvent: (JSONObject) -> Unit,
 ) {
+    private val webAcks = MPosWebAckHttp()
     private val loyaltyProfiles = MPosLoyaltyProfileHttp()
     private val profileCalls = java.util.concurrent.ConcurrentHashMap<String, Call>()
     private val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(0, TimeUnit.MILLISECONDS).build()
@@ -35,6 +36,7 @@ class MPosNetworkTransport(
     fun handle(payload: JSONObject) {
         val requestId = payload.optString("requestId")
         when (payload.optString("action")) {
+            "webAck" -> webAck(requestId,payload)
             "loyaltyProfile" -> loyaltyProfile(requestId, payload)
             "loyaltyMutation" -> loyaltyProfile(requestId, payload, true)
             "loyaltyProfileCancel" -> profileCalls.remove(requestId)?.cancel()
@@ -48,6 +50,16 @@ class MPosNetworkTransport(
     }
 
     private fun status(requestId:String)=JSONObject().put("requestId",requestId).put("ok",true).put("transport","okhttp").put("authoritative",false).put("sseEnabled",shadowJob?.isActive==true).put("businessHandlers","legacy").put("connected",shadowConnected).put("events",shadowEvents).put("reconnects",reconnects).put("lastEventHash",lastEventHash)
+
+    private fun webAck(requestId:String,payload:JSONObject) {
+        val call=try{webAcks.client.newCall(webAcks.request(payload))}catch(_:Exception){onResult(JSONObject().put("requestId",requestId).put("ok",false).put("message","Некорректные настройки WEB ACK"));return}
+        profileCalls.put(requestId,call)?.cancel()
+        scope.launch(Dispatchers.IO){
+            try{call.execute().use{onResult(loyaltyProfiles.decode(it).put("source","native-web-ack").put("requestId",requestId))}}
+            catch(error:Exception){onResult(JSONObject().put("requestId",requestId).put("ok",false).put("message",if(error is IllegalStateException)error.message else "Не удалось подтвердить WEB заказ"))}
+            finally{profileCalls.remove(requestId,call)}
+        }
+    }
 
     private fun loyaltyProfile(requestId: String, payload: JSONObject, mutation: Boolean = false) {
         val call = try { loyaltyProfiles.client.newCall(if(mutation)loyaltyProfiles.mutation(payload) else loyaltyProfiles.request(payload)) }
