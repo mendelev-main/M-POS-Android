@@ -4,7 +4,7 @@
   const bridge=global.webkit?.messageHandlers?.settingsScreen;
   if(!bridge)return;
   if(global.MPosNativeSettingsUiEnabled===undefined)global.MPosNativeSettingsUiEnabled=true;
-  let sequence=0,current=null,queued=false,scope=0,submission=null,dirty=true,activeProductJob=null,paymentOutstanding=0,paymentMessage='',paymentCart=null,surfaceObserver=null,receiptScope=0,receiptOutstanding=0;
+  let sequence=0,current=null,queued=false,scope=0,submission=null,dirty=true,activeProductJob=null,paymentOutstanding=0,paymentMessage='',paymentCart=null,surfaceObserver=null,receiptScope=0,receiptOutstanding=0,domainScope=0,domainOutstanding=0;
   let nodeSequence=0;const nodeKeys=new WeakMap();
   const nodeKey=node=>{if(!nodeKeys.has(node))nodeKeys.set(node,String(++nodeSequence));return nodeKeys.get(node)};
   const productRoot=()=>document.getElementById('product-editor-root')?.querySelector('.product-editor');
@@ -12,10 +12,21 @@
   if(global.MPosNativePaymentUiEnabled===undefined)global.MPosNativePaymentUiEnabled=true;
   const paymentRoot=()=>document.getElementById('payment-page-root');
   const paymentSurface=root=>root?.id==='payment-page-root'||root?.dataset?.mposPaymentForm==='true';
-  const pending=root=>receiptSurface(root)?receiptOutstanding>0||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy):paymentSurface(root)?paymentOutstanding>0||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||!!global.state?.busy:global._pmSaving===true;
+  const pending=root=>domainSurface(root)?domainOutstanding>0||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy):receiptSurface(root)?receiptOutstanding>0||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy):paymentSurface(root)?paymentOutstanding>0||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||!!global.state?.busy:global._pmSaving===true;
   const receiptEnabled=()=>global.MPosNativeReceiptUiEnabled!==false;
   if(global.MPosNativeReceiptUiEnabled===undefined)global.MPosNativeReceiptUiEnabled=true;
   const receiptSurface=root=>root?.dataset?.mposReceiptForm==='true'||root?.dataset?.mposSettingsUi==='receipts';
+  const domainEnabled=()=>global.MPosNativeCustomerUiEnabled!==false;
+  if(global.MPosNativeCustomerUiEnabled===undefined)global.MPosNativeCustomerUiEnabled=true;
+  const domainSurface=root=>root?.dataset?.mposCustomerForm==='true'||root?.dataset?.mposSettingsUi==='loyalty';
+  const domainWrapped=new WeakSet();
+  function installDomainOperations(){
+    for(const name of ['confirmParkOrderLabel','parkOrderNow','resumeParked','deleteParked','selectCustomer','removeOrderCustomer','createCustomerFromPos','saveLoyaltyAdjustment','saveLoyaltyProgram','deleteLoyaltyProgram','toggleLoyaltyProgram','openCustomersAdmin','openCustomerAdminCard']){
+      const original=global[name];if(typeof original!=='function'||domainWrapped.has(original))continue;
+      const wrapped=function(...args){domainScope++;let result;try{result=original.apply(this,args)}finally{domainScope--;schedule()}if(!result||typeof result.then!=='function')return result;domainOutstanding++;const watched=Promise.resolve(result).finally(()=>{domainOutstanding--;schedule()});if(submission)submission.promises.push(watched);return watched};
+      domainWrapped.add(wrapped);global[name]=wrapped;
+    }
+  }
   const productEnabled=()=>global.MPosNativeProductEditorEnabled!==false;
   if(global.MPosNativeProductEditorEnabled===undefined)global.MPosNativeProductEditorEnabled=true;
   const text=node=>String(node?.getAttribute?.('title')||node?.textContent||'').replace(/\s+/g,' ').trim().replace(/iPad/g,'Android').replace(/Safari/gi,'браузере');
@@ -29,7 +40,7 @@
   function restore(){surfaceObserver?.disconnect();surfaceObserver=null;if(current?.focus)for(const [node,focus]of current.focus)node.focus=focus;if(current?.root){current.root.style.opacity=current.opacity;current.root.style.pointerEvents=current.pointerEvents}current=null}
   function hide(){if(current)post({action:current.form?'formHide':'hide',token:current.token});restore()}
   function field(node,root,index){
-    const parent=node.closest('.field'),row=node.closest('.setting-row'),label=node.closest('label');
+    const parent=node.closest('.field,.loyalty-client-search'),row=node.closest('.setting-row'),label=node.closest('label');
     const name=text(parent?.querySelector('label')||row?.querySelector('.setting-title'))||label?.getAttribute('aria-label')||text(label)||node.getAttribute('aria-label')||node.id||'Поле';
     return{key:String(index),label:name,type:node.tagName==='SELECT'?'select':node.tagName==='TEXTAREA'?'multiline':node.type==='checkbox'?'checkbox':node.type==='password'?'password':node.type==='number'?'number':node.type==='tel'?'phone':'text',value:node.type==='checkbox'?!!node.checked:String(node.value??''),hint:node.placeholder||'',visible:visible(node,root),options:node.options?[...node.options].map(o=>({value:o.value,label:text(o)})):[],readOnly:node.readOnly||node.disabled,maxLength:Number(node.getAttribute('maxlength'))>0?Number(node.getAttribute('maxlength')):0};
   }
@@ -37,6 +48,7 @@
     const actions=[],fields=[],items=[];let cancelButton=null;
     function walk(node,out){
       if(!node||node.nodeType!==1)return;
+      if(domainSurface(root)&&node.getAttribute('aria-hidden')==='true')return;
       if(node.matches('script,style,svg,input[type="hidden"],input[type="file"]'))return;
       if(product&&!visible(node,root))return;
       if(node.matches('.network-device-key')){out.push({kind:'text',text:text(node)});return}
@@ -49,15 +61,16 @@
       if(product&&node.matches('.payment-change')){out.push({kind:'metric',label:text(node.closest('.field')?.querySelector('label'))||'Сдача',value:text(node)});return}
       if(product&&node.matches('.payment-total-big')){out.push({kind:'metric',label:'К оплате',value:text(node),primary:true});return}
       if(node.tagName==='BUTTON'||(product&&node.getAttribute('role')==='button')){
-        if(paymentSurface(root)&&global.state?.paymentPage==='receipt'&&text(node)==='Готово')cancelButton=node;
-        if(form&&(/^(Отмена|Закрыть|← Назад|Понятно)$/.test(text(node))||(paymentSurface(root)&&text(node)==='Вернуться'))){cancelButton=node;return}
+        if((paymentSurface(root)&&global.state?.paymentPage==='receipt'||domainSurface(root))&&text(node)==='Готово')cancelButton=node;
+        if(form&&(/^(Отмена|Закрыть|← Назад|Понятно)$/.test(text(node))||(paymentSurface(root)&&text(node)==='Вернуться')||(domainSurface(root)&&(/^(Назад|Закрыть)$/.test(text(node))||node.getAttribute('aria-label')==='Закрыть')))){cancelButton=node;return}
         const i=actions.length;actions.push(node);
-        out.push({kind:'button',receiptRow:node.matches('.receipts-list-row'),key:product?nodeKey(node):String(i),label:(node.matches('.receipts-list-row')?[text(node.querySelector('.receipts-list-number'))+' · '+text(node.querySelector('.receipts-list-amount')),text(node.querySelector('.receipts-list-meta')),text(node.querySelector('.receipts-list-statusline'))].filter(Boolean).join('\n'):node.getAttribute('aria-label')||(node.matches('.payment-amount-display')?'Сумма · '+text(node):node.matches('.split-amount-display')?'Сумма части · '+text(node):node.parentElement?.matches('.split-count')?(text(node)==='+'?'Добавить часть оплаты':'Убрать часть оплаты'):text(node))||'Открыть')+(node.getAttribute('role')==='switch'?(node.getAttribute('aria-checked')==='true'?' · Включено':' · Выключено'):''),primary:node.classList.contains('btn-primary')||node.classList.contains('btn-cash')||(node.classList.contains('btn-card')&&!!node.closest('.modal')),selected:product&&(node.classList.contains('selected')||node.getAttribute('aria-pressed')==='true'),danger:node.classList.contains('danger')||node.classList.contains('btn-danger')||node.classList.contains('receipt-action-return')||/Удалить/.test(text(node)),disabled:node.disabled||node.getAttribute('aria-disabled')==='true',visible:visible(node,root)});return;
+        out.push({kind:'button',receiptRow:node.matches('.receipts-list-row'),key:product?nodeKey(node):String(i),label:(node.matches('.customer-result-card')?[text(node.querySelector('strong')),text(node.querySelector('small')),'Выбрать'].join(' · '):node.matches('.receipts-list-row')?[text(node.querySelector('.receipts-list-number'))+' · '+text(node.querySelector('.receipts-list-amount')),text(node.querySelector('.receipts-list-meta')),text(node.querySelector('.receipts-list-statusline'))].filter(Boolean).join('\n'):node.getAttribute('aria-label')||(node.matches('.payment-amount-display')?'Сумма · '+text(node):node.matches('.split-amount-display')?'Сумма части · '+text(node):node.parentElement?.matches('.split-count')?(text(node)==='+'?'Добавить часть оплаты':'Убрать часть оплаты'):text(node))||'Открыть')+(node.getAttribute('role')==='switch'?(node.getAttribute('aria-checked')==='true'?' · Включено':' · Выключено'):''),primary:node.classList.contains('btn-primary')||node.classList.contains('btn-cash')||(node.classList.contains('btn-card')&&!!node.closest('.modal')),selected:product&&(node.classList.contains('selected')||node.getAttribute('aria-pressed')==='true'),danger:node.classList.contains('danger')||node.classList.contains('btn-danger')||node.classList.contains('receipt-action-return')||/Удалить/.test(text(node)),disabled:node.disabled||node.getAttribute('aria-disabled')==='true',visible:visible(node,root)});return;
       }
-      if(node.matches('.settings-card,.employee-settings-row,.list-row,.pe-card,.component-card,.modifier-option-card,.pe-summary,.payment-receipt,.payment-box,.split-payment')){const children=[];for(const child of node.children)walk(child,children);out.push({kind:'card',items:children});return}
+      if(node.matches('.settings-card,.employee-settings-row,.list-row,.pe-card,.component-card,.modifier-option-card,.pe-summary,.payment-receipt,.payment-box,.split-payment,.loyalty-summary-card,.loyalty-program-card,.lp-panel,.loyalty-clients-panel')){const children=[];for(const child of node.children)walk(child,children);out.push({kind:'card',items:children});return}
       if(node.matches('.content-title,.settings-section-title,.settings-card-title,.network-card-title,.modal-title,h1,h2,h3,.component-builder-title,.payment-page-title,.payment-section-title,.payment-split-title,.split-payment-label,.receipt-payment-heading,.receipts-list-heading,.receipt-detail-title')){out.push({kind:'heading',text:text(node)});return}
       if(node.matches('.setting-sub,.settings-note,.list-row-name,.list-row-sub,.admin-badge,.center-note,.network-card-subtitle,.network-status,.settings-version,p,.pe-empty,.pe-note,.pe-badge,.pe-eyebrow,.pe-nav-caption,.component-card-name,.component-card-meta,.component-cost,.component-total,.component-empty,.component-builder-note,.modifier-input-suffix,.pe-summary-hint,.pe-summary-row,.pe-price-block,.pe-usage-facts,.product-image-empty,.modal-sub,.payment-order-label,.payment-order-meta,.payment-change,.split-payment-status,.payment-part-caption,.payment-part-amount,.payment-card-instruction,.payment-card-amount,.payment-offline-note,.receipt-line-detail,.receipt-order-label,.receipt-order-meta,.receipt-customer,.receipts-list-count,.receipt-return-banner,.receipt-return-sticker,.receipt-return-meta,.receipt-return-amount')){out.push({kind:'text',text:text(node)});return}
       if(receiptSurface(root)&&node.tagName==='SPAN'){out.push({kind:'text',text:text(node)});return}
+      if(domainSurface(root)&&!node.children.length&&text(node)&&node.tagName!=='LABEL'){out.push({kind:'text',text:text(node)});return}
       // Labels are represented by their field descriptor, so do not duplicate field text.
       if(node.tagName==='LABEL'&&!node.querySelector('input,select,textarea'))return;
       for(const child of node.children)walk(child,out);
@@ -65,14 +78,15 @@
     for(const child of root.children)walk(child,items);
     return{items,actions,fields,cancelButton};
   }
+  const geometry=root=>{const r=root.getBoundingClientRect();return{rect:{left:r.left,top:r.top,width:r.width,height:r.height},viewportWidth:global.innerWidth,viewportHeight:global.innerHeight}};
   function show(root,form,product=false){
     if(!root||!enabled())return;
-    if(current?.root===root&&product){if(current.busy)return;if(current.theme!==theme()){hide();show(root,form,product);return}const data=model(root,form,true),signature=JSON.stringify([data.items,theme(),product&&pending(root)]);if(signature!==current.signature){for(const [node,focus]of current.focus)node.focus=focus;current.focus=data.fields.map(node=>[node,node.focus]);Object.assign(current,data,{signature});for(const [node]of current.focus)node.focus=()=>{};post({action:'formPatch',token:current.token,items:data.items,pending:pending(root),blocked:recoveryPending()})}return}
+    if(current?.root===root&&product){if(current.busy)return;if(current.theme!==theme()){hide();show(root,form,product);return}const data=model(root,form,true),signature=JSON.stringify([data.items,theme(),product&&pending(root),!form&&geometry(root)]);if(signature!==current.signature){for(const [node,focus]of current.focus)node.focus=focus;current.focus=data.fields.map(node=>[node,node.focus]);Object.assign(current,data,{signature});for(const [node]of current.focus)node.focus=()=>{};post({action:'formPatch',token:current.token,items:data.items,pending:pending(root),blocked:recoveryPending(),...(!form?geometry(root):{})})}return}
     if(current?.root===root){if(form)post({action:'formUpdate',token:current.token,fields:current.fields.map((f,i)=>field(f,root,i))});return}
     hide();const data=model(root,form,product),token='settings-ui-'+(++sequence);
-    current={root,form,product,receipt:receiptSurface(root),payment:paymentSurface(root),token,theme:theme(),signature:JSON.stringify([data.items,theme(),product&&pending(root)]),...data,focus:form?data.fields.map(node=>[node,node.focus]):[],opacity:root.style.opacity,pointerEvents:root.style.pointerEvents};
+    current={root,form,product,receipt:receiptSurface(root),domain:domainSurface(root),payment:paymentSurface(root),token,theme:theme(),signature:JSON.stringify([data.items,theme(),product&&pending(root),!form&&geometry(root)]),...data,focus:form?data.fields.map(node=>[node,node.focus]):[],opacity:root.style.opacity,pointerEvents:root.style.pointerEvents};
     const r=root.getBoundingClientRect();
-    const payload={action:form?'formShow':'show',token,theme:theme(),expanded:product&&(root.classList.contains('product-editor')||root.id==='payment-page-root'||receiptSurface(root)),deferCancel:paymentSurface(root),hideCancel:paymentSurface(root)&&global.state?.paymentPage==='receipt'&&!!data.cancelButton,blocked:product&&recoveryPending(),pending:product&&pending(root),title:text(root.querySelector('.modal-title,.content-title,#pe-title'))||'Настройки',items:data.items,cancelLabel:text(data.cancelButton)||(data.fields.length?'Отмена':'Закрыть'),rect:{left:r.left,top:r.top,width:r.width,height:r.height},viewportWidth:global.innerWidth,viewportHeight:global.innerHeight};
+    const payload={action:form?'formShow':'show',token,theme:theme(),expanded:product&&(root.classList.contains('product-editor')||root.id==='payment-page-root'||receiptSurface(root)||domainSurface(root)),deferCancel:paymentSurface(root)||domainSurface(root),hideCancel:!!data.cancelButton&&((paymentSurface(root)&&global.state?.paymentPage==='receipt')||(domainSurface(root)&&text(data.cancelButton)==='Готово')),blocked:product&&recoveryPending(),pending:product&&pending(root),title:text(root.querySelector('.modal-title,.content-title,#pe-title'))||'Настройки',items:data.items,cancelLabel:text(data.cancelButton)||(data.fields.length?'Отмена':'Закрыть'),rect:{left:r.left,top:r.top,width:r.width,height:r.height},viewportWidth:global.innerWidth,viewportHeight:global.innerHeight};
     if(post(payload)===false){restore();return}
     if(root.id==='payment-page-root'){surfaceObserver=new MutationObserver(schedule);surfaceObserver.observe(root,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','disabled','aria-disabled']})}
     root.style.opacity='0';root.style.pointerEvents='none';
@@ -80,12 +94,13 @@
     dirty=false;
   }
   function update(){
-    queued=false;
+    queued=false;installDomainOperations();
     if(!enabled()||!global.state?.loaded||document.hidden){hide();return}
     const dialog=modal();
-    if(dialog){if(dialog.dataset.mposReceiptForm==='true'&&receiptEnabled())show(dialog,true,true);else if(dialog.dataset.mposPaymentForm==='true'&&paymentEnabled())show(dialog,true,true);else if(dialog.dataset.mposProductForm==='true'&&productEnabled())show(dialog,true,true);else if(dialog.dataset.mposSettingsForm==='true')show(dialog,true);else hide();return}
+    if(dialog){if(dialog.dataset.mposCustomerForm==='true'&&domainEnabled())show(dialog,true,true);else if(dialog.dataset.mposReceiptForm==='true'&&receiptEnabled())show(dialog,true,true);else if(dialog.dataset.mposPaymentForm==='true'&&paymentEnabled())show(dialog,true,true);else if(dialog.dataset.mposProductForm==='true'&&productEnabled())show(dialog,true,true);else if(dialog.dataset.mposSettingsForm==='true')show(dialog,true);else hide();return}
     const payment=paymentRoot();if(payment){if(paymentEnabled())show(payment,true,true);else hide();return}
     const editor=productRoot();if(editor){if(productEnabled())show(editor,true,true);else hide();return}
+    if(global.state.loyaltyAdminScreen){const loyalty=document.querySelector('[data-mpos-settings-ui="loyalty"].active');if(loyalty&&domainEnabled()){show(loyalty,false,true);return}hide();return}
     if(global.state.tab==='receipts'){const receipts=document.querySelector('[data-mpos-settings-ui="receipts"].active');if(receipts&&receiptEnabled()){show(receipts,false,true);return}hide();return}
     const page=document.getElementById('printer-page');
     if(page){show(page,true);return}
@@ -96,12 +111,14 @@
     show(root,false);
   }
   function schedule(){if(!queued){queued=true;requestAnimationFrame(update)}}
-  for(const [name,tab]of [['renderSettingsScreen','settings'],['renderNetworkScreen','network'],['renderReceiptsScreen','receipts']]){
+  for(const [name,tab]of [['renderSettingsScreen','settings'],['renderNetworkScreen','network'],['renderReceiptsScreen','receipts'],['renderLoyaltyAdminScreen','loyalty']]){
     const original=global[name];if(typeof original!=='function')continue;
     global[name]=function(...args){return original.apply(this,args).replace('<div class="screen content-screen','<div data-mpos-settings-ui="'+tab+'" class="screen content-screen')};
   }
   const showModal=global.showModal;
-  if(typeof showModal==='function')global.showModal=function(...args){const value=showModal.apply(this,args);{const node=modal();if(node&&receiptEnabled()&&(receiptScope||node.querySelector('.receipt-return-amount')&&text(node.querySelector('.modal-title'))==='Возврат выполнен'))node.dataset.mposReceiptForm='true';if(node&&scope===0&&global.state?.paymentPage&&paymentEnabled())node.dataset.mposPaymentForm='true';if(node&&scope===0&&productRoot()&&productEnabled())node.dataset.mposProductForm='true';if(node&&(scope||node.querySelector('#backup-import-password,#employee-delete-password,#ef-name')))node.dataset.mposSettingsForm='true'}schedule();return value};
+  if(typeof showModal==='function')global.showModal=function(...args){const value=showModal.apply(this,args);{const node=modal();if(node&&domainEnabled()&&(domainScope||node.querySelector('#admin-customer-search,.loyalty-customer-section-title,#la-progress,#lp-save')))node.dataset.mposCustomerForm='true';if(node&&receiptEnabled()&&(receiptScope||node.querySelector('.receipt-return-amount')&&text(node.querySelector('.modal-title'))==='Возврат выполнен'))node.dataset.mposReceiptForm='true';if(node&&scope===0&&global.state?.paymentPage&&paymentEnabled())node.dataset.mposPaymentForm='true';if(node&&scope===0&&productRoot()&&productEnabled())node.dataset.mposProductForm='true';if(node&&(scope||node.querySelector('#backup-import-password,#employee-delete-password,#ef-name')))node.dataset.mposSettingsForm='true'}schedule();return value};
+  for(const name of ['parkOrder','openParkedModal','openOrderCustomer','renderOrderCustomerModal','openCustomerPicker','openCreateCustomer','openLoyaltyAdjustment','loyaltyProgramForm','confirmDeleteLoyaltyProgram']){const original=global[name];if(typeof original!=='function')continue;global[name]=function(...args){domainScope++;try{return original.apply(this,args)}finally{domainScope--;schedule()}}}
+  for(const name of ['customerSearchChanged','adminCustomerSearch','loyaltyAdminCustomerSearch','loadCustomerLoyalty','loadLoyaltyAdminScreen','filterLoyaltyProducts','updateLoyaltyProductCount']){const original=global[name];if(typeof original!=='function')continue;global[name]=function(...args){const result=original.apply(this,args);schedule();if(result&&typeof result.then==='function')Promise.resolve(result).then(schedule,schedule);return result}}
   for(const name of ['viewReceiptModal','openReturnConfirm']){const original=global[name];if(typeof original!=='function')continue;global[name]=function(...args){receiptScope++;try{return original.apply(this,args)}finally{receiptScope--;schedule()}}}
   const returnOperation=global.processFullReturn;
   if(typeof returnOperation==='function')global.processFullReturn=function(...args){receiptScope++;let result;try{result=returnOperation.apply(this,args)}finally{receiptScope--;schedule()}if(!result||typeof result.then!=='function')return result;receiptOutstanding++;const watched=Promise.resolve(result).finally(()=>{receiptOutstanding--;schedule()});if(submission)submission.promises.push(watched);return watched};
@@ -144,10 +161,11 @@
     for(const node of events){if(!attached(node))continue;if(current?.product&&node.type!=='checkbox'&&node.tagName!=='SELECT')node.dispatchEvent(new Event('input',{bubbles:true}));if(attached(node))node.dispatchEvent(new Event('change',{bubbles:true}));}
   }
   global.__nativeSettingsAction=async payload=>{
+    installDomainOperations();
     if(!enabled()||!current||payload?.token!==current.token||!attached(current.root)||current.busy)return;
     if(current.product&&pending(current.root))return;
     if(!current.form&&!['settings','network','receipts'].includes(global.state?.tab))return;
-    if(payload.action==='cancel'&&current.payment){const snapshot=current,feedback={message:'',promises:[]};submission=feedback;try{apply(payload.fields,true);const button=snapshot.cancelButton;if(button&&attached(button)&&!button.disabled)button.click();else global.closeModal()}finally{submission=null;if(current===snapshot&&attached(snapshot.root))post({action:'formResult',token:snapshot.token,ok:false,error:!!feedback.message,message:feedback.message,blocked:recoveryPending()});schedule()}return}
+    if(payload.action==='cancel'&&(current.payment||current.domain)){const snapshot=current,feedback={message:'',promises:[]};submission=feedback;snapshot.busy=true;snapshot.job=feedback;try{apply(payload.fields,true);const button=snapshot.cancelButton;if(button&&attached(button)&&!button.disabled)button.click();else global.closeModal();submission=null;for(let i=0;i<feedback.promises.length;i++)await feedback.promises[i]}catch(error){feedback.message=error?.message||'Не удалось вернуться'}finally{submission=null;snapshot.busy=false;snapshot.job=null;if(current===snapshot&&attached(snapshot.root))post({action:'formResult',token:snapshot.token,ok:false,error:!!feedback.message,message:feedback.message,blocked:recoveryPending()});schedule()}return}
     if(payload.action==='cancel'){if(!current.form)return;apply(payload.fields,current.product);const button=current.cancelButton;if(button&&attached(button)&&!button.disabled)button.click();else{const page=document.getElementById('printer-page');if(page)global.closePrinterPage();else global.closeModal()}hide();schedule();return}
     if(payload.action==='change'){if(current.product){const feedback={message:'',promises:[]};try{submission=feedback;apply(payload.fields,true);post({action:'formResult',token:current.token,ok:false,error:!!feedback.message,message:feedback.message,blocked:recoveryPending()})}catch(error){post({action:'formResult',token:current.token,ok:false,error:true,message:error?.message||'Не удалось изменить поле',blocked:recoveryPending()})}finally{submission=null}if(current?.product)show(current.root,true,true);schedule();return}apply(payload.fields,true);if(current?.form)post({action:'formUpdate',token:current.token,fields:current.fields.map((f,i)=>field(f,current.root,i))});schedule();return}
     if(payload.action!=='click'||!/^\d+$/.test(String(payload.key)))return;
@@ -162,13 +180,13 @@
       for(let i=0;i<job.promises.length;i++)await job.promises[i];
       if(current===snapshot&&attached(snapshot.root))post({action:'formResult',token:snapshot.token,ok:false,error:/^(Введите|Проверьте|Не удалось|Ошибка|Неверн|Требуется|Перезапустите|Выберите)/i.test(job.message),message:job.message,blocked:recoveryPending()});
     }catch(error){if(current===snapshot)post({action:'formResult',token:snapshot.token,ok:false,error:true,message:error?.message||'Не удалось выполнить операцию',blocked:recoveryPending()})}
-    finally{submission=null;snapshot.busy=false;snapshot.job=null;if(activeProductJob===job)activeProductJob=null;if(snapshot.product&&current!==snapshot&&current?.product&&attached(current.root)&&(snapshot.receipt?current.receipt:snapshot.payment?job.cart===global.state?.cart:job.session===global._pmSession))post({action:'formResult',token:current.token,ok:false,error:/^(Введите|Проверьте|Не удалось|Ошибка|Неверн|Требуется|Перезапустите|Выберите)/i.test(job.message),message:job.message,blocked:recoveryPending()});schedule()}
+    finally{submission=null;snapshot.busy=false;snapshot.job=null;if(activeProductJob===job)activeProductJob=null;if(snapshot.product&&current!==snapshot&&current?.product&&attached(current.root)&&(snapshot.domain?current.domain:snapshot.receipt?current.receipt:snapshot.payment?job.cart===global.state?.cart:job.session===global._pmSession))post({action:'formResult',token:current.token,ok:false,error:/^(Введите|Проверьте|Не удалось|Ошибка|Неверн|Требуется|Перезапустите|Выберите)/i.test(job.message),message:job.message,blocked:recoveryPending()});schedule()}
   };
   function observe(){
     const observer=new MutationObserver(()=>{dirty=true;schedule()});
     for(const id of ['app','modal-root','product-editor-root']){const node=document.getElementById(id);if(node)observer.observe(node,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','disabled','aria-checked','aria-pressed']})}
     observer.observe(document.body,{childList:true});observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-    global.addEventListener('resize',()=>{if(current&&!current.form)hide();schedule()});document.addEventListener('visibilitychange',schedule);schedule();
+    global.addEventListener('resize',()=>{if(current&&!current.form&&!current.product)hide();schedule()});document.addEventListener('visibilitychange',schedule);schedule();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observe,{once:true});else observe();
 })(window);

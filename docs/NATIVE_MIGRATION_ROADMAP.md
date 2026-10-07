@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **103/110 выполнено (93,64%)**
-после 104. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **104/110 выполнено (94,55%)**
+после 105. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -605,3 +605,7 @@ Main payment/receipt preview, tender/quick values/change, split parts, explicit 
 ## 104 — native receipt history/details/full returns
 
 Native history retains 50-row Room paging, loading/error/retry, mounted selection/print identity. Kotlin provides independently scrolling responsive history/detail panels and full return confirmation/result. Existing 050 return authority and saved stock restore, source legacy fallback, current-shift cash accounting and bank-terminal refund semantics remain. Unknown local result blocks resubmit; native presentation rollback does not roll back storage authority. Web compatibility remains 109; physical acceptance 110 pending. [104](../specs/104-native-receipt-history/spec.md). Next 105 — parked orders/customer/loyalty presentation.
+
+## 105 — native parked/customer/loyalty surfaces
+
+Park label/list/resume/delete, customer picker/search/create/profile/gift and loyalty administrator program/client screens/editor/adjustment use shared Kotlin presentation. Source permissions, persisted command authority, gift allocation and outbox rules remain. Mutating/navigation promises are awaited even when native command adapters replace source functions after UI initialization; read search remains editable. Cashier stale-response guards preserved. Native overlay geometry patches keep stable fields/focus on keyboard resize. [105](../specs/105-native-parked-customer-loyalty/spec.md). Next 106 — warehouse/purchases/receiving/inventory; compatibility DOM removal 109 and physical acceptance 110 remain.

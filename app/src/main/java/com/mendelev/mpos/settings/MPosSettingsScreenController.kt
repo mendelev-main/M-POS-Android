@@ -319,6 +319,11 @@ class MPosSettingsScreenController(
     }
     private fun patch(payload: JSONObject) {
         val root = content ?: return
+        if (!form && payload.has("rect")) {
+            val bounds = MPosShiftScreenController.bounds(payload, host.width, host.height) ?: return
+            presentationWidth = bounds.width; presentationHeight = bounds.height
+            overlay.layoutParams = FrameLayout.LayoutParams(bounds.width, bounds.height).apply { leftMargin = bounds.left; topMargin = bounds.top }
+        }
         externalBusy = payload.optBoolean("pending"); blocked = blocked || payload.optBoolean("blocked")
         val focused = fields.entries.firstOrNull { it.value.hasFocus() }
         val selection = (focused?.value as? EditText)?.selectionStart ?: 0

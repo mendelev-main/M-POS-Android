@@ -319,4 +319,49 @@ class MPosSettingsScreenControllerTest {
         assertEquals(android.widget.LinearLayout.VERTICAL, columns.orientation); controller.dismiss()
     }
 
+    @Test fun customerAndLoyaltyFormsReuseLiveFieldsAndSharedNativePalettePreviews() {
+        val (controller, calls, activity) = setup()
+        activity.resources.displayMetrics.widthPixels = 1000; activity.resources.displayMetrics.heightPixels = 800
+        for (dark in listOf(false, true)) {
+            val items = JSONArray()
+                .put(JSONObject().put("kind", "heading").put("text", "Клиент заказа"))
+                .put(JSONObject().put("kind", "field").put("key", "phone").put("type", "phone").put("label", "Номер телефона после +375").put("value", "291234567").put("maxLength", 9).put("live", true))
+                .put(JSONObject().put("kind", "card").put("items", JSONArray()
+                    .put(JSONObject().put("kind", "heading").put("text", "Гость"))
+                    .put(JSONObject().put("kind", "text").put("text", "+375 29 123 45 67"))
+                    .put(JSONObject().put("kind", "text").put("text", "Кофе · подарок доступен"))
+                    .put(JSONObject().put("kind", "field").put("key", "gift").put("type", "select").put("label", "Использовать подарок программы Кофе").put("value", "0").put("live", true)
+                        .put("options", JSONArray().put(JSONObject().put("value", "0").put("label", "Не использовать")).put(JSONObject().put("value", "1").put("label", "Использовать подарок"))))
+                    .put(JSONObject().put("kind", "button").put("key", "select").put("label", "Выбрать клиента").put("primary", true))))
+            controller.handle(JSONObject().put("action", "formShow").put("token", "customer-$dark").put("theme", if (dark) "dark" else "light").put("expanded", true).put("deferCancel", true).put("items", items)); ShadowLooper.idleMainLooper()
+            val dialog = ShadowAlertDialog.getLatestAlertDialog()
+            val phone = nodes(dialog.window!!.decorView).filterIsInstance<EditText>().single()
+            phone.requestFocus(); phone.setSelection(4)
+            controller.handle(JSONObject().put("action", "formPatch").put("token", "customer-$dark").put("items", items)); ShadowLooper.idleMainLooper()
+            assertSame(phone, nodes(dialog.window!!.decorView).filterIsInstance<EditText>().single()); assertEquals(4, phone.selectionStart)
+            val view = dialog.window!!.decorView
+            view.measure(View.MeasureSpec.makeMeasureSpec(1000, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)); view.layout(0, 0, 1000, view.measuredHeight)
+            val bitmap = android.graphics.Bitmap.createBitmap(1000, view.measuredHeight, android.graphics.Bitmap.Config.ARGB_8888); view.draw(android.graphics.Canvas(bitmap))
+            val file = java.io.File("build/design-previews/customer-${if (dark) "dark" else "light"}.png")
+            file.parentFile!!.mkdirs(); file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }; bitmap.recycle(); assertTrue(file.length() > 1000)
+            controller.consumeBack(); assertEquals("cancel", calls.last().optString("action")); assertTrue(dialog.isShowing)
+            controller.handle(JSONObject().put("action", "formHide").put("token", "customer-$dark")); assertFalse(dialog.isShowing)
+        }
+    }
+
+    @Test fun nativeClientSearchKeepsFieldFocusAndCursorWhenViewportResizesForKeyboard() {
+        val (controller, _, activity) = setup()
+        val host = activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
+        host.layout(0, 0, 1000, 800)
+        val items = JSONArray().put(JSONObject().put("kind", "field").put("key", "query").put("type", "text").put("label", "Найти клиента").put("value", "Анна").put("live", true))
+        val payload = historyModel("search").put("items", items)
+        controller.handle(payload); ShadowLooper.idleMainLooper()
+        val field = nodes(host).filterIsInstance<EditText>().single(); field.requestFocus(); field.setSelection(2)
+        host.layout(0, 0, 1000, 400)
+        controller.handle(payload.put("action", "formPatch").put("viewportHeight", 400)); ShadowLooper.idleMainLooper()
+        val next = nodes(host).filterIsInstance<EditText>().single()
+        assertSame(field, next); assertTrue(next.hasFocus()); assertEquals(2, next.selectionStart); assertEquals("Анна", next.text.toString())
+        controller.dismiss()
+    }
+
 }

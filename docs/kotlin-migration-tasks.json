@@ -692,9 +692,10 @@
     {
       "id": "105",
       "title": "Нативные отложенные заказы, клиенты и лояльность",
-      "status": "planned",
+      "status": "done",
       "area": "P6/P11/UI",
-      "dependencies": "079,084,085,086"
+      "dependencies": "079,084,085,086",
+      "spec": "specs/105-native-parked-customer-loyalty/spec.md"
     },
     {
       "id": "106",
