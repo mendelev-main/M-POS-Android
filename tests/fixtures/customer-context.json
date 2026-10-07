@@ -1,0 +1,762 @@
+[
+  {
+    "input": {
+      "version": 1,
+      "operation": "remove",
+      "session": {
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "comment": "no sugar"
+          }
+        ],
+        "customer": {
+          "id": "old",
+          "name": "Old",
+          "phone": "x",
+          "address": "Street",
+          "extra": {
+            "v": 7
+          }
+        },
+        "loyaltyPrograms": [
+          {
+            "id": "p",
+            "rewards": 2
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyCustomerId": "old",
+        "orderLabel": "Table",
+        "source": "web",
+        "webOrderId": "w",
+        "webOrderStatus": "accepted",
+        "paymentDraft": {
+          "parts": [
+            {
+              "paid": true,
+              "amount": 2
+            }
+          ]
+        },
+        "updatedAt": 10
+      }
+    },
+    "expected": {
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "comment": "no sugar"
+        }
+      ],
+      "customer": {
+        "name": "",
+        "phone": "",
+        "address": "Street"
+      },
+      "loyaltyPrograms": [],
+      "loyaltyRedemptions": {},
+      "loyaltyCustomerId": "",
+      "orderLabel": "Table",
+      "source": "web",
+      "webOrderId": "w",
+      "webOrderStatus": "accepted",
+      "paymentDraft": {
+        "parts": [
+          {
+            "paid": true,
+            "amount": 2
+          }
+        ]
+      },
+      "updatedAt": 10
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "remove",
+      "session": {
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "comment": "no sugar"
+          }
+        ],
+        "customer": {
+          "id": "old",
+          "name": "Old",
+          "phone": "x",
+          "address": "",
+          "extra": {
+            "v": 7
+          }
+        },
+        "loyaltyPrograms": [
+          {
+            "id": "p",
+            "rewards": 2
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyCustomerId": "old",
+        "orderLabel": "Table",
+        "source": "web",
+        "webOrderId": "w",
+        "webOrderStatus": "accepted",
+        "paymentDraft": {
+          "parts": [
+            {
+              "paid": true,
+              "amount": 2
+            }
+          ]
+        },
+        "updatedAt": 10
+      }
+    },
+    "expected": {
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "comment": "no sugar"
+        }
+      ],
+      "customer": {
+        "name": "",
+        "phone": "",
+        "address": ""
+      },
+      "loyaltyPrograms": [],
+      "loyaltyRedemptions": {},
+      "loyaltyCustomerId": "",
+      "orderLabel": "Table",
+      "source": "web",
+      "webOrderId": "w",
+      "webOrderStatus": "accepted",
+      "paymentDraft": {
+        "parts": [
+          {
+            "paid": true,
+            "amount": 2
+          }
+        ]
+      },
+      "updatedAt": 10
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "remove",
+      "session": {
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "comment": "no sugar"
+          }
+        ],
+        "customer": {
+          "id": "old",
+          "name": "Old",
+          "phone": "x",
+          "address": null,
+          "extra": {
+            "v": 7
+          }
+        },
+        "loyaltyPrograms": [
+          {
+            "id": "p",
+            "rewards": 2
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyCustomerId": "old",
+        "orderLabel": "Table",
+        "source": "web",
+        "webOrderId": "w",
+        "webOrderStatus": "accepted",
+        "paymentDraft": {
+          "parts": [
+            {
+              "paid": true,
+              "amount": 2
+            }
+          ]
+        },
+        "updatedAt": 10
+      }
+    },
+    "expected": {
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "comment": "no sugar"
+        }
+      ],
+      "customer": {
+        "name": "",
+        "phone": "",
+        "address": ""
+      },
+      "loyaltyPrograms": [],
+      "loyaltyRedemptions": {},
+      "loyaltyCustomerId": "",
+      "orderLabel": "Table",
+      "source": "web",
+      "webOrderId": "w",
+      "webOrderStatus": "accepted",
+      "paymentDraft": {
+        "parts": [
+          {
+            "paid": true,
+            "amount": 2
+          }
+        ]
+      },
+      "updatedAt": 10
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "remove",
+      "session": {
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "comment": "no sugar"
+          }
+        ],
+        "customer": {
+          "id": "old",
+          "name": "Old",
+          "phone": "x",
+          "address": 0,
+          "extra": {
+            "v": 7
+          }
+        },
+        "loyaltyPrograms": [
+          {
+            "id": "p",
+            "rewards": 2
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyCustomerId": "old",
+        "orderLabel": "Table",
+        "source": "web",
+        "webOrderId": "w",
+        "webOrderStatus": "accepted",
+        "paymentDraft": {
+          "parts": [
+            {
+              "paid": true,
+              "amount": 2
+            }
+          ]
+        },
+        "updatedAt": 10
+      }
+    },
+    "expected": {
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "comment": "no sugar"
+        }
+      ],
+      "customer": {
+        "name": "",
+        "phone": "",
+        "address": ""
+      },
+      "loyaltyPrograms": [],
+      "loyaltyRedemptions": {},
+      "loyaltyCustomerId": "",
+      "orderLabel": "Table",
+      "source": "web",
+      "webOrderId": "w",
+      "webOrderStatus": "accepted",
+      "paymentDraft": {
+        "parts": [
+          {
+            "paid": true,
+            "amount": 2
+          }
+        ]
+      },
+      "updatedAt": 10
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "select",
+      "session": {
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "comment": "no sugar"
+          }
+        ],
+        "customer": {
+          "id": "old",
+          "name": "Old",
+          "phone": "x",
+          "address": "Street",
+          "extra": {
+            "v": 7
+          }
+        },
+        "loyaltyPrograms": [
+          {
+            "id": "p",
+            "rewards": 2
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyCustomerId": "old",
+        "orderLabel": "Table",
+        "source": "web",
+        "webOrderId": "w",
+        "webOrderStatus": "accepted",
+        "paymentDraft": {
+          "parts": [
+            {
+              "paid": true,
+              "amount": 2
+            }
+          ]
+        },
+        "updatedAt": 10
+      },
+      "customer": {
+        "id": "new",
+        "name": " Иван 😀 ",
+        "phone": "+375 (29) 123"
+      }
+    },
+    "expected": {
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "comment": "no sugar"
+        }
+      ],
+      "customer": {
+        "id": "new",
+        "name": " Иван 😀 ",
+        "phone": "+375 (29) 123",
+        "address": "Street",
+        "extra": {
+          "v": 7
+        }
+      },
+      "loyaltyPrograms": [],
+      "loyaltyRedemptions": {},
+      "loyaltyCustomerId": "",
+      "orderLabel": "Table",
+      "source": "web",
+      "webOrderId": "w",
+      "webOrderStatus": "accepted",
+      "paymentDraft": {
+        "parts": [
+          {
+            "paid": true,
+            "amount": 2
+          }
+        ]
+      },
+      "updatedAt": 10
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "select",
+      "session": {
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "comment": "no sugar"
+          }
+        ],
+        "customer": {
+          "id": "old",
+          "name": "Old",
+          "phone": "x",
+          "address": "Street",
+          "extra": {
+            "v": 7
+          }
+        },
+        "loyaltyPrograms": [
+          {
+            "id": "p",
+            "rewards": 2
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyCustomerId": "old",
+        "orderLabel": "Table",
+        "source": "web",
+        "webOrderId": "w",
+        "webOrderStatus": "accepted",
+        "paymentDraft": {
+          "parts": [
+            {
+              "paid": true,
+              "amount": 2
+            }
+          ]
+        },
+        "updatedAt": 10
+      },
+      "customer": {
+        "id": 42,
+        "name": " Иван 😀 ",
+        "phone": "+375 (29) 123"
+      }
+    },
+    "expected": {
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "comment": "no sugar"
+        }
+      ],
+      "customer": {
+        "id": 42,
+        "name": " Иван 😀 ",
+        "phone": "+375 (29) 123",
+        "address": "Street",
+        "extra": {
+          "v": 7
+        }
+      },
+      "loyaltyPrograms": [],
+      "loyaltyRedemptions": {},
+      "loyaltyCustomerId": "",
+      "orderLabel": "Table",
+      "source": "web",
+      "webOrderId": "w",
+      "webOrderStatus": "accepted",
+      "paymentDraft": {
+        "parts": [
+          {
+            "paid": true,
+            "amount": 2
+          }
+        ]
+      },
+      "updatedAt": 10
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "profile",
+      "session": {
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "comment": "no sugar"
+          }
+        ],
+        "customer": {
+          "id": "old",
+          "name": "Old",
+          "phone": "x",
+          "address": "Street",
+          "extra": {
+            "v": 7
+          }
+        },
+        "loyaltyPrograms": [
+          {
+            "id": "p",
+            "rewards": 2
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyCustomerId": "old",
+        "orderLabel": "Table",
+        "source": "web",
+        "webOrderId": "w",
+        "webOrderStatus": "accepted",
+        "paymentDraft": {
+          "parts": [
+            {
+              "paid": true,
+              "amount": 2
+            }
+          ]
+        },
+        "updatedAt": 10
+      },
+      "customerId": "old",
+      "data": {
+        "customer": {
+          "id": "old",
+          "name": "Updated",
+          "normalized_phone": "+375123"
+        },
+        "programs": []
+      }
+    },
+    "expected": {
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "comment": "no sugar"
+        }
+      ],
+      "customer": {
+        "id": "old",
+        "name": "Updated",
+        "phone": "+375123",
+        "address": "Street",
+        "extra": {
+          "v": 7
+        }
+      },
+      "loyaltyPrograms": [],
+      "loyaltyRedemptions": {},
+      "loyaltyCustomerId": "old",
+      "orderLabel": "Table",
+      "source": "web",
+      "webOrderId": "w",
+      "webOrderStatus": "accepted",
+      "paymentDraft": {
+        "parts": [
+          {
+            "paid": true,
+            "amount": 2
+          }
+        ]
+      },
+      "updatedAt": 10
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "profile",
+      "session": {
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "comment": "no sugar"
+          }
+        ],
+        "customer": {
+          "id": "old",
+          "name": "Old",
+          "phone": "x",
+          "address": "Street",
+          "extra": {
+            "v": 7
+          }
+        },
+        "loyaltyPrograms": [
+          {
+            "id": "p",
+            "rewards": 2
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyCustomerId": "old",
+        "orderLabel": "Table",
+        "source": "web",
+        "webOrderId": "w",
+        "webOrderStatus": "accepted",
+        "paymentDraft": {
+          "parts": [
+            {
+              "paid": true,
+              "amount": 2
+            }
+          ]
+        },
+        "updatedAt": 10
+      },
+      "customerId": "old",
+      "data": {
+        "customer": {
+          "id": "old",
+          "name": "Updated",
+          "normalized_phone": "+375123"
+        },
+        "programs": [
+          {
+            "id": "a",
+            "rewards": 1
+          }
+        ]
+      }
+    },
+    "expected": {
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "comment": "no sugar"
+        }
+      ],
+      "customer": {
+        "id": "old",
+        "name": "Updated",
+        "phone": "+375123",
+        "address": "Street",
+        "extra": {
+          "v": 7
+        }
+      },
+      "loyaltyPrograms": [
+        {
+          "id": "a",
+          "rewards": 1
+        }
+      ],
+      "loyaltyRedemptions": {},
+      "loyaltyCustomerId": "old",
+      "orderLabel": "Table",
+      "source": "web",
+      "webOrderId": "w",
+      "webOrderStatus": "accepted",
+      "paymentDraft": {
+        "parts": [
+          {
+            "paid": true,
+            "amount": 2
+          }
+        ]
+      },
+      "updatedAt": 10
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "operation": "profile",
+      "session": {
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "comment": "no sugar"
+          }
+        ],
+        "customer": {
+          "id": "old",
+          "name": "Old",
+          "phone": "x",
+          "address": "Street",
+          "extra": {
+            "v": 7
+          }
+        },
+        "loyaltyPrograms": [
+          {
+            "id": "p",
+            "rewards": 2
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyCustomerId": "old",
+        "orderLabel": "Table",
+        "source": "web",
+        "webOrderId": "w",
+        "webOrderStatus": "accepted",
+        "paymentDraft": {
+          "parts": [
+            {
+              "paid": true,
+              "amount": 2
+            }
+          ]
+        },
+        "updatedAt": 10
+      },
+      "customerId": "old",
+      "data": {
+        "customer": {
+          "id": "old",
+          "name": "Updated",
+          "normalized_phone": "+375123"
+        },
+        "programs": null
+      }
+    },
+    "expected": {
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "comment": "no sugar"
+        }
+      ],
+      "customer": {
+        "id": "old",
+        "name": "Updated",
+        "phone": "+375123",
+        "address": "Street",
+        "extra": {
+          "v": 7
+        }
+      },
+      "loyaltyPrograms": [],
+      "loyaltyRedemptions": {},
+      "loyaltyCustomerId": "old",
+      "orderLabel": "Table",
+      "source": "web",
+      "webOrderId": "w",
+      "webOrderStatus": "accepted",
+      "paymentDraft": {
+        "parts": [
+          {
+            "paid": true,
+            "amount": 2
+          }
+        ]
+      },
+      "updatedAt": 10
+    }
+  }
+]

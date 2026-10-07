@@ -369,3 +369,7 @@ Cancel/modal replacement/pending checkout, restart/backup v13.
 ## 083 employee commands — pending
 
 Create/edit ordinary employees offline; change roles with correct/incorrect password; preserve extension fields after v13 import/edit/export. Check demotion of the last administrator retains current policy. Delete ordinary employee with an open shift and correct/incorrect password; reject self/admin deletion and deletion without a shift. Restart and verify saved records. Confirm no availability/catalogue network publication. Record APK commit and actual results at final tablet acceptance; automated checks are not physical acceptance.
+
+## 084 customer association — pending
+
+Select/remove a customer, refresh profile and verify rewards reset, retained address/extensions and metadata. Repeat offline; central search/create still requires backend. Exercise rapid selection, modal close, old profile response, storage failure, force-stop/restart and v13 export/import with a WEB order and paid split draft. Verify no automatic catalogue/availability requests.

@@ -137,6 +137,9 @@
 
   const mposCore=global.MPosCore=global.MPosCore||{};
   mposCore.Storage=mposStorage;
+  mposCore.CustomerContext=Object.freeze({
+    async calculate(input){return requireNative(await request('customerContextRead',{payload:JSON.stringify(input)}),true);}
+  });
   mposCore.EmployeeCommands=Object.freeze({
     async commit(input){return requireNative(await request('employeeCommit',{payload:JSON.stringify(input)}),true);}
   });

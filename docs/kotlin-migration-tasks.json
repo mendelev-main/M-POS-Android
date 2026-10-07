@@ -524,9 +524,10 @@
     {
       "id": "084",
       "title": "Клиенты: локальные команды и хранение",
-      "status": "planned",
+      "status": "done",
       "area": "P11",
-      "dependencies": "078"
+      "dependencies": "078",
+      "spec": "specs/084-native-customer-context/spec.md"
     },
     {
       "id": "085",

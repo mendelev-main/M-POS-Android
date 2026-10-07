@@ -144,6 +144,10 @@ class MPosStorageMirror(
                 readAttempt(command.action) { MPosStockPreflightRepository(database).read(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native stock preflight unavailable") }
             }
+            "customerContextRead" -> {
+                attempt { MPosCustomerEngine.calculate(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId, false, "native customer context unavailable") }
+            }
             "employeeCommit" -> {
                 attempt { MPosEmployeeCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "local employee transaction failed") }
