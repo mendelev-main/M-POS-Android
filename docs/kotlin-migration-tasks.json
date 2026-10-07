@@ -612,9 +612,10 @@
     {
       "id": "095",
       "title": "Инвентаризация: пересчёт, расхождения и атомарное применение",
-      "status": "planned",
+      "status": "done",
       "area": "P10",
-      "dependencies": "094"
+      "dependencies": "094",
+      "spec": "specs/095-native-inventory-commands/spec.md"
     },
     {
       "id": "096",

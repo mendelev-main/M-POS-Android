@@ -1,0 +1,446 @@
+{
+  "fix": {
+    "version": 1,
+    "operation": "inventory-fix",
+    "writes": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "extension": 8
+        }
+      ],
+      "inventoryDraft": {
+        "id": "i",
+        "type": "scheduled",
+        "startedAt": 100,
+        "scheduledDate": 100,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Milk",
+            "unit": "l",
+            "expected": 10,
+            "actual": 8,
+            "difference": -2,
+            "fixedAt": 123
+          }
+        ],
+        "extension": 7
+      }
+    },
+    "expected": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 10,
+          "cost": 4,
+          "extension": 8
+        }
+      ],
+      "inventoryDraft": {
+        "id": "i",
+        "type": "scheduled",
+        "startedAt": 100,
+        "scheduledDate": 100,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Milk",
+            "unit": "l",
+            "expected": 12,
+            "actual": 8
+          }
+        ],
+        "extension": 7
+      },
+      "inventoryConfig": {
+        "enabled": true,
+        "frequency": "monthly",
+        "productIds": [
+          "p"
+        ],
+        "lastCompletedAt": null,
+        "customDates": [],
+        "extension": 9
+      },
+      "inventoryHistory": []
+    },
+    "id": "p"
+  },
+  "complete": {
+    "version": 1,
+    "operation": "inventory-complete",
+    "writes": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 7,
+          "cost": 4,
+          "extension": 8
+        }
+      ],
+      "inventoryHistory": [
+        {
+          "id": "i",
+          "type": "scheduled",
+          "startedAt": 100,
+          "scheduledDate": 100,
+          "items": [
+            {
+              "productId": "p",
+              "name": "Milk",
+              "unit": "l",
+              "expected": 10,
+              "actual": 8,
+              "difference": -2,
+              "fixedAt": 120
+            }
+          ],
+          "extension": 7,
+          "completedAt": 123,
+          "estimatedLoss": 8
+        }
+      ],
+      "inventoryConfig": {
+        "enabled": true,
+        "frequency": "monthly",
+        "productIds": [
+          "p"
+        ],
+        "lastCompletedAt": 123,
+        "customDates": [],
+        "extension": 9
+      },
+      "inventoryDraft": null
+    },
+    "expected": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 7,
+          "cost": 4,
+          "extension": 8
+        }
+      ],
+      "inventoryDraft": {
+        "id": "i",
+        "type": "scheduled",
+        "startedAt": 100,
+        "scheduledDate": 100,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Milk",
+            "unit": "l",
+            "expected": 10,
+            "actual": 8,
+            "difference": -2,
+            "fixedAt": 120
+          }
+        ],
+        "extension": 7
+      },
+      "inventoryConfig": {
+        "enabled": true,
+        "frequency": "monthly",
+        "productIds": [
+          "p"
+        ],
+        "lastCompletedAt": null,
+        "customDates": [],
+        "extension": 9
+      },
+      "inventoryHistory": []
+    }
+  },
+  "adhoc": {
+    "version": 1,
+    "operation": "inventory-complete",
+    "writes": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 7,
+          "cost": 4,
+          "extension": 8
+        }
+      ],
+      "inventoryHistory": [
+        {
+          "id": "i",
+          "type": "adhoc",
+          "startedAt": 100,
+          "scheduledDate": 100,
+          "items": [
+            {
+              "productId": "p",
+              "name": "Milk",
+              "unit": "l",
+              "expected": 10,
+              "actual": 8,
+              "difference": -2,
+              "fixedAt": 120
+            }
+          ],
+          "extension": 7,
+          "completedAt": 123,
+          "estimatedLoss": 8
+        }
+      ],
+      "inventoryConfig": {
+        "enabled": true,
+        "frequency": "monthly",
+        "productIds": [
+          "p"
+        ],
+        "lastCompletedAt": null,
+        "customDates": [],
+        "extension": 9
+      },
+      "inventoryDraft": null
+    },
+    "expected": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 7,
+          "cost": 4,
+          "extension": 8
+        }
+      ],
+      "inventoryDraft": {
+        "id": "i",
+        "type": "adhoc",
+        "startedAt": 100,
+        "scheduledDate": 100,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Milk",
+            "unit": "l",
+            "expected": 10,
+            "actual": 8,
+            "difference": -2,
+            "fixedAt": 120
+          }
+        ],
+        "extension": 7
+      },
+      "inventoryConfig": {
+        "enabled": true,
+        "frequency": "monthly",
+        "productIds": [
+          "p"
+        ],
+        "lastCompletedAt": null,
+        "customDates": [],
+        "extension": 9
+      },
+      "inventoryHistory": []
+    }
+  },
+  "normalized-config": {
+    "version": 1,
+    "operation": "inventory-complete",
+    "writes": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 7,
+          "cost": 4,
+          "extension": 8
+        }
+      ],
+      "inventoryHistory": [
+        {
+          "id": "i",
+          "type": "scheduled",
+          "startedAt": 100,
+          "scheduledDate": 100,
+          "items": [
+            {
+              "productId": "p",
+              "name": "Milk",
+              "unit": "l",
+              "expected": 10,
+              "actual": 8,
+              "difference": -2,
+              "fixedAt": 120
+            }
+          ],
+          "extension": 7,
+          "completedAt": 123,
+          "estimatedLoss": 8
+        }
+      ],
+      "inventoryConfig": {
+        "enabled": true,
+        "frequency": "monthly",
+        "productIds": [
+          "p"
+        ],
+        "lastCompletedAt": 123,
+        "customDates": [],
+        "extension": 9
+      },
+      "inventoryDraft": null
+    },
+    "expected": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 7,
+          "cost": 4,
+          "extension": 8
+        }
+      ],
+      "inventoryDraft": {
+        "id": "i",
+        "type": "scheduled",
+        "startedAt": 100,
+        "scheduledDate": 100,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Milk",
+            "unit": "l",
+            "expected": 10,
+            "actual": 8,
+            "difference": -2,
+            "fixedAt": 120
+          }
+        ],
+        "extension": 7
+      },
+      "inventoryConfig": {
+        "enabled": true,
+        "frequency": "monthly",
+        "productIds": [
+          "p"
+        ],
+        "lastCompletedAt": null,
+        "customDates": [],
+        "extension": 9
+      },
+      "inventoryHistory": []
+    }
+  },
+  "unsaved-frequency": {
+    "version": 1,
+    "operation": "inventory-complete",
+    "writes": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 7,
+          "cost": 4,
+          "extension": 8
+        }
+      ],
+      "inventoryHistory": [
+        {
+          "id": "i",
+          "type": "scheduled",
+          "startedAt": 100,
+          "scheduledDate": 100,
+          "items": [
+            {
+              "productId": "p",
+              "name": "Milk",
+              "unit": "l",
+              "expected": 10,
+              "actual": 8,
+              "difference": -2,
+              "fixedAt": 120
+            }
+          ],
+          "extension": 7,
+          "completedAt": 123,
+          "estimatedLoss": 8
+        }
+      ],
+      "inventoryConfig": {
+        "enabled": true,
+        "frequency": "weekly",
+        "productIds": [
+          "p"
+        ],
+        "lastCompletedAt": 123,
+        "customDates": [],
+        "extension": 9
+      },
+      "inventoryDraft": null
+    },
+    "expected": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 7,
+          "cost": 4,
+          "extension": 8
+        }
+      ],
+      "inventoryDraft": {
+        "id": "i",
+        "type": "scheduled",
+        "startedAt": 100,
+        "scheduledDate": 100,
+        "items": [
+          {
+            "productId": "p",
+            "name": "Milk",
+            "unit": "l",
+            "expected": 10,
+            "actual": 8,
+            "difference": -2,
+            "fixedAt": 120
+          }
+        ],
+        "extension": 7
+      },
+      "inventoryConfig": {
+        "enabled": true,
+        "frequency": "weekly",
+        "productIds": [
+          "p"
+        ],
+        "lastCompletedAt": null,
+        "customDates": [],
+        "extension": 9
+      },
+      "inventoryHistory": []
+    }
+  }
+}

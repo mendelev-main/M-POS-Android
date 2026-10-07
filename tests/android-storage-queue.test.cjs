@@ -88,3 +88,8 @@ test('receiving draft command freezes incomplete input and initializes authorita
  input.draft.lines[0].qtyInput='changed';await new Promise(r=>setImmediate(r));const statuses=h.calls.filter(r=>r&&typeof r==='object');assert.equal(statuses.length,4);assert.ok(statuses.some(r=>r.key==='receivingDraft'&&r.action==='supplyStatus'));
  for(const s of statuses)h.context.__nativeStorageResult({requestId:s.requestId,ok:true,initialized:true});await new Promise(r=>setImmediate(r));const command=h.calls.at(-1);assert.equal(command.action,'receivingDraftCommand');assert.equal(JSON.parse(command.payload).draft.lines[0].qtyInput,'');h.context.__nativeStorageResult({requestId:command.requestId,ok:true,authoritative:true});await p;
 });
+test('inventory command freezes count/draft before ownership initialization and requires durability',async()=>{
+ const h=host(),input={version:1,operation:'inventory-fix',id:'p',expected:{inventoryDraft:{items:[{actual:8}]}},writes:{products:[]}},p=h.context.MPosCore.InventoryCommands.commit(input);
+ input.expected.inventoryDraft.items[0].actual=9;await new Promise(r=>setImmediate(r));const statuses=h.calls.filter(r=>r&&typeof r==='object');assert.equal(statuses.length,5);assert.equal(statuses.filter(r=>r.action==='inventoryStatus').length,3);
+ for(const s of statuses)h.context.__nativeStorageResult({requestId:s.requestId,ok:true,initialized:true});await new Promise(r=>setImmediate(r));const command=h.calls.at(-1);assert.equal(command.action,'inventoryCommit');assert.equal(JSON.parse(command.payload).expected.inventoryDraft.items[0].actual,8);h.context.__nativeStorageResult({requestId:command.requestId,ok:true,authoritative:true});await p;
+});

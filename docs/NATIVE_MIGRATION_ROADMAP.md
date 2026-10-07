@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **93/110 выполнено (84,55%)**
-после 094. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **94/110 выполнено (85,45%)**
+после 095. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -556,3 +556,8 @@ Native invoice/unit/valuation/shortage arithmetic and expected-state command ver
 ## 094 — receiving drafts
 
 Native open/save/restoration from Room, legacy quantity/total defaults and captured cart, incomplete marker before rendering. Partial drafts retain their fields without invoice validation; source form presentation/rollback remain. Next 095: inventory recount/differences/atomic application. [094](../specs/094-native-receiving-drafts/spec.md).
+
+
+## 095 — inventory recount and atomic application
+
+Authoritative native fixation/difference/loss calculation and atomic stock/draft or history/config/clear; later sales survive completion. Inventory JSON ownership/projector keeps v13. Input/start/cancel/calendar/summary preview remain presentation/runtime compatibility; native command validates committed values. Next 096: warehouse period reports. [095](../specs/095-native-inventory-commands/spec.md).

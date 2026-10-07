@@ -367,3 +367,8 @@ Actual-source fixtures checked independently in JS/JVM: unit packing, weighted a
 ## 094 — receiving drafts
 
 Actual-source restoration/save fixtures checked in JVM and JS, including legacy/saved/null/blank/package/cart cases. Native protocol snapshot test, ack-before-render, failed save/double tap/uncertainty/rollback, Room stale/closed orders, no-write reopen, partial save, injected SQL failure/recovery guard and file-backed reopen. Stock/cost unchanged. Physical pending. [094](../specs/094-native-receiving-drafts/spec.md).
+
+
+## 095 — inventory commands
+
+Actual-source candidates independently tested in JS/JVM: current-stock fixation, loss, scheduled/adhoc completion and later sales. Room stale/tampered/input/closed-row guards, config loader/unsaved-frequency compatibility, unfinished/duplicate refusal, and injected final-write rollback. File-backed native FIFO ownership covers all three inventory documents and obsolete shadows. Source memory follows native ack; rollback remains. Physical pending. Cancellation ambiguity retains existing behavior while question is pending. [095](../specs/095-native-inventory-commands/spec.md).
