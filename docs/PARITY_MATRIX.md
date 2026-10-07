@@ -442,3 +442,5 @@ Actual reviewed page/modal renderers and finalizePayment verify formatted receip
 ## 109: native runtime — in progress
 
 Read-only transactional Room snapshot foundation added; no production cutover or WebView removal yet. See [spec](../specs/109-native-runtime/spec.md). Completion remains 107/110; physical acceptance pending.
+
+109 session increment: Kotlin now projects restored current-order fields on production startup; existing split-draft validation and print marks preserved, no print retry. Reviewed rollback remains. WebView/navigation removal pending; 107/110 completed.

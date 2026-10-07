@@ -1477,6 +1477,13 @@ async function loadAll(){
   // Сохраняются позиции, количество, комментарии/скидки и параметры заказа.
   const safeCurrentOrder=currentOrderSession===null?null:storageRecord(currentOrderSession,'currentOrderSession',null);
   if(safeCurrentOrder && Array.isArray(safeCurrentOrder.items)){
+    const nativeSession = await window.MPosCore?.SessionRestore?.prepare(safeCurrentOrder);
+    if(nativeSession){
+      Object.assign(state,nativeSession.state);
+      window.__currentOrderKitchenPrinted=nativeSession.kitchenPrinted;
+      window.__currentOrderPrintedItems=nativeSession.printedItems;
+      nativeSession.warnings.forEach(markStorageBroken);
+    }else{
     state.cart = safeCurrentOrder.items.filter(item=>item&&typeof item==='object'&&!Array.isArray(item));
     state.orderLabel = safeCurrentOrder.orderLabel || '';
     state.orderType = safeCurrentOrder.orderType || 'На месте';
@@ -1492,6 +1499,7 @@ async function loadAll(){
     state.loyaltyPrograms=Array.isArray(safeCurrentOrder.loyaltyPrograms)?storageSnapshot(safeCurrentOrder.loyaltyPrograms):[];
     state.loyaltyRedemptions=safeCurrentOrder.loyaltyRedemptions&&typeof safeCurrentOrder.loyaltyRedemptions==='object'&&!Array.isArray(safeCurrentOrder.loyaltyRedemptions)?storageSnapshot(safeCurrentOrder.loyaltyRedemptions):{};
     state.loyaltyCustomerId=String(safeCurrentOrder.loyaltyCustomerId||'');state.loyaltyLoadingCustomerId='';state.loyaltyLoadError='';
+    }
     const previousLoyaltyPrograms=state.loyaltyPrograms,previousLoyaltyRedemptions=state.loyaltyRedemptions;
     const restoredPaymentDraft=validateSplitPaymentDraft(safeCurrentOrder.paymentDraft,cartTotal());
     if(restoredPaymentDraft){

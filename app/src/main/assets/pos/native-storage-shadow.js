@@ -198,6 +198,17 @@
   mposCore.DeliveryRead=Object.freeze({
     async calculate(input){return requireNative(await request('deliveryRead',{payload:JSON.stringify(input)}),true);}
   });
+  mposCore.SessionRestore=Object.freeze({
+    async prepare(session){
+      if(global.MPosNativeSessionRestoreEnabled===false)return null;
+      try{
+        const result=requireNative(await request('sessionRestoreRead',{payload:JSON.stringify({version:1,session})}),true);
+        if(result.restore!==true)return null;
+        if(!result.state||!Array.isArray(result.state.cart)||!result.state.customer||!Array.isArray(result.state.loyaltyPrograms)||!result.state.loyaltyRedemptions||!Array.isArray(result.printedItems)||typeof result.kitchenPrinted!=='boolean'||!Array.isArray(result.warnings))throw Error('invalid native session projection');
+        return result;
+      }catch(_error){return null;} // Read failure retains recorded paid parts and the reviewed restore block.
+    }
+  });
   mposCore.SplitRecoveryRead=Object.freeze({
     async calculate(input){
       return requireNative(await request('splitRecoveryRead',{payload:JSON.stringify(input)}),true);

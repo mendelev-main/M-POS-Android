@@ -1,6 +1,9 @@
 package com.mendelev.mpos.data
 
 import androidx.room.Room
+import androidx.room.withTransaction
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.*
@@ -50,5 +53,28 @@ class MPosRuntimeSnapshotTest {
             assertEquals("[]", dao.get("products")?.payload)
             assertEquals(1, dao.count())
         }
+    }
+
+    @Test fun concurrentAtomicWritesNeverProduceMixedDocumentGenerations() = runBlocking {
+        val dao = database.legacyStorageShadowDao()
+        database.withTransaction {
+            for (key in listOf("layout", "posNavigation")) dao.upsert(LegacyStorageShadowEntity(key, "0", 0))
+        }
+        val writer = launch(Dispatchers.IO) {
+            repeat(100) { generation ->
+                database.withTransaction {
+                    dao.upsert(LegacyStorageShadowEntity("layout", generation.toString(), generation.toLong()))
+                    dao.upsert(LegacyStorageShadowEntity("posNavigation", generation.toString(), generation.toLong()))
+                }
+            }
+        }
+        val reader = launch(Dispatchers.IO) {
+            repeat(100) {
+                val snapshot = MPosRuntimeSnapshot(database).read(setOf("layout", "posNavigation"))
+                assertEquals(snapshot["layout"], snapshot["posNavigation"])
+            }
+        }
+        writer.join()
+        reader.join()
     }
 }

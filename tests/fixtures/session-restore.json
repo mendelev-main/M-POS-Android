@@ -1,0 +1,271 @@
+[
+  {
+    "name": "empty cart defaults",
+    "session": {
+      "items": []
+    },
+    "expected": {
+      "state": {
+        "cart": [],
+        "orderLabel": "",
+        "orderType": "На месте",
+        "customer": {
+          "name": "",
+          "phone": "",
+          "address": ""
+        },
+        "deliveryFee": 0,
+        "deliveryTariffSelected": false,
+        "orderComment": "",
+        "currentOrderSource": "",
+        "currentWebOrderId": "",
+        "currentWebOrderStatus": "",
+        "loyaltyPrograms": [],
+        "loyaltyRedemptions": {},
+        "loyaltyCustomerId": "",
+        "loyaltyLoadingCustomerId": "",
+        "loyaltyLoadError": ""
+      },
+      "kitchenPrinted": false,
+      "printedItems": [],
+      "warnings": []
+    }
+  },
+  {
+    "name": "complete order and extensions",
+    "session": {
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "comment": "Без сахара",
+          "extension": {
+            "zero": 0
+          }
+        },
+        null,
+        3,
+        []
+      ],
+      "orderLabel": "Стол 3",
+      "orderType": "Доставка",
+      "customer": {
+        "name": "Анна",
+        "phone": "+375",
+        "address": "Минск",
+        "extension": false
+      },
+      "deliveryFee": "2.5",
+      "deliveryTariffSelected": true,
+      "orderComment": "Позвонить",
+      "source": "web",
+      "webOrderId": "w1",
+      "webOrderStatus": "accepted",
+      "kitchenPrinted": true,
+      "printedItems": [
+        {
+          "id": "p",
+          "qty": 2,
+          "extension": "kept"
+        }
+      ],
+      "loyaltyPrograms": [
+        {
+          "id": "l",
+          "custom": 0
+        }
+      ],
+      "loyaltyRedemptions": {
+        "l": 1
+      },
+      "loyaltyCustomerId": "c1"
+    },
+    "expected": {
+      "state": {
+        "cart": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "comment": "Без сахара",
+            "extension": {
+              "zero": 0
+            }
+          }
+        ],
+        "orderLabel": "Стол 3",
+        "orderType": "Доставка",
+        "customer": {
+          "name": "Анна",
+          "phone": "+375",
+          "address": "Минск",
+          "extension": false
+        },
+        "deliveryFee": 2.5,
+        "deliveryTariffSelected": true,
+        "orderComment": "Позвонить",
+        "currentOrderSource": "web",
+        "currentWebOrderId": "w1",
+        "currentWebOrderStatus": "accepted",
+        "loyaltyPrograms": [
+          {
+            "id": "l",
+            "custom": 0
+          }
+        ],
+        "loyaltyRedemptions": {
+          "l": 1
+        },
+        "loyaltyCustomerId": "c1",
+        "loyaltyLoadingCustomerId": "",
+        "loyaltyLoadError": ""
+      },
+      "kitchenPrinted": true,
+      "printedItems": [
+        {
+          "id": "p",
+          "qty": 2,
+          "extension": "kept"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  {
+    "name": "falsy fields and strict flag",
+    "session": {
+      "items": [
+        {
+          "qty": 0
+        }
+      ],
+      "orderLabel": 0,
+      "orderType": false,
+      "customer": null,
+      "deliveryFee": false,
+      "deliveryTariffSelected": 1,
+      "kitchenPrinted": [],
+      "printedItems": {},
+      "loyaltyPrograms": null,
+      "loyaltyRedemptions": [],
+      "loyaltyCustomerId": 0
+    },
+    "expected": {
+      "state": {
+        "cart": [
+          {
+            "qty": 0
+          }
+        ],
+        "orderLabel": "",
+        "orderType": "На месте",
+        "customer": {
+          "name": "",
+          "phone": "",
+          "address": ""
+        },
+        "deliveryFee": 0,
+        "deliveryTariffSelected": false,
+        "orderComment": "",
+        "currentOrderSource": "",
+        "currentWebOrderId": "",
+        "currentWebOrderStatus": "",
+        "loyaltyPrograms": [],
+        "loyaltyRedemptions": {},
+        "loyaltyCustomerId": "",
+        "loyaltyLoadingCustomerId": "",
+        "loyaltyLoadError": ""
+      },
+      "kitchenPrinted": true,
+      "printedItems": [],
+      "warnings": []
+    }
+  },
+  {
+    "name": "malformed customer retains warning",
+    "session": {
+      "items": [],
+      "customer": [
+        "wrong"
+      ],
+      "deliveryFee": "0x10"
+    },
+    "expected": {
+      "state": {
+        "cart": [],
+        "orderLabel": "",
+        "orderType": "На месте",
+        "customer": {
+          "name": "",
+          "phone": "",
+          "address": ""
+        },
+        "deliveryFee": 16,
+        "deliveryTariffSelected": false,
+        "orderComment": "",
+        "currentOrderSource": "",
+        "currentWebOrderId": "",
+        "currentWebOrderStatus": "",
+        "loyaltyPrograms": [],
+        "loyaltyRedemptions": {},
+        "loyaltyCustomerId": "",
+        "loyaltyLoadingCustomerId": "",
+        "loyaltyLoadError": ""
+      },
+      "kitchenPrinted": false,
+      "printedItems": [],
+      "warnings": [
+        "Некорректный формат currentOrderSession.customer"
+      ]
+    }
+  },
+  {
+    "name": "empty strings in customer retained",
+    "session": {
+      "items": [],
+      "customer": {
+        "name": null,
+        "phone": 0,
+        "address": false
+      },
+      "deliveryFee": -2
+    },
+    "expected": {
+      "state": {
+        "cart": [],
+        "orderLabel": "",
+        "orderType": "На месте",
+        "customer": {
+          "name": null,
+          "phone": 0,
+          "address": false
+        },
+        "deliveryFee": -2,
+        "deliveryTariffSelected": false,
+        "orderComment": "",
+        "currentOrderSource": "",
+        "currentWebOrderId": "",
+        "currentWebOrderStatus": "",
+        "loyaltyPrograms": [],
+        "loyaltyRedemptions": {},
+        "loyaltyCustomerId": "",
+        "loyaltyLoadingCustomerId": "",
+        "loyaltyLoadError": ""
+      },
+      "kitchenPrinted": false,
+      "printedItems": [],
+      "warnings": []
+    }
+  },
+  {
+    "name": "missing items leaves state",
+    "session": {
+      "orderLabel": "Ignored"
+    },
+    "expected": {
+      "state": {},
+      "kitchenPrinted": false,
+      "printedItems": [],
+      "warnings": []
+    }
+  }
+]
