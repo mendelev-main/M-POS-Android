@@ -92,6 +92,7 @@ for(const counted of [0,75.001,100.0])test('native closing form retains actual l
 
 test('native opening form uses actual verifier and post-ack native lifecycle without carrying input secret',async()=>{
  const h=host(),forms=[],select={value:''},secret={value:''};
+ h.ctx.MPosNativeShiftOpenCommandEnabled=false; // Explicit compatibility path; native authority has separate parity coverage.
  h.ctx.state.loaded=true;h.ctx.showModal=()=>h.events.push('modal');h.ctx.fullMoney=v=>String(v);h.ctx.escapeAttr=v=>String(v);h.ctx.escapeHtml=v=>String(v);h.ctx.employeeShortName=v=>String(v);
  h.ctx.document={getElementById:id=>id==='sf-employee'?select:id==='sf-admin-password'?secret:{value:''},querySelector:()=>({style:{}})};
  h.ctx.webkit.messageHandlers.shiftScreen={postMessage:p=>{forms.push(p);return true}};
@@ -103,6 +104,7 @@ test('native opening form uses actual verifier and post-ack native lifecycle wit
  assert.equal(h.ctx.state.shifts.length,1);assert.equal(h.events.includes('telegram-open'),false);h.reply();await saving;
  assert.equal(h.ctx.state.shifts.length,2);assert.ok(h.events.indexOf('telegram-open')>h.events.indexOf('ack'));assert.equal(secret.value,'');
  const admin=host(),adminFields={select:{value:''},secret:{value:''}},adminForms=[];
+ admin.ctx.MPosNativeShiftOpenCommandEnabled=false;
  admin.ctx.state.loaded=true;admin.ctx.state.employees[0].role='admin';admin.ctx.showModal=()=>{};admin.ctx.fullMoney=v=>String(v);admin.ctx.escapeAttr=v=>String(v);admin.ctx.escapeHtml=v=>String(v);admin.ctx.employeeShortName=v=>String(v);
  admin.ctx.document={getElementById:id=>id==='sf-employee'?adminFields.select:adminFields.secret,querySelector:()=>({style:{}})};
  admin.ctx.webkit.messageHandlers.shiftScreen={postMessage:p=>{adminForms.push(p);return true}};vm.runInContext(source('native-open-form.js'),admin.ctx);admin.ctx.openShiftModal();form=adminForms.at(-1);

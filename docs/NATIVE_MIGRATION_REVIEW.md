@@ -1,6 +1,16 @@
 # Native migration review
 
-## Current boundary
+## Current runtime increment (109, 7 October 2026)
+
+The authoritative current scope is specs/109-native-runtime/spec.md and
+NATIVE_RUNTIME_REMAINING_RU.md. Production Room session/paired-bootstrap reads,
+workspace transitions and default native shift-opening authentication/transaction
+are connected. Opening credentials remain native; existing JS screen and
+post-commit notification coordination still remain. WebView has not been removed.
+The historical reviews below describe their respective implementation slices,
+not the complete current feature coverage. Engineering progress stays 107/110.
+
+## Historical boundary (040–048)
 
 **User decision 2026-10-06 / spec 040:** manual acceptance is deferred to the end; per-domain native cutovers are authorized after automated checks. Products, category layout, navigation, employees and shifts persistence/reads are now authoritative in Kotlin/Room (040–048). Other Room domains and SSE remain shadows by implementation, rather than a blanket prohibition on cutover. Business engines/UI still use reviewed JS. Previous shadow-only descriptions below are historical context.
 
@@ -87,3 +97,7 @@ Limits: shared business runtime still loads/submits full arrays, native reconcil
 Actual payment finalization now uses Kotlin validation/stock deduction/delivery cash checks and one Room transaction for catalog, shifts, one receipt, cleared session and idempotency marker. No full order archive is sent or copied to a payment journal. Exact retry is locally idempotent; stale/conflicting commands fail. Pricing, discounts/rewards and recipe expansion remain reviewed JS; external effects run after native acknowledgement. Nonpayment journal recovery remains unchanged. This partially implements P7, not the whole financial engine. Physical cash/card/split/delivery/reward/force-stop and v13 cases remain pending.
 
 Business issue for separate refactor: existing cross-shift refund drawer calculation (100 opening minus 20 refunded from prior shift reports 100 instead of physical 80) is reproduced and retained, including native delivery cash parity. Return attribution and historical reports need a coordinated business fix.
+
+109 opening verification: 551 JS / 438 JVM passed, 0 failed/errors/skips; lint
+0 errors / 22 warnings in unchanged files (7 are online dependency advisories).
+No local product APK assembly; physical acceptance pending. Progress 107/110.

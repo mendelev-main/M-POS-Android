@@ -728,7 +728,7 @@
       "area": "UI/architecture",
       "dependencies": "100,101,102,103,104,105,106,107,108",
       "spec": "specs/109-native-runtime/spec.md",
-      "summary": "In progress: Room snapshot, order restore, workspace routes and paired shift/employee startup normalization; synchronous role helpers, complete root lifecycle and WebView removal pending."
+      "summary": "In progress: Room snapshot, order restore, workspace routes, paired shift/employee bootstrap and native opening authentication/transaction. DOM models, direct remaining dispatch, full root/recovery/effects lifecycle and WebView removal pending."
     },
     {
       "id": "110",

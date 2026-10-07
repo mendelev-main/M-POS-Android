@@ -6,6 +6,8 @@ The current application deliberately keeps the reviewed HTML/CSS/JavaScript busi
 
 Текущий [статус миграции, проценты и проверки на планшете](docs/MIGRATION_STATUS_RU.md) — полный отчёт на русском.
 
+Current 109 production increments: Room session/bootstrap reads, workspace routes and direct native shift-opening authentication/transaction. WebView/DOM compatibility remains; see [remaining runtime work](docs/NATIVE_RUNTIME_REMAINING_RU.md). Engineering progress: **107/110 (97.27%)**; physical acceptance pending.
+
 ## Architecture
 
 - One hardware-accelerated `WebView`; no remote UI and no cross-platform runtime.

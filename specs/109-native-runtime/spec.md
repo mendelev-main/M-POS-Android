@@ -44,6 +44,7 @@ The production session read now uses MPosSessionRestoreRepository: it checks exi
 - [x] Transactional read-only document snapshot and concurrent consistency test.
 - [x] Production current-order field projection from owned Room data, with reviewed rollback.
 - [x] Native workspace category/folder/Back/edit transition decisions.
+- [x] Native opening-form administrator verification, live employee selection and transactional shift creation.
 - [ ] Native session/shift selection, remaining navigation and complete bootstrap state orchestration.
 - [ ] Domain read models replacing DOM screen extraction.
 - [ ] Direct native command dispatch replacing mounted JS handlers.
@@ -84,3 +85,66 @@ Internal progress: paired shift/employee normalization is active; complete nativ
 ## Verification of paired bootstrap increment
 
 541/541 JS tests, 430/430 JVM tests passed; failures/errors/skips: 0. Lint: 0 errors, 15 existing warnings. No local APK assembly; tablet acceptance is pending in 110. Completed tasks remain 107/110.
+
+## Native shift opening authority increment
+
+Default production opening uses MPosShiftOpenCommand through a native-only
+MPosStorageMirror.openShift entry on the existing bounded FIFO. The native dialog
+retains the transient credential while JS reserves criticalOperationBusy and
+returns its expected employees/shifts plus the existing UID/time. Kotlin checks
+both owned documents in one transaction, verifies the selected live admin using
+the exact reviewed credential policy, obtains carryover/recovery gates through
+MPosShiftOpeningRepository and commits via MPosShiftLifecycleCommand. The
+credential is a separate transient argument: it is never serialized into the
+command, lifecycle hash/marker, backup, result or diagnostics. Credential policy
+is unchanged; using a native digest is not a new authentication/security policy.
+
+The transaction retains the full historical documents/extensions and cart,
+rechecks employee/shift state and rejects concurrent changes, pending critical
+journals, invalid carryover, existing open shift and projection/marker failures.
+No print/network/availability/catalogue trigger runs in the command. Saved state
+survives process restart; automatic retry is absent. A repeated gesture is locked
+out; an already saved/stale opening must reload instead of creating another shift.
+
+The compatibility adapter no longer invokes submitOpenShift or touches its DOM
+password field in native-command mode. After a correlated successful result,
+it verifies live expected state and result identity/history, applies the saved
+shift, closes/renders and retains existing Telegram/monthly actions. Wrong
+credentials allow correction; stale/uncertain outcomes block critical work.
+Close or showModal cannot abandon an in-flight native operation. Ambiguous
+dispatch failure is blocked; explicit non-dispatch rejection can retry safely.
+The active credential is cleared after native dispatch/cancel/result/destruction.
+
+Rollback before submission: MPosNativeShiftOpenCommandEnabled=false retains the
+existing native form + reviewed JS verification/lifecycle path; form fallback
+retains reviewed HTML. No schema/storage keys/v13 formats change. Existing
+legacy password bytes are not duplicated in new code or fixtures. Other role,
+employee-edit/delete, company/network authentication and full lifecycle/effect
+authority remain pending. The hidden HTML form is still mounted; this is not
+WebView removal or completed root authentication.
+
+Automated scope: actual reviewed submitOpenShift fixtures (credential categories
+only), exact/case/whitespace authentication, first/tied/missing carryover, normal
+and admin staff; Room restart/stale data/pending journal/real SQLite rollback and
+credential non-persistence; UI native/legacy mode, native-only credential handoff,
+correlated/stale results; adapter ack ordering, duplicate locks, modal replacement,
+wrong password, state conflict, dispatch ambiguity and external-effect failure.
+Physical cases remain pending in 110.
+
+Remaining work and milestone counting: [Russian runtime analysis](../../docs/NATIVE_RUNTIME_REMAINING_RU.md).
+
+## Verification of native opening increment
+
+551/551 JS tests and 438/438 JVM tests passed; failures/errors/skips: 0.
+Android lint: 0 errors, 22 warnings in unchanged files (15 existing style/platform
+warnings plus 7 dependency-version advisories from the online check). Full
+testDebugUnitTest and lintDebug passed after the final callback-delivery guard.
+The real SQLite/FIFO tests include an acknowledged database commit with failed
+result delivery: saved shift remains, response requires reload, no resubmission.
+
+Local JS validation used Node 24 with TZ=UTC and an available python command
+for the existing source-sync fixture. Robolectric used a writable test-only
+user.home outside the repository; no product APK assembled and no physical
+tablet acceptance. The original reviewed source bytes/hash still pass.
+Engineering completion remains **107/110 (97.27%)**; no task IDs or denominator
+were added for internal 109 increments.

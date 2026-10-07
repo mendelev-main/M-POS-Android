@@ -610,10 +610,25 @@ Accept online/offline/timeouts with valid estimate; prepared/local/ACK/confirmed
 
 ## 109 — native runtime (pending)
 
-After the native bootstrap cutover: restart offline with imported v13 data; verify products, employees, current shift and pending order against the prior runtime. Missing documents must not become invented defaults; critical recovery must block duplicate payment/printing. Repeat after process termination and failed import. Current read-only snapshot increment does not yet change application startup.
+After the native bootstrap cutover: restart offline with imported v13 data; verify products, employees, current shift and pending order against the prior runtime. Missing documents must not become invented defaults; critical recovery must block duplicate payment/printing. Repeat after process termination and failed import. The initial read-only snapshot increment did not change application startup; subsequent production restore/bootstrap increments below now use it.
 
 109 session cutover: restart with customer/delivery/comment/WEB/loyalty data, previously printed kitchen items and a paid split part. Verify exact values, no repeat print, and unchanged paid amount; repeat with native session restore rollback. Pending physical acceptance.
 
 109 workspace routes (pending): open category and folder, Back from modal/legacy folder/root, toggle edit and verify search reset/drag availability; rapidly open category then Back, change tab or modal while waiting, and confirm cart/paid parts remain intact. Compare native-route rollback; repeat offline and after import.
 
 109 paired bootstrap (pending): cold restart offline with admin/non-admin open shift, closed shifts and restored employees; verify selected employee and existing permissions. Restart after v13 import, compare explicit active-session rollback and verify warnings for malformed test records. No unexpected role grant, repeat print or availability send.
+
+109 native opening authority (pending):
+- Open offline as ordinary employee and administrator; wrong/blank/spaced password
+  must reject without a new shift, correct password opens once. Compare explicit
+  native-command rollback on the same synthetic v13 data.
+- Carry over the last counted cash; first shift starts at zero; verify history,
+  employee identity and current unpaid cart after restart and backup round-trip.
+- Double-tap Open; attempt Back/cancel/another modal while saving; no duplicate
+  shift or notification. Change employee/shift data in a controlled test while
+  opening; stale state blocks rather than granting a changed role.
+- Force-stop during opening, reopen offline and verify at most one saved shift;
+  no automatic Telegram/print/availability retry. Simulate failed local save and
+  a lost result; restart must recover persisted state before a new attempt.
+- Telegram/monthly failures must not undo opening. Both themes, keyboard and
+  large fonts retain the current native form. No physical pass is claimed.

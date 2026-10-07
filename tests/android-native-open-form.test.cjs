@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const read=n=>fs.readFileSync('app/src/main/assets/pos/'+n,'utf8');
 function host(){
  const sent=[],events=[],select={value:''},secret={value:''},overlay={style:{}};let done;
- const ctx={state:{loaded:true,currency:'BYN',employees:[{id:'e1',role:'cashier'}]},criticalOperationBusy:false,criticalStorageRecoveryPending:false,currentShift:()=>null,
+ const ctx={MPosNativeShiftOpenCommandEnabled:false,state:{loaded:true,currency:'BYN',employees:[{id:'e1',role:'cashier'}]},criticalOperationBusy:false,criticalStorageRecoveryPending:false,currentShift:()=>null,
  document:{getElementById:id=>id==='sf-employee'?select:id==='sf-admin-password'?secret:null,querySelector:()=>overlay},openShiftModal:()=>events.push('legacy-form'),closeModal:()=>events.push('close'),showModal:()=>events.push('show'),submitOpenShift:async()=>{events.push('submit');const ok=await new Promise(r=>done=r);if(ok){ctx.closeModal();events.push('telegram')}return ok},webkit:{messageHandlers:{shiftScreen:{postMessage:p=>{sent.push(p);return true}}}}};
  ctx.window=ctx;vm.createContext(ctx);vm.runInContext(read('native-open-form.js'),ctx);
  return {ctx,sent,events,select,secret,overlay,reply:ok=>done(ok),open(){ctx.openShiftModal();return sent.at(-1)},submit(p){return ctx.MPosCore.NativeOpenForm.handleAction(p)}};

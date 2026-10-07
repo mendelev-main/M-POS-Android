@@ -1,0 +1,795 @@
+[
+  {
+    "name": "ordinary employee opening uses last counted cash and retains extensions",
+    "credential": "wrong",
+    "input": {
+      "version": 1,
+      "id": "new-shift",
+      "openedAt": 200,
+      "employeeId": "e1",
+      "expectedShifts": [
+        {
+          "id": "latest",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 80,
+          "custom": {
+            "keep": 0
+          }
+        },
+        {
+          "id": "older",
+          "status": "closed",
+          "closedAt": 50,
+          "countedCash": 40
+        }
+      ],
+      "expectedEmployees": [
+        {
+          "id": "e1",
+          "name": "Кассир",
+          "phone": "phone",
+          "role": "employee",
+          "custom": false
+        },
+        {
+          "id": "a1",
+          "name": "Администратор",
+          "role": "admin"
+        }
+      ]
+    },
+    "expected": {
+      "ok": true,
+      "shifts": [
+        {
+          "id": "latest",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 80,
+          "custom": {
+            "keep": 0
+          }
+        },
+        {
+          "id": "older",
+          "status": "closed",
+          "closedAt": 50,
+          "countedCash": 40
+        },
+        {
+          "id": "new-shift",
+          "status": "open",
+          "openedAt": 200,
+          "openingCash": 80,
+          "employeeId": "e1",
+          "employeeName": "Кассир",
+          "employeePhone": "phone",
+          "openingSourceShiftId": "latest"
+        }
+      ],
+      "shift": {
+        "id": "new-shift",
+        "status": "open",
+        "openedAt": 200,
+        "openingCash": 80,
+        "employeeId": "e1",
+        "employeeName": "Кассир",
+        "employeePhone": "phone",
+        "openingSourceShiftId": "latest"
+      },
+      "events": [
+        "close",
+        "render",
+        "telegram",
+        "monthly"
+      ],
+      "writes": 1
+    }
+  },
+  {
+    "name": "administrator exact credential accepted",
+    "credential": "accepted",
+    "input": {
+      "version": 1,
+      "id": "new-shift",
+      "openedAt": 200,
+      "employeeId": "a1",
+      "expectedShifts": [
+        {
+          "id": "latest",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 80,
+          "custom": {
+            "keep": 0
+          }
+        },
+        {
+          "id": "older",
+          "status": "closed",
+          "closedAt": 50,
+          "countedCash": 40
+        }
+      ],
+      "expectedEmployees": [
+        {
+          "id": "e1",
+          "name": "Кассир",
+          "phone": "phone",
+          "role": "employee",
+          "custom": false
+        },
+        {
+          "id": "a1",
+          "name": "Администратор",
+          "role": "admin"
+        }
+      ]
+    },
+    "expected": {
+      "ok": true,
+      "shifts": [
+        {
+          "id": "latest",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 80,
+          "custom": {
+            "keep": 0
+          }
+        },
+        {
+          "id": "older",
+          "status": "closed",
+          "closedAt": 50,
+          "countedCash": 40
+        },
+        {
+          "id": "new-shift",
+          "status": "open",
+          "openedAt": 200,
+          "openingCash": 80,
+          "employeeId": "a1",
+          "employeeName": "Администратор",
+          "employeePhone": "",
+          "openingSourceShiftId": "latest"
+        }
+      ],
+      "shift": {
+        "id": "new-shift",
+        "status": "open",
+        "openedAt": 200,
+        "openingCash": 80,
+        "employeeId": "a1",
+        "employeeName": "Администратор",
+        "employeePhone": "",
+        "openingSourceShiftId": "latest"
+      },
+      "events": [
+        "close",
+        "render",
+        "telegram",
+        "monthly"
+      ],
+      "writes": 1
+    }
+  },
+  {
+    "name": "administrator wrong credential rejected",
+    "credential": "wrong",
+    "input": {
+      "version": 1,
+      "id": "new-shift",
+      "openedAt": 200,
+      "employeeId": "a1",
+      "expectedShifts": [
+        {
+          "id": "latest",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 80,
+          "custom": {
+            "keep": 0
+          }
+        },
+        {
+          "id": "older",
+          "status": "closed",
+          "closedAt": 50,
+          "countedCash": 40
+        }
+      ],
+      "expectedEmployees": [
+        {
+          "id": "e1",
+          "name": "Кассир",
+          "phone": "phone",
+          "role": "employee",
+          "custom": false
+        },
+        {
+          "id": "a1",
+          "name": "Администратор",
+          "role": "admin"
+        }
+      ]
+    },
+    "expected": {
+      "ok": false,
+      "shifts": [
+        {
+          "id": "latest",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 80,
+          "custom": {
+            "keep": 0
+          }
+        },
+        {
+          "id": "older",
+          "status": "closed",
+          "closedAt": 50,
+          "countedCash": 40
+        }
+      ],
+      "shift": null,
+      "events": [],
+      "writes": 0
+    }
+  },
+  {
+    "name": "administrator blank credential rejected",
+    "credential": "blank",
+    "input": {
+      "version": 1,
+      "id": "new-shift",
+      "openedAt": 200,
+      "employeeId": "a1",
+      "expectedShifts": [
+        {
+          "id": "latest",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 80,
+          "custom": {
+            "keep": 0
+          }
+        },
+        {
+          "id": "older",
+          "status": "closed",
+          "closedAt": 50,
+          "countedCash": 40
+        }
+      ],
+      "expectedEmployees": [
+        {
+          "id": "e1",
+          "name": "Кассир",
+          "phone": "phone",
+          "role": "employee",
+          "custom": false
+        },
+        {
+          "id": "a1",
+          "name": "Администратор",
+          "role": "admin"
+        }
+      ]
+    },
+    "expected": {
+      "ok": false,
+      "shifts": [
+        {
+          "id": "latest",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 80,
+          "custom": {
+            "keep": 0
+          }
+        },
+        {
+          "id": "older",
+          "status": "closed",
+          "closedAt": 50,
+          "countedCash": 40
+        }
+      ],
+      "shift": null,
+      "events": [],
+      "writes": 0
+    }
+  },
+  {
+    "name": "administrator whitespace is not trimmed",
+    "credential": "spaced",
+    "input": {
+      "version": 1,
+      "id": "new-shift",
+      "openedAt": 200,
+      "employeeId": "a1",
+      "expectedShifts": [
+        {
+          "id": "latest",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 80,
+          "custom": {
+            "keep": 0
+          }
+        },
+        {
+          "id": "older",
+          "status": "closed",
+          "closedAt": 50,
+          "countedCash": 40
+        }
+      ],
+      "expectedEmployees": [
+        {
+          "id": "e1",
+          "name": "Кассир",
+          "phone": "phone",
+          "role": "employee",
+          "custom": false
+        },
+        {
+          "id": "a1",
+          "name": "Администратор",
+          "role": "admin"
+        }
+      ]
+    },
+    "expected": {
+      "ok": false,
+      "shifts": [
+        {
+          "id": "latest",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 80,
+          "custom": {
+            "keep": 0
+          }
+        },
+        {
+          "id": "older",
+          "status": "closed",
+          "closedAt": 50,
+          "countedCash": 40
+        }
+      ],
+      "shift": null,
+      "events": [],
+      "writes": 0
+    }
+  },
+  {
+    "name": "administrator credential remains case sensitive",
+    "credential": "caseChanged",
+    "input": {
+      "version": 1,
+      "id": "new-shift",
+      "openedAt": 200,
+      "employeeId": "a1",
+      "expectedShifts": [
+        {
+          "id": "latest",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 80,
+          "custom": {
+            "keep": 0
+          }
+        },
+        {
+          "id": "older",
+          "status": "closed",
+          "closedAt": 50,
+          "countedCash": 40
+        }
+      ],
+      "expectedEmployees": [
+        {
+          "id": "e1",
+          "name": "Кассир",
+          "phone": "phone",
+          "role": "employee",
+          "custom": false
+        },
+        {
+          "id": "a1",
+          "name": "Администратор",
+          "role": "admin"
+        }
+      ]
+    },
+    "expected": {
+      "ok": false,
+      "shifts": [
+        {
+          "id": "latest",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 80,
+          "custom": {
+            "keep": 0
+          }
+        },
+        {
+          "id": "older",
+          "status": "closed",
+          "closedAt": 50,
+          "countedCash": 40
+        }
+      ],
+      "shift": null,
+      "events": [],
+      "writes": 0
+    }
+  },
+  {
+    "name": "first shift starts at zero",
+    "credential": "blank",
+    "input": {
+      "version": 1,
+      "id": "new-shift",
+      "openedAt": 200,
+      "employeeId": "e1",
+      "expectedShifts": [],
+      "expectedEmployees": [
+        {
+          "id": "e1",
+          "name": "Кассир",
+          "phone": "phone",
+          "role": "employee",
+          "custom": false
+        },
+        {
+          "id": "a1",
+          "name": "Администратор",
+          "role": "admin"
+        }
+      ]
+    },
+    "expected": {
+      "ok": true,
+      "shifts": [
+        {
+          "id": "new-shift",
+          "status": "open",
+          "openedAt": 200,
+          "openingCash": 0,
+          "employeeId": "e1",
+          "employeeName": "Кассир",
+          "employeePhone": "phone",
+          "openingSourceShiftId": ""
+        }
+      ],
+      "shift": {
+        "id": "new-shift",
+        "status": "open",
+        "openedAt": 200,
+        "openingCash": 0,
+        "employeeId": "e1",
+        "employeeName": "Кассир",
+        "employeePhone": "phone",
+        "openingSourceShiftId": ""
+      },
+      "events": [
+        "close",
+        "render",
+        "telegram",
+        "monthly"
+      ],
+      "writes": 1
+    }
+  },
+  {
+    "name": "equal close times keep first history entry",
+    "credential": "blank",
+    "input": {
+      "version": 1,
+      "id": "new-shift",
+      "openedAt": 200,
+      "employeeId": "e1",
+      "expectedShifts": [
+        {
+          "id": "first",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 12
+        },
+        {
+          "id": "second",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 34
+        }
+      ],
+      "expectedEmployees": [
+        {
+          "id": "e1",
+          "name": "Кассир",
+          "phone": "phone",
+          "role": "employee",
+          "custom": false
+        },
+        {
+          "id": "a1",
+          "name": "Администратор",
+          "role": "admin"
+        }
+      ]
+    },
+    "expected": {
+      "ok": true,
+      "shifts": [
+        {
+          "id": "first",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 12
+        },
+        {
+          "id": "second",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 34
+        },
+        {
+          "id": "new-shift",
+          "status": "open",
+          "openedAt": 200,
+          "openingCash": 12,
+          "employeeId": "e1",
+          "employeeName": "Кассир",
+          "employeePhone": "phone",
+          "openingSourceShiftId": "first"
+        }
+      ],
+      "shift": {
+        "id": "new-shift",
+        "status": "open",
+        "openedAt": 200,
+        "openingCash": 12,
+        "employeeId": "e1",
+        "employeeName": "Кассир",
+        "employeePhone": "phone",
+        "openingSourceShiftId": "first"
+      },
+      "events": [
+        "close",
+        "render",
+        "telegram",
+        "monthly"
+      ],
+      "writes": 1
+    }
+  },
+  {
+    "name": "missing prior counted cash uses zero",
+    "credential": "blank",
+    "input": {
+      "version": 1,
+      "id": "new-shift",
+      "openedAt": 200,
+      "employeeId": "e1",
+      "expectedShifts": [
+        {
+          "id": "old",
+          "status": "closed",
+          "closedAt": 100
+        }
+      ],
+      "expectedEmployees": [
+        {
+          "id": "e1",
+          "name": "Кассир",
+          "phone": "phone",
+          "role": "employee",
+          "custom": false
+        },
+        {
+          "id": "a1",
+          "name": "Администратор",
+          "role": "admin"
+        }
+      ]
+    },
+    "expected": {
+      "ok": true,
+      "shifts": [
+        {
+          "id": "old",
+          "status": "closed",
+          "closedAt": 100
+        },
+        {
+          "id": "new-shift",
+          "status": "open",
+          "openedAt": 200,
+          "openingCash": 0,
+          "employeeId": "e1",
+          "employeeName": "Кассир",
+          "employeePhone": "phone",
+          "openingSourceShiftId": "old"
+        }
+      ],
+      "shift": {
+        "id": "new-shift",
+        "status": "open",
+        "openedAt": 200,
+        "openingCash": 0,
+        "employeeId": "e1",
+        "employeeName": "Кассир",
+        "employeePhone": "phone",
+        "openingSourceShiftId": "old"
+      },
+      "events": [
+        "close",
+        "render",
+        "telegram",
+        "monthly"
+      ],
+      "writes": 1
+    }
+  },
+  {
+    "name": "negative carryover rejected",
+    "credential": "blank",
+    "input": {
+      "version": 1,
+      "id": "new-shift",
+      "openedAt": 200,
+      "employeeId": "e1",
+      "expectedShifts": [
+        {
+          "id": "old",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": -1
+        }
+      ],
+      "expectedEmployees": [
+        {
+          "id": "e1",
+          "name": "Кассир",
+          "phone": "phone",
+          "role": "employee",
+          "custom": false
+        },
+        {
+          "id": "a1",
+          "name": "Администратор",
+          "role": "admin"
+        }
+      ]
+    },
+    "expected": {
+      "ok": false,
+      "shifts": [
+        {
+          "id": "old",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": -1
+        }
+      ],
+      "shift": null,
+      "events": [],
+      "writes": 0
+    }
+  },
+  {
+    "name": "existing open shift rejected",
+    "credential": "blank",
+    "input": {
+      "version": 1,
+      "id": "new-shift",
+      "openedAt": 200,
+      "employeeId": "e1",
+      "expectedShifts": [
+        {
+          "id": "open",
+          "status": "open",
+          "employeeId": "e1"
+        }
+      ],
+      "expectedEmployees": [
+        {
+          "id": "e1",
+          "name": "Кассир",
+          "phone": "phone",
+          "role": "employee",
+          "custom": false
+        },
+        {
+          "id": "a1",
+          "name": "Администратор",
+          "role": "admin"
+        }
+      ]
+    },
+    "expected": {
+      "ok": false,
+      "shifts": [
+        {
+          "id": "open",
+          "status": "open",
+          "employeeId": "e1"
+        }
+      ],
+      "shift": null,
+      "events": [],
+      "writes": 0
+    }
+  },
+  {
+    "name": "missing selected employee rejected",
+    "credential": "blank",
+    "input": {
+      "version": 1,
+      "id": "new-shift",
+      "openedAt": 200,
+      "employeeId": "missing",
+      "expectedShifts": [
+        {
+          "id": "latest",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 80,
+          "custom": {
+            "keep": 0
+          }
+        },
+        {
+          "id": "older",
+          "status": "closed",
+          "closedAt": 50,
+          "countedCash": 40
+        }
+      ],
+      "expectedEmployees": [
+        {
+          "id": "e1",
+          "name": "Кассир",
+          "phone": "phone",
+          "role": "employee",
+          "custom": false
+        },
+        {
+          "id": "a1",
+          "name": "Администратор",
+          "role": "admin"
+        }
+      ]
+    },
+    "expected": {
+      "ok": false,
+      "shifts": [
+        {
+          "id": "latest",
+          "status": "closed",
+          "closedAt": 100,
+          "countedCash": 80,
+          "custom": {
+            "keep": 0
+          }
+        },
+        {
+          "id": "older",
+          "status": "closed",
+          "closedAt": 50,
+          "countedCash": 40
+        }
+      ],
+      "shift": null,
+      "events": [],
+      "writes": 0
+    }
+  }
+]

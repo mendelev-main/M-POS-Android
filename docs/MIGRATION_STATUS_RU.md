@@ -1,6 +1,6 @@
 # Статус миграции M POS Android и проверки на планшете
 
-Актуальный срез: завершён этап 108; этап 109 в работе. Основной счётчик и полный план находятся в
+Актуальный срез: завершён этап 108; этап 109 в работе, включая нативное открытие смены. Основной счётчик и полный план находятся в
 [реестре задач](KOTLIN_MIGRATION_TASKS.md): **107/110 выполнено — 97,27%**.
 Это инженерные задачи, не процент функций/кода; физическая приёмка ожидается.
 Исторические таблицы ниже описывают срез 040–053; более поздние изменения
@@ -544,3 +544,27 @@ Read-only transactional Room snapshot foundation added; no production cutover or
 109 workspace increment: Kotlin category/folder/Back/edit decisions now active; FIFO and stale-view guards preserve current state. No business document writes. Search/tab/rendering and WebView removal still pending. Engineering completion: 107/110.
 
 109 active-session bootstrap: production startup now reads owned shifts/employees together and uses Kotlin normalization. Native first-match active-session model prepared; synchronous JS role helpers still remain until native handlers replace them. Read-only, rollback and v13 retained. Overall: 107/110; WebView removal pending.
+
+## 109 — нативное открытие смены
+
+MPosShiftOpenCommand выбирает сотрудника из сохранённого Room-документа,
+проверяет действующее правило пароля администратора и строит новую смену
+с переносом фактических наличных из последней закрытой смены. Проверка
+сотрудников/истории, recovery gate, запись смены/индексов/маркера проходят
+в одной транзакции. Пароль нативной формы не попадает в JS, JSON-команду,
+базу, маркер операции или диагностику. Само правило пароля не усилено.
+
+JS только резервирует текущую операцию и принимает подтверждённый результат
+для обновления памяти/экрана и прежних Telegram/monthly triggers. Ошибка
+пароля допускает исправление; конфликт данных и неопределённая доставка
+требуют восстановления/перезапуска. Повторные нажатия и замена формы во время
+сохранения не запускают вторую операцию. Нативный callback не повторяется
+автоматически. MPosNativeShiftOpenCommandEnabled=false возвращает прежний путь.
+
+Это завершённый срез внутри 109, а не завершение удаления WebView.
+**107/110 — 97,27%; осталось 3 инженерных этапа.**
+[Оставшаяся работа](NATIVE_RUNTIME_REMAINING_RU.md). Планшетная приёмка pending.
+
+109 opening verification: 551 JS / 438 JVM passed, 0 failed/errors/skips; lint
+0 errors / 22 warnings in unchanged files (7 are online dependency advisories).
+No local product APK assembly; physical acceptance pending. Progress 107/110.

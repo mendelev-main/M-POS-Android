@@ -624,10 +624,22 @@ Native relative floor map, table select/edit-only drag, table forms/menu, bookin
 
 ## 109: native runtime — in progress
 
-Read-only transactional Room snapshot foundation added; no production cutover or WebView removal yet. See [spec](../specs/109-native-runtime/spec.md). Completion remains 107/110; physical acceptance pending.
+Native Room snapshot, current-order restore, workspace routes, paired shift/employee bootstrap and native opening command are connected to production paths. WebView, DOM screen models and remaining JS orchestration are still active. See [spec](../specs/109-native-runtime/spec.md). Completion remains 107/110; physical acceptance pending.
 
 109 session increment: Kotlin now projects restored current-order fields on production startup; existing split-draft validation and print marks preserved, no print retry. Reviewed rollback remains. WebView/navigation removal pending; 107/110 completed.
 
 109 workspace increment: Kotlin category/folder/Back/edit decisions now active; FIFO and stale-view guards preserve current state. No business document writes. Search/tab/rendering and WebView removal still pending. Engineering completion: 107/110.
 
 109 active-session bootstrap: production startup now reads owned shifts/employees together and uses Kotlin normalization. Native first-match active-session model prepared; synchronous JS role helpers still remain until native handlers replace them. Read-only, rollback and v13 retained. Overall: 107/110; WebView removal pending.
+
+109 opening authority: default native form verifies the reviewed administrator
+credential and creates the shift directly in Kotlin/Room through the bounded
+FIFO. Credentials stay outside the WebView; expected live documents, carryover,
+journal and transactional lifecycle checks remain. JS screen/post-commit effects
+and other authentication remain until subsequent 109 increments. Explicit
+MPosNativeShiftOpenCommandEnabled=false rollback; v13/keys unchanged. Physical
+acceptance pending, engineering progress remains 107/110 (97.27%).
+
+109 opening verification: 551 JS / 438 JVM passed, 0 failed/errors/skips; lint
+0 errors / 22 warnings in unchanged files (7 are online dependency advisories).
+No local product APK assembly; physical acceptance pending. Progress 107/110.

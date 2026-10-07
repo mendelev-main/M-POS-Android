@@ -28,6 +28,17 @@ class MPosStorageMirror(
 
     fun close() = queue.close()
 
+    /** Called only by the native opening dialog; credentials never enter the WebView router. */
+    fun openShift(input: JSONObject, credential: String) {
+        val snapshot = input.toString()
+        val requestId = input.getString("requestId")
+        if (!queue.submit({ emitResult(MPosShiftOpenCommand.failure(it).put("requestId", requestId).put("blocked", true)) }) {
+            attempt { MPosShiftOpenCommand(database).commit(JSONObject(snapshot), credential).put("requestId", requestId) }
+                .onSuccess(::emitResult).onFailure { emitResult(MPosShiftOpenCommand.failure(it).put("requestId", requestId)) }
+        }) emitResult(JSONObject().put("requestId", requestId).put("ok", false).put("blocked", false)
+            .put("message", "Сохранение ещё не началось. Повторите открытие смены."))
+    }
+
     private suspend fun <T> attempt(block: suspend () -> T): Result<T> = try {
         Result.success(block())
     } catch (cancelled: CancellationException) {

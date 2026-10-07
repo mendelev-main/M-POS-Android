@@ -19,8 +19,9 @@ import org.json.JSONObject
 import java.util.Locale
 import kotlin.math.floor
 
-/** Native selection/password input; no verifier or persisted authentication data is introduced. */
-class MPosShiftOpenDialog(private val context: Context, private val request: (JSONObject) -> Unit, private val action: (JSONObject) -> Unit) {
+/** Native opening input/commit; compatibility mode retains the reviewed form handler. */
+class MPosShiftOpenDialog(private val context: Context, private val request: (JSONObject) -> Unit, private val action: (JSONObject) -> Unit,
+    private val open: ((JSONObject, String) -> Unit)? = null) {
     private var theme = MPosNativeTheme(context, false)
     private var token = ""
     private var currency = ""
@@ -34,12 +35,18 @@ class MPosShiftOpenDialog(private val context: Context, private val request: (JS
     private var picker: Spinner? = null
     private var error: TextView? = null
     private var employeeCount = 0
+    private var nativeCommit = false
+    private var submittedEmployee = ""
+    private var enteredCredential = ""
+    private var commitPending: String? = null
+    private var commitDispatched = false
     private fun dp(n: Int) = (n * context.resources.displayMetrics.density).toInt()
     fun handle(payload: JSONObject) {
         when (payload.optString("action")) {
             "openFormShow" -> {
                 if (busy || payload.optString("token").isBlank()) return
                 dismiss(); theme = MPosNativeTheme(context, payload.optString("theme") == "dark"); token = payload.getString("token"); currency = payload.optString("currency")
+                nativeCommit = payload.optBoolean("nativeCommit") && open != null
                 val view = AlertDialog.Builder(theme.uiContext).setTitle("Открыть смену").setMessage("Чтение сохранённых данных…")
                     .setNegativeButton("Отмена", null).setNeutralButton("Повторить", null).setPositiveButton("Прежняя форма", null).create()
                 loading = view
@@ -54,10 +61,19 @@ class MPosShiftOpenDialog(private val context: Context, private val request: (JS
                 view.show(); theme.dialog(view); refresh()
             }
             "openFormHide" -> if (payload.optString("token") == token) dismiss()
+            "openFormCommit" -> {
+                if (!nativeCommit || !busy || commitDispatched || payload.optString("token") != token || payload.optString("employeeId") != submittedEmployee) return
+                val id = "native-shift-open-commit-${++generation}"
+                commitPending = id
+                commitDispatched = true
+                val input = JSONObject(payload.toString()).put("requestId", id).put("version", 1)
+                val credential = enteredCredential; enteredCredential = ""
+                open!!.invoke(input, credential)
+            }
             "openFormResult" -> {
                 if (payload.optString("token") != token || !busy) return
                 if (payload.optBoolean("ok")) { dismiss(); return }
-                busy = false; blocked = payload.optBoolean("blocked"); password?.text?.clear()
+                busy = false; blocked = payload.optBoolean("blocked"); commitDispatched = false; enteredCredential = ""; submittedEmployee = ""; password?.text?.clear()
                 error?.text = if (blocked) "Статус сохранения не подтверждён. Перезапустите приложение." else "Смена не открыта. Проверьте сотрудника, пароль администратора и актуальность данных."
                 controls()
             }
@@ -69,6 +85,15 @@ class MPosShiftOpenDialog(private val context: Context, private val request: (JS
         request(JSONObject().put("action", "shiftOpenFormRead").put("requestId", pending))
     }
     fun result(value: JSONObject) {
+        if (commitPending != null && value.optString("requestId") == commitPending) {
+            commitPending = null
+            // Only acknowledged state/fixed failures leave the native boundary, never credentials.
+            val reply = JSONObject().put("action", "committed").put("token", token).put("ok", value.optBoolean("ok"))
+                .put("blocked", value.optBoolean("blocked")).put("message", value.optString("message"))
+            if (value.optBoolean("ok")) reply.put("shift", value.getJSONObject("shift")).put("shifts", value.getJSONArray("shifts"))
+            action(reply)
+            return
+        }
         if (pending == null || value.optString("requestId") != pending || loading == null) return
         pending = null
         val opening = value.optDouble("openingCash")
@@ -139,7 +164,10 @@ class MPosShiftOpenDialog(private val context: Context, private val request: (JS
                 if (admin && secret.text.isBlank()) { secret.error = "Введите пароль администратора"; return@setOnClickListener }
                 val entered = if (admin) secret.text.toString() else ""
                 secret.text.clear(); busy = true; controls(); error?.text = "Сохранение…"
-                action(JSONObject().put("action", "submit").put("token", token).put("employeeId", selected.getString("id")).put("password", entered))
+                if (nativeCommit) {
+                    submittedEmployee = selected.getString("id"); enteredCredential = entered
+                    action(JSONObject().put("action", "prepare").put("token", token).put("employeeId", submittedEmployee))
+                } else action(JSONObject().put("action", "submit").put("token", token).put("employeeId", selected.getString("id")).put("password", entered))
             }
             controls()
         }
@@ -151,5 +179,5 @@ class MPosShiftOpenDialog(private val context: Context, private val request: (JS
         dialog?.let { it.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = !busy && !blocked && employeeCount > 0; it.getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled = !busy; it.setCancelable(!busy); it.setCanceledOnTouchOutside(!busy) }
     }
     private fun cancel(name: String) { if (busy) return; val old = token; dismiss(); action(JSONObject().put("action", name).put("token", old)) }
-    fun dismiss() { pending = null; generation++; password?.text?.clear(); loading?.setOnCancelListener(null); loading?.dismiss(); loading = null; dialog?.setOnCancelListener(null); dialog?.dismiss(); dialog = null; token = ""; busy = false; blocked = false; password = null; picker = null; error = null }
+    fun dismiss() { pending = null; commitPending = null; commitDispatched = false; enteredCredential = ""; submittedEmployee = ""; nativeCommit = false; generation++; password?.text?.clear(); loading?.setOnCancelListener(null); loading?.dismiss(); loading = null; dialog?.setOnCancelListener(null); dialog?.dismiss(); dialog = null; token = ""; busy = false; blocked = false; password = null; picker = null; error = null }
 }

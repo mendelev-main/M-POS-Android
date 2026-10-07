@@ -166,9 +166,10 @@ class MainActivity : AppCompatActivity() {
         shiftCloseDialog = MPosShiftCloseDialog(this, nativeStorageMirror::handle) { action ->
             callJavaScript("window.MPosCore&&window.MPosCore.NativeCloseForm&&window.MPosCore.NativeCloseForm.handleAction($action);")
         }
-        shiftOpenDialog = MPosShiftOpenDialog(this, nativeStorageMirror::handle) { action ->
-            callJavaScript("window.MPosCore&&window.MPosCore.NativeOpenForm&&window.MPosCore.NativeOpenForm.handleAction($action);")
-        }
+        shiftOpenDialog = MPosShiftOpenDialog(this, nativeStorageMirror::handle, { action ->
+            val serialized = com.mendelev.mpos.data.MPosBridgeJson.serialize(action)
+            callJavaScript("window.MPosCore&&window.MPosCore.NativeOpenForm&&window.MPosCore.NativeOpenForm.handleAction($serialized);")
+        }, nativeStorageMirror::openShift)
         cardConfirmationDialog = MPosCardConfirmationDialog(this) { action ->
             callJavaScript("window.MPosCore&&window.MPosCore.NativeCardConfirmation&&window.MPosCore.NativeCardConfirmation.handleAction($action);")
         }
