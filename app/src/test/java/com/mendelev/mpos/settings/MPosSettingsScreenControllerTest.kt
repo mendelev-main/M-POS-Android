@@ -265,4 +265,58 @@ class MPosSettingsScreenControllerTest {
         controller.consumeBack(); assertTrue(dialog.isShowing); assertEquals("cancel", calls.last().getString("action")); controller.dismiss()
     }
 
+    private fun historyModel(token: String, dark: Boolean = false): JSONObject {
+        val rows = JSONArray().put(JSONObject().put("kind", "heading").put("text", "История чеков"))
+        repeat(50) { index -> rows.put(JSONObject().put("kind", "button").put("key", "r$index").put("receiptRow", true).put("label", "Чек ${index + 1}    12,50 BYN\n07.10.2026 · Наличные\nНа месте").put("selected", index == 0)) }
+        val detail = JSONArray().put(JSONObject().put("kind", "heading").put("text", "Чек 1"))
+            .put(JSONObject().put("kind", "text").put("text", "07.10.2026 · Наличные · На месте"))
+            .put(JSONObject().put("kind", "metric").put("label", "Молоко × 1").put("value", "12,50"))
+            .put(JSONObject().put("kind", "metric").put("label", "Итого").put("value", "12,50 BYN").put("primary", true))
+            .put(JSONObject().put("kind", "button").put("key", "print").put("label", "Печать"))
+            .put(JSONObject().put("kind", "button").put("key", "return").put("label", "Вернуть").put("danger", true))
+        return JSONObject().put("action", "show").put("token", token).put("theme", if (dark) "dark" else "light")
+            .put("rect", JSONObject().put("left", 0).put("top", 0).put("width", 1040).put("height", 640))
+            .put("viewportWidth", 1040).put("viewportHeight", 640)
+            .put("items", JSONArray().put(JSONObject().put("kind", "heading").put("text", "Чеки"))
+                .put(JSONObject().put("kind", "columns").put("items", JSONArray()
+                    .put(JSONObject().put("scrollKey", "list-page-1").put("items", rows))
+                    .put(JSONObject().put("scrollKey", "detail-1").put("items", detail)))))
+    }
+    @Test fun receiptHistoryRetainsIndependentScrollAfterSelectionAndLocksRepeatedActions() {
+        val (controller, calls, activity) = setup()
+        val host = activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
+        host.layout(0, 0, 1040, 640)
+        controller.handle(historyModel("h1")); ShadowLooper.idleMainLooper()
+        host.measure(View.MeasureSpec.makeMeasureSpec(1040, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(640, View.MeasureSpec.EXACTLY)); host.layout(0, 0, 1040, 640)
+        val list = nodes(host).filterIsInstance<android.widget.ScrollView>().first { scroll -> nodes(scroll).filterIsInstance<Button>().size == 50 }
+        list.scrollTo(0, 200)
+        controller.handle(historyModel("h2")); ShadowLooper.idleMainLooper()
+        host.measure(View.MeasureSpec.makeMeasureSpec(1040, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(640, View.MeasureSpec.EXACTLY)); host.layout(0, 0, 1040, 640); ShadowLooper.idleMainLooper()
+        val next = nodes(host).filterIsInstance<android.widget.ScrollView>().first { scroll -> nodes(scroll).filterIsInstance<Button>().size == 50 }
+        assertEquals(200, next.scrollY)
+        val print = nodes(host).filterIsInstance<Button>().first { it.text == "Печать" }
+        print.performClick(); print.performClick(); assertEquals(1, calls.size)
+        controller.handle(JSONObject().put("action", "formResult").put("token", "h2")); assertTrue(print.isEnabled)
+        controller.dismiss()
+    }
+    @Test fun receiptHistoryUsesSharedPalettesResponsiveColumnsAndSyntheticPreviews() {
+        val (controller, _, activity) = setup()
+        val host = activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
+        for (dark in listOf(false, true)) {
+            host.layout(0, 0, 1040, 640); controller.handle(historyModel("preview-$dark", dark)); ShadowLooper.idleMainLooper()
+            host.measure(View.MeasureSpec.makeMeasureSpec(1040, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(640, View.MeasureSpec.EXACTLY)); host.layout(0, 0, 1040, 640); ShadowLooper.idleMainLooper()
+            val bitmap = android.graphics.Bitmap.createBitmap(1040, 640, android.graphics.Bitmap.Config.ARGB_8888)
+            host.draw(android.graphics.Canvas(bitmap))
+            val file = java.io.File("build/design-previews/receipts-${if (dark) "dark" else "light"}.png")
+            file.parentFile!!.mkdirs(); file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }; bitmap.recycle()
+            assertTrue(file.length() > 1000)
+            val columns = nodes(host).filterIsInstance<android.widget.LinearLayout>().first { it.childCount == 2 && it.getChildAt(0) is android.widget.ScrollView && it.getChildAt(1) is android.widget.ScrollView }
+            assertEquals(android.widget.LinearLayout.HORIZONTAL, columns.orientation)
+            controller.dismiss()
+        }
+        host.layout(0, 0, 600, 640); controller.handle(historyModel("narrow")); ShadowLooper.idleMainLooper()
+        val columns = nodes(host).filterIsInstance<android.widget.LinearLayout>().first { it.childCount == 2 && it.getChildAt(0) is android.widget.ScrollView && it.getChildAt(1) is android.widget.ScrollView }
+        assertEquals(android.widget.LinearLayout.VERTICAL, columns.orientation); controller.dismiss()
+    }
+
 }

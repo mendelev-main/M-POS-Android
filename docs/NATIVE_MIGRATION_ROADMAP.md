@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **102/110 выполнено (92,73%)**
-после 103. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **103/110 выполнено (93,64%)**
+после 104. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -601,3 +601,7 @@ Kotlin expanded editor/contextual forms cover all reviewed sections and mounted 
 ## 103 — native payment workspace
 
 Main payment/receipt preview, tender/quick values/change, split parts, explicit card terminal confirmation, offline loyalty decision and completion receipt use native presentation. Mounted opaque node/token actions retain business ownership; async stock/reward/progress/settlement locks survive context replacement. Hardware back waits for reviewed split-exit refusal. Existing native cash/count/amount forms stay integrated. User explicitly retained the source ordinary-card-cancel → empty split behavior. Source formatting/DOM/payment compatibility persists until 109, no measured performance/physical acceptance claim. Next 104: receipt history/details/refunds. [103](../specs/103-native-payment-screen/spec.md).
+
+## 104 — native receipt history/details/full returns
+
+Native history retains 50-row Room paging, loading/error/retry, mounted selection/print identity. Kotlin provides independently scrolling responsive history/detail panels and full return confirmation/result. Existing 050 return authority and saved stock restore, source legacy fallback, current-shift cash accounting and bank-terminal refund semantics remain. Unknown local result blocks resubmit; native presentation rollback does not roll back storage authority. Web compatibility remains 109; physical acceptance 110 pending. [104](../specs/104-native-receipt-history/spec.md). Next 105 — parked orders/customer/loyalty presentation.

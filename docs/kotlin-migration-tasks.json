@@ -684,9 +684,10 @@
     {
       "id": "104",
       "title": "Нативная история чеков, детали и возвраты",
-      "status": "planned",
+      "status": "done",
       "area": "P7/UI",
-      "dependencies": "050,097"
+      "dependencies": "050,097",
+      "spec": "specs/104-native-receipt-history/spec.md"
     },
     {
       "id": "105",

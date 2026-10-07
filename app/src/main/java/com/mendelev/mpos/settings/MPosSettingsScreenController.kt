@@ -29,6 +29,9 @@ class MPosSettingsScreenController(
     private var token = ""
     private var busy = false
     private var externalBusy = false
+    private var presentationWidth = 0
+    private var presentationHeight = 0
+    private val receiptScroll = linkedMapOf<String, Int>()
     private var deferCancel = false
     private var blocked = false
     private var form = false
@@ -75,6 +78,8 @@ class MPosSettingsScreenController(
         val bounds = if (!nativeForm) MPosShiftScreenController.bounds(payload, host.width, host.height) ?: return else null
         dismiss(); token = next; form = nativeForm; externalBusy = payload.optBoolean("pending"); blocked = payload.optBoolean("blocked"); deferCancel = payload.optBoolean("deferCancel")
         theme = MPosNativeTheme(context, payload.optString("theme") == "dark")
+        presentationWidth = bounds?.width ?: context.resources.displayMetrics.widthPixels
+        presentationHeight = bounds?.height ?: context.resources.displayMetrics.heightPixels
         updating = true
         val content = column(24); this.content = content
         content.setBackgroundColor(if (form) theme.surface else theme.bg)
@@ -115,7 +120,10 @@ class MPosSettingsScreenController(
             overlay.layoutParams = FrameLayout.LayoutParams(requireNotNull(bounds).width, bounds.height).apply {
                 leftMargin = bounds.left; topMargin = bounds.top
             }
+            error = TextView(theme.uiContext).apply { theme.text(this, 14f); setTextColor(theme.danger) }
+            content.addView(error, params())
             overlay.visibility = View.VISIBLE
+            updateControls()
         }
     }
     private fun render(items: JSONArray, parent: LinearLayout) {
@@ -128,6 +136,31 @@ class MPosSettingsScreenController(
                     parent.addView(TextView(theme.uiContext).apply {
                         text = item.optString("text"); theme.text(this, if (heading) 20f else 14f, if (heading) 700 else 400, !heading)
                     }, params())
+                }
+                "columns" -> {
+                    val wide = presentationWidth >= theme.dp(760)
+                    val columns = LinearLayout(theme.uiContext).apply { orientation = if (wide) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL }
+                    val entries = item.optJSONArray("items") ?: JSONArray()
+                    for (index in 0 until entries.length()) {
+                        val entry = entries.optJSONObject(index) ?: continue
+                        val key = entry.optString("scrollKey")
+                        val card = column(16).apply { background = theme.shape(theme.surface, 22, true) }
+                        render(entry.optJSONArray("items") ?: JSONArray(), card)
+                        val restoreY = receiptScroll[key] ?: 0
+                        val scroll = ScrollView(theme.uiContext).apply {
+                            isFillViewport = false; addView(card)
+                            setOnScrollChangeListener { _, _, y, _, _ ->
+                                receiptScroll[key] = y
+                                if (receiptScroll.size > 32) receiptScroll.remove(receiptScroll.keys.first())
+                            }
+                            post { scrollTo(0, restoreY) }
+                        }
+                        val height = (presentationHeight - theme.dp(112)).coerceAtLeast(theme.dp(240))
+                        columns.addView(scroll, LinearLayout.LayoutParams(if (wide) 0 else ViewGroup.LayoutParams.MATCH_PARENT, height, if (wide) if (index == 0) 0.9f else 1.3f else 0f).apply {
+                            if (wide && index > 0) leftMargin = theme.dp(16) else if (!wide && index > 0) topMargin = theme.dp(16)
+                        })
+                    }
+                    parent.addView(columns, params())
                 }
                 "card" -> {
                     val card = column(16).apply { background = theme.shape(theme.surface, 22, true) }
@@ -144,6 +177,10 @@ class MPosSettingsScreenController(
                     }
                     if (item.optBoolean("disabled")) immutableControls += button
                     controls += button
+                    if (item.optBoolean("receiptRow")) {
+                        button.gravity = android.view.Gravity.START or android.view.Gravity.CENTER_VERTICAL
+                        parent.addView(button, params()); continue
+                    }
                     val row = (if (parent.isNotEmpty()) parent.getChildAt(parent.childCount - 1) else null) as? MPosSettingsActionRow
                         ?: MPosSettingsActionRow(theme.uiContext, theme.dp(8)).also { parent.addView(it, params()) }
                     row.addView(button)
