@@ -708,9 +708,10 @@
     {
       "id": "107",
       "title": "Нативные экраны аналитики",
-      "status": "planned",
+      "status": "done",
       "area": "P12/UI",
-      "dependencies": "097"
+      "dependencies": "097",
+      "spec": "specs/107-native-analytics-screens/spec.md"
     },
     {
       "id": "108",

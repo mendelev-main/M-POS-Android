@@ -424,3 +424,10 @@ Actual reviewed page/modal renderers and finalizePayment verify formatted receip
 - Async save/confirm/back await source/native acknowledgement, duplicate gestures are suppressed, failed save retains cart/document. Source report generation sequence guards remain.
 - Inventory fixation applies current stock; completion cannot overwrite later sales. Supplier rights and empty-binding filled-cart policy explicitly preserved. Cancellation stock/text ambiguity remains documented in 095/106.
 - `MPosNativeWarehouseUiEnabled=false` restores reviewed Web presentation without rolling back native storage/commands. DOM compatibility 109 and physical acceptance 110 pending.
+
+## 107 — native analytics UI
+
+- 097 supplies sales aggregates; no finance/stock/receipt/refund/storage/v13 changes. Source formatting, admin financial visibility, category/product quantities and top-ten/order rules retained. Non-admin employee sums are omitted, payment percentages remain visible.
+- Native dates/presets/period modal invoke original mounted handlers; empty/invalid period checks remain. User confirmed inline reversed-range state-before-warning behavior on 7 October 2026.
+- Latest visible-period guards/error/retry/no-JS-fallback and original loyalty read/key/error rules remain. Native DatePicker locks async replacement until dismissal, with stale result rechecked after date selection; old pickers close on screen replacement.
+- Recycled native chart rows and responsive cards preserve source labels/relative widths. UI flag MPosNativeAnalyticsUiEnabled=false restores presentation while retaining 097 authority. DOM 109 / physical 110 pending.

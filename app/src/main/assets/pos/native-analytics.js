@@ -2,7 +2,9 @@
  'use strict';
  const core=global.MPosCore,original=global.renderAnalyticsScreen,oldData=global.analyticsData,oldInventory=global.inventoryCostValue;
  if(!core?.Analytics||typeof original!=='function')return;
- let scoped=null,cached=null,generation=0;
+ let scoped=null,cached=null,generation=0,deferredDate=null;
+ const ui=core.AnalyticsUi||= {};
+ ui.resumeDate=function(){const deferred=deferredDate;deferredDate=null;if(deferred)apply(deferred.ticket,deferred.period,deferred.content)};
  const disabled=()=>global.MPosNativeAnalyticsEnabled===false;
  function period(){return {from:state.analyticsFrom||'',to:state.analyticsTo||''}}
  function input(){return {version:1,...period(),now:Date.now(),zone:Intl.DateTimeFormat().resolvedOptions().timeZone}}
@@ -15,6 +17,7 @@
  global.inventoryCostValue=function(){if(disabled())return oldInventory.apply(this,arguments);if(!scoped)throw Error('Аналитика ещё не загружена');return scoped.inventoryValue};
  function apply(ticket,p,content){
   if(!current(ticket,p))return;
+  if(ui.dateEditing){deferredDate={ticket,period:p,content};return}
   const node=document.querySelector('[data-mpos-native-analytics]');if(!node)return;
   const focused=document.activeElement;
   if(focused&&node.contains?.(focused)&&focused.matches?.('input[type="date"]')){focused.addEventListener('blur',()=>apply(ticket,p,content),{once:true});return}

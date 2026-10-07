@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **105/110 выполнено (95,45%)**
-после 106. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **106/110 выполнено (96,36%)**
+после 107. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -613,3 +613,7 @@ Park label/list/resume/delete, customer picker/search/create/profile/gift and lo
 ## 106 — native warehouse/purchase/receiving/inventory presentation
 
 Shared Kotlin cards, date fields, recycled report tables and original mounted actions cover warehouse reports/export, suppliers, purchase quantities/history/detail/share, receiving drafts/confirmation/history and inventory configuration/recount/summary/cancel. Existing 091–096 persisted authorities and formulas remain; receiving Back waits for draft persistence. Inventory completion preserves sales after item fixation. Cancellation still removes draft without stock rollback; source text ambiguity pending clarification. [106](../specs/106-native-warehouse-screens/spec.md). Next 107 analytics, 108 hall, 109 compatibility DOM removal; physical acceptance 110 remains pending.
+
+## 107 — native analytics presentation
+
+Native responsive KPI/chart/date/preset/loading/retry screens retain 097 Room calculation authority, reviewed formatting/admin visibility and loyalty reads. Hidden cashier employee amounts are omitted from native model/accessibility. Charts recycle visible rows; picker focus defers async DOM replacement and releases only a still-current period result. User explicitly retained reversed inline-date state/warning semantics. [107](../specs/107-native-analytics-screens/spec.md). Next 108 hall/bookings; 109 compatibility DOM removal and 110 physical acceptance remain pending.

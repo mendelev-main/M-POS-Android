@@ -165,7 +165,9 @@ class MPosSettingsScreenController(
                 }
                 "grid" -> {
                     val entries = item.optJSONArray("items") ?: JSONArray()
-                    val count = item.optInt("columns", 3).coerceIn(1, 4)
+                    val maximum = item.optInt("columns", 3).coerceIn(1, 4)
+                    val minimum = item.optInt("minCellWidth")
+                    val count = if (minimum > 0) ((presentationWidth - theme.dp(48)) / theme.dp(minimum)).coerceIn(1, maximum) else maximum
                     for (start in 0 until entries.length() step count) {
                         val row = LinearLayout(theme.uiContext)
                         for (index in start until minOf(start + count, entries.length())) {
@@ -175,6 +177,14 @@ class MPosSettingsScreenController(
                         }
                         parent.addView(row, params())
                     }
+                }
+                "bars" -> {
+                    val key = "bars-" + item.optString("scrollKey")
+                    val bars = MPosSettingsBars(theme, item.optJSONArray("rows") ?: JSONArray(),
+                        (presentationHeight - theme.dp(160)).coerceAtLeast(theme.dp(240)), tableScroll[key] ?: (0 to 0)) { row, top ->
+                        tableScroll[key] = row to top; if (tableScroll.size > 32) tableScroll.remove(tableScroll.keys.first())
+                    }
+                    parent.addView(bars)
                 }
                 "table" -> {
                     val key = item.optString("scrollKey")
@@ -250,7 +260,12 @@ class MPosSettingsScreenController(
         } else if (old is MPosSettingsDateField && item.optString("type") == "date") {
             (old.parent as? ViewGroup)?.removeView(old); old.bind(item.optString("value")); old
         } else when (item.optString("type")) {
-            "date" -> MPosSettingsDateField(theme) { changed() }.apply { bind(item.optString("value")) }
+            "date" -> {
+                val epoch = token
+                MPosSettingsDateField(theme, editing = { active ->
+                    action(JSONObject().put("action", "dateEditing").put("token", epoch).put("key", key).put("editing", active))
+                }) { if (token == epoch) changed() }.apply { bind(item.optString("value")) }
+            }
             "checkbox" -> CheckBox(theme.uiContext).apply {
                 theme.text(this); buttonTintList = android.content.res.ColorStateList.valueOf(theme.accent)
                 text = item.optString("label"); minHeight = theme.dp(48)
@@ -361,6 +376,7 @@ class MPosSettingsScreenController(
             root.removeAllViews(); fields.clear(); fieldRows.clear(); fieldLabels.clear(); controls.clear(); immutableControls.clear()
             render(payload.optJSONArray("items") ?: JSONArray(), root)
             // Removed credentials/drafts cannot remain addressable by an old callback.
+            reuseFields.filterKeys { it !in fields }.values.filterIsInstance<MPosSettingsDateField>().forEach { it.dismissPicker() }
             reuseFields.filterKeys { it !in fields }.values.filterIsInstance<EditText>().forEach { it.setText("") }
             dirtyFields.retainAll(fields.keys)
             error?.let { (it.parent as? ViewGroup)?.removeView(it); root.addView(it, params()) }
@@ -398,6 +414,7 @@ class MPosSettingsScreenController(
     fun dismiss() {
         updating = true
         // Wipe form text before releasing references, including passwords and tokens.
+        fields.values.filterIsInstance<MPosSettingsDateField>().forEach { it.dismissPicker() }
         fields.values.filterIsInstance<EditText>().forEach { it.setText("") }
         dialog?.setOnCancelListener(null); dialog?.dismiss(); dialog = null
         overlay.visibility = View.GONE; overlay.removeAllViews()
