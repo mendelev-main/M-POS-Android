@@ -580,9 +580,10 @@
     {
       "id": "091",
       "title": "Поставщики: бизнес-команды и локальное хранение",
-      "status": "planned",
+      "status": "done",
       "area": "P10",
-      "dependencies": "080"
+      "dependencies": "080",
+      "spec": "specs/091-native-supplier-commands/spec.md"
     },
     {
       "id": "092",

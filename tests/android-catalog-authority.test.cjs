@@ -44,9 +44,9 @@ function host({data=new Map(),room={initialized:false,found:false,payload:null},
    case 'catalogRemove':room.found=false;room.payload=null;break;
    case 'catalogParity':result={ok:true,matches:true,shadowCaughtUp:true};break;
   }
-  if((command.action.startsWith('workspace')||command.action.startsWith('employee')||command.action.startsWith('shift')||command.action.startsWith('order')||command.action.startsWith('parked')||command.action.startsWith('recovery'))&&!rejected){
+  if((command.action.startsWith('workspace')||command.action.startsWith('employee')||command.action.startsWith('shift')||command.action.startsWith('order')||command.action.startsWith('parked')||command.action.startsWith('recovery')||command.action.startsWith('supply'))&&!rejected){
    const entry=room.workspace[command.key]??={initialized:false,found:false,payload:null};
-   switch(command.action.replace(/^(employee|shift|order|parked|recovery)/,'workspace')){
+   switch(command.action.replace(/^(employee|shift|order|parked|recovery|supply)/,'workspace')){
     case 'workspaceStatus':result.initialized=entry.initialized;break;
     case 'workspaceInitialize':if(!entry.initialized){entry.initialized=true;entry.found=typeof command.payload==='string';entry.payload=entry.found?command.payload:null;}break;
     case 'workspaceWrite':entry.found=true;entry.payload=command.payload;break;
@@ -135,10 +135,10 @@ test('absence null and removal preserve fallback semantics without resurrecting 
  assert.equal(await restart.context.MPosCore.Storage.get('products','missing'),'missing');
 });
 
-test('startup shadow mirroring excludes the authoritative products key',async()=>{
+test('startup shadow mirroring excludes authoritative products and suppliers keys',async()=>{
  const h=host({data:new Map([['products',products('Old')],['suppliers',[]]])});
  const startup=[...h.timers.values()].find(timer=>timer.delay===0);startup.fn();
- assert.equal(h.calls.filter(x=>x==='native:put').length,1);
+ assert.equal(h.calls.filter(x=>x==='native:put').length,0);
  assert.equal(h.room.initialized,false);
 });
 

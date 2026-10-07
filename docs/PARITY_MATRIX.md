@@ -347,3 +347,8 @@ No catalogue/media scheduling or backup format change. Native menu deadline 60s,
 | Payment-only network and native cancellation | Post-commit source trigger, JS lifecycle/no-op/failure/coalescing, HTTP route/deadline/no retry | Pending |
 
 Current AGENTS 7 supersedes 033 ordinary-success sends; failed retry remains next-payment only. Transport rollback retains native gate. See [090](../specs/090-native-payment-availability/spec.md).
+
+
+## 091 — supplier boundary
+
+Create/edit/delete and bindings: actual source + Room tests; raw JSON/unknown fields/null/import/late shadows/reopen: native authority tests. No history cascade; user confirms existing rights. Physical acceptance pending. [091](../specs/091-native-supplier-commands/spec.md).

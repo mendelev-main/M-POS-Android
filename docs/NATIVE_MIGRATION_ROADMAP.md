@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **89/110 выполнено (80,91%)**
-после 090. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **90/110 выполнено (81,82%)**
+после 091. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -536,3 +536,8 @@ Kotlin owns exact configured menu/media HTTP routes, unchanged JSON bytes, statu
 ## 090 — native availability, durable payment gate
 
 Native Room catalogue calculations and one-use per-receipt permit precede OkHttp publication. Current AGENTS 7 replaces historical 033 ordinary-success stock/manual triggers; only post-commit payments publish, with no restart/online/foreground replay. Internal revision/ticket metadata remains outside v13, compatible revision is retained. Next 091: suppliers business commands and local storage. See [090](../specs/090-native-payment-availability/spec.md).
+
+
+## 091 — suppliers
+
+Native supply JSON ownership and expected/candidate supplier commands; persisted admin/open-shift delete gate, source create/edit rights retained explicitly. Next 092 purchase-order commands. [091](../specs/091-native-supplier-commands/spec.md).

@@ -34,16 +34,16 @@
     });
   }
 
-  const nativeKeys=new Set(['products','layout','posNavigation','employees','shifts','orders','parked','currentOrderSession','criticalStorageJournal','webOrderAcceptances','webOrderReadyJournal']);
+  const nativeKeys=new Set(['products','layout','posNavigation','employees','shifts','orders','parked','currentOrderSession','criticalStorageJournal','suppliers','webOrderAcceptances','webOrderReadyJournal']);
   const ready=new Map();
   let cacheFailures=0;
-  const cacheFailuresByKey={products:0,layout:0,posNavigation:0,employees:0,shifts:0,orders:0,parked:0,currentOrderSession:0,criticalStorageJournal:0,webOrderAcceptances:0,webOrderReadyJournal:0};
+  const cacheFailuresByKey={products:0,layout:0,posNavigation:0,employees:0,shifts:0,orders:0,parked:0,currentOrderSession:0,criticalStorageJournal:0,suppliers:0,webOrderAcceptances:0,webOrderReadyJournal:0};
   function requireNative(result,authority=false){
     if(!result?.ok)throw new Error(result?.reason||result?.message||'M POS native storage operation failed');
     if(authority&&result.authoritative!==true)throw new Error('M POS native storage authority missing');
     return result;
   }
-  function domainAction(key,action){return (key==='products'?'catalog':key==='employees'?'employee':key==='shifts'?'shift':key==='orders'?'order':key==='parked'?'parked':(key==='currentOrderSession'||key==='criticalStorageJournal')?'recovery':(key==='webOrderAcceptances'||key==='webOrderReadyJournal')?'webJournal':'workspace')+action}
+  function domainAction(key,action){return (key==='products'?'catalog':key==='employees'?'employee':key==='shifts'?'shift':key==='orders'?'order':key==='parked'?'parked':(key==='currentOrderSession'||key==='criticalStorageJournal')?'recovery':(key==='webOrderAcceptances'||key==='webOrderReadyJournal')?'webJournal':key==='suppliers'?'supply':'workspace')+action}
   function initializeNative(key){
     if(!ready.has(key)){
       const promise=(async()=>{
@@ -91,7 +91,7 @@
         return value;
       }catch(error){
         if(onError)onError(error);else console.error('[MPosStorage] read failed',key,error);
-        if(key==='criticalStorageJournal'||key==='webOrderAcceptances'||key==='webOrderReadyJournal')throw error;
+        if(key==='suppliers'||key==='criticalStorageJournal'||key==='webOrderAcceptances'||key==='webOrderReadyJournal')throw error;
         return fallback;
       }
     },
@@ -152,6 +152,9 @@
   });
   mposCore.CustomerContext=Object.freeze({
     async calculate(input){return requireNative(await request('customerContextRead',{payload:JSON.stringify(input)}),true);}
+  });
+  mposCore.SupplierCommands=Object.freeze({
+    async commit(input){const payload=JSON.stringify(input),operation=input.operation;await initializeNative('suppliers');if(operation==='delete')await Promise.all(['employees','shifts'].map(initializeNative));return requireNative(await request('supplierCommit',{payload}),true);}
   });
   mposCore.EmployeeCommands=Object.freeze({
     async commit(input){return requireNative(await request('employeeCommit',{payload:JSON.stringify(input)}),true);}

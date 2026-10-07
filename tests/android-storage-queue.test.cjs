@@ -23,16 +23,16 @@ function host({localFails=false,nativeFails=false}={}){
 }
 
 test('native failure cannot turn successful local storage write into failed supplier persistence',async()=>{
- const h=host({nativeFails:true});await h.context.MPosCore.Storage.set('suppliers',[{id:'supplier-1'}]);
+ const h=host({nativeFails:true});await h.context.MPosCore.Storage.set('discounts',[{id:'supplier-1'}]);
  assert.equal(h.calls[0],'local');assert.equal(h.calls[1].action,'put');
- assert.equal(h.data.get('suppliers')[0].id,'supplier-1');
+ assert.equal(h.data.get('discounts')[0].id,'supplier-1');
  assert.equal(h.context.MPosCore.Storage.describe().nativeShadowAuthoritative,false);
 });
 
 test('failed local persistence is never mirrored as a committed operation',async()=>{
  const h=host({localFails:true});
- await assert.rejects(h.context.MPosCore.Storage.set('suppliers',[]),/local failure/);
- assert.deepEqual(h.calls,['local']);assert.equal(h.data.has('suppliers'),false);
+ await assert.rejects(h.context.MPosCore.Storage.set('discounts',[]),/local failure/);
+ assert.deepEqual(h.calls,['local']);assert.equal(h.data.has('discounts'),false);
 });
 
 test('comparison cannot report healthy parity while pending shadow changes exist',async()=>{
@@ -70,3 +70,11 @@ test('customer context freezes compatible session and requires correlated native
 test('loyalty eligibility model is immutable correlated read without sale persistence',async()=>{const h=host(),input={version:1,redemptions:{p:1},programs:[{id:'p',rewards:1}]};const p=h.context.MPosCore.LoyaltyEligibility.calculate(input),request=h.calls.at(-1);assert.equal(request.action,'loyaltyEligibilityRead');input.redemptions.p=2;assert.equal(JSON.parse(request.payload).redemptions.p,1);h.context.__nativeStorageResult({requestId:request.requestId,ok:true,authoritative:true,valid:true});assert.equal((await p).valid,true);assert.equal(h.data.size,0)});
 test('loyalty journal command freezes attempt and requires native durability',async()=>{const h=host(),input={version:1,operation:'claim',id:'o',kind:'sale',at:10};const p=h.context.MPosCore.LoyaltyJournal.execute(input),r=h.calls.at(-1);assert.equal(r.action,'loyaltyJournal');input.id='changed';assert.equal(JSON.parse(r.payload).id,'o');h.context.__nativeStorageResult({requestId:r.requestId,ok:true,authoritative:true,send:true});assert.equal((await p).send,true);const bad=h.context.MPosCore.LoyaltyJournal.execute(input),s=h.calls.at(-1);h.context.__nativeStorageResult({requestId:s.requestId,ok:false,message:'disk failure'});await assert.rejects(bad,/disk failure/)});
 test('WEB journal ownership migrates once and unreadable journal cannot fall back to empty',async()=>{const h=host(),p=h.context.MPosCore.Storage.get('webOrderAcceptances',{});const status=h.calls.at(-1);assert.equal(status.action,'webJournalStatus');h.context.__nativeStorageResult({requestId:status.requestId,ok:true,initialized:false});await new Promise(r=>setImmediate(r));const init=h.calls.at(-1);assert.equal(init.action,'webJournalInitialize');h.context.__nativeStorageResult({requestId:init.requestId,ok:true,authoritative:true});await new Promise(r=>setImmediate(r));const read=h.calls.at(-1);assert.equal(read.action,'webJournalRead');h.context.__nativeStorageResult({requestId:read.requestId,ok:false,message:'read failure'});await assert.rejects(p,/read failure/)});
+
+test('supplier command freezes expected/candidate before authority initialization',async()=>{
+ const h=host(),input={version:1,operation:'save',id:'s',expected:[{id:'s'}],next:[{id:'s',name:'New',productIds:[]}]};
+ const p=h.context.MPosCore.SupplierCommands.commit(input),status=h.calls.at(-1);assert.equal(status.action,'supplyStatus');
+ input.expected[0].id='changed';h.context.__nativeStorageResult({requestId:status.requestId,ok:true,initialized:true});
+ await new Promise(r=>setImmediate(r));const command=h.calls.at(-1);assert.equal(command.action,'supplierCommit');assert.equal(JSON.parse(command.payload).expected[0].id,'s');
+ h.context.__nativeStorageResult({requestId:command.requestId,ok:true,authoritative:true});await p;
+});
