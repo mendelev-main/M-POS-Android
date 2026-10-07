@@ -700,9 +700,10 @@
     {
       "id": "106",
       "title": "Нативные экраны склада/закупок/приёмки/инвентаризации",
-      "status": "planned",
+      "status": "done",
       "area": "P10/UI",
-      "dependencies": "091,092,093,094,095,096"
+      "dependencies": "091,092,093,094,095,096",
+      "spec": "specs/106-native-warehouse-screens/spec.md"
     },
     {
       "id": "107",

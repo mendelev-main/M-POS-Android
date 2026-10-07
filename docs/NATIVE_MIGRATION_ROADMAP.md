@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **104/110 выполнено (94,55%)**
-после 105. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **105/110 выполнено (95,45%)**
+после 106. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -609,3 +609,7 @@ Native history retains 50-row Room paging, loading/error/retry, mounted selectio
 ## 105 — native parked/customer/loyalty surfaces
 
 Park label/list/resume/delete, customer picker/search/create/profile/gift and loyalty administrator program/client screens/editor/adjustment use shared Kotlin presentation. Source permissions, persisted command authority, gift allocation and outbox rules remain. Mutating/navigation promises are awaited even when native command adapters replace source functions after UI initialization; read search remains editable. Cashier stale-response guards preserved. Native overlay geometry patches keep stable fields/focus on keyboard resize. [105](../specs/105-native-parked-customer-loyalty/spec.md). Next 106 — warehouse/purchases/receiving/inventory; compatibility DOM removal 109 and physical acceptance 110 remain.
+
+## 106 — native warehouse/purchase/receiving/inventory presentation
+
+Shared Kotlin cards, date fields, recycled report tables and original mounted actions cover warehouse reports/export, suppliers, purchase quantities/history/detail/share, receiving drafts/confirmation/history and inventory configuration/recount/summary/cancel. Existing 091–096 persisted authorities and formulas remain; receiving Back waits for draft persistence. Inventory completion preserves sales after item fixation. Cancellation still removes draft without stock rollback; source text ambiguity pending clarification. [106](../specs/106-native-warehouse-screens/spec.md). Next 107 analytics, 108 hall, 109 compatibility DOM removal; physical acceptance 110 remains pending.

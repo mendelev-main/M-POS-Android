@@ -31,6 +31,7 @@ class MPosSettingsScreenController(
     private var externalBusy = false
     private var presentationWidth = 0
     private var presentationHeight = 0
+    private val tableScroll = linkedMapOf<String, Pair<Int, Int>>()
     private val receiptScroll = linkedMapOf<String, Int>()
     private var deferCancel = false
     private var blocked = false
@@ -55,7 +56,7 @@ class MPosSettingsScreenController(
         when (payload.optString("action")) {
             "show", "formShow" -> show(payload)
             "hide", "formHide" -> if (payload.optString("token") == token) dismiss()
-            "formPatch" -> if (payload.optString("token") == token && form && !busy) patch(payload)
+            "formPatch" -> if (payload.optString("token") == token && !busy) patch(payload)
             "formUpdate" -> if (payload.optString("token") == token) update(payload.optJSONArray("fields"))
             "formResult" -> if (payload.optString("token") == token) {
                 busy = false; blocked = payload.optBoolean("blocked")
@@ -162,6 +163,27 @@ class MPosSettingsScreenController(
                     }
                     parent.addView(columns, params())
                 }
+                "grid" -> {
+                    val entries = item.optJSONArray("items") ?: JSONArray()
+                    val count = item.optInt("columns", 3).coerceIn(1, 4)
+                    for (start in 0 until entries.length() step count) {
+                        val row = LinearLayout(theme.uiContext)
+                        for (index in start until minOf(start + count, entries.length())) {
+                            val cell = column()
+                            render(JSONArray().put(entries.getJSONObject(index)), cell)
+                            row.addView(cell, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { if (index > start) leftMargin = theme.dp(8) })
+                        }
+                        parent.addView(row, params())
+                    }
+                }
+                "table" -> {
+                    val key = item.optString("scrollKey")
+                    val table = MPosSettingsTable(theme, item.optJSONArray("headers") ?: JSONArray(), item.optJSONArray("rows") ?: JSONArray(),
+                        (presentationHeight - theme.dp(160)).coerceAtLeast(theme.dp(240)), tableScroll[key] ?: (0 to 0)) { row, top ->
+                        tableScroll[key] = row to top; if (tableScroll.size > 32) tableScroll.remove(tableScroll.keys.first())
+                    }
+                    parent.addView(table, params())
+                }
                 "card" -> {
                     val card = column(16).apply { background = theme.shape(theme.surface, 22, true) }
                     render(item.optJSONArray("items") ?: JSONArray(), card); parent.addView(card, params())
@@ -170,7 +192,7 @@ class MPosSettingsScreenController(
                     if (!item.optBoolean("visible", true)) continue
                     val key = item.optString("key")
                     val button = Button(theme.uiContext).apply {
-                        text = item.optString("label"); contentDescription = text
+                        text = item.optString("label"); contentDescription = item.optString("description").ifBlank { text.toString() }
                         theme.button(this, item.optBoolean("primary"), item.optBoolean("danger"), item.optBoolean("selected"))
                         isEnabled = !item.optBoolean("disabled")
                         setOnClickListener { if (!busy && !externalBusy && !blocked) submit(key) }
@@ -218,14 +240,17 @@ class MPosSettingsScreenController(
         val label = TextView(theme.uiContext).apply { text = item.optString("label"); theme.text(this, 14f, 600) }
         row.addView(label, params()); fieldLabels[key] = label
         val old = reuseFields[key]
-        val field: View = if (old is EditText && item.optString("type") !in setOf("checkbox", "select")) {
+        val field: View = if (old is EditText && item.optString("type") !in setOf("checkbox", "select", "date")) {
             (old.parent as? ViewGroup)?.removeView(old)
             if (key !in dirtyFields && old.text.toString() != item.optString("value")) old.setText(item.optString("value"))
             val desired = inputType(item.optString("type"))
             if (old.inputType != desired) old.inputType = desired
             old.hint = item.optString("hint")
             old
+        } else if (old is MPosSettingsDateField && item.optString("type") == "date") {
+            (old.parent as? ViewGroup)?.removeView(old); old.bind(item.optString("value")); old
         } else when (item.optString("type")) {
+            "date" -> MPosSettingsDateField(theme) { changed() }.apply { bind(item.optString("value")) }
             "checkbox" -> CheckBox(theme.uiContext).apply {
                 theme.text(this); buttonTintList = android.content.res.ColorStateList.valueOf(theme.accent)
                 text = item.optString("label"); minHeight = theme.dp(48)
@@ -301,6 +326,7 @@ class MPosSettingsScreenController(
     private fun values(): JSONObject = JSONObject().also { values ->
         fields.forEach { (key, view) ->
             when (view) {
+                is MPosSettingsDateField -> values.put(key, view.dateValue)
                 is CheckBox -> values.put(key, view.isChecked)
                 is EditText -> values.put(key, view.text.toString())
                 is Spinner -> {
@@ -327,7 +353,8 @@ class MPosSettingsScreenController(
         externalBusy = payload.optBoolean("pending"); blocked = blocked || payload.optBoolean("blocked")
         val focused = fields.entries.firstOrNull { it.value.hasFocus() }
         val selection = (focused?.value as? EditText)?.selectionStart ?: 0
-        val scrollY = formScroll?.scrollY ?: 0
+        val scroll = if (form) formScroll else overlay
+        val scrollY = scroll?.scrollY ?: 0
         updating = true
         try {
             reuseFields = fields.toMap()
@@ -338,7 +365,7 @@ class MPosSettingsScreenController(
             dirtyFields.retainAll(fields.keys)
             error?.let { (it.parent as? ViewGroup)?.removeView(it); root.addView(it, params()) }
             focused?.key?.let { fields[it] }?.let { view -> view.requestFocus(); if (view is EditText) view.setSelection(selection.coerceIn(0, view.length())) }
-            formScroll?.post { formScroll?.scrollTo(0, scrollY) }
+            scroll?.post { scroll.scrollTo(0, scrollY) }
         } finally { reuseFields = emptyMap(); updating = false }
         updateControls()
     }
@@ -367,7 +394,7 @@ class MPosSettingsScreenController(
         if (busy || externalBusy) return
         val old = token; val draft = values(); if (deferCancel) { busy = true; updateControls() } else dismiss(); action(JSONObject().put("action", "cancel").put("token", old).put("fields", draft))
     }
-    fun consumeBack(): Boolean { if (!form || dialog == null) return false; cancel(); return true }
+    fun consumeBack(): Boolean { if (if (form) dialog == null else !deferCancel || overlay.visibility != View.VISIBLE) return false; cancel(); return true }
     fun dismiss() {
         updating = true
         // Wipe form text before releasing references, including passwords and tokens.

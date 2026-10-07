@@ -416,3 +416,11 @@ Actual reviewed page/modal renderers and finalizePayment verify formatted receip
 | 104 receipt history/details/returns UI | Native Kotlin shared renderer: existing 50-row Room page, selected receipt, metrics/customer/modifiers/delivery/tenders, manual print, full return confirmation/result | Source mounted handlers + existing native return authority; open-shift/duplicate/cash/stock checks, local-before-side-effects, v13/legacy fallback unchanged. Responsive panels/scroll/palettes verified automatically; physical pending. DOM runtime removal 109. |
 
 | 105 parked/customer/loyalty UI | Kotlin shared native forms and administrator page; mounted park/resume/delete/customer/profile/gift/program/adjustment actions, live fields and known promise locks | Existing 079/084/085/086 authorities/rights/outbox, source cashier search guards, historical fields/address and print delta state preserved; admin search race recorded as future candidate. Keyboard geometry retains focus/cursor; v13 unchanged, rollback presentation only, physical pending. |
+
+## 106 — native warehouse screens
+
+- Kotlin presentation binds reviewed warehouse/supplier/purchase/receiving/inventory fields and mounted opaque actions; no financial formulas, permissions or v13 shapes changed.
+- Date picker emits ISO date; warehouse tables retain source headers/rows and recycle visible native views. Dirty quantity/total fields flush before unit-triggered rerender; purchase keypad preserves its original conversion rules.
+- Async save/confirm/back await source/native acknowledgement, duplicate gestures are suppressed, failed save retains cart/document. Source report generation sequence guards remain.
+- Inventory fixation applies current stock; completion cannot overwrite later sales. Supplier rights and empty-binding filled-cart policy explicitly preserved. Cancellation stock/text ambiguity remains documented in 095/106.
+- `MPosNativeWarehouseUiEnabled=false` restores reviewed Web presentation without rolling back native storage/commands. DOM compatibility 109 and physical acceptance 110 pending.

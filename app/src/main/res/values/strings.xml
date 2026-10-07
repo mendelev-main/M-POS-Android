@@ -2,5 +2,7 @@
     <string name="app_name">M POS</string>
     <string name="mpos_cash_change">Сдача: %1$s</string>
     <string name="mpos_storage_recovery_required">Перезапустите M POS для восстановления данных</string>
+    <string name="mpos_choose_date">Выбрать дату</string>
+    <string name="mpos_clear_date">Очистить дату</string>
 </resources>
 
