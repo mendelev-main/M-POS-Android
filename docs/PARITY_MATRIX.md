@@ -431,3 +431,10 @@ Actual reviewed page/modal renderers and finalizePayment verify formatted receip
 - Native dates/presets/period modal invoke original mounted handlers; empty/invalid period checks remain. User confirmed inline reversed-range state-before-warning behavior on 7 October 2026.
 - Latest visible-period guards/error/retry/no-JS-fallback and original loyalty read/key/error rules remain. Native DatePicker locks async replacement until dismissal, with stale result rechecked after date selection; old pickers close on screen replacement.
 - Recycled native chart rows and responsive cards preserve source labels/relative widths. UI flag MPosNativeAnalyticsUiEnabled=false restores presentation while retaining 097 authority. DOM 109 / physical 110 pending.
+
+## 108 — native hall UI
+
+- Native floor map binds reviewed table IDs via opaque mounted keys, relative placement/shape/rotation/selection and booked state. Normal mode cannot drag; editor uses original 098 pointer/native transaction handlers. Failed drag preserves persisted baseline; no double pointer-release/click effect.
+- Table create/edit/rotation/delete and booking create/edit/cancel wait for acknowledged Room commands; uncertain outcome blocks retry. Table/bookings deletion remains atomic; archived receipts/parked snapshots are untouched.
+- Time/duration/guest/name/phone/comment/date fields preserve source capture/defaults/stepper limits and all 098 overlap/status semantics. Direct cancellation does not add confirmation or also trigger editor. No new role/shift/capacity restriction.
+- Preserve first-table side-card fallback without auto-selection: booking still needs actual selected ID. Presentation flag MPosNativeHallUiEnabled=false restores DOM without undoing 098 authority or v13. Physical 110 and active DOM/runtime removal 109 pending.

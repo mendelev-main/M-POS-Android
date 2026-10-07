@@ -716,9 +716,10 @@
     {
       "id": "108",
       "title": "Нативный зал/столы/бронирования",
-      "status": "planned",
+      "status": "done",
       "area": "P6/UI",
-      "dependencies": "098"
+      "dependencies": "098",
+      "spec": "specs/108-native-hall-bookings/spec.md"
     },
     {
       "id": "109",

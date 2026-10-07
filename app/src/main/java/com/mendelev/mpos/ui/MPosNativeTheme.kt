@@ -29,6 +29,12 @@ class MPosNativeTheme(private val context: Context, val dark: Boolean) {
     val border = color("#E7E4DD", "#353B49")
     val danger = color("#E0483E", "#FF6B61")
     val dangerSoft = color("#FBE7E5", "#432522")
+    val info = color("#31558F", "#BFD5FF")
+    val infoSoft = color("#E8F0FF", "#26334A")
+    val infoBorder = color("#C7D7F2", "#3C506F")
+    val warning = color("#8A5A17", "#E9C989")
+    val warningSoft = color("#FFF4E9", "#3A3022")
+    val warningBorder = color("#F5DCB8", "#5A4A30")
     fun dp(value: Int) = (value * context.resources.displayMetrics.density).roundToInt()
     fun shape(fill: Int, radius: Int = 12, outlined: Boolean = false, stroke: Int = border) = GradientDrawable().apply {
         setColor(fill); cornerRadius = dp(radius).toFloat()

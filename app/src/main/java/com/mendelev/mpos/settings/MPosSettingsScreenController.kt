@@ -178,6 +178,16 @@ class MPosSettingsScreenController(
                         parent.addView(row, params())
                     }
                 }
+                "hallMap" -> {
+                    val epoch = token
+                    val map = MPosHallMap(theme, item.optJSONArray("tables") ?: JSONArray(), item.optBoolean("editing"), item.optString("empty"),
+                        (presentationHeight - theme.dp(200)).coerceIn(theme.dp(330), theme.dp(520)), { key -> if (token == epoch && !busy && !externalBusy && !blocked) submit(key) },
+                        { key, x, y -> if (token == epoch && !busy && !externalBusy && !blocked) {
+                            busy = true; updateControls()
+                            action(JSONObject().put("action", "hallMove").put("token", token).put("key", key).put("x", x).put("y", y).put("fields", values()))
+                        } })
+                    controls += map; parent.addView(map)
+                }
                 "bars" -> {
                     val key = "bars-" + item.optString("scrollKey")
                     val bars = MPosSettingsBars(theme, item.optJSONArray("rows") ?: JSONArray(),
@@ -250,7 +260,7 @@ class MPosSettingsScreenController(
         val label = TextView(theme.uiContext).apply { text = item.optString("label"); theme.text(this, 14f, 600) }
         row.addView(label, params()); fieldLabels[key] = label
         val old = reuseFields[key]
-        val field: View = if (old is EditText && item.optString("type") !in setOf("checkbox", "select", "date")) {
+        val field: View = if (old is EditText && item.optString("type") !in setOf("checkbox", "select", "date", "time")) {
             (old.parent as? ViewGroup)?.removeView(old)
             if (key !in dirtyFields && old.text.toString() != item.optString("value")) old.setText(item.optString("value"))
             val desired = inputType(item.optString("type"))
@@ -259,7 +269,10 @@ class MPosSettingsScreenController(
             old
         } else if (old is MPosSettingsDateField && item.optString("type") == "date") {
             (old.parent as? ViewGroup)?.removeView(old); old.bind(item.optString("value")); old
+        } else if (old is MPosSettingsTimeField && item.optString("type") == "time") {
+            (old.parent as? ViewGroup)?.removeView(old); old.bind(item.optString("value")); old
         } else when (item.optString("type")) {
+            "time" -> { val epoch = token; MPosSettingsTimeField(theme) { if (token == epoch) changed() }.apply { bind(item.optString("value")) } }
             "date" -> {
                 val epoch = token
                 MPosSettingsDateField(theme, editing = { active ->
@@ -342,6 +355,7 @@ class MPosSettingsScreenController(
         fields.forEach { (key, view) ->
             when (view) {
                 is MPosSettingsDateField -> values.put(key, view.dateValue)
+                is MPosSettingsTimeField -> values.put(key, view.timeValue)
                 is CheckBox -> values.put(key, view.isChecked)
                 is EditText -> values.put(key, view.text.toString())
                 is Spinner -> {
@@ -376,6 +390,7 @@ class MPosSettingsScreenController(
             root.removeAllViews(); fields.clear(); fieldRows.clear(); fieldLabels.clear(); controls.clear(); immutableControls.clear()
             render(payload.optJSONArray("items") ?: JSONArray(), root)
             // Removed credentials/drafts cannot remain addressable by an old callback.
+            reuseFields.filterKeys { it !in fields }.values.filterIsInstance<MPosSettingsTimeField>().forEach { it.dismissPicker() }
             reuseFields.filterKeys { it !in fields }.values.filterIsInstance<MPosSettingsDateField>().forEach { it.dismissPicker() }
             reuseFields.filterKeys { it !in fields }.values.filterIsInstance<EditText>().forEach { it.setText("") }
             dirtyFields.retainAll(fields.keys)
@@ -414,6 +429,7 @@ class MPosSettingsScreenController(
     fun dismiss() {
         updating = true
         // Wipe form text before releasing references, including passwords and tokens.
+        fields.values.filterIsInstance<MPosSettingsTimeField>().forEach { it.dismissPicker() }
         fields.values.filterIsInstance<MPosSettingsDateField>().forEach { it.dismissPicker() }
         fields.values.filterIsInstance<EditText>().forEach { it.setText("") }
         dialog?.setOnCancelListener(null); dialog?.dismiss(); dialog = null

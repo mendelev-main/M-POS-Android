@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **106/110 выполнено (96,36%)**
-после 107. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **107/110 выполнено (97,27%)**
+после 108. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -617,3 +617,7 @@ Shared Kotlin cards, date fields, recycled report tables and original mounted ac
 ## 107 — native analytics presentation
 
 Native responsive KPI/chart/date/preset/loading/retry screens retain 097 Room calculation authority, reviewed formatting/admin visibility and loyalty reads. Hidden cashier employee amounts are omitted from native model/accessibility. Charts recycle visible rows; picker focus defers async DOM replacement and releases only a still-current period result. User explicitly retained reversed inline-date state/warning semantics. [107](../specs/107-native-analytics-screens/spec.md). Next 108 hall/bookings; 109 compatibility DOM removal and 110 physical acceptance remain pending.
+
+## 108 — native hall/tables/bookings presentation
+
+Native relative floor map, table select/edit-only drag, table forms/menu, booking date/cards/create/edit/cancel and time/guest controls retain 098 native Room commands and reviewed rules. Drag runs through the original pointer boundary, restores durable baseline before native persistence and consumes the browser-style suppressed click once. Source shape/rotation/blue/amber states and offline Manrope palettes remain. Failure/duplicate/uncertain outcomes preserve native command safeguards. [108](../specs/108-native-hall-bookings/spec.md). Next 109 removes active WebView compatibility, while 110 physical acceptance and 111 update metadata remain.

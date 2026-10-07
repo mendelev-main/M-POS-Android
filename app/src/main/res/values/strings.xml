@@ -4,5 +4,8 @@
     <string name="mpos_storage_recovery_required">Перезапустите M POS для восстановления данных</string>
     <string name="mpos_choose_date">Выбрать дату</string>
     <string name="mpos_clear_date">Очистить дату</string>
+    <string name="mpos_choose_time">Выбрать время</string>
+    <string name="mpos_clear_time">Очистить время</string>
+    <string name="mpos_hall_table_caption">%1$s\n%2$s</string>
 </resources>
 
