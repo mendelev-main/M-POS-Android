@@ -20,6 +20,7 @@ class MPosNetworkTransport(
     private val onEvent: (JSONObject) -> Unit,
 ) {
     private val webSse = MPosWebSse(scope, onEvent)
+    private val catalog = MPosCatalogHttp()
     private val webAcks = MPosWebAckHttp()
     private val loyaltyProfiles = MPosLoyaltyProfileHttp()
     private val profileCalls = java.util.concurrent.ConcurrentHashMap<String, Call>()
@@ -40,6 +41,8 @@ class MPosNetworkTransport(
             "startWebSse" -> webSse.start(payload)
             "stopWebSse" -> webSse.stop(payload.optString("sessionId"))
             "webSseAck" -> webSse.acknowledge(payload.optString("sessionId"), payload.optLong("sequence"))
+            "catalogExchange" -> catalogExchange(requestId,payload)
+            "catalogCancel" -> profileCalls.remove(requestId)?.cancel()
             "webAck" -> webAck(requestId,payload)
             "loyaltyProfile" -> loyaltyProfile(requestId, payload)
             "loyaltyMutation" -> loyaltyProfile(requestId, payload, true)
@@ -54,6 +57,18 @@ class MPosNetworkTransport(
     }
 
     private fun status(requestId:String)=JSONObject().put("requestId",requestId).put("ok",true).put("transport","okhttp").put("authoritative",false).put("sseEnabled",shadowJob?.isActive==true).put("businessHandlers","legacy").put("connected",shadowConnected).put("events",shadowEvents).put("reconnects",reconnects).put("lastEventHash",lastEventHash)
+
+    private fun catalogExchange(requestId: String, payload: JSONObject) {
+        val call = try { (if (payload.optString("kind") == "media") catalog.mediaClient else catalog.menuClient).newCall(catalog.request(payload)) }
+        catch (_: Exception) { onResult(JSONObject().put("requestId",requestId).put("ok",false).put("message","Некорректные настройки каталога")); return }
+        profileCalls.put(requestId,call)?.cancel()
+        scope.launch(Dispatchers.IO) {
+            try { call.execute().use { onResult(catalog.decode(it).put("requestId",requestId)) } }
+            catch (error: Exception) { onResult(JSONObject().put("requestId",requestId).put("ok",false)
+                .put("timeout",error is java.io.InterruptedIOException).put("message","Не удалось связаться с сервером")) }
+            finally { profileCalls.remove(requestId,call) }
+        }
+    }
 
     private fun webAck(requestId:String,payload:JSONObject) {
         val call=try{webAcks.client.newCall(webAcks.request(payload))}catch(_:Exception){onResult(JSONObject().put("requestId",requestId).put("ok",false).put("message","Некорректные настройки WEB ACK"));return}

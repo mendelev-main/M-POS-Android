@@ -328,3 +328,12 @@ webOrderAcceptances/webOrderReadyJournal стали основными доку�
 | Framing, backpressure, Last-Event-ID, MIME/HTTP stop, lifecycle | JVM primary-reader and injected HTTP tests | Pending network transitions |
 
 No automatic catalogue/availability sends; existing WEB normalization/merge retained. See [088](../specs/088-native-web-sse/spec.md).
+
+## 089 — manual catalogue/media
+
+| Boundary | Automated evidence | Physical status |
+|---|---|---|
+| Manual menu POST and unchanged payload/status | Actual source sync/payload; JVM bytes/routes/no retry | Pending |
+| Local product save then native media upload | Actual source success/413, pending local photo; abort/timeout tests | Pending |
+
+No catalogue/media scheduling or backup format change. Native menu deadline 60s, media remains 10s. See [089](../specs/089-native-catalog-transport/spec.md).

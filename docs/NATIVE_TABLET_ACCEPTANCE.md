@@ -394,3 +394,12 @@ Accept online/offline/timeouts with valid estimate; prepared/local/ACK/confirmed
 - Close/reconfigure backend during delivery: previous connection cannot update the new session.
 - Large/multiline payload and slow local save: events retain order, memory does not accumulate a JS message queue.
 - Server 204/wrong MIME closes; connection loss retries; replay depends on backend IDs/replay support.
+
+## 089 — каталог и фото (pending)
+
+- Без нажатия «Синхронизировать» запуск/сеть/foreground не отправляют каталог.
+- Администратор вручную отправляет категории/цены/видимость/фото: статус и WEB-каталог совпадают.
+- Офлайн или отказ сервера: ошибка без автоматического повтора, повтор только по кнопке.
+- Фото сохраняется локально до отправки; успех обновляет imageUrl, 413/таймаут оставляет imageUploadPending.
+- При смене изображения во время запроса старый ответ не заменяет новое изображение.
+- Отмена/закрытие приложения закрывают запрос; восстановленный бэкап v13 и лимит 500 МБ работают как раньше.

@@ -564,9 +564,10 @@
     {
       "id": "089",
       "title": "Ручная синхронизация каталога и media transport",
-      "status": "planned",
+      "status": "done",
       "area": "P3",
-      "dependencies": "088"
+      "dependencies": "088",
+      "spec": "specs/089-native-catalog-transport/spec.md"
     },
     {
       "id": "090",

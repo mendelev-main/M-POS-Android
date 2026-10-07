@@ -6,11 +6,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.HttpUrl.Companion.toHttpUrl
-import android.util.JsonReader
-import android.util.JsonToken
-import java.io.StringReader
 import org.json.JSONObject
-import org.json.JSONTokener
 import java.util.concurrent.TimeUnit
 
 /** Read-only central loyalty profile: no retries, no offline eligibility cache. */
@@ -41,20 +37,7 @@ class MPosLoyaltyProfileHttp(client: OkHttpClient = OkHttpClient()) {
     }
 
     fun decode(response: Response): JSONObject {
-        val raw = response.body?.string()
-        val data = try {
-            if (raw == null) JSONObject.NULL else {
-                // Wrapping permits valid scalar JSON while strict Android parsing rejects
-                // comments, unquoted keys and trailing tokens accepted by JSONTokener.
-                JsonReader(StringReader("[$raw]")).use { reader ->
-                    reader.isLenient = false
-                    reader.beginArray(); reader.skipValue(); reader.endArray()
-                    require(reader.peek() == JsonToken.END_DOCUMENT)
-                }
-                val parser = JSONTokener(raw)
-                parser.nextValue().also { require(parser.nextClean() == '\u0000') }
-            }
-        } catch (_: Exception) { JSONObject.NULL }
+        val data = MPosHttpJson.read(response)
         if (!response.isSuccessful) {
             val error = (data as? JSONObject)?.opt("error")
             throw IllegalStateException(if (com.mendelev.mpos.data.MPosJsonNumbers.truthy(error)) error.toString() else "HTTP ${response.code}")

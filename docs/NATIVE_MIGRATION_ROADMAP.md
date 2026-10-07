@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **87/110 выполнено (79,09%)**
-после 088. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **88/110 выполнено (80,00%)**
+после 089. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -528,3 +528,7 @@ webOrderAcceptances/webOrderReadyJournal стали основными доку�
 ## 088 — native primary WEB SSE
 
 Configured WEB EventSource now uses Kotlin framing, reconnect, IDs/retry, cancellation and lifecycle, with single-event bridge backpressure. Reviewed order/owner-report handlers remain; webEvents business/storage authority is not claimed. Diagnostic shadow remains separate. Next: 089 manual catalogue/media transport. See [088](../specs/088-native-web-sse/spec.md).
+
+## 089 — manual catalogue/media transport
+
+Kotlin owns exact configured menu/media HTTP routes, unchanged JSON bytes, status/strict parsing, cancellation and bounded no-retry transport. Reviewed payload/business/UI and local-image update conditions remain. Next 090: availability publication and durable payment-only gate; reconcile older 033 ordinary-success triggers with current AGENTS 7. See [089](../specs/089-native-catalog-transport/spec.md).
