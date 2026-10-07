@@ -19,6 +19,8 @@ class MPosNetworkTransport(
     private val onResult: (JSONObject) -> Unit,
     private val onEvent: (JSONObject) -> Unit,
 ) {
+    private val loyaltyProfiles = MPosLoyaltyProfileHttp()
+    private val profileCalls = java.util.concurrent.ConcurrentHashMap<String, Call>()
     private val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(0, TimeUnit.MILLISECONDS).build()
     private var shadowJob: Job? = null
     @Volatile private var shadowCall: Call? = null
@@ -33,6 +35,8 @@ class MPosNetworkTransport(
     fun handle(payload: JSONObject) {
         val requestId = payload.optString("requestId")
         when (payload.optString("action")) {
+            "loyaltyProfile" -> loyaltyProfile(requestId, payload)
+            "loyaltyProfileCancel" -> profileCalls.remove(requestId)?.cancel()
             "describe" -> onResult(status(requestId))
             "probe" -> probe(requestId, payload)
             "startShadowSse" -> startShadowSse(requestId, payload)
@@ -43,6 +47,23 @@ class MPosNetworkTransport(
     }
 
     private fun status(requestId:String)=JSONObject().put("requestId",requestId).put("ok",true).put("transport","okhttp").put("authoritative",false).put("sseEnabled",shadowJob?.isActive==true).put("businessHandlers","legacy").put("connected",shadowConnected).put("events",shadowEvents).put("reconnects",reconnects).put("lastEventHash",lastEventHash)
+
+    private fun loyaltyProfile(requestId: String, payload: JSONObject) {
+        val call = try { loyaltyProfiles.client.newCall(loyaltyProfiles.request(payload)) }
+        catch (_: Exception) { onResult(JSONObject().put("requestId",requestId).put("ok",false).put("message","Некорректные настройки сервера")); return }
+        profileCalls.put(requestId,call)?.cancel()
+        scope.launch(Dispatchers.IO) {
+            try { call.execute().use { response -> onResult(loyaltyProfiles.decode(response).put("requestId",requestId)) } }
+            catch (error: Exception) {
+                val message = when(error) {
+                    is java.io.InterruptedIOException -> "Сервер не ответил вовремя"
+                    is IllegalStateException -> error.message ?: "Ошибка программы лояльности"
+                    else -> "Нет связи с сервером"
+                }
+                onResult(JSONObject().put("requestId",requestId).put("ok",false).put("message",message))
+            } finally { profileCalls.remove(requestId,call) }
+        }
+    }
 
     private fun probe(requestId: String, payload: JSONObject) {
         val backendUrl = payload.optString("backendUrl").trim().trimEnd('/'); val deviceKey = payload.optString("deviceKey")
@@ -92,7 +113,7 @@ class MPosNetworkTransport(
     private fun stopShadowSse(clearRequest:Boolean){ shadowJob?.cancel(); shadowJob=null; shadowCall?.cancel(); shadowCall=null; shadowConnected=false; if(clearRequest){shadowRequested=false;shadowBackendUrl="";shadowDeviceKey=""} }
     fun onBackground(){ if(shadowRequested){ stopShadowSse(false); emitState("background-paused") } }
     fun onForeground(){ if(shadowRequested && shadowJob?.isActive!=true && validBackend(shadowBackendUrl,shadowDeviceKey)){ startShadowSse("",JSONObject().put("backendUrl",shadowBackendUrl).put("deviceKey",shadowDeviceKey),false); emitState("foreground-resumed") } }
-    fun close(){ stopShadowSse(true) }
+    fun close(){ stopShadowSse(true); profileCalls.values.forEach { it.cancel() }; profileCalls.clear() }
     private fun validBackend(url:String,key:String)=url.startsWith("https://")&&key.isNotBlank()
     private fun eventsUrl(url:String,key:String)=url+"/api/orders/events?deviceKey="+URLEncoder.encode(key,"UTF-8")
     private fun sha256(value:String)=MessageDigest.getInstance("SHA-256").digest(value.toByteArray(Charsets.UTF_8)).joinToString(""){"%02x".format(it)}

@@ -532,9 +532,10 @@
     {
       "id": "085",
       "title": "Онлайн-проверка доступности подарка и offline policy",
-      "status": "planned",
+      "status": "done",
       "area": "P11",
-      "dependencies": "084"
+      "dependencies": "084",
+      "spec": "specs/085-native-loyalty-eligibility/spec.md"
     },
     {
       "id": "086",

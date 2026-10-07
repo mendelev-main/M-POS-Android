@@ -306,7 +306,7 @@ class MainActivity : AppCompatActivity() {
     }
     private fun nativeNetworkResult(result: JSONObject) {
         diagnostics.record("network", "result", result.optBoolean("ok", false))
-        callJavaScript("window.__nativeNetworkResult&&window.__nativeNetworkResult($result);")
+        callJavaScript("window.__nativeNetworkResult&&window.__nativeNetworkResult(${com.mendelev.mpos.data.MPosBridgeJson.serialize(result)});")
     }
     private fun nativeNetworkEvent(event: JSONObject) {
         diagnostics.record("network", event.optString("state", event.optString("type", "event")))

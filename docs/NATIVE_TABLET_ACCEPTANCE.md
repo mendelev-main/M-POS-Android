@@ -373,3 +373,7 @@ Create/edit ordinary employees offline; change roles with correct/incorrect pass
 ## 084 customer association — pending
 
 Select/remove a customer, refresh profile and verify rewards reset, retained address/extensions and metadata. Repeat offline; central search/create still requires backend. Exercise rapid selection, modal close, old profile response, storage failure, force-stop/restart and v13 export/import with a WEB order and paid split draft. Verify no automatic catalogue/availability requests.
+
+## 085 gift eligibility — pending
+
+Available/unavailable gifts online; offline/timeout cancel and explicit continue without gift. Change customer/redemption/order or close dialog during read; no obsolete payment continuation. Check profile refresh and reconnect without automatic gift work, completed payment/return/restart. Correctly selected gift must still use existing price/receipt allocation.

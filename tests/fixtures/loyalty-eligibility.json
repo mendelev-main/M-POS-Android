@@ -1,0 +1,2152 @@
+[
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 0
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 0
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 0
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 0
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 0
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 0
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 1
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 1
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 1
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 1
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 1
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 1
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 2
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 2
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 2
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 2
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 2
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 2
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": -1
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": -1
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": -1
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": -1
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": -1
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": -1
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 1.9
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 1.9
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 1.9
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 1.9
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 1.9
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": 1.9
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "bad"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "bad"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "bad"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "bad"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "bad"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "bad"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": null
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": null
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": null
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": null
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": null
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": null
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": true
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": true
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": true
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": true
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": true
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": true
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": []
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": []
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": []
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": []
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": []
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": []
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          1
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          1
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          1
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          1
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          1
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          1
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          "2"
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          "2"
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          "2"
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          "2"
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          "2"
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          "2"
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          1,
+          2
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          1,
+          2
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          1,
+          2
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          1,
+          2
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          1,
+          2
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": [
+          1,
+          2
+        ]
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "Infinity"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "Infinity"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "Infinity"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "Infinity"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "Infinity"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "Infinity"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "NaN"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "NaN"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "NaN"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "NaN"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "NaN"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "NaN"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "﻿2 "
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "﻿2 "
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "﻿2 "
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "﻿2 "
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "﻿2 "
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "﻿2 "
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "\u001c2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "\u001c2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "\u001c2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "\u001c2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "\u001c2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "\u001c2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": false,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "0x2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "0x2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "0x2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "0x2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "0x2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "0x2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "1e2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "1e2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 1
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "1e2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "1e2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "2"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "1e2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": "bad"
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": true
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "redemptions": {
+        "gift": "1e2"
+      },
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": null
+        }
+      ]
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "programs": [],
+      "redemptions": {
+        "42": 1,
+        "gift": 1
+      }
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "programs": [
+        {
+          "id": 42,
+          "rewards": 1
+        }
+      ],
+      "redemptions": {
+        "42": 1,
+        "gift": 1
+      }
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  },
+  {
+    "input": {
+      "version": 1,
+      "programs": [
+        {
+          "id": "gift",
+          "rewards": 0
+        },
+        {
+          "id": "gift",
+          "rewards": 2
+        }
+      ],
+      "redemptions": {
+        "42": 1,
+        "gift": 1
+      }
+    },
+    "expected": {
+      "selected": true,
+      "valid": false
+    }
+  }
+]
