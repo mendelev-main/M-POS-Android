@@ -211,4 +211,58 @@ class MPosSettingsScreenControllerTest {
         assertEquals("2.5", calls.last().getJSONObject("fields").getString("0")); controller.dismiss()
     }
 
+    @Test fun paymentBackWaitsForReviewedRefusalAndHardwareBackDoesNotDismissPaidSplitForm() {
+        val (controller, calls) = setup()
+        controller.handle(model("payment").put("deferCancel", true)); ShadowLooper.idleMainLooper()
+        val dialog = ShadowAlertDialog.getLatestAlertDialog()
+        assertTrue(dialog.dispatchKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_BACK)))
+        assertTrue(dialog.isShowing); assertEquals("cancel", calls.last().getString("action"))
+        assertFalse(dialog.getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled)
+        controller.handle(JSONObject().put("action", "formResult").put("token", "payment").put("message", "Сначала завершите раздельную оплату"))
+        assertTrue(dialog.isShowing); assertTrue(dialog.getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled)
+        assertTrue(nodes(dialog.window!!.decorView).filterIsInstance<android.widget.TextView>().any { it.text == "Сначала завершите раздельную оплату" })
+        controller.handle(JSONObject().put("action", "formHide").put("token", "payment")); assertFalse(dialog.isShowing)
+    }
+    @Test fun paymentPageReopensWithRecoveryBlockAndCannotSubmitButCanRequestReviewedBack() {
+        val (controller, calls) = setup()
+        controller.handle(model("recovery").put("deferCancel", true).put("blocked", true)); ShadowLooper.idleMainLooper()
+        val dialog = ShadowAlertDialog.getLatestAlertDialog()
+        assertFalse(nodes(dialog.window!!.decorView).filterIsInstance<Button>().first { it.text == "Сохранить" }.isEnabled)
+        assertTrue(nodes(dialog.window!!.decorView).filterIsInstance<android.widget.TextView>().any { it.text == "Перезапустите M POS для восстановления данных" })
+        controller.consumeBack(); assertEquals("cancel", calls.last().getString("action")); assertTrue(dialog.isShowing)
+        controller.dismiss()
+    }
+    @Test fun syntheticPaymentPreviewsUseFormattedReceiptAndClearTenderActionsInBothThemes() {
+        val (controller, _, activity) = setup()
+        activity.resources.displayMetrics.heightPixels = 1200; activity.resources.displayMetrics.widthPixels = 1200
+        for (dark in listOf(false, true)) {
+            val receipt = JSONArray().put(JSONObject().put("kind", "heading").put("text", "Чек"))
+                .put(JSONObject().put("kind", "text").put("text", "На месте · Стол 3"))
+                .put(JSONObject().put("kind", "metric").put("label", "Молоко × 1").put("value", "12,50 BYN"))
+                .put(JSONObject().put("kind", "metric").put("label", "Итого").put("value", "12,50 BYN").put("primary", true))
+            val items = JSONArray().put(JSONObject().put("kind", "heading").put("text", "Оплата"))
+                .put(JSONObject().put("kind", "card").put("items", receipt))
+                .put(JSONObject().put("kind", "metric").put("label", "К оплате").put("value", "12,50 BYN").put("primary", true))
+                .put(JSONObject().put("kind", "button").put("key", "split").put("label", "Разделить"))
+                .put(JSONObject().put("kind", "button").put("key", "amount").put("label", "Сумма · 20,00 BYN"))
+                .put(JSONObject().put("kind", "metric").put("label", "Сдача").put("value", "7,50 BYN"))
+                .put(JSONObject().put("kind", "button").put("key", "cash").put("label", "Оплатить").put("primary", true))
+                .put(JSONObject().put("kind", "button").put("key", "card").put("label", "Оплата картой"))
+            controller.handle(JSONObject().put("action", "formShow").put("token", "payment-preview").put("expanded", true).put("deferCancel", true).put("cancelLabel", "← Назад").put("theme", if (dark) "dark" else "light").put("items", items))
+            ShadowLooper.idleMainLooper(); val view = ShadowAlertDialog.getLatestAlertDialog().window!!.decorView
+            view.measure(View.MeasureSpec.makeMeasureSpec(1040, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)); view.layout(0, 0, 1040, view.measuredHeight)
+            val bitmap = android.graphics.Bitmap.createBitmap(1040, view.measuredHeight, android.graphics.Bitmap.Config.ARGB_8888); view.draw(android.graphics.Canvas(bitmap))
+            val file = java.io.File("build/design-previews/payment-${if (dark) "dark" else "light"}.png"); file.parentFile!!.mkdirs(); file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }; bitmap.recycle()
+            assertTrue(file.length() > 1000); controller.dismiss()
+        }
+    }
+
+    @Test fun completedReceiptShowsDoneOnceAndHardwareBackStillUsesReviewedCompletionAction() {
+        val (controller, calls) = setup()
+        controller.handle(model("receipt").put("deferCancel", true).put("hideCancel", true).put("cancelLabel", "Готово")); ShadowLooper.idleMainLooper()
+        val dialog = ShadowAlertDialog.getLatestAlertDialog()
+        assertEquals(View.GONE, dialog.getButton(AlertDialog.BUTTON_NEGATIVE).visibility)
+        controller.consumeBack(); assertTrue(dialog.isShowing); assertEquals("cancel", calls.last().getString("action")); controller.dismiss()
+    }
+
 }

@@ -668,18 +668,18 @@
     {
       "id": "102",
       "title": "Нативный редактор товара/рецепта/модификаторов",
-      "status": "in_progress",
+      "status": "done",
       "area": "P9/UI",
       "dependencies": "080,081",
-      "spec": "specs/102-native-product-editor/spec.md",
-      "publication": "pending: GitHub rejected main update with Internal Server Error"
+      "spec": "specs/102-native-product-editor/spec.md"
     },
     {
       "id": "103",
       "title": "Нативный основной экран оплаты",
-      "status": "planned",
+      "status": "done",
       "area": "P7/UI",
-      "dependencies": "074,075,077"
+      "dependencies": "074,075,077",
+      "spec": "specs/103-native-payment-screen/spec.md"
     },
     {
       "id": "104",

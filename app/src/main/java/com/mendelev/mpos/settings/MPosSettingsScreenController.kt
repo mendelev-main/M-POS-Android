@@ -1,5 +1,6 @@
 package com.mendelev.mpos.settings
 
+import com.mendelev.mpos.R
 import android.app.AlertDialog
 import android.content.Context
 import android.text.InputType
@@ -28,6 +29,7 @@ class MPosSettingsScreenController(
     private var token = ""
     private var busy = false
     private var externalBusy = false
+    private var deferCancel = false
     private var blocked = false
     private var form = false
     private var updating = false
@@ -54,7 +56,7 @@ class MPosSettingsScreenController(
             "formUpdate" -> if (payload.optString("token") == token) update(payload.optJSONArray("fields"))
             "formResult" -> if (payload.optString("token") == token) {
                 busy = false; blocked = payload.optBoolean("blocked")
-                error?.text = payload.optString("message")
+                error?.text = payload.optString("message").ifBlank { if (blocked) context.getString(R.string.mpos_storage_recovery_required) else "" }
                 error?.setTextColor(if (blocked || payload.optBoolean("error", true)) theme.danger else theme.muted); updateControls()
             }
         }
@@ -71,7 +73,7 @@ class MPosSettingsScreenController(
         if (next.isBlank()) return
         val nativeForm = payload.optString("action") == "formShow"
         val bounds = if (!nativeForm) MPosShiftScreenController.bounds(payload, host.width, host.height) ?: return else null
-        dismiss(); token = next; form = nativeForm; externalBusy = payload.optBoolean("pending")
+        dismiss(); token = next; form = nativeForm; externalBusy = payload.optBoolean("pending"); blocked = payload.optBoolean("blocked"); deferCancel = payload.optBoolean("deferCancel")
         theme = MPosNativeTheme(context, payload.optString("theme") == "dark")
         updating = true
         val content = column(24); this.content = content
@@ -79,7 +81,7 @@ class MPosSettingsScreenController(
         render(payload.optJSONArray("items") ?: JSONArray(), content)
         updating = false
         if (form) {
-            error = TextView(theme.uiContext).apply { theme.text(this, 14f); setTextColor(theme.danger) }
+            error = TextView(theme.uiContext).apply { theme.text(this, 14f); setTextColor(theme.danger); if (blocked) text = context.getString(R.string.mpos_storage_recovery_required) }
             content.addView(error, params())
             val scroll = MPosSettingsScrollView(theme.uiContext, (context.resources.displayMetrics.heightPixels * .85).toInt() - theme.dp(80)).apply { isFillViewport = false; addView(content) }
             formScroll = scroll
@@ -87,16 +89,26 @@ class MPosSettingsScreenController(
             val current = AlertDialog.Builder(theme.uiContext).setView(scroll).setNegativeButton(payload.optString("cancelLabel", "Отмена"), null).create()
             dialog = current
             current.setOnCancelListener { cancel() }
+            current.setOnKeyListener { _, key, event ->
+                if (deferCancel && key == android.view.KeyEvent.KEYCODE_BACK) {
+                    if (event.action == android.view.KeyEvent.ACTION_UP) cancel()
+                    true
+                } else false
+            }
             current.setOnShowListener {
                 current.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener { cancel() }
             }
             current.show()
+            if (deferCancel && android.os.Build.VERSION.SDK_INT >= 33) {
+                current.window?.onBackInvokedDispatcher?.registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT) { cancel() }
+            }
             current.window?.setBackgroundDrawable(theme.shape(theme.surface, 22, true))
             current.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             val metrics = context.resources.displayMetrics
             current.window?.setLayout(minOf(metrics.widthPixels - theme.dp(32), theme.dp(if (payload.optBoolean("expanded")) 1120 else 640)),
                 ViewGroup.LayoutParams.WRAP_CONTENT)
             theme.button(current.getButton(AlertDialog.BUTTON_NEGATIVE))
+            if (payload.optBoolean("hideCancel")) current.getButton(AlertDialog.BUTTON_NEGATIVE).visibility = View.GONE
             updateControls()
         } else {
             overlay.removeAllViews(); overlay.addView(content)
@@ -270,7 +282,7 @@ class MPosSettingsScreenController(
     }
     private fun patch(payload: JSONObject) {
         val root = content ?: return
-        externalBusy = payload.optBoolean("pending")
+        externalBusy = payload.optBoolean("pending"); blocked = blocked || payload.optBoolean("blocked")
         val focused = fields.entries.firstOrNull { it.value.hasFocus() }
         val selection = (focused?.value as? EditText)?.selectionStart ?: 0
         val scrollY = formScroll?.scrollY ?: 0
@@ -307,11 +319,11 @@ class MPosSettingsScreenController(
     }
     private fun updateControls() {
         controls.forEach { it.isEnabled = !busy && !externalBusy && !blocked && it !in immutableControls }
-        dialog?.let { it.setCancelable(!busy && !externalBusy); it.setCanceledOnTouchOutside(false); it.getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled = !busy && !externalBusy }
+        dialog?.let { it.setCancelable(!busy && !externalBusy && !deferCancel); it.setCanceledOnTouchOutside(false); it.getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled = !busy && !externalBusy }
     }
     private fun cancel() {
         if (busy || externalBusy) return
-        val old = token; val draft = values(); dismiss(); action(JSONObject().put("action", "cancel").put("token", old).put("fields", draft))
+        val old = token; val draft = values(); if (deferCancel) { busy = true; updateControls() } else dismiss(); action(JSONObject().put("action", "cancel").put("token", old).put("fields", draft))
     }
     fun consumeBack(): Boolean { if (!form || dialog == null) return false; cancel(); return true }
     fun dismiss() {
@@ -323,7 +335,7 @@ class MPosSettingsScreenController(
         fields.clear(); controls.clear(); immutableControls.clear(); fieldRows.clear(); fieldLabels.clear(); error = null
         previewLoader.clear(); imageSource = null; imageView = null
         content = null; formScroll = null; reuseFields = emptyMap(); dirtyFields.clear()
-        token = ""; busy = false; externalBusy = false; blocked = false; form = false; updating = false
+        token = ""; busy = false; externalBusy = false; deferCancel = false; blocked = false; form = false; updating = false
     }
 }
 

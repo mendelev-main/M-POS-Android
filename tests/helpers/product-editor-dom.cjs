@@ -4,7 +4,8 @@ const decode=s=>s.replace(/&quot;/g,'"').replace(/&#39;|&#x27;/g,"'").replace(/&
 function dom(context){
  const observers=[],frames=[];
  class Node{
-  constructor(tag='div'){this.tagName=tag.toUpperCase();this.nodeType=1;this.children=[];this.attrs={};this.style={};this.dataset={};this._text='';this._value=undefined;this.hidden=false;this.disabled=false;this.readOnly=false;this.checked=false;this.scrollTop=0;this.focus=()=>{document.activeElement=this};this.blur=()=>{document.activeElement=null};this.classList={contains:c=>this.classes.includes(c),toggle:(c,on)=>{let cs=this.classes.filter(x=>x!==c);if(on)cs.push(c);this.attrs.class=cs.join(' ')}}}
+  constructor(tag='div'){this.tagName=tag.toUpperCase();this.nodeType=1;this.children=[];this.attrs={};this.style={};this.dataset={};this._text='';this._value=undefined;this.hidden=false;this.disabled=false;this.readOnly=false;this.checked=false;this.scrollTop=0;this.focus=()=>{document.activeElement=this};this.blur=()=>{document.activeElement=null};this.classList={contains:c=>this.classes.includes(c),add:c=>{this.attrs.class=[...this.classes,c].join(' ')},toggle:(c,on)=>{let cs=this.classes.filter(x=>x!==c);if(on)cs.push(c);this.attrs.class=cs.join(' ')}}}
+  remove(){if(this.parentElement){this.parentElement.children=this.parentElement.children.filter(c=>c!==this);this.parentElement=null}} select(){}
   get classes(){return(this.attrs.class||'').split(/\s+/)} get id(){return this.attrs.id||''} set id(v){this.attrs.id=v}
   get type(){return this.attrs.type||'text'}get placeholder(){return this.attrs.placeholder||''}
   get isConnected(){return this===document.body||!!this.parentElement?.isConnected}
@@ -22,8 +23,8 @@ function dom(context){
   click(){if(!this.disabled)this.dispatchEvent({type:'click'})}
  }
  function parse(html,root){const stack=[root];for(const m of html.matchAll(/<\/?[^>]+>|[^<]+/g)){const t=m[0];if(t.startsWith('</')){stack.pop();continue}if(t.startsWith('<')){const tag=t.match(/^<([\w-]+)/)?.[1];if(!tag)continue;const node=new Node(tag);const rest=t.slice(tag.length+1,-1);for(const a of rest.matchAll(/([^\s=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s]+)))?/g))node.setAttribute(a[1],decode(a[2]??a[3]??a[4]??''));node.hidden='hidden'in node.attrs;node.disabled='disabled'in node.attrs;node.readOnly='readonly'in node.attrs;node.checked='checked'in node.attrs;stack.at(-1).appendChild(node);if(!['input','img','br','hr','meta','link'].includes(tag))stack.push(node)}else stack.at(-1)._text+=decode(t)}}
- const document={hidden:false,readyState:'complete',activeElement:null,body:null,documentElement:{getAttribute:()=>context.theme||'light'},getElementById:id=>document.body.querySelector('#'+id),querySelector:s=>document.body.querySelector(s),querySelectorAll:s=>document.body.querySelectorAll(s),addEventListener:()=>{}};document.body=new Node('body');
+ const document={hidden:false,readyState:'complete',activeElement:null,body:null,createElement:tag=>new Node(tag),documentElement:{getAttribute:()=>context.theme||'light'},getElementById:id=>document.body.querySelector('#'+id),querySelector:s=>document.body.querySelector(s),querySelectorAll:s=>document.body.querySelectorAll(s),addEventListener:()=>{}};document.body=new Node('body');
  document.body.innerHTML='<div id="app"><div class="screen active"></div></div><div id="modal-root"></div><div id="product-editor-root"></div>';
- return{document,Node,MutationObserver:class{constructor(f){observers.push(f)}observe(){}},requestAnimationFrame:f=>frames.push(f),pump(){observers.forEach(f=>f());for(let i=0;frames.length&&i<20;i++)frames.shift()()}};
+ return{document,Node,MutationObserver:class{constructor(f){observers.push(()=>{if(this.active)f()})}observe(){this.active=true}disconnect(){this.active=false}},requestAnimationFrame:f=>frames.push(f),pump(){observers.forEach(f=>f());for(let i=0;frames.length&&i<20;i++)frames.shift()()}};
 }
 module.exports={dom};
