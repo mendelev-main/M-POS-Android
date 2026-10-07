@@ -372,3 +372,8 @@ Actual-source restoration/save fixtures checked in JVM and JS, including legacy/
 ## 095 — inventory commands
 
 Actual-source candidates independently tested in JS/JVM: current-stock fixation, loss, scheduled/adhoc completion and later sales. Room stale/tampered/input/closed-row guards, config loader/unsaved-frequency compatibility, unfinished/duplicate refusal, and injected final-write rollback. File-backed native FIFO ownership covers all three inventory documents and obsolete shadows. Source memory follows native ack; rollback remains. Physical pending. Cancellation ambiguity retains existing behavior while question is pending. [095](../specs/095-native-inventory-commands/spec.md).
+
+
+## 096 — warehouse reports
+
+Full actual-source model fixtures checked in JS/JVM: bounds, local timezone/DST/leap days, units, prices, supplier snapshots, incomplete/invalid/legacy history, deleted/untracked products, nulls and RU collation. Room proves authoritative sources and unchanged business documents. Native protocol period capture, stale/close handling, no fallback, section/format selection freeze, PDF/monthly/admin/rollback tested. Physical pending. [096](../specs/096-native-warehouse-reports/spec.md).

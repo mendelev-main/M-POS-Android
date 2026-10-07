@@ -620,9 +620,10 @@
     {
       "id": "096",
       "title": "Складские отчёты по периодам и источники данных",
-      "status": "planned",
+      "status": "done",
       "area": "P10",
-      "dependencies": "093,095"
+      "dependencies": "093,095",
+      "spec": "specs/096-native-warehouse-reports/spec.md"
     },
     {
       "id": "097",

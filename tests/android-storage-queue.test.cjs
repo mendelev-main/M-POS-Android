@@ -93,3 +93,8 @@ test('inventory command freezes count/draft before ownership initialization and 
  input.expected.inventoryDraft.items[0].actual=9;await new Promise(r=>setImmediate(r));const statuses=h.calls.filter(r=>r&&typeof r==='object');assert.equal(statuses.length,5);assert.equal(statuses.filter(r=>r.action==='inventoryStatus').length,3);
  for(const s of statuses)h.context.__nativeStorageResult({requestId:s.requestId,ok:true,initialized:true});await new Promise(r=>setImmediate(r));const command=h.calls.at(-1);assert.equal(command.action,'inventoryCommit');assert.equal(JSON.parse(command.payload).expected.inventoryDraft.items[0].actual,8);h.context.__nativeStorageResult({requestId:command.requestId,ok:true,authoritative:true});await p;
 });
+test('warehouse read freezes period and initializes only authoritative reporting sources',async()=>{
+ const h=host(),input={version:1,from:'2026-10-01',to:'2026-10-02',now:1,validationNow:1,zone:'Europe/Moscow'},p=h.context.MPosCore.Warehouse.read(input);
+ input.from='changed';await new Promise(r=>setImmediate(r));const statuses=h.calls.filter(r=>r&&typeof r==='object');assert.equal(statuses.length,3);
+ for(const s of statuses)h.context.__nativeStorageResult({requestId:s.requestId,ok:true,initialized:true});await new Promise(r=>setImmediate(r));const command=h.calls.at(-1);assert.equal(command.action,'warehouseRead');assert.equal(JSON.parse(command.payload).from,'2026-10-01');assert.equal(JSON.parse(command.payload).products,undefined);h.context.__nativeStorageResult({requestId:command.requestId,ok:true,authoritative:true,report:{}});await p;
+});

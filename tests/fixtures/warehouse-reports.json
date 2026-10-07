@@ -1,0 +1,2310 @@
+[
+  {
+    "label": "empty",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "minStock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": [],
+      "orders": [],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": true,
+      "report": {
+        "from": "2026-10-01",
+        "to": "2026-10-02",
+        "rows": [
+          {
+            "id": "p",
+            "name": "Молоко",
+            "unit": "l",
+            "cost": 4,
+            "current": 8,
+            "minStock": 9,
+            "supplierNames": [],
+            "incoming": 0,
+            "incomingValue": 0,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 0,
+            "afterEnd": 0,
+            "start": 8,
+            "end": 8,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 32,
+            "endValue": 32
+          }
+        ],
+        "documents": [],
+        "suppliers": [],
+        "warnings": {
+          "legacySales": 0,
+          "legacyReturns": 0,
+          "invalid": 0,
+          "unknownCosts": 0
+        },
+        "recordedSalesCost": 0,
+        "missingSalesCosts": 0,
+        "incomingValue": 0,
+        "outgoingValue": 0,
+        "returnedValue": 0,
+        "currentValue": 32,
+        "endValue": 32,
+        "low": 1,
+        "idle": 1,
+        "generatedTimestamp": 1791374400000
+      }
+    }
+  },
+  {
+    "label": "period-boundaries",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "minStock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": [
+        {
+          "id": "r1790812799999",
+          "timestamp": 1790812799999,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "id": "r1790812800000",
+          "timestamp": 1790812800000,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "id": "r1790985599999",
+          "timestamp": 1790985599999,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "id": "r1790985600000",
+          "timestamp": 1790985600000,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "id": "r1791374400001",
+          "timestamp": 1791374400001,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        }
+      ],
+      "orders": [
+        {
+          "id": "o1790812799999",
+          "timestamp": 1790812799999,
+          "items": [
+            {
+              "productId": "p",
+              "qty": 1,
+              "cost": 3
+            }
+          ],
+          "stockConsumption": {
+            "version": 1,
+            "items": [
+              {
+                "productId": "p",
+                "qty": 1
+              }
+            ]
+          },
+          "returnedAt": 1790812800000
+        },
+        {
+          "id": "o1790812800000",
+          "timestamp": 1790812800000,
+          "items": [
+            {
+              "productId": "p",
+              "qty": 2,
+              "cost": 3
+            }
+          ],
+          "stockConsumption": {
+            "version": 1,
+            "items": [
+              {
+                "productId": "p",
+                "qty": 2
+              }
+            ]
+          },
+          "returnedAt": 1790985599999
+        },
+        {
+          "id": "o1790985600000",
+          "timestamp": 1790985600000,
+          "items": [
+            {
+              "productId": "p",
+              "qty": 1,
+              "cost": 3
+            }
+          ],
+          "stockConsumption": {
+            "version": 1,
+            "items": [
+              {
+                "productId": "p",
+                "qty": 1
+              }
+            ]
+          }
+        },
+        {
+          "id": "o1791374400001",
+          "timestamp": 1791374400001,
+          "items": [
+            {
+              "productId": "p",
+              "qty": 1,
+              "cost": 3
+            }
+          ],
+          "stockConsumption": {
+            "version": 1,
+            "items": [
+              {
+                "productId": "p",
+                "qty": 1
+              }
+            ]
+          }
+        }
+      ],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": true,
+      "report": {
+        "from": "2026-10-01",
+        "to": "2026-10-02",
+        "rows": [
+          {
+            "id": "p",
+            "name": "Молоко",
+            "unit": "l",
+            "cost": 4,
+            "current": 8,
+            "minStock": 9,
+            "supplierNames": [
+              "Поставщик"
+            ],
+            "incoming": 4,
+            "incomingValue": 20,
+            "outgoing": 2,
+            "returned": 3,
+            "afterStart": 6,
+            "afterEnd": 1,
+            "start": 2,
+            "end": 7,
+            "outgoingValue": 8,
+            "returnedValue": 12,
+            "currentValue": 32,
+            "endValue": 28
+          }
+        ],
+        "documents": [
+          {
+            "id": "r1790985599999",
+            "supplier": "Поставщик",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790985599999,
+            "total": 10,
+            "shortage": false
+          },
+          {
+            "id": "r1790812800000",
+            "supplier": "Поставщик",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790812800000,
+            "total": 10,
+            "shortage": false
+          }
+        ],
+        "suppliers": [
+          {
+            "name": "Поставщик",
+            "count": 2,
+            "total": 20,
+            "shortages": 0
+          }
+        ],
+        "warnings": {
+          "legacySales": 0,
+          "legacyReturns": 0,
+          "invalid": 2,
+          "unknownCosts": 0
+        },
+        "recordedSalesCost": 6,
+        "missingSalesCosts": 0,
+        "incomingValue": 20,
+        "outgoingValue": 8,
+        "returnedValue": 12,
+        "currentValue": 32,
+        "endValue": 28,
+        "low": 1,
+        "idle": 0,
+        "generatedTimestamp": 1791374400000
+      }
+    }
+  },
+  {
+    "label": "unit-conversion-and-suppliers",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "minStock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": [
+        {
+          "id": "r1790812800000",
+          "timestamp": 1790812800000,
+          "supplierName": "Первый",
+          "totalCost": 20,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 500,
+              "stockUnit": "ml",
+              "totalCost": 20
+            }
+          ],
+          "shortage": true,
+          "invoiceNumber": "x",
+          "invoiceDate": "2020-01-01"
+        },
+        {
+          "id": "r1790812800001",
+          "timestamp": 1790812800001,
+          "supplierName": "Второй",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 1,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "id": "r1790812800002",
+          "timestamp": 1790812800002,
+          "supplierName": "Первый",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 1,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        }
+      ],
+      "orders": [],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": true,
+      "report": {
+        "from": "2026-10-01",
+        "to": "2026-10-02",
+        "rows": [
+          {
+            "id": "p",
+            "name": "Молоко",
+            "unit": "l",
+            "cost": 4,
+            "current": 8,
+            "minStock": 9,
+            "supplierNames": [
+              "Первый",
+              "Второй"
+            ],
+            "incoming": 2.5,
+            "incomingValue": 40,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 2.5,
+            "afterEnd": 0,
+            "start": 5.5,
+            "end": 8,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 32,
+            "endValue": 32
+          }
+        ],
+        "documents": [
+          {
+            "id": "r1790812800002",
+            "supplier": "Первый",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790812800002,
+            "total": 10,
+            "shortage": false
+          },
+          {
+            "id": "r1790812800001",
+            "supplier": "Второй",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790812800001,
+            "total": 10,
+            "shortage": false
+          },
+          {
+            "id": "r1790812800000",
+            "supplier": "Первый",
+            "number": "x",
+            "date": "2020-01-01",
+            "timestamp": 1790812800000,
+            "total": 20,
+            "shortage": true
+          }
+        ],
+        "suppliers": [
+          {
+            "name": "Первый",
+            "count": 2,
+            "total": 30,
+            "shortages": 1
+          },
+          {
+            "name": "Второй",
+            "count": 1,
+            "total": 10,
+            "shortages": 0
+          }
+        ],
+        "warnings": {
+          "legacySales": 0,
+          "legacyReturns": 0,
+          "invalid": 0,
+          "unknownCosts": 0
+        },
+        "recordedSalesCost": 0,
+        "missingSalesCosts": 0,
+        "incomingValue": 40,
+        "outgoingValue": 0,
+        "returnedValue": 0,
+        "currentValue": 32,
+        "endValue": 32,
+        "low": 1,
+        "idle": 1,
+        "generatedTimestamp": 1791374400000
+      }
+    }
+  },
+  {
+    "label": "deleted-and-untracked",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "minStock": 9,
+          "extension": 7,
+          "noStockTracking": true
+        },
+        {
+          "id": "recipe",
+          "name": "Рецепт",
+          "type": "complex"
+        }
+      ],
+      "receivings": [
+        {
+          "id": "r1790812800000",
+          "timestamp": 1790812800000,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "id": "deleted",
+          "timestamp": 1790812800000,
+          "items": [
+            {
+              "productId": "gone",
+              "productName": "Удалён",
+              "stockUnit": "g",
+              "qty": 50,
+              "unitCost": 2
+            }
+          ],
+          "shortage": true
+        }
+      ],
+      "orders": [
+        {
+          "id": "o1790812800000",
+          "timestamp": 1790812800000,
+          "items": [
+            {
+              "productId": "p",
+              "qty": 2,
+              "cost": 3
+            }
+          ],
+          "stockConsumption": {
+            "version": 1,
+            "items": [
+              {
+                "productId": "gone",
+                "qty": 3
+              },
+              {
+                "productId": "recipe",
+                "qty": 2
+              }
+            ]
+          }
+        }
+      ],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": true,
+      "report": {
+        "from": "2026-10-01",
+        "to": "2026-10-02",
+        "rows": [
+          {
+            "id": "p",
+            "name": "Молоко",
+            "unit": "l",
+            "cost": 4,
+            "current": null,
+            "minStock": 9,
+            "supplierNames": [
+              "Поставщик"
+            ],
+            "incoming": 2,
+            "incomingValue": 10,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 2,
+            "afterEnd": 0,
+            "start": null,
+            "end": null,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": null,
+            "endValue": null
+          },
+          {
+            "id": "recipe",
+            "name": "Рецепт",
+            "unit": "",
+            "cost": null,
+            "current": null,
+            "minStock": null,
+            "supplierNames": [],
+            "incoming": 0,
+            "incomingValue": 0,
+            "outgoing": 2,
+            "returned": 0,
+            "afterStart": -2,
+            "afterEnd": 0,
+            "start": null,
+            "end": null,
+            "outgoingValue": null,
+            "returnedValue": null,
+            "currentValue": null,
+            "endValue": null
+          },
+          {
+            "id": "gone",
+            "name": "Удалён",
+            "unit": "g",
+            "cost": null,
+            "current": null,
+            "minStock": null,
+            "supplierNames": [
+              "Не указан"
+            ],
+            "incoming": 50,
+            "incomingValue": 100,
+            "outgoing": 3,
+            "returned": 0,
+            "afterStart": 47,
+            "afterEnd": 0,
+            "start": null,
+            "end": null,
+            "outgoingValue": null,
+            "returnedValue": null,
+            "currentValue": null,
+            "endValue": null
+          }
+        ],
+        "documents": [
+          {
+            "id": "r1790812800000",
+            "supplier": "Поставщик",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790812800000,
+            "total": 10,
+            "shortage": false
+          },
+          {
+            "id": "deleted",
+            "supplier": "Не указан",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790812800000,
+            "total": 100,
+            "shortage": true
+          }
+        ],
+        "suppliers": [
+          {
+            "name": "Поставщик",
+            "count": 1,
+            "total": 10,
+            "shortages": 0
+          },
+          {
+            "name": "Не указан",
+            "count": 1,
+            "total": 100,
+            "shortages": 1
+          }
+        ],
+        "warnings": {
+          "legacySales": 0,
+          "legacyReturns": 0,
+          "invalid": 0,
+          "unknownCosts": 2
+        },
+        "recordedSalesCost": 6,
+        "missingSalesCosts": 0,
+        "incomingValue": 110,
+        "outgoingValue": 0,
+        "returnedValue": 0,
+        "currentValue": 0,
+        "endValue": 0,
+        "low": 0,
+        "idle": 0,
+        "generatedTimestamp": 1791374400000
+      }
+    }
+  },
+  {
+    "label": "missing-cost-and-legacy-receiving",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8
+        }
+      ],
+      "receivings": [
+        {
+          "id": "old",
+          "timestamp": 1790812800000,
+          "productId": "p",
+          "qty": 2,
+          "unitCost": 3,
+          "supplierName": ""
+        }
+      ],
+      "orders": [
+        {
+          "id": "o1790812800000",
+          "timestamp": 1790812800000,
+          "items": [
+            {
+              "qty": 2
+            },
+            {
+              "qty": 2,
+              "cost": null
+            },
+            {
+              "qty": 2,
+              "cost": "bad"
+            },
+            {
+              "qty": 2,
+              "cost": 4
+            }
+          ],
+          "stockConsumption": {
+            "version": 1,
+            "items": [
+              {
+                "productId": "p",
+                "qty": 2
+              }
+            ]
+          }
+        }
+      ],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": true,
+      "report": {
+        "from": "2026-10-01",
+        "to": "2026-10-02",
+        "rows": [
+          {
+            "id": "p",
+            "name": "Молоко",
+            "unit": "l",
+            "cost": null,
+            "current": 8,
+            "supplierNames": [
+              "Не указан"
+            ],
+            "incoming": 2,
+            "incomingValue": 6,
+            "outgoing": 2,
+            "returned": 0,
+            "afterStart": 0,
+            "afterEnd": 0,
+            "start": 8,
+            "end": 8,
+            "outgoingValue": null,
+            "returnedValue": null,
+            "currentValue": null,
+            "endValue": null
+          }
+        ],
+        "documents": [
+          {
+            "id": "old",
+            "supplier": "Не указан",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790812800000,
+            "total": 6,
+            "shortage": false
+          }
+        ],
+        "suppliers": [
+          {
+            "name": "Не указан",
+            "count": 1,
+            "total": 6,
+            "shortages": 0
+          }
+        ],
+        "warnings": {
+          "legacySales": 0,
+          "legacyReturns": 0,
+          "invalid": 0,
+          "unknownCosts": 1
+        },
+        "recordedSalesCost": 8,
+        "missingSalesCosts": 3,
+        "incomingValue": 6,
+        "outgoingValue": 0,
+        "returnedValue": 0,
+        "currentValue": 0,
+        "endValue": 0,
+        "low": 0,
+        "idle": 0,
+        "generatedTimestamp": 1791374400000
+      }
+    }
+  },
+  {
+    "label": "invalid-and-legacy-snapshots",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "minStock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": [],
+      "orders": [
+        {
+          "id": "o1790812800000",
+          "timestamp": 1790812800000,
+          "items": [
+            {
+              "productId": "p",
+              "qty": 1,
+              "cost": 3
+            }
+          ],
+          "stockConsumption": null,
+          "returnedAt": 1790985600001
+        },
+        {
+          "id": "o1790985600001",
+          "timestamp": 1790985600001,
+          "items": [
+            {
+              "productId": "p",
+              "qty": 1,
+              "cost": 3
+            }
+          ],
+          "stockConsumption": {
+            "version": "1",
+            "items": []
+          }
+        },
+        {
+          "id": "o1790812800000",
+          "timestamp": 1790812800000,
+          "items": [
+            {
+              "productId": "p",
+              "qty": 1,
+              "cost": 3
+            }
+          ],
+          "stockConsumption": {
+            "version": 1,
+            "items": [
+              {
+                "productId": "p",
+                "qty": 1
+              },
+              {
+                "productId": "p",
+                "qty": 2
+              }
+            ]
+          }
+        },
+        {
+          "id": "o1790812800000",
+          "timestamp": 1790812800000,
+          "items": [
+            {
+              "productId": "p",
+              "qty": 1,
+              "cost": 3
+            }
+          ],
+          "stockConsumption": {
+            "version": 1,
+            "items": [
+              null
+            ]
+          }
+        },
+        {
+          "id": "o1790812800000",
+          "timestamp": 1790812800000,
+          "items": [
+            {
+              "productId": "p",
+              "qty": 1,
+              "cost": 3
+            }
+          ],
+          "stockConsumption": {
+            "version": 1,
+            "items": [
+              {
+                "productId": "p",
+                "qty": -1
+              }
+            ]
+          }
+        }
+      ],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": true,
+      "report": {
+        "from": "2026-10-01",
+        "to": "2026-10-02",
+        "rows": [
+          {
+            "id": "p",
+            "name": "Молоко",
+            "unit": "l",
+            "cost": 4,
+            "current": 8,
+            "minStock": 9,
+            "supplierNames": [],
+            "incoming": 0,
+            "incomingValue": 0,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 0,
+            "afterEnd": 0,
+            "start": 8,
+            "end": 8,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 32,
+            "endValue": 32
+          }
+        ],
+        "documents": [],
+        "suppliers": [],
+        "warnings": {
+          "legacySales": 2,
+          "legacyReturns": 1,
+          "invalid": 3,
+          "unknownCosts": 0
+        },
+        "recordedSalesCost": 12,
+        "missingSalesCosts": 0,
+        "incomingValue": 0,
+        "outgoingValue": 0,
+        "returnedValue": 0,
+        "currentValue": 32,
+        "endValue": 32,
+        "low": 1,
+        "idle": 1,
+        "generatedTimestamp": 1791374400000
+      }
+    }
+  },
+  {
+    "label": "invalid-receiving-and-admin-tombstone",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "minStock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": [
+        {
+          "id": "r1790812800000",
+          "timestamp": 1790812800000,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "kg",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "id": "r1790812800000",
+          "timestamp": 1790812800000,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": -1,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "id": "r1790812800000",
+          "timestamp": 1790812800000,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": "bad",
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "id": "r1790812800000",
+          "timestamp": 1790812800000,
+          "supplierName": "Поставщик",
+          "totalCost": "bad",
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": "bad"
+            }
+          ]
+        },
+        {
+          "id": "r1790812800000",
+          "timestamp": 1790812800000,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ],
+          "adminDeleted": true
+        },
+        {
+          "timestamp": 1790812800000,
+          "items": [
+            {
+              "productId": "p",
+              "qty": 2
+            }
+          ]
+        }
+      ],
+      "orders": [],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": true,
+      "report": {
+        "from": "2026-10-01",
+        "to": "2026-10-02",
+        "rows": [
+          {
+            "id": "p",
+            "name": "Молоко",
+            "unit": "l",
+            "cost": 4,
+            "current": 8,
+            "minStock": 9,
+            "supplierNames": [],
+            "incoming": 0,
+            "incomingValue": 0,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 0,
+            "afterEnd": 0,
+            "start": 8,
+            "end": 8,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 32,
+            "endValue": 32
+          }
+        ],
+        "documents": [
+          {
+            "id": "r1790812800000",
+            "supplier": "Поставщик",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790812800000,
+            "total": 10,
+            "shortage": false
+          },
+          {
+            "id": "r1790812800000",
+            "supplier": "Поставщик",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790812800000,
+            "total": 10,
+            "shortage": false
+          },
+          {
+            "id": "r1790812800000",
+            "supplier": "Поставщик",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790812800000,
+            "total": 10,
+            "shortage": false
+          },
+          {
+            "id": "r1790812800000",
+            "supplier": "Поставщик",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790812800000,
+            "total": null,
+            "shortage": false
+          },
+          {
+            "supplier": "Не указан",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790812800000,
+            "total": null,
+            "shortage": false
+          }
+        ],
+        "suppliers": [
+          {
+            "name": "Поставщик",
+            "count": 4,
+            "total": 30,
+            "shortages": 0
+          },
+          {
+            "name": "Не указан",
+            "count": 1,
+            "total": 0,
+            "shortages": 0
+          }
+        ],
+        "warnings": {
+          "legacySales": 0,
+          "legacyReturns": 0,
+          "invalid": 5,
+          "unknownCosts": 0
+        },
+        "recordedSalesCost": 0,
+        "missingSalesCosts": 0,
+        "incomingValue": 0,
+        "outgoingValue": 0,
+        "returnedValue": 0,
+        "currentValue": 32,
+        "endValue": 32,
+        "low": 1,
+        "idle": 1,
+        "generatedTimestamp": 1791374400000
+      }
+    }
+  },
+  {
+    "label": "null-zero-and-missing-fields",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": null,
+          "cost": null,
+          "minStock": 9,
+          "extension": 7
+        },
+        {
+          "id": "missing",
+          "name": "Прочерк",
+          "type": "simple",
+          "stockUnit": "piece"
+        }
+      ],
+      "receivings": [
+        {
+          "id": "r1790812800000",
+          "timestamp": 1790812800000,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": null,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "timestamp": 1790812800000,
+          "items": [
+            {
+              "productId": "p",
+              "qty": 1,
+              "unitCost": 0
+            }
+          ]
+        },
+        {
+          "timestamp": 1790812800000,
+          "items": [
+            {
+              "productId": "p",
+              "qty": 0,
+              "totalCost": 0,
+              "stockUnit": null
+            }
+          ]
+        }
+      ],
+      "orders": [
+        {
+          "id": "o1790812800000",
+          "timestamp": 1790812800000,
+          "items": [
+            {
+              "cost": 2,
+              "qty": null
+            }
+          ],
+          "stockConsumption": {
+            "version": 1,
+            "items": [
+              {
+                "productId": "p",
+                "qty": 0
+              }
+            ]
+          }
+        }
+      ],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": true,
+      "report": {
+        "from": "2026-10-01",
+        "to": "2026-10-02",
+        "rows": [
+          {
+            "id": "p",
+            "name": "Молоко",
+            "unit": "l",
+            "cost": 0,
+            "current": 0,
+            "minStock": 9,
+            "supplierNames": [
+              "Не указан"
+            ],
+            "incoming": 1,
+            "incomingValue": 10,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 1,
+            "afterEnd": 0,
+            "start": -1,
+            "end": 0,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 0,
+            "endValue": 0
+          },
+          {
+            "id": "missing",
+            "name": "Прочерк",
+            "unit": "piece",
+            "cost": null,
+            "current": null,
+            "supplierNames": [],
+            "incoming": 0,
+            "incomingValue": 0,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 0,
+            "afterEnd": 0,
+            "start": null,
+            "end": null,
+            "outgoingValue": null,
+            "returnedValue": null,
+            "currentValue": null,
+            "endValue": null
+          }
+        ],
+        "documents": [
+          {
+            "id": "r1790812800000",
+            "supplier": "Поставщик",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790812800000,
+            "total": 10,
+            "shortage": false
+          },
+          {
+            "supplier": "Не указан",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790812800000,
+            "total": 0,
+            "shortage": false
+          },
+          {
+            "supplier": "Не указан",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790812800000,
+            "total": 0,
+            "shortage": false
+          }
+        ],
+        "suppliers": [
+          {
+            "name": "Поставщик",
+            "count": 1,
+            "total": 10,
+            "shortages": 0
+          },
+          {
+            "name": "Не указан",
+            "count": 2,
+            "total": 0,
+            "shortages": 0
+          }
+        ],
+        "warnings": {
+          "legacySales": 0,
+          "legacyReturns": 0,
+          "invalid": 1,
+          "unknownCosts": 0
+        },
+        "recordedSalesCost": 0,
+        "missingSalesCosts": 0,
+        "incomingValue": 10,
+        "outgoingValue": 0,
+        "returnedValue": 0,
+        "currentValue": 0,
+        "endValue": 0,
+        "low": 1,
+        "idle": 0,
+        "generatedTimestamp": 1791374400000
+      }
+    }
+  },
+  {
+    "label": "name-order",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "n0",
+          "name": "Milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 1,
+          "cost": 1,
+          "minStock": 9,
+          "extension": 7
+        },
+        {
+          "id": "n1",
+          "name": "milk",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 1,
+          "cost": 1,
+          "minStock": 9,
+          "extension": 7
+        },
+        {
+          "id": "n2",
+          "name": "Ёж",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 1,
+          "cost": 1,
+          "minStock": 9,
+          "extension": 7
+        },
+        {
+          "id": "n3",
+          "name": "Еж",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 1,
+          "cost": 1,
+          "minStock": 9,
+          "extension": 7
+        },
+        {
+          "id": "n4",
+          "name": "Арбуз",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 1,
+          "cost": 1,
+          "minStock": 9,
+          "extension": 7
+        },
+        {
+          "id": "n5",
+          "name": "яблоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 1,
+          "cost": 1,
+          "minStock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": [],
+      "orders": [],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": true,
+      "report": {
+        "from": "2026-10-01",
+        "to": "2026-10-02",
+        "rows": [
+          {
+            "id": "n4",
+            "name": "Арбуз",
+            "unit": "l",
+            "cost": 1,
+            "current": 1,
+            "minStock": 9,
+            "supplierNames": [],
+            "incoming": 0,
+            "incomingValue": 0,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 0,
+            "afterEnd": 0,
+            "start": 1,
+            "end": 1,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 1,
+            "endValue": 1
+          },
+          {
+            "id": "n3",
+            "name": "Еж",
+            "unit": "l",
+            "cost": 1,
+            "current": 1,
+            "minStock": 9,
+            "supplierNames": [],
+            "incoming": 0,
+            "incomingValue": 0,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 0,
+            "afterEnd": 0,
+            "start": 1,
+            "end": 1,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 1,
+            "endValue": 1
+          },
+          {
+            "id": "n2",
+            "name": "Ёж",
+            "unit": "l",
+            "cost": 1,
+            "current": 1,
+            "minStock": 9,
+            "supplierNames": [],
+            "incoming": 0,
+            "incomingValue": 0,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 0,
+            "afterEnd": 0,
+            "start": 1,
+            "end": 1,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 1,
+            "endValue": 1
+          },
+          {
+            "id": "n5",
+            "name": "яблоко",
+            "unit": "l",
+            "cost": 1,
+            "current": 1,
+            "minStock": 9,
+            "supplierNames": [],
+            "incoming": 0,
+            "incomingValue": 0,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 0,
+            "afterEnd": 0,
+            "start": 1,
+            "end": 1,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 1,
+            "endValue": 1
+          },
+          {
+            "id": "n1",
+            "name": "milk",
+            "unit": "l",
+            "cost": 1,
+            "current": 1,
+            "minStock": 9,
+            "supplierNames": [],
+            "incoming": 0,
+            "incomingValue": 0,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 0,
+            "afterEnd": 0,
+            "start": 1,
+            "end": 1,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 1,
+            "endValue": 1
+          },
+          {
+            "id": "n0",
+            "name": "Milk",
+            "unit": "l",
+            "cost": 1,
+            "current": 1,
+            "minStock": 9,
+            "supplierNames": [],
+            "incoming": 0,
+            "incomingValue": 0,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 0,
+            "afterEnd": 0,
+            "start": 1,
+            "end": 1,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 1,
+            "endValue": 1
+          }
+        ],
+        "documents": [],
+        "suppliers": [],
+        "warnings": {
+          "legacySales": 0,
+          "legacyReturns": 0,
+          "invalid": 0,
+          "unknownCosts": 0
+        },
+        "recordedSalesCost": 0,
+        "missingSalesCosts": 0,
+        "incomingValue": 0,
+        "outgoingValue": 0,
+        "returnedValue": 0,
+        "currentValue": 6,
+        "endValue": 6,
+        "low": 6,
+        "idle": 6,
+        "generatedTimestamp": 1791374400000
+      }
+    }
+  },
+  {
+    "label": "numeric-duplicate-snapshot",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "minStock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": [],
+      "orders": [
+        {
+          "id": "o1790812800000",
+          "timestamp": 1790812800000,
+          "items": [
+            {
+              "productId": "p",
+              "qty": 1,
+              "cost": 3
+            }
+          ],
+          "stockConsumption": {
+            "version": 1,
+            "items": [
+              {
+                "productId": 1,
+                "qty": 1
+              },
+              {
+                "productId": 1,
+                "qty": 2
+              }
+            ]
+          }
+        }
+      ],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": true,
+      "report": {
+        "from": "2026-10-01",
+        "to": "2026-10-02",
+        "rows": [
+          {
+            "id": "p",
+            "name": "Молоко",
+            "unit": "l",
+            "cost": 4,
+            "current": 8,
+            "minStock": 9,
+            "supplierNames": [],
+            "incoming": 0,
+            "incomingValue": 0,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 0,
+            "afterEnd": 0,
+            "start": 8,
+            "end": 8,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 32,
+            "endValue": 32
+          }
+        ],
+        "documents": [],
+        "suppliers": [],
+        "warnings": {
+          "legacySales": 0,
+          "legacyReturns": 0,
+          "invalid": 1,
+          "unknownCosts": 0
+        },
+        "recordedSalesCost": 3,
+        "missingSalesCosts": 0,
+        "incomingValue": 0,
+        "outgoingValue": 0,
+        "returnedValue": 0,
+        "currentValue": 32,
+        "endValue": 32,
+        "low": 1,
+        "idle": 1,
+        "generatedTimestamp": 1791374400000
+      }
+    }
+  },
+  {
+    "label": "moscow-local-days",
+    "request": {
+      "version": 1,
+      "from": "2026-10-01",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "Europe/Moscow"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "minStock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": [
+        {
+          "id": "r1790801999999",
+          "timestamp": 1790801999999,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "id": "r1790802000000",
+          "timestamp": 1790802000000,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "id": "r1790974799999",
+          "timestamp": 1790974799999,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "id": "r1790974800000",
+          "timestamp": 1790974800000,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        }
+      ],
+      "orders": [],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": true,
+      "report": {
+        "from": "2026-10-01",
+        "to": "2026-10-02",
+        "rows": [
+          {
+            "id": "p",
+            "name": "Молоко",
+            "unit": "l",
+            "cost": 4,
+            "current": 8,
+            "minStock": 9,
+            "supplierNames": [
+              "Поставщик"
+            ],
+            "incoming": 4,
+            "incomingValue": 20,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 6,
+            "afterEnd": 2,
+            "start": 2,
+            "end": 6,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 32,
+            "endValue": 24
+          }
+        ],
+        "documents": [
+          {
+            "id": "r1790974799999",
+            "supplier": "Поставщик",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790974799999,
+            "total": 10,
+            "shortage": false
+          },
+          {
+            "id": "r1790802000000",
+            "supplier": "Поставщик",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1790802000000,
+            "total": 10,
+            "shortage": false
+          }
+        ],
+        "suppliers": [
+          {
+            "name": "Поставщик",
+            "count": 2,
+            "total": 20,
+            "shortages": 0
+          }
+        ],
+        "warnings": {
+          "legacySales": 0,
+          "legacyReturns": 0,
+          "invalid": 0,
+          "unknownCosts": 0
+        },
+        "recordedSalesCost": 0,
+        "missingSalesCosts": 0,
+        "incomingValue": 20,
+        "outgoingValue": 0,
+        "returnedValue": 0,
+        "currentValue": 32,
+        "endValue": 24,
+        "low": 1,
+        "idle": 1,
+        "generatedTimestamp": 1791374400000
+      }
+    }
+  },
+  {
+    "label": "dst-local-day",
+    "request": {
+      "version": 1,
+      "from": "2025-10-26",
+      "to": "2025-10-26",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "Europe/Berlin"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "minStock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": [
+        {
+          "id": "r1761429600000",
+          "timestamp": 1761429600000,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "id": "r1761519599000",
+          "timestamp": 1761519599000,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        },
+        {
+          "id": "r1761519600000",
+          "timestamp": 1761519600000,
+          "supplierName": "Поставщик",
+          "totalCost": 10,
+          "items": [
+            {
+              "productId": "p",
+              "productName": "Старое имя",
+              "qty": 2,
+              "stockUnit": "l",
+              "totalCost": 10
+            }
+          ]
+        }
+      ],
+      "orders": [],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": true,
+      "report": {
+        "from": "2025-10-26",
+        "to": "2025-10-26",
+        "rows": [
+          {
+            "id": "p",
+            "name": "Молоко",
+            "unit": "l",
+            "cost": 4,
+            "current": 8,
+            "minStock": 9,
+            "supplierNames": [
+              "Поставщик"
+            ],
+            "incoming": 4,
+            "incomingValue": 20,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 6,
+            "afterEnd": 2,
+            "start": 2,
+            "end": 6,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 32,
+            "endValue": 24
+          }
+        ],
+        "documents": [
+          {
+            "id": "r1761519599000",
+            "supplier": "Поставщик",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1761519599000,
+            "total": 10,
+            "shortage": false
+          },
+          {
+            "id": "r1761429600000",
+            "supplier": "Поставщик",
+            "number": "—",
+            "date": "—",
+            "timestamp": 1761429600000,
+            "total": 10,
+            "shortage": false
+          }
+        ],
+        "suppliers": [
+          {
+            "name": "Поставщик",
+            "count": 2,
+            "total": 20,
+            "shortages": 0
+          }
+        ],
+        "warnings": {
+          "legacySales": 0,
+          "legacyReturns": 0,
+          "invalid": 0,
+          "unknownCosts": 0
+        },
+        "recordedSalesCost": 0,
+        "missingSalesCosts": 0,
+        "incomingValue": 20,
+        "outgoingValue": 0,
+        "returnedValue": 0,
+        "currentValue": 32,
+        "endValue": 24,
+        "low": 1,
+        "idle": 1,
+        "generatedTimestamp": 1791374400000
+      }
+    }
+  },
+  {
+    "label": "leap-day",
+    "request": {
+      "version": 1,
+      "from": "2024-02-29",
+      "to": "2024-02-29",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "minStock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": [],
+      "orders": [],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": true,
+      "report": {
+        "from": "2024-02-29",
+        "to": "2024-02-29",
+        "rows": [
+          {
+            "id": "p",
+            "name": "Молоко",
+            "unit": "l",
+            "cost": 4,
+            "current": 8,
+            "minStock": 9,
+            "supplierNames": [],
+            "incoming": 0,
+            "incomingValue": 0,
+            "outgoing": 0,
+            "returned": 0,
+            "afterStart": 0,
+            "afterEnd": 0,
+            "start": 8,
+            "end": 8,
+            "outgoingValue": 0,
+            "returnedValue": 0,
+            "currentValue": 32,
+            "endValue": 32
+          }
+        ],
+        "documents": [],
+        "suppliers": [],
+        "warnings": {
+          "legacySales": 0,
+          "legacyReturns": 0,
+          "invalid": 0,
+          "unknownCosts": 0
+        },
+        "recordedSalesCost": 0,
+        "missingSalesCosts": 0,
+        "incomingValue": 0,
+        "outgoingValue": 0,
+        "returnedValue": 0,
+        "currentValue": 32,
+        "endValue": 32,
+        "low": 1,
+        "idle": 1,
+        "generatedTimestamp": 1791374400000
+      }
+    }
+  },
+  {
+    "label": "bad-date",
+    "request": {
+      "version": 1,
+      "from": "2026-02-29",
+      "to": "2026-03-01",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "minStock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": [],
+      "orders": [],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Некорректная дата"
+    }
+  },
+  {
+    "label": "bad-format",
+    "request": {
+      "version": 1,
+      "from": "2026-1-1",
+      "to": "2026-01-02",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "minStock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": [],
+      "orders": [],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Укажите даты периода"
+    }
+  },
+  {
+    "label": "reversed",
+    "request": {
+      "version": 1,
+      "from": "2026-10-03",
+      "to": "2026-10-02",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "minStock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": [],
+      "orders": [],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Начало периода позже окончания"
+    }
+  },
+  {
+    "label": "future",
+    "request": {
+      "version": 1,
+      "from": "2026-10-08",
+      "to": "2026-10-08",
+      "now": 1791374400000,
+      "validationNow": 1791374400000,
+      "zone": "UTC"
+    },
+    "state": {
+      "products": [
+        {
+          "id": "p",
+          "name": "Молоко",
+          "type": "simple",
+          "stockUnit": "l",
+          "stock": 8,
+          "cost": 4,
+          "minStock": 9,
+          "extension": 7
+        }
+      ],
+      "receivings": [],
+      "orders": [],
+      "company": {},
+      "currency": "₽"
+    },
+    "expected": {
+      "allowed": false,
+      "message": "Дата окончания не может быть в будущем"
+    }
+  }
+]

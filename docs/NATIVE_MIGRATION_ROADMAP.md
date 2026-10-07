@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **94/110 выполнено (85,45%)**
-после 095. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **95/110 выполнено (86,36%)**
+после 096. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -561,3 +561,8 @@ Native open/save/restoration from Room, legacy quantity/total defaults and captu
 ## 095 — inventory recount and atomic application
 
 Authoritative native fixation/difference/loss calculation and atomic stock/draft or history/config/clear; later sales survive completion. Inventory JSON ownership/projector keeps v13. Input/start/cancel/calendar/summary preview remain presentation/runtime compatibility; native command validates committed values. Next 096: warehouse period reports. [095](../specs/095-native-inventory-commands/spec.md).
+
+
+## 096 — native warehouse model
+
+Calendar periods/DST and movement/valuation/warning/supplier model read from authoritative Room sources. Existing page/export/monthly handlers await model, preserve role/send policy, capture export choices and reject stale renders. Android ICU RU ordering matches source. Presentation/unit grouping remains JS; historical estimates never mutate stock. Next 097 analytics. [096](../specs/096-native-warehouse-reports/spec.md).

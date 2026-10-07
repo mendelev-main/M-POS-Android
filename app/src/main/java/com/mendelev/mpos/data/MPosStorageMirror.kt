@@ -184,6 +184,10 @@ class MPosStorageMirror(
                 attempt { MPosCustomerEngine.calculate(JSONObject(requireNotNull(command.serialized))).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native customer context unavailable") }
             }
+            "warehouseRead" -> {
+                attempt { MPosWarehouseRepository(database).read(requireNotNull(command.serialized)).put("requestId",requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId,false,"native warehouse report unavailable") }
+            }
             "inventoryCommit" -> {
                 attempt { MPosInventoryCommand(database).commit(requireNotNull(command.serialized)).put("requestId",requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId,false,"local inventory transaction failed") }
