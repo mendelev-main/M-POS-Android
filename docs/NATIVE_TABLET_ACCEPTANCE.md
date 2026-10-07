@@ -377,3 +377,7 @@ Select/remove a customer, refresh profile and verify rewards reset, retained add
 ## 085 gift eligibility — pending
 
 Available/unavailable gifts online; offline/timeout cancel and explicit continue without gift. Change customer/redemption/order or close dialog during read; no obsolete payment continuation. Check profile refresh and reconnect without automatic gift work, completed payment/return/restart. Correctly selected gift must still use existing price/receipt allocation.
+
+## 086 loyalty sale/reversal journal — pending
+
+Pay with customer online/offline; restart during sending; repeated reconnect with live requests; return while sale is pending/sending/synced; ensure sale completion precedes pending reversal. Simulate network success/local finish failure; reopen and verify allowed idempotent recovery. Export/import v13 and reopen. Several pending receipts plus a new sale/return must preserve all financial/stock totals, receipt history and return fields. Availability must still wait for next saved payment.

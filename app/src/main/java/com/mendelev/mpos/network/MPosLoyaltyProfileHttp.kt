@@ -1,6 +1,8 @@
 package com.mendelev.mpos.network
 
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -26,6 +28,16 @@ class MPosLoyaltyProfileHttp(client: OkHttpClient = OkHttpClient()) {
             .addPathSegment(payload.getString("customerId")).addPathSegment("loyalty").build()
         return Request.Builder().url(url).header("Content-Type", "application/json")
             .header("X-Device-Key", key).header("Cache-Control", "no-cache, no-store").get().build()
+    }
+
+    fun mutation(payload: JSONObject): Request {
+        val base = payload.getString("backendUrl").trim().trimEnd('/').toHttpUrl()
+        require(base.isHttps)
+        val key = payload.getString("deviceKey"); require(key.isNotBlank())
+        val route = when(payload.getString("kind")) { "sale" -> "sales"; "reversal" -> "reversal"; else -> throw IllegalArgumentException("unsupported loyalty mutation") }
+        val url = base.newBuilder().addPathSegments("api/loyalty").addPathSegment(route).build()
+        return Request.Builder().url(url).header("X-Device-Key",key).header("Cache-Control","no-cache, no-store")
+            .post(payload.getJSONObject("body").toString().toRequestBody("application/json".toMediaType())).build()
     }
 
     fun decode(response: Response): JSONObject {

@@ -36,6 +36,7 @@ class MPosNetworkTransport(
         val requestId = payload.optString("requestId")
         when (payload.optString("action")) {
             "loyaltyProfile" -> loyaltyProfile(requestId, payload)
+            "loyaltyMutation" -> loyaltyProfile(requestId, payload, true)
             "loyaltyProfileCancel" -> profileCalls.remove(requestId)?.cancel()
             "describe" -> onResult(status(requestId))
             "probe" -> probe(requestId, payload)
@@ -48,8 +49,8 @@ class MPosNetworkTransport(
 
     private fun status(requestId:String)=JSONObject().put("requestId",requestId).put("ok",true).put("transport","okhttp").put("authoritative",false).put("sseEnabled",shadowJob?.isActive==true).put("businessHandlers","legacy").put("connected",shadowConnected).put("events",shadowEvents).put("reconnects",reconnects).put("lastEventHash",lastEventHash)
 
-    private fun loyaltyProfile(requestId: String, payload: JSONObject) {
-        val call = try { loyaltyProfiles.client.newCall(loyaltyProfiles.request(payload)) }
+    private fun loyaltyProfile(requestId: String, payload: JSONObject, mutation: Boolean = false) {
+        val call = try { loyaltyProfiles.client.newCall(if(mutation)loyaltyProfiles.mutation(payload) else loyaltyProfiles.request(payload)) }
         catch (_: Exception) { onResult(JSONObject().put("requestId",requestId).put("ok",false).put("message","Некорректные настройки сервера")); return }
         profileCalls.put(requestId,call)?.cancel()
         scope.launch(Dispatchers.IO) {

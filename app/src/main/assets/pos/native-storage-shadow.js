@@ -137,6 +137,9 @@
 
   const mposCore=global.MPosCore=global.MPosCore||{};
   mposCore.Storage=mposStorage;
+  mposCore.LoyaltyJournal=Object.freeze({
+    async execute(input){return requireNative(await request('loyaltyJournal',{payload:JSON.stringify(input)}),true);}
+  });
   mposCore.LoyaltyEligibility=Object.freeze({
     async calculate(input){return requireNative(await request('loyaltyEligibilityRead',{payload:JSON.stringify(input)}),true);}
   });

@@ -113,6 +113,11 @@ class MPosOrderStorage(private val database: MPosDatabase) {
             .put("total", orderDao.orderCount()).put("revision", rowState().optLong("revision"))
     }
 
+    /** Revision only; metadata commands must not serialize the complete receipt history. */
+    suspend fun revision(): Long = database.withTransaction {
+        check(isAuthoritative()); ensureRows(); rowState().getLong("revision")
+    }
+
     suspend fun upsert(serialized: String): JSONObject = database.withTransaction {
         check(isAuthoritative()); ensureRows()
         val envelope = parseObject(serialized)

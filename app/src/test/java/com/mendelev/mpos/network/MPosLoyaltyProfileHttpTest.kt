@@ -35,4 +35,15 @@ class MPosLoyaltyProfileHttpTest {
         val client=OkHttpClient.Builder().addInterceptor { chain -> observed=chain.request().header("X-Device-Key")=="synthetic-test-key";Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200).message("fixture").body("{\"programs\":[]}".toResponseBody()).build() }.build()
         val http=MPosLoyaltyProfileHttp(client);http.client.newCall(http.request(payload())).execute().use{assertTrue(http.decode(it).getBoolean("ok"))};assertTrue(observed)
     }
+    @Test fun saleAndReversalUseOnlyReviewedPostRoutesAndBodies(){
+        val http=MPosLoyaltyProfileHttp()
+        for((kind,route) in listOf("sale" to "sales","reversal" to "reversal")){
+            val p=payload().put("kind",kind).put("body",JSONObject().put("orderId","o").put("customerId","c"))
+            val request=http.mutation(p);assertEquals("POST",request.method);assertEquals("/prefix/api/loyalty/$route",request.url.encodedPath)
+            val buffer=okio.Buffer();request.body!!.writeTo(buffer);assertEquals("o",JSONObject(buffer.readUtf8()).getString("orderId"))
+            assertEquals("synthetic-test-key",request.header("X-Device-Key"))
+        }
+        try{http.mutation(payload().put("kind","payment").put("body",JSONObject()));fail("arbitrary endpoint accepted")}catch(_:IllegalArgumentException){}
+    }
+
 }

@@ -1,0 +1,1624 @@
+[
+  {
+    "kind": "sale",
+    "success": true,
+    "before": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltySync": {
+        "status": "pending",
+        "extra": 7
+      }
+    },
+    "requests": [
+      {
+        "path": "/api/loyalty/sales",
+        "body": {
+          "orderId": "o",
+          "customerId": "c",
+          "items": [
+            {
+              "productId": "p",
+              "quantity": 2
+            }
+          ],
+          "redemptions": {
+            "p": 1
+          },
+          "rewardAllocations": {
+            "p": [
+              {
+                "productId": "p",
+                "quantity": 1
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "writes": [
+      {
+        "id": "o",
+        "customer": {
+          "id": "c",
+          "extra": 1
+        },
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "extra": "keep"
+          }
+        ],
+        "total": 12,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 12
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyRewardAllocations": {
+          "p": [
+            {
+              "productId": "p",
+              "quantity": 1
+            }
+          ]
+        },
+        "extension": {
+          "v": 7
+        },
+        "loyaltySync": {
+          "status": "sending",
+          "extra": 7,
+          "attemptedAt": 10
+        }
+      },
+      {
+        "id": "o",
+        "customer": {
+          "id": "c",
+          "extra": 1
+        },
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "extra": "keep"
+          }
+        ],
+        "total": 12,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 12
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyRewardAllocations": {
+          "p": [
+            {
+              "productId": "p",
+              "quantity": 1
+            }
+          ]
+        },
+        "extension": {
+          "v": 7
+        },
+        "loyaltySync": {
+          "status": "synced",
+          "at": 10,
+          "events": [
+            "event"
+          ]
+        }
+      }
+    ],
+    "after": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltySync": {
+        "status": "synced",
+        "at": 10,
+        "events": [
+          "event"
+        ]
+      }
+    }
+  },
+  {
+    "kind": "sale",
+    "success": false,
+    "before": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltySync": {
+        "status": "pending",
+        "extra": 7
+      }
+    },
+    "requests": [
+      {
+        "path": "/api/loyalty/sales",
+        "body": {
+          "orderId": "o",
+          "customerId": "c",
+          "items": [
+            {
+              "productId": "p",
+              "quantity": 2
+            }
+          ],
+          "redemptions": {
+            "p": 1
+          },
+          "rewardAllocations": {
+            "p": [
+              {
+                "productId": "p",
+                "quantity": 1
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "writes": [
+      {
+        "id": "o",
+        "customer": {
+          "id": "c",
+          "extra": 1
+        },
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "extra": "keep"
+          }
+        ],
+        "total": 12,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 12
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyRewardAllocations": {
+          "p": [
+            {
+              "productId": "p",
+              "quantity": 1
+            }
+          ]
+        },
+        "extension": {
+          "v": 7
+        },
+        "loyaltySync": {
+          "status": "sending",
+          "extra": 7,
+          "attemptedAt": 10
+        }
+      },
+      {
+        "id": "o",
+        "customer": {
+          "id": "c",
+          "extra": 1
+        },
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "extra": "keep"
+          }
+        ],
+        "total": 12,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 12
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyRewardAllocations": {
+          "p": [
+            {
+              "productId": "p",
+              "quantity": 1
+            }
+          ]
+        },
+        "extension": {
+          "v": 7
+        },
+        "loyaltySync": {
+          "status": "pending",
+          "error": "offline",
+          "at": 10
+        }
+      }
+    ],
+    "after": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltySync": {
+        "status": "pending",
+        "error": "offline",
+        "at": 10
+      }
+    }
+  },
+  {
+    "kind": "sale",
+    "success": true,
+    "before": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltySync": {
+        "status": "sending",
+        "extra": 7
+      }
+    },
+    "requests": [],
+    "writes": [],
+    "after": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltySync": {
+        "status": "sending",
+        "extra": 7
+      }
+    }
+  },
+  {
+    "kind": "sale",
+    "success": false,
+    "before": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltySync": {
+        "status": "sending",
+        "extra": 7
+      }
+    },
+    "requests": [],
+    "writes": [],
+    "after": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltySync": {
+        "status": "sending",
+        "extra": 7
+      }
+    }
+  },
+  {
+    "kind": "sale",
+    "success": true,
+    "before": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltySync": {
+        "status": "synced",
+        "extra": 7
+      }
+    },
+    "requests": [
+      {
+        "path": "/api/loyalty/sales",
+        "body": {
+          "orderId": "o",
+          "customerId": "c",
+          "items": [
+            {
+              "productId": "p",
+              "quantity": 2
+            }
+          ],
+          "redemptions": {
+            "p": 1
+          },
+          "rewardAllocations": {
+            "p": [
+              {
+                "productId": "p",
+                "quantity": 1
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "writes": [
+      {
+        "id": "o",
+        "customer": {
+          "id": "c",
+          "extra": 1
+        },
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "extra": "keep"
+          }
+        ],
+        "total": 12,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 12
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyRewardAllocations": {
+          "p": [
+            {
+              "productId": "p",
+              "quantity": 1
+            }
+          ]
+        },
+        "extension": {
+          "v": 7
+        },
+        "loyaltySync": {
+          "status": "sending",
+          "extra": 7,
+          "attemptedAt": 10
+        }
+      },
+      {
+        "id": "o",
+        "customer": {
+          "id": "c",
+          "extra": 1
+        },
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "extra": "keep"
+          }
+        ],
+        "total": 12,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 12
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyRewardAllocations": {
+          "p": [
+            {
+              "productId": "p",
+              "quantity": 1
+            }
+          ]
+        },
+        "extension": {
+          "v": 7
+        },
+        "loyaltySync": {
+          "status": "synced",
+          "at": 10,
+          "events": [
+            "event"
+          ]
+        }
+      }
+    ],
+    "after": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltySync": {
+        "status": "synced",
+        "at": 10,
+        "events": [
+          "event"
+        ]
+      }
+    }
+  },
+  {
+    "kind": "sale",
+    "success": false,
+    "before": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltySync": {
+        "status": "synced",
+        "extra": 7
+      }
+    },
+    "requests": [
+      {
+        "path": "/api/loyalty/sales",
+        "body": {
+          "orderId": "o",
+          "customerId": "c",
+          "items": [
+            {
+              "productId": "p",
+              "quantity": 2
+            }
+          ],
+          "redemptions": {
+            "p": 1
+          },
+          "rewardAllocations": {
+            "p": [
+              {
+                "productId": "p",
+                "quantity": 1
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "writes": [
+      {
+        "id": "o",
+        "customer": {
+          "id": "c",
+          "extra": 1
+        },
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "extra": "keep"
+          }
+        ],
+        "total": 12,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 12
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyRewardAllocations": {
+          "p": [
+            {
+              "productId": "p",
+              "quantity": 1
+            }
+          ]
+        },
+        "extension": {
+          "v": 7
+        },
+        "loyaltySync": {
+          "status": "sending",
+          "extra": 7,
+          "attemptedAt": 10
+        }
+      },
+      {
+        "id": "o",
+        "customer": {
+          "id": "c",
+          "extra": 1
+        },
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "extra": "keep"
+          }
+        ],
+        "total": 12,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 12
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyRewardAllocations": {
+          "p": [
+            {
+              "productId": "p",
+              "quantity": 1
+            }
+          ]
+        },
+        "extension": {
+          "v": 7
+        },
+        "loyaltySync": {
+          "status": "pending",
+          "error": "offline",
+          "at": 10
+        }
+      }
+    ],
+    "after": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltySync": {
+        "status": "pending",
+        "error": "offline",
+        "at": 10
+      }
+    }
+  },
+  {
+    "kind": "reversal",
+    "success": true,
+    "before": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltyReversal": {
+        "status": "pending",
+        "extra": 7
+      }
+    },
+    "requests": [
+      {
+        "path": "/api/loyalty/reversal",
+        "body": {
+          "orderId": "o",
+          "customerId": "c"
+        }
+      }
+    ],
+    "writes": [
+      {
+        "id": "o",
+        "customer": {
+          "id": "c",
+          "extra": 1
+        },
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "extra": "keep"
+          }
+        ],
+        "total": 12,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 12
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyRewardAllocations": {
+          "p": [
+            {
+              "productId": "p",
+              "quantity": 1
+            }
+          ]
+        },
+        "extension": {
+          "v": 7
+        },
+        "loyaltyReversal": {
+          "status": "sending",
+          "extra": 7,
+          "attemptedAt": 10
+        }
+      },
+      {
+        "id": "o",
+        "customer": {
+          "id": "c",
+          "extra": 1
+        },
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "extra": "keep"
+          }
+        ],
+        "total": 12,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 12
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyRewardAllocations": {
+          "p": [
+            {
+              "productId": "p",
+              "quantity": 1
+            }
+          ]
+        },
+        "extension": {
+          "v": 7
+        },
+        "loyaltyReversal": {
+          "status": "synced",
+          "at": 10
+        }
+      }
+    ],
+    "after": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltyReversal": {
+        "status": "synced",
+        "at": 10
+      }
+    }
+  },
+  {
+    "kind": "reversal",
+    "success": false,
+    "before": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltyReversal": {
+        "status": "pending",
+        "extra": 7
+      }
+    },
+    "requests": [
+      {
+        "path": "/api/loyalty/reversal",
+        "body": {
+          "orderId": "o",
+          "customerId": "c"
+        }
+      }
+    ],
+    "writes": [
+      {
+        "id": "o",
+        "customer": {
+          "id": "c",
+          "extra": 1
+        },
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "extra": "keep"
+          }
+        ],
+        "total": 12,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 12
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyRewardAllocations": {
+          "p": [
+            {
+              "productId": "p",
+              "quantity": 1
+            }
+          ]
+        },
+        "extension": {
+          "v": 7
+        },
+        "loyaltyReversal": {
+          "status": "sending",
+          "extra": 7,
+          "attemptedAt": 10
+        }
+      },
+      {
+        "id": "o",
+        "customer": {
+          "id": "c",
+          "extra": 1
+        },
+        "items": [
+          {
+            "productId": "p",
+            "qty": 2,
+            "extra": "keep"
+          }
+        ],
+        "total": 12,
+        "payments": [
+          {
+            "method": "cash",
+            "amount": 12
+          }
+        ],
+        "loyaltyRedemptions": {
+          "p": 1
+        },
+        "loyaltyRewardAllocations": {
+          "p": [
+            {
+              "productId": "p",
+              "quantity": 1
+            }
+          ]
+        },
+        "extension": {
+          "v": 7
+        },
+        "loyaltyReversal": {
+          "status": "pending",
+          "error": "offline",
+          "at": 10
+        }
+      }
+    ],
+    "after": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltyReversal": {
+        "status": "pending",
+        "error": "offline",
+        "at": 10
+      }
+    }
+  },
+  {
+    "kind": "reversal",
+    "success": true,
+    "before": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltyReversal": {
+        "status": "sending",
+        "extra": 7
+      }
+    },
+    "requests": [],
+    "writes": [],
+    "after": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltyReversal": {
+        "status": "sending",
+        "extra": 7
+      }
+    }
+  },
+  {
+    "kind": "reversal",
+    "success": false,
+    "before": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltyReversal": {
+        "status": "sending",
+        "extra": 7
+      }
+    },
+    "requests": [],
+    "writes": [],
+    "after": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltyReversal": {
+        "status": "sending",
+        "extra": 7
+      }
+    }
+  },
+  {
+    "kind": "reversal",
+    "success": true,
+    "before": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltyReversal": {
+        "status": "synced",
+        "extra": 7
+      }
+    },
+    "requests": [],
+    "writes": [],
+    "after": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltyReversal": {
+        "status": "synced",
+        "extra": 7
+      }
+    }
+  },
+  {
+    "kind": "reversal",
+    "success": false,
+    "before": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltyReversal": {
+        "status": "synced",
+        "extra": 7
+      }
+    },
+    "requests": [],
+    "writes": [],
+    "after": {
+      "id": "o",
+      "customer": {
+        "id": "c",
+        "extra": 1
+      },
+      "items": [
+        {
+          "productId": "p",
+          "qty": 2,
+          "extra": "keep"
+        }
+      ],
+      "total": 12,
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 12
+        }
+      ],
+      "loyaltyRedemptions": {
+        "p": 1
+      },
+      "loyaltyRewardAllocations": {
+        "p": [
+          {
+            "productId": "p",
+            "quantity": 1
+          }
+        ]
+      },
+      "extension": {
+        "v": 7
+      },
+      "loyaltyReversal": {
+        "status": "synced",
+        "extra": 7
+      }
+    }
+  }
+]

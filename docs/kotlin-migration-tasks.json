@@ -540,9 +540,10 @@
     {
       "id": "086",
       "title": "Начисление/отмена лояльности и разрешённые durable retry",
-      "status": "planned",
+      "status": "done",
       "area": "P4/P11",
-      "dependencies": "085"
+      "dependencies": "085",
+      "spec": "specs/086-native-loyalty-journal/spec.md"
     },
     {
       "id": "087",
