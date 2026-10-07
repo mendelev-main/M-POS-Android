@@ -47,3 +47,7 @@ scroll identity remain. Physical light/dark/font-scale acceptance pending.
 097: analytics loading/error uses existing Web card/analytics-title/center-note/btn-primary tokens and bundled Manrope in both themes. Successful rendering retains reviewed chart/KPI layout. Async replacement retains screen scroll and waits for date-input blur. This is a Web presentation adapter, not native analytics UI acceptance; full UI remains 107. Physical theme/font-scale checks pending.
 
 100: native settings/network cards and settings/employee forms reuse MPosNativeTheme and offline Manrope. Compact actions wrap at large font scales; long forms scroll with a keyboard-height cap, short forms fit their content. Source cancel/back is represented once. Both palettes, primary/secondary/danger hierarchy and credential clearing are covered by native view tests. [Synthetic previews](design/100/README.md); tablet keyboard/landscape/font-scale acceptance is pending.
+
+101: normal POS workspace uses native category/product/folder grid cards, stock/price hierarchy, compact cart rows and wrapping actions with shared light/dark/Manrope tokens. Wide tablets show catalogue/cart side by side; narrow layouts stack them with scrollable cart content so keyboard/large-font actions remain reachable. Root grid spans come from the original presentation. Layout editing and planned modals retain reviewed presentation. Synthetic native previews are distinct from tablet acceptance.
+
+[Синтетические превью рабочего места 101](design/101/README.md).

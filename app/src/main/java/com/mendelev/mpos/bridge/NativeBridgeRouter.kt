@@ -30,6 +30,7 @@ class NativeBridgeRouter(
                 "paymentScreen" -> activity.handlePaymentScreen(payload)
                 "shiftScreen" -> activity.handleShiftScreen(payload)
                 "settingsScreen" -> activity.handleSettingsScreen(payload)
+                "workspace" -> activity.handleWorkspace(payload)
                 "network" -> networkTransport.handle(payload)
                 "diagnostics" -> if (payload.optString("action") == "export") activity.exportDiagnostics()
             }

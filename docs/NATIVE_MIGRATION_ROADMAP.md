@@ -2,8 +2,8 @@
 
 ## Актуальный план и счётчик
 
-[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **99/110 выполнено (90,00%)**
-после 100. Source of truth: `kotlin-migration-tasks.json` и
+[Реестр задач](KOTLIN_MIGRATION_TASKS.md) — **100/110 выполнено (90,91%)**
+после 101. Source of truth: `kotlin-migration-tasks.json` и
 `python scripts/migration-progress.py`. Это инженерные этапы; физическая
 приёмка и полный переход UI ещё впереди. Исторические промежуточные gates ниже
 читаются с учётом последующих спецификаций и current authority policy.
@@ -585,3 +585,9 @@ Kotlin owns routing, exact category/flag rules, copies, per-endpoint FIFO and bo
 ## 100 — native settings/employee surfaces
 
 Native hubs/forms use shared Manrope palettes and compact wrapping actions. Printer/notification authority cutover compares full expected snapshots and acknowledges disk persistence before memory/UI/test printing; delayed mirrors cannot overwrite it. v13 restore awaits this boundary. Mounted reviewed field/button tokens preserve employee auth/rights and other settings handlers without evaluating code or copying verifier constants. Presentation rollback retains native preference ownership. The reviewed DOM/auth runtime and fire-and-forget company/delivery/discount writes remain explicit compatibility boundaries; independent native auth is required before 109. This is a transitional UI architecture, with no measured performance claim. Next 101: native POS workspace/catalog/folders/cart. [100](../specs/100-native-settings-employees/spec.md). Physical pending.
+
+## 101 — native normal-operation workspace
+
+Native Kotlin tiles, source grid coordinates/spans, toolbar, folder browsing and cart/total/actions use shared palettes/Manrope. Reviewed mounted targets and known handlers retain native business command ownership; old/detached/disabled/forged callbacks cannot alter a new context. Matching native quote updates replace presentation without redoing money formulas; catalogue/cart scroll is retained where context matches. Layout drag/edit and configuration/customer/modifier/manual-price/payment/parked modal boundaries explicitly keep reviewed presentation and hide the overlay. Removal keeps cart-line identity. These residual presentation/DOM/auth boundaries must be resolved before 109; no measured speed/physical acceptance claim. Next 102 product/recipe/modifier editor. [101](../specs/101-native-workspace/spec.md).
+
+101 verification: 463 JS / 384 full JVM passed; final workspace checks 5/5 after recovery-caption adjustment. Lint 0 errors / 15 existing warnings. No product APK assembled; physical acceptance pending.

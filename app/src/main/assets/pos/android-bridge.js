@@ -17,7 +17,8 @@
     diagnostics:handler('diagnostics'),
     paymentScreen:handler('paymentScreen'),
     shiftScreen:handler('shiftScreen'),
-    settingsScreen:handler('settingsScreen')
+    settingsScreen:handler('settingsScreen'),
+    workspace:handler('workspace')
   });
   global.__MPOS_PLATFORM__='android';
   global.__MPOS_VERSION__='0.1.0';

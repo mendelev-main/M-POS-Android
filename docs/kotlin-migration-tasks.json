@@ -660,9 +660,10 @@
     {
       "id": "101",
       "title": "Нативное рабочее место: каталог, папки, корзина",
-      "status": "planned",
+      "status": "done",
       "area": "P6/UI",
-      "dependencies": "076,078,082"
+      "dependencies": "076,078,082",
+      "spec": "specs/101-native-workspace/spec.md"
     },
     {
       "id": "102",

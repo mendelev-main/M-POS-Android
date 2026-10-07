@@ -36,6 +36,7 @@ import com.mendelev.mpos.shift.MPosShiftScreenController
 import com.mendelev.mpos.shift.MPosCashMovementDialog
 import com.mendelev.mpos.shift.MPosShiftCloseDialog
 import com.mendelev.mpos.shift.MPosShiftOpenDialog
+import com.mendelev.mpos.workspace.MPosWorkspaceController
 import com.mendelev.mpos.settings.MPosSettingsStore
 import com.mendelev.mpos.settings.MPosSettingsScreenController
 import com.mendelev.mpos.telegram.TelegramClient
@@ -57,6 +58,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var shiftOpenDialog: MPosShiftOpenDialog
     private lateinit var shiftCloseDialog: MPosShiftCloseDialog
     private lateinit var cashMovementDialog: MPosCashMovementDialog
+    private lateinit var workspace: MPosWorkspaceController
     private lateinit var settingsScreen: MPosSettingsScreenController
     private lateinit var shiftScreen: MPosShiftScreenController
     private lateinit var webView: WebView
@@ -150,6 +152,10 @@ class MainActivity : AppCompatActivity() {
         shiftScreen = MPosShiftScreenController(this, root, nativeStorageMirror::handle) { action ->
             callJavaScript("window.__mposShiftScreenAction&&window.__mposShiftScreenAction($action);")
         }
+        workspace = MPosWorkspaceController(this, root) { action ->
+            val serialized = com.mendelev.mpos.data.MPosBridgeJson.serialize(action)
+            callJavaScript("window.__nativeWorkspaceAction&&window.__nativeWorkspaceAction($serialized);")
+        }
         settingsScreen = MPosSettingsScreenController(this, root) { action ->
             val serialized = com.mendelev.mpos.data.MPosBridgeJson.serialize(action)
             callJavaScript("window.__nativeSettingsAction&&window.__nativeSettingsAction($serialized);")
@@ -209,6 +215,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        if (::workspace.isInitialized) workspace.hide()
         if (::settingsScreen.isInitialized) settingsScreen.dismiss()
         if (::cashInputDialog.isInitialized) cashInputDialog.dismiss()
         if (::splitCashDialog.isInitialized) splitCashDialog.dismiss()
@@ -274,6 +281,10 @@ class MainActivity : AppCompatActivity() {
         } else if (payload.optString("action").startsWith("cash")) {
             if (::splitCashDialog.isInitialized) splitCashDialog.handle(payload)
         } else if (::cardConfirmationDialog.isInitialized) cardConfirmationDialog.handle(payload)
+    }
+
+    fun handleWorkspace(payload: JSONObject) = runOnUiThread {
+        if (::workspace.isInitialized) workspace.handle(payload)
     }
 
     fun handleSettingsScreen(payload: JSONObject) = runOnUiThread {
