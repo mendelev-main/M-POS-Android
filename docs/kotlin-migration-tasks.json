@@ -796,13 +796,18 @@
         {
           "id": "109.06",
           "title": "Корневая сессия и bootstrap",
-          "status": "planned",
+          "status": "in_progress",
           "dependencies": [
             "109.02",
             "109.04",
             "109.05"
           ],
-          "acceptance": "Kotlin владеет currentShift, выбранным сотрудником и порядком старта; restart/import не оставляют устаревшее состояние."
+          "acceptance": "Kotlin владеет currentShift, выбранным сотрудником и порядком старта; restart/import не оставляют устаревшее состояние.",
+          "evidence": [
+            "app/src/main/java/com/mendelev/mpos/data/MPosRootSessionRepository.kt",
+            "app/src/test/java/com/mendelev/mpos/data/MPosRootSessionRepositoryTest.kt"
+          ],
+          "remaining": "Корневой Activity/session controller, полный порядок запуска и замена синхронных JS currentShift/role helpers ещё не завершены."
         },
         {
           "id": "109.07",

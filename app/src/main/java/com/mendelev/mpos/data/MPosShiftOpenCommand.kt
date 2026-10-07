@@ -3,21 +3,14 @@ package com.mendelev.mpos.data
 import androidx.room.withTransaction
 import org.json.JSONArray
 import org.json.JSONObject
-import org.json.JSONTokener
 
 /** Native opening authority. Credentials are transient arguments, never command/journal fields. */
 class MPosShiftOpenCommand(private val database: MPosDatabase) {
     suspend fun commit(input: JSONObject, credential: String): JSONObject = database.withTransaction {
         require(input.getInt("version") == 1)
-        val shifts = MPosShiftStorage(database)
-        val employees = MPosEmployeeStorage(database)
-        check(shifts.isAuthoritative() && employees.isAuthoritative())
-        val before = shifts.readRecords()
-        val document = employees.read()
-        val parser = JSONTokener(if (document.getBoolean("found")) document.getString("payload") else "null")
-        val parsed = parser.nextValue()
-        require(parser.nextClean() == '\u0000' && (parsed is JSONArray || parsed === JSONObject.NULL))
-        val staff = parsed as? JSONArray ?: JSONArray()
+        val root = MPosRootSessionRepository(database).read()
+        val before = root.shifts
+        val staff = root.employees
         check(MPosSupplyParity.same(before, input.getJSONArray("expectedShifts"))) { "shift state changed" }
         check(MPosSupplyParity.same(staff, input.getJSONArray("expectedEmployees"))) { "employee state changed" }
         val employeeId = input.getString("employeeId")
@@ -27,7 +20,7 @@ class MPosShiftOpenCommand(private val database: MPosDatabase) {
         val employee = matches.single()
         if (employee.opt("role") == "admin") check(MPosAdministratorCredential.accepts(credential)) { "administrator credential rejected" }
         // Reuse the established read gate: no open shift, valid carryover, no pending journal.
-        val opening = MPosShiftOpeningRepository(database).read().getDouble("openingCash")
+        val opening = MPosShiftOpeningRepository(database).metadata(root).getDouble("openingCash")
         val records = (0 until before.length()).map { before.getJSONObject(it) }
         val previous = records.filter { it.opt("status") == "closed" }
             .maxByOrNull { MPosJsonNumbers.amount(it, "closedAt") }

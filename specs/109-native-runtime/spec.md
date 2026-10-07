@@ -139,3 +139,18 @@ user.home outside the repository; no product APK assembled and no physical
 tablet acceptance. The original reviewed source bytes/hash still pass.
 Engineering completion remains **107/110 (97.27%)**; no task IDs or denominator
 were added for internal 109 increments.
+
+
+## 109.06 — fresh native root session context (in progress)
+
+MPosRootSessionRepository reads owned shifts, employees and critical journal together in one Room transaction. It exposes native currentShift, selectedEmployee, isAdmin and recoveryPending plus raw compatible arrays for commands. It does not cache across role edits, database replacement or restart, initialize documents, replay a journal or emit effects. View records are detached copies; original stored extensions/roles remain unchanged.
+
+Production ActiveSession.bootstrap now initializes established domain boundaries and requests rootSessionBootstrap after existing recovery. The paired compatibility bootstrap API remains for rollback/compatibility. Native opening form metadata and MPosShiftOpenCommand use the same root context; existing password policy, expected document conflicts, carryover validation and lifecycle transaction still apply. Opening checks recovery before mutation; reporting isAdmin does not authorize a blocked critical operation.
+
+Tests cover root restart, owned record replacement/role changes, missing authority, detached records, pending journal without replay and concurrent three-document coherence. Existing opening parity and real SQLite tests remain required. Complete root startup ownership, synchronous JS currentShift/role helper replacement and import/lifecycle orchestration remain pending; 109.06 is not complete.
+
+Opening carryover metadata reuses the command's existing root transaction snapshot; there is no second root document read/parse within that command. No tablet performance claim is made.
+
+## Verification of 109.06 root-context increment
+
+551/551 JS tests and 442/442 JVM tests passed after final snapshot reuse; failures/errors/skips: 0. Lint: 0 errors, 15 existing warnings in this environment. No APK assembly or physical acceptance. 109.06 remains in_progress; counters: 5/20 within 109, 112/129 expanded, 107/110 major milestones.

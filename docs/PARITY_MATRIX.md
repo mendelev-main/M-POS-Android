@@ -463,3 +463,5 @@ acceptance pending, engineering progress remains 107/110 (97.27%).
 109 opening verification: 551 JS / 438 JVM passed, 0 failed/errors/skips; lint
 0 errors / 22 warnings in unchanged files (7 are online dependency advisories).
 No local product APK assembly; physical acceptance pending. Progress 107/110.
+
+109.06 в работе: свежий корневой Room-контекст (смена, сотрудник, роль, critical journal) подключён к bootstrap и нативному открытию. Полный root lifecycle и JS helper cutover остаются. 5/20 внутри 109; 112/129 детально; 107/110 крупных этапов.

@@ -205,8 +205,8 @@
     async bootstrap(){
       if(global.MPosNativeActiveSessionEnabled===false)return null;
       try{
-        await Promise.all(['shifts','employees'].map(initializeNative));
-        const result=requireNative(await request('activeSessionBootstrap'),true);
+        await Promise.all(['shifts','employees','criticalStorageJournal'].map(initializeNative));
+        const result=requireNative(await request('rootSessionBootstrap'),true);
         if(global.MPosNativeActiveSessionEnabled===false)return null;
         if(!Array.isArray(result.shifts)||!Array.isArray(result.employees)||!Array.isArray(result.warnings)||typeof result.isAdmin!=='boolean')throw Error('invalid active session projection');
         return result;
