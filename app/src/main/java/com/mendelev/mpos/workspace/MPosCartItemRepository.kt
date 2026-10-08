@@ -24,8 +24,8 @@ class MPosCartItemRepository(private val database:MPosDatabase,private val owner
         when(input.getString("operation")) {
             "cartItemView"->{
                 check(MPosSupplyParity.same(items,input.getJSONArray("items"))){"cart projection changed"}
-                return@withTransaction reply.put("model",JSONObject().put("id",id).put("name",item.opt("name"))
-                    .put("quantity",item.opt("qty")).put("comment",MPosJsonNumbers.fallback(item.opt("comment")))
+                return@withTransaction reply.put("model",JSONObject().put("id",id).put("name",MPosAvailabilityEngine.text(item.opt("name")))
+                    .put("quantity",item.opt("qty")?:JSONObject.NULL).put("comment",MPosAvailabilityEngine.text(MPosJsonNumbers.fallback(item.opt("comment"))))
                     .put("discountId",MPosJsonNumbers.fallback(item.opt("discountId"))).put("discounts",JSONArray(input.getJSONArray("discounts").toString()))
                     .put("currency",input.getString("currency")).put("sessionRevision",revision(raw)))
             }

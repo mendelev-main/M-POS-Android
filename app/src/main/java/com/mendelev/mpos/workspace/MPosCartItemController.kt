@@ -65,7 +65,8 @@ class MPosCartItemController(private val context:Context,private val action:(JSO
         form.show();theme.dialog(form)
         form.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
             if(!busy){busy=true;enable();val n=MPosJsonNumbers.number(quantity).let{if(it.isNaN()||it==0.0)1.0 else max(1.0,it)}
-                action(JSONObject().put("action","cartItemSave").put("token",captured).put("quantity",n).put("comment",comment.text.toString()).put("discountId",MPosAvailabilityEngine.text(selected)))}
+                if(!n.isFinite()){busy=false;status?.text="Укажите допустимое количество";enable()}
+                else action(JSONObject().put("action","cartItemSave").put("token",captured).put("quantity",n).put("comment",comment.text.toString()).put("discountId",MPosAvailabilityEngine.text(selected)))}
         }
     }
     fun hide(){token="";dialog?.setOnDismissListener(null);dialog?.dismiss();dialog=null;busy=false;controls.clear();status=null}

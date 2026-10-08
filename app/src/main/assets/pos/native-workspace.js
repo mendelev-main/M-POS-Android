@@ -7,7 +7,7 @@
   let current=null,scheduled=false,sequence=0,generation=0,awaiting=false,capture=null,cartForm=null;
   const enabled=()=>global.MPosNativeWorkspaceEnabled&&global.MPosNativeWorkspaceReadModelsEnabled!==false;
   const view=()=>({tab:state.tab,search:String(state.search||''),posPath:state.posPath??null,posFolder:state.posFolder||'',editMode:!!state.editMode});
-  const blocked=()=>!!cartForm||!!state.busy||(typeof criticalStorageRecoveryPending!=='undefined'&&criticalStorageRecoveryPending)||!!core.NativeOpenForm?.activeToken?.();
+  const blocked=()=>awaiting||!!cartForm||!!core.CartOperations?.hasPending?.()||!!state.busy||(typeof criticalStorageRecoveryPending!=='undefined'&&criticalStorageRecoveryPending)||!!core.NativeOpenForm?.activeToken?.();
   function order(){return{items:state.cart,discounts:state.discounts||[],loyaltyPrograms:state.loyaltyPrograms||[],loyaltyRedemptions:state.loyaltyRedemptions||{},orderType:state.orderType,deliveryFee:state.deliveryFee,deliveryTariffSelected:state.deliveryTariffSelected,deliveryRates:state.deliveryRates||[],customer:state.customer,orderLabel:state.orderLabel,orderComment:state.orderComment,source:state.currentOrderSource,webOrderId:state.currentWebOrderId,webOrderStatus:state.currentWebOrderStatus,currency:state.currency,demandOverload:!!state.demandOverload};}
   const stamp=()=>JSON.stringify([core.WorkspaceNavigationLifecycle.generation(),view(),order(),state.products,state.shifts,state.parked,global._posFolderModal,core.OverlayLifecycle?.snapshot().stamp]);
   const context=()=>JSON.stringify([state.posPath,state.posFolder,global._posFolderModal]);
