@@ -728,7 +728,7 @@
       "area": "UI/architecture",
       "dependencies": "100,101,102,103,104,105,106,107,108",
       "spec": "specs/109-native-runtime/spec.md",
-      "summary": "109.01–109.07 implemented. 109.08 native navigation state, acknowledged routes, Android Back policy and restart/import runtime invalidation implemented in increments; native controls and DOM removal remain. Route tests corrected and confirmed by Actions 37747195877; latest Back/runtime tests pending.",
+      "summary": "109.01–109.07 implemented. 109.08 native navigation state, acknowledged routes, Android Back policy and restart/import runtime invalidation implemented in increments; native controls and DOM removal remain. Route tests corrected and confirmed by Actions 37747195877; Back/runtime tests confirmed by Tests and lint in Actions 37748093813.",
       "subtasks": [
         {
           "id": "109.01",
@@ -898,7 +898,7 @@
             "app/src/test/java/com/mendelev/mpos/workspace/MPosSystemBackTest.kt",
             "tests/android-system-back.test.cjs"
           ],
-          "remaining": "Owner tab/query/category/folder/edit, acknowledged routes, native System Back policy и root runtime invalidation подключены. Остались native controls/read models и удаление DOM route targets/presence/close handlers. Новые Back/runtime проверки ожидают Actions; 109.08 не закрыт."
+          "remaining": "Owner tab/query/category/folder/edit, acknowledged routes, native System Back policy и root runtime invalidation подключены. Остались native controls/read models и удаление DOM route targets/presence/close handlers. Back/runtime проверки прошли Tests and lint в Actions 37748093813; 109.08 не закрыт."
         },
         {
           "id": "109.09",
@@ -1089,6 +1089,16 @@
       "conclusion": "success",
       "commit": "3f87071",
       "newBackRuntimeIncrement": "Tests authored; next Actions pending"
+    },
+    {
+      "date": "2026-10-08",
+      "scope": "Android Back and navigation runtime lifecycle",
+      "execution": "GitHub Actions",
+      "runId": 37748093813,
+      "commit": "8ca9dd6",
+      "testsAndLint": "success",
+      "apkBuild": "in_progress",
+      "physicalAcceptance": "pending"
     }
   ]
 }

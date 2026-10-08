@@ -339,3 +339,6 @@ DOM presence и экранные close handlers пока остаются пер
 Тестовый FIFO fixture исправлен; Actions 37747195877 для 3f87071 успешен
 (tests/lint и APK). Новые Back/runtime проверки ожидают следующий Actions.
 Этап 109.08 не закрыт; **114/129**, внутри 109 **7/20**.
+
+
+Проверка кода 8ca9dd6: [Actions 37748093813](https://github.com/mendelev-main/M-POS-Android/actions/runs/37748093813) успешно завершил job Tests and lint (JS, правила версий, Kotlin и lint). Подписанная APK собирается отдельным job. Локальные тесты/сборка не запускались; физическая приёмка pending.

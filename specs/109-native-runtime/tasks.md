@@ -258,3 +258,6 @@ Actions 37747195877 подтвердил tests/lint и APK build для испр
 109.08 остаётся in_progress: нативные controls/read models и устранение
 оставшихся DOM targets/presence ещё впереди. Прогресс **114/129**, внутри
 109 **7/20**; физические кейсы pending, APK локально не собиралась.
+
+
+Проверка кода 8ca9dd6: [Actions 37748093813](https://github.com/mendelev-main/M-POS-Android/actions/runs/37748093813) успешно завершил job Tests and lint (JS, правила версий, Kotlin и lint). Подписанная APK собирается отдельным job. Локальные тесты/сборка не запускались; физическая приёмка pending.
