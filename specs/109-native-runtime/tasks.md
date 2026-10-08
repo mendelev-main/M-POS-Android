@@ -326,3 +326,23 @@ handlers; их read models ещё впереди. Написаны JS, Room и n
 Исправление `8855327`: [Actions 37752933255](https://github.com/mendelev-main/M-POS-Android/actions/runs/37752933255) — Tests and lint успешно (JS, Kotlin, lint); APK отдельным job, проверка на планшете pending.
 
 Native category tile `a645d39`: [Actions 37753269784](https://github.com/mendelev-main/M-POS-Android/actions/runs/37753269784) — Tests and lint успешно. APK исправления `8855327` уже опубликована как Actions artifact M-POS-Android-release-0.1.173-1; категория собирается отдельным job. Физическая проверка pending.
+
+
+### 109.08 — открытие папки с native плитки (08.10.2026)
+
+Folder tile передаёт openFolder + ID непосредственно в Kotlin FIFO, без вызова
+mounted HTML click. Repository проверяет expected revision и актуальные products/
+posNavigation из Room при подготовке и принятии маршрута; удалённая/неизвестная
+папка отклоняется. Обычная hydration уже инициализирует оба owned документа;
+навигация не создаёт authority markers и не перезаписывает документы из UI.
+
+Ответ renderFolder проверяется до изменения JS projection: category должна
+совпадать с выбранной, ID — строка. После принятия остаётся прежняя category,
+поиск очищается, открывается folder modal; stale/некорректный ответ отменяет только
+свой маршрут. Back закрывает папку без выхода из категории. Shared appearance и
+retained Views актуального main сохранены. Product tile/renderer/read models пока
+сохраняют compatibility path (109.09). Добавлены JS/Room/native view проверки;
+Actions следующего коммита pending, физическая приёмка pending.
+
+109.08 in_progress: native tabs/search controls, редактор раскладки и global Back
+presence остаются. Прогресс **114/129 (88,37%)**, 109 **7/20**.

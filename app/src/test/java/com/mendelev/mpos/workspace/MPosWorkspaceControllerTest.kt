@@ -221,4 +221,20 @@ class MPosWorkspaceControllerTest {
         assertNotSame(old,current);old.performClick();assertTrue(calls.isEmpty());current.performClick();assertEquals("rollback",calls.single().getString("token"));controller.hide()
     }
 
+    @Test fun folderTileUsesTypedRoomRouteAndBlocksDuplicateClick() {
+        val (controller,root,calls)=setup();val payload=model()
+        val snapshot=JSONObject().put("tab","pos").put("posPath","Кофе").put("posFolder","").put("search","чай").put("editMode",false).put("revision",7)
+        val content=payload.getJSONObject("model")
+        content.put("navigation",MPosWorkspaceToolbarModel.calculate(snapshot,null,null))
+        content.getJSONArray("tiles").getJSONObject(2).put("type","folder")
+            .put("route",JSONObject().put("operation","openFolder").put("value","f"))
+        controller.handle(payload);ShadowLooper.idleMainLooper()
+        val tile=nodes(root).first{it.contentDescription=="Напитки"};tile.performClick();tile.performClick()
+        assertEquals(1,calls.size);assertEquals("navigate",calls.single().getString("action"))
+        val command=calls.single().getJSONObject("command")
+        assertEquals("openFolder",command.getString("route"));assertEquals("f",command.getString("value"))
+        assertEquals(7L,command.getJSONObject("expected").getLong("revision"));assertFalse(calls.single().has("key"))
+        controller.hide();tile.performClick();assertEquals(1,calls.size)
+    }
+
 }

@@ -73,7 +73,7 @@ class MPosWorkspaceNavigationRepositoryTest {
         val after=owner.state.value
         try{repository.navigateToolbar(input);fail("duplicate toolbar action accepted")}catch(_:IllegalStateException){}
         assertEquals(after,owner.state.value)
-        try{repository.navigateToolbar(JSONObject(input.toString()).put("route","openFolder"));fail("unsupported toolbar action accepted")}catch(_:IllegalArgumentException){}
+        try{repository.navigateToolbar(JSONObject(input.toString()).put("route","deleteFolder"));fail("unsupported toolbar action accepted")}catch(_:IllegalArgumentException){}
         assertEquals(beforeProducts,db.legacyStorageShadowDao().get("products"));assertEquals(beforeNav,db.legacyStorageShadowDao().get("posNavigation"))
     }
 
@@ -87,6 +87,22 @@ class MPosWorkspaceNavigationRepositoryTest {
         assertEquals(products,documents.get("products"));assertEquals(navigation,documents.get("posNavigation"))
         try{repository.navigateToolbar(command);fail("stale category click accepted")}catch(_:IllegalStateException){}
         assertEquals("Напитки",owner.state.value.posPath)
+    }
+
+    @Test fun nativeFolderTileChecksCurrentRoomAndReturnsModalWithoutWritingBusinessData()=runCase {db,owner,repository->
+        val documents=db.legacyStorageShadowDao();val products=documents.get("products");val navigation=documents.get("posNavigation")
+        fun input(id:String)=JSONObject().put("version",1).put("route","openFolder").put("value",id)
+            .put("expected",owner.handle(JSONObject().put("version",1).put("operation","read")).getJSONObject("snapshot"))
+        val accepted=repository.navigateToolbar(input("f"))
+        assertEquals("renderFolder",accepted.getString("effect"));assertEquals("Кофе",accepted.getJSONObject("folderModal").getString("category"))
+        assertEquals("f",accepted.getJSONObject("folderModal").getString("id"));assertEquals("Кофе",owner.state.value.posPath)
+        assertEquals("",owner.state.value.search);assertEquals(products,documents.get("products"));assertEquals(navigation,documents.get("posNavigation"))
+        MPosWorkspaceStorage(db).write("posNavigation","""{"version":1,"categories":[]}""")
+        val before=owner.state.value
+        try{repository.navigateToolbar(input("f"));fail("deleted folder accepted")}catch(_:IllegalStateException){}
+        assertEquals(before,owner.state.value)
+        try{repository.navigateToolbar(input("invented"));fail("invented folder accepted")}catch(_:IllegalStateException){}
+        assertEquals(before,owner.state.value)
     }
 
 }

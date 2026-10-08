@@ -22,7 +22,7 @@
     const columns=Math.max(1,global.getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length||4);
     const tiles=[...grid.querySelectorAll('.layout-tile')].filter(node=>!node.hidden).map((node,i)=>{
       const card=node.querySelector('.pcard');
-      return{id:String(node.dataset.tileType||'product')+':'+String(node.dataset.id||''),key:bind(card,'tile'),route:navigation&&node.dataset.tileType==='category'?{operation:'openCategory',value:String(node.dataset.id||'')}:undefined,name:text(card.querySelector('.pcard-name')),price:text(card.querySelector('.pcard-price')),stock:text(card.querySelector('.pcard-stock')),symbol:text(card.querySelector('.tile-symbol')),type:node.dataset.tileType||'product',disabled:card.classList.contains('disabled'),color:card.style.getPropertyValue('--category-color'),...position(node,i,columns)};
+      return{id:String(node.dataset.tileType||'product')+':'+String(node.dataset.id||''),key:bind(card,'tile'),route:navigation&&['category','folder'].includes(node.dataset.tileType)?{operation:node.dataset.tileType==='folder'?'openFolder':'openCategory',value:String(node.dataset.id||'')}:undefined,name:text(card.querySelector('.pcard-name')),price:text(card.querySelector('.pcard-price')),stock:text(card.querySelector('.pcard-stock')),symbol:text(card.querySelector('.tile-symbol')),type:node.dataset.tileType||'product',disabled:card.classList.contains('disabled'),color:card.style.getPropertyValue('--category-color'),...position(node,i,columns)};
     });
     const panel=root.querySelector('.cart-panel');
     const gridStyle=global.getComputedStyle(grid),screenStyle=global.getComputedStyle(root);
@@ -77,9 +77,10 @@
     try{
       if(!result?.ok){if(valid)global.flash?.(result?.message||'Не удалось выполнить переход');return;}
       if(!valid)return;
-      if(!result.patch||Object.keys(result.patch).some(key=>!['posPath','posFolder','search','editMode'].includes(key))||!['render','closeModal'].includes(result.effect))throw Error('Invalid toolbar transition');
+      if(!result.patch||Object.keys(result.patch).some(key=>!['posPath','posFolder','search','editMode'].includes(key))||!['render','renderFolder','closeModal'].includes(result.effect))throw Error('Invalid toolbar transition');
+      if(result.effect==='renderFolder'&&(!result.folderModal||result.folderModal.category!==state.posPath||typeof result.folderModal.id!=='string'))throw Error('Invalid folder transition');
       Object.assign(state,result.patch);applied=true;
-      if(result.effect==='closeModal')global.closeModal();else {global.render();if(result.setupDrag)setTimeout(global.setupLayoutGridDrag,50);}
+      if(result.effect==='closeModal')global.closeModal();else if(result.effect==='renderFolder'){global._posFolderModal=result.folderModal;global.renderPosFolderModal();}else {global.render();if(result.setupDrag)setTimeout(global.setupLayoutGridDrag,50);}
     }catch(_error){if(valid)global.flash?.('Не удалось выполнить переход');}
     finally{
       if(result?.ok&&!applied&&result.proposalToken)await global.MPosCore?.WorkspaceNavigation?.execute({version:1,operation:'discardRoute',proposalToken:result.proposalToken}).catch(()=>{});

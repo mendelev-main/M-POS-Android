@@ -416,3 +416,23 @@ Native category tile `a645d39`: [Actions 37753269784](https://github.com/mendele
 ## Рабочая зона — визуальный паритет iPad, 08.10.2026
 
 См. [перенос исходной раскладки](NATIVE_WORKSPACE_IPAD_PARITY_RU.md). Изменения ограничены рабочей зоной; CI и физическое сравнение pending. Новых завершённых этапов нет: 114/129 (88,37%), осталось 15; 109 — 7/20.
+
+
+### 109.08 — открытие папки с native плитки (08.10.2026)
+
+Folder tile передаёт openFolder + ID непосредственно в Kotlin FIFO, без вызова
+mounted HTML click. Repository проверяет expected revision и актуальные products/
+posNavigation из Room при подготовке и принятии маршрута; удалённая/неизвестная
+папка отклоняется. Обычная hydration уже инициализирует оба owned документа;
+навигация не создаёт authority markers и не перезаписывает документы из UI.
+
+Ответ renderFolder проверяется до изменения JS projection: category должна
+совпадать с выбранной, ID — строка. После принятия остаётся прежняя category,
+поиск очищается, открывается folder modal; stale/некорректный ответ отменяет только
+свой маршрут. Back закрывает папку без выхода из категории. Shared appearance и
+retained Views актуального main сохранены. Product tile/renderer/read models пока
+сохраняют compatibility path (109.09). Добавлены JS/Room/native view проверки;
+Actions следующего коммита pending, физическая приёмка pending.
+
+109.08 in_progress: native tabs/search controls, редактор раскладки и global Back
+presence остаются. Прогресс **114/129 (88,37%)**, 109 **7/20**.

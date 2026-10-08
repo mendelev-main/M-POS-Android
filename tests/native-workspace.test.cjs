@@ -77,3 +77,18 @@ test('workspace carries stable tile/cart identity and preserves payment button s
 });
 
 test('retained-view rollback is explicit and leaves reviewed action dispatch unchanged',()=>{const h=host();assert.equal(h.sent.at(-1).retainedUpdates,true);h.h.MPosNativeWorkspaceRetainedViewsEnabled=false;h.mutate();assert.equal(h.sent.at(-1).retainedUpdates,false)});
+
+test('native folder tile dispatch metadata and accepted modal preserve category without HTML click',async()=>{
+ const navigation={title:'Кофе',buttons:[],expected:{tab:'pos',posPath:'Кофе',posFolder:'',search:'чай',editMode:false,revision:1},folderModal:null};
+ const h=host(c=>{Object.assign(c.state,navigation.expected);c.renderPosFolderModal=()=>c.eventsForFolder=(c.eventsForFolder||0)+1;c.MPosCore={WorkspaceNavigationLifecycle:{generation:()=>1,toolbar:async()=>navigation}};});
+ h.tile.dataset={tileType:'folder',id:'f'};await tick();const show=h.sent.at(-1);
+ assert.deepEqual(show.model.tiles[0].route,{operation:'openFolder',value:'f'});
+ await h.h.__nativeWorkspaceNavigationResult({token:show.token,result:{ok:true,patch:{posFolder:'',search:''},effect:'renderFolder',folderModal:{category:'Кофе',id:'f'},proposalToken:'folder'}});
+ assert.equal(h.h.state.posPath,'Кофе');assert.equal(h.h.state.search,'');assert.equal(h.h._posFolderModal.id,'f');assert.equal(h.h.eventsForFolder,1);assert.deepEqual(h.events,[]);
+});
+test('invalid folder acknowledgement is discarded before changing state or opening modal',async()=>{
+ const discarded=[],navigation={title:'Кофе',buttons:[],expected:{tab:'pos',posPath:'Кофе',posFolder:'',search:'чай',editMode:false,revision:1},folderModal:null};
+ const h=host(c=>{Object.assign(c.state,navigation.expected);c.renderPosFolderModal=()=>{throw Error('must not render')};c.MPosCore={WorkspaceNavigationLifecycle:{generation:()=>1,toolbar:async()=>navigation},WorkspaceNavigation:{execute:async input=>discarded.push(input)}};});
+ await tick();await h.h.__nativeWorkspaceNavigationResult({token:h.sent[0].token,result:{ok:true,patch:{search:''},effect:'renderFolder',folderModal:{category:'Другой раздел',id:'f'},proposalToken:'bad-folder'}});
+ assert.equal(h.h.state.search,'чай');assert.equal(h.h._posFolderModal,undefined);assert.equal(discarded[0].operation,'discardRoute');
+});
