@@ -907,7 +907,7 @@
             "tests/android-native-shift-screen.test.cjs",
             "app/src/test/java/com/mendelev/mpos/shift/MPosShiftScreenControllerTest.kt"
           ],
-          "remaining": "Native owner/routes, System Back/runtime и toolbar labels/typed Back/layout/folder-close подключены. Остались общие native tabs/search controls, controls редактора раскладки и DOM presence глобального Back. Каталог/корзина read models — 109.09. Toolbar JS/Kotlin/lint passed Actions 37750512318 (7bd7ecc); 109.08 in_progress. Production lexical-state wiring и native shift background исправлены; regression tests ожидают Actions, физическая проверка pending. Native category tile dispatch подключён без mounted HTML click; folder/product tiles сохраняют compatibility handler. Следующий Actions pending."
+          "remaining": "Kotlin owner/routes, Back/runtime, toolbar и прямой выбор категории подключены. Production lexical-state wiring и native shift background исправлены; JS/Kotlin/lint подтвердил Actions 37752933255 (8855327). Прямой выбор категории a645d39 прошёл Tests and lint в Actions 37753269784. Остаются native tabs/search controls, controls редактора, folder DOM route targets и global Back presence. Каталог/корзина read models — 109.09; физическая проверка pending."
         },
         {
           "id": "109.09",
@@ -1117,6 +1117,27 @@
       "commit": "7bd7ecc",
       "testsAndLint": "success",
       "apkBuild": "success",
+      "physicalAcceptance": "pending"
+    },
+    {
+      "date": "2026-10-08",
+      "scope": "Production lexical state and native shift cash-dialog background",
+      "execution": "GitHub Actions",
+      "runId": 37752933255,
+      "commit": "8855327",
+      "testsAndLint": "success",
+      "apkBuild": "success",
+      "physicalAcceptance": "pending",
+      "apkArtifact": "M-POS-Android-release-0.1.173-1"
+    },
+    {
+      "date": "2026-10-08",
+      "scope": "Typed native category tile selection",
+      "execution": "GitHub Actions",
+      "runId": 37753269784,
+      "commit": "a645d39",
+      "testsAndLint": "success",
+      "apkBuild": "in_progress",
       "physicalAcceptance": "pending"
     }
   ]

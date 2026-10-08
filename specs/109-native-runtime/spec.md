@@ -483,3 +483,7 @@ editMode сохранены; бизнес-документы не записыв
 нажатие отклоняются. Product/folder tiles и явный rollback пока используют reviewed
 handlers; их read models ещё впереди. Написаны JS, Room и native view проверки,
 выполнение следующего коммита в Actions pending. 109.08 in_progress; **114/129**.
+
+Исправление `8855327`: [Actions 37752933255](https://github.com/mendelev-main/M-POS-Android/actions/runs/37752933255) — Tests and lint успешно (JS, Kotlin, lint); APK отдельным job, проверка на планшете pending.
+
+Native category tile `a645d39`: [Actions 37753269784](https://github.com/mendelev-main/M-POS-Android/actions/runs/37753269784) — Tests and lint успешно. APK исправления `8855327` уже опубликована как Actions artifact M-POS-Android-release-0.1.173-1; категория собирается отдельным job. Физическая проверка pending.
