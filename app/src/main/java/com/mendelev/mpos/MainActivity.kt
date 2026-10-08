@@ -72,6 +72,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var telegram: TelegramClient
     private lateinit var nativeSettings: MPosSettingsStore
     private lateinit var nativeStorageMirror: MPosStorageMirror
+    private lateinit var employeeAuthorization: com.mendelev.mpos.employee.MPosEmployeeAuthorizationDialog
     private lateinit var rootSession: MPosRootSessionOwner
     private lateinit var nativeNetworkTransport: MPosNetworkTransport
     private lateinit var diagnostics: MPosDiagnosticBreadcrumbStore
@@ -122,6 +123,9 @@ class MainActivity : AppCompatActivity() {
         rootSession = MPosRootSessionOwner(MPosDatabase.get(this), lifecycleScope)
         nativeStorageMirror = MPosStorageMirror(MPosDatabase.get(this), lifecycleScope, rootSession::bootstrap, ::nativeStorageResult)
         nativeNetworkTransport = MPosNetworkTransport(lifecycleScope, ::nativeNetworkResult, ::nativeNetworkEvent, MPosDatabase.get(this))
+        employeeAuthorization = com.mendelev.mpos.employee.MPosEmployeeAuthorizationDialog(this, nativeStorageMirror::commitEmployee) { result ->
+            callJavaScript("window.__mposEmployeeCommandResult&&window.__mposEmployeeCommandResult(${com.mendelev.mpos.data.MPosBridgeJson.serialize(result)});")
+        }
         router = NativeBridgeRouter(this, photos, backup, nativeSettings, nativeStorageMirror, nativeNetworkTransport)
 
         webView = WebView(this).apply {
@@ -237,6 +241,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         if (::rootSession.isInitialized) rootSession.close()
+        if (::employeeAuthorization.isInitialized) employeeAuthorization.close()
         if (::shiftScreen.isInitialized) shiftScreen.hide()
         if (::workspace.isInitialized) workspace.hide()
         if (::settingsScreen.isInitialized) settingsScreen.dismiss()
@@ -311,7 +316,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun handleSettingsScreen(payload: JSONObject) = runOnUiThread {
-        if (::settingsScreen.isInitialized) settingsScreen.handle(payload)
+        if (payload.optString("action") == "employeeAuthorize") {
+            if (::employeeAuthorization.isInitialized) employeeAuthorization.handle(payload)
+        } else if (::settingsScreen.isInitialized) settingsScreen.handle(payload)
     }
 
     fun handleShiftScreen(payload: JSONObject) = runOnUiThread {
@@ -350,7 +357,9 @@ class MainActivity : AppCompatActivity() {
             callJavaScript("window.MPosCore?.RootSession?.receive(($model).rootSession,($model).rootSequence);")
         }
         diagnostics.record("storage", "result", result.optBoolean("ok", false) && result.optBoolean("projectionOk", true))
-        if (result.optString("requestId").startsWith("native-shift-open-")) {
+        if (result.optString("requestId").startsWith("native-employee-commit-")) {
+            runOnUiThread { if (::employeeAuthorization.isInitialized) employeeAuthorization.result(result) }
+        } else if (result.optString("requestId").startsWith("native-shift-open-")) {
             runOnUiThread { if (::shiftOpenDialog.isInitialized) shiftOpenDialog.result(result) }
         } else if (result.optString("requestId").startsWith("native-shift-close-")) {
             runOnUiThread { if (::shiftCloseDialog.isInitialized) shiftCloseDialog.result(result) }

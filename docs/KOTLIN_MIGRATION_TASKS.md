@@ -172,3 +172,5 @@ policy молча и не добавляем новые features ради про
 ## Исправление обратной связи интеграционных тестов — 08.10.2026
 
 [Telegram / WEB / LAN-print](CONNECTION_TEST_FIX_RU.md): corrected callback, correlated terminal result, bounded wait, duplicate/stale guards. 572/572 JS, 457/457 JVM; lint 0 ошибок / 22 предупреждения. Физическая проверка pending. Счётчики после независимого завершения 109.06: 107/110, 109 6/20, детальный план 113/129 — 87,60%; исправление подключений не закрывает новые подэтапы.
+
+109.07 — нативная авторизация сотрудников подключена: JS authorization marker не разрешает смену роли/удаление; пароль вводится в MPosEmployeeAuthorizationDialog и проверяется в транзакции MPosEmployeeCommand. Ordinary create/edit, last-admin demotion, self/admin deletion guards и supplier permissions сохранены. Проверки: 575 JS / 464 JVM; lint 0 ошибок / 15 прежних предупреждений. Полные критерии 109.07 ещё не выполнены: editor/product/category delete и settings gates остаются. Прогресс без увеличения: 6/20 внутри 109, 113/129 детально; физические кейсы pending.

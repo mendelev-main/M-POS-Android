@@ -822,11 +822,23 @@
         {
           "id": "109.07",
           "title": "Оставшаяся авторизация и права",
-          "status": "planned",
+          "status": "in_progress",
           "dependencies": [
             "109.06"
           ],
-          "acceptance": "Edit/delete/settings и смена ролей проверяют актуальные права нативно без JS authority; пароль не попадает в bridge или журнал."
+          "acceptance": "Edit/delete/settings и смена ролей проверяют актуальные права нативно без JS authority; пароль не попадает в bridge или журнал.",
+          "evidence": [
+            "app/src/main/java/com/mendelev/mpos/data/MPosEmployeeCommand.kt",
+            "app/src/main/java/com/mendelev/mpos/employee/MPosEmployeeAuthorizationDialog.kt",
+            "app/src/main/assets/pos/native-employee-command.js",
+            "app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt",
+            "app/src/main/java/com/mendelev/mpos/MainActivity.kt",
+            "app/src/test/java/com/mendelev/mpos/data/MPosEmployeeCommandTest.kt",
+            "app/src/test/java/com/mendelev/mpos/employee/MPosEmployeeAuthorizationDialogTest.kt",
+            "tests/android-employee-command.test.cjs",
+            "specs/109-native-runtime/spec.md"
+          ],
+          "remaining": "Нативная авторизация сотрудников подключена. Остались edit/delete товаров и категорий, разблокировка защищённых полей редактора и защищённые settings действия; закрытие возможно только после проверки всех этих границ."
         },
         {
           "id": "109.08",

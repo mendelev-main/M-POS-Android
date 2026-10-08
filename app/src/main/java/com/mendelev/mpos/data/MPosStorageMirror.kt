@@ -44,6 +44,27 @@ class MPosStorageMirror(
             .put("message", "Сохранение ещё не началось. Повторите открытие смены."))
     }
 
+    /** Native employee dialog owns credentials; they never enter bridge input or persistent documents. */
+    fun commitEmployee(input: JSONObject, credential: String) {
+        val serialized = input.toString()
+        val requestId = input.getString("requestId")
+        if (!queue.submit({ emitEmployeeFailure(requestId, it) }) {
+            withRootResult(requestId, "employeeCommit") {
+                attempt { MPosEmployeeCommand(database).commit(serialized, credential).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { emitEmployeeFailure(requestId, it) }
+            }
+        }) emitEmployeeFailure(requestId, IllegalStateException("native queue unavailable"))
+    }
+
+    private fun emitEmployeeFailure(requestId: String, error: Throwable) {
+        val known = setOf("Неверный пароль администратора", "Перезапустите M POS для восстановления данных", "Список сотрудников изменился",
+            "Смена изменилась", "Сотрудник не найден", "Нельзя удалить самого себя", "Нельзя удалить администратора", "Для удаления сотрудника откройте смену",
+            "Введите ФИО сотрудника", "Изменение сотрудников не совпадает с командой")
+        val message = error.message.takeIf { it in known } ?: "Не удалось сохранить сотрудника"
+        emitResult(JSONObject().put("requestId", requestId).put("ok", false).put("message", message)
+            .put("credentialRejected", error.message == "Неверный пароль администратора"))
+    }
+
     private suspend fun <T> attempt(block: suspend () -> T): Result<T> = try {
         Result.success(block())
     } catch (cancelled: CancellationException) {

@@ -657,3 +657,13 @@ After the native bootstrap cutover: restart offline with imported v13 data; veri
 - Сообщение формы и busy state различимы в светлой/тёмной теме и при крупном шрифте; native результат не содержит token/deviceKey.
 
 Автоматические проверки 572/572 JS и 457/457 JVM не закрывают эти физические кейсы. [Описание исправления](CONNECTION_TEST_FIX_RU.md).
+
+## 109.07 — native employee credentials (pending)
+
+- Add/rename an ordinary employee without a password; grant/remove admin rights with wrong/correct password, including demotion of the last admin without an open shift.
+- Delete an ordinary employee with an open shift/password; self/admin deletion stays blocked and past receipts/shifts stay present.
+- Cancel native confirmation after typing: no changes, no red persistence banner caused by cancellation; repeat the action.
+- Wrong password → retry → success; password field clears, both palettes match POS, landscape/keyboard/large font remain usable.
+- Leave the password dialog open for over 30 seconds before confirming: no uncertain-commit gate while typing. Double submit, background/restart, and a late result after an actual commit timeout do not duplicate writes.
+- Change employee/role/shift while confirmation is open: stale command is refused without overwriting newer data; refresh/retry using current data.
+- Pending critical journal blocks employee changes; no journal replay, printing or availability retry is triggered by the password dialog.
