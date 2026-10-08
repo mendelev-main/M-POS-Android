@@ -12,8 +12,8 @@ android {
         applicationId = "com.mendelev.mpos"
         minSdk = 28
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = providers.environmentVariable("MPOS_VERSION_CODE").orElse("1").get().toInt()
+        versionName = providers.environmentVariable("MPOS_VERSION_NAME").orElse("0.1.0").get()
     }
 
     testOptions {
@@ -24,8 +24,21 @@ android {
         buildConfig = true
     }
 
+    val releaseKeystore = providers.environmentVariable("MPOS_KEYSTORE_PATH").orNull
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("mposRelease") {
+                storeFile = file(releaseKeystore)
+                storePassword = providers.environmentVariable("MPOS_KEYSTORE_PASSWORD").get()
+                keyAlias = providers.environmentVariable("MPOS_KEY_ALIAS").get()
+                keyPassword = providers.environmentVariable("MPOS_KEY_PASSWORD").get()
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (releaseKeystore != null) signingConfig = signingConfigs.getByName("mposRelease")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

@@ -29,9 +29,8 @@ Current 109 production increments: Room session/bootstrap reads, workspace route
 
 Install Android Studio, then install Android SDK Platform 35 and Build-Tools 35 from SDK Manager.
 The first installation requires accepting Google's Android SDK license in Android Studio.
-The project has been compiled with Platform 35 and Build-Tools 35.0.0; both debug and minified
-release variants pass compilation. GitHub Actions repeats source-parity tests, lint and the debug
-build for every change to `main`.
+GitHub Actions runs source tests, Kotlin tests and lint in a separate job, then builds a signed
+release APK for `main`. Local verification/builds are performed only on explicit request.
 
 ```bash
 ./gradlew assembleDebug
@@ -65,3 +64,7 @@ When shift-close notifications are enabled, Telegram receives a PNG receipt with
 movements, matching the iPad report contract. Shift closure is committed locally before sending;
 Telegram failure does not undo closure or stop LAN receipt printing. See
 [spec 034](specs/034-telegram-shift-receipt-image/spec.md) for image parity and remaining physical checks.
+
+### CI и постоянная подпись
+
+Тесты и lint выполняются отдельной job GitHub Actions, затем собирается подписанный release APK с увеличивающейся версией. Агент поддерживает тесты без обычного локального запуска. Настройка Secrets, резервное копирование ключа и переход со старого debug APK: [инструкция](docs/CI_AND_APK_SIGNING_RU.md).
