@@ -1,5 +1,7 @@
 # 109 — Native runtime authority
 
+Current status (08 October 2026): **109.06 complete; 6/20 inside 109, 113/129 expanded, 107/110 major tasks.** Earlier increment sections below record their historical limitations; the completion section supersedes the pending root-startup/helper scope. Parent 109 remains in progress; next is 109.07.
+
 Status: in_progress. Engineering completion remains 107/110.
 
 ## Scope and sequence
@@ -172,3 +174,17 @@ Automated cases: empty installation awaiting migration; owned replacements and r
 ## Verification of root lifecycle owner increment
 
 Full suite: 551/551 JS and 449/449 JVM passed; no failures/errors/skips. After the final KTX-only visibility adjustment, the 5 shift-controller JVM tests and lint were rerun successfully; JS 551/551 was also rechecked. Final lint: 0 errors, 15 existing warnings. No APK assembly or physical tablet acceptance. Counters remain 5/20 for 109, 112/129 expanded and 107/110 major milestones; 109.06 stays in_progress.
+
+## Completion of 109.06 — root startup and compatibility consumers
+
+MPosRootStartup owns the recover → hydrate → activate → ready protocol in the Activity-owned FIFO storage service. begin creates a generation; advance requires the matching generation and current phase, rejects duplicate/out-of-order completions and cannot restart a completed generation. The root snapshot is read after recovery. Before activation, a fresh native snapshot must equal the hydration snapshot; an import/role/shift change cannot activate an old root. Restart/import loadAll calls are serialized and a failed attempt does not poison the next attempt. Pending journals are never implicitly replayed by this coordinator.
+
+MPosCore.RootSession is a compatibility transport, not an alternative projection or authorization engine. Android synchronous currentShift/currentShiftEmployeeIsAdmin and selectedEmployee consume Kotlin's selected records/role instead of searching JS arrays. A missing/failed root clears the selections. The explicit MPosNativeActiveSessionEnabled=false flag restores the reviewed legacy startup/selectors. The original source is retained for rollback/reference until 109.19.
+
+Root-changing commands deliver a fresh Room projection before acknowledgement, independent of observer scheduling. The response retains its original success/error result even if projecting the root fails after a durable commit: it carries a null root and the consumers deny stale access, rather than pretending the commit failed and inviting a duplicate operation. Revision guards reject late replies. Mutation responses contain only current shift, selected employee, admin and recovery flags; full history is read at startup only. Foreground refresh is ordered through the same FIFO and never replays printing/network/catalogue/availability effects.
+
+The existing adapters still execute journal replay (109.15), domain hydration and saved-order application (109.09–109.14), and post-activation effects (109.16–109.18). Kotlin owns their root phase ordering, not these later domains. WebView, mounted UI actions and remaining edit/delete/settings authorization are still active and belong to 109.07–109.19. No business-role, supplier/cart, payment-cancel, print-retry or availability retry policy changes; keys, JSON documents and v13 remain compatible.
+
+Automated cases cover startup order, duplicate acknowledgement, old generation after restart, import during hydration, restart after failure, durable writes despite a later root projection failure, role/shift replacement, detached selections, late revision rejection, compact mutation transport, root application before acknowledgement, explicit rollback, reference-source integrity and all existing session/recovery/shift parity cases. Physical acceptance is pending in 110.
+
+Verification on 08 October 2026: **558/558 JS and 454/454 JVM tests passed**, zero failures/errors/skips. Lint: 0 errors, 15 existing warnings. No local APK assembly or physical acceptance. The reference-source hash check restores only the exact approved root hooks before comparison; unrelated reviewed source remains covered. 109.06 is done, parent 109 remains in_progress; progress is 6/20, 113/129 and 107/110.

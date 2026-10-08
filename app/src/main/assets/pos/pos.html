@@ -1386,8 +1386,10 @@ async function loadAll(){
     markStorageBroken('localStorage test write failed');
   }
   storageCheckedOnce = true;
+  const rootSession=window.MPosCore?.RootSession;
+  const rootTicket=await rootSession?.begin();
   await recoverCriticalStorageJournal();
-  const nativeActiveSession = await window.MPosCore?.ActiveSession?.bootstrap();
+  const nativeActiveSession = rootTicket ? await rootSession.recovered(rootTicket) : await window.MPosCore?.ActiveSession?.bootstrap();
   if(nativeActiveSession)nativeActiveSession.warnings.forEach(markStorageBroken);
   const [products, shifts, employees, orders, parked, demandOverload, operationalOutbox, operationalRevision, receivings, suppliers, purchaseOrders, discounts, layout, printer, theme, company, deliveryRates, telegram, network, currentOrderSession, hallTables, bookings, webEvents, posNavigation, inventoryConfig, inventoryHistory, inventoryDraft] = await Promise.all([
     loadKey('products', null),
@@ -1543,6 +1545,7 @@ async function loadAll(){
     );
   }
 
+  if(rootTicket)await rootSession.hydrated(rootTicket);
   state.loaded = true;
   render();
   if(hasPaidSplitPayment())setTimeout(()=>openPaymentModal(),0);
@@ -1551,6 +1554,7 @@ async function loadAll(){
   void flushOperationalOutbox();
   startOperationalSchedule();
   void recoverWebAcceptanceJournal().catch(e=>console.warn('WEB acceptance recovery:',e));
+  if(rootTicket)await rootSession.activated(rootTicket);
 }
 function categoryLayoutSnapshot(){
   return {
@@ -2607,6 +2611,7 @@ document.addEventListener('touchmove',function(e){
 <script src="native-split-cash.js"></script>
 <script src="native-cash-payment.js"></script>
 <script src="native-workspace.js"></script>
+<script src="native-root-session.js"></script>
 <script>loadAll().then(()=>startAvailabilityRecovery());</script>
 </body>
 </html>

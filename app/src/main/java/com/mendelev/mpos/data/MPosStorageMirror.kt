@@ -24,7 +24,7 @@ class MPosStorageMirror(
         val key = if (action.startsWith("catalog") && action in setOf("catalogInitialize", "catalogWrite", "catalogRemove")) "products" else if (action in setOf("employeeInitialize", "employeeWrite", "employeeRemove")) "employees" else if (action in setOf("shiftInitialize", "shiftWrite", "shiftRemove")) "shifts" else if (action in setOf("orderInitialize", "orderWrite", "orderRemove", "orderUpsert")) "orders" else if (action in setOf("parkedInitialize", "parkedWrite", "parkedRemove")) "parked" else payload.optString("key")
         val command = Command(action, payload.optString("requestId"), key, payload.opt("payload") as? String, payload.optString("sourceKey"),
             if (key.isNotBlank() && action in setOf("put", "remove", "catalogInitialize", "catalogWrite", "catalogRemove", "workspaceInitialize", "workspaceWrite", "workspaceRemove", "employeeInitialize", "employeeWrite", "employeeRemove", "shiftInitialize", "shiftWrite", "shiftRemove", "orderInitialize", "orderWrite", "orderRemove", "orderUpsert", "parkedInitialize", "parkedWrite", "parkedRemove", "recoveryInitialize", "recoveryWrite", "recoveryRemove", "webJournalInitialize", "webJournalWrite", "webJournalRemove", "supplyInitialize", "supplyWrite", "supplyRemove", "inventoryInitialize", "inventoryWrite", "inventoryRemove", "hallInitialize", "hallWrite", "hallRemove")) writeState.request(key) else null)
-        if (!queue.submit({ result(command.requestId, false, "native shadow command failed") }) { dispatch(command) }) {
+        if (!queue.submit({ result(command.requestId, false, "native shadow command failed") }) { withRootResult(command.requestId, command.action, command.key) { dispatch(command) } }) {
             result(command.requestId, false, "native shadow queue is full or closed")
         }
     }
@@ -36,8 +36,10 @@ class MPosStorageMirror(
         val snapshot = input.toString()
         val requestId = input.getString("requestId")
         if (!queue.submit({ emitResult(MPosShiftOpenCommand.failure(it).put("requestId", requestId).put("blocked", true)) }) {
-            attempt { MPosShiftOpenCommand(database).commit(JSONObject(snapshot), credential).put("requestId", requestId) }
-                .onSuccess(::emitResult).onFailure { emitResult(MPosShiftOpenCommand.failure(it).put("requestId", requestId)) }
+            withRootResult(requestId, "shiftOpen") {
+                attempt { MPosShiftOpenCommand(database).commit(JSONObject(snapshot), credential).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure { emitResult(MPosShiftOpenCommand.failure(it).put("requestId", requestId)) }
+            }
         }) emitResult(JSONObject().put("requestId", requestId).put("ok", false).put("blocked", false)
             .put("message", "Сохранение ещё не началось. Повторите открытие смены."))
     }
@@ -59,7 +61,56 @@ class MPosStorageMirror(
         value
     }
 
+    private val startup = MPosRootStartup()
+    private var startupRoot: String? = null
+    private val resultMonitor = Any()
+    private var collectingId: String? = null
+    private val collected = mutableListOf<JSONObject>()
+    private var rootSequence = 0L
+
+    /** Deliver committed root state before the matching command acknowledgement, never from the observer cache. */
+    private suspend fun withRootResult(id: String, action: String, key: String = "", block: suspend () -> Unit) {
+        synchronized(resultMonitor) { collectingId = id }
+        try {
+            block()
+        } finally {
+            val values = synchronized(resultMonitor) {
+                collectingId = null
+                collected.toList().also { collected.clear() }
+            }
+            // Reads do not invalidate the root. These are all bridges capable of changing its documents.
+            val changesRoot = action in setOf("rootSessionRefresh", "shiftOpen", "shiftLifecycleCommit", "cashMovementCommit", "returnCommit", "employeeCommit",
+                "shiftInitialize", "shiftWrite", "shiftRemove", "employeeInitialize", "employeeWrite", "employeeRemove") ||
+                action in setOf("recoveryWrite", "recoveryRemove", "recoveryInitialize", "put", "remove") && key in setOf("shifts", "employees", "criticalStorageJournal")
+            val root = if (changesRoot) attempt { rootSelection(rootBootstrap()) }.getOrNull() else null
+            val sequence = if (changesRoot) ++rootSequence else rootSequence
+            for (value in values) {
+                if (changesRoot) value.put("rootSession", root ?: JSONObject.NULL).put("rootSequence", sequence)
+                deliverResult(value)
+            }
+        }
+    }
+
+    /** Mutation replies carry selected records only, rather than retransmitting the shift/employee history. */
+    private fun rootSelection(root: JSONObject): JSONObject {
+        fun selected(records: String, index: String): Any = if (root.isNull(index)) JSONObject.NULL
+            else root.getJSONArray(records).getJSONObject(root.getInt(index))
+        return JSONObject().put("currentShift", selected("shifts", "activeShiftIndex"))
+            .put("selectedEmployee", selected("employees", "activeEmployeeIndex"))
+            .put("isAdmin", root.getBoolean("isAdmin")).put("recoveryPending", root.getBoolean("recoveryPending"))
+    }
+
     private fun emitResult(value: JSONObject) {
+        synchronized(resultMonitor) {
+            if (collectingId != null && collectingId == value.optString("requestId")) {
+                collected.add(value)
+                return
+            }
+        }
+        deliverResult(value)
+    }
+
+    private fun deliverResult(value: JSONObject) {
         value.put("shadowCaughtUp", writeState.caughtUp()).put("pendingShadowKeys", writeState.pendingKeys())
         onResult(value)
     }
@@ -126,6 +177,25 @@ class MPosStorageMirror(
             }
         }
         when (command.action) {
+            "rootSessionRefresh" -> emitResult(JSONObject().put("requestId", requestId).put("ok", true))
+            "rootStartup" -> {
+                attempt {
+                    val input = JSONObject(requireNotNull(command.serialized))
+                    if (input.optString("operation") == "advance" && input.optString("completed") == "hydrate") {
+                        check(startupRoot != null && startupRoot == rootBootstrap().toString()) { "root changed during startup" }
+                    }
+                    val next = startup.execute(input)
+                    when (next.getString("step")) {
+                        "recover" -> startupRoot = null
+                        "hydrate" -> {
+                            val root = rootBootstrap()
+                            startupRoot = root.toString()
+                            next.put("rootSession", root)
+                        }
+                    }
+                    next.put("requestId", requestId).put("ok", true).put("authoritative", true)
+                }.onSuccess(::emitResult).onFailure { result(requestId, false, "native root startup failed") }
+            }
             "shiftOpenFormRead" -> {
                 readAttempt(command.action) { MPosShiftOpeningRepository(database).read().put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "native shift opening form unavailable") }

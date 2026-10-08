@@ -639,3 +639,12 @@ After the native bootstrap cutover: restart offline with imported v13 data; veri
 109.06 (pending): restart with admin/non-admin shift, change employee role and replace/import owned shift/staff data, then verify fresh native opening metadata and no stale selected employee. Pending critical journal must block opening without automatic print or extra shift. Physical full import/restart acceptance remains unrun.
 
 109.06 owner (pending physical): открыть экран смены, изменить сотрудника/роль или восстановить тестовую v13-копию и убедиться, что видимый экран перечитывает данные без повторного открытия вкладки; старые кнопки не действуют во время загрузки. Проверить foreground без изменения данных (сохранение прокрутки), force-stop/restart и пустую установку. При повреждённом/незавершённом журнале нет автоматической оплаты, печати или отправки остатков.
+
+## 109.06 — root startup cutover (pending, 08.10.2026)
+
+- Empty/offline install: create employees, open shift, restart and verify current employee/role; closing clears the current shift.
+- Import v13 with a different open shift and employee: no prior employee/role remains; force-stop/restart and verify the imported root again.
+- Edit admin to employee and back: settings permissions/current shift refresh immediately after saved changes; repeat after background/foreground.
+- Rapid successive load/import/restart actions: no old generation activates; failed load is followed by a successful fresh load.
+- Pending critical journal: preserve existing recovery semantics, paid split parts and recorded kitchen status; no automatic reprint, catalogue sync or availability retry on startup/foreground.
+- Compare responsiveness with a large shift/employee history; mutation bridge frames contain selected records only. No measured physical performance claim yet.

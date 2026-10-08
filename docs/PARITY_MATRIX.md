@@ -1,6 +1,6 @@
 # Android parity matrix
 
-> Детализация 109 (07.10.2026): **5/20 — 25,00%**, осталось 15. Общий детальный план: **112/129 — 86,82%**, осталось 17. Крупные этапы: **107/110 — 97,27%**. [Подэтапы, критерии и правила подсчёта](../specs/109-native-runtime/tasks.md). Проценты относятся к количеству задач; физическая приёмка 110 ещё не выполнена.
+> Детализация 109 (08.10.2026): **6/20 — 30,00%**, осталось 14. Общий детальный план: **113/129 — 87,60%**, осталось 16. Крупные этапы: **107/110 — 97,27%**. [Подэтапы, критерии и правила подсчёта](../specs/109-native-runtime/tasks.md). Проценты относятся к количеству задач; физическая приёмка 110 ещё не выполнена.
 
 
 User decision 2026-10-06 allows immediate native cutovers with automated compatibility checks and defers comprehensive physical acceptance to the end. `implemented` means code exists. Only `accepted` means it passed the physical Android tablet cases.
@@ -464,6 +464,5 @@ acceptance pending, engineering progress remains 107/110 (97.27%).
 0 errors / 22 warnings in unchanged files (7 are online dependency advisories).
 No local product APK assembly; physical acceptance pending. Progress 107/110.
 
-109.06 в работе: свежий корневой Room-контекст (смена, сотрудник, роль, critical journal) подключён к bootstrap и нативному открытию. Полный root lifecycle и JS helper cutover остаются. 5/20 внутри 109; 112/129 детально; 107/110 крупных этапов.
 
-109.06: нативный lifecycle-владелец сессии наблюдает три Room-документа и authority markers, обновляет видимый экран смены и закрывается с Activity. Fresh bootstrap и транзакционные команды не используют view-cache как проверку прав. Полный bootstrap/JS helper cutover остаются; прогресс 5/20 внутри 109, 112/129 детально.
+109.06 завершена: Kotlin выбирает текущую смену/сотрудника и задаёт последовательность recover → hydrate → activate → ready. Повторный запуск/импорт сериализованы; старые поколения и ответы отбрасываются. Изменение root-документов во время загрузки блокирует активацию, следующий запуск читает свежую сессию. После root-операций выбранные записи обновляются до acknowledgement, без повторной передачи истории. Foreground читает свежий root через FIFO; команды по-прежнему проверяют права в своих транзакциях. 6/20 внутри 109; 113/129 детально; 107/110 крупных этапов. Следующая задача — 109.07. JS-адаптеры исполнения recovery/hydration/effects остаются в 109.09–109.18; WebView удаляется в 109.19.

@@ -201,6 +201,12 @@
   mposCore.WorkspaceRouteRead=Object.freeze({
     async calculate(input){return requireNative(await request('workspaceRouteRead',{payload:JSON.stringify(input)}),true);}
   });
+  mposCore.RootStartup=Object.freeze({
+    async execute(input){
+      if(input.operation==='advance'&&input.completed==='recover')await Promise.all(['shifts','employees','criticalStorageJournal'].map(initializeNative));
+      return requireNative(await request('rootStartup',{payload:JSON.stringify(input)}),true);
+    }
+  });
   mposCore.ActiveSession=Object.freeze({
     async bootstrap(){
       if(global.MPosNativeActiveSessionEnabled===false)return null;
@@ -394,6 +400,7 @@
   global.__mposCatalogSnapshot=()=>mposCore.Catalog.getNativeSnapshot();
   global.__nativeStorageShadowStats=global.__mposNativeStorageStats;
   global.__nativeStorageResult=result=>{
+    if(result && Object.prototype.hasOwnProperty.call(result,'rootSession'))global.MPosCore?.RootSession?.receive(result.rootSession,result.rootSequence);
     global.__lastNativeStorageResult=result||null;
     const requestId=result?.requestId;
     const waiter=requestId?pending.get(requestId):null;

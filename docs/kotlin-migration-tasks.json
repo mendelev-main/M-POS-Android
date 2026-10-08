@@ -728,7 +728,7 @@
       "area": "UI/architecture",
       "dependencies": "100,101,102,103,104,105,106,107,108",
       "spec": "specs/109-native-runtime/spec.md",
-      "summary": "In progress: Room snapshot, order restore, workspace routes, paired shift/employee bootstrap and native opening authentication/transaction. DOM models, direct remaining dispatch, full root/recovery/effects lifecycle and WebView removal pending.",
+      "summary": "In progress: 109.01–109.06 complete, including Kotlin-owned root selections, lifecycle and ordered startup with post-commit refresh. Next: 109.07 remaining authorization. Domain hydration, recovery replay, post-commit effects and WebView removal remain in their explicit subtasks.",
       "subtasks": [
         {
           "id": "109.01",
@@ -796,7 +796,7 @@
         {
           "id": "109.06",
           "title": "Корневая сессия и bootstrap",
-          "status": "in_progress",
+          "status": "done",
           "dependencies": [
             "109.02",
             "109.04",
@@ -809,9 +809,15 @@
             "app/src/main/java/com/mendelev/mpos/MainActivity.kt",
             "app/src/test/java/com/mendelev/mpos/data/MPosRootSessionRepositoryTest.kt",
             "app/src/test/java/com/mendelev/mpos/data/MPosRootSessionOwnerTest.kt",
-            "app/src/test/java/com/mendelev/mpos/shift/MPosShiftScreenControllerTest.kt"
-          ],
-          "remaining": "Нативный lifecycle/наблюдение сессии подключены; полный порядок старта и замена синхронных JS currentShift/role helpers остаются."
+            "app/src/test/java/com/mendelev/mpos/shift/MPosShiftScreenControllerTest.kt",
+            "app/src/main/java/com/mendelev/mpos/data/MPosRootStartup.kt",
+            "app/src/main/java/com/mendelev/mpos/data/MPosStorageMirror.kt",
+            "app/src/main/assets/pos/native-root-session.js",
+            "app/src/test/java/com/mendelev/mpos/data/MPosRootStartupTest.kt",
+            "app/src/test/java/com/mendelev/mpos/data/MPosStorageMirrorTest.kt",
+            "tests/android-root-session.test.cjs",
+            "specs/109-native-runtime/spec.md"
+          ]
         },
         {
           "id": "109.07",

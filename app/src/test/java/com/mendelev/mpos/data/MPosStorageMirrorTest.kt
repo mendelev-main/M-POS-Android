@@ -57,6 +57,53 @@ class MPosStorageMirrorTest {
         return result
     }
 
+    private suspend fun initializeRoot() {
+        MPosEmployeeStorage(database).initialize("[]")
+        MPosShiftStorage(database).initialize("[]")
+        MPosRecoveryStorage(database).initialize("criticalStorageJournal", "null")
+    }
+    private fun rootReply(): JSONObject = requireNotNull(replies.poll(10, TimeUnit.SECONDS))
+
+    @Test fun committedRootIsAttachedBeforeAcknowledgementAndReadFailureDoesNotUndoCommit() = runBlocking {
+        initializeRoot()
+        send("employeeWrite", "employee", value = """[{"id":"a","role":"admin"}]""")
+        assertTrue(rootReply().getBoolean("ok"))
+        send("shiftWrite", "shift", value = """[{"id":"s","status":"open","employeeId":"a"}]""")
+        val opened = rootReply()
+        assertTrue(opened.getJSONObject("rootSession").getBoolean("isAdmin"))
+        send("employeeWrite", "role", value = """[{"id":"a","role":"employee"}]""")
+        val changed = rootReply()
+        assertFalse(changed.getJSONObject("rootSession").getBoolean("isAdmin"))
+        assertTrue(changed.getLong("rootSequence") > opened.getLong("rootSequence"))
+        database.legacyStorageShadowDao().delete(MPosEmployeeStorage.AUTHORITY_KEY)
+        send("shiftWrite", "close", value = "[]")
+        val closed = rootReply()
+        assertTrue(closed.getBoolean("ok"))
+        assertTrue(closed.isNull("rootSession"))
+        assertEquals("[]", database.legacyStorageShadowDao().get("shifts")!!.payload)
+    }
+
+    @Test fun rootStartupRejectsImportDuringHydrationAndAllowsFreshRestart() = runBlocking {
+        initializeRoot()
+        fun startup(input: JSONObject): JSONObject {
+            send("rootStartup", "boot", value = input.toString())
+            return rootReply()
+        }
+        val first = startup(JSONObject().put("operation", "begin"))
+        fun advance(generation: Long, step: String) = startup(JSONObject().put("operation", "advance")
+            .put("generation", generation).put("completed", step))
+        val generation = first.getLong("generation")
+        assertTrue(advance(generation, "recover").getBoolean("ok"))
+        MPosEmployeeStorage(database).write("""[{"id":"imported","role":"admin"}]""")
+        assertFalse(advance(generation, "hydrate").getBoolean("ok"))
+        val retry = startup(JSONObject().put("operation", "begin")).getLong("generation")
+        assertFalse(advance(generation, "recover").getBoolean("ok"))
+        val restored = advance(retry, "recover").getJSONObject("rootSession")
+        assertEquals("imported", restored.getJSONArray("employees").getJSONObject(0).getString("id"))
+        assertTrue(advance(retry, "hydrate").getBoolean("ok"))
+        assertEquals("ready", advance(retry, "activate").getString("step"))
+    }
+
     @Test fun deliveryReadIsPureCorrelatedAndWorkerSurvivesMalformedInput() = runBlocking {
         send("deliveryRead", "bad-delivery", value = "{}")
         assertFalse(reply("bad-delivery").getBoolean("ok"))

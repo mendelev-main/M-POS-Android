@@ -222,6 +222,8 @@ class MainActivity : AppCompatActivity() {
         hideSystemBars()
         diagnostics.record("lifecycle", "foreground")
         if (::rootSession.isInitialized) rootSession.refresh()
+        if (::nativeStorageMirror.isInitialized) nativeStorageMirror.handle(JSONObject()
+            .put("action", "rootSessionRefresh").put("requestId", "native-root-foreground"))
         nativeNetworkTransport.onForeground()
         if (::webView.isInitialized) callJavaScript("window._availabilityAppActive=true;window.onAvailabilityAppState&&window.onAvailabilityAppState(true);")
     }
@@ -342,6 +344,10 @@ class MainActivity : AppCompatActivity() {
     }
     private fun nativeSettingsResult(result: JSONObject) = callJavaScript("window.__nativeSettingsResult&&window.__nativeSettingsResult($result);")
     private fun nativeStorageResult(result: JSONObject) {
+        if (result.has("rootSession") && result.optString("requestId").startsWith("native-")) {
+            val model = com.mendelev.mpos.data.MPosBridgeJson.serialize(result)
+            callJavaScript("window.MPosCore?.RootSession?.receive(($model).rootSession,($model).rootSequence);")
+        }
         diagnostics.record("storage", "result", result.optBoolean("ok", false) && result.optBoolean("projectionOk", true))
         if (result.optString("requestId").startsWith("native-shift-open-")) {
             runOnUiThread { if (::shiftOpenDialog.isInitialized) shiftOpenDialog.result(result) }
