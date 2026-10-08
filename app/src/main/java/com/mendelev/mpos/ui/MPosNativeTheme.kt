@@ -27,6 +27,7 @@ class MPosNativeTheme(private val context: Context, val dark: Boolean) {
     val accentInk = color("#FFFFFF", "#07140F")
     val soft = color("#E4F3EE", "#173B31")
     val border = color("#E7E4DD", "#353B49")
+    val navy = color("#22273A", "#10131A")
     val danger = color("#E0483E", "#FF6B61")
     val dangerSoft = color("#FBE7E5", "#432522")
     val info = color("#31558F", "#BFD5FF")
@@ -45,18 +46,31 @@ class MPosNativeTheme(private val context: Context, val dark: Boolean) {
         view.setTextColor(if (secondary) muted else ink)
         view.setLineSpacing(dp(3).toFloat(), 1f)
     }
-    fun button(view: Button, primary: Boolean = false, destructive: Boolean = false, selected: Boolean = false) {
+    fun button(view: Button, primary: Boolean = false, destructive: Boolean = false, selected: Boolean = false, style: String = "default") {
         text(view, 15f, 600); view.isSelected = selected; view.isAllCaps = false; view.minHeight = dp(48); view.minimumHeight = dp(48)
         view.minWidth = 0; view.minimumWidth = 0; view.backgroundTintList = null
-        val fill = if (primary) accent else if (destructive) dangerSoft else if (selected) soft else surface
-        val normal = shape(fill, 12, !primary)
+        val prominent = primary || style == "primary" || style == "cash"
+        val fill = when {
+            style == "card" -> navy
+            prominent -> accent
+            destructive -> dangerSoft
+            selected -> soft
+            style == "secondary" -> bg
+            style == "outline" -> android.graphics.Color.TRANSPARENT
+            else -> surface
+        }
+        val textColor = if (style == "card") android.graphics.Color.WHITE else if (prominent) accentInk else if (destructive) danger else if (selected) accent else ink
+        val outlined = style == "outline" || (!prominent && style != "card" && style != "secondary")
+        val normal = shape(fill, 12, outlined)
         val states = StateListDrawable().apply {
+            // Busy actions remain disabled, but retain their normal palette to avoid a grey flash.
+            addState(intArrayOf(-android.R.attr.state_enabled, android.R.attr.state_activated), normal)
             addState(intArrayOf(-android.R.attr.state_enabled), shape(bg, 12, true))
             addState(intArrayOf(android.R.attr.state_focused), shape(fill, 12, true, accent))
-            addState(intArrayOf(), RippleDrawable(ColorStateList.valueOf(0x201B1F2A), normal, shape(0xFFFFFFFF.toInt())))
+            addState(intArrayOf(), RippleDrawable(ColorStateList.valueOf(0x201B1F2A), shape(fill, 12, outlined), shape(0xFFFFFFFF.toInt())))
         }
         view.background = states
-        view.setTextColor(ColorStateList(arrayOf(intArrayOf(-android.R.attr.state_enabled), intArrayOf()), intArrayOf(muted, if (primary) accentInk else if (destructive) danger else if (selected) accent else ink)))
+        view.setTextColor(ColorStateList(arrayOf(intArrayOf(-android.R.attr.state_enabled, android.R.attr.state_activated), intArrayOf(-android.R.attr.state_enabled), intArrayOf()), intArrayOf(textColor, muted, textColor)))
         view.setPadding(dp(16), dp(12), dp(16), dp(12))
     }
     fun dialog(view: AlertDialog) {

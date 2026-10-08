@@ -213,7 +213,7 @@ class MPosSettingsScreenController(
                     val key = item.optString("key")
                     val button = Button(theme.uiContext).apply {
                         text = item.optString("label"); contentDescription = item.optString("description").ifBlank { text.toString() }
-                        theme.button(this, item.optBoolean("primary"), item.optBoolean("danger"), item.optBoolean("selected"))
+                        theme.button(this, item.optBoolean("primary"), item.optBoolean("danger"), item.optBoolean("selected"), style = item.optString("style", "default"))
                         isEnabled = !item.optBoolean("disabled")
                         setOnClickListener { if (!busy && !externalBusy && !blocked) submit(key) }
                     }

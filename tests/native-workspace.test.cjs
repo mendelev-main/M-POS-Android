@@ -69,3 +69,11 @@ test('category route metadata uses stable category ID while product and rollback
  h.tile.dataset.tileType='product';h.mutate();await tick();assert.equal(h.sent.at(-1).model.tiles[0].route,undefined);
  h.h.MPosNativeWorkspaceToolbarEnabled=false;h.tile.dataset.tileType='category';h.mutate();await tick();assert.equal(h.sent.at(-1).model.tiles[0].route,undefined);
 });
+
+test('workspace carries stable tile/cart identity and preserves payment button styles across DOM replacement',()=>{
+ const h=host();h.pay.classList={contains:c=>c==='btn-card'};h.park.classList={contains:c=>c==='btn-secondary'};h.mutate();const model=h.sent.at(-1).model;
+ assert.equal(model.tiles[0].id,'product:p');assert.equal(model.lines[0].id,'line-1');assert.equal(model.cartButtons[0].style,'secondary');assert.equal(model.cartButtons[1].style,'card');
+ h.pay.classList={contains:c=>c==='btn-cash'};h.mutate();assert.equal(h.sent.at(-1).model.cartButtons[1].style,'cash');
+});
+
+test('retained-view rollback is explicit and leaves reviewed action dispatch unchanged',()=>{const h=host();assert.equal(h.sent.at(-1).retainedUpdates,true);h.h.MPosNativeWorkspaceRetainedViewsEnabled=false;h.mutate();assert.equal(h.sent.at(-1).retainedUpdates,false)});

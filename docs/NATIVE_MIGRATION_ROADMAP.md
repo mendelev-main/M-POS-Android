@@ -888,3 +888,7 @@ handlers; их read models ещё впереди. Написаны JS, Room и n
 Исправление `8855327`: [Actions 37752933255](https://github.com/mendelev-main/M-POS-Android/actions/runs/37752933255) — Tests and lint успешно (JS, Kotlin, lint); APK отдельным job, проверка на планшете pending.
 
 Native category tile `a645d39`: [Actions 37753269784](https://github.com/mendelev-main/M-POS-Android/actions/runs/37753269784) — Tests and lint успешно. APK исправления `8855327` уже опубликована как Actions artifact M-POS-Android-release-0.1.173-1; категория собирается отдельным job. Физическая проверка pending.
+
+## Стабильное обновление рабочей зоны — 08.10.2026
+
+[Подробности и проверка](NATIVE_WORKSPACE_SMOOTHNESS_RU.md): обновления остатков/количества/итогов и строк корзины сохраняют Views; действие/token обновляются без пересоздания сетки. Cash/card/secondary/outline передаются в shared theme; busy блокирует повторы без серого мигания рабочих кнопок. Новые тесты выполняет Actions, физическая плавность pending. Новых завершённых migration IDs нет: 114/129 (88,37%), 109 — 7/20.

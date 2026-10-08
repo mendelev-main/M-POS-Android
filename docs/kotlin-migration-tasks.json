@@ -663,7 +663,12 @@
       "status": "done",
       "area": "P6/UI",
       "dependencies": "076,078,082",
-      "spec": "specs/101-native-workspace/spec.md"
+      "spec": "specs/101-native-workspace/spec.md",
+      "qualityFollowUp": {
+        "date": "2026-10-08",
+        "doc": "docs/NATIVE_WORKSPACE_SMOOTHNESS_RU.md",
+        "summary": "Retained native workspace views, keyed cart/total reconciliation and reviewed cash/card/button palettes; CI and physical smoothness pending; no new completion."
+      }
     },
     {
       "id": "102",

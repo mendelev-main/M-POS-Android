@@ -76,4 +76,20 @@ class MPosNativeThemeTest {
         }
         activity.finish()
     }
+    @Test fun cashCardSecondaryAndOutlinePreserveReviewedRolesInBothPalettes() {
+        val activity=Robolectric.buildActivity(Activity::class.java).setup().get()
+        for(dark in listOf(false,true)) {
+            val theme=MPosNativeTheme(activity,dark)
+            assertEquals(Color.parseColor(if(dark)"#10131A" else "#22273A"),theme.navy)
+            val cash=Button(activity);theme.button(cash,style="cash");assertEquals(theme.accentInk,cash.currentTextColor)
+            val card=Button(activity);theme.button(card,style="card");assertEquals(Color.WHITE,card.currentTextColor)
+            val drawable=(card.background as android.graphics.drawable.StateListDrawable).current as android.graphics.drawable.RippleDrawable
+            assertEquals(theme.navy,(drawable.getDrawable(0) as android.graphics.drawable.GradientDrawable).color!!.defaultColor)
+            val secondary=Button(activity);theme.button(secondary,style="secondary");assertEquals(theme.ink,secondary.currentTextColor)
+            card.isActivated=true;card.isEnabled=false;assertEquals(Color.WHITE,card.currentTextColor)
+            card.isActivated=false;assertEquals(theme.muted,card.currentTextColor)
+        }
+        activity.finish()
+    }
+
 }

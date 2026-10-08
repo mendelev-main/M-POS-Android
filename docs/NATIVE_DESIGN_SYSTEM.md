@@ -92,3 +92,7 @@ busy/recovery disables controls. Physical tablet/font-scale checks pending.
 workspace/settings surfaces. Shift cash Dialog keeps native themed summary behind
 it, disabling background buttons; visible legacy HTML modals keep the compatibility
 path. Manrope/palettes/touch targets unchanged. Tablet verification pending.
+
+## Стабильное обновление рабочей зоны — 08.10.2026
+
+[Подробности и проверка](NATIVE_WORKSPACE_SMOOTHNESS_RU.md): обновления остатков/количества/итогов и строк корзины сохраняют Views; действие/token обновляются без пересоздания сетки. Cash/card/secondary/outline передаются в shared theme; busy блокирует повторы без серого мигания рабочих кнопок. Новые тесты выполняет Actions, физическая плавность pending. Новых завершённых migration IDs нет: 114/129 (88,37%), 109 — 7/20.

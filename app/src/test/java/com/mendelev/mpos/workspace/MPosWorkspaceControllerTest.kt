@@ -94,6 +94,7 @@ class MPosWorkspaceControllerTest {
         val (controller,root,calls)=setup()
         fun nativeModel(token:String):JSONObject {
             val payload=model(token)
+            payload.getJSONObject("model").put("context", token)
             val snapshot=JSONObject().put("tab","pos").put("posPath","Кофе").put("posFolder","").put("search","").put("editMode",false).put("revision",2)
             payload.getJSONObject("model").put("navigation",MPosWorkspaceToolbarModel.calculate(snapshot,null,null))
             return payload
@@ -119,6 +120,7 @@ class MPosWorkspaceControllerTest {
         val (controller,root,calls)=setup()
         fun nativeModel(token:String):JSONObject {
             val payload=model(token)
+            payload.getJSONObject("model").put("context", token)
             val snapshot=JSONObject().put("tab","pos").put("posPath",JSONObject.NULL).put("posFolder","").put("search","").put("editMode",false).put("revision",1)
             val content=payload.getJSONObject("model")
             content.put("navigation",MPosWorkspaceToolbarModel.calculate(snapshot,null,null))
@@ -133,6 +135,66 @@ class MPosWorkspaceControllerTest {
         assertEquals("openCategory",command.getString("route"));assertEquals("Напитки",command.getString("value"))
         controller.handle(JSONObject().put("action","result").put("token","first"));controller.handle(nativeModel("second"))
         tile.performClick();assertEquals(1,calls.size);controller.hide()
+    }
+
+    @Test fun quantityStockAndTotalUpdatesRetainViewsAndUseLatestActionKeys() {
+        val (controller,root,calls)=setup(); val first=model("first")
+        first.getJSONObject("model").getJSONArray("lines").getJSONObject(0).put("id","milk-line")
+        controller.handle(first); ShadowLooper.idleMainLooper()
+        val grid=nodes(root).filterIsInstance<MPosWorkspaceGrid>().single()
+        val tile=nodes(root).first{it.contentDescription=="Молоко"}
+        val edit=nodes(root).filterIsInstance<Button>().first{it.text=="Молоко"}
+        val pay=nodes(root).filterIsInstance<Button>().first{it.text=="Оплатить"}
+        val total=nodes(root).filterIsInstance<TextView>().first{it.text=="Итого  7,00 BYN"}
+        val stock=nodes(root).filterIsInstance<TextView>().first{it.text=="Остаток: 10 шт"}
+        val next=model("next");val data=next.getJSONObject("model")
+        data.getJSONArray("lines").getJSONObject(0).put("id","milk-line").put("amount","10,50 BYN").put("details","3,50 / шт · ×3").put("key","13").put("removeKey","14")
+        data.getJSONArray("tiles").getJSONObject(0).put("stock","Остаток: 9 шт")
+        data.getJSONArray("totals").getJSONObject(0).put("value","10,50 BYN")
+        data.getJSONArray("cartButtons").getJSONObject(1).put("key","16")
+        controller.handle(next)
+        assertSame(grid,nodes(root).filterIsInstance<MPosWorkspaceGrid>().single());assertTrue(nodes(root).any{it===tile});assertTrue(nodes(root).any{it===edit});assertTrue(nodes(root).any{it===pay})
+        assertEquals("Итого  10,50 BYN",total.text.toString());assertEquals("Остаток: 9 шт",stock.text.toString())
+        edit.performClick();assertEquals("13",calls.last().getString("key"));assertEquals("next",calls.last().getString("token"))
+        controller.handle(JSONObject().put("action","result").put("token","first"));assertFalse(pay.isEnabled)
+        controller.handle(JSONObject().put("action","result").put("token","next"));pay.performClick();assertEquals("16",calls.last().getString("key"))
+        controller.hide()
+    }
+    @Test fun cartInsertionRemovalAndReorderingKeepCatalogueAndUnaffectedRows() {
+        val (controller,root,calls)=setup()
+        fun snapshot(token:String, ids:List<String>):JSONObject {
+            val p=model(token);val rows=JSONArray()
+            for((i,id)in ids.withIndex())rows.put(JSONObject().put("id",id).put("key",(10+i*2).toString()).put("removeKey",(11+i*2).toString()).put("name",id).put("amount","3,50 BYN").put("details","×1"))
+            p.getJSONObject("model").put("lines",rows).put("cartEmpty","Заказ пуст")
+            return p
+        }
+        controller.handle(snapshot("empty",emptyList()));val grid=nodes(root).filterIsInstance<MPosWorkspaceGrid>().single();val pay=nodes(root).filterIsInstance<Button>().first{it.text=="Оплатить"}
+        controller.handle(snapshot("one",listOf("Milk")));val milk=nodes(root).filterIsInstance<Button>().first{it.text=="Milk"}
+        controller.handle(snapshot("two",listOf("Tea","Milk")));assertTrue(nodes(root).any{it===milk});val tea=nodes(root).filterIsInstance<Button>().first{it.text=="Tea"}
+        controller.handle(snapshot("back",listOf("Milk")));assertFalse(nodes(root).any{it===tea});tea.performClick();assertTrue(calls.isEmpty())
+        assertSame(grid,nodes(root).filterIsInstance<MPosWorkspaceGrid>().single());assertTrue(nodes(root).any{it===pay});milk.performClick();assertEquals("10",calls.single().getString("key"));assertEquals("back",calls.single().getString("token"))
+        controller.handle(JSONObject().put("action","result").put("token","back"));controller.handle(snapshot("clear",emptyList()))
+        assertTrue(nodes(root).filterIsInstance<TextView>().any{it.text=="Заказ пуст"&&it.visibility==View.VISIBLE});assertSame(grid,nodes(root).filterIsInstance<MPosWorkspaceGrid>().single());controller.hide()
+    }
+    @Test fun busyButtonsKeepPaletteWithoutAllowingDuplicateActions() {
+        val (controller,root,calls)=setup();controller.handle(model())
+        val pay=nodes(root).filterIsInstance<Button>().first{it.text=="Оплатить"};val color=pay.currentTextColor;val background=pay.background
+        pay.performClick();assertFalse(pay.isEnabled);assertTrue(pay.isActivated);assertEquals(color,pay.currentTextColor);assertSame(background,pay.background)
+        pay.performClick();assertEquals(1,calls.size);controller.handle(JSONObject().put("action","result").put("token","w"));assertTrue(pay.isEnabled);assertFalse(pay.isActivated);controller.hide()
+    }
+
+    @Test fun deliveryAndDiscountRowsChangeWithoutReplacingGridOrFinalTotal() {
+        val (controller,root,_)=setup();controller.handle(model("first"))
+        val grid=nodes(root).filterIsInstance<MPosWorkspaceGrid>().single();val total=nodes(root).filterIsInstance<TextView>().first{it.text=="Итого  7,00 BYN"}
+        val next=model("delivery");next.getJSONObject("model").put("totals",JSONArray().put(JSONObject().put("label","Доставка").put("value","2,00 BYN")).put(JSONObject().put("label","Итого").put("value","9,00 BYN")))
+        controller.handle(next);assertSame(grid,nodes(root).filterIsInstance<MPosWorkspaceGrid>().single());assertTrue(nodes(root).any{it===total});assertEquals("Итого  9,00 BYN",total.text.toString())
+        controller.handle(model("back"));assertTrue(nodes(root).any{it===total});assertEquals("Итого  7,00 BYN",total.text.toString());assertFalse(nodes(root).filterIsInstance<TextView>().any{it.text=="Доставка  2,00 BYN"});controller.hide()
+    }
+
+    @Test fun explicitRollbackRebuildsWorkspaceAndDetachedButtonsStayInactive() {
+        val (controller,root,calls)=setup();controller.handle(model("old"));val old=nodes(root).filterIsInstance<Button>().first{it.text=="Оплатить"}
+        controller.handle(model("rollback").put("retainedUpdates",false));val current=nodes(root).filterIsInstance<Button>().first{it.text=="Оплатить"}
+        assertNotSame(old,current);old.performClick();assertTrue(calls.isEmpty());current.performClick();assertEquals("rollback",calls.single().getString("token"));controller.hide()
     }
 
 }

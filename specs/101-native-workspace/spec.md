@@ -27,3 +27,7 @@ JS action/model/lifecycle tests and existing native business parity suites; JVM 
 Verification: 463 JS tests and full 384 JVM tests passed, 0 failed/skipped; final workspace-specific JVM checks repeated after the recovery-caption adjustment. Lint and publication are recorded after final completion below. Synthetic native light/dark previews inspected; tablet/printer acceptance remains pending. No local product APK assembled.
 
 Final checks: full JS 463/463, full JVM 384/384, final workspace rerun 5/5; 0 failed/skipped. Lint 0 errors / 15 existing warnings. Previews are synthetic; physical acceptance pending.
+
+## Стабильное обновление рабочей зоны — 08.10.2026
+
+[Подробности и проверка](../../docs/NATIVE_WORKSPACE_SMOOTHNESS_RU.md): обновления остатков/количества/итогов и строк корзины сохраняют Views; действие/token обновляются без пересоздания сетки. Cash/card/secondary/outline передаются в shared theme; busy блокирует повторы без серого мигания рабочих кнопок. Новые тесты выполняет Actions, физическая плавность pending. Новых завершённых migration IDs нет: 114/129 (88,37%), 109 — 7/20.

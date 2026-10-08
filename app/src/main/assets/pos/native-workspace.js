@@ -17,15 +17,15 @@
   }
   function build(root,folder,navigation){
     const actions=[],bind=(node,kind='button',extra={})=>{const key=String(actions.length);actions.push({node,kind,...extra});return key};
-    const button=node=>({key:bind(node),label:node.getAttribute('aria-label')||text(node),primary:node.classList.contains('btn-primary'),disabled:node.disabled});
+    const button=node=>({key:bind(node),label:node.getAttribute('aria-label')||text(node),primary:node.classList.contains('btn-primary'),style:node.classList.contains('btn-cash')?'cash':node.classList.contains('btn-card')?'card':node.classList.contains('btn-primary')?'primary':node.classList.contains('btn-secondary')?'secondary':node.classList.contains('btn-outline')?'outline':'default',disabled:node.disabled});
     const grid=folder?folder.querySelector('.pos-folder-grid'):root.querySelector('.product-grid');
     const columns=Math.max(1,global.getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length||4);
     const tiles=[...grid.querySelectorAll('.layout-tile')].filter(node=>!node.hidden).map((node,i)=>{
       const card=node.querySelector('.pcard');
-      return{key:bind(card,'tile'),route:navigation&&node.dataset.tileType==='category'?{operation:'openCategory',value:String(node.dataset.id||'')}:undefined,name:text(card.querySelector('.pcard-name')),price:text(card.querySelector('.pcard-price')),stock:text(card.querySelector('.pcard-stock')),symbol:text(card.querySelector('.tile-symbol')),type:node.dataset.tileType||'product',disabled:card.classList.contains('disabled'),color:card.style.getPropertyValue('--category-color'),...position(node,i,columns)};
+      return{id:String(node.dataset.tileType||'product')+':'+String(node.dataset.id||''),key:bind(card,'tile'),route:navigation&&node.dataset.tileType==='category'?{operation:'openCategory',value:String(node.dataset.id||'')}:undefined,name:text(card.querySelector('.pcard-name')),price:text(card.querySelector('.pcard-price')),stock:text(card.querySelector('.pcard-stock')),symbol:text(card.querySelector('.tile-symbol')),type:node.dataset.tileType||'product',disabled:card.classList.contains('disabled'),color:card.style.getPropertyValue('--category-color'),...position(node,i,columns)};
     });
     const panel=root.querySelector('.cart-panel');
-    const lines=[...panel.querySelectorAll('.cart-row')].map(node=>({key:bind(node,'cart'),removeKey:bind(node,'remove',{id:node.dataset.cartId}),name:text(node.querySelector('.cart-row-name')),amount:text(node.querySelector('.cart-row-linetotal')),details:[...node.querySelectorAll('.cart-row-sub')].map(text).join('\n')}));
+    const lines=[...panel.querySelectorAll('.cart-row')].map(node=>({id:String(node.dataset.cartId||''),key:bind(node,'cart'),removeKey:bind(node,'remove',{id:node.dataset.cartId}),name:text(node.querySelector('.cart-row-name')),amount:text(node.querySelector('.cart-row-linetotal')),details:[...node.querySelectorAll('.cart-row-sub')].map(text).join('\n')}));
     return{actions,model:{blocked:blocked(),columns,tiles,navigation,title:navigation?.title??(folder?text(folder.querySelector('h2')):text(root.querySelector('.zone-title-btn'))),context:String(appState().posPath||'')+'|'+String(global._posFolderModal?.id||appState().posFolder||''),folder:!!folder,closeKey:folder&&!navigation?bind(folder.querySelector('header button')):null,
       toolbar:folder?[]:[...root.querySelectorAll('.pos-left .pos-toolbar button,.no-shift-banner button')].filter(node=>!navigation||!node.classList.contains('pos-back')&&node.getAttribute('onclick')!=='toggleEditMode()').map(button),notice:folder?'':text(root.querySelector('.no-shift-banner span')),
       empty:text(grid.querySelector('.empty-hint,.pos-folder-empty'))||'В папке пока нет товаров.',cartTitle:text(panel.querySelector('.cart-order-title')),metadata:text(panel.querySelector('.order-meta')),lines,
@@ -51,7 +51,7 @@
       }catch(_error){toolbarCache=null;hide();return;}
     }
     let built;try{built=build(root,folder,navigation)}catch(_){global.MPosNativeWorkspaceEnabled=false;hide();return}
-    const payload={action:'show',theme:document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light',viewportWidth:global.innerWidth,viewportHeight:global.innerHeight,rect:rect(root),model:built.model};
+    const payload={action:'show',retainedUpdates:global.MPosNativeWorkspaceRetainedViewsEnabled!==false,theme:document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light',viewportWidth:global.innerWidth,viewportHeight:global.innerHeight,rect:rect(root),model:built.model};
     const signature=JSON.stringify(payload);
     if(current?.root===root&&current?.folder===folder&&signature===lastSignature&&current.actions.length===built.actions.length&&current.actions.every((entry,i)=>entry.node===built.actions[i].node&&entry.kind===built.actions[i].kind&&entry.id===built.actions[i].id))return;
     const old=current,same=old?.root===root&&old?.folder===folder;const previousStyles=same?old.styles:null;if(old&&!same)restore();
