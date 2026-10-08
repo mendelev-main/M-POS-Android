@@ -846,3 +846,11 @@ increment переносит обработчик, а не добавляет п
 - Fallback «Прежняя форма» и native header rollback сохраняют reviewed путь.
 - Light/dark, длинное имя, landscape/portrait/font scale. При narrow topbar
   с группами вне viewport пока действует documented source scroller fallback.
+
+
+109.08 — все входы открытия смены (pending): открыть native окно через кнопку
+на workspace, действие на экране смены и topbar. Во всех случаях нет скрытой
+HTML формы; native фон сохраняется и его кнопки недоступны. Отмена/Back возвращают
+тот же native фон без появления старой формы. Двойное нажатие — один диалог,
+одна смена и одно уведомление после успешного commit. Проверить перенос наличных,
+admin credential, пустой список сотрудников, bridge/read failure и явный fallback.

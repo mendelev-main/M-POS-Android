@@ -30,9 +30,25 @@ test('direct opening refuses pending recovery, busy operation and existing shift
   assert.equal(h.ctx.MPosCore.NativeOpenForm.openNative(),false);assert.equal(h.events.includes('form'),false);
  }
 });
+test('every default openShiftModal entry uses direct native form and duplicate taps retain one token',async()=>{
+ const h=host();assert.deepEqual(h.events,[]);h.ctx.document.getElementById=()=>{throw Error('No HTML field expected')};
+ const before=h.sent.filter(p=>p.action==='openFormShow').length;assert.equal(h.ctx.openShiftModal(),true);
+ assert.equal(h.ctx.MPosCore.NativeOpenForm.activeToken(),h.token);assert.equal(h.sent.filter(p=>p.action==='openFormShow').length,before);
+ await h.prepare();h.ctx.openShiftModal();assert.equal(h.sent.filter(p=>p.action==='openFormCommit').length,1);
+ await h.action(h.committed());assert.equal(h.events.includes('form'),false);
+});
+test('native-only start and cancel notify views without HTML mutation; failed bridge does not build legacy form',async()=>{
+ const h=host();await h.action({action:'cancel'});const notifications=[];
+ h.ctx.Event=class{constructor(type){this.type=type}};h.ctx.dispatchEvent=event=>notifications.push({type:event.type,token:h.ctx.MPosCore.NativeOpenForm.activeToken()});
+ assert.equal(h.ctx.openShiftModal(),true);const token=h.ctx.MPosCore.NativeOpenForm.activeToken();
+ await h.ctx.MPosCore.NativeOpenForm.handleAction({action:'cancel',token});
+ assert.deepEqual(notifications.map(event=>event.type),['mpos-native-open-state','mpos-native-open-state']);assert.equal(notifications[1].token,null);
+ h.ctx.webkit.messageHandlers.shiftScreen.postMessage=()=>false;assert.equal(h.ctx.openShiftModal(),false);
+ assert.equal(h.ctx.MPosCore.NativeOpenForm.activeToken(),null);assert.equal(h.events.includes('form'),false);
+});
 test('native opening waits for durable acknowledgement and never calls JS credential verifier',async()=>{
- const h=host();assert.equal(h.sent.at(-1).nativeCommit,true);await h.prepare();assert.equal(h.ctx.criticalOperationBusy,true);assert.equal(h.ctx.state.shifts.length,1);assert.deepEqual(h.events,['form']);assert.equal(h.secret.value,'');
- const c=h.sent.at(-1);assert.equal(c.action,'openFormCommit');assert.equal(Object.hasOwn(c,'password'),false);await h.action(h.committed());assert.equal(h.ctx.criticalOperationBusy,false);assert.equal(h.ctx.state.shifts.length,2);assert.deepEqual(h.events,['form','close','render','telegram','monthly']);assert.equal(h.sent.find(p=>p.action==='openFormResult').ok,true);
+ const h=host();assert.equal(h.sent.at(-1).nativeCommit,true);await h.prepare();assert.equal(h.ctx.criticalOperationBusy,true);assert.equal(h.ctx.state.shifts.length,1);assert.deepEqual(h.events,[]);assert.equal(h.secret.value,'');
+ const c=h.sent.at(-1);assert.equal(c.action,'openFormCommit');assert.equal(Object.hasOwn(c,'password'),false);await h.action(h.committed());assert.equal(h.ctx.criticalOperationBusy,false);assert.equal(h.ctx.state.shifts.length,2);assert.deepEqual(h.events,['close','render','telegram','monthly']);assert.equal(h.sent.find(p=>p.action==='openFormResult').ok,true);
 });
 test('duplicate gestures and wrong tokens cannot dispatch a second opening or notification',async()=>{
  const h=host();await h.action({action:'prepare',token:'old',employeeId:'e1'});await h.prepare();await h.prepare();await h.action({action:'submit',employeeId:'e1',password:'synthetic'});assert.equal(h.sent.filter(p=>p.action==='openFormCommit').length,1);const reply=h.committed();await h.action(reply);await h.action(reply);assert.equal(h.events.filter(e=>e==='telegram').length,1);

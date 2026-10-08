@@ -11,10 +11,11 @@
 - [x] ~~Нативный владелец состояния навигации, категории и папки~~ — подключён, Actions подтверждён.
 - [x] ~~Основные вкладки верхней панели~~ — подключены, Actions 37767655391.
 - [x] ~~Live фильтрация текущих плиток по каталогу Room~~ — подключена, Actions 37769761293; presentation ещё временная.
-- [ ] **Кнопка смены целиком** — status/label из Room, direct selection/opening,
-  stale/busy/Back/cancel/fallback. Реализована в текущем коммите; Actions pending.
+- [x] ~~Кнопка смены целиком~~ — status/label из Room, direct selection/opening,
+  stale/busy/Back/cancel/fallback; main b38a2c4, Actions 37772473180 успешно.
 - [ ] **Все входы в открытие смены без скрытой HTML-формы** — переключить default
   openShiftModal на native form; legacy form остаётся только explicit rollback.
+  Реализовано, включая state notifications и блокировку фона; Actions pending.
 - [ ] **Поиск и управление раскладкой** — закрыть оставшиеся controls/state
   границы, сохранить scope и source behavior; domain catalog models входят в 109.09.
 - [ ] **Состояние overlays для Back** — заменить оставшиеся DOM presence targets

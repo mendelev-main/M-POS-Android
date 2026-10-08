@@ -611,3 +611,29 @@ SystemBack учитывает token нативного окна даже без 
 Список исполняемых участков: docs/NATIVE_MIGRATION_EXECUTION_RU.md.
 Прогресс **114/129 (88,37%)**, 109 **7/20**. Участок не добавляет новую задачу
 в общий счётчик: входит в стабильный ID 109.08.
+
+Shift header `b38a2c4`: [Actions 37772473180](https://github.com/mendelev-main/M-POS-Android/actions/runs/37772473180) — Tests and lint успешно (JS, Kotlin, lint); участок вычеркнут в execution checklist. Tablet acceptance pending.
+
+
+### 109.08 — все входы открытия смены без HTML формы, 08.10.2026
+
+Production openShiftModal теперь сразу вызывает NativeOpenForm.openNative:
+кнопка workspace, действие native shift screen и topbar используют один путь.
+Hidden select/password/HTML modal не создаются; старый openOriginal вызывается
+только при explicit compatibility flags или «Прежняя форма». Повторное нажатие
+сохраняет тот же token/диалог и не отправляет вторую команду. Отказ bridge не
+переключает молча на старую форму. Existing save/ack/recovery/effects не изменены.
+
+NativeOpenForm уведомляет presentation через mpos-native-open-state на open и
+abandon. Header скрывается и возвращается по состоянию окна; shift screen
+остаётся native под диалогом, получает только block/unblock, без нового Room read.
+Workspace сохраняет native фон и блокирует команды; закрытие окна разблокирует
+его без HTML MutationObserver. Это блокировка окна, а не recovery failure:
+сообщение о перезапуске при ней не появляется. Back и restart/import защищены
+existing token/runtime guards предыдущего участка.
+
+Написаны проверки всех default entries, повторного нажатия, отказа bridge,
+событий без DOM, блокировки/разблокировки native shift/workspace/header, сохранения
+и explicit compatibility path. Локально JS/JVM/lint/APK не запускались (§17);
+Actions следующего коммита pending. Физическая приёмка pending.
+109.08 остаётся in_progress; **114/129 (88,37%)**, внутри 109 **7/20**.

@@ -5,16 +5,20 @@
   if(!bridge||typeof openShiftModal!=='function'||typeof submitOpenShift!=='function')return;
   if(global.MPosNativeOpenFormEnabled===undefined)global.MPosNativeOpenFormEnabled=true;
   let active=null,generation=0;
+  function notify(){if(typeof global.dispatchEvent==='function'&&typeof global.Event==='function')global.dispatchEvent(new global.Event('mpos-native-open-state'));}
   const same=(a,b)=>{
     if(a===b)return true;
     if(!a||!b||typeof a!=='object'||typeof b!=='object'||Array.isArray(a)!==Array.isArray(b))return false;
     const keys=Object.keys(a);return keys.length===Object.keys(b).length&&keys.every(k=>Object.prototype.hasOwnProperty.call(b,k)&&same(a[k],b[k]));
   };
   const openOriginal=global.openShiftModal,closeOriginal=global.closeModal,showOriginal=global.showModal;
-  function abandon(){if(active){active.password.value='';bridge.postMessage({action:'openFormHide',token:active.token});active=null;}}
+  function abandon(){if(active){active.password.value='';bridge.postMessage({action:'openFormHide',token:active.token});active=null;notify();}}
   global.closeModal=function(...args){if(active?.busy)return false;abandon();return closeOriginal.apply(this,args);};
   global.showModal=function(...args){if(active?.nativeCommit&&active.busy)return false;abandon();return showOriginal.apply(this,args);};
   global.openShiftModal=function(){
+    if(global.MPosNativeOpenFormEnabled&&global.MPosNativeShiftOpenCommandEnabled!==false){
+      const opened=global.MPosCore.NativeOpenForm.openNative();if(!opened)global.flash?.('Не удалось открыть окно смены. Повторите действие.');return opened;
+    }
     if(active?.busy)return;
     abandon();const result=openOriginal.apply(this,arguments);
     if(!global.MPosNativeOpenFormEnabled)return result;
@@ -31,10 +35,12 @@
     invalidate(){if(!active?.busy)abandon();},
     openNative(){
       if(!global.MPosNativeOpenFormEnabled||global.MPosNativeShiftOpenCommandEnabled===false){global.openShiftModal();return true;}
+      if(active?.nativeOnly)return true;
       if(active?.busy||!state.loaded||criticalOperationBusy||criticalStorageRecoveryPending||currentShift())return false;
       abandon();const token='native-open-form-'+(++generation);
       active={token,password:{value:''},busy:false,nativeCommit:true,nativeOnly:true};
       if(bridge.postMessage({action:'openFormShow',token,nativeCommit:true,currency:state.currency||'',theme:document.documentElement?.dataset?.theme||'light'})===false){active=null;return false;}
+      notify();
       return true;
     },
     async handleAction(payload){

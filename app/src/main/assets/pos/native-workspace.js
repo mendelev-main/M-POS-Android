@@ -7,6 +7,7 @@
   let current=null,sequence=0,scheduled=false,lastSignature='',awaiting=null,capture=null,message='',toolbarCache=null;
   const text=node=>String(node?.textContent||'').replace(/\s+/g,' ').trim();
   const blocked=()=>typeof criticalStorageRecoveryPending!=='undefined'&&criticalStorageRecoveryPending;
+  const controlsBlocked=()=>blocked()||!!global.MPosCore?.NativeOpenForm?.activeToken?.();
   function restore(){if(current)for(const [node,opacity,pointer]of current.styles){node.style.opacity=opacity;node.style.pointerEvents=pointer}current=null;lastSignature=''}
   function hide(){toolbarCache=null;if(current)bridge.postMessage({action:'hide',token:current.token});restore()}
   const rect=node=>{const r=node.getBoundingClientRect();return{left:r.left,top:r.top,width:r.width,height:r.height}};
@@ -30,7 +31,7 @@
     const presentation={cartWidth:panel.getBoundingClientRect().width,padding:number(screenStyle.paddingLeft,16),gap:number(screenStyle.columnGap,16),vertical:screenStyle.flexDirection==='column',gridGap:number(gridStyle.columnGap,12),rowHeight:number(gridStyle.gridTemplateRows?.split(' ')[0],155)};
 
     const lines=[...panel.querySelectorAll('.cart-row')].map(node=>({id:String(node.dataset.cartId||''),key:bind(node,'cart'),removeKey:bind(node,'remove',{id:node.dataset.cartId}),name:text(node.querySelector('.cart-row-name')),amount:text(node.querySelector('.cart-row-linetotal')),details:[...node.querySelectorAll('.cart-row-sub')].map(text).join('\n')}));
-    return{actions,model:{sourceLayout:global.MPosNativeWorkspaceSourceLayoutEnabled!==false,presentation,orderComment:text(panel.querySelector('.cart-order-comment')),blocked:blocked(),columns,tiles,navigation,title:navigation?.title??(folder?text(folder.querySelector('h2')):text(root.querySelector('.zone-title-btn'))),context:String(appState().posPath||'')+'|'+String(global._posFolderModal?.id||appState().posFolder||''),folder:!!folder,closeKey:folder&&!navigation?bind(folder.querySelector('header button')):null,
+    return{actions,model:{sourceLayout:global.MPosNativeWorkspaceSourceLayoutEnabled!==false,presentation,orderComment:text(panel.querySelector('.cart-order-comment')),blocked:controlsBlocked(),columns,tiles,navigation,title:navigation?.title??(folder?text(folder.querySelector('h2')):text(root.querySelector('.zone-title-btn'))),context:String(appState().posPath||'')+'|'+String(global._posFolderModal?.id||appState().posFolder||''),folder:!!folder,closeKey:folder&&!navigation?bind(folder.querySelector('header button')):null,
       toolbar:folder?[]:[...root.querySelectorAll('.pos-left .pos-toolbar button,.no-shift-banner button')].filter(node=>(global.MPosNativeWorkspaceSourceLayoutEnabled===false||!node.classList.contains('zone-title-btn'))&&(!navigation||!node.classList.contains('pos-back')&&node.getAttribute('onclick')!=='toggleEditMode()')).map(button),notice:folder?'':text(root.querySelector('.no-shift-banner span')),
       empty:text(grid.querySelector('.empty-hint,.pos-folder-empty'))||'В папке пока нет товаров.',cartTitle:text(panel.querySelector('.cart-order-title')),metadata:text(panel.querySelector('.order-meta')),lines,
       cartHeaderButtons:[...panel.querySelectorAll('.cart-head button,.order-meta button')].map(button),cartButtons:[...panel.querySelectorAll('.cart-foot button')].map(button),totals:[...panel.querySelectorAll('.total-row')].map(node=>({label:text(node.querySelector('.label')),value:text(node.querySelector('.value'))})),cartEmpty:text(panel.querySelector('.cart-empty'))}};
@@ -69,7 +70,7 @@
     const result=payload?.result;const token=payload?.token;
     const navigation=current?.navigation;
     const expected=navigation?.expected;
-    const valid=global.MPosNativeWorkspaceEnabled&&global.MPosNativeWorkspaceToolbarEnabled!==false&&!state.editMode&&current&&token===current.token&&current.root.isConnected!==false&&state.loaded&&state.tab==='pos'&&!state.paymentPage&&!document.hidden&&!blocked()
+    const valid=global.MPosNativeWorkspaceEnabled&&global.MPosNativeWorkspaceToolbarEnabled!==false&&!state.editMode&&current&&token===current.token&&current.root.isConnected!==false&&state.loaded&&state.tab==='pos'&&!state.paymentPage&&!document.hidden&&!controlsBlocked()
       &&expected&&['tab','posPath','posFolder','search','editMode'].every(key=>(state[key]??null)===(expected[key]??null))
       &&JSON.stringify(global._posFolderModal??null)===JSON.stringify(navigation.folderModal??null)
       &&document.querySelector('#modal-root .modal')===current.folder;
@@ -84,7 +85,7 @@
     }catch(_error){if(valid)global.flash?.('Не удалось выполнить переход');}
     finally{
       if(result?.ok&&!applied&&result.proposalToken)await global.MPosCore?.WorkspaceNavigation?.execute({version:1,operation:'discardRoute',proposalToken:result.proposalToken}).catch(()=>{});
-      bridge.postMessage({action:'result',token:current?.token||token,blocked:blocked()});schedule();
+      bridge.postMessage({action:'result',token:current?.token||token,blocked:controlsBlocked()});schedule();
     }
   };
   global.__nativeWorkspaceAction=async payload=>{
@@ -92,7 +93,7 @@
     if(payload.action==='fallback'){global.MPosNativeWorkspaceEnabled=false;hide();return}
     if(payload.action!=='click')return;
     if(awaiting)return;
-    if(!global.MPosNativeWorkspaceEnabled||!appState().loaded||appState().tab!=='pos'||appState().editMode||appState().paymentPage||document.hidden||blocked()){bridge.postMessage({action:'result',token:current.token,blocked:blocked(),message:blocked()?'Перезапустите M POS для восстановления заказа':''});return;}
+    if(!global.MPosNativeWorkspaceEnabled||!appState().loaded||appState().tab!=='pos'||appState().editMode||appState().paymentPage||document.hidden||controlsBlocked()){bridge.postMessage({action:'result',token:current.token,blocked:controlsBlocked(),message:blocked()?'Перезапустите M POS для восстановления заказа':''});return;}
     const modal=document.querySelector('#modal-root .modal');if(modal&&modal!==current.folder)return;
     const entry=current.actions[Number(payload.key)];if(!/^\d+$/.test(String(payload.key))||!entry||entry.node?.isConnected===false||entry.node?.disabled||entry.node?.classList.contains('disabled'))return;
     const token=current.token;awaiting=token;message='';const promises=[];capture=promises;
@@ -106,7 +107,7 @@
       }else result=entry.node.click();
       capture=null;await Promise.resolve(result);for(const promise of promises)await promise;
     }catch(_){message='Не удалось выполнить действие заказа';global.flash?.(message)}
-    finally{capture=null;awaiting=null;bridge.postMessage({action:'result',token:current?.token||token,blocked:blocked(),message});schedule()}
+    finally{capture=null;awaiting=null;bridge.postMessage({action:'result',token:current?.token||token,blocked:controlsBlocked(),message});schedule()}
   };
   const originalFlash=global.flash;if(typeof originalFlash==='function')global.flash=function(value,...args){if(awaiting)message=String(value??'');return originalFlash.call(this,value,...args)};
   for(const name of ['addToCart','addConfiguredCartItem','removeFromCart','parkOrder','markCurrentWebOrderReady','openPaymentModal','openPosCategory','closePosCategory','openPosFolder','toggleEditMode','setTab','onSearch']){
@@ -118,6 +119,7 @@
     observer.observe(document.body,{childList:true});
     observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
     global.addEventListener('resize',()=>{lastSignature='';schedule()});document.addEventListener('visibilitychange',schedule);schedule();
+    global.addEventListener('mpos-native-open-state',schedule);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observe,{once:true});else observe();
 })(window);

@@ -115,3 +115,9 @@ pill, reviewed green/red dot and 48dp targets. Native opening launches the exist
 themed employee/carryover dialog without a hidden HTML form from this entry point.
 Long labels can scroll within their group; source geometry/narrow root fallback
 remain. Both themes and typed busy controls have native View tests; tablet pending.
+
+
+109.08 default shift opening: all opening entry points use the same themed native
+dialog without hidden HTML fields. Native workspace/shift background remains
+mounted and disabled beneath it; cancel restores controls via native opening
+state, without relying on a DOM mutation. Tablet acceptance pending.

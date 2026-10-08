@@ -74,6 +74,7 @@
     for(const id of ['app','modal-root','product-editor-root','payment-page-root']){const node=document.getElementById(id);if(node)observer.observe(node,{childList:true,subtree:true});}
     observer.observe(document.body,{childList:true});observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
     global.addEventListener('resize',()=>{lastSignature='';schedule();});document.addEventListener('visibilitychange',schedule);document.addEventListener('scroll',schedule,true);schedule();
+    global.addEventListener('mpos-native-open-state',schedule);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observe,{once:true});else observe();
 })(window);

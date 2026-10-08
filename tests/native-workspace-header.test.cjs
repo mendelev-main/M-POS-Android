@@ -3,19 +3,19 @@ const source=fs.readFileSync('app/src/main/assets/pos/native-workspace-header.js
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 const destinations=[['pos','M POS','brand'],['purchaseOrders','Заказы','tabs'],['receiving','Приёмка','tabs'],['receipts','Чеки','tabs'],['analytics','Аналитика','tabs'],['bookings','Бронирования','tabs'],['settings','Настройки','settings']];
 function host(options={}){
- const sent=[],events=[],frames=[],discarded=[];let observer,modal=false,coveredPage=false,root;
+ const sent=[],events=[],frames=[],discarded=[],listeners={};let observer,modal=false,coveredPage=false,root;
  const node=(left,width)=>({style:{opacity:'',pointerEvents:''},isConnected:true,getBoundingClientRect:()=>({left,top:12,width,height:40}),click:()=>{throw Error('HTML click must not run')}});
  const groups={brand:node(16,96),tabs:node(122,800),settings:node(1050,44)};
  if(options.shift)groups.shift=node(925,120);
  root={isConnected:true,querySelector:s=>groups[{'.brand':'brand','.tabs':'tabs','.settings-topbar-btn':'settings','.shift-pill':'shift'}[s]]||null};
- const ctx={innerWidth:1200,innerHeight:800,document:{hidden:false,readyState:'complete',body:{},documentElement:{getAttribute:()=>options.dark?'dark':'light'},getElementById:id=>id==='app'?root:['modal-root','product-editor-root','payment-page-root'].includes(id)?{}:id==='printer-page'&&coveredPage?{}:null,querySelector:s=>s==='.topbar'?root:s.includes('modal-overlay')&&modal?{}:null,addEventListener(){}},requestAnimationFrame:fn=>frames.push(fn),addEventListener(){},MutationObserver:class{constructor(fn){observer=fn}observe(){}},render:()=>events.push('render'),flash:x=>events.push(x),setTab:tab=>{app().tab=tab;events.push('legacy')},onSearch:query=>{app().search=query},webkit:{messageHandlers:{workspace:{postMessage:p=>{sent.push(JSON.parse(JSON.stringify(p)));return options.refuse!==true}}}},MPosCore:{WorkspaceNavigationLifecycle:{generation:()=>ctx.generation||0,header:()=>options.read?options.read(model()):Promise.resolve(model())},WorkspaceNavigation:{execute:async p=>discarded.push(p)}}};
+ const ctx={innerWidth:1200,innerHeight:800,document:{hidden:false,readyState:'complete',body:{},documentElement:{getAttribute:()=>options.dark?'dark':'light'},getElementById:id=>id==='app'?root:['modal-root','product-editor-root','payment-page-root'].includes(id)?{}:id==='printer-page'&&coveredPage?{}:null,querySelector:s=>s==='.topbar'?root:s.includes('modal-overlay')&&modal?{}:null,addEventListener(){}},requestAnimationFrame:fn=>frames.push(fn),addEventListener:(name,fn)=>{listeners[name]=fn},MutationObserver:class{constructor(fn){observer=fn}observe(){}},render:()=>events.push('render'),flash:x=>events.push(x),setTab:tab=>{app().tab=tab;events.push('legacy')},onSearch:query=>{app().search=query},webkit:{messageHandlers:{workspace:{postMessage:p=>{sent.push(JSON.parse(JSON.stringify(p)));return options.refuse!==true}}}},MPosCore:{WorkspaceNavigationLifecycle:{generation:()=>ctx.generation||0,header:()=>options.read?options.read(model()):Promise.resolve(model())},WorkspaceNavigation:{execute:async p=>discarded.push(p)}}};
  function app(){return vm.runInContext('state',ctx)}
  if(options.shift){ctx.MPosCore.WorkspaceNavigationLifecycle.shiftHeader=()=>Promise.resolve({expected:{...app(),revision:1},shift:{tab:'shift',group:'shift',selected:app().tab==='shift',open:options.shift==='open',label:options.shift==='open'?'Иванов И.И.':'Открыть смену',revision:'saved-shift'}});ctx.MPosCore.NativeOpenForm={activeToken:()=>ctx.openingToken||null,openNative:()=>{events.push('native-open');ctx.openingToken='form';return true;}};}
  function model(){return{buttons:destinations.map(([tab,label,group])=>({tab,label,group,selected:app().tab===tab})),expected:{...app(),revision:1}}}
  ctx.window=ctx;vm.createContext(ctx);vm.runInContext("let state={loaded:true,tab:'pos',search:'чай',posPath:'Кофе',posFolder:'',editMode:false,paymentPage:''}",ctx);
  vm.runInContext(source,ctx);
  const flush=()=>{for(let n=0;frames.length&&n<10;n++)frames.shift()()};flush();
- return{ctx,sent,events,discarded,groups,app,model,flush,mutate:()=>{observer();flush()},modal:value=>{modal=value},page:value=>{coveredPage=value},replaceGroup:()=>{groups.tabs=node(122,800)}};
+ return{ctx,sent,events,discarded,listeners,groups,app,model,flush,mutate:()=>{observer();flush()},modal:value=>{modal=value},page:value=>{coveredPage=value},replaceGroup:()=>{groups.tabs=node(122,800)}};
 }
 test('native labels and selected tab use production lexical state and do not extract HTML actions',async()=>{
  const h=host();await tick();const show=h.sent[0];assert.equal(h.ctx.state,undefined);assert.equal(show.action,'headerShow');assert.equal(show.navigation.buttons[3].label,'Чеки');assert.equal(show.navigation.buttons[0].selected,true);
@@ -38,6 +38,11 @@ test('shift changes or native opening invalidate an old header result',async()=>
   await h.ctx.__nativeWorkspaceHeaderResult({token:show.token,kind:'shift',result:{ok:true,effect:'render',snapshot:{tab:'shift'},headerToken:'old'}});
   assert.equal(h.app().tab,'pos');assert.deepEqual(h.events,[]);assert.equal(h.discarded[0].headerToken,'old');
  }
+});
+test('native-only modal event hides header and cancel restores it without a DOM observer event',async()=>{
+ const h=host({shift:'closed'});await tick();h.ctx.openingToken='opening';h.listeners['mpos-native-open-state']();h.flush();await tick();
+ assert.equal(h.sent.at(-1).action,'headerHide');h.ctx.openingToken=null;h.listeners['mpos-native-open-state']();h.flush();await tick();
+ assert.equal(h.sent.at(-1).action,'headerShow');assert.equal(h.groups.shift.style.opacity,'0');
 });
 test('stale tab reply is discarded and original controls restore under modal/payment/covered page',async()=>{
  for(const change of [h=>h.modal(true),h=>{h.app().paymentPage='main'},h=>h.page(true),h=>{h.ctx.document.hidden=true},h=>{h.ctx.generation=1},h=>h.replaceGroup()]){

@@ -22,7 +22,7 @@
     const theme=document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';
     const payload={theme,action:'show',rect:{left:r.left,top:r.top,width:r.width,height:r.height},viewportWidth:width,viewportHeight:height,currency:state.currency||'',establishmentName:state.company?.establishmentName||''};
     const key=JSON.stringify([payload,identity(state.shifts),identity(state.orders),renderRevision]);
-    const blocked=!!modal;
+    const blocked=!!modal||!!window.MPosCore?.NativeOpenForm?.activeToken?.();
     if(key===lastKey){if(lastBlocked!==blocked){lastBlocked=blocked;bridge.postMessage({action:'block',blocked});}return;}
     lastKey=key;lastBlocked=blocked;visible=true;bridge.postMessage({...payload,blocked});
   }
@@ -31,7 +31,7 @@
     const name=payload?.action;
     if(!['open','deposit','withdrawal','close','report','fallback'].includes(name))return;
     if(name==='fallback'){window.MPosNativeShiftScreenEnabled=false;hide();return;}
-    if(!window.MPosNativeShiftScreenEnabled||!state.loaded||state.tab!=='shift'||state.busy||document.querySelector('#modal-root .modal-overlay')){schedule();return;}
+    if(!window.MPosNativeShiftScreenEnabled||!state.loaded||state.tab!=='shift'||state.busy||window.MPosCore?.NativeOpenForm?.activeToken?.()||document.querySelector('#modal-root .modal-overlay')){schedule();return;}
     if(['deposit','withdrawal','close'].includes(name)&&currentShift()?.id!==payload.shiftId){flash('Смена изменилась. Обновите экран.','err');lastKey='';schedule();return;}
     lastBlocked=null;
     try{
@@ -45,6 +45,7 @@
     for(const id of ['app','modal-root']){const node=document.getElementById(id);if(node)observer.observe(node,{childList:true,subtree:true});}
     observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
     window.addEventListener('resize',()=>{lastKey='';schedule();});
+    window.addEventListener('mpos-native-open-state',schedule);
     document.addEventListener('visibilitychange',schedule);
     schedule();
   }
