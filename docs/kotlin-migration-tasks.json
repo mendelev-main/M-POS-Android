@@ -918,7 +918,7 @@
             "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceHeaderControllerTest.kt",
             "tests/native-workspace-header.test.cjs"
           ],
-          "remaining": "Native owner/routes/Back/runtime, toolbar, category/folder selection и fixed topbar tabs подключены. Остались search/filter controls, shift-tab control, редактор раскладки и global Back DOM presence. Source geometry/narrow topbar scroller сохраняются до native root presentation. Header tests authored, Actions pending; physical acceptance pending."
+          "remaining": "Native owner/routes/Back/runtime, toolbar, category/folder selection и fixed topbar tabs подключены. Остались search/filter controls, shift-tab control, редактор раскладки и global Back DOM presence. Source geometry/narrow topbar scroller сохраняются до native root presentation. Fixed header JS/Kotlin/lint прошёл Actions 37767655391 (b0196c5); physical acceptance pending."
         },
         {
           "id": "109.09",
@@ -1160,6 +1160,22 @@
       "testsAndLint": "success",
       "apkBuild": "success",
       "physicalAcceptance": "pending"
+    },
+    {
+      "date": "2026-10-08",
+      "scope": "Fixed native header tab controls and acknowledged selections",
+      "execution": "GitHub Actions",
+      "runId": 37767655391,
+      "commit": "b0196c5",
+      "testsAndLint": "success",
+      "apkBuild": "in_progress",
+      "physicalAcceptance": "pending",
+      "priorRun": {
+        "runId": 37767548247,
+        "commit": "5dbe862",
+        "testsAndLint": "failure",
+        "correction": "Registered header adapter in source synchronization and unchanged source parity checks"
+      }
     }
   ]
 }

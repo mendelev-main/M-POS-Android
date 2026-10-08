@@ -768,3 +768,5 @@ source rollback и narrow→wide. Локальные тесты/lint/APK не з
 редактора раскладки и global Back presence ещё впереди. Domain/catalog read models
 и удаление presentation geometry относятся к дальнейшим runtime этапам.
 Прогресс **114/129 (88,37%)**, внутри 109 **7/20**, крупных **107/110**.
+
+Fixed header `b0196c5`: [Actions 37767655391](https://github.com/mendelev-main/M-POS-Android/actions/runs/37767655391) — Tests and lint успешно (JS, правила версий, Kotlin, lint). Адаптер зарегистрирован в sync-pos-assets и parity fixtures; первый run 37767548247 до регистрации упал на JS проверках. APK отдельным job; физическая проверка pending.
