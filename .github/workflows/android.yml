@@ -30,7 +30,12 @@ jobs:
       - name: Verify CI version rules
         run: python3 -m unittest discover -s tests -p 'test_ci_*.py'
       - name: Run Kotlin tests and lint
-        run: ./gradlew --no-daemon --max-workers=4 testDebugUnitTest lintDebug
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon --max-workers=4 testDebugUnitTest lintDebug 2>&1 | tee "$RUNNER_TEMP/mpos-kotlin-checks.log"
+      - name: Annotate Kotlin verification failures
+        if: failure()
+        run: python3 scripts/ci/annotate-kotlin-checks.py
       - name: Publish verification reports
         if: always()
         uses: actions/upload-artifact@v4

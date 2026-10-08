@@ -4,7 +4,7 @@
   const core=global.MPosCore,bridge=global.webkit?.messageHandlers?.workspace;
   if(!core?.WorkspaceNavigationLifecycle||!bridge)return;
   if(global.MPosNativeWorkspaceEnabled===undefined)global.MPosNativeWorkspaceEnabled=true;
-  let current=null,scheduled=false,sequence=0,generation=0,awaiting=false;
+  let current=null,scheduled=false,sequence=0,generation=0,awaiting=false,capture=null;
   const enabled=()=>global.MPosNativeWorkspaceEnabled&&global.MPosNativeWorkspaceReadModelsEnabled!==false;
   const view=()=>({tab:state.tab,search:String(state.search||''),posPath:state.posPath??null,posFolder:state.posFolder||'',editMode:!!state.editMode});
   const blocked=()=>!!state.busy||(typeof criticalStorageRecoveryPending!=='undefined'&&criticalStorageRecoveryPending)||!!core.NativeOpenForm?.activeToken?.();
@@ -63,12 +63,13 @@
     if(payload.action!=='click'||awaiting)return;
     const token=current.token,command=current.model.actions[payload.key];
     if(!normal()||blocked()||current.stamp!==stamp()||!command||!Object.hasOwn(commands,command.operation)){bridge.postMessage({action:'result',token,blocked:blocked()});schedule();return;}
-    awaiting=true;let message='';try{await commands[command.operation](command.value);}catch(_error){message='Не удалось выполнить действие заказа';global.flash?.(message);}
-    finally{awaiting=false;bridge.postMessage({action:'result',token:current?.token||token,blocked:blocked(),message});schedule();}
+    awaiting=true;let message='';const promises=[];capture=promises;
+    try{const result=commands[command.operation](command.value);capture=null;await result;for(const promise of promises)await promise;}catch(_error){message='Не удалось выполнить действие заказа';global.flash?.(message);}
+    finally{capture=null;awaiting=false;bridge.postMessage({action:'result',token:current?.token||token,blocked:blocked(),message});schedule();}
   };
   core.WorkspaceReadUi=Object.freeze({invalidate:hide,refresh:schedule});
   for(const name of ['addToCart','addConfiguredCartItem','changeQty','removeFromCart','parkOrder','markCurrentWebOrderReady','openPaymentModal','openPosCategory','closePosCategory','openPosFolder','toggleEditMode','setTab','onSearch','closeModal']){
-    const original=global[name];if(typeof original!=='function')continue;global[name]=function(...args){const result=original.apply(this,args);if(result&&typeof result.then==='function')result.then(schedule,schedule);else schedule();return result;};
+    const original=global[name];if(typeof original!=='function')continue;global[name]=function(...args){const result=original.apply(this,args);if(result&&typeof result.then==='function'){if(capture)capture.push(result);result.then(schedule,schedule);}else schedule();return result;};
   }
   function observe(){const observer=new MutationObserver(schedule);for(const id of ['app','modal-root']){const node=document.getElementById(id);if(node)observer.observe(node,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['hidden']});}observer.observe(document.body,{childList:true});observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});global.addEventListener('resize',()=>{if(current)current.stamp='';schedule();});document.addEventListener('visibilitychange',schedule);global.addEventListener('mpos-native-open-state',()=>{if(current)current.stamp='';schedule();});schedule();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observe,{once:true});else observe();

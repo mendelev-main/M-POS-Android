@@ -15,7 +15,6 @@ class MPosWorkspaceNavigationRepository(private val database:MPosDatabase,privat
     private var searchNames:Map<String,String> = emptyMap()
     suspend fun navigateToolbar(input:JSONObject):JSONObject {
         require(input.getInt("version")==1)
-        if(input.getString("operation")=="workspaceView")return MPosWorkspaceReadRepository(database,owner).read(input)
         require(input.getString("route") in setOf("closeCategory","toggleEdit","openCategory","openFolder"))
         check(input.getJSONObject("expected").getLong("revision")==owner.state.value.revision){"workspace toolbar changed"}
         val proposal=execute(JSONObject(input.toString()).put("operation","prepareRoute"))
@@ -25,6 +24,7 @@ class MPosWorkspaceNavigationRepository(private val database:MPosDatabase,privat
     }
     suspend fun execute(input:JSONObject):JSONObject {
         require(input.getInt("version")==1)
+        if(input.getString("operation")=="workspaceView")return MPosWorkspaceReadRepository(database,owner).read(input)
         if(input.getString("operation") in setOf("layoutView","layoutCommit"))return MPosLayoutRepository(database,owner).execute(input)
         if(input.getString("operation") in setOf("shiftHeaderView","selectShiftHeader"))return database.withTransaction {
             owner.handle(JSONObject().put("version",1).put("operation","read"));owner.checkExpected(input)
