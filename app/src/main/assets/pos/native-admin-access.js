@@ -1,7 +1,7 @@
 (function(global){
   'use strict';
   const access=global.MPosCore?.AdminAccess;if(!access)return;
-  for(const name of ['openAdminPanel','openCompanyDetailsModal','testTelegramConnection','testWebOrder']){
+  for(const name of ['openAdminPanel','openCompanyDetailsModal','testTelegramConnection','testWebOrder','testBackendConnection']){
     const original=global[name];if(typeof original!=='function')continue;
     let busy=false;
     global[name]=async function(...args){
