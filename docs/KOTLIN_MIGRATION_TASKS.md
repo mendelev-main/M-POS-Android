@@ -504,3 +504,5 @@ lint и APK не запускались (§17 AGENTS); GitHub Actions следу
 Физическая приёмка pending. 109.08 in_progress: native search presentation,
 shift-tab control, редактор раскладки и global Back presence остаются.
 Прогресс **114/129 (88,37%)**, внутри 109 **7/20**, крупных **107/110**.
+
+Live search `1564939`: [Actions 37769761293](https://github.com/mendelev-main/M-POS-Android/actions/runs/37769761293) — Tests and lint успешно: JS/reference, правила версий, Kotlin и lint. APK собирается отдельным job; физическая приёмка pending.

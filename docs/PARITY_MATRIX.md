@@ -1,6 +1,6 @@
 # Android parity matrix
 
-> Детализация 109 (08.10.2026): **6/20 — 30,00%**, осталось 14. Общий детальный план: **113/129 — 87,60%**, осталось 16. Крупные этапы: **107/110 — 97,27%**. [Подэтапы, критерии и правила подсчёта](../specs/109-native-runtime/tasks.md). Проценты относятся к количеству задач; физическая приёмка 110 ещё не выполнена.
+> Детализация 109 (08.10.2026): **7/20 — 35,00%**, осталось 13. Общий детальный план: **114/129 — 88,37%**, осталось 15. Крупные этапы: **107/110 — 97,27%**. [Подэтапы, критерии и правила подсчёта](../specs/109-native-runtime/tasks.md). Проценты относятся к количеству задач; физическая приёмка 110 ещё не выполнена.
 
 
 User decision 2026-10-06 allows immediate native cutovers with automated compatibility checks and defers comprehensive physical acceptance to the end. `implemented` means code exists. Only `accepted` means it passed the physical Android tablet cases.
@@ -802,3 +802,5 @@ lint и APK не запускались (§17 AGENTS); GitHub Actions следу
 Физическая приёмка pending. 109.08 in_progress: native search presentation,
 shift-tab control, редактор раскладки и global Back presence остаются.
 Прогресс **114/129 (88,37%)**, внутри 109 **7/20**, крупных **107/110**.
+
+Live search `1564939`: [Actions 37769761293](https://github.com/mendelev-main/M-POS-Android/actions/runs/37769761293) — Tests and lint успешно: JS/reference, правила версий, Kotlin и lint. APK собирается отдельным job; физическая приёмка pending.

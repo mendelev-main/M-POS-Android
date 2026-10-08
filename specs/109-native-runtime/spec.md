@@ -1,6 +1,6 @@
 # 109 — Native runtime authority
 
-Current status (08 October 2026): **109.06 complete; 6/20 inside 109, 113/129 expanded, 107/110 major tasks.** Earlier increment sections below record their historical limitations; the completion section supersedes the pending root-startup/helper scope. Parent 109 remains in progress; 109.07 is in progress with the employee authorization cutover below.
+Current status (08 October 2026): **109.01–109.07 complete; 7/20 inside 109, 114/129 expanded, 107/110 major tasks.** Parent 109 remains in progress. 109.08 is in progress: native navigation owner/routes/Back/runtime, toolbar, category/folder selection, fixed header tabs and live search filtering are implemented; remaining controls and DOM independence are documented in the latest increments below. Earlier sections retain historical evidence, not the current counter.
 
 Status: in_progress. Engineering completion remains 107/110.
 
@@ -575,3 +575,5 @@ lint и APK не запускались (§17 AGENTS); GitHub Actions следу
 Физическая приёмка pending. 109.08 in_progress: native search presentation,
 shift-tab control, редактор раскладки и global Back presence остаются.
 Прогресс **114/129 (88,37%)**, внутри 109 **7/20**, крупных **107/110**.
+
+Live search `1564939`: [Actions 37769761293](https://github.com/mendelev-main/M-POS-Android/actions/runs/37769761293) — Tests and lint успешно: JS/reference, правила версий, Kotlin и lint. APK собирается отдельным job; физическая приёмка pending.
