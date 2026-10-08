@@ -10,6 +10,8 @@ import org.json.JSONTokener
 
 /** Route proposals and acknowledgements validate coherent, current Room documents. No writes. */
 class MPosWorkspaceNavigationRepository(private val database:MPosDatabase,private val owner:MPosWorkspaceNavigationOwner) {
+    private var searchCatalog:String?=null
+    private var searchNames:Map<String,String> = emptyMap()
     suspend fun navigateToolbar(input:JSONObject):JSONObject {
         require(input.getInt("version")==1)
         require(input.getString("route") in setOf("closeCategory","toggleEdit","openCategory","openFolder"))
@@ -21,6 +23,21 @@ class MPosWorkspaceNavigationRepository(private val database:MPosDatabase,privat
     }
     suspend fun execute(input:JSONObject):JSONObject {
         require(input.getInt("version")==1)
+        if(input.getString("operation")=="selectFilteredSearch") {
+            val search=input.getString("search");val tiles=input.getJSONArray("tiles")
+            // Empty query restores every tile, including folders and missing products, without SQL.
+            val names=if(tiles.length()==0||MPosWorkspaceSearchModel.query(search).isEmpty()) emptyMap() else database.withTransaction {
+                check(MPosCatalogStorage(database).isAuthoritative()) { "native catalog is not initialized" }
+                val payload=database.legacyStorageShadowDao().get("products")?.payload
+                if(payload!=searchCatalog) {
+                    val products=payload?.let{JSONTokener(it).nextValue()} as? JSONArray ?: JSONArray()
+                    searchNames=MPosWorkspaceSearchModel.names(products);searchCatalog=payload
+                }
+                searchNames
+            }
+            val visible=MPosWorkspaceSearchModel.visibility(search,tiles,names)
+            return owner.handle(input).put("visible",visible)
+        }
         if(input.getString("operation")=="toolbarView") {
             owner.handle(JSONObject().put("version",1).put("operation","read"));owner.checkExpected(input)
             val snapshot=owner.handle(JSONObject().put("version",1).put("operation","read")).getJSONObject("snapshot")

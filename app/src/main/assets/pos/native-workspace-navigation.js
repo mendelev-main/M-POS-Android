@@ -42,14 +42,27 @@
     if(!enabled())return originalSearch.apply(this,arguments);
     if(loading)return false;const epoch=runtime,request=++searchSequence,query=String(value||'');
     const context=JSON.stringify([state.tab,state.posPath,state.posFolder,state.editMode,global._posFolderModal]);
-    const previousSearch=state.search,receiver=this;
+    const previousSearch=state.search,expected=view();
+    const grid=global.document?.getElementById('sections-wrap')||null;
+    const nodes=grid?Array.from(grid.querySelectorAll('.layout-tile')):[];
+    const tiles=nodes.map(tile=>({type:tile.dataset.tileType??null,id:tile.dataset.id??null}));
+    const sameGrid=()=>{
+      if(grid!==(global.document?.getElementById('sections-wrap')||null))return false;
+      const current=grid?Array.from(grid.querySelectorAll('.layout-tile')):[];
+      return current.length===nodes.length&&current.every((tile,index)=>tile===nodes[index]&&
+        (tile.dataset.tileType??null)===tiles[index].type&&(tile.dataset.id??null)===tiles[index].id);
+    };
+    const discard=result=>{if(typeof result?.searchToken==='string')commands.execute({version:1,operation:'discardSearch',searchToken:result.searchToken}).catch(()=>{});};
     try{
       await initialize();if(epoch!==runtime||loading)return false;
-      const result=await commands.execute({version:1,operation:'selectSearch',search:query});
-      if(epoch!==runtime||loading||request!==searchSequence||!enabled()||previousSearch!==state.search||context!==JSON.stringify([state.tab,state.posPath,state.posFolder,state.editMode,global._posFolderModal]))return false;
-      if(typeof result?.snapshot?.search!=='string'||!Number.isInteger(result.snapshot.revision))throw Error('Некорректное состояние поиска');
-      // Reviewed filtering remains a projection until native workspace read models replace it.
-      originalSearch.call(receiver,result.snapshot.search);return true;
+      const result=await commands.execute({version:1,operation:'selectFilteredSearch',search:query,expected,tiles});
+      if(epoch!==runtime||loading||request!==searchSequence||!enabled()||previousSearch!==state.search||!sameGrid()||context!==JSON.stringify([state.tab,state.posPath,state.posFolder,state.editMode,global._posFolderModal])){discard(result);return false;}
+      if(result?.snapshot?.search!==query||!Number.isInteger(result.snapshot.revision)||typeof result.searchToken!=='string'||
+        !Array.isArray(result.visible)||result.visible.length!==nodes.length||result.visible.some(value=>typeof value!=='boolean')){
+        discard(result);throw Error('Некорректное состояние поиска');
+      }
+      state.search=result.snapshot.search;
+      nodes.forEach((tile,index)=>{tile.hidden=!result.visible[index];});return true;
     }catch(error){if(request===searchSequence)flash(error?.message||'Не удалось изменить поиск');return false;}
   };
   let routeTail=Promise.resolve(),routePending=0;

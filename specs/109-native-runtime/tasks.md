@@ -382,3 +382,35 @@ source rollback и narrow→wide. Локальные тесты/lint/APK не з
 Прогресс **114/129 (88,37%)**, внутри 109 **7/20**, крупных **107/110**.
 
 Fixed header `b0196c5`: [Actions 37767655391](https://github.com/mendelev-main/M-POS-Android/actions/runs/37767655391) — Tests and lint успешно (JS, правила версий, Kotlin, lint). Адаптер зарегистрирован в sync-pos-assets и parity fixtures; первый run 37767548247 до регистрации упал на JS проверках. APK отдельным job; физическая проверка pending.
+
+
+### 109.08 — фильтрация текущих плиток в Kotlin, 08.10.2026
+
+Live onSearch передаёт только типы/ID текущих sections-wrap плиток в
+selectFilteredSearch. MPosWorkspaceSearchModel ищет по названиям авторитетного
+каталога Room: trim по JavaScript whitespace, русский lower-case, substring,
+строго строковые ID и первое совпадение getProduct. Пустой запрос показывает
+все плитки, включая папки и отсутствующие товары; при непустом папки/категории
+скрываются. Область поиска не расширена до всего каталога или folder modal.
+Render-time фильтрация renderPosScreen остаётся в 109.09, нового search UI нет.
+
+Одна native команда возвращает query/token/visibility. JS только проецирует
+подтверждённую маску, без originalSearch и повторного render. Проверяются runtime,
+последний запрос, прежний query/context, identity grid/плиток и type/ID. Stale или
+некорректный ответ отменяет только свой query; новые query, routes, tab и import
+не откатываются. Отмена последнего из нескольких неподтверждённых запросов
+возвращает последний спроецированный query. Ошибка authority/модели не меняет query.
+
+Repository сохраняется на время native FIFO; индекс имён перестраивается только
+при изменении сырого Room catalog document. Каждая непустая фильтрация проверяет
+текущий документ и authority; пустой запрос/отсутствующий grid не требуют SQL.
+Данные каталога, корзина и финансовые документы не записываются. Rollback через
+MPosNativeWorkspaceNavigationEnabled=false сохраняет reviewed onSearch.
+
+Добавлены shared reference/Kotlin fixtures (русский текст, Unicode, whitespace,
+строгие ID, дубликаты и coercion имён), Room freshness/no-writes/authority,
+query token/runtime и JS stale/malformed projection проверки. Локальные тесты,
+lint и APK не запускались (§17 AGENTS); GitHub Actions следующего коммита pending.
+Физическая приёмка pending. 109.08 in_progress: native search presentation,
+shift-tab control, редактор раскладки и global Back presence остаются.
+Прогресс **114/129 (88,37%)**, внутри 109 **7/20**, крупных **107/110**.

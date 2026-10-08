@@ -18,13 +18,15 @@ class MPosWorkspaceNavigationOwner {
     private var headerSelection:HeaderSelection?=null
     private var tabEpoch=0L
     private var queryEpoch=0L
+    private data class SearchSelection(val token:String,val before:String,val after:State,val epoch:Long)
+    private var searchSelection:SearchSelection?=null
     private val mutable=MutableStateFlow(State())
     private val proposals=linkedMapOf<String,Proposal>()
     val state:StateFlow<State> = mutable.asStateFlow()
     private var runtimeGeneration=0L
     fun beginRuntime(generation:Long) {
         check(generation>runtimeGeneration){"stale navigation runtime"}
-        runtimeGeneration=generation;proposals.clear();accepted=null;headerSelection=null;tabEpoch=0;queryEpoch=0
+        runtimeGeneration=generation;proposals.clear();accepted=null;headerSelection=null;searchSelection=null;tabEpoch=0;queryEpoch=0
         mutable.value=State(revision=mutable.value.revision+1)
     }
 
@@ -81,10 +83,33 @@ class MPosWorkspaceNavigationOwner {
                 return reply()
             }
             "read" -> check(previous.initialized){"navigation is not initialized"}
-            "selectSearch" -> {
+            "selectSearch", "selectFilteredSearch" -> {
                 check(previous.initialized){"navigation is not initialized"}
+                val projectedSearch=if(input.getString("operation")=="selectFilteredSearch")input.getJSONObject("expected").getString("search") else previous.search
+                if(input.getString("operation")=="selectFilteredSearch") {
+                    val expected=input.getJSONObject("expected");val current=snapshot(previous)
+                    check(listOf("tab","posPath","posFolder","editMode").all{MPosSupplyParity.same(expected.opt(it),current.opt(it))}) {
+                        "workspace search context changed"
+                    }
+                }
                 val search=input.getString("search");queryEpoch++
                 if(search!=previous.search)mutable.value=previous.copy(search=search,revision=previous.revision+1)
+                if(input.getString("operation")=="selectFilteredSearch") {
+                    val token=UUID.randomUUID().toString()
+                    searchSelection=SearchSelection(token,projectedSearch,mutable.value,queryEpoch)
+                    if(mutable.value!=previous)proposals.clear()
+                    return reply().put("searchToken",token)
+                }
+            }
+            "discardSearch" -> {
+                val selection=searchSelection
+                if(selection!=null&&selection.token==input.getString("searchToken")&&selection.epoch==queryEpoch&&
+                    previous.search==selection.after.search&&previous.posPath==selection.after.posPath&&
+                    previous.posFolder==selection.after.posFolder&&previous.editMode==selection.after.editMode) {
+                    if(previous.search!=selection.before){mutable.value=previous.copy(search=selection.before,revision=previous.revision+1);proposals.clear()}
+                    searchSelection=null
+                }
+                return reply()
             }
             "prepareRoute" -> {
                 check(previous.initialized){"navigation is not initialized"};checkExpected(input)

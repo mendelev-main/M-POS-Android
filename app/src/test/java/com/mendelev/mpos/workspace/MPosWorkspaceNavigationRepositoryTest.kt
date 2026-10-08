@@ -19,6 +19,9 @@ import org.robolectric.annotation.SQLiteMode
 @Config(sdk=[28],manifest=Config.NONE)
 @SQLiteMode(SQLiteMode.Mode.NATIVE)
 class MPosWorkspaceNavigationRepositoryTest {
+    private fun search(owner:MPosWorkspaceNavigationOwner,query:String)=JSONObject().put("version",1).put("operation","selectFilteredSearch")
+        .put("search",query).put("expected",owner.handle(JSONObject().put("version",1).put("operation","read")).getJSONObject("snapshot"))
+        .put("tiles",JSONArray("""[{"type":"product","id":"p"},{"type":"folder","id":"f"}]"""))
     private fun runCase(block:suspend(MPosDatabase,MPosWorkspaceNavigationOwner,MPosWorkspaceNavigationRepository)->Unit)=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(),MPosDatabase::class.java).build()
         try {
@@ -114,6 +117,31 @@ class MPosWorkspaceNavigationRepositoryTest {
             assertEquals(7,header.getJSONObject("navigation").getJSONArray("buttons").length())
             assertNull(db.legacyStorageShadowDao().get("products"));assertNull(db.legacyStorageShadowDao().get(MPosCatalogStorage.AUTHORITY_KEY))
             assertFalse(MPosWorkspaceStorage(db).isAuthoritative("posNavigation"))
+        }finally{db.close()}
+    }
+
+    @Test fun searchUsesFreshAuthoritativeCatalogAndIgnoresCallerNamesWithoutWritingDocuments()=runCase {db,owner,repository->
+        MPosCatalogStorage(db).write("""[{"id":"p","name":"КОФЕ"}]""")
+        val documents=db.legacyStorageShadowDao();val before=documents.get("products");val navigation=documents.get("posNavigation")
+        val result=repository.execute(search(owner,"кофе").put("products",JSONArray("""[{"id":"p","name":"Подмена"}]""")))
+        assertEquals("[true,false]",result.getJSONArray("visible").toString());assertEquals("кофе",owner.state.value.search)
+        assertEquals(before,documents.get("products"));assertEquals(navigation,documents.get("posNavigation"))
+        MPosCatalogStorage(db).write("""[{"id":"p","name":"ЧАЙ"}]""")
+        assertEquals("[false,false]",repository.execute(search(owner,"кофе")).getJSONArray("visible").toString())
+        assertEquals("[true,false]",repository.execute(search(owner,"чай")).getJSONArray("visible").toString())
+        MPosCatalogStorage(db).remove()
+        assertEquals("[false,false]",repository.execute(search(owner,"чай")).getJSONArray("visible").toString())
+    }
+    @Test fun searchFailurePreservesQueryAndEmptySearchDoesNotInitializeCatalog()=runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(),MPosDatabase::class.java).build()
+        try {
+            val owner=MPosWorkspaceNavigationOwner();owner.handle(JSONObject().put("version",1).put("operation","initialize").put("tab","pos").put("search","keep"))
+            val repository=MPosWorkspaceNavigationRepository(db,owner)
+            try {repository.execute(search(owner,"кофе"));fail("unowned catalog accepted")}
+            catch(_:IllegalStateException){}
+            assertEquals("keep",owner.state.value.search)
+            assertEquals("[true,true]",repository.execute(search(owner," \uFEFF ")).getJSONArray("visible").toString())
+            assertNull(db.legacyStorageShadowDao().get("products"));assertNull(db.legacyStorageShadowDao().get(MPosCatalogStorage.AUTHORITY_KEY))
         }finally{db.close()}
     }
 

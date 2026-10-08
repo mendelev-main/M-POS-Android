@@ -33,7 +33,7 @@ class MPosStorageMirror(
         val serialized=input.toString()
         fun failure(error:Throwable) {reply(JSONObject().put("ok",false).put("message","Панель изменилась. Повторите действие"))}
         if(!queue.submit(::failure) {
-            attempt {com.mendelev.mpos.workspace.MPosWorkspaceNavigationRepository(database,workspaceNavigation).navigateToolbar(JSONObject(serialized))}
+            attempt {workspaceNavigationRepository.navigateToolbar(JSONObject(serialized))}
                 .onSuccess(reply).onFailure(::failure)
         })failure(IllegalStateException("native queue unavailable"))
     }
@@ -85,6 +85,7 @@ class MPosStorageMirror(
     private suspend fun loyaltyVerificationConfiguration():JSONObject = MPosLoyaltyBalanceVerification(database).context("",requireAdmin=false)
 
     private val workspaceNavigation = com.mendelev.mpos.workspace.MPosWorkspaceNavigationOwner()
+    private val workspaceNavigationRepository = com.mendelev.mpos.workspace.MPosWorkspaceNavigationRepository(database,workspaceNavigation)
     private val editorGrants = MPosEditorGrants()
 
     fun authorizeEditor(input: JSONObject, credential: String) {
@@ -421,7 +422,7 @@ class MPosStorageMirror(
                 }.onSuccess(::emitResult).onFailure { result(requestId,false,"native supply storage operation failed") }
             }
             "workspaceNavigation" -> {
-                attempt { com.mendelev.mpos.workspace.MPosWorkspaceNavigationRepository(database,workspaceNavigation).execute(JSONObject(requireNotNull(command.serialized))).put("requestId",requestId) }
+                attempt { workspaceNavigationRepository.execute(JSONObject(requireNotNull(command.serialized))).put("requestId",requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId,false,"Не удалось переключить раздел") }
             }
             "loyaltyAdjustmentStatus" -> {

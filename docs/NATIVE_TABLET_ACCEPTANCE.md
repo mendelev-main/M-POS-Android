@@ -817,3 +817,16 @@ After the native bootstrap cutover: restart offline with imported v13 data; veri
 - Портрет/крупный шрифт/горизонтальный scroll: исходный scroller доступен, События,
   напоминание inventory и shift pill сохраняют доступность; широкий layout
   автоматически возвращает native controls. Явный header rollback работает.
+
+
+### 109.08 — native live search filtering (pending)
+
+Проверить существующий поиск/вызов onSearch: русский текст в разных регистрах,
+пробелы, очистка запроса, скрытие папок/категорий при непустом запросе; scope —
+только текущие sections-wrap плитки, без поиска внутри folder modal. Если в
+reviewed UI нет поля поиска, не считать новый control реализованным: этот
+increment переносит обработчик, а не добавляет поле. Быстро изменить query,
+перейти в категорию/другую вкладку или импортировать backup до ответа: старый
+результат не должен менять новый экран. Изменить название товара, проверить
+свежий поиск, очистить query; корзина/оплаты/остатки должны сохраниться. Повторить
+с MPosNativeWorkspaceNavigationEnabled=false для reviewed rollback. Pending.

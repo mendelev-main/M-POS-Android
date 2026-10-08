@@ -916,9 +916,13 @@
             "app/src/main/assets/pos/native-workspace-header.js",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceHeaderOwnerTest.kt",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceHeaderControllerTest.kt",
-            "tests/native-workspace-header.test.cjs"
+            "tests/native-workspace-header.test.cjs",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceSearchModel.kt",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceSearchModelTest.kt",
+            "tests/android-workspace-search.test.cjs",
+            "tests/fixtures/workspace-search.json"
           ],
-          "remaining": "Native owner/routes/Back/runtime, toolbar, category/folder selection и fixed topbar tabs подключены. Остались search/filter controls, shift-tab control, редактор раскладки и global Back DOM presence. Source geometry/narrow topbar scroller сохраняются до native root presentation. Fixed header JS/Kotlin/lint прошёл Actions 37767655391 (b0196c5); physical acceptance pending."
+          "remaining": "Native owner/routes/Back/runtime, toolbar, category/folder selection и fixed topbar tabs подключены. Остались search/filter controls, shift-tab control, редактор раскладки и global Back DOM presence. Source geometry/narrow topbar scroller сохраняются до native root presentation. Fixed header JS/Kotlin/lint прошёл Actions 37767655391 (b0196c5); physical acceptance pending. Live filtering now uses authoritative Room names and typed visibility; source grid scope/render-time search/presentation retained. Search Actions pending; physical acceptance pending."
         },
         {
           "id": "109.09",

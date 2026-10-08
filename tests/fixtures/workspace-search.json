@@ -1,0 +1,266 @@
+{
+  "products": [
+    {
+      "id": "coffee",
+      "name": "КОФЕ Латте"
+    },
+    {
+      "id": "tea",
+      "name": "Чай зелёный"
+    },
+    {
+      "id": "coffee",
+      "name": "Дубликат"
+    },
+    {
+      "id": 7,
+      "name": "Число"
+    },
+    {
+      "id": "empty",
+      "name": false
+    },
+    {
+      "id": "unicode",
+      "name": "İ ΟΣ 😀"
+    },
+    {
+      "id": "object",
+      "name": {
+        "x": 1
+      }
+    },
+    {
+      "id": "array",
+      "name": [
+        "Яблоко",
+        null,
+        "Чай"
+      ]
+    }
+  ],
+  "tiles": [
+    {
+      "type": "product",
+      "id": "coffee"
+    },
+    {
+      "type": "product",
+      "id": "tea"
+    },
+    {
+      "type": "folder",
+      "id": "tea"
+    },
+    {
+      "type": "category",
+      "id": "coffee"
+    },
+    {
+      "type": "product",
+      "id": "missing"
+    },
+    {
+      "type": "product",
+      "id": "7"
+    },
+    {
+      "type": "product",
+      "id": "empty"
+    },
+    {
+      "type": "product",
+      "id": "unicode"
+    },
+    {
+      "type": "product",
+      "id": "object"
+    },
+    {
+      "type": "product",
+      "id": "array"
+    }
+  ],
+  "cases": [
+    {
+      "search": " ﻿КОФЕ ",
+      "visible": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "search": "ЧАЙ",
+      "visible": [
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
+      ]
+    },
+    {
+      "search": "Дубликат",
+      "visible": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "search": "Число",
+      "visible": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "search": "false",
+      "visible": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "search": "i̇",
+      "visible": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ]
+    },
+    {
+      "search": "ος",
+      "visible": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ]
+    },
+    {
+      "search": "😀",
+      "visible": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ]
+    },
+    {
+      "search": "[object object]",
+      "visible": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false
+      ]
+    },
+    {
+      "search": "яблоко,,чай",
+      "visible": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
+      ]
+    },
+    {
+      "search": " ﻿\t",
+      "visible": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "search": "кофе",
+      "visible": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  ]
+}

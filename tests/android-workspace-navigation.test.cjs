@@ -9,20 +9,20 @@ test('explicit rollback and unusual nonstring input preserve reviewed setTab',as
 test('search waits for native acknowledgement and preserves reviewed string coercion and order',async()=>{
  const h=host(),p=h.c.onSearch(0);assert.equal(h.calls[0].input.search,'keep');assert.equal(h.c.state.search,'keep');
  h.calls[0].resolve({snapshot:{tab:'pos',search:'keep',revision:1}});await h.ready();
- assert.equal(h.calls[1].input.operation,'selectSearch');assert.equal(h.calls[1].input.search,'');
- h.calls[1].resolve({snapshot:{tab:'pos',search:'',revision:2}});assert.equal(await p,true);
- assert.equal(h.c.state.search,'');assert.equal(h.c.state.cart.length,1);assert.deepEqual(h.events,['filter']);
+ assert.equal(h.calls[1].input.operation,'selectFilteredSearch');assert.equal(h.calls[1].input.search,'');
+ h.calls[1].resolve({snapshot:{tab:'pos',search:'',revision:2},visible:[],searchToken:'clear'});assert.equal(await p,true);
+ assert.equal(h.c.state.search,'');assert.equal(h.c.state.cart.length,1);assert.deepEqual(h.events,[]);
 });
 test('rapid search responses cannot restore an older query',async()=>{
  const h=host(),first=h.c.onSearch('ко'),last=h.c.onSearch('кофе');h.calls[0].resolve({snapshot:{tab:'pos',search:'keep',revision:1}});await h.ready();
- h.calls[2].resolve({snapshot:{tab:'pos',search:'кофе',revision:3}});assert.equal(await last,true);
- h.calls[1].resolve({snapshot:{tab:'pos',search:'ко',revision:2}});assert.equal(await first,false);
- assert.equal(h.c.state.search,'кофе');assert.deepEqual(h.events,['filter']);
+ h.calls[2].resolve({snapshot:{tab:'pos',search:'кофе',revision:3},visible:[],searchToken:'latest'});assert.equal(await last,true);
+ h.calls[1].resolve({snapshot:{tab:'pos',search:'ко',revision:2},visible:[],searchToken:'older'});assert.equal(await first,false);
+ assert.equal(h.c.state.search,'кофе');assert.deepEqual(h.events,[]);
 });
 test('category navigation or closing a search during native request prevents stale filtering',async()=>{
  for(const change of [c=>{c.state.posPath='Drinks';c.state.search=''},c=>{c.state.tab='receipts'},c=>{c._posFolderModal={id:'folder'}}]){
   const h=host(),p=h.c.onSearch('кофе');h.calls[0].resolve({snapshot:{tab:'pos',search:'keep',revision:1}});await h.ready();change(h.c);
-  h.calls[1].resolve({snapshot:{tab:'pos',search:'кофе',revision:2}});assert.equal(await p,false);assert.equal(h.events.includes('filter'),false);
+  h.calls[1].resolve({snapshot:{tab:'pos',search:'кофе',revision:2},visible:[],searchToken:'stale'});assert.equal(await p,false);assert.equal(h.events.includes('filter'),false);
  }
 });
 test('search failure and rollback preserve existing query and reviewed filtering respectively',async()=>{
@@ -50,4 +50,36 @@ test('header read initializes owner once and rejects response from replaced runt
  assert.equal(h.calls[1].input.operation,'headerView');assert.equal(h.calls[1].input.expected.search,'keep');
  h.c.MPosCore.WorkspaceNavigationLifecycle.invalidate();h.calls[1].resolve({navigation:{buttons:[],expected:{}}});await assert.rejects(read,/Navigation view changed/);
  await assert.rejects(h.c.MPosCore.WorkspaceNavigationLifecycle.header(),/loading/);
+});
+
+test('native search applies only typed visibility to original mounted tiles without legacy filtering or render',async()=>{
+ const h=host(),tiles=[{dataset:{tileType:'product',id:'p'},hidden:false},{dataset:{tileType:'folder',id:'f'},hidden:false}];
+ const grid={querySelectorAll:()=>tiles};h.c.document={getElementById:()=>grid};
+ const p=h.c.onSearch('кофе');h.calls[0].resolve({snapshot:{tab:'pos',search:'keep',revision:1}});await h.ready();
+ assert.deepEqual(JSON.parse(JSON.stringify(h.calls[1].input.tiles)),[{type:'product',id:'p'},{type:'folder',id:'f'}]);
+ assert.equal(h.calls[1].input.expected.search,'keep');assert.equal(tiles[1].hidden,false);
+ h.calls[1].resolve({snapshot:{search:'кофе',revision:2},visible:[true,false],searchToken:'search'});
+ assert.equal(await p,true);assert.deepEqual(tiles.map(tile=>tile.hidden),[false,true]);
+ assert.equal(h.c.state.cart.length,1);assert.deepEqual(h.events,[]);
+});
+test('replaced grid or changed tile ID discards accepted search without touching state or tiles',async()=>{
+ for(const change of ['grid','id']){
+  const h=host(),tile={dataset:{tileType:'product',id:'p'},hidden:false};let grid={querySelectorAll:()=>[tile]};
+  h.c.document={getElementById:()=>grid};const p=h.c.onSearch('кофе');
+  h.calls[0].resolve({snapshot:{tab:'pos',search:'keep',revision:1}});await h.ready();
+  if(change==='grid')grid={querySelectorAll:()=>[tile]};else tile.dataset.id='new';
+  h.calls[1].resolve({snapshot:{search:'кофе',revision:2},visible:[false],searchToken:'stale'});
+  assert.equal(await p,false);assert.equal(h.c.state.search,'keep');assert.equal(tile.hidden,false);
+  assert.equal(h.calls[2].input.operation,'discardSearch');assert.equal(h.calls[2].input.searchToken,'stale');
+ }
+});
+test('malformed native mask is discarded before applying any visibility or query',async()=>{
+ for(const visible of [[true,'false'],[true]]){
+  const h=host(),tiles=[{dataset:{id:'a'},hidden:false},{dataset:{id:'b'},hidden:false}],grid={querySelectorAll:()=>tiles};
+  h.c.document={getElementById:()=>grid};const p=h.c.onSearch('чай');
+  h.calls[0].resolve({snapshot:{tab:'pos',search:'keep',revision:1}});await h.ready();
+  h.calls[1].resolve({snapshot:{search:'чай',revision:2},visible,searchToken:'bad'});
+  assert.equal(await p,false);assert.equal(h.c.state.search,'keep');assert.deepEqual(tiles.map(tile=>tile.hidden),[false,false]);
+  assert.equal(h.calls[2].input.operation,'discardSearch');
+ }
 });
