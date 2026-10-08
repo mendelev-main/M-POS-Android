@@ -17,7 +17,7 @@
     const request=++generation;
     try{
       await core.WorkspaceNavigationLifecycle.toolbar();
-      const model=await core.WorkspaceNavigation.execute({version:1,operation:'layoutView',expected:view(),parent:global._posFolderModal?.id||state.posFolder||''});
+      const model=await core.WorkspaceNavigation.execute({version:1,operation:'layoutView',expected:view(),parent:global._posFolderModal?.id||state.posFolder||'',searchScope:current?.node===node?'live':'render'});
       if(request!==generation||stamp!==JSON.stringify([core.WorkspaceNavigationLifecycle.generation(),view()])||node!==document.querySelector('#screen-pos .pos-left')||!enabled()||document.hidden)return;
       if(model?.ok!==true||model.authoritative!==true||!Array.isArray(model.tiles)||typeof model.documentRevision!=='string')throw Error('Некорректная раскладка');
       hide();const token='layout-'+(++sequence),r=node.getBoundingClientRect(),app=document.getElementById('app');current={node,token,stamp,model,app,inert:app?.inert||false,opacity:node.style.opacity,pointer:node.style.pointerEvents};
@@ -61,6 +61,10 @@
   for(const [name,kind]of [['openLayoutEditor','add'],['openPosFolderEditor','folder'],['openPosTileMove','move']]){
     const original=global[name];if(typeof original!=='function')continue;
     global[name]=function(id=''){if(!enabled()||!state.editMode)return original.apply(this,arguments);form={form:kind,id};schedule();};
+  }
+  for(const name of ['setTab','onSearch']){
+    const original=global[name];if(typeof original!=='function')continue;
+    global[name]=function(){const result=original.apply(this,arguments);if(result&&typeof result.then==='function')result.then(schedule,schedule);else schedule();return result;};
   }
   function observe(){const observer=new MutationObserver(schedule);for(const id of ['app','modal-root']){const node=document.getElementById(id);if(node)observer.observe(node,{childList:true,subtree:true});}
     observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});global.addEventListener('resize',()=>{if(current)current.stamp='';schedule();});document.addEventListener('visibilitychange',schedule);schedule();}

@@ -36,7 +36,7 @@ class MPosLayoutController(private val context:Context,private val host:FrameLay
                 hide();token=payload.getString("token");theme=MPosNativeTheme(context,payload.optString("theme")=="dark")
                 bounds=FrameLayout.LayoutParams(frame.width,frame.height).apply{leftMargin=frame.left;topMargin=frame.top}
                 model=JSONObject(payload.getJSONObject("model").toString());draw()
-                when(payload.optString("form")){"add"->addDialog();"folder"->folderDialog(payload.optString("id"));"move"->moveDialog(payload.getString("id"))}
+                when(payload.optString("form")){"add"->addDialog();"folder"->folderDialog(payload.optString("id"));"move"->moveDialog(payload.get("id"))}
             }
             "layoutResult"->if(payload.optString("requestId")==pending){
                 pending=null;busy=false
@@ -53,7 +53,7 @@ class MPosLayoutController(private val context:Context,private val host:FrameLay
         setOnClickListener{if(!busy&&this in controls)onClick()}
     }
     private fun input(operation:String)=JSONObject().put("version",1).put("operation",operation)
-        .put("expected",JSONObject(model!!.getJSONObject("expected").toString())).put("parent",model!!.getString("parent"))
+        .put("expected",JSONObject(model!!.getJSONObject("expected").toString())).put("parent",model!!.getString("parent")).put("searchScope",model!!.optString("searchScope","render"))
     private fun read(parent:String) {
         if(busy||model==null)return
         dispatch("read",input("layoutView").put("parent",parent))
@@ -106,7 +106,7 @@ class MPosLayoutController(private val context:Context,private val host:FrameLay
             val actions=LinearLayout(theme.uiContext)
             if(tile.getString("type")=="folder"){
                 actions.addView(button("Открыть"){read(tile.getString("id"))});actions.addView(button("Изменить"){folderDialog(tile.getString("id"))})
-            }else actions.addView(button("Переместить"){moveDialog(tile.getString("id"))})
+            }else actions.addView(button("Переместить"){moveDialog(tile.get("id"))})
             row.addView(actions)
             row.setOnLongClickListener{if(busy||model?.getJSONObject("expected")?.optString("search")?.isNotEmpty()==true)false else it.startDragAndDrop(ClipData.newPlainText("layout",i.toString()),View.DragShadowBuilder(it),tile,0)}
             row.setOnDragListener{_,event->when(event.action){DragEvent.ACTION_DRAG_STARTED->!busy&&event.localState is JSONObject;DragEvent.ACTION_DROP->{if(!busy){val source=event.localState as JSONObject;commit(JSONObject().put("operation","reorder").put("type",source.getString("type")).put("id",source.get("id")).put("targetIndex",i))};true};else->true}}
@@ -148,7 +148,7 @@ class MPosLayoutController(private val context:Context,private val host:FrameLay
         })
         form(if(folder==null)"Новая папка" else "Изменить папку",body){commit(JSONObject().put("operation","saveFolder").put("id",id).put("name",name.text.toString()))}
     }
-    private fun moveDialog(id:String) {
+    private fun moveDialog(id:Any?) {
         val folders=model!!.getJSONArray("folders");val rows=(0 until folders.length()).map{folders.getJSONObject(it)}
         val picker=Spinner(theme.uiContext).apply{minimumHeight=theme.dp(48);background=theme.shape(theme.surface,12,true)
             adapter=object:ArrayAdapter<String>(theme.uiContext,android.R.layout.simple_spinner_dropdown_item,listOf("Корень категории")+rows.map{it.getString("name")}){

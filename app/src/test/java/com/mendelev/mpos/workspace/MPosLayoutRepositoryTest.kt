@@ -81,6 +81,22 @@ class MPosLayoutRepositoryTest {
             assertEquals(before,db.legacyStorageShadowDao().get("posNavigation"))
         }
     }
+    @Test fun rootNumericIdsStayStrictAndAddChoicesUseSourceDatasetStrings()=runCase {db,owner,repo->
+        MPosCatalogStorage(db).write("""[{"id":7,"category":"Кофе","name":"Чай numeric"},{"id":"7","category":"Кофе","name":"Кофе string"}]""")
+        MPosWorkspaceStorage(db).write("layout","""{"tiles":[{"type":"product","id":7,"col":0,"row":0},{"type":"product","id":"7","col":1,"row":0}]}""")
+        val model=repo.execute(input(owner));assertEquals("Чай numeric",model.getJSONArray("tiles").getJSONObject(0).getString("label"));assertEquals("Кофе string",model.getJSONArray("tiles").getJSONObject(1).getString("label"))
+        assertTrue(model.getJSONArray("choices").getJSONObject(1).get("id") is String)
+        owner.handle(JSONObject().put("version",1).put("operation","selectSearch").put("search","ЧАЙ"))
+        assertEquals(1,repo.execute(input(owner)).getJSONArray("tiles").length())
+        assertEquals(0,repo.execute(input(owner).put("searchScope","live")).getJSONArray("tiles").length())
+    }
+    @Test fun categoryRenderSearchCrossesFoldersButLiveSearchKeepsMountedParentScope()=runCase("Кофе") {db,owner,repo->
+        MPosWorkspaceStorage(db).write("posNavigation","""{"version":1,"categories":[{"category":"Кофе","items":[{"type":"folder","id":"f","name":"Папка","parentId":""},{"type":"product","id":"p","parentId":"f"}]}]}""")
+        owner.handle(JSONObject().put("version",1).put("operation","selectSearch").put("search","ЛАТТЕ"))
+        assertEquals(1,repo.execute(input(owner)).getJSONArray("tiles").length())
+        assertEquals(0,repo.execute(input(owner).put("searchScope","live")).getJSONArray("tiles").length())
+        assertEquals(1,repo.execute(input(owner,parent="f").put("searchScope","live")).getJSONArray("tiles").length())
+    }
     @Test fun folderCreateRenameMoveReorderDeletePreserveProductsAndReturnItemsToRoot()=runCase("Кофе") {db,owner,repo->
         val before=db.legacyStorageShadowDao().get("products")
         val created=commit(repo,owner,JSONObject().put("operation","saveFolder").put("name","Молочный кофе"))
