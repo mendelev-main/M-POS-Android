@@ -447,3 +447,5 @@ hidden плиток, кеширования и rollback. Локальные те
 раскладки ещё используют DOM, global Back ещё получает presence из адаптера.
 Каталог/корзина read models относятся к 109.09. Прогресс не увеличен:
 **114/129 (88,37%)**, 109 **7/20**, крупных **107/110**.
+
+Проверка toolbar-кода `7bd7ecc`: [Actions 37750512318](https://github.com/mendelev-main/M-POS-Android/actions/runs/37750512318) — Tests and lint успешно (JS, правила версий, Kotlin, lint). APK собирается отдельным job; физическая приёмка pending.

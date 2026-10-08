@@ -902,7 +902,7 @@
             "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceController.kt",
             "tests/native-workspace.test.cjs"
           ],
-          "remaining": "Native owner/routes, System Back/runtime и toolbar labels/typed Back/layout/folder-close подключены. Остались общие native tabs/search controls, controls редактора раскладки и DOM presence глобального Back. Каталог/корзина read models — 109.09. Toolbar tests authored, Actions pending; 109.08 in_progress."
+          "remaining": "Native owner/routes, System Back/runtime и toolbar labels/typed Back/layout/folder-close подключены. Остались общие native tabs/search controls, controls редактора раскладки и DOM presence глобального Back. Каталог/корзина read models — 109.09. Toolbar JS/Kotlin/lint passed Actions 37750512318 (7bd7ecc); 109.08 in_progress."
         },
         {
           "id": "109.09",
@@ -1102,6 +1102,16 @@
       "commit": "8ca9dd6",
       "testsAndLint": "success",
       "apkBuild": "success",
+      "physicalAcceptance": "pending"
+    },
+    {
+      "date": "2026-10-08",
+      "scope": "Native workspace toolbar model and typed transitions",
+      "execution": "GitHub Actions",
+      "runId": 37750512318,
+      "commit": "7bd7ecc",
+      "testsAndLint": "success",
+      "apkBuild": "in_progress",
       "physicalAcceptance": "pending"
     }
   ]
