@@ -43,10 +43,10 @@
 - [x] ~~Добавление товара, модификаторы и ручная цена целиком~~ — native модели,
   формы и atomic Room commit подключены; CAS/stock/merge/metadata/uncertain
   Actions 37821758058: tests/lint/signed APK success. Детали: NATIVE_CART_ADD_10909_RU.md.
-- [ ] **Удаление и изменение количества** — native atomic commit подключён;
-  stock/context/reset/rollback и JS ack checks pending Actions.
-- [ ] **Остальные операции и черновики корзины** — native changeQty/remove и
-  параметры заказа; владение всем черновиком и
+- [x] ~~Удаление и изменение количества~~ — native atomic commit подключён;
+  stock/context/reset/rollback и JS ack checks: Actions 37823644094 success.
+  Предыдущая APK 37823125367 success, latest APK pending.
+- [ ] **Остальные операции и черновики корзины** — параметры заказа; владение всем черновиком и
   восстановление заказа после restart. Сохранить цены/рецепты/лояльность.
 - [ ] **Редактор товара** — native модель полей и валидация, действующие права,
   создание/изменение/отмена и одна согласованная запись; сохранение фотографий.

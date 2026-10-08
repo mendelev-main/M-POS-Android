@@ -969,7 +969,7 @@
             "app/src/test/java/com/mendelev/mpos/workspace/MPosCartEditRepositoryTest.kt",
             "docs/NATIVE_CART_EDIT_10909_RU.md"
           ],
-          "remaining": "Native configured add/modifier/manual price verified: Actions 37821758058 tests/lint/signed APK success. Native remove/quantity atomic commands connected; verification pending Actions. Remaining: order settings/native order draft ownership and full product editor. 109.09 in progress; 115/129 unchanged."
+          "remaining": "Native add/modifier/manual price verified: Actions 37821758058 success. Native remove/quantity atomic commands verified: Actions 37823644094 JS/Kotlin/lint success, latest APK pending; prior 37823125367 signed APK success. Remaining: native order settings/full order draft ownership and full product editor. 109.09 in progress; 115/129 unchanged."
         },
         {
           "id": "109.10",

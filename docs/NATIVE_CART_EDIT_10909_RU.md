@@ -1,7 +1,8 @@
 # 109.09 — удаление и количество
 
 Production команды cartRemoveCommit/cartQuantityCommit переданы Kotlin/Room.
-Проверки pending GitHub Actions. Общий этап 109.09 in progress, 115/129 (89.15%).
+Actions 37823644094 (75691dc): JS/Kotlin/tests/lint success; signed APK pending.
+Actions 37823125367 (11ed9be): tests/lint/signed APK success. Общий этап 109.09 in progress, 115/129 (89.15%).
 
 Одна transaction читает authoritative session, проверяет native navigation,
 recovery и точное совпадение items с проекцией. Положительное количество

@@ -1051,3 +1051,9 @@ JS/Room/controller parity/failure проверки pending Actions; local tests/
 не запускались (§17). 109.09 in_progress, **115/129, внутри 109 — 8/20**.
 
 109.09: configured add/modifier/manual-price Actions 37821758058 success (tests/lint/signed APK). Native remove/quantity atomic commits implemented; tests pending Actions. Full native order draft/settings and product editor remain. 115/129; physical pending 110. Details: NATIVE_CART_EDIT_10909_RU.md.
+
+109.09 checkpoint: native remove/quantity verified in Actions 37823644094
+(75691dc, JS/Kotlin/lint success; APK pending). Prior 37823125367 (11ed9be)
+passed tests/lint/signed APK. Remove/quantity checklist struck completed;
+remaining native order settings/full draft ownership and product editor keep
+109.09 in progress. 115/129 (89.15%), 109: 8/20; physical pending 110.
