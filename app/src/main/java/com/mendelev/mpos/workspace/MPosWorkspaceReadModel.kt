@@ -19,7 +19,7 @@ object MPosWorkspaceReadModel {
             if(MPosJsonNumbers.truthy(p.opt("noStockTracking")))return JSONObject.NULL
             val value=MPosJsonNumbers.number(p.opt("stock"))
             // POS tiles retain negative stock; publication advisory clamps it separately.
-            return if(value==Double.POSITIVE_INFINITY)JSONObject.NULL else if(value.isNaN())0.0 else value
+            return if(value.isNaN())0.0 else value
         }
         fun text(value:Any?)=MPosAvailabilityEngine.text(if(value==null||value===JSONObject.NULL)"" else value)
         fun money(value:Any?):String {
@@ -30,6 +30,7 @@ object MPosWorkspaceReadModel {
             val quantity=quantity(p)
             if(quantity===JSONObject.NULL)return "Остаток: ∞"
             val n=MPosJsonNumbers.number(quantity)
+            if(folder!=null&&n==Double.POSITIVE_INFINITY)return "Остаток: ∞"
             if(folder==null&&p.opt("type")!="simple")return "Доступно: "+MPosAvailabilityEngine.text(n)
             val unit=if(p.opt("type")=="simple")p.optString("stockUnit") else text(MPosJsonNumbers.fallback(p.opt("recipeUnit"),"piece"))
             val label=mapOf("piece" to "шт.","kg" to "кг","g" to "г","l" to "л","ml" to "мл")[unit]?:"ед. (не задана)"

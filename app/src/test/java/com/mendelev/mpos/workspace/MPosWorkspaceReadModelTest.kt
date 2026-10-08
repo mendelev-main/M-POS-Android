@@ -61,6 +61,6 @@ class MPosWorkspaceReadModelTest {
         val layout=JSONObject("""{"tiles":[{"type":"product","id":"negative"},{"type":"product","id":"infinite"}]}""")
         val tiles=MPosWorkspaceReadModel.calculate(records,layout,null,snapshot(),null,order(),true,0,5).getJSONArray("tiles")
         assertEquals("Остаток: -0.125 кг",tiles.getJSONObject(0).getString("stock"));assertTrue(tiles.getJSONObject(0).getBoolean("disabled"))
-        assertEquals("Остаток: ∞",tiles.getJSONObject(1).getString("stock"));assertFalse(tiles.getJSONObject(1).getBoolean("disabled"))
+        assertEquals("Остаток: 0 ед. (не задана)",tiles.getJSONObject(1).getString("stock"));assertFalse(tiles.getJSONObject(1).getBoolean("disabled"))
     }
 }
