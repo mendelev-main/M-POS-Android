@@ -7,7 +7,7 @@
   let current=null,queued=false,sequence=0,modal=null,form=null;
   let generation=0;
   const same=(a,b)=>a===b||!!a&&!!b&&typeof a==='object'&&typeof b==='object'&&Array.isArray(a)===Array.isArray(b)&&Object.keys(a).length===Object.keys(b).length&&Object.keys(a).every(k=>Object.hasOwn(b,k)&&same(a[k],b[k]));
-  function hide(){generation++;if(current){bridge.postMessage({action:'layoutHide',token:current.token});current.node.style.opacity=current.opacity;current.node.style.pointerEvents=current.pointer;current=null;}modal=null;core.OverlayLifecycle?.changed();}
+  function hide(){generation++;if(current){bridge.postMessage({action:'layoutHide',token:current.token});current.node.style.opacity=current.opacity;current.node.style.pointerEvents=current.pointer;if(current.app)current.app.inert=current.inert;current=null;}modal=null;core.OverlayLifecycle?.changed();}
   function schedule(){if(!queued){queued=true;requestAnimationFrame(update);}}
   async function update(){
     queued=false;if(!enabled()||!state.loaded||state.tab!=='pos'||!state.editMode||state.busy||state.paymentPage||document.hidden||(typeof criticalStorageRecoveryPending!=='undefined'&&criticalStorageRecoveryPending)){hide();return;}
@@ -20,7 +20,7 @@
       const model=await core.WorkspaceNavigation.execute({version:1,operation:'layoutView',expected:view(),parent:global._posFolderModal?.id||state.posFolder||''});
       if(request!==generation||stamp!==JSON.stringify([core.WorkspaceNavigationLifecycle.generation(),view()])||node!==document.querySelector('#screen-pos .pos-left')||!enabled()||document.hidden)return;
       if(model?.ok!==true||model.authoritative!==true||!Array.isArray(model.tiles)||typeof model.documentRevision!=='string')throw Error('Некорректная раскладка');
-      hide();const token='layout-'+(++sequence),r=node.getBoundingClientRect();current={node,token,stamp,model,opacity:node.style.opacity,pointer:node.style.pointerEvents};
+      hide();const token='layout-'+(++sequence),r=node.getBoundingClientRect(),app=document.getElementById('app');current={node,token,stamp,model,app,inert:app?.inert||false,opacity:node.style.opacity,pointer:node.style.pointerEvents};
       const packet={action:'layoutShow',token,model,theme:document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light',viewportWidth:global.innerWidth,viewportHeight:global.innerHeight,rect:{left:r.left,top:r.top,width:r.width,height:r.height},...(form||{})};form=null;
       if(bridge.postMessage(packet)===false){hide();return;}node.style.opacity='0';node.style.pointerEvents='none';
     }catch(error){if(request===generation){hide();global.flash?.(error?.message||'Не удалось открыть раскладку');}}
@@ -32,7 +32,7 @@
     action(payload){
       if(!current||payload.token!==current.token)return;
       if(payload.action==='fallback'){global.MPosNativeLayoutUiEnabled=false;hide();return;}
-      if(payload.action==='modal'){modal=payload.active?current.token:null;if(typeof payload.parent==='string')global._posFolderModal=payload.parent?{category:state.posPath,id:payload.parent}:null;core.OverlayLifecycle?.changed();return;}
+      if(payload.action==='modal'){modal=payload.active?current.token:null;if(current.app)current.app.inert=payload.active||current.inert;if(typeof payload.parent==='string')global._posFolderModal=payload.parent?{category:state.posPath,id:payload.parent}:null;core.OverlayLifecycle?.changed();return;}
       if(payload.action==='route'){
         const operation=payload.operation;if(!['toggleEdit','closeCategory'].includes(operation))return;
         Promise.resolve(operation==='toggleEdit'?global.toggleEditMode():global.closePosCategory()).finally(()=>{hide();schedule();});

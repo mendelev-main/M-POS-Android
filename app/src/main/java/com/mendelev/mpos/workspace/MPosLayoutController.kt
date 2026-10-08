@@ -123,10 +123,17 @@ class MPosLayoutController(private val context:Context,private val host:FrameLay
         view.setOnShowListener{view.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener{if(!busy)onSave()};enable()};view.show();theme.dialog(view);notifyModal()
     }
     private fun addDialog() {
-        val list=LinearLayout(theme.uiContext).apply{orientation=LinearLayout.VERTICAL;setPadding(theme.dp(16),theme.dp(12),theme.dp(16),theme.dp(12))}
         val choices=model!!.getJSONArray("choices")
-        for(i in 0 until choices.length()){val choice=choices.getJSONObject(i);list.addView(button("＋ "+choice.getString("label")){commit(JSONObject().put("operation","addTile").put("type",choice.getString("type")).put("id",choice.get("id")))})}
-        dialog?.dismiss();val view=AlertDialog.Builder(theme.uiContext).setTitle("Настройка рабочей зоны").setView(ScrollView(theme.uiContext).apply{addView(list)}).setPositiveButton("Готово",null).create()
+        val list=ListView(theme.uiContext).apply {
+            adapter=object:ArrayAdapter<String>(theme.uiContext,android.R.layout.simple_list_item_1,(0 until choices.length()).map{choices.getJSONObject(it).getString("label")}) {
+                override fun getView(position:Int,convertView:View?,parent:ViewGroup):View=(convertView as? TextView?:TextView(theme.uiContext)).apply {
+                    text="＋ "+getItem(position);theme.text(this);minHeight=theme.dp(48);setPadding(theme.dp(16),theme.dp(12),theme.dp(16),theme.dp(12))
+                }
+            }
+            setOnItemClickListener{_,_,position,_->if(!busy){val choice=choices.getJSONObject(position);commit(JSONObject().put("operation","addTile").put("type",choice.getString("type")).put("id",choice.get("id")))}}
+        }
+        controls+=list
+        dialog?.dismiss();val view=AlertDialog.Builder(theme.uiContext).setTitle("Настройка рабочей зоны").setView(list).setPositiveButton("Готово",null).create()
         dialog=view;view.setOnDismissListener{if(dialog===view){dialog=null;notifyModal()}};view.show();theme.dialog(view);notifyModal()
     }
     private fun folderDialog(id:String) {
