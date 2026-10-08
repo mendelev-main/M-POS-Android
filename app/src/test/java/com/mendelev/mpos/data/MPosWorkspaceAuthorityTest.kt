@@ -44,7 +44,7 @@ class MPosWorkspaceAuthorityTest {
     }
 
     @Test fun ownedKeysMigrateOnceRetainExactJsonAndIgnoreObsoleteShadows() {
-        for ((key, document) in mapOf("layout" to layout, "posNavigation" to navigation, "company" to "{\"legalName\":\"Cafe\",\"extension\":false}")) {
+        for ((key, document) in mapOf("layout" to layout, "posNavigation" to navigation, "company" to "{\"legalName\":\"Cafe\",\"extension\":false}", "network" to "{\"deviceKey\":\"synthetic-key\"}", "telegram" to "{\"botToken\":\"synthetic-token\"}")) {
             call("put", key, "{\"old\":true}")
             assertTrue(call("workspaceInitialize", key, document).getBoolean("authoritative"))
             call("workspaceInitialize", key, "{\"stale\":true}")

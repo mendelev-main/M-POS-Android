@@ -728,7 +728,7 @@
       "area": "UI/architecture",
       "dependencies": "100,101,102,103,104,105,106,107,108",
       "spec": "specs/109-native-runtime/spec.md",
-      "summary": "In progress: 109.01–109.06 complete, including Kotlin-owned root selections, lifecycle and ordered startup with post-commit refresh. Next: 109.07 remaining authorization. Domain hydration, recovery replay, post-commit effects and WebView removal remain in their explicit subtasks.",
+      "summary": "109.01–109.07 implemented: native root startup/session, employee/editor/catalog/settings permission checks and native loyalty password boundary. CI for latest increments pending owner review. Next: 109.08 navigation ownership; domain hydration, replay, effects and WebView removal remain separate tasks.",
       "subtasks": [
         {
           "id": "109.01",
@@ -822,7 +822,7 @@
         {
           "id": "109.07",
           "title": "Оставшаяся авторизация и права",
-          "status": "in_progress",
+          "status": "done",
           "dependencies": [
             "109.06"
           ],
@@ -851,9 +851,28 @@
             "app/src/test/java/com/mendelev/mpos/data/MPosProductEditorCommandTest.kt",
             "tests/android-catalog-delete.test.cjs",
             "tests/android-editor-authorization.test.cjs",
-            "tests/android-product-editor-commit.test.cjs"
+            "tests/android-product-editor-commit.test.cjs",
+            "app/src/main/java/com/mendelev/mpos/data/MPosAdminSettingsCommand.kt",
+            "app/src/main/java/com/mendelev/mpos/data/MPosProductWebCommand.kt",
+            "app/src/main/java/com/mendelev/mpos/data/MPosLoyaltyAdjustmentPreparation.kt",
+            "app/src/main/java/com/mendelev/mpos/data/MPosLoyaltyAdjustmentVerification.kt",
+            "app/src/main/java/com/mendelev/mpos/data/MPosLoyaltyBalanceVerification.kt",
+            "app/src/main/java/com/mendelev/mpos/network/MPosLoyaltyAdjustmentHttp.kt",
+            "app/src/main/assets/pos/native-admin-access.js",
+            "app/src/main/assets/pos/native-admin-settings.js",
+            "app/src/main/assets/pos/native-loyalty-authorization.js",
+            "app/src/main/assets/pos/native-product-web.js",
+            "app/src/test/java/com/mendelev/mpos/data/MPosAdminSettingsCommandTest.kt",
+            "app/src/test/java/com/mendelev/mpos/data/MPosProductWebCommandTest.kt",
+            "app/src/test/java/com/mendelev/mpos/data/MPosLoyaltyAdjustmentPreparationTest.kt",
+            "app/src/test/java/com/mendelev/mpos/data/MPosLoyaltyAdjustmentVerificationTest.kt",
+            "app/src/test/java/com/mendelev/mpos/network/MPosLoyaltyAdjustmentHttpTest.kt",
+            "tests/android-admin-settings.test.cjs",
+            "tests/android-admin-access.test.cjs",
+            "tests/android-loyalty-authorization.test.cjs",
+            "tests/android-product-web.test.cjs"
           ],
-          "remaining": "Сотрудники, реквизиты, удаление товаров/категорий и защищённое сохранение карточки товара подключены к нативным проверкам. Новые JS/JVM тесты ожидают GitHub Actions. Остались остальные settings gates, WEB toggle товара и защищённые действия лояльности; 109.07 не закрыт."
+          "remaining": "Реализация критериев завершена. Новые JS/JVM проверки и lint выполняет GitHub Actions; результат ещё не подтверждён. Планшетная приёмка pending. Сбор полей/моделей и post-commit effects остаются в 109.09–109.18."
         },
         {
           "id": "109.08",

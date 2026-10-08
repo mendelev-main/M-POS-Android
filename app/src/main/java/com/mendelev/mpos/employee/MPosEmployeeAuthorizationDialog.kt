@@ -115,6 +115,8 @@ class MPosEmployeeAuthorizationDialog(
         commit(JSONObject(input.toString()).put("requestId", id), credential)
     }
 
+    fun isPending(id: String): Boolean = pending == id
+
     fun result(value: JSONObject) {
         if (pending == null || pending != value.optString("requestId")) return
         pending = null

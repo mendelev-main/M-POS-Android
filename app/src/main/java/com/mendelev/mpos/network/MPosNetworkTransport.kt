@@ -50,6 +50,7 @@ class MPosNetworkTransport(
             "catalogExchange" -> catalogExchange(requestId,payload)
             "catalogCancel" -> profileCalls.remove(requestId)?.cancel()
             "webAck" -> webAck(requestId,payload)
+            "loyaltyBalanceVerification" -> verifyAdjustmentBalance(requestId,payload)
             "loyaltyProfile" -> loyaltyProfile(requestId, payload)
             "loyaltyMutation" -> loyaltyProfile(requestId, payload, true)
             "loyaltyProfileCancel" -> profileCalls.remove(requestId)?.cancel()
@@ -99,6 +100,25 @@ class MPosNetworkTransport(
             try{call.execute().use{onResult(loyaltyProfiles.decode(it).put("source","native-web-ack").put("requestId",requestId))}}
             catch(error:Exception){onResult(JSONObject().put("requestId",requestId).put("ok",false).put("message",if(error is IllegalStateException)error.message else "Не удалось подтвердить WEB заказ"))}
             finally{profileCalls.remove(requestId,call)}
+        }
+    }
+
+    private fun verifyAdjustmentBalance(requestId:String,input:JSONObject) {
+        scope.launch(Dispatchers.IO) {
+            var call:Call?=null
+            try {
+                val balance=com.mendelev.mpos.data.MPosLoyaltyBalanceVerification(database)
+                val config=balance.context(input.getString("customerId"))
+                val verification=com.mendelev.mpos.data.MPosLoyaltyAdjustmentVerification(database)
+                val token=verification.ticket(config,input.getString("customerId"),input.get("programId"))
+                val active=loyaltyProfiles.client.newCall(loyaltyProfiles.request(config));call=active
+                profileCalls.put(requestId,active)?.cancel()
+                val decoded=active.execute().use(loyaltyProfiles::decode)
+                val program=balance.complete(config,input.getString("customerId"),input.get("programId"),token,decoded.getJSONObject("data"))
+                onResult(JSONObject().put("requestId",requestId).put("ok",true).put("authoritative",true).put("program",program))
+            } catch(cancelled:kotlinx.coroutines.CancellationException){throw cancelled}
+            catch (_:Exception){onResult(JSONObject().put("requestId",requestId).put("ok",false).put("message","Не удалось подтвердить актуальный баланс клиента"))}
+            finally {call?.let{profileCalls.remove(requestId,it)}}
         }
     }
 

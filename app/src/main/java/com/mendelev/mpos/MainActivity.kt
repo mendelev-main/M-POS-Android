@@ -72,6 +72,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var telegram: TelegramClient
     private lateinit var nativeSettings: MPosSettingsStore
     private lateinit var nativeStorageMirror: MPosStorageMirror
+    private lateinit var loyaltyAuthorization: com.mendelev.mpos.employee.MPosEmployeeAuthorizationDialog
     private lateinit var editorAuthorization: com.mendelev.mpos.employee.MPosEmployeeAuthorizationDialog
     private lateinit var catalogAuthorization: com.mendelev.mpos.employee.MPosEmployeeAuthorizationDialog
     private lateinit var employeeAuthorization: com.mendelev.mpos.employee.MPosEmployeeAuthorizationDialog
@@ -138,6 +139,35 @@ class MainActivity : AppCompatActivity() {
             bridgeAction = "editorAuthorize", operations = setOf("stock", "no-stock"), commitPrefix = "native-editor-authorize-",
             description = { if (it.getString("operation") == "stock") "Для изменения остатка требуется пароль администратора." else "Для изменения учёта остатков требуется пароль администратора." },
             resultKeys = setOf("granted", "operation", "productId", "grant"))
+        val loyaltyAdjustmentHttp = com.mendelev.mpos.network.MPosLoyaltyAdjustmentHttp()
+        loyaltyAuthorization = com.mendelev.mpos.employee.MPosEmployeeAuthorizationDialog(this,
+            { input, credential ->
+                val id = input.getString("requestId")
+                fun reply(ok: Boolean, message: String = "") = runOnUiThread {
+                    if (::loyaltyAuthorization.isInitialized) loyaltyAuthorization.result(JSONObject().put("requestId", id).put("ok", ok).put("message", message))
+                }
+                nativeStorageMirror.prepareLoyaltyAdjustment(input, { prepared ->
+                    runOnUiThread {
+                        if (loyaltyAuthorization.isPending(id)) lifecycleScope.launch {
+                            suspend fun confirmed(){
+                                com.mendelev.mpos.data.MPosLoyaltyAdjustmentVerification(com.mendelev.mpos.data.MPosDatabase.get(this@MainActivity))
+                                    .finish(prepared,prepared.getString("customerId"),prepared.getJSONObject("body").get("programId"),prepared.getString("verificationToken"))
+                            }
+                            try { loyaltyAdjustmentHttp.execute(prepared, credential); confirmed(); reply(true) }
+                            catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+                            catch (_: java.io.InterruptedIOException) { reply(false, "Сервер не ответил вовремя") }
+                            catch (error: IllegalStateException) {
+                                if (error is com.mendelev.mpos.network.MPosLoyaltyAdjustmentHttp.Rejected && error.status in 400..499 && error.status != 408 && runCatching { confirmed() }.isSuccess) reply(false, error.message ?: "Не удалось сохранить корректировку")
+                                else reply(false, "Перед повторной корректировкой проверьте актуальный баланс клиента")
+                            }
+                            catch (_: Exception) { reply(false, "Не удалось сохранить корректировку") }
+                        }
+                    }
+                }, { message -> reply(false, message) })
+            },
+            { result -> callJavaScript("window.__mposLoyaltyAuthorizationResult&&window.__mposLoyaltyAuthorizationResult(${com.mendelev.mpos.data.MPosBridgeJson.serialize(result)});") },
+            bridgeAction = "loyaltyAdjustAuthorize", operations = setOf("adjust"), commitPrefix = "native-loyalty-adjust-",
+            description = { "Для корректировки лояльности требуется пароль администратора. Его проверит сервер." })
         router = NativeBridgeRouter(this, photos, backup, nativeSettings, nativeStorageMirror, nativeNetworkTransport)
 
         webView = WebView(this).apply {
@@ -256,6 +286,7 @@ class MainActivity : AppCompatActivity() {
         if (::employeeAuthorization.isInitialized) employeeAuthorization.close()
         if (::catalogAuthorization.isInitialized) catalogAuthorization.close()
         if (::editorAuthorization.isInitialized) editorAuthorization.close()
+        if (::loyaltyAuthorization.isInitialized) loyaltyAuthorization.close()
         if (::shiftScreen.isInitialized) shiftScreen.hide()
         if (::workspace.isInitialized) workspace.hide()
         if (::settingsScreen.isInitialized) settingsScreen.dismiss()
@@ -330,7 +361,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun handleSettingsScreen(payload: JSONObject) = runOnUiThread {
-        if (payload.optString("action") == "editorAuthorize") {
+        if (payload.optString("action") == "loyaltyAdjustAuthorize") {
+            if (::loyaltyAuthorization.isInitialized) loyaltyAuthorization.handle(payload)
+        } else if (payload.optString("action") == "editorAuthorize") {
             if (::editorAuthorization.isInitialized) editorAuthorization.handle(payload)
         } else if (payload.optString("action") == "catalogDeleteAuthorize") {
             if (::catalogAuthorization.isInitialized) catalogAuthorization.handle(payload)

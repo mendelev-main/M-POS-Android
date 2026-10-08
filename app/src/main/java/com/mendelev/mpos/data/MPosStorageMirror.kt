@@ -56,6 +56,16 @@ class MPosStorageMirror(
         }) emitEmployeeFailure(requestId, IllegalStateException("native queue unavailable"))
     }
 
+    fun prepareLoyaltyAdjustment(input: JSONObject, ready: (JSONObject) -> Unit, failed: (String) -> Unit) {
+        val serialized = input.toString()
+        fun failure(error: Throwable) = failed(if (error.message in setOf("Требуются права администратора", "Перед повторной корректировкой проверьте актуальный баланс клиента")) error.message!! else "Не удалось подготовить корректировку")
+        if (!queue.submit(::failure) {
+            attempt { MPosLoyaltyAdjustmentPreparation(database).prepare(serialized) }.onSuccess(ready).onFailure(::failure)
+        }) failed("Не удалось подготовить корректировку")
+    }
+
+    private suspend fun loyaltyVerificationConfiguration():JSONObject = MPosLoyaltyBalanceVerification(database).context("",requireAdmin=false)
+
     private val editorGrants = MPosEditorGrants()
 
     fun authorizeEditor(input: JSONObject, credential: String) {
@@ -135,7 +145,7 @@ class MPosStorageMirror(
                 collected.toList().also { collected.clear() }
             }
             // Reads do not invalidate the root. These are all bridges capable of changing its documents.
-            val changesRoot = action in setOf("rootSessionRefresh", "shiftOpen", "shiftLifecycleCommit", "cashMovementCommit", "returnCommit", "employeeCommit",
+            val changesRoot = action in setOf("adminAccess", "rootSessionRefresh", "shiftOpen", "shiftLifecycleCommit", "cashMovementCommit", "returnCommit", "employeeCommit",
                 "shiftInitialize", "shiftWrite", "shiftRemove", "employeeInitialize", "employeeWrite", "employeeRemove") ||
                 action in setOf("recoveryWrite", "recoveryRemove", "recoveryInitialize", "put", "remove") && key in setOf("shifts", "employees", "criticalStorageJournal")
             val root = if (changesRoot) attempt { rootSelection(rootBootstrap()) }.getOrNull() else null
@@ -390,6 +400,36 @@ class MPosStorageMirror(
                     }
                     command.version?.let{writeState.commit(command.key,it)};value.put("requestId",requestId)
                 }.onSuccess(::emitResult).onFailure { result(requestId,false,"native supply storage operation failed") }
+            }
+            "loyaltyAdjustmentStatus" -> {
+                attempt {
+                    val input=JSONObject(requireNotNull(command.serialized))
+                    val config=loyaltyVerificationConfiguration()
+                    val token=MPosLoyaltyAdjustmentVerification(database).ticket(config,input.getString("customerId"),input.get("programId"))
+                    JSONObject().put("ok",true).put("authoritative",true).put("required",token!=null).put("requestId",requestId)
+                }.onSuccess(::emitResult).onFailure { result(requestId,false,"Не удалось проверить состояние корректировки") }
+            }
+            "adminAccess" -> {
+                attempt {
+                    val root = MPosRootSessionRepository(database).read()
+                    JSONObject().put("ok",true).put("authoritative",true).put("allowed",root.isAdmin).put("requestId",requestId)
+                }.onSuccess(::emitResult).onFailure { result(requestId,false,"Не удалось проверить права администратора") }
+            }
+            "adminSettingsCommit" -> {
+                attempt { MPosAdminSettingsCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure {
+                        val known = setOf("Сетевые конфигурации доступны только администратору", "Настройки изменились. Откройте форму заново",
+                            "Адрес backend должен начинаться с https://", "Укажите корректный ID рабочего устройства", "Укажите корректный ID владельца")
+                        result(requestId, false, it.message.takeIf { value -> value in known } ?: "Не удалось сохранить настройки")
+                    }
+            }
+            "productWebCommit" -> {
+                attempt { MPosProductWebCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure {
+                        val known = setOf("Настройку WEB может изменять только администратор при открытой им смене",
+                            "Перезапустите M POS для восстановления данных", "Каталог изменился. Повторите действие")
+                        result(requestId, false, it.message.takeIf { value -> value in known } ?: "Не удалось сохранить настройку WEB")
+                    }
             }
             "productEditorCommit" -> {
                 attempt { MPosProductEditorCommand(database, editorGrants).commit(requireNotNull(command.serialized)).put("requestId", requestId) }

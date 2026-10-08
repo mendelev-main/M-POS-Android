@@ -7,7 +7,7 @@ import org.json.JSONTokener
 /** Native persistence for category layout, navigation and company metadata; presentation rules remain unchanged. */
 class MPosWorkspaceStorage(private val database: MPosDatabase) {
     private val documents = database.legacyStorageShadowDao()
-    companion object { val KEYS = setOf("layout", "posNavigation", "company") }
+    companion object { val KEYS = setOf("layout", "posNavigation", "company", "network", "telegram") }
 
     private fun marker(key: String): String {
         require(key in KEYS) { "unsupported workspace key" }

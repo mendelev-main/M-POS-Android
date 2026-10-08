@@ -1955,7 +1955,7 @@ function saveNetworkSettings(){
   return true;
 }
 async function testBackendConnection(){
-  if(!saveNetworkSettings()) return;
+  if(!await saveNetworkSettings()) return;
   const n=networkConfigFromState();
   try{
     const r=await fetch(n.backendUrl+'/health',{method:'GET',cache:'no-store'});
@@ -2176,7 +2176,7 @@ function buildMenuSyncPayload(){
   return {deviceKey:networkConfigFromState().deviceKey,deviceName:networkConfigFromState().deviceName,categories,products};
 }
 async function syncMenuToBackend(){
-  if(!saveNetworkSettings()) return;
+  if(!await saveNetworkSettings()) return;
   const n=networkConfigFromState();
   const payload=buildMenuSyncPayload();
   setNetworkStatus('network-sync-status','Синхронизация…');
@@ -2575,6 +2575,10 @@ document.addEventListener('touchmove',function(e){
 <script src="native-company-command.js"></script>
 <script src="native-catalog-delete.js"></script>
 <script src="native-editor-authorization.js"></script>
+<script src="native-product-web.js"></script>
+<script src="native-admin-settings.js"></script>
+<script src="native-admin-access.js"></script>
+<script src="native-loyalty-authorization.js"></script>
 <script src="native-customer-command.js"></script>
 <script src="native-loyalty-guard.js"></script>
 <script src="native-loyalty-outbox.js"></script>

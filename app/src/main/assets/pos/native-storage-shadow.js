@@ -34,10 +34,10 @@
     });
   }
 
-  const nativeKeys=new Set(['products','layout','posNavigation','company','employees','shifts','orders','parked','currentOrderSession','criticalStorageJournal','purchaseOrders','receivings','receivingDraft','inventoryConfig','inventoryDraft','inventoryHistory','hallTables','bookings','suppliers','webOrderAcceptances','webOrderReadyJournal']);
+  const nativeKeys=new Set(['products','layout','posNavigation','company','network','telegram','employees','shifts','orders','parked','currentOrderSession','criticalStorageJournal','purchaseOrders','receivings','receivingDraft','inventoryConfig','inventoryDraft','inventoryHistory','hallTables','bookings','suppliers','webOrderAcceptances','webOrderReadyJournal']);
   const ready=new Map();
   let cacheFailures=0;
-  const cacheFailuresByKey={products:0,layout:0,posNavigation:0,company:0,employees:0,shifts:0,orders:0,parked:0,currentOrderSession:0,criticalStorageJournal:0,purchaseOrders:0,receivings:0,receivingDraft:0,inventoryConfig:0,inventoryDraft:0,inventoryHistory:0,hallTables:0,bookings:0,suppliers:0,webOrderAcceptances:0,webOrderReadyJournal:0};
+  const cacheFailuresByKey={products:0,layout:0,posNavigation:0,company:0,network:0,telegram:0,employees:0,shifts:0,orders:0,parked:0,currentOrderSession:0,criticalStorageJournal:0,purchaseOrders:0,receivings:0,receivingDraft:0,inventoryConfig:0,inventoryDraft:0,inventoryHistory:0,hallTables:0,bookings:0,suppliers:0,webOrderAcceptances:0,webOrderReadyJournal:0};
   function requireNative(result,authority=false){
     if(!result?.ok)throw new Error(result?.reason||result?.message||'M POS native storage operation failed');
     if(authority&&result.authoritative!==true)throw new Error('M POS native storage authority missing');
@@ -176,6 +176,18 @@
   });
   mposCore.SupplierCommands=Object.freeze({
     async commit(input){const payload=JSON.stringify(input),operation=input.operation;await initializeNative('suppliers');if(operation==='delete')await Promise.all(['employees','shifts'].map(initializeNative));return requireNative(await request('supplierCommit',{payload}),true);}
+  });
+  mposCore.LoyaltyVerification=Object.freeze({
+    async status(input){await Promise.all(['network','employees','shifts','criticalStorageJournal'].map(initializeNative));return requireNative(await request('loyaltyAdjustmentStatus',{payload:JSON.stringify(input)}),true);}
+  });
+  mposCore.AdminAccess=Object.freeze({
+    async check(){await Promise.all(['employees','shifts','criticalStorageJournal'].map(initializeNative));return requireNative(await request('adminAccess'),true);}
+  });
+  mposCore.AdminSettingsCommands=Object.freeze({
+    async commit(input){await Promise.all([input.key,'employees','shifts','criticalStorageJournal'].map(initializeNative));return requireNative(await request('adminSettingsCommit',{payload:JSON.stringify(input)}),true);}
+  });
+  mposCore.ProductWebCommands=Object.freeze({
+    async commit(input){await Promise.all(['products','employees','shifts','criticalStorageJournal'].map(initializeNative));return requireNative(await request('productWebCommit',{payload:JSON.stringify(input)}),true);}
   });
   mposCore.ProductEditorCommands=Object.freeze({
     enabled:()=>global.MPosNativeProductEditorCommitEnabled!==false,
