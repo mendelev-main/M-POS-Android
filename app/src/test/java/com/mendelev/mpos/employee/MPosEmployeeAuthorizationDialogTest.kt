@@ -89,4 +89,28 @@ class MPosEmployeeAuthorizationDialogTest {
         assertEquals(1, replies.size)
         controller.close(); activity.finish()
     }
+
+    @Test fun catalogConfirmationUsesConfiguredActionPrefixAndWhitelistedResultOnly() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val requests = mutableListOf<JSONObject>(); val replies = mutableListOf<JSONObject>()
+        val controller = MPosEmployeeAuthorizationDialog(activity, { value, _ -> requests.add(value) }, replies::add,
+            bridgeAction = "catalogDeleteAuthorize", operations = setOf("delete"), commitPrefix = "native-catalog-delete-",
+            description = { "Удалить товар?" }, requiresPassword = { false }, resultKeys = setOf("products"))
+        controller.handle(JSONObject().put("action", "catalogDeleteAuthorize").put("requestId", "catalog-1")
+            .put("command", JSONObject().put("operation", "delete")))
+        ShadowLooper.idleMainLooper()
+        val dialog = ShadowAlertDialog.getLatestAlertDialog()
+        val field = views(dialog.window!!.decorView).filterIsInstance<EditText>().single()
+        assertEquals(View.GONE, field.visibility)
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        assertTrue(requests.single().getString("requestId").startsWith("native-catalog-delete-"))
+        controller.result(JSONObject().put("requestId", requests.single().getString("requestId"))
+            .put("ok", false).put("credentialRejected", true))
+        assertEquals(View.VISIBLE, field.visibility); assertTrue(field.isEnabled)
+        field.setText("synthetic-input"); dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        controller.result(JSONObject().put("requestId", requests.last().getString("requestId")).put("ok", true)
+            .put("products", org.json.JSONArray()).put("credential", "synthetic-input"))
+        assertTrue(replies.last().has("products")); assertFalse(replies.last().has("credential"))
+        assertFalse(dialog.isShowing)
+    }
 }

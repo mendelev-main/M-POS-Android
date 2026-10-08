@@ -78,7 +78,7 @@ async function saveProduct(editingId){
     if(window._pmRemoveImage){delete p.localImageId;delete p.imageUploadPending}
     if(editingId && JSON.stringify(getProduct(editingId))!==originalProduct)throw new Error('Товар изменился во время сохранения. Откройте карточку заново');
     const nextProducts=storageSnapshot(state.products);if(editingId)nextProducts[nextProducts.findIndex(x=>x.id===editingId)]=p;else nextProducts.push(p);
-    await window.PrilavokCore.Storage.set('products',nextProducts);state.products=nextProducts;window._pmLocalImageId=null;syncCategoryOrder();void publishAvailability();
+    await (window.MPosCore?.ProductEditorCommands?.enabled() ? window.MPosCore.ProductEditorCommands.commit({version:1,editingId:editingId??null,expected:storageSnapshot(state.products),nextProducts,grants:window.MPosCore.EditorAuthorization?.grants()||{}}) : window.PrilavokCore.Storage.set('products',nextProducts));window.MPosCore?.EditorAuthorization?.clear();state.products=nextProducts;window._pmLocalImageId=null;syncCategoryOrder();void publishAvailability();
     if(previousLocalImageId && (window._pmRemoveImage || (selectedLocalImageId&&selectedLocalImageId!==previousLocalImageId)))window.webkit?.messageHandlers?.photoPicker?.postMessage({action:'remove',id:previousLocalImageId});
     let imageData=window._pmImageData;
     if(!imageData&&p.imageUploadPending&&p.localImageId)imageData=await readNativeProductImage(p.localImageId);
@@ -95,6 +95,7 @@ async function saveProduct(editingId){
     closeModal();render();flash(photoError?'Товар сохранён локально. Фото ожидает повторной загрузки: '+photoError:'Товар сохранён');
     return true;
   }catch(e){
+    if(String(e?.message).includes('commit status is uncertain')){criticalStorageRecoveryPending=true;markStorageBroken(e);}
     if(btn){ btn.disabled=false; btn.textContent='Сохранить'; }
     flash('Не удалось сохранить товар: '+(e?.message||'ошибка'));
   }

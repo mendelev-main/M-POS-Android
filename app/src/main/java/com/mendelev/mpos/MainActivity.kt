@@ -72,6 +72,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var telegram: TelegramClient
     private lateinit var nativeSettings: MPosSettingsStore
     private lateinit var nativeStorageMirror: MPosStorageMirror
+    private lateinit var editorAuthorization: com.mendelev.mpos.employee.MPosEmployeeAuthorizationDialog
+    private lateinit var catalogAuthorization: com.mendelev.mpos.employee.MPosEmployeeAuthorizationDialog
     private lateinit var employeeAuthorization: com.mendelev.mpos.employee.MPosEmployeeAuthorizationDialog
     private lateinit var rootSession: MPosRootSessionOwner
     private lateinit var nativeNetworkTransport: MPosNetworkTransport
@@ -123,9 +125,19 @@ class MainActivity : AppCompatActivity() {
         rootSession = MPosRootSessionOwner(MPosDatabase.get(this), lifecycleScope)
         nativeStorageMirror = MPosStorageMirror(MPosDatabase.get(this), lifecycleScope, rootSession::bootstrap, ::nativeStorageResult)
         nativeNetworkTransport = MPosNetworkTransport(lifecycleScope, ::nativeNetworkResult, ::nativeNetworkEvent, MPosDatabase.get(this))
-        employeeAuthorization = com.mendelev.mpos.employee.MPosEmployeeAuthorizationDialog(this, nativeStorageMirror::commitEmployee) { result ->
+        employeeAuthorization = com.mendelev.mpos.employee.MPosEmployeeAuthorizationDialog(this, nativeStorageMirror::commitEmployee, { result ->
             callJavaScript("window.__mposEmployeeCommandResult&&window.__mposEmployeeCommandResult(${com.mendelev.mpos.data.MPosBridgeJson.serialize(result)});")
-        }
+        })
+        catalogAuthorization = com.mendelev.mpos.employee.MPosEmployeeAuthorizationDialog(this, nativeStorageMirror::commitCatalogDelete,
+            { result -> callJavaScript("window.__mposCatalogDeleteResult&&window.__mposCatalogDeleteResult(${com.mendelev.mpos.data.MPosBridgeJson.serialize(result)});") },
+            bridgeAction = "catalogDeleteAuthorize", operations = setOf("delete"), commitPrefix = "native-catalog-delete-",
+            description = { "Удаление элемента каталога. Это действие нельзя отменить." },
+            requiresPassword = { it.optBoolean("passwordRequired", true) }, resultKeys = setOf("products", "layout", "posNavigation"))
+        editorAuthorization = com.mendelev.mpos.employee.MPosEmployeeAuthorizationDialog(this, nativeStorageMirror::authorizeEditor,
+            { result -> callJavaScript("window.__mposEditorAuthorizationResult&&window.__mposEditorAuthorizationResult(${com.mendelev.mpos.data.MPosBridgeJson.serialize(result)});") },
+            bridgeAction = "editorAuthorize", operations = setOf("stock", "no-stock"), commitPrefix = "native-editor-authorize-",
+            description = { if (it.getString("operation") == "stock") "Для изменения остатка требуется пароль администратора." else "Для изменения учёта остатков требуется пароль администратора." },
+            resultKeys = setOf("granted", "operation", "productId", "grant"))
         router = NativeBridgeRouter(this, photos, backup, nativeSettings, nativeStorageMirror, nativeNetworkTransport)
 
         webView = WebView(this).apply {
@@ -242,6 +254,8 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         if (::rootSession.isInitialized) rootSession.close()
         if (::employeeAuthorization.isInitialized) employeeAuthorization.close()
+        if (::catalogAuthorization.isInitialized) catalogAuthorization.close()
+        if (::editorAuthorization.isInitialized) editorAuthorization.close()
         if (::shiftScreen.isInitialized) shiftScreen.hide()
         if (::workspace.isInitialized) workspace.hide()
         if (::settingsScreen.isInitialized) settingsScreen.dismiss()
@@ -316,7 +330,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun handleSettingsScreen(payload: JSONObject) = runOnUiThread {
-        if (payload.optString("action") == "employeeAuthorize") {
+        if (payload.optString("action") == "editorAuthorize") {
+            if (::editorAuthorization.isInitialized) editorAuthorization.handle(payload)
+        } else if (payload.optString("action") == "catalogDeleteAuthorize") {
+            if (::catalogAuthorization.isInitialized) catalogAuthorization.handle(payload)
+        } else if (payload.optString("action") == "employeeAuthorize") {
             if (::employeeAuthorization.isInitialized) employeeAuthorization.handle(payload)
         } else if (::settingsScreen.isInitialized) settingsScreen.handle(payload)
     }
@@ -357,7 +375,11 @@ class MainActivity : AppCompatActivity() {
             callJavaScript("window.MPosCore?.RootSession?.receive(($model).rootSession,($model).rootSequence);")
         }
         diagnostics.record("storage", "result", result.optBoolean("ok", false) && result.optBoolean("projectionOk", true))
-        if (result.optString("requestId").startsWith("native-employee-commit-")) {
+        if (result.optString("requestId").startsWith("native-editor-authorize-")) {
+            runOnUiThread { if (::editorAuthorization.isInitialized) editorAuthorization.result(result) }
+        } else if (result.optString("requestId").startsWith("native-catalog-delete-")) {
+            runOnUiThread { if (::catalogAuthorization.isInitialized) catalogAuthorization.result(result) }
+        } else if (result.optString("requestId").startsWith("native-employee-commit-")) {
             runOnUiThread { if (::employeeAuthorization.isInitialized) employeeAuthorization.result(result) }
         } else if (result.optString("requestId").startsWith("native-shift-open-")) {
             runOnUiThread { if (::shiftOpenDialog.isInitialized) shiftOpenDialog.result(result) }

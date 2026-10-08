@@ -18,6 +18,12 @@ class MPosEmployeeAuthorizationDialog(
     private val context: Context,
     private val commit: (JSONObject, String) -> Unit,
     private val reply: (JSONObject) -> Unit,
+    private val bridgeAction: String = "employeeAuthorize",
+    private val operations: Set<String> = setOf("save", "delete"),
+    private val commitPrefix: String = "native-employee-commit-",
+    private val description: ((JSONObject) -> String)? = null,
+    private val requiresPassword: (JSONObject) -> Boolean = { true },
+    private val resultKeys: Set<String> = emptySet(),
 ) {
     private val handler = Handler(Looper.getMainLooper())
     private var deadline: Runnable? = null
@@ -31,7 +37,7 @@ class MPosEmployeeAuthorizationDialog(
     private var command: JSONObject? = null
 
     fun handle(payload: JSONObject) {
-        if (payload.optString("action") != "employeeAuthorize") return
+        if (payload.optString("action") != bridgeAction) return
         val id = payload.optString("requestId")
         if (id.isBlank()) return
         if (dialog != null) {
@@ -39,7 +45,7 @@ class MPosEmployeeAuthorizationDialog(
             return
         }
         val input = payload.optJSONObject("command")
-        if (input == null || input.optString("operation") !in setOf("save", "delete")) {
+        if (input == null || input.optString("operation") !in operations) {
             reply(JSONObject().put("requestId", id).put("ok", false).put("message", "Некорректная команда сотрудника"))
             return
         }
@@ -51,7 +57,7 @@ class MPosEmployeeAuthorizationDialog(
             setPadding(theme.dp(24), theme.dp(16), theme.dp(24), theme.dp(16))
         }
         content.addView(TextView(theme.uiContext).apply {
-            text = if (input.getString("operation") == "delete") "Для удаления сотрудника требуется пароль администратора."
+            text = description?.invoke(input) ?: if (input.getString("operation") == "delete") "Для удаления сотрудника требуется пароль администратора."
                 else "Для изменения прав сотрудника требуется пароль администратора."
             theme.text(this, 16f)
         })
@@ -65,6 +71,7 @@ class MPosEmployeeAuthorizationDialog(
             background = theme.shape(theme.bg, 12, true)
             setPadding(theme.dp(12), theme.dp(8), theme.dp(12), theme.dp(8))
         }
+        field.visibility = if (requiresPassword(input)) android.view.View.VISIBLE else android.view.View.GONE
         password = field
         content.addView(field, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = theme.dp(16) })
         error = TextView(theme.uiContext).apply { theme.text(this, 14f); setTextColor(theme.danger) }.also { content.addView(it) }
@@ -87,7 +94,7 @@ class MPosEmployeeAuthorizationDialog(
         val input = command ?: return
         val credential = password?.text?.toString().orEmpty()
         password?.text?.clear()
-        val id = "native-employee-commit-${++generation}"
+        val id = "$commitPrefix${++generation}"
         pending = id
         dialog?.setCancelable(false)
         password?.isEnabled = false
@@ -113,6 +120,7 @@ class MPosEmployeeAuthorizationDialog(
         pending = null
         deadline?.let(handler::removeCallbacks); deadline = null
         if (value.optBoolean("credentialRejected")) {
+            password?.visibility = android.view.View.VISIBLE
             password?.isEnabled = true
             dialog?.setCancelable(true)
             dialog?.getButton(AlertDialog.BUTTON_NEGATIVE)?.isEnabled = true
@@ -124,6 +132,7 @@ class MPosEmployeeAuthorizationDialog(
         // Forward fixed results only, never submitted credential or command documents.
         val result = JSONObject().put("requestId", requestId).put("ok", value.optBoolean("ok"))
             .put("message", value.optString("message"))
+        if (value.optBoolean("ok")) for (key in resultKeys) if (value.has(key)) result.put(key, value.get(key))
         close()
         reply(result)
     }

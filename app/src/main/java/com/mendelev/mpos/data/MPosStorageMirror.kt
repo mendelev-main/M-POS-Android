@@ -56,6 +56,41 @@ class MPosStorageMirror(
         }) emitEmployeeFailure(requestId, IllegalStateException("native queue unavailable"))
     }
 
+    private val editorGrants = MPosEditorGrants()
+
+    fun authorizeEditor(input: JSONObject, credential: String) {
+        val serialized = input.toString()
+        val requestId = input.getString("requestId")
+        fun failure(error: Throwable) {
+            val known = setOf("Неверный пароль администратора", "Перезапустите M POS для восстановления данных", "Товар изменился. Откройте карточку заново")
+            emitResult(JSONObject().put("requestId", requestId).put("ok", false)
+                .put("message", error.message.takeIf { it in known } ?: "Не удалось проверить разрешение редактора")
+                .put("credentialRejected", error.message == "Неверный пароль администратора"))
+        }
+        if (!queue.submit(::failure) {
+            attempt { MPosEditorAuthorization(database, editorGrants).authorize(serialized, credential).put("requestId", requestId) }
+                .onSuccess(::emitResult).onFailure(::failure)
+        }) failure(IllegalStateException("native queue unavailable"))
+    }
+
+    fun commitCatalogDelete(input: JSONObject, credential: String) {
+        val serialized = input.toString()
+        val requestId = input.getString("requestId")
+        if (!queue.submit({ emitCatalogDeleteFailure(requestId, it) }) {
+            attempt { MPosCatalogDeleteCommand(database).commit(serialized, credential).put("requestId", requestId) }
+                .onSuccess(::emitResult).onFailure { emitCatalogDeleteFailure(requestId, it) }
+        }) emitCatalogDeleteFailure(requestId, IllegalStateException("native queue unavailable"))
+    }
+
+    private fun emitCatalogDeleteFailure(requestId: String, error: Throwable) {
+        val known = setOf("Неверный пароль администратора", "Перезапустите M POS для восстановления данных",
+            "Каталог изменился. Откройте подтверждение заново", "Товар нужен для возврата ранее проданных чеков",
+            "Товар используется в составном товаре", "Нельзя удалить категорию: в ней есть товары")
+        emitResult(JSONObject().put("requestId", requestId).put("ok", false)
+            .put("message", if (error is MPosCatalogDeleteCommand.ReferencedProduct) "Товар используется в составном товаре «${error.productName}»" else error.message.takeIf { it in known } ?: "Не удалось удалить элемент каталога")
+            .put("credentialRejected", error.message == "Неверный пароль администратора"))
+    }
+
     private fun emitEmployeeFailure(requestId: String, error: Throwable) {
         val known = setOf("Неверный пароль администратора", "Перезапустите M POS для восстановления данных", "Список сотрудников изменился",
             "Смена изменилась", "Сотрудник не найден", "Нельзя удалить самого себя", "Нельзя удалить администратора", "Для удаления сотрудника откройте смену",
@@ -355,6 +390,18 @@ class MPosStorageMirror(
                     }
                     command.version?.let{writeState.commit(command.key,it)};value.put("requestId",requestId)
                 }.onSuccess(::emitResult).onFailure { result(requestId,false,"native supply storage operation failed") }
+            }
+            "productEditorCommit" -> {
+                attempt { MPosProductEditorCommand(database, editorGrants).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure {
+                        val message = it.message.takeIf { value -> value != null && value in setOf(
+                            "Перезапустите M POS для восстановления данных", "Товар изменился во время сохранения. Откройте карточку заново",
+                            "Изменение учёта остатков требует разрешения администратора", "Изменение остатка требует разрешения администратора",
+                            "Настройку WEB может изменять только администратор при открытой им смене", "Введите название", "Добавьте хотя бы один товар в состав",
+                            "Нельзя изменить тип: товар нужен для возврата ранее проданных чеков", "Тип товара с единицами или связями нельзя менять: создайте отдельный товар")
+                        } ?: "Не удалось сохранить товар"
+                        result(requestId, false, message)
+                    }
             }
             "companyCommit" -> {
                 attempt { MPosCompanyCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }

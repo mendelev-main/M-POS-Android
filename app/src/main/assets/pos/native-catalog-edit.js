@@ -6,7 +6,7 @@
   const snapshot=()=>Object.fromEntries(keys.map(k=>[k,state[k]]));
   const stamp=()=>JSON.stringify([snapshot(),state.orders]);
   let pending=false;
-  const busy=()=>global.MPosCore.NativeNavigation?.hasPending()||state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||global.MPosCore.OrderContext?.hasPending()||global.MPosCore.CartOperations?.hasPending()||global.MPosCore.SplitPayments?.hasPending();
+  const busy=()=>global.MPosCore.CatalogDelete?.hasPending()||global.MPosCore.NativeNavigation?.hasPending()||state.busy||(typeof criticalOperationBusy!=='undefined'&&criticalOperationBusy)||global.MPosCore.OrderContext?.hasPending()||global.MPosCore.CartOperations?.hasPending()||global.MPosCore.SplitPayments?.hasPending();
   const root=()=>document.getElementById('modal-root');
   const value=id=>document.getElementById(id)?.value||'';
   const form=()=>JSON.stringify([Array.from(root()?.querySelectorAll?.('input,select,textarea')||[],n=>[n.id,n.value,n.checked]),global._pmEditingId,global._pmType,global._pmComponents,global._pmModifierGroups,global._cmOnlineMenu,global._cmOnlineOrder]);

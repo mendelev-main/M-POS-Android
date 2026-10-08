@@ -177,6 +177,10 @@
   mposCore.SupplierCommands=Object.freeze({
     async commit(input){const payload=JSON.stringify(input),operation=input.operation;await initializeNative('suppliers');if(operation==='delete')await Promise.all(['employees','shifts'].map(initializeNative));return requireNative(await request('supplierCommit',{payload}),true);}
   });
+  mposCore.ProductEditorCommands=Object.freeze({
+    enabled:()=>global.MPosNativeProductEditorCommitEnabled!==false,
+    async commit(input){if(global.criticalStorageRecoveryPending)throw Error('Перезапустите M POS для восстановления данных');await Promise.all(['products','orders','employees','shifts','criticalStorageJournal'].map(initializeNative));return requireNative(await request('productEditorCommit',{payload:JSON.stringify(input)}),true);}
+  });
   mposCore.CompanyCommands=Object.freeze({
     async commit(input){await Promise.all(['company','employees','shifts','criticalStorageJournal'].map(initializeNative));return requireNative(await request('companyCommit',{payload:JSON.stringify(input)}),true);}
   });

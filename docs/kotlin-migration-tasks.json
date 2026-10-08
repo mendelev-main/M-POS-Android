@@ -840,9 +840,20 @@
             "app/src/main/java/com/mendelev/mpos/data/MPosCompanyCommand.kt",
             "app/src/main/assets/pos/native-company-command.js",
             "app/src/test/java/com/mendelev/mpos/data/MPosCompanyCommandTest.kt",
-            "tests/android-company-command.test.cjs"
+            "tests/android-company-command.test.cjs",
+            "app/src/main/java/com/mendelev/mpos/data/MPosCatalogDeleteCommand.kt",
+            "app/src/main/java/com/mendelev/mpos/data/MPosEditorAuthorization.kt",
+            "app/src/main/java/com/mendelev/mpos/data/MPosEditorGrants.kt",
+            "app/src/main/java/com/mendelev/mpos/data/MPosProductEditorCommand.kt",
+            "app/src/main/assets/pos/native-catalog-delete.js",
+            "app/src/main/assets/pos/native-editor-authorization.js",
+            "app/src/test/java/com/mendelev/mpos/data/MPosCatalogDeleteCommandTest.kt",
+            "app/src/test/java/com/mendelev/mpos/data/MPosProductEditorCommandTest.kt",
+            "tests/android-catalog-delete.test.cjs",
+            "tests/android-editor-authorization.test.cjs",
+            "tests/android-product-editor-commit.test.cjs"
           ],
-          "remaining": "Нативная авторизация сотрудников и транзакционное сохранение реквизитов подключены; новые проверки реквизитов ожидают GitHub Actions. Остались edit/delete товаров и категорий, разблокировка защищённых полей редактора и остальные защищённые settings действия; подэтап не закрыт."
+          "remaining": "Сотрудники, реквизиты, удаление товаров/категорий и защищённое сохранение карточки товара подключены к нативным проверкам. Новые JS/JVM тесты ожидают GitHub Actions. Остались остальные settings gates, WEB toggle товара и защищённые действия лояльности; 109.07 не закрыт."
         },
         {
           "id": "109.08",

@@ -72,3 +72,10 @@ scroll identity remain. Physical light/dark/font-scale acceptance pending.
 08.10.2026: тесты Telegram/WEB/печати используют существующее поле сообщения native settings формы для ожидания и результата. Layout, Manrope, palette и touch targets прежние; late result привязан к исходной форме, физическая оценка обеих тем pending.
 
 109.07 employee confirmation uses MPosNativeTheme/Manrope, native light/dark palettes, a 52dp password input, primary confirmation and secondary cancellation. It scrolls with the keyboard/font scale; wrong credentials show an inline error. The password is excluded from view-state saving and never mirrored to the mounted settings form. Busy state locks confirmation/cancel during dispatched commit; a credential rejection before timeout clears input and restores controls. An unknown outcome disables resubmission and offers closing with a restart message. Synthetic-data Robolectric view checks passed; physical keyboard/font-scale acceptance remains pending.
+
+
+109.07: подтверждение удаления каталога и разблокировка редактора используют
+существующий MPosNativeTheme/Manrope, обе темы, прокрутку и нативное поле пароля
+без state saving. Для администратора при удалении товара поле скрыто;
+при изменении роли перед commit оно появляется после нативного отказа.
+Существующие формы и их layout не менялись. Проверка на планшете pending.
