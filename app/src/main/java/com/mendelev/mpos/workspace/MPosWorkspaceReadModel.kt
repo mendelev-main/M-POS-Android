@@ -13,19 +13,26 @@ object MPosWorkspaceReadModel {
         val records=(0 until products.length()).map{products.getJSONObject(it)}
         fun product(id:Any?)=if(id is JSONObject||id is JSONArray)null else records.firstOrNull{MPosSupplyParity.same(it.opt("id"),id)}
         val availability=MPosAvailabilityEngine.items(products)
+        fun quantity(p:JSONObject):Any {
+            if(p.opt("type")!="simple")return availability.getJSONObject(records.indexOf(p)).get("quantity")
+            if(MPosJsonNumbers.truthy(p.opt("noStockTracking")))return JSONObject.NULL
+            val value=MPosJsonNumbers.number(p.opt("stock"))
+            // POS tiles retain negative stock; publication advisory clamps it separately.
+            return if(value==Double.POSITIVE_INFINITY)JSONObject.NULL else if(value.isNaN())0.0 else value
+        }
         fun text(value:Any?)=MPosAvailabilityEngine.text(if(value==null||value===JSONObject.NULL)"" else value)
         fun money(value:Any?):String {
             val n=MPosJsonNumbers.number(MPosJsonNumbers.fallback(value,0));require(n.isFinite())
             return String.format(Locale.US,"%.2f",MPosJsonNumbers.roundMoney(n)).replace('.',',')+" "+order.getString("currency")
         }
         fun stock(p:JSONObject):String {
-            val quantity=availability.getJSONObject(records.indexOf(p)).opt("quantity")
+            val quantity=quantity(p)
             if(quantity===JSONObject.NULL)return "Остаток: ∞"
             val n=MPosJsonNumbers.number(quantity)
             if(folder==null&&p.opt("type")!="simple")return "Доступно: "+MPosAvailabilityEngine.text(n)
-            val unit=if(p.opt("type")=="simple")p.optString("stockUnit") else p.optString("recipeUnit","piece")
+            val unit=if(p.opt("type")=="simple")p.optString("stockUnit") else text(MPosJsonNumbers.fallback(p.opt("recipeUnit"),"piece"))
             val label=mapOf("piece" to "шт.","kg" to "кг","g" to "г","l" to "л","ml" to "мл")[unit]?:"ед. (не задана)"
-            return "Остаток: "+MPosAvailabilityEngine.text(floor((n+Math.ulp(1.0))*1000+.5)/1000)+" "+label
+            return "Остаток: "+(if(n.isFinite())MPosAvailabilityEngine.text(floor((n+Math.ulp(1.0))*1000+.5)/1000) else "0")+" "+label
         }
         val actions=JSONObject()
         fun command(operation:String,value:Any?=null):String {
@@ -47,7 +54,7 @@ object MPosWorkspaceReadModel {
             val i=tiles.length();val item=JSONObject().put("id",type+":"+text(id)+":"+i).put("type",type)
                 .put("column",position?.optInt("col")?:i%columns).put("row",position?.optInt("row")?:i/columns).put("columnSpan",1).put("rowSpan",1).put("sourceId",id?:JSONObject.NULL)
             if(type=="product") {
-                val record=p!!;val quantity=availability.getJSONObject(records.indexOf(record)).opt("quantity")
+                val record=p!!;val quantity=quantity(record)
                 item.put("name",text(record.opt("name"))).put("price",money(record.opt("price"))).put("stock",stock(record)).put("symbol",text(record.opt("tileSymbol")))
                     .put("disabled",quantity!==JSONObject.NULL&&MPosJsonNumbers.number(quantity)<=0).put("key",command("addProduct",text(record.opt("id"))))
             }else {

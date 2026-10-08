@@ -2,6 +2,7 @@ package com.mendelev.mpos.workspace
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -12,6 +13,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowAlertDialog
 
@@ -41,6 +43,7 @@ class MPosCartItemControllerTest {
         val activity=Robolectric.buildActivity(Activity::class.java).setup().get();val actions=mutableListOf<JSONObject>()
         val controller=MPosCartItemController(activity){actions+=it};controller.handle(packet("light"))
         ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_NEGATIVE).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
         assertEquals("cartItemCancel",actions.single().getString("action"))
         controller.handle(packet("dark"));val dialog=ShadowAlertDialog.getLatestAlertDialog();controller.hide();assertFalse(dialog.isShowing)
         assertEquals(1,actions.size);activity.finish()

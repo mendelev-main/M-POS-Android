@@ -50,4 +50,11 @@ class MPosWorkspaceReadModelTest {
         assertEquals(3,model.getJSONArray("cartButtons").length());assertEquals("Текущий заказ — 2 поз.",model.getString("cartTitle"))
         assertEquals("payment",model.getJSONObject("actions").getJSONObject(model.getJSONArray("cartButtons").getJSONObject(2).getString("key")).getString("operation"))
     }
+    @Test fun simpleNegativeStockRemainsVisibleAndInfiniteLegacyStockRetainsTileAvailability() {
+        val records=JSONArray("""[{"id":"negative","name":"Корректировка","type":"simple","price":1,"stock":-0.125,"stockUnit":"kg"},{"id":"infinite","name":"Legacy","type":"simple","price":1,"stock":"Infinity"}]""")
+        val layout=JSONObject("""{"tiles":[{"type":"product","id":"negative"},{"type":"product","id":"infinite"}]}""")
+        val tiles=MPosWorkspaceReadModel.calculate(records,layout,null,snapshot(),null,order(),true,0,5).getJSONArray("tiles")
+        assertEquals("Остаток: -0.125 кг",tiles.getJSONObject(0).getString("stock"));assertTrue(tiles.getJSONObject(0).getBoolean("disabled"))
+        assertEquals("Остаток: ∞",tiles.getJSONObject(1).getString("stock"));assertFalse(tiles.getJSONObject(1).getBoolean("disabled"))
+    }
 }
