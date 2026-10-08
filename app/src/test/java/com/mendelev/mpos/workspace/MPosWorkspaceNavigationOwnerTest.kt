@@ -28,4 +28,20 @@ class MPosWorkspaceNavigationOwnerTest {
         assertFalse(MPosWorkspaceNavigationOwner().state.value.initialized)
     }
     @Test(expected=IllegalStateException::class) fun selectionBeforeInitializationIsRejected(){MPosWorkspaceNavigationOwner().handle(command("selectTab","settings"))}
+    @Test fun searchPreservesExactQueryAndTabWithoutPersistenceOrTabReset() {
+        val owner=MPosWorkspaceNavigationOwner()
+        owner.handle(command("initialize").put("search", "  Кофе Ё  "))
+        owner.handle(command("initialize").put("search", "discarded"))
+        assertEquals("  Кофе Ё  ",owner.state.value.search)
+        val input=command("selectSearch").put("search", "чай")
+        owner.handle(input);owner.handle(input)
+        assertEquals(2L,owner.state.value.revision)
+        owner.handle(command("selectTab","receipts"))
+        assertEquals("чай",owner.handle(command("read")).getJSONObject("snapshot").getString("search"))
+        assertEquals("receipts",owner.state.value.tab)
+        assertEquals("",MPosWorkspaceNavigationOwner().state.value.search)
+    }
+    @Test(expected=IllegalStateException::class) fun searchBeforeInitializationIsRejected(){
+        MPosWorkspaceNavigationOwner().handle(command("selectSearch").put("search", "чай"))
+    }
 }
