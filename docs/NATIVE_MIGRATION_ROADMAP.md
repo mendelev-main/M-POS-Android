@@ -1117,3 +1117,9 @@ currentOrderSession + projection save. Source handlers/HTML inputs на этом
 повтор/legacy save до восстановления. [Граница, rollback и физические кейсы](NATIVE_CART_ADD_10909_RU.md).
 JS/Room/controller parity/failure проверки pending Actions; local tests/APK
 не запускались (§17). 109.09 in_progress, **115/129, внутри 109 — 8/20**.
+
+109.09 increment: add/modifier/manual price verified in Actions 37821758058
+(tests/lint/signed APK success). Native remove/quantity commands now own atomic
+session commits, stock checks and distinct last-row reset semantics. Automated
+checks pending Actions; details/physical cases: docs/NATIVE_CART_EDIT_10909_RU.md.
+Order settings/native full draft/product editor remain. 115/129; 109: 8/20.

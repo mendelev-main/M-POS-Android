@@ -1049,3 +1049,5 @@ currentOrderSession + projection save. Source handlers/HTML inputs на этом
 повтор/legacy save до восстановления. [Граница, rollback и физические кейсы](NATIVE_CART_ADD_10909_RU.md).
 JS/Room/controller parity/failure проверки pending Actions; local tests/APK
 не запускались (§17). 109.09 in_progress, **115/129, внутри 109 — 8/20**.
+
+109.09: configured add/modifier/manual-price Actions 37821758058 success (tests/lint/signed APK). Native remove/quantity atomic commits implemented; tests pending Actions. Full native order draft/settings and product editor remain. 115/129; physical pending 110. Details: NATIVE_CART_EDIT_10909_RU.md.

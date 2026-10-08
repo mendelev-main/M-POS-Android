@@ -964,9 +964,12 @@
             "app/src/test/java/com/mendelev/mpos/workspace/MPosCartAddRepositoryTest.kt",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosCartAddModelTest.kt",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosCartAddControllerTest.kt",
-            "docs/NATIVE_CART_ADD_10909_RU.md"
+            "docs/NATIVE_CART_ADD_10909_RU.md",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosCartEditRepository.kt",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosCartEditRepositoryTest.kt",
+            "docs/NATIVE_CART_EDIT_10909_RU.md"
           ],
-          "remaining": "Native configured add, modifier/manual-price drafts and atomic session commit connected; JS/Room/controller checks pending Actions. Session-save barrier defers stale JS snapshots until native ack and blocks uncertain retries. Remaining: native changeQty/remove/order-settings drafts/commands, full product editor and complete order draft ownership. Order context/config remains an explicit transitional snapshot. Stage 109.09 in progress; 115/129 unchanged."
+          "remaining": "Native configured add/modifier/manual price verified: Actions 37821758058 tests/lint/signed APK success. Native remove/quantity atomic commands connected; verification pending Actions. Remaining: order settings/native order draft ownership and full product editor. 109.09 in progress; 115/129 unchanged."
         },
         {
           "id": "109.10",

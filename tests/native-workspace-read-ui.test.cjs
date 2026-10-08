@@ -128,3 +128,31 @@ test('uncertain commit blocks legacy saves and retries until a new runtime resto
  assert.equal(h.c.MPosCore.CartOperations.hasPending(),true);assert.equal(saves.length,0);
  await h.c.__nativeWorkspaceAction({token:h.sent[0].token,action:'click',key:'0'});assert.equal(inputs.length,2);
 });
+
+function editHost(handler,configure){return host(null,(c,events)=>{
+ c.currentOrderSessionSnapshot=()=>vm.runInContext('({items:JSON.parse(JSON.stringify(state.cart)),customer:state.customer})',c);
+ c.changeQty=(id,delta)=>events.push(['quantity',id,delta]);c.MPosCore.WorkspaceNavigation.cartEdit=handler;
+ if(configure)configure(c,events);
+});}
+const resetState=()=>({orderLabel:'',orderType:'На месте',deliveryFee:0,deliveryTariffSelected:false,customer:{id:'',name:'',phone:'',address:''},loyaltyPrograms:[],loyaltyRedemptions:{},_splitPayments:[],_splitCount:0,_splitPaymentTotalCents:null,loyaltyCustomerId:'',loyaltyLoadingCustomerId:'',loyaltyLoadError:'',orderComment:'',currentOrderSource:'',currentWebOrderId:'',currentWebOrderStatus:''});
+test('native last removal resets context before a deferred metadata save and never invokes source remove',async()=>{
+ let finish;const inputs=[],saves=[],h=editHost(input=>{inputs.push(input);return new Promise(resolve=>{finish=resolve});},c=>{
+  c.saveCurrentOrderSession=()=>saves.push(JSON.parse(vm.runInContext('JSON.stringify({items:state.cart,customer:state.customer,source:state.currentOrderSource,parts:state._splitPayments})',c)));
+ });await tick();h.state().cart=[{cartLineId:'line',qty:1}];h.state().customer={id:'c'};h.state().currentOrderSource='web';h.state()._splitPayments=[{amount:1}];h.c.__currentOrderKitchenPrinted=true;h.c.__currentOrderPrintedItems=[{qty:1}];h.mutate();await tick();
+ const token=h.sent.filter(p=>p.action==='show').at(-1).token,p=h.c.__nativeWorkspaceAction({token,action:'click',key:'1'});await tick();assert.equal(inputs[0].operation,'cartRemoveCommit');assert.equal(h.state().cart.length,1);
+ h.c.saveCurrentOrderSession();await h.c.removeFromCart('line');assert.equal(inputs.length,1);assert.equal(saves.length,0);
+ finish({ok:true,authoritative:true,allowed:true,items:[],resetState:resetState()});await p;
+ assert.equal(saves.length,1);assert.equal(saves[0].customer.id,'');assert.equal(saves[0].source,'');assert.equal(saves[0].parts.length,0);assert.equal(saves[0].items.length,0);assert.equal(h.c.__currentOrderKitchenPrinted,false);assert.equal(h.c.__currentOrderPrintedItems.length,0);assert.equal(h.events.some(e=>e[0]==='remove'),false);
+});
+test('native quantity sends explicit delta, retains empty-order context and rejects known stock without changing items',async()=>{
+ const inputs=[],h=editHost(async input=>{inputs.push(input);return input.delta===1?{ok:true,authoritative:true,allowed:false,message:'stock'}:{ok:true,authoritative:true,allowed:true,items:[]};});await tick();
+ h.state().cart=[{cartLineId:'line',qty:1}];h.state().customer={id:'c'};h.state().currentOrderSource='web';h.mutate();await tick();
+ await h.c.changeQty('line',1);assert.equal(h.state().cart.length,1);assert.equal(h.c.MPosCore.CartOperations.hasPending(),false);
+ await h.c.changeQty('line',-1);assert.equal(inputs.at(-1).operation,'cartQuantityCommit');assert.equal(inputs.at(-1).delta,-1);assert.equal(h.state().cart.length,0);assert.equal(h.state().customer.id,'c');assert.equal(h.state().currentOrderSource,'web');assert.equal(h.events.some(e=>e[0]==='quantity'),false);
+});
+test('uncertain remove blocks retries and source saves; late runtime ack cannot reset restored order',async()=>{
+ const inputs=[],saves=[],h=editHost(async input=>{inputs.push(input);throw Error('lost ack');},c=>{c.saveCurrentOrderSession=()=>saves.push('save');});await tick();
+ h.state().cart=[{cartLineId:'line'}];h.mutate();await tick();await h.c.__nativeWorkspaceAction({token:h.sent.filter(p=>p.action==='show').at(-1).token,action:'click',key:'1'});
+ h.c.saveCurrentOrderSession();await h.c.removeFromCart('line');assert.equal(inputs.length,1);assert.equal(saves.length,0);assert.equal(h.state().cart.length,1);assert.equal(h.c.MPosCore.CartOperations.hasPending(),true);
+ let finish;const late=editHost(()=>new Promise(resolve=>{finish=resolve}));await tick();const p=late.c.removeFromCart('line');await tick();late.c.runtime=1;late.state().customer={id:'restored'};late.state().cart=[{cartLineId:'restored'}];finish({ok:true,authoritative:true,allowed:true,items:[],resetState:resetState()});await p;assert.equal(late.state().customer.id,'restored');assert.equal(late.state().cart[0].cartLineId,'restored');
+});

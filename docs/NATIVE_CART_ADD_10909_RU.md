@@ -1,6 +1,6 @@
 # 109.09 — добавление товара и формы цены
 
-Статус участка: production подключён, Actions pending. Общий этап не закрыт:
+Статус участка: production подключён, Actions 37821758058: tests/lint и signed APK success. Общий этап не закрыт:
 115/129 задач, внутри 109 — 8/20. Physical acceptance pending 110.
 
 MPosCartAddRepository читает products/currentOrderSession в Room transaction,
