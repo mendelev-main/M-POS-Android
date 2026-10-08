@@ -178,7 +178,7 @@
     async commit(input){const payload=JSON.stringify(input),operation=input.operation;await initializeNative('suppliers');if(operation==='delete')await Promise.all(['employees','shifts'].map(initializeNative));return requireNative(await request('supplierCommit',{payload}),true);}
   });
   mposCore.WorkspaceNavigation=Object.freeze({
-    async execute(input){return requireNative(await request('workspaceNavigation',{payload:JSON.stringify(input)}),true);}
+    async execute(input){if(input.operation==='prepareRoute'&&input.route==='openFolder')await Promise.all(['products','posNavigation'].map(initializeNative));return requireNative(await request('workspaceNavigation',{payload:JSON.stringify(input)}),true);}
   });
   mposCore.LoyaltyVerification=Object.freeze({
     async status(input){await Promise.all(['network','employees','shifts','criticalStorageJournal'].map(initializeNative));return requireNative(await request('loyaltyAdjustmentStatus',{payload:JSON.stringify(input)}),true);}

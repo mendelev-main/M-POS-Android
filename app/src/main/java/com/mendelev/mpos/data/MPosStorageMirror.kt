@@ -403,7 +403,7 @@ class MPosStorageMirror(
                 }.onSuccess(::emitResult).onFailure { result(requestId,false,"native supply storage operation failed") }
             }
             "workspaceNavigation" -> {
-                attempt { workspaceNavigation.handle(JSONObject(requireNotNull(command.serialized))).put("requestId",requestId) }
+                attempt { com.mendelev.mpos.workspace.MPosWorkspaceNavigationRepository(database,workspaceNavigation).execute(JSONObject(requireNotNull(command.serialized))).put("requestId",requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId,false,"Не удалось переключить раздел") }
             }
             "loyaltyAdjustmentStatus" -> {

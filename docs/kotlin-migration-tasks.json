@@ -887,9 +887,13 @@
             "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceNavigationOwner.kt",
             "app/src/main/assets/pos/native-workspace-navigation.js",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceNavigationOwnerTest.kt",
-            "tests/android-workspace-navigation.test.cjs"
+            "tests/android-workspace-navigation.test.cjs",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceNavigationRepository.kt",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceRouteOwnershipTest.kt",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceNavigationRepositoryTest.kt",
+            "tests/android-workspace-route-ownership.test.cjs"
           ],
-          "remaining": "Нативный owner tab и запроса поиска подключён. Reviewed DOM-фильтрация поиска пока является проекцией; category/folder/Back ещё не принадлежат owner. Остались native controls/read models и устранение DOM route targets; 109.08 не закрыт."
+          "remaining": "Owner tab/query/category/folder/edit подключён; route prepare/accept с fresh Room проверкой папки. Остались native controls/read models, Android Back, DOM route targets и согласование нового runtime. Поздний accept имеет guarded discard без потери нового tab/query. Новые проверки ожидают Actions; 109.08 не закрыт."
         },
         {
           "id": "109.09",
@@ -1062,6 +1066,15 @@
       "lintWarnings": 15,
       "apkBuilt": false,
       "physicalAcceptance": "pending"
+    },
+    {
+      "date": "2026-10-08",
+      "scope": "Confirm remote verification of 98f5f73",
+      "execution": "GitHub Actions",
+      "runId": 37744808114,
+      "conclusion": "success",
+      "commit": "98f5f73",
+      "currentRouteIncrement": "tests authored; execution pending next Actions"
     }
   ]
 }
