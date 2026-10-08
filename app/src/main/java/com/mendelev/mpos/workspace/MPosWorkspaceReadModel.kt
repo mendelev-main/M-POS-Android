@@ -12,9 +12,10 @@ object MPosWorkspaceReadModel {
     fun calculate(products:JSONArray,layout:JSONObject,navigation:Any?,snapshot:JSONObject,folder:JSONObject?,order:JSONObject,shiftOpen:Boolean,parkCount:Int,columns:Int,liveScope:JSONArray?=null):JSONObject {
         val records=(0 until products.length()).map{products.getJSONObject(it)}
         fun product(id:Any?)=if(id is JSONObject||id is JSONArray)null else records.firstOrNull{MPosSupplyParity.same(it.opt("id"),id)}
-        val availability=MPosAvailabilityEngine.items(products)
+        val availability=MPosAvailabilityEngine.reader(products)
+        val quantities=mutableMapOf<JSONObject,Any>()
         fun quantity(p:JSONObject):Any {
-            if(p.opt("type")!="simple")return availability.getJSONObject(records.indexOf(p)).get("quantity")
+            if(p.opt("type")!="simple")return quantities.getOrPut(p){availability(p)}
             if(MPosJsonNumbers.truthy(p.opt("noStockTracking")))return JSONObject.NULL
             val value=MPosJsonNumbers.number(p.opt("stock"))
             // POS tiles retain negative stock; publication advisory clamps it separately.

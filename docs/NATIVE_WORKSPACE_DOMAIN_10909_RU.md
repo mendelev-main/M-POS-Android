@@ -11,6 +11,10 @@ root/recovery и parked в Room transaction. MPosWorkspaceReadModel строит
 Default native-workspace.js читает только геометрию оболочки; имена, цены,
 строки и команды не извлекаются из HTML. Сохранены координаты, units,
 рецепты/unlimited, strict IDs, render/live search и область папок.
+Ingredient lookup строится один раз; availability раскрывает только видимые
+composite товары и кешируется внутри модели. Полный catalogue publication
+сохраняет прежний обход и clamp; POS показывает отрицательные simple остатки
+как раньше. Время/нагрузка на физическом планшете ещё не измерены.
 
 Main **5b94b88**, [Actions 37787596243](https://github.com/mendelev-main/M-POS-Android/actions/runs/37787596243):
 JS/Kotlin tests, lint и подписанная APK — успешно. Dispatch зарегистрирован в

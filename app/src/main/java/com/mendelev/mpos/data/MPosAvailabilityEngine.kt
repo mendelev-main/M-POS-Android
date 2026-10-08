@@ -34,12 +34,11 @@ object MPosAvailabilityEngine {
             }
         };return totals
     }
-    fun items(products:JSONArray):JSONArray {
+    /** Build the ingredient lookup once; workspace callers calculate only visible products. */
+    fun reader(products:JSONArray):(JSONObject)->Any {
         val byId=linkedMapOf<Key,JSONObject>()
         for(i in 0 until products.length()){val p=products.getJSONObject(i);byId[key(p.opt("id"))]=p}
-        val out=JSONArray()
-        for(i in 0 until products.length()){
-            val p=products.getJSONObject(i)
+        return {p->
             val quantity=if(p.opt("type")=="simple"){
                 if(MPosJsonNumbers.truthy(p.opt("noStockTracking")))Double.POSITIVE_INFINITY else stock(p)
             }else try{
@@ -53,8 +52,14 @@ object MPosAvailabilityEngine {
                     min=kotlin.math.min(min,max(0.0,floor(ratio+Math.ulp(1.0)*8*max(1.0,abs(ratio)))))
                 };min
             }catch(_:Exception){0.0}
-            val value=if(quantity==Double.POSITIVE_INFINITY)JSONObject.NULL else if(quantity.isFinite())max(0.0,quantity) else 0.0
-            out.put(JSONObject().put("externalId",text(p.opt("id"))).put("quantity",value))
+            if(quantity==Double.POSITIVE_INFINITY)JSONObject.NULL else if(quantity.isFinite())max(0.0,quantity) else 0.0
+        }
+    }
+    fun items(products:JSONArray):JSONArray {
+        val quantity=reader(products);val out=JSONArray()
+        for(i in 0 until products.length()){
+            val p=products.getJSONObject(i)
+            out.put(JSONObject().put("externalId",text(p.opt("id"))).put("quantity",quantity(p)))
         }
         return out // Adapter retains reviewed localeCompare ordering; quantities are native.
     }

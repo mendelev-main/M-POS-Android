@@ -50,6 +50,12 @@ class MPosWorkspaceReadModelTest {
         assertEquals(3,model.getJSONArray("cartButtons").length());assertEquals("Текущий заказ — 2 поз.",model.getString("cartTitle"))
         assertEquals("payment",model.getJSONObject("actions").getJSONObject(model.getJSONArray("cartButtons").getJSONObject(2).getString("key")).getString("operation"))
     }
+    @Test fun visibleRecipeReadsIngredientsOutsideWorkspaceWithoutRenderingTheirTiles() {
+        val records=JSONArray("""[{"id":"ingredient","name":"Молоко","type":"simple","price":1,"stock":2.125,"stockUnit":"l"},{"id":"drink","name":"Напиток","type":"composite","price":2,"components":[{"productId":"ingredient","qty":0.25}]}]""")
+        val layout=JSONObject("""{"tiles":[{"type":"product","id":"drink"}]}""")
+        val tiles=MPosWorkspaceReadModel.calculate(records,layout,null,snapshot(),null,order(),true,0,5).getJSONArray("tiles")
+        assertEquals(1,tiles.length());assertEquals("Доступно: 8",tiles.getJSONObject(0).getString("stock"));assertFalse(tiles.getJSONObject(0).getBoolean("disabled"))
+    }
     @Test fun simpleNegativeStockRemainsVisibleAndInfiniteLegacyStockRetainsTileAvailability() {
         val records=JSONArray("""[{"id":"negative","name":"Корректировка","type":"simple","price":1,"stock":-0.125,"stockUnit":"kg"},{"id":"infinite","name":"Legacy","type":"simple","price":1,"stock":"Infinity"}]""")
         val layout=JSONObject("""{"tiles":[{"type":"product","id":"negative"},{"type":"product","id":"infinite"}]}""")
