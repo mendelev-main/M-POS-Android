@@ -64,6 +64,23 @@ class MPosLayoutRepositoryTest {
         assertFalse(commit(repo,owner,JSONObject().put("operation","addTile").put("type","product").put("id","q")).getBoolean("allowed"))
         assertEquals(before,db.legacyStorageShadowDao().get("layout"))
     }
+    @Test fun sqlitePersistenceFailureRollsBackAndFreshManualRetryCanSucceed()=runCase {db,owner,repo->
+        val before=db.legacyStorageShadowDao().get("layout");val navigation=owner.state.value
+        db.openHelper.writableDatabase.execSQL("CREATE TRIGGER reject_layout BEFORE INSERT ON legacy_storage_shadow WHEN NEW.key = 'layout' BEGIN SELECT RAISE(ABORT, 'synthetic storage failure'); END")
+        val command=JSONObject().put("operation","removeTile").put("index",0)
+        try{commit(repo,owner,command);fail("failed storage was acknowledged")}catch(_:Exception){}
+        assertEquals(before,db.legacyStorageShadowDao().get("layout"));assertEquals(navigation,owner.state.value)
+        db.openHelper.writableDatabase.execSQL("DROP TRIGGER reject_layout")
+        assertTrue(commit(repo,owner,command).getBoolean("allowed"));assertEquals(0,repo.execute(input(owner)).getJSONArray("tiles").length())
+    }
+    @Test fun invalidOrDuplicateFolderNamesDoNotPersist()=runCase("Кофе") {db,owner,repo->
+        commit(repo,owner,JSONObject().put("operation","saveFolder").put("name","Кофе"))
+        val before=db.legacyStorageShadowDao().get("posNavigation")
+        for(name in listOf(" ","a".repeat(81),"кофе")) {
+            assertFalse(commit(repo,owner,JSONObject().put("operation","saveFolder").put("name",name)).getBoolean("allowed"))
+            assertEquals(before,db.legacyStorageShadowDao().get("posNavigation"))
+        }
+    }
     @Test fun folderCreateRenameMoveReorderDeletePreserveProductsAndReturnItemsToRoot()=runCase("Кофе") {db,owner,repo->
         val before=db.legacyStorageShadowDao().get("products")
         val created=commit(repo,owner,JSONObject().put("operation","saveFolder").put("name","Молочный кофе"))
