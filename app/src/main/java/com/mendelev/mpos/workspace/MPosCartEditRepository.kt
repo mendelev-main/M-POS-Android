@@ -21,7 +21,9 @@ class MPosCartEditRepository(private val database:MPosDatabase,private val owner
         val removing=input.getString("operation")=="cartRemoveCommit"
         if(!removing) {
             require(input.getString("operation")=="cartQuantityCommit");val target=matching.firstOrNull()?:return@withTransaction result.put("allowed",false).put("message","Позиция заказа изменена")
-            val item=items.getJSONObject(target);val next=MPosCartQuantityRepository.quantity(item.opt("qty"),input.get("delta"));val number=MPosCartAddModel.number(next)
+            val item=items.getJSONObject(target)
+            if(!item.has("qty"))return@withTransaction result.put("allowed",false).put("message","У позиции заказа отсутствует количество")
+            val next=MPosCartQuantityRepository.quantity(item.opt("qty"),input.get("delta"));val number=MPosCartAddModel.number(next)
             if(!number.isFinite())return@withTransaction result.put("allowed",false).put("message","Не удалось изменить количество. Проверьте позицию заказа.")
             if(number<=0)items=JSONArray((0 until items.length()).filter{it !in matching}.map{items.get(it)})
             else {

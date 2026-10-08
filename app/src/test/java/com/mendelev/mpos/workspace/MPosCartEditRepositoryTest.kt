@@ -55,6 +55,11 @@ class MPosCartEditRepositoryTest {
             val s=session();s.getJSONArray("items").getJSONObject(0).put("qty","2");s.getJSONArray("items").put(JSONObject("""{"cartLineId":"other","productId":"p","qty":1,"price":5}"""));prepare(db,s);val o=owner();val repo=MPosCartEditRepository(db,o)
             assertFalse(repo.execute(command(o,s,"cartQuantityCommit").put("delta",1)).getBoolean("allowed")) // legacy "2" + 1 is 21: stock failure.
             assertFalse(repo.execute(command(o,s,"cartQuantityCommit").put("delta",-1)).getBoolean("allowed")) // "2-1" cannot be persisted as a quantity.
+            val malformed=JSONObject(s.toString());malformed.getJSONArray("items").getJSONObject(0).remove("qty")
+            MPosRecoveryStorage(db).write("currentOrderSession",malformed.toString())
+            assertFalse(repo.execute(command(o,malformed,"cartQuantityCommit").put("delta",1)).getBoolean("allowed"))
+            assertEquals(malformed.toString(),db.legacyStorageShadowDao().get("currentOrderSession")!!.payload)
+            MPosRecoveryStorage(db).write("currentOrderSession",s.toString())
             val supplied=JSONObject(s.toString()).put("customer",JSONObject().put("id","new"));val removed=repo.execute(command(o,supplied,"cartRemoveCommit"));assertEquals(1,removed.getJSONArray("items").length());assertFalse(removed.has("resetState"))
             val saved=JSONObject(db.legacyStorageShadowDao().get("currentOrderSession")!!.payload);assertTrue(saved.getJSONObject("extension").getBoolean("keep"));assertEquals("new",saved.getJSONObject("customer").getString("id"));assertTrue(saved.has("paymentDraft"))
         }finally{db.close()}

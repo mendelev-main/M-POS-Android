@@ -38,3 +38,28 @@ uncertain repeat gate и late runtime acknowledgement.
   строки и их исторические цены/состояние сохраняются.
 - Нехватка остатка не меняет количество; force-stop и импорт не вызывают
   повторную операцию, печать или сетевую публикацию.
+
+## Следующая граница — параметры заказа
+
+Полный следующий участок включает native форму и Room команды:
+
+- View читает сохранённые session и delivery rates, native draft держит четыре
+  поля (подпись/имя/телефон/адрес); ввод не берётся из DOM.
+- Save применяет ECMAScript trim через MPosOrderContextEngine, сохраняет
+  customer identity/loyalty/comment и одной transaction записывает session.
+  Скрытый адрес недоставочного заказа сохраняется пустым, как текущая форма.
+- Выбор типа сразу сохраняет type; изменение type снимает tariffSelected,
+  недоставочный type обнуляет fee. Cancel не отменяет эту уже записанную смену.
+- Выбор тарифа сверяется с актуальным deliveryRates по Number(amount), сразу
+  сохраняет fee/selected и пересоздаёт форму. Отображение total берётся из
+  native totals, без альтернативного финансового расчёта.
+- Пересоздание формы после type/tariff сохраняет прежнюю особенность: несохранённые
+  текстовые поля теряются. Пример: введено имя, выбран «Доставка» — имя возвращается
+  к ранее сохранённому. Это не меняется незаметно в миграции.
+- Stale navigation/session/rates, recovery, duplicate tap, stock/context
+  continuity, SQLite rollback, unknown ack и force-stop проверяются отдельно.
+- MPosNativeTheme/Manrope, compact type/tariff choices, scroll, 48dp, обе темы,
+  keyboard/font scale; primary «Сохранить», secondary «Отмена».
+
+Эта граница пока planned. Полное native владение всеми order draft mutations
+и product editor остаются обязательными до закрытия 109.09.
