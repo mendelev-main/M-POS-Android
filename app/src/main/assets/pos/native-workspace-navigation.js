@@ -6,7 +6,15 @@
   const view=()=>({tab:state.tab,search:String(state.search||''),posPath:state.posPath??null,posFolder:state.posFolder||'',editMode:!!state.editMode});
   global.MPosCore.WorkspaceNavigationLifecycle=Object.freeze({
     invalidate(){runtime++;sequence++;searchSequence++;initialization=null;loading=true;},
-    ready(){loading=false;}
+    ready(){loading=false;},
+    generation(){return runtime;},
+    async toolbar(){
+      if(loading)throw Error('Navigation runtime loading');const epoch=runtime,before=JSON.stringify(view());
+      await initialize();if(epoch!==runtime||loading||before!==JSON.stringify(view()))throw Error('Navigation view changed');
+      const result=await commands.execute({version:1,operation:'toolbarView',expected:view(),folderModal:global._posFolderModal??null});
+      if(epoch!==runtime||loading||before!==JSON.stringify(view()))throw Error('Navigation view changed');
+      return result.navigation;
+    }
   });
   function initialize(){
     if(!initialization){const epoch=runtime;const promise=commands.execute({version:1,operation:'initialize',...view()}).then(result=>{if(epoch!==runtime)throw Error('Navigation runtime changed');return result;}).catch(error=>{if(initialization===promise)initialization=null;throw error;});initialization=promise;}

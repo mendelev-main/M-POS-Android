@@ -217,7 +217,10 @@ class MainActivity : AppCompatActivity() {
         }
         workspace = MPosWorkspaceController(this, root) { action ->
             val serialized = com.mendelev.mpos.data.MPosBridgeJson.serialize(action)
-            callJavaScript("window.__nativeWorkspaceAction&&window.__nativeWorkspaceAction($serialized);")
+            if(action.optString("action")=="navigate")nativeStorageMirror.navigateWorkspaceToolbar(action.getJSONObject("command")) { result ->
+                val payload=JSONObject().put("token",action.getString("token")).put("result",result)
+                callJavaScript("window.__nativeWorkspaceNavigationResult&&window.__nativeWorkspaceNavigationResult(${com.mendelev.mpos.data.MPosBridgeJson.serialize(payload)});")
+            } else callJavaScript("window.__nativeWorkspaceAction&&window.__nativeWorkspaceAction($serialized);")
         }
         settingsScreen = MPosSettingsScreenController(this, root) { action ->
             val serialized = com.mendelev.mpos.data.MPosBridgeJson.serialize(action)

@@ -79,3 +79,10 @@ scroll identity remain. Physical light/dark/font-scale acceptance pending.
 без state saving. Для администратора при удалении товара поле скрыто;
 при изменении роли перед commit оно появляется после нативного отказа.
 Существующие формы и их layout не менялись. Проверка на планшете pending.
+
+
+109.08 workspace toolbar: native state supplies title and Back/layout/folder-close
+labels. Shared MPosNativeTheme/Manrope, both palettes, 48dp secondary buttons and
+horizontal scrolling remain; payment stays primary. Source HTML toolbar labels
+are not extracted for these controls. Typed callbacks bind to view token;
+busy/recovery disables controls. Physical tablet/font-scale checks pending.

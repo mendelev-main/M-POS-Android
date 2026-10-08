@@ -896,9 +896,13 @@
             "app/src/main/java/com/mendelev/mpos/workspace/MPosSystemBackController.kt",
             "app/src/main/assets/pos/native-system-back.js",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosSystemBackTest.kt",
-            "tests/android-system-back.test.cjs"
+            "tests/android-system-back.test.cjs",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceToolbarModel.kt",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceToolbarModelTest.kt",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceController.kt",
+            "tests/native-workspace.test.cjs"
           ],
-          "remaining": "Owner tab/query/category/folder/edit, acknowledged routes, native System Back policy и root runtime invalidation подключены. Остались native controls/read models и удаление DOM route targets/presence/close handlers. Back/runtime проверки прошли Tests and lint в Actions 37748093813; 109.08 не закрыт."
+          "remaining": "Native owner/routes, System Back/runtime и toolbar labels/typed Back/layout/folder-close подключены. Остались общие native tabs/search controls, controls редактора раскладки и DOM presence глобального Back. Каталог/корзина read models — 109.09. Toolbar tests authored, Actions pending; 109.08 in_progress."
         },
         {
           "id": "109.09",
@@ -1097,7 +1101,7 @@
       "runId": 37748093813,
       "commit": "8ca9dd6",
       "testsAndLint": "success",
-      "apkBuild": "in_progress",
+      "apkBuild": "success",
       "physicalAcceptance": "pending"
     }
   ]

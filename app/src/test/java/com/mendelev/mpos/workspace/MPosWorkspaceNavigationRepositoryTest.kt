@@ -50,4 +50,31 @@ class MPosWorkspaceNavigationRepositoryTest {
             assertEquals(before,owner.state.value)
         }
     }
+    @Test fun toolbarUsesCurrentRoomFolderNameWithoutTrustingCallerLabelsOrWritingDocuments()=runCase {db,owner,repository->
+        val documents=db.legacyStorageShadowDao()
+        val beforeProducts=documents.get("products")
+        MPosWorkspaceStorage(db).write("posNavigation","""{"version":1,"categories":[{"category":"Кофе","items":[{"id":"f","type":"folder","name":"Новое имя"}]}]}""")
+        val beforeNav=documents.get("posNavigation")
+        val expected=owner.handle(JSONObject().put("version",1).put("operation","read")).getJSONObject("snapshot")
+        val result=repository.execute(JSONObject().put("version",1).put("operation","toolbarView").put("expected",expected)
+            .put("folderModal",JSONObject().put("category","Кофе").put("id","f").put("name","Подмена")))
+        assertEquals("Новое имя",result.getJSONObject("navigation").getString("title"))
+        assertEquals(1,result.getJSONObject("navigation").getJSONArray("buttons").length())
+        assertEquals(beforeProducts,documents.get("products"));assertEquals(beforeNav,documents.get("posNavigation"))
+    }
+    @Test fun toolbarTransitionConsumesRevisionAndRejectsDuplicateOrUnsupportedActions()=runCase {db,owner,repository->
+        val beforeProducts=db.legacyStorageShadowDao().get("products")
+        val beforeNav=db.legacyStorageShadowDao().get("posNavigation")
+        val expected=owner.handle(JSONObject().put("version",1).put("operation","read")).getJSONObject("snapshot")
+        val input=JSONObject().put("version",1).put("route","closeCategory").put("expected",expected)
+        val accepted=repository.navigateToolbar(input)
+        assertTrue(accepted.getBoolean("ok"));assertEquals(JSONObject.NULL,accepted.getJSONObject("patch").get("posPath"))
+        assertNull(owner.state.value.posPath)
+        val after=owner.state.value
+        try{repository.navigateToolbar(input);fail("duplicate toolbar action accepted")}catch(_:IllegalStateException){}
+        assertEquals(after,owner.state.value)
+        try{repository.navigateToolbar(JSONObject(input.toString()).put("route","openCategory"));fail("unsupported toolbar action accepted")}catch(_:IllegalArgumentException){}
+        assertEquals(beforeProducts,db.legacyStorageShadowDao().get("products"));assertEquals(beforeNav,db.legacyStorageShadowDao().get("posNavigation"))
+    }
+
 }

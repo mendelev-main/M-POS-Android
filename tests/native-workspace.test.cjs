@@ -1,14 +1,14 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const adapter=fs.readFileSync('app/src/main/assets/pos/native-workspace.js','utf8');
 function node(text='',classes=[]){return{textContent:text,style:{opacity:'',pointerEvents:'',getPropertyValue:()=> '#E4F3EE'},dataset:{},isConnected:true,disabled:false,classList:{contains:c=>classes.includes(c)},getAttribute:()=>null,querySelector(s){return this.one?.[s]??null},querySelectorAll(s){return this.many?.[s]??[]},getBoundingClientRect:()=>({left:100,top:80,width:900,height:700}),click(){this.onclick?.()},closest(){return this.parent},one:{},many:{}}}
-function host(){
+function host(configure=()=>{}){
  const sent=[],events=[],frames=[],observers=[];let modal=null,resolve;
  const root=node('',['active']),grid=node(),panel=node(),card=node(),tile=node(),line=node(),pay=node('Оплатить'),park=node('Отложить');
  tile.dataset={tileType:'product',id:'p'};tile.one['.pcard']=card;card.one['.pcard-name']=node('Молоко');card.one['.pcard-price']=node('3,50 BYN');card.one['.pcard-stock']=node('Остаток: 10 шт');card.parent=tile;grid.many['.layout-tile']=[tile];grid.one['.empty-hint,.pos-folder-empty']=null;
  line.dataset.cartId='line-1';line.one['.cart-row-name']=node('Молоко');line.one['.cart-row-linetotal']=node('7,00 BYN');line.many['.cart-row-sub']=[node('3,50 / шт · ×2')];panel.many['.cart-row']=[line];panel.one['.cart-order-title']=node('Текущий заказ — 2 поз.');panel.one['.order-meta']=node('С собой');panel.many['.cart-head button,.order-meta button']=[];panel.many['.cart-foot button']=[park,pay];const total=node();total.one['.label']=node('Итого');total.one['.value']=node('7,00 BYN');panel.many['.total-row']=[total];
  root.one['.product-grid']=grid;root.one['.cart-panel']=panel;root.one['.zone-title-btn']=node('Рабочая зона');root.many['.pos-left .pos-toolbar button,.no-shift-banner button']=[];
  const h={state:{loaded:true,tab:'pos',editMode:false,cart:[{cartLineId:'line-1',productId:'p'}]},document:{readyState:'complete',hidden:false,body:node(),documentElement:{getAttribute:()=> 'light'},getElementById:id=>id==='screen-pos'?root:id==='app'?root:id==='modal-root'?node():null,querySelector:()=>modal,addEventListener(){}},innerWidth:1100,innerHeight:900,requestAnimationFrame:f=>frames.push(f),getComputedStyle:()=>({gridTemplateColumns:'200px 200px 200px 200px',gridColumnStart:'2',gridRowStart:'3',gridColumnEnd:'span 2',gridRowEnd:'span 1'}),addEventListener(){},MutationObserver:class{constructor(fn){observers.push(fn)}observe(){}},webkit:{messageHandlers:{workspace:{postMessage:p=>{sent.push(JSON.parse(JSON.stringify(p)));return true}}}},handlePosGridClick:e=>{events.push('tile');h.addToCart(e.target.parent.dataset.id)},handleCartRowClick:(e,id)=>events.push(['cart',id]),removeFromCart:id=>events.push(['remove',id]),cartItemKey:i=>i.cartLineId||i.productId,addToCart:id=>events.push(['add',id]),parkOrder:()=>{events.push('park');return new Promise(r=>resolve=r)},flash:s=>events.push(s)};
- park.onclick=()=>h.parkOrder();pay.onclick=()=>events.push('pay');h.window=h;vm.createContext(h);vm.runInContext(adapter,h);
+ park.onclick=()=>h.parkOrder();pay.onclick=()=>events.push('pay');configure(h);h.window=h;vm.createContext(h);vm.runInContext(adapter,h);
  const flush=()=>{while(frames.length)frames.shift()()};const mutate=()=>{observers[0]();flush()};flush();
  return{h,sent,events,root,grid,panel,card,tile,line,pay,park,total,flush,mutate,reply:()=>resolve(),action:p=>h.__nativeWorkspaceAction({action:'click',...p}),setModal:n=>{modal=n}};
 }
@@ -25,3 +25,31 @@ test('payment page hides native workspace before the reviewed payment surface an
 test('replacement of an identical mounted button rebuilds action registry without stale DOM binding',async()=>{const h=host(),old=h.sent[0],replacement=node('Оплатить');replacement.onclick=()=>h.events.push('new-pay');h.pay.isConnected=false;h.panel.many['.cart-foot button']=[h.park,replacement];h.mutate();const next=h.sent.at(-1);assert.notEqual(next.token,old.token);await h.action({token:next.token,key:next.model.cartButtons[1].key});assert.deepEqual(h.events,['new-pay'])});
 
 test('unrecognized future DOM shape falls back to intact reviewed presentation',()=>{const h=host();h.tile.one['.pcard']=null;h.mutate();assert.equal(h.h.MPosNativeWorkspaceEnabled,false);assert.equal(h.root.style.opacity,'');assert.equal(h.sent.at(-1).action,'hide')});
+
+const tick=()=>new Promise(r=>setImmediate(r));
+test('native toolbar labels do not read HTML title; catalogue-only refresh reuses native model',async()=>{
+ let reads=0;const navigation={title:'Нативная категория',buttons:[{label:'← Назад',operation:'closeCategory'}],expected:{tab:'pos',posPath:'Нативная категория',posFolder:'',search:'',editMode:false,revision:1},folderModal:null};
+ const h=host(c=>{Object.assign(c.state,navigation.expected);c.MPosCore={WorkspaceNavigationLifecycle:{generation:()=>1,toolbar:async()=>{reads++;return navigation}}};});
+ await tick();assert.equal(h.sent[0].model.title,'Нативная категория');assert.equal(h.sent[0].model.navigation.buttons[0].operation,'closeCategory');
+ h.total.one['.value'].textContent='8,00 BYN';h.mutate();await tick();assert.equal(reads,1);assert.equal(h.sent.at(-1).model.totals[0].value,'8,00 BYN');
+});
+test('late toolbar read cannot cover payment or hidden application',async()=>{
+ for(const change of [c=>{c.state.paymentPage='main'},c=>{c.document.hidden=true}]){
+  let reply;const h=host(c=>{c.MPosCore={WorkspaceNavigationLifecycle:{generation:()=>1,toolbar:()=>new Promise(r=>reply=r)}};});
+  change(h.h);reply({title:'Root',buttons:[],expected:{}});await tick();assert.equal(h.sent.length,0);assert.equal(h.root.style.opacity,'');
+ }
+});
+test('hidden source tiles are absent from native search results',()=>{
+ const h=host();h.tile.hidden=true;h.mutate();assert.equal(h.sent.at(-1).model.tiles.length,0);
+ h.tile.hidden=false;h.mutate();assert.equal(h.sent.at(-1).model.tiles.length,1);
+});
+test('native navigation projects durable route once and discards stale acceptance',async()=>{
+ const discarded=[],navigation={title:'Кофе',buttons:[],expected:{tab:'pos',posPath:'Кофе',posFolder:'',search:'',editMode:false,revision:1},folderModal:null};
+ const h=host(c=>{Object.assign(c.state,navigation.expected);c.render=()=>{};c.MPosCore={WorkspaceNavigationLifecycle:{generation:()=>1,toolbar:async()=>navigation},WorkspaceNavigation:{execute:async p=>discarded.push(p)}};});
+ await tick();const token=h.sent[0].token;
+ await h.h.__nativeWorkspaceNavigationResult({token,result:{ok:true,patch:{posPath:null,search:'',editMode:false},effect:'render',proposalToken:'one'}});assert.equal(h.h.state.posPath,null);assert.equal(discarded.length,0);
+ await h.h.__nativeWorkspaceNavigationResult({token:'stale',result:{ok:true,patch:{posPath:'Old'},effect:'render',proposalToken:'stale'}});assert.equal(h.h.state.posPath,null);assert.equal(discarded[0].operation,'discardRoute');
+});
+test('explicit native toolbar rollback retains reviewed title and keys',()=>{
+ const h=host(c=>{c.MPosNativeWorkspaceToolbarEnabled=false;c.MPosCore={WorkspaceNavigationLifecycle:{toolbar:()=>{throw Error('must not run')}}};});assert.equal(h.sent[0].model.title,'Рабочая зона');assert.equal(h.sent[0].model.navigation,undefined);
+});

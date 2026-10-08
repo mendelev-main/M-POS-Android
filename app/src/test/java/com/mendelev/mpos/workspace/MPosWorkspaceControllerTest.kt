@@ -90,4 +90,29 @@ class MPosWorkspaceControllerTest {
         controller.hide()
     }
 
+    @Test fun nativeToolbarUsesTypedCommandAndIgnoresOldButtonAfterContextReplacement() {
+        val (controller,root,calls)=setup()
+        fun nativeModel(token:String):JSONObject {
+            val payload=model(token)
+            val snapshot=JSONObject().put("tab","pos").put("posPath","Кофе").put("posFolder","").put("search","").put("editMode",false).put("revision",2)
+            payload.getJSONObject("model").put("navigation",MPosWorkspaceToolbarModel.calculate(snapshot,null,null))
+            return payload
+        }
+        controller.handle(nativeModel("first"));ShadowLooper.idleMainLooper()
+        val oldBack=nodes(root).filterIsInstance<Button>().first{it.text=="← Назад"}
+        assertFalse(oldBack.isAllCaps)
+        assertTrue(nodes(root).filterIsInstance<TextView>().any{it.text=="Кофе"})
+        oldBack.performClick();oldBack.performClick()
+        assertEquals(1,calls.size);assertEquals("navigate",calls.single().getString("action"))
+        assertFalse(calls.single().has("key"));assertEquals("closeCategory",calls.single().getJSONObject("command").getString("route"))
+        assertEquals(2L,calls.single().getJSONObject("command").getJSONObject("expected").getLong("revision"))
+        controller.handle(JSONObject().put("action","result").put("token","first"))
+        controller.handle(nativeModel("second"));oldBack.performClick();assertEquals(1,calls.size)
+        val layout=nodes(root).filterIsInstance<Button>().first{it.text=="Раскладка"}
+        layout.performClick();assertEquals("toggleEdit",calls.last().getJSONObject("command").getString("route"))
+        controller.handle(JSONObject().put("action","result").put("token","second").put("blocked",true))
+        layout.performClick();assertEquals(2,calls.size);assertFalse(layout.isEnabled)
+        controller.hide()
+    }
+
 }

@@ -32,7 +32,7 @@ class MPosWorkspaceNavigationOwner {
         .put("navigation",input.opt("navigation")?:JSONObject.NULL)
     private fun reply(decision:JSONObject=JSONObject()):JSONObject = decision.put("ok",true).put("authoritative",true)
         .put("source","native-workspace-navigation").put("snapshot",snapshot(mutable.value))
-    private fun checkExpected(input:JSONObject) {
+    fun checkExpected(input:JSONObject) {
         val expected=input.getJSONObject("expected")
         val current=snapshot(mutable.value)
         check(listOf("tab","search","posPath","posFolder","editMode").all{MPosSupplyParity.same(expected.opt(it),current.opt(it))}) {

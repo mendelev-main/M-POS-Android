@@ -29,6 +29,15 @@ class MPosStorageMirror(
         }
     }
 
+    fun navigateWorkspaceToolbar(input:JSONObject,reply:(JSONObject)->Unit) {
+        val serialized=input.toString()
+        fun failure(error:Throwable) {reply(JSONObject().put("ok",false).put("message","Панель изменилась. Повторите действие"))}
+        if(!queue.submit(::failure) {
+            attempt {com.mendelev.mpos.workspace.MPosWorkspaceNavigationRepository(database,workspaceNavigation).navigateToolbar(JSONObject(serialized))}
+                .onSuccess(reply).onFailure(::failure)
+        })failure(IllegalStateException("native queue unavailable"))
+    }
+
     fun close() = queue.close()
 
     /** Called only by the native opening dialog; credentials never enter the WebView router. */

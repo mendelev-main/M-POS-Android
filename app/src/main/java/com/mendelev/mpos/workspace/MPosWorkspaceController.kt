@@ -23,6 +23,7 @@ class MPosWorkspaceController(private val context: Context, private val host: Fr
     private var contextKey = ""
     private var busy = false
     private var blocked = false
+    private var navigation: JSONObject? = null
     private var catalogScroll: ScrollView? = null
     private var cartScroll: ScrollView? = null
     private var status: TextView? = null
@@ -55,19 +56,29 @@ class MPosWorkspaceController(private val context: Context, private val host: Fr
         val catalogY = if (sameContext) catalogScroll?.scrollY ?: 0 else 0
         val cartY = cartScroll?.scrollY ?: 0
         token = next; blocked = model.optBoolean("blocked"); contextKey = model.optString("context"); controls.clear(); disabled.clear(); overlay.removeAllViews()
+        navigation=model.optJSONObject("navigation")?.let{JSONObject(it.toString())}
         theme = MPosNativeTheme(context, payload.optString("theme") == "dark")
         overlay.setBackgroundColor(theme.bg); overlay.setPadding(theme.dp(12), theme.dp(12), theme.dp(12), theme.dp(12))
         overlay.orientation = if (bounds.width >= theme.dp(720)) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL
         overlay.layoutParams = FrameLayout.LayoutParams(bounds.width, bounds.height).apply { leftMargin = bounds.left; topMargin = bounds.top }
         val catalog = column(); val cart = column().apply { background = theme.shape(theme.surface, 22, true); setPadding(theme.dp(16), theme.dp(16), theme.dp(16), theme.dp(16)) }
-        catalog.addView(label(model.optString("title"), 24f, true), margin())
+        catalog.addView(label(navigation?.optString("title")?:model.optString("title"), 24f, true), margin())
         if (model.optString("notice").isNotBlank()) catalog.addView(label(model.optString("notice"), 14f, secondary = true), margin())
-        if (model.optBoolean("folder")) catalog.addView(button(JSONObject().put("key", model.optString("closeKey")).put("label", "Закрыть папку")), margin())
+        if (model.optBoolean("folder")&&navigation==null) catalog.addView(button(JSONObject().put("key", model.optString("closeKey")).put("label", "Закрыть папку")), margin())
         val toolbar = model.optJSONArray("toolbar") ?: JSONArray()
         val bar = HorizontalScrollView(theme.uiContext)
         val barItems = LinearLayout(theme.uiContext)
+        val nativeButtons=navigation?.optJSONArray("buttons")?:JSONArray()
+        for(i in 0 until nativeButtons.length()) {
+            val value=nativeButtons.getJSONObject(i)
+            val viewToken=token
+            barItems.addView(Button(theme.uiContext).apply {
+                text=value.getString("label");theme.button(this);controls+=this
+                setOnClickListener{if(viewToken==token)emitNavigation(value.getString("operation"))}
+            },LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT).apply{marginEnd=theme.dp(8)})
+        }
         for (i in 0 until toolbar.length()) barItems.addView(button(toolbar.getJSONObject(i)), LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginEnd = theme.dp(8) })
-        bar.addView(barItems); if (toolbar.length() > 0) catalog.addView(bar, margin())
+        bar.addView(barItems); if (toolbar.length() > 0||nativeButtons.length()>0) catalog.addView(bar, margin())
         status = label(if (blocked) "Перезапустите M POS для восстановления заказа" else "", 14f, secondary = true); catalog.addView(status, margin())
         val grid = MPosWorkspaceGrid(theme.uiContext, model.optInt("columns", 4).coerceIn(1, 12), theme.dp(10), theme.dp((170 * context.resources.configuration.fontScale.coerceAtLeast(1f)).toInt()))
         val tiles = model.optJSONArray("tiles") ?: JSONArray()
@@ -152,8 +163,16 @@ class MPosWorkspaceController(private val context: Context, private val host: Fr
         }
     }
     private fun emit(key: String) { if (busy || blocked || token.isBlank()) return; busy = true; enable(); action(JSONObject().put("action", "click").put("token", token).put("key", key)) }
+    private fun emitNavigation(operation:String) {
+        val model=navigation?:return
+        if(busy||blocked||token.isBlank())return
+        busy=true;enable()
+        action(JSONObject().put("action","navigate").put("token",token).put("command",JSONObject().put("version",1)
+            .put("route",operation).put("expected",JSONObject(model.getJSONObject("expected").toString()))
+            .put("folderModal",model.opt("folderModal")?:JSONObject.NULL)))
+    }
     private fun enable() { controls.forEach { it.isEnabled = !busy && !blocked && it !in disabled } }
-    fun hide() { overlay.visibility = View.GONE; token = ""; contextKey = ""; busy = false; blocked = false; controls.clear(); disabled.clear(); overlay.removeAllViews(); catalogScroll = null; cartScroll = null; status = null }
+    fun hide() { overlay.visibility = View.GONE; token = ""; contextKey = ""; busy = false; blocked = false; navigation=null; controls.clear(); disabled.clear(); overlay.removeAllViews(); catalogScroll = null; cartScroll = null; status = null }
 }
 
 /** Source coordinates/spans are presentation metadata; no catalogue layout is written here. */
