@@ -59,6 +59,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var shiftOpenDialog: MPosShiftOpenDialog
     private lateinit var shiftCloseDialog: MPosShiftCloseDialog
     private lateinit var cashMovementDialog: MPosCashMovementDialog
+    private lateinit var workspaceHeader: com.mendelev.mpos.workspace.MPosWorkspaceHeaderController
     private lateinit var workspace: MPosWorkspaceController
     private lateinit var settingsScreen: MPosSettingsScreenController
     private lateinit var shiftScreen: MPosShiftScreenController
@@ -222,6 +223,14 @@ class MainActivity : AppCompatActivity() {
                 callJavaScript("window.__nativeWorkspaceNavigationResult&&window.__nativeWorkspaceNavigationResult(${com.mendelev.mpos.data.MPosBridgeJson.serialize(payload)});")
             } else callJavaScript("window.__nativeWorkspaceAction&&window.__nativeWorkspaceAction($serialized);")
         }
+        workspaceHeader=com.mendelev.mpos.workspace.MPosWorkspaceHeaderController(this,root) { action ->
+            val serialized=com.mendelev.mpos.data.MPosBridgeJson.serialize(action)
+            if(action.optString("action")=="fallback")callJavaScript("window.__nativeWorkspaceHeaderFallback&&window.__nativeWorkspaceHeaderFallback($serialized);")
+            else nativeStorageMirror.selectWorkspaceHeader(action.getJSONObject("command")) { result ->
+                val payload=JSONObject().put("token",action.getString("token")).put("result",result)
+                callJavaScript("window.__nativeWorkspaceHeaderResult&&window.__nativeWorkspaceHeaderResult(${com.mendelev.mpos.data.MPosBridgeJson.serialize(payload)});")
+            }
+        }
         settingsScreen = MPosSettingsScreenController(this, root) { action ->
             val serialized = com.mendelev.mpos.data.MPosBridgeJson.serialize(action)
             callJavaScript("window.__nativeSettingsAction&&window.__nativeSettingsAction($serialized);")
@@ -303,6 +312,7 @@ class MainActivity : AppCompatActivity() {
         if (::loyaltyAuthorization.isInitialized) loyaltyAuthorization.close()
         if (::shiftScreen.isInitialized) shiftScreen.hide()
         if (::workspace.isInitialized) workspace.hide()
+        if (::workspaceHeader.isInitialized) workspaceHeader.hide()
         if (::settingsScreen.isInitialized) settingsScreen.dismiss()
         if (::cashInputDialog.isInitialized) cashInputDialog.dismiss()
         if (::splitCashDialog.isInitialized) splitCashDialog.dismiss()
@@ -371,7 +381,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun handleWorkspace(payload: JSONObject) = runOnUiThread {
-        if (::workspace.isInitialized) workspace.handle(payload)
+        if(payload.optString("action").startsWith("header")){if(::workspaceHeader.isInitialized)workspaceHeader.handle(payload)}
+        else if (::workspace.isInitialized) workspace.handle(payload)
     }
 
     fun handleSettingsScreen(payload: JSONObject) = runOnUiThread {

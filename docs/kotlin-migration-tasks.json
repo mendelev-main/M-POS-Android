@@ -910,9 +910,15 @@
             "tests/native-platform-settings.test.cjs",
             "tests/android-employee-command.test.cjs",
             "tests/android-native-shift-screen.test.cjs",
-            "app/src/test/java/com/mendelev/mpos/shift/MPosShiftScreenControllerTest.kt"
+            "app/src/test/java/com/mendelev/mpos/shift/MPosShiftScreenControllerTest.kt",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceHeaderModel.kt",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceHeaderController.kt",
+            "app/src/main/assets/pos/native-workspace-header.js",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceHeaderOwnerTest.kt",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceHeaderControllerTest.kt",
+            "tests/native-workspace-header.test.cjs"
           ],
-          "remaining": "Native owner/routes/Back/runtime, toolbar, category/folder typed tile selection подключены. Остались native tabs/search controls, controls редактора раскладки и global Back DOM presence; catalogue/cart/read models — 109.09. Folder increment JS/Kotlin/lint прошёл Actions 37764445102 (c7e976a); physical acceptance pending."
+          "remaining": "Native owner/routes/Back/runtime, toolbar, category/folder selection и fixed topbar tabs подключены. Остались search/filter controls, shift-tab control, редактор раскладки и global Back DOM presence. Source geometry/narrow topbar scroller сохраняются до native root presentation. Header tests authored, Actions pending; physical acceptance pending."
         },
         {
           "id": "109.09",
@@ -1152,7 +1158,7 @@
       "runId": 37764445102,
       "commit": "c7e976a",
       "testsAndLint": "success",
-      "apkBuild": "in_progress",
+      "apkBuild": "success",
       "physicalAcceptance": "pending"
     }
   ]

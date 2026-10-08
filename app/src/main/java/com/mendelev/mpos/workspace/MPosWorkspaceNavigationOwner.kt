@@ -14,6 +14,9 @@ class MPosWorkspaceNavigationOwner {
     private data class Proposal(val before:State,val decision:String,val documents:String?)
     private data class Accepted(val token:String,val before:State,val after:State,val queryEpoch:Long)
     private var accepted:Accepted?=null
+    private data class HeaderSelection(val token:String,val beforeTab:String,val afterTab:String,val epoch:Long)
+    private var headerSelection:HeaderSelection?=null
+    private var tabEpoch=0L
     private var queryEpoch=0L
     private val mutable=MutableStateFlow(State())
     private val proposals=linkedMapOf<String,Proposal>()
@@ -21,7 +24,7 @@ class MPosWorkspaceNavigationOwner {
     private var runtimeGeneration=0L
     fun beginRuntime(generation:Long) {
         check(generation>runtimeGeneration){"stale navigation runtime"}
-        runtimeGeneration=generation;proposals.clear();accepted=null;queryEpoch=0
+        runtimeGeneration=generation;proposals.clear();accepted=null;headerSelection=null;tabEpoch=0;queryEpoch=0
         mutable.value=State(revision=mutable.value.revision+1)
     }
 
@@ -52,8 +55,30 @@ class MPosWorkspaceNavigationOwner {
                 input.optString("search", ""),input.opt("posPath") as? String,input.optString("posFolder",""),input.optBoolean("editMode",false))
             "selectTab" -> {
                 check(previous.initialized){"navigation is not initialized"}
-                val tab=input.getString("tab")
+                val tab=input.getString("tab");tabEpoch++
                 if(tab!=previous.tab)mutable.value=previous.copy(tab=tab,revision=previous.revision+1)
+            }
+            "headerView" -> {
+                check(previous.initialized){"navigation is not initialized"};checkExpected(input)
+                return reply().put("navigation",MPosWorkspaceHeaderModel.calculate(snapshot(previous)))
+            }
+            "selectHeaderTab" -> {
+                check(previous.initialized){"navigation is not initialized"};checkExpected(input)
+                check(input.getJSONObject("expected").getLong("revision")==previous.revision){"header changed"}
+                val tab=input.getString("tab");require(tab in MPosWorkspaceHeaderModel.destinations)
+                tabEpoch++
+                if(tab!=previous.tab){mutable.value=previous.copy(tab=tab,revision=previous.revision+1);proposals.clear()}
+                val token=UUID.randomUUID().toString()
+                headerSelection=HeaderSelection(token,previous.tab,tab,tabEpoch)
+                return reply().put("headerToken",token)
+            }
+            "discardHeaderTab" -> {
+                val selection=headerSelection
+                if(selection!=null&&selection.token==input.getString("headerToken")&&selection.epoch==tabEpoch&&previous.tab==selection.afterTab) {
+                    if(previous.tab!=selection.beforeTab){mutable.value=previous.copy(tab=selection.beforeTab,revision=previous.revision+1);proposals.clear()}
+                    headerSelection=null
+                }
+                return reply()
             }
             "read" -> check(previous.initialized){"navigation is not initialized"}
             "selectSearch" -> {

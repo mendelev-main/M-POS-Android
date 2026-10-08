@@ -38,6 +38,15 @@ class MPosStorageMirror(
         })failure(IllegalStateException("native queue unavailable"))
     }
 
+    fun selectWorkspaceHeader(input:JSONObject,reply:(JSONObject)->Unit) {
+        val serialized=input.toString()
+        val failure:(Throwable)->Unit={reply(JSONObject().put("ok",false).put("message","Раздел изменился. Повторите действие"))}
+        if(!queue.submit(failure) {
+            attempt {workspaceNavigation.handle(JSONObject(serialized).put("operation","selectHeaderTab"))}
+                .onSuccess(reply).onFailure(failure)
+        })failure(IllegalStateException("native queue unavailable"))
+    }
+
     fun close() = queue.close()
 
     /** Called only by the native opening dialog; credentials never enter the WebView router. */

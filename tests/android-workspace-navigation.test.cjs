@@ -44,3 +44,10 @@ test('late tab and search replies from before import cannot restore old UI',asyn
  h.c.MPosCore.WorkspaceNavigationLifecycle.invalidate();h.c.state.tab='pos';h.c.state.search='imported';h.c.MPosCore.WorkspaceNavigationLifecycle.ready();
  h.calls[1].resolve({snapshot:{tab:'receipts',search:'old query',revision:2}});assert.equal(await p,false);assert.equal(h.c.state.tab,'pos');assert.equal(h.c.state.search,'imported');assert.deepEqual(h.events,[]);}
 });
+
+test('header read initializes owner once and rejects response from replaced runtime',async()=>{
+ const h=host(),read=h.c.MPosCore.WorkspaceNavigationLifecycle.header();h.calls[0].resolve({snapshot:{tab:'pos',revision:1}});await h.ready();
+ assert.equal(h.calls[1].input.operation,'headerView');assert.equal(h.calls[1].input.expected.search,'keep');
+ h.c.MPosCore.WorkspaceNavigationLifecycle.invalidate();h.calls[1].resolve({navigation:{buttons:[],expected:{}}});await assert.rejects(read,/Navigation view changed/);
+ await assert.rejects(h.c.MPosCore.WorkspaceNavigationLifecycle.header(),/loading/);
+});

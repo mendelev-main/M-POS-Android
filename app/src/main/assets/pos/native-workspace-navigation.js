@@ -8,6 +8,13 @@
     invalidate(){runtime++;sequence++;searchSequence++;initialization=null;loading=true;},
     ready(){loading=false;},
     generation(){return runtime;},
+    async header(){
+      if(loading)throw Error('Navigation runtime loading');const epoch=runtime,before=JSON.stringify(view());
+      await initialize();if(epoch!==runtime||loading||before!==JSON.stringify(view()))throw Error('Navigation view changed');
+      const result=await commands.execute({version:1,operation:'headerView',expected:view()});
+      if(epoch!==runtime||loading||before!==JSON.stringify(view()))throw Error('Navigation view changed');
+      return result.navigation;
+    },
     async toolbar(){
       if(loading)throw Error('Navigation runtime loading');const epoch=runtime,before=JSON.stringify(view());
       await initialize();if(epoch!==runtime||loading||before!==JSON.stringify(view()))throw Error('Navigation view changed');

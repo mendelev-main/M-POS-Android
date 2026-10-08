@@ -105,4 +105,16 @@ class MPosWorkspaceNavigationRepositoryTest {
         assertEquals(before,owner.state.value)
     }
 
+    @Test fun headerViewNeedsOnlyNavigationOwnerAndDoesNotInitializeCatalogAuthority()=runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(),MPosDatabase::class.java).build()
+        try {
+            val owner=MPosWorkspaceNavigationOwner()
+            val snapshot=owner.handle(JSONObject().put("version",1).put("operation","initialize").put("tab","pos")).getJSONObject("snapshot")
+            val header=MPosWorkspaceNavigationRepository(db,owner).execute(JSONObject().put("version",1).put("operation","headerView").put("expected",snapshot))
+            assertEquals(7,header.getJSONObject("navigation").getJSONArray("buttons").length())
+            assertNull(db.legacyStorageShadowDao().get("products"));assertNull(db.legacyStorageShadowDao().get(MPosCatalogStorage.AUTHORITY_KEY))
+            assertFalse(MPosWorkspaceStorage(db).isAuthoritative("posNavigation"))
+        }finally{db.close()}
+    }
+
 }

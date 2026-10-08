@@ -101,3 +101,10 @@ path. Manrope/palettes/touch targets unchanged. Tablet verification pending.
 ## Рабочая зона — визуальный паритет iPad, 08.10.2026
 
 См. [перенос исходной раскладки](NATIVE_WORKSPACE_IPAD_PARITY_RU.md). Изменения ограничены рабочей зоной; CI и физическое сравнение pending. Новых завершённых этапов нет: 114/129 (88,37%), осталось 15; 109 — 7/20.
+
+
+109.08 native fixed topbar tabs: shared Manrope, source navy and white/muted-white
+pill labels, selected fill rgba(255,255,255,.14), 48dp controls. Auxiliary events/
+shift controls retain source presentation. Source outer horizontal scrolling is
+preserved when fixed groups do not fit; resize restores native controls. Modals/
+payment/editor own their upper layer. Physical font-scale/portrait checks pending.

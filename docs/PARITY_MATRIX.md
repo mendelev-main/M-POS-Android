@@ -736,3 +736,35 @@ Actions следующего коммита pending, физическая при
 presence остаются. Прогресс **114/129 (88,37%)**, 109 **7/20**.
 
 Проверка folder-кода `c7e976a`: [Actions 37764445102](https://github.com/mendelev-main/M-POS-Android/actions/runs/37764445102) — Tests and lint успешно (JS, правила версий, Kotlin, lint). APK отдельным job; физическая приёмка pending.
+
+
+### 109.08 — нативные основные вкладки верхней панели, 08.10.2026
+
+MPosWorkspaceHeaderModel формирует reviewed destinations/labels и selected state
+из Kotlin owner: M POS, Заказы, Приёмка, Чеки, Аналитика, Бронирования, Настройки.
+MPosWorkspaceHeaderController отправляет selectHeaderTab прямо через native FIFO,
+без нажатия HTML-кнопки. CAS по expected state/revision и token подтверждают
+переход; discard отменяет только свой выбор, сохраняя новый search и последующие
+явные selections (в том числе повторный выбор той же вкладки). Restart/import
+сбрасывает outstanding selection. Native completion не разблокирует новую команду.
+Header read не читает Room/catalog и не создаёт authority markers или документы.
+
+Native controls используют navy/Manrope/selected pill и 48dp touch targets;
+геометрия трёх групп ещё согласуется с source topbar. События, напоминание inventory
+и shift pill остаются под их reviewed domain handlers. При оплате, редакторе,
+модальном/складском overlay панель скрывается. Если source topbar требует внешнего
+горизонтального скролла (группы за viewport), сохраняется исходный scroller;
+при подходящей геометрии native controls возвращаются автоматически. Это временная
+граница presentation, не утверждение полностью нативной верхней панели.
+
+Rollback: MPosNativeWorkspaceHeaderEnabled=false возвращает исходные кнопки;
+MPosNativeWorkspaceNavigationEnabled=false также выключает native header.
+Добавлены Kotlin owner/model, Room boundary, Android View и production lexical
+state JS проверки: busy/stale/runtime/late read, несовпавший DOM, modal/payment,
+source rollback и narrow→wide. Локальные тесты/lint/APK не запускались; Actions
+следующего коммита pending. Физическая оценка тем/портрета/font scale pending.
+
+109.08 остаётся in_progress: поиск/filter controls, shift-tab control, controls
+редактора раскладки и global Back presence ещё впереди. Domain/catalog read models
+и удаление presentation geometry относятся к дальнейшим runtime этапам.
+Прогресс **114/129 (88,37%)**, внутри 109 **7/20**, крупных **107/110**.
