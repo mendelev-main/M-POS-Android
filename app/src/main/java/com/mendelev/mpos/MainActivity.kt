@@ -117,7 +117,7 @@ class MainActivity : AppCompatActivity() {
         val printTransport = EscPosPrinter(::printerEvent)
         printer = MPosPrintService(MPosDatabase.get(this), lifecycleScope, ::printerEvent, printTransport::send, printTransport::close, printTransport::notifySound)
         shares = ReportShareManager(this)
-        telegram = TelegramClient(shares::createWarehousePdf, ::telegramResult, ::telegramMonthlyResult, ::telegramShiftResult)
+        telegram = TelegramClient(shares::createWarehousePdf, ::telegramResult, ::telegramMonthlyResult, ::telegramShiftResult, ::telegramTestResult)
         nativeSettings = MPosSettingsStore(this, lifecycleScope, ::nativeSettingsResult)
         rootSession = MPosRootSessionOwner(MPosDatabase.get(this), lifecycleScope)
         nativeStorageMirror = MPosStorageMirror(MPosDatabase.get(this), lifecycleScope, rootSession::bootstrap, ::nativeStorageResult)
@@ -336,7 +336,8 @@ class MainActivity : AppCompatActivity() {
         diagnostics.record("printer", event.optString("status", event.optString("type", "event")), event.optString("type") != "printError")
         callJavaScript("window.__nativePrinterEvent&&window.__nativePrinterEvent($event);")
     }
-    private fun telegramResult(ok: Boolean, message: String) = callJavaScript("window.handleTelegramResult&&window.handleTelegramResult({ok:$ok,message:${JSONObject.quote(message)}});")
+    private fun telegramResult(ok: Boolean, message: String) = callJavaScript("window.onTelegramResult&&window.onTelegramResult({ok:$ok,message:${JSONObject.quote(message)}});")
+    private fun telegramTestResult(result: JSONObject) = callJavaScript("window.__nativeConnectionTestResult&&window.__nativeConnectionTestResult($result);")
     private fun telegramMonthlyResult(result: JSONObject) = callJavaScript("window.onTelegramMonthlyWarehouseResult&&window.onTelegramMonthlyWarehouseResult($result);")
     private fun telegramShiftResult(ok: Boolean, message: String) {
         val result = JSONObject().put("ok", ok).put("message", message)

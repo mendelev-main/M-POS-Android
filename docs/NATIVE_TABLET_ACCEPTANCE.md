@@ -648,3 +648,12 @@ After the native bootstrap cutover: restart offline with imported v13 data; veri
 - Rapid successive load/import/restart actions: no old generation activates; failed load is followed by a successful fresh load.
 - Pending critical journal: preserve existing recovery semantics, paid split parts and recorded kitchen status; no automatic reprint, catalogue sync or availability retry on startup/foreground.
 - Compare responsiveness with a large shift/employee history; mutation bridge frames contain selected records only. No measured physical performance claim yet.
+
+## Pending: тестовые подключения после исправления 08.10.2026
+
+- Telegram: native форма ждёт success/error/timeout; правильные и неверные token/chat/topic; повторное нажатие не отправляет второе сообщение, закрытый dialog не получает поздний результат.
+- WEB тест: success/HTTP 401/offline/timeout; один запрос/заказ при повторах; новый dialog не получает чужой результат. После timeout проверить существование заказа перед новым тестом.
+- LAN Wi-Fi ESC/POS: настройки подтверждены до отправки; queue admission не выдаётся за отправку; корректный/недоступный IPv4:9100, отсутствие бумаги, поздний ответ после закрытия и явный ручной повтор без автоматической допечатки.
+- Сообщение формы и busy state различимы в светлой/тёмной теме и при крупном шрифте; native результат не содержит token/deviceKey.
+
+Автоматические проверки 572/572 JS и 457/457 JVM не закрывают эти физические кейсы. [Описание исправления](CONNECTION_TEST_FIX_RU.md).

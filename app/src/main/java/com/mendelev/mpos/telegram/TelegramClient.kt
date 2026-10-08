@@ -13,16 +13,23 @@ class TelegramClient(
     private val onResult: (Boolean, String) -> Unit,
     private val onMonthlyResult: (JSONObject) -> Unit,
     private val onShiftResult: (Boolean, String) -> Unit,
+    private val onTestResult: ((JSONObject) -> Unit)? = null,
 ) {
     private val executor = Executors.newSingleThreadExecutor()
 
     fun handle(payload: JSONObject) {
         val action = payload.optString("action")
+        val requestId = payload.optString("requestId")
+        val result: (Boolean, String) -> Unit = { ok, message ->
+            if (action == "test" && requestId.isNotBlank() && onTestResult != null)
+                onTestResult.invoke(JSONObject().put("requestId", requestId).put("ok", ok).put("message", message))
+            else onResult(ok, message)
+        }
         val token = payload.optString("botToken").trim()
         val chatId = payload.optString("chatId").trim()
         if (token.isBlank() || chatId.isBlank()) {
             if (action == "sendShiftCloseReport") onShiftResult(false, "Укажите токен бота и ID рабочей группы")
-            else onResult(false, "Укажите токен бота и ID рабочей группы")
+            else result(false, "Укажите токен бота и ID рабочей группы")
             return
         }
         if (action == "sendShiftCloseReport") {
@@ -57,12 +64,12 @@ class TelegramClient(
         val text = when (action) {
             "test" -> "🟢 <b>Telegram подключён</b>\nM POS Android успешно связался с рабочей группой."
             "send" -> payload.optString("text")
-            else -> return onResult(false, "Эта Telegram-команда ещё не перенесена на Android")
+            else -> return result(false, "Эта Telegram-команда ещё не перенесена на Android")
         }
         executor.execute {
             runCatching { send(token, chatId, payload.optString("threadId"), text) }
-                .onSuccess { onResult(true, if (action == "test") "Telegram подключён" else "Отчёт отправлен") }
-                .onFailure { onResult(false, it.message ?: "Ошибка Telegram") }
+                .onSuccess { result(true, if (action == "test") "Telegram подключён" else "Отчёт отправлен") }
+                .onFailure { result(false, "Не удалось подключиться к Telegram. Проверьте сеть, токен, группу и тему") }
         }
     }
 

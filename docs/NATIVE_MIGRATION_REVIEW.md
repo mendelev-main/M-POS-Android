@@ -104,3 +104,8 @@ Business issue for separate refactor: existing cross-shift refund drawer calcula
 109 opening verification: 551 JS / 438 JVM passed, 0 failed/errors/skips; lint
 0 errors / 22 warnings in unchanged files (7 are online dependency advisories).
 No local product APK assembly; physical acceptance pending. Progress 107/110.
+
+
+## Исправление обратной связи интеграционных тестов — 08.10.2026
+
+[Telegram / WEB / LAN-print](CONNECTION_TEST_FIX_RU.md): corrected callback, correlated terminal result, bounded wait, duplicate/stale guards. 572/572 JS, 457/457 JVM; lint 0 ошибок / 22 предупреждения. Физическая проверка pending. Счётчики после независимого завершения 109.06: 107/110, 109 6/20, детальный план 113/129 — 87,60%; исправление подключений не закрывает новые подэтапы.

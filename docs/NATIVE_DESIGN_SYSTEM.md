@@ -67,3 +67,6 @@ scroll identity remain. Physical light/dark/font-scale acceptance pending.
 108: native floor map/table forms/bookings use shared Manrope and responsive independent map/list panels. Info blue and warning amber tokens match source hall CSS in both themes; selected tables keep scale/elevation, squares/rectangles/rotation and relative positions. Tight table padding keeps status legible, labelled native time/date pickers preserve source formats. [Synthetic previews](design/108/README.md); physical touch/font/keyboard/performance acceptance pending.
 
 109.06: native shift invalidation reuses the existing loading text, Manrope/palettes and layout. No visual redesign; controls from the previous root revision are removed while loading and their callbacks cannot run. Physical foreground/scroll checks remain pending.
+
+
+08.10.2026: тесты Telegram/WEB/печати используют существующее поле сообщения native settings формы для ожидания и результата. Layout, Manrope, palette и touch targets прежние; late result привязан к исходной форме, физическая оценка обеих тем pending.

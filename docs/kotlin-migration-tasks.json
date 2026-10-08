@@ -982,5 +982,17 @@
       "dependencies": "032"
     }
   ],
-  "subtaskCounting": "Nested tasks count separately. Expanded progress replaces a decomposed parent with its non-superseded children; do not count parent twice. Counts are unweighted, not effort or native code coverage."
+  "subtaskCounting": "Nested tasks count separately. Expanded progress replaces a decomposed parent with its non-superseded children; do not count parent twice. Counts are unweighted, not effort or native code coverage.",
+  "lastCorrection": {
+    "date": "2026-10-08",
+    "spec": "docs/CONNECTION_TEST_FIX_RU.md",
+    "summary": "Connection test feedback: Telegram callback/request correlation, awaited WEB test and terminal LAN print status; no migration subtask completion.",
+    "verification": {
+      "js": 572,
+      "jvm": 457,
+      "lintErrors": 0,
+      "lintWarnings": 22,
+      "physicalAcceptance": "pending"
+    }
+  }
 }

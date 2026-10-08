@@ -248,6 +248,11 @@
     }catch(error){if(current===snapshot)post({action:'formResult',token:snapshot.token,ok:false,error:true,message:error?.message||'Не удалось выполнить операцию',blocked:recoveryPending()})}
     finally{submission=null;snapshot.busy=false;snapshot.job=null;if(activeProductJob===job)activeProductJob=null;if(snapshot.product&&current!==snapshot&&current?.product&&attached(current.root)&&(snapshot.warehouse?current.warehouse:snapshot.domain?current.domain:snapshot.receipt?current.receipt:snapshot.payment?job.cart===global.state?.cart:job.session===global._pmSession))post({action:'formResult',token:current.token,ok:false,error:/^(Введите|Проверьте|Не удалось|Ошибка|Неверн|Требуется|Перезапустите|Выберите)/i.test(job.message),message:job.message,blocked:recoveryPending()});schedule()}
   };
+  global.MPosCore=global.MPosCore||{};
+  global.MPosCore.ConnectionTestFeedback=Object.freeze({capture(){
+    const snapshot=current,job=current?.job;
+    return message=>{if(current===snapshot&&(!snapshot||snapshot.job===job&&attached(snapshot.root)))global.flash?.(message)};
+  }});
   function observe(){
     const observer=new MutationObserver(()=>{dirty=true;schedule()});
     for(const id of ['app','modal-root','product-editor-root','warehouse-root','receiving-page-root']){const node=document.getElementById(id);if(node)observer.observe(node,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','disabled','aria-checked','aria-pressed']})}

@@ -1,11 +1,11 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('app/src/main/assets/pos/network-printer.js','utf8'),mirror=fs.readFileSync('app/src/main/assets/pos/native-settings.js','utf8'),adapter=fs.readFileSync('app/src/main/assets/pos/native-platform-settings.js','utf8');
 const clone=x=>JSON.parse(JSON.stringify(x));
-function host(saved=null){
+function host(saved=null,connections=false){
  const calls=[],prints=[],events=[],timers=new Map(),values=new Map([['printers',JSON.stringify([{id:'p',name:'Old',ip:'192.0.2.1',extension:{keep:true}}])]]);let timer=0;
  const elements={};const storage={getItem:k=>values.get(String(k))??null,setItem:(k,v)=>values.set(String(k),String(v)),removeItem:k=>values.delete(String(k)),key:i=>[...values.keys()][i]??null,get length(){return values.size}};
  const h={Date,console,localStorage:storage,state:{},document:{getElementById:id=>elements[id],querySelectorAll:()=>[]},setTimeout:fn=>{timers.set(++timer,fn);return timer},clearTimeout:id=>timers.delete(id),flash:s=>events.push(s),render:()=>events.push('render'),closeModal:()=>events.push('close'),loadAll:async()=>events.push('load'),webkit:{messageHandlers:{settings:{postMessage:p=>{calls.push(clone(p));return true}},printer:{postMessage:p=>prints.push(clone(p))}}}};
- h.window=h;vm.createContext(h);vm.runInContext(source,h);h.openPrintersManager=()=>events.push('manager');h.applyBackupData=async data=>{events.push('storage-import');h.__restorePrinterSettings(data)};vm.runInContext(mirror,h);vm.runInContext(adapter,h);
+ h.window=h;vm.createContext(h);vm.runInContext(source,h);h.openPrintersManager=()=>events.push('manager');h.applyBackupData=async data=>{events.push('storage-import');h.__restorePrinterSettings(data)};vm.runInContext(mirror,h);vm.runInContext(adapter,h);if(connections)vm.runInContext(fs.readFileSync("app/src/main/assets/pos/native-connection-tests.js","utf8"),h);
  function answer(call,extra={}){h.__nativeSettingsResult({requestId:call.requestId,ok:true,...extra})}
  async function settle(){for(let i=0;i<10;i++)await Promise.resolve()}
  async function initialize(){const p=h.MPosCore.PlatformSettings.initialize();answer(calls.at(-1),saved?{authoritative:true,snapshot:{settings:saved}}:{authoritative:false});await settle();if(!saved)answer(calls.at(-1),{authoritative:true,snapshot:{settings:calls.at(-1).settings}});await p;return p}
@@ -26,3 +26,15 @@ test('backup waits for native restore, writes both keys in one snapshot and prop
 test('uncertain acknowledgement blocks new writes; late success cannot publish or retry',async()=>{const h=host();await h.initialize();h.edit();const p=h.h.savePrinterFromPage();await h.settle();const call=h.calls.filter(c=>c.action==='platformSettingsWrite').at(-1);const timeout=[...h.timers.entries()].at(-1);h.timers.delete(timeout[0]);timeout[1]();await assert.rejects(p,/uncertain/);h.answer(call,{authoritative:true,snapshot:{settings:call.settings}});assert.equal(h.h.__printerSettingsSnapshot().printers[0].name,'Old');assert.equal(h.h.MPosCore.PlatformSettings.blocked,true);const count=h.calls.length;await assert.rejects(h.h.savePrinterFromPage(),/Перезапустите/);assert.equal(h.calls.length,count);assert.equal(h.prints.length,0)});
 test('busy guard rejects overlapping save and disk failure in compatibility copy cannot undo native commit',async()=>{const h=host();await h.initialize();h.edit();const p=h.h.savePrinterFromPage();await h.settle();await assert.rejects(h.h.savePrinterFromPage(),/Дождитесь/);const call=h.calls.filter(c=>c.action==='platformSettingsWrite').at(-1);h.h.localStorage.getItem('other');const legacyWrite=h.values.set;h.values.set=()=>{throw Error('browser disabled')};h.answer(call,{authoritative:true,snapshot:{settings:call.settings}});await p;h.values.set=legacyWrite;assert.equal(h.h.__printerSettingsSnapshot().printers[0].name,'New');assert.equal(h.events.at(-1),'manager')});
 test('snapshot is isolated and validation failure has no native write or success effect',async()=>{const h=host();await h.initialize();const before=h.calls.length,snapshot=h.h.__printerSettingsSnapshot();snapshot.printers.length=0;assert.equal(h.h.__printerSettingsSnapshot().printers.length,1);h.edit();h.elements['mp-ip'].value='';assert.equal(await h.h.savePrinterFromPage(),false);assert.equal(h.calls.length,before);assert.deepEqual(h.events,['Введите IP-адрес принтера'])});
+
+
+test('correlated test print preserves real disk acknowledgement and waits for terminal transport result',async()=>{
+ const x=host(null,true);await x.initialize();x.edit();const p=x.h.testPrinterFromPage();await x.settle();assert.equal(x.prints.length,0);
+ const write=x.calls.filter(c=>c.action==='platformSettingsWrite').at(-1);x.answer(write,{authoritative:true,snapshot:{settings:write.settings}});await x.settle();assert.equal(x.prints.length,1);assert.equal(x.prints[0].order.__networkPrinterIp,'192.0.2.2');
+ const requestId=x.prints[0].requestId;assert.match(requestId,/connection-test-printer/);let done=false;p.then(()=>done=true);x.h.__nativePrinterEvent({type:'printAdmission',requestId,ok:true,count:1});await x.settle();assert.equal(done,false);
+ x.h.__nativePrinterEvent({type:'printed',requestId});assert.equal(await p,true);assert.match(x.events.at(-1),/Проверьте бумажный чек/);assert.equal(x.prints.length,1);
+});
+
+test('failed real settings commit never submits correlated print and releases test guard',async()=>{
+ const x=host(null,true);await x.initialize();const initialTimers=x.timers.size;x.edit();const p=x.h.testPrinterFromPage();await x.settle();const write=x.calls.filter(c=>c.action==='platformSettingsWrite').at(-1);x.answer(write,{ok:false,message:'disk failure'});await assert.rejects(p,/disk failure/);assert.equal(x.prints.length,0);assert.equal(x.timers.size,initialTimers);
+});
