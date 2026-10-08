@@ -8,7 +8,7 @@ function host(){
  MPosCore:{WorkspaceNavigation:{execute:input=>new Promise((resolve,reject)=>calls.push({input,resolve,reject}))}}};
  for(const name of ['openPosCategory','closePosCategory','openPosFolder','toggleEditMode'])c[name]=()=>events.push('legacy-'+name);
  c.window=c;vm.createContext(c);vm.runInContext(source,c);
- return{c,calls,events,ready:async()=>{calls[0].resolve({});await tick()}};
+ return{c,calls,events,ready:async()=>{await tick();calls[0].resolve({});await tick()}};
 }
 const prepared=(token='proposal')=>({allowed:true,proposalToken:token,patch:{posPath:'Кофе',posFolder:'',search:'',editMode:false},effect:'render'});
 test('category uses native state, no catalogue/DOM payload, and waits for accepted proposal',async()=>{
