@@ -920,9 +920,12 @@
             "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceSearchModel.kt",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceSearchModelTest.kt",
             "tests/android-workspace-search.test.cjs",
-            "tests/fixtures/workspace-search.json"
+            "tests/fixtures/workspace-search.json",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceShiftHeaderModel.kt",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceShiftHeaderTest.kt",
+            "docs/NATIVE_MIGRATION_EXECUTION_RU.md"
           ],
-          "remaining": "Native owner/routes/Back/runtime, toolbar, category/folder selection и fixed topbar tabs подключены. Остались search/filter controls, shift-tab control, редактор раскладки и global Back DOM presence. Source geometry/narrow topbar scroller сохраняются до native root presentation. Fixed header JS/Kotlin/lint прошёл Actions 37767655391 (b0196c5); physical acceptance pending. Live filtering now uses authoritative Room names and typed visibility; source grid scope/render-time search/presentation retained. Search JS/Kotlin/lint passed Actions 37769761293 (1564939); physical acceptance pending."
+          "remaining": "Native owner/routes/Back/runtime, toolbar, category/folder selection и fixed topbar tabs подключены. Остались search/filter controls, shift-tab control, редактор раскладки и global Back DOM presence. Source geometry/narrow topbar scroller сохраняются до native root presentation. Fixed header JS/Kotlin/lint прошёл Actions 37767655391 (b0196c5); physical acceptance pending. Live filtering now uses authoritative Room names and typed visibility; source grid scope/render-time search/presentation retained. Search JS/Kotlin/lint passed Actions 37769761293 (1564939); physical acceptance pending. Shift header status/selection/direct native opening implemented; Actions pending. Other opening entry points still build legacy forms; tracked in execution checklist."
         },
         {
           "id": "109.09",

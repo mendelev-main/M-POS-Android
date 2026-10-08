@@ -108,3 +108,10 @@ pill labels, selected fill rgba(255,255,255,.14), 48dp controls. Auxiliary event
 shift controls retain source presentation. Source outer horizontal scrolling is
 preserved when fixed groups do not fit; resize restores native controls. Modals/
 payment/editor own their upper layer. Physical font-scale/portrait checks pending.
+
+
+109.08 shift header: shared Manrope/navy, white employee label, rounded muted-white
+pill, reviewed green/red dot and 48dp targets. Native opening launches the existing
+themed employee/carryover dialog without a hidden HTML form from this entry point.
+Long labels can scroll within their group; source geometry/narrow root fallback
+remain. Both themes and typed busy controls have native View tests; tablet pending.

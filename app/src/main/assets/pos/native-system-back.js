@@ -6,10 +6,11 @@
   function read(){
     const imported=global._pendingBackupImport;
     const modal=document.querySelector('.modal-overlay');
+    const nativeOpening=core.NativeOpenForm?.activeToken?.();
     const warehouse=document.getElementById('warehouse-root')?.firstElementChild;
     const receiving=document.getElementById('receiving-page-root')?.firstElementChild;
-    return{version:1,pendingImport:!!imported,modal:!!modal,warehouse:!!warehouse,receiving:!!receiving,
-      stamp:JSON.stringify([key(imported),key(modal),key(warehouse),key(receiving)])};
+    return{version:1,pendingImport:!!imported,modal:!!modal||!!nativeOpening,warehouse:!!warehouse,receiving:!!receiving,
+      stamp:JSON.stringify([key(imported),key(modal),key(warehouse),key(receiving),nativeOpening||null])};
   }
   const effects={CANCEL_IMPORT:()=>global.cancelBackupImport(),CLOSE_MODAL:()=>global.closeModal(),
     CLOSE_WAREHOUSE:()=>global.closeWarehousePage(),FINISH_RECEIVING:()=>global.finishReceivingPage(),BACKGROUND:()=>{}};

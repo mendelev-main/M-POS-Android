@@ -1,15 +1,35 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const script=fs.readFileSync('app/src/main/assets/pos/native-open-form.js','utf8');
-function host(){
+function host(nativePath=false){
  const sent=[],events=[],secret={value:''},select={value:''},overlay={style:{}};
  const ctx={state:{loaded:true,currency:'BYN',shifts:[{id:'old',status:'closed',countedCash:80}],employees:[{id:'e1',name:'Кассир',role:'employee'}]},criticalOperationBusy:false,criticalStorageRecoveryPending:false,currentShift:()=>null,uid:()=> 'new-shift',
  document:{getElementById:id=>id==='sf-employee'?select:id==='sf-admin-password'?secret:null,querySelector:()=>overlay},openShiftModal:()=>events.push('form'),closeModal:()=>events.push('close'),showModal:()=>events.push('modal'),submitOpenShift:()=>{throw Error('JS verifier must not run')},render:()=>events.push('render'),sendTelegramShiftOpened:()=>events.push('telegram'),maybeSendMonthlyWarehouseReport:()=>events.push('monthly'),flash:s=>events.push(s),webkit:{messageHandlers:{shiftScreen:{postMessage:p=>{sent.push(structuredClone(p));return true}}}}};
- ctx.window=ctx;vm.createContext(ctx);vm.runInContext(script,ctx);ctx.openShiftModal();const token=sent.at(-1).token;
+ ctx.window=ctx;vm.createContext(ctx);vm.runInContext(script,ctx);if(nativePath){ctx.document.getElementById=()=>{throw Error('No HTML form expected')};ctx.MPosCore.NativeOpenForm.openNative();}else ctx.openShiftModal();const token=sent.at(-1).token;
  const action=p=>ctx.MPosCore.NativeOpenForm.handleAction({token,...p});
  const prepare=()=>action({action:'prepare',employeeId:'e1'});
  function committed(extra={}){const c=sent.find(p=>p.action==='openFormCommit');const shift={id:c.id,status:'open',openedAt:c.openedAt,employeeId:'e1',employeeName:'Кассир',openingCash:80};return {action:'committed',ok:true,shift,shifts:[...structuredClone(ctx.state.shifts),shift],...extra};}
  return {ctx,sent,events,secret,select,token,action,prepare,committed};
 }
+test('native header opens form and commits without creating or reading hidden HTML fields',async()=>{
+ const h=host(true);assert.deepEqual(h.events,[]);assert.equal(h.ctx.MPosCore.NativeOpenForm.activeToken(),h.token);
+ assert.equal(h.sent.at(-1).action,'openFormShow');await h.prepare();assert.equal(h.ctx.closeModal(),false);
+ await h.action(h.committed());assert.equal(h.ctx.state.shifts.length,2);
+ assert.deepEqual(h.events,['close','render','telegram','monthly']);assert.equal(h.ctx.MPosCore.NativeOpenForm.activeToken(),null);
+ assert.equal(h.sent.find(p=>p.action==='openFormCommit').password,undefined);
+});
+test('direct native opening cancel, restart and explicit fallback preserve reviewed form boundary',async()=>{
+ const h=host(true);await h.action({action:'cancel'});assert.equal(h.ctx.MPosCore.NativeOpenForm.activeToken(),null);assert.equal(h.events.includes('form'),false);
+ assert.equal(h.ctx.MPosCore.NativeOpenForm.openNative(),true);h.ctx.MPosCore.NativeOpenForm.invalidate();assert.equal(h.ctx.MPosCore.NativeOpenForm.activeToken(),null);
+ h.ctx.MPosCore.NativeOpenForm.openNative();const token=h.ctx.MPosCore.NativeOpenForm.activeToken();
+ await h.ctx.MPosCore.NativeOpenForm.handleAction({action:'fallback',token});assert.equal(h.ctx.MPosNativeOpenFormEnabled,false);assert.equal(h.events.at(-1),'form');
+});
+test('direct opening refuses pending recovery, busy operation and existing shift without creating HTML',()=>{
+ for(const field of ['criticalOperationBusy','criticalStorageRecoveryPending','currentShift']){
+  const h=host(true);h.ctx.MPosCore.NativeOpenForm.invalidate();
+  if(field==='currentShift')h.ctx.currentShift=()=>({id:'current'});else h.ctx[field]=true;
+  assert.equal(h.ctx.MPosCore.NativeOpenForm.openNative(),false);assert.equal(h.events.includes('form'),false);
+ }
+});
 test('native opening waits for durable acknowledgement and never calls JS credential verifier',async()=>{
  const h=host();assert.equal(h.sent.at(-1).nativeCommit,true);await h.prepare();assert.equal(h.ctx.criticalOperationBusy,true);assert.equal(h.ctx.state.shifts.length,1);assert.deepEqual(h.events,['form']);assert.equal(h.secret.value,'');
  const c=h.sent.at(-1);assert.equal(c.action,'openFormCommit');assert.equal(Object.hasOwn(c,'password'),false);await h.action(h.committed());assert.equal(h.ctx.criticalOperationBusy,false);assert.equal(h.ctx.state.shifts.length,2);assert.deepEqual(h.events,['form','close','render','telegram','monthly']);assert.equal(h.sent.find(p=>p.action==='openFormResult').ok,true);

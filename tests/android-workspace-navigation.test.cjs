@@ -51,6 +51,11 @@ test('header read initializes owner once and rejects response from replaced runt
  h.c.MPosCore.WorkspaceNavigationLifecycle.invalidate();h.calls[1].resolve({navigation:{buttons:[],expected:{}}});await assert.rejects(read,/Navigation view changed/);
  await assert.rejects(h.c.MPosCore.WorkspaceNavigationLifecycle.header(),/loading/);
 });
+test('shift header lifecycle requests owned shift model and drops response after import',async()=>{
+ const h=host(),read=h.c.MPosCore.WorkspaceNavigationLifecycle.shiftHeader();h.calls[0].resolve({snapshot:{tab:'pos',revision:1}});await h.ready();
+ assert.equal(h.calls[1].input.operation,'shiftHeaderView');h.c.MPosCore.WorkspaceNavigationLifecycle.invalidate();
+ h.calls[1].resolve({navigation:{shift:{open:false},expected:{}}});await assert.rejects(read,/Navigation view changed/);
+});
 
 test('native search applies only typed visibility to original mounted tiles without legacy filtering or render',async()=>{
  const h=host(),tiles=[{dataset:{tileType:'product',id:'p'},hidden:false},{dataset:{tileType:'folder',id:'f'},hidden:false}];

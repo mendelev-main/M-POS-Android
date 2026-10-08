@@ -416,3 +416,37 @@ shift-tab control, редактор раскладки и global Back presence �
 Прогресс **114/129 (88,37%)**, внутри 109 **7/20**, крупных **107/110**.
 
 Live search `1564939`: [Actions 37769761293](https://github.com/mendelev-main/M-POS-Android/actions/runs/37769761293) — Tests and lint успешно: JS/reference, правила версий, Kotlin и lint. APK собирается отдельным job; физическая приёмка pending.
+
+
+### 109.08 — полный участок кнопки смены, 08.10.2026
+
+Нативная shift-pill включена в MPosWorkspaceHeaderController: Manrope/navy,
+white text, зелёный/красный индикатор, compact pill и 48dp. Label и status берутся
+из первого открытого shift авторитетного Room document, не из текста/onclick DOM.
+Формат employeeShortName сохранён, включая whitespace/первые два UTF-16 initials.
+Source geometry и narrow topbar fallback остаются до native root presentation.
+
+shiftHeaderView читает актуальный shifts document без записи/инициализации.
+selectShiftHeader сравнивает его digest и expected navigation/revision в одной
+Room transaction. При открытой смене подтверждается native tab=shift; при
+закрытой — effect=openShift. stale changes не переключают tab/не запускают окно.
+Устаревший принятый переход отменяется только своим headerToken.
+
+NativeOpenForm.openNative запускает MPosShiftOpenDialog без openOriginal,
+HTML form, select/password DOM fields. Это production путь новой кнопки; другие
+legacy entry points пока относятся к следующему участку. Сумма переноса,
+сотрудники и роли читаются existing native opening repository; credential
+остаётся внутри Kotlin dialog и существующего native opening command.
+Existing commit/ack, recovery gate и post-commit уведомления сохранены.
+Cancel/fallback, pending busy и import/runtime invalidation обработаны;
+SystemBack учитывает token нативного окна даже без HTML modal. Explicit fallback
+возвращает reviewed форму. Global source geometry/Back presence других overlays
+не удалены и этап 109.08 ещё не закрыт.
+
+Добавлены JS boundary, Kotlin model/repository и View проверки: open/closed,
+первый открытый shift, label/status, freshness/authority/no-writes, stale query,
+дубли, busy/cancel/fallback/runtime/Back без DOM. Локальные тесты/lint/APK не
+запускались (§17 AGENTS). Actions следующего коммита pending; tablet pending.
+Список исполняемых участков: docs/NATIVE_MIGRATION_EXECUTION_RU.md.
+Прогресс **114/129 (88,37%)**, 109 **7/20**. Участок не добавляет новую задачу
+в общий счётчик: входит в стабильный ID 109.08.

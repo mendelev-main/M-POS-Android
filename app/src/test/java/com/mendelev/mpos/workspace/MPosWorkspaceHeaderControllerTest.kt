@@ -57,4 +57,19 @@ class MPosWorkspaceHeaderControllerTest {
         val invalid=model();invalid.getJSONObject("groups").getJSONObject("tabs").put("width",0)
         controller.handle(invalid);assertEquals(0,host.childCount);assertEquals("fallback",calls.single().getString("action"))
     }
+    @Test fun shiftPillHasStatusLabelAndTypedNativeCommandInBothThemes() {
+        val activity=Robolectric.buildActivity(Activity::class.java).setup().get();val host=FrameLayout(activity);host.layout(0,0,1200,800)
+        val calls=mutableListOf<JSONObject>();val controller=MPosWorkspaceHeaderController(activity,host){calls+=it}
+        for(open in listOf(false,true))for(dark in listOf(false,true)) {
+            controller.hide();calls.clear();val payload=model(dark=dark);val navigation=payload.getJSONObject("navigation")
+            val shiftModel=MPosWorkspaceShiftHeaderModel.calculate(navigation.getJSONObject("expected"),if(open)"""[{"status":"open","employeeName":"Иванов Иван"}]""" else "[]")
+            val shift=shiftModel.getJSONObject("shift");navigation.put("shift",shift).put("shiftExpected",shiftModel.getJSONObject("expected"));navigation.getJSONArray("buttons").put(shift)
+            payload.getJSONObject("groups").put("shift",JSONObject().put("left",925).put("top",12).put("width",120).put("height",40))
+            controller.handle(payload);val pill=nodes(host).filterIsInstance<Button>().single{it.contentDescription==if(open)"Иванов И." else "Открыть смену"}
+            assertEquals(Color.WHITE,pill.currentTextColor);assertTrue(pill.minimumHeight>=48);assertFalse(pill.isAllCaps)
+            pill.performClick();pill.performClick();assertEquals(1,calls.size);assertFalse(pill.isEnabled)
+            val action=calls.single();assertEquals("shift",action.getString("kind"));assertEquals("selectShiftHeader",action.getJSONObject("command").getString("operation"))
+            assertEquals(shift.getString("revision"),action.getJSONObject("command").getString("shiftRevision"));assertFalse(action.has("key"))
+        }
+    }
 }

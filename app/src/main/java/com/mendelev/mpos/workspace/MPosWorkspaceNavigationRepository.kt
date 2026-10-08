@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.mendelev.mpos.data.MPosCatalogStorage
 import com.mendelev.mpos.data.MPosDatabase
 import com.mendelev.mpos.data.MPosWorkspaceStorage
+import com.mendelev.mpos.data.MPosShiftStorage
 import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
@@ -23,6 +24,18 @@ class MPosWorkspaceNavigationRepository(private val database:MPosDatabase,privat
     }
     suspend fun execute(input:JSONObject):JSONObject {
         require(input.getInt("version")==1)
+        if(input.getString("operation") in setOf("shiftHeaderView","selectShiftHeader"))return database.withTransaction {
+            owner.handle(JSONObject().put("version",1).put("operation","read"));owner.checkExpected(input)
+            val snapshot=owner.handle(JSONObject().put("version",1).put("operation","read")).getJSONObject("snapshot")
+            check(MPosShiftStorage(database).isAuthoritative()) { "native shifts are not initialized" }
+            val model=MPosWorkspaceShiftHeaderModel.calculate(snapshot,database.legacyStorageShadowDao().get("shifts")?.payload)
+            if(input.getString("operation")=="shiftHeaderView")return@withTransaction JSONObject().put("ok",true).put("authoritative",true).put("navigation",model)
+            check(input.getJSONObject("expected").getLong("revision")==snapshot.getLong("revision")) { "shift header navigation changed" }
+            check(input.getString("shiftRevision")==model.getJSONObject("shift").getString("revision")) { "saved shift changed" }
+            if(model.getJSONObject("shift").getBoolean("open"))owner.handle(JSONObject(input.toString()).put("operation","selectHeaderTab").put("tab","shift"),allowShiftTab=true)
+                .put("effect","render")
+            else JSONObject().put("ok",true).put("authoritative",true).put("snapshot",snapshot).put("effect","openShift")
+        }
         if(input.getString("operation")=="selectFilteredSearch") {
             val search=input.getString("search");val tiles=input.getJSONArray("tiles")
             // Empty query restores every tile, including folders and missing products, without SQL.

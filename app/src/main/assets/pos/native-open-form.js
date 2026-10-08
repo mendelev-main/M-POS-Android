@@ -27,10 +27,21 @@
   };
   global.MPosCore=global.MPosCore||{};
   global.MPosCore.NativeOpenForm=Object.freeze({
+    activeToken(){return active?.token||null;},
+    invalidate(){if(!active?.busy)abandon();},
+    openNative(){
+      if(!global.MPosNativeOpenFormEnabled||global.MPosNativeShiftOpenCommandEnabled===false){global.openShiftModal();return true;}
+      if(active?.busy||!state.loaded||criticalOperationBusy||criticalStorageRecoveryPending||currentShift())return false;
+      abandon();const token='native-open-form-'+(++generation);
+      active={token,password:{value:''},busy:false,nativeCommit:true,nativeOnly:true};
+      if(bridge.postMessage({action:'openFormShow',token,nativeCommit:true,currency:state.currency||'',theme:document.documentElement?.dataset?.theme||'light'})===false){active=null;return false;}
+      return true;
+    },
     async handleAction(payload){
       const form=active;if(!form||payload?.token!==form.token)return;
       if(payload.action==='fallback'){
         if(form.busy)return;global.MPosNativeOpenFormEnabled=false;abandon();
+        if(form.nativeOnly){openOriginal();return;}
         const overlay=document.querySelector('#modal-root .modal-overlay');if(overlay)overlay.style.visibility='';return;
       }
       if(payload.action==='cancel'){if(!form.busy)global.closeModal();return;}

@@ -227,7 +227,7 @@ class MainActivity : AppCompatActivity() {
             val serialized=com.mendelev.mpos.data.MPosBridgeJson.serialize(action)
             if(action.optString("action")=="fallback")callJavaScript("window.__nativeWorkspaceHeaderFallback&&window.__nativeWorkspaceHeaderFallback($serialized);")
             else nativeStorageMirror.selectWorkspaceHeader(action.getJSONObject("command")) { result ->
-                val payload=JSONObject().put("token",action.getString("token")).put("result",result)
+                val payload=JSONObject().put("token",action.getString("token")).put("kind",action.optString("kind","tab")).put("result",result)
                 callJavaScript("window.__nativeWorkspaceHeaderResult&&window.__nativeWorkspaceHeaderResult(${com.mendelev.mpos.data.MPosBridgeJson.serialize(payload)});")
             }
         }

@@ -42,7 +42,8 @@ class MPosStorageMirror(
         val serialized=input.toString()
         val failure:(Throwable)->Unit={reply(JSONObject().put("ok",false).put("message","Раздел изменился. Повторите действие"))}
         if(!queue.submit(failure) {
-            attempt {workspaceNavigation.handle(JSONObject(serialized).put("operation","selectHeaderTab"))}
+            attempt {if(JSONObject(serialized).optString("operation")=="selectShiftHeader")workspaceNavigationRepository.execute(JSONObject(serialized))
+                else workspaceNavigation.handle(JSONObject(serialized).put("operation","selectHeaderTab"))}
                 .onSuccess(reply).onFailure(failure)
         })failure(IllegalStateException("native queue unavailable"))
     }

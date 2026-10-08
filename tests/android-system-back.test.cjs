@@ -17,3 +17,9 @@ test('background acknowledges stable empty screen and receiving uses existing fi
  const h=host(),a=h.capture();assert.equal(h.c.MPosCore.SystemBack.apply({token:a.token,action:'BACKGROUND'}),true);assert.deepEqual(h.events,[]);
  h.c.receiving={};const b=h.capture();assert.equal(h.c.MPosCore.SystemBack.apply({token:b.token,action:'FINISH_RECEIVING'}),true);assert.deepEqual(h.events,['receiving']);
 });
+test('native opening without HTML is modal presence and token replacement rejects stale Back',()=>{
+ const h=host();let token='opening';h.c.MPosCore.NativeOpenForm={activeToken:()=>token};
+ const first=h.capture();assert.equal(first.modal,true);token='new-opening';
+ assert.equal(h.c.MPosCore.SystemBack.apply({token:first.token,action:'CLOSE_MODAL'}),false);
+ const next=h.capture();assert.equal(h.c.MPosCore.SystemBack.apply({token:next.token,action:'CLOSE_MODAL'}),true);assert.deepEqual(h.events,['modal']);
+});

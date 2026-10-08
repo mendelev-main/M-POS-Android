@@ -49,7 +49,7 @@ class MPosWorkspaceNavigationOwner {
         "acceptRoute" -> proposals[input.getString("proposalToken")]?.documents!=null
         else -> false
     }
-    fun handle(input:JSONObject):JSONObject {
+    fun handle(input:JSONObject,allowShiftTab:Boolean=false):JSONObject {
         require(input.getInt("version")==1)
         val previous=mutable.value
         when(input.getString("operation")) {
@@ -67,7 +67,7 @@ class MPosWorkspaceNavigationOwner {
             "selectHeaderTab" -> {
                 check(previous.initialized){"navigation is not initialized"};checkExpected(input)
                 check(input.getJSONObject("expected").getLong("revision")==previous.revision){"header changed"}
-                val tab=input.getString("tab");require(tab in MPosWorkspaceHeaderModel.destinations)
+                val tab=input.getString("tab");require(tab in MPosWorkspaceHeaderModel.destinations||(allowShiftTab&&tab=="shift"))
                 tabEpoch++
                 if(tab!=previous.tab){mutable.value=previous.copy(tab=tab,revision=previous.revision+1);proposals.clear()}
                 val token=UUID.randomUUID().toString()
