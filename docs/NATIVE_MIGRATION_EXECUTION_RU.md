@@ -40,8 +40,11 @@
   отмена/Back, сохранение в Room после stock preflight, CAS/recovery/duplicate и
   SQLite rollback. Фон native; переход из папки сохранён. Main 1b74e9a,
   Actions 37791354617: JS/Kotlin/lint и signed APK success; physical acceptance pending 110.
-- [ ] **Остальные операции и черновики корзины** — native add/changeQty/remove,
-  модификаторы, ручная цена и параметры заказа; владение всем черновиком и
+- [ ] **Добавление товара, модификаторы и ручная цена целиком** — native модели,
+  формы и atomic Room commit подключены; CAS/stock/merge/metadata/uncertain
+  verification pending Actions. Детали: NATIVE_CART_ADD_10909_RU.md.
+- [ ] **Остальные операции и черновики корзины** — native changeQty/remove и
+  параметры заказа; владение всем черновиком и
   восстановление заказа после restart. Сохранить цены/рецепты/лояльность.
 - [ ] **Редактор товара** — native модель полей и валидация, действующие права,
   создание/изменение/отмена и одна согласованная запись; сохранение фотографий.

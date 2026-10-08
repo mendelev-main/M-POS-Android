@@ -957,9 +957,16 @@
             "app/src/main/java/com/mendelev/mpos/workspace/MPosCartItemController.kt",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosCartItemRepositoryTest.kt",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosCartItemControllerTest.kt",
-            "docs/NATIVE_WORKSPACE_DOMAIN_10909_RU.md"
+            "docs/NATIVE_WORKSPACE_DOMAIN_10909_RU.md",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosCartAddRepository.kt",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosCartAddModel.kt",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosCartAddController.kt",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosCartAddRepositoryTest.kt",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosCartAddModelTest.kt",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosCartAddControllerTest.kt",
+            "docs/NATIVE_CART_ADD_10909_RU.md"
           ],
-          "remaining": "Native catalogue and cart presentation plus native quantity/comment/discount form with atomic session save verified in Actions 37791354617 (1b74e9a, JS/Kotlin/lint/signed APK success). Full signed run 37791017299 passed on 5281321. Availability only expands visible recipes; folder exit, CAS/stock/recovery/SQLite rollback and metadata retained. Remaining: native add/modifier/manual-price/remove/order-settings drafts/commands, full product editor; current order/config still transitional runtime snapshot. 109.09 is not complete; progress 115/129 unchanged."
+          "remaining": "Native configured add, modifier/manual-price drafts and atomic session commit connected; JS/Room/controller checks pending Actions. Session-save barrier defers stale JS snapshots until native ack and blocks uncertain retries. Remaining: native changeQty/remove/order-settings drafts/commands, full product editor and complete order draft ownership. Order context/config remains an explicit transitional snapshot. Stage 109.09 in progress; 115/129 unchanged."
         },
         {
           "id": "109.10",

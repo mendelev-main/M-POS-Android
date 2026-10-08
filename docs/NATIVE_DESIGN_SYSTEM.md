@@ -1,5 +1,10 @@
 # Нативный стиль M POS
 
+109.09 добавление: MPosCartAddController — сетка modifiers, отдельная manual-price
+фаза, shared Manrope/theme, scroll/48dp и primary «Добавить в заказ». На большом
+font scale варианты идут в одну колонку. Detached controls предыдущей фазы
+не вызывают действия. Физические кейсы — NATIVE_CART_ADD_10909_RU.md, pending 110.
+
 109.09: строка корзины использует MPosCartItemController/MPosNativeTheme.
 Количество — компактный stepper, комментарий — textarea, скидки — кнопки
 выбора, primary — «Сохранить». Native workspace остаётся фоном; cancel/Back

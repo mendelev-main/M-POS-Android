@@ -62,6 +62,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var workspaceHeader: com.mendelev.mpos.workspace.MPosWorkspaceHeaderController
     private lateinit var workspace: MPosWorkspaceController
     private lateinit var cartItemForm:com.mendelev.mpos.workspace.MPosCartItemController
+    private lateinit var cartAddForm:com.mendelev.mpos.workspace.MPosCartAddController
     private lateinit var layoutEditor:com.mendelev.mpos.workspace.MPosLayoutController
     private val backState=com.mendelev.mpos.workspace.MPosBackStateOwner()
     private lateinit var settingsScreen: MPosSettingsScreenController
@@ -229,6 +230,9 @@ class MainActivity : AppCompatActivity() {
         cartItemForm=com.mendelev.mpos.workspace.MPosCartItemController(this) { action ->
             callJavaScript("window.MPosCore?.CartItemUi?.action(${com.mendelev.mpos.data.MPosBridgeJson.serialize(action)});")
         }
+        cartAddForm=com.mendelev.mpos.workspace.MPosCartAddController(this) { action ->
+            callJavaScript("window.MPosCore?.CartAddUi?.action(${com.mendelev.mpos.data.MPosBridgeJson.serialize(action)});")
+        }
         workspaceHeader=com.mendelev.mpos.workspace.MPosWorkspaceHeaderController(this,root) { action ->
             val serialized=com.mendelev.mpos.data.MPosBridgeJson.serialize(action)
             if(action.optString("action")=="fallback")callJavaScript("window.__nativeWorkspaceHeaderFallback&&window.__nativeWorkspaceHeaderFallback($serialized);")
@@ -301,6 +305,7 @@ class MainActivity : AppCompatActivity() {
         if(::workspaceHeader.isInitialized)workspaceHeader.hide()
         if(::workspace.isInitialized)workspace.hide()
         if(::cartItemForm.isInitialized)cartItemForm.hide()
+        if(::cartAddForm.isInitialized)cartAddForm.hide()
     }
 
     private fun handleLegacySystemBack() {
@@ -338,6 +343,7 @@ class MainActivity : AppCompatActivity() {
         if (::shiftScreen.isInitialized) shiftScreen.hide()
         if (::workspace.isInitialized) workspace.hide()
         if (::cartItemForm.isInitialized) cartItemForm.hide()
+        if (::cartAddForm.isInitialized) cartAddForm.hide()
         if (::workspaceHeader.isInitialized) workspaceHeader.hide()
         if (::layoutEditor.isInitialized) layoutEditor.hide()
         if (::settingsScreen.isInitialized) settingsScreen.dismiss()
@@ -410,6 +416,7 @@ class MainActivity : AppCompatActivity() {
     fun handleWorkspace(payload: JSONObject) = runOnUiThread {
         if(payload.optString("action")=="backState")backState.update(payload)
         else if(payload.optString("action").startsWith("cartItem")){if(::cartItemForm.isInitialized)cartItemForm.handle(payload)}
+        else if(payload.optString("action").startsWith("cartAdd")){if(::cartAddForm.isInitialized)cartAddForm.handle(payload)}
         else if(payload.optString("action").startsWith("layout")){if(::layoutEditor.isInitialized)layoutEditor.handle(payload)}
         else if(payload.optString("action").startsWith("header")){if(::workspaceHeader.isInitialized)workspaceHeader.handle(payload)}
         else if (::workspace.isInitialized) workspace.handle(payload)

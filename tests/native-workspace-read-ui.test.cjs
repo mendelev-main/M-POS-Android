@@ -77,3 +77,54 @@ test('opening native cart editor from folder closes that folder like the reviewe
  assert.equal(h.calls.at(-1).folderModal,null);assert.ok(h.sent.find(p=>p.action==='cartItemShow'));
  h.c.MPosCore.CartItemUi.back();assert.deepEqual(h.events,[['close']]);
 });
+function addHost(handler,configure){return host(null,(c,events)=>{
+ c.currentOrderSessionSnapshot=()=>vm.runInContext('({items:JSON.parse(JSON.stringify(state.cart)),orderType:state.orderType,customer:{id:"customer"},updatedAt:123})',c);
+ c.MPosCore.WorkspaceNavigation.cartAdd=handler;
+ if(configure)configure(c,events);
+});}
+const addModel=(manual=false,groups=[])=>({ok:true,authoritative:true,allowed:true,supported:true,model:{manual,groups,sessionRevision:'session',catalogRevision:'catalog'}});
+const added=()=>({ok:true,authoritative:true,allowed:true,items:[{cartLineId:'new',productId:'p',qty:1,price:6}],animation:{id:'new',className:'cart-item-added'}});
+test('native ordinary add projects only persisted items and waits for acknowledgement',async()=>{
+ const inputs=[];let finish;const h=addHost(async input=>{inputs.push(input);return input.operation==='cartAddView'?addModel():new Promise(resolve=>{finish=resolve});});await tick();
+ const token=h.sent[0].token,p=h.c.__nativeWorkspaceAction({token,action:'click',key:'0'});await tick();
+ assert.equal(h.state().cart.length,0);assert.equal(inputs.length,2);assert.equal(inputs[0].session.updatedAt,undefined);
+ await h.c.__nativeWorkspaceAction({token,action:'click',key:'0'});assert.equal(inputs.length,2);
+ finish(added());await p;assert.equal(h.state().cart[0].cartLineId,'new');assert.equal(h.c.__cartAnimation.id,'new');assert.deepEqual(h.events,[['render']]);
+});
+test('native manual modifier form sends explicit selection and raw price, cancel never writes',async()=>{
+ const inputs=[],h=addHost(async input=>{inputs.push(input);return input.operation==='cartAddView'?addModel(true,[{id:'g'}]):added();});await tick();
+ await h.c.__nativeWorkspaceAction({token:h.sent[0].token,action:'click',key:'0'});
+ let token=h.c.MPosCore.CartAddUi.activeToken();assert.ok(h.sent.find(p=>p.action==='cartAddShow'));assert.equal(h.root.style.opacity,'0');
+ await h.c.MPosCore.CartAddUi.action({action:'cartAddCancel',token});assert.equal(inputs.length,1);assert.equal(h.state().cart.length,0);
+ h.flush();await tick();await h.c.__nativeWorkspaceAction({token:h.sent.filter(p=>p.action==='show').at(-1).token,action:'click',key:'0'});
+ token=h.c.MPosCore.CartAddUi.activeToken();await h.c.MPosCore.CartAddUi.action({action:'cartAddSave',token,selections:[[0]],manualInput:'0,004'});
+ const command=inputs.at(-1);assert.equal(command.manualInput,'0,004');assert.equal(command.catalogRevision,'catalog');assert.deepEqual(JSON.parse(JSON.stringify(command.selections)),[[0]]);
+ assert.equal(h.state().cart.length,1);assert.equal(h.c.MPosCore.CartAddUi.activeToken(),null);assert.deepEqual(h.events,[['render']]);
+});
+test('native add rejects late views and never repeats uncertain commit through source fallback',async()=>{
+ let finish;const h=addHost(()=>new Promise(resolve=>{finish=resolve}));await tick();const p=h.c.__nativeWorkspaceAction({token:h.sent[0].token,action:'click',key:'0'});await tick();
+ h.state().cart=[{cartLineId:'other'}];finish(addModel(true));await p;assert.equal(h.sent.some(p=>p.action==='cartAddShow'),false);assert.deepEqual(h.events,[]);
+ const inputs=[],broken=addHost(async input=>{inputs.push(input);if(input.operation==='cartAddView')return addModel();throw Error('unknown commit outcome');});await tick();
+ await broken.c.__nativeWorkspaceAction({token:broken.sent[0].token,action:'click',key:'0'});assert.equal(inputs.length,2);assert.equal(broken.state().cart.length,0);assert.equal(broken.events.some(e=>e[0]==='add'),false);
+});
+test('legacy modifier identity rollback occurs only before commit and modifier forms close folders',async()=>{
+ const fallback=addHost(async()=>({ok:true,authoritative:true,supported:false}));await tick();
+ await fallback.c.__nativeWorkspaceAction({token:fallback.sent[0].token,action:'click',key:'0'});assert.deepEqual(fallback.events,[['add','p']]);
+ const h=addHost(async()=>addModel(false,[{id:'g'}]),(c,events)=>{c._posFolderModal={id:'folder'};c.closeModal=()=>{c._posFolderModal=null;events.push(['close']);};});await tick();
+ await h.c.__nativeWorkspaceAction({token:h.sent[0].token,action:'click',key:'0'});assert.equal(h.c._posFolderModal,null);assert.deepEqual(h.events,[['close']]);assert.ok(h.sent.find(p=>p.action==='cartAddShow'));
+ h.c.MPosCore.WorkspaceReadUi.invalidate();assert.equal(h.c.MPosCore.CartAddUi.activeToken(),null);
+});
+test('background session save waits for native ack and snapshots the persisted cart',async()=>{
+ let finish;const saves=[],h=addHost(async input=>input.operation==='cartAddView'?addModel():new Promise(resolve=>{finish=resolve}),(c)=>{
+  c.saveCurrentOrderSession=()=>saves.push(JSON.parse(vm.runInContext('JSON.stringify({items:state.cart,customer:state.customer})',c)));
+ });await tick();
+ const p=h.c.__nativeWorkspaceAction({token:h.sent[0].token,action:'click',key:'0'});await tick();assert.equal(h.c.MPosCore.CartOperations.hasPending(),true);
+ h.state().customer={id:'updated'};h.c.saveCurrentOrderSession();assert.equal(saves.length,0);
+ finish(added());await p;assert.equal(saves.length,1);assert.equal(saves[0].items[0].cartLineId,'new');assert.equal(saves[0].customer.id,'updated');assert.equal(h.c.MPosCore.CartOperations.hasPending(),false);
+});
+test('uncertain commit blocks legacy saves and retries until a new runtime restores Room',async()=>{
+ const saves=[],inputs=[],h=addHost(async input=>{inputs.push(input);if(input.operation==='cartAddView')return addModel();throw Error('lost ack');},c=>{c.saveCurrentOrderSession=()=>saves.push('saved');});await tick();
+ await h.c.__nativeWorkspaceAction({token:h.sent[0].token,action:'click',key:'0'});h.c.saveCurrentOrderSession();
+ assert.equal(h.c.MPosCore.CartOperations.hasPending(),true);assert.equal(saves.length,0);
+ await h.c.__nativeWorkspaceAction({token:h.sent[0].token,action:'click',key:'0'});assert.equal(inputs.length,2);
+});
