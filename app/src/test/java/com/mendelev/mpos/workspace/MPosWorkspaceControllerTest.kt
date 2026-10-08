@@ -39,6 +39,30 @@ class MPosWorkspaceControllerTest {
         val root = FrameLayout(activity); activity.setContentView(root); root.layout(0, 0, 1200, 900)
         val calls = mutableListOf<JSONObject>(); return Triple(MPosWorkspaceController(activity, root) { calls += it }, root, calls)
     }
+    @Test fun sourceWorkspaceKeepsCartWidthAndPaymentBelowParkingWithRetainedTotals() {
+        val (controller,root,_)=setup()
+        fun source(token:String):JSONObject=model(token).also { payload ->
+            val data=payload.getJSONObject("model")
+            data.put("sourceLayout",true).put("presentation",JSONObject().put("cartWidth",380).put("rowHeight",155).put("padding",16).put("gridGap",12).put("vertical",false))
+            data.getJSONArray("cartButtons").getJSONObject(1).put("placement","payment").put("style","primary")
+            data.put("cartHeaderButtons",JSONArray().put(JSONObject().put("key","meta").put("label","С собой").put("placement","metadata").put("style","orderMeta")))
+        }
+        controller.handle(source("first"));ShadowLooper.idleMainLooper()
+        root.measure(View.MeasureSpec.makeMeasureSpec(1200,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(900,View.MeasureSpec.EXACTLY));root.layout(0,0,1200,900)
+        val pay=nodes(root).filterIsInstance<Button>().first{it.text=="Оплатить"}
+        val park=nodes(root).filterIsInstance<Button>().first{it.text=="Отложить"}
+        assertSame(park.parent.parent,pay.parent)
+        assertEquals(380,(pay.parent.parent as View).width)
+        assertTrue(pay.top>(park.parent as View).top)
+        assertEquals(1,nodes(root).filterIsInstance<TextView>().count{it.text=="С собой"})
+        assertTrue(nodes(root).filterIsInstance<Button>().first{it.contentDescription=="Удалить Молоко"}.visibility==View.GONE)
+        val amount=nodes(root).filterIsInstance<TextView>().first{it.text=="7,00 BYN" && it.parent is android.widget.LinearLayout && (it.parent as ViewGroup).getChildAt(0) is Button}
+        assertSame(nodes(root).filterIsInstance<Button>().first{it.text=="Молоко"}.parent,amount.parent)
+        controller.handle(source("second"))
+        assertSame(pay,nodes(root).filterIsInstance<Button>().first{it.text=="Оплатить"})
+        controller.hide()
+    }
+
     @Test fun realWorkspaceForwardsSelectedActionOnceAndIgnoresStaleCompletion() {
         val (controller, root, calls) = setup(); controller.handle(model()); ShadowLooper.idleMainLooper()
         val pay = nodes(root).filterIsInstance<Button>().first { it.text == "Оплатить" }

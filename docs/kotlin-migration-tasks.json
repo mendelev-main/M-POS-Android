@@ -667,7 +667,7 @@
       "qualityFollowUp": {
         "date": "2026-10-08",
         "doc": "docs/NATIVE_WORKSPACE_SMOOTHNESS_RU.md",
-        "summary": "Retained native workspace views, keyed cart/total reconciliation and reviewed cash/card/button palettes; CI and physical smoothness pending; no new completion."
+        "summary": "Retained workspace views and source iPad workspace layout/button placement; docs/NATIVE_WORKSPACE_IPAD_PARITY_RU.md; CI and physical visual acceptance pending; no new completion."
       }
     },
     {
