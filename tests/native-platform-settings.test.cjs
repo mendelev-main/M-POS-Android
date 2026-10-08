@@ -1,11 +1,11 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('app/src/main/assets/pos/network-printer.js','utf8'),mirror=fs.readFileSync('app/src/main/assets/pos/native-settings.js','utf8'),adapter=fs.readFileSync('app/src/main/assets/pos/native-platform-settings.js','utf8');
 const clone=x=>JSON.parse(JSON.stringify(x));
-function host(saved=null,connections=false){
+function host(saved=null,connections=false,lexical=false){
  const calls=[],prints=[],events=[],timers=new Map(),values=new Map([['printers',JSON.stringify([{id:'p',name:'Old',ip:'192.0.2.1',extension:{keep:true}}])]]);let timer=0;
  const elements={};const storage={getItem:k=>values.get(String(k))??null,setItem:(k,v)=>values.set(String(k),String(v)),removeItem:k=>values.delete(String(k)),key:i=>[...values.keys()][i]??null,get length(){return values.size}};
  const h={Date,console,localStorage:storage,state:{},document:{getElementById:id=>elements[id],querySelectorAll:()=>[]},setTimeout:fn=>{timers.set(++timer,fn);return timer},clearTimeout:id=>timers.delete(id),flash:s=>events.push(s),render:()=>events.push('render'),closeModal:()=>events.push('close'),loadAll:async()=>events.push('load'),webkit:{messageHandlers:{settings:{postMessage:p=>{calls.push(clone(p));return true}},printer:{postMessage:p=>prints.push(clone(p))}}}};
- h.window=h;vm.createContext(h);vm.runInContext(source,h);h.openPrintersManager=()=>events.push('manager');h.applyBackupData=async data=>{events.push('storage-import');h.__restorePrinterSettings(data)};vm.runInContext(mirror,h);vm.runInContext(adapter,h);if(connections)vm.runInContext(fs.readFileSync("app/src/main/assets/pos/native-connection-tests.js","utf8"),h);
+ h.window=h;vm.createContext(h);if(lexical){delete h.state;vm.runInContext('let state = {}',h);}vm.runInContext(source,h);h.openPrintersManager=()=>events.push('manager');h.applyBackupData=async data=>{events.push('storage-import');h.__restorePrinterSettings(data)};vm.runInContext(mirror,h);vm.runInContext(adapter,h);if(connections)vm.runInContext(fs.readFileSync("app/src/main/assets/pos/native-connection-tests.js","utf8"),h);
  function answer(call,extra={}){h.__nativeSettingsResult({requestId:call.requestId,ok:true,...extra})}
  async function settle(){for(let i=0;i<10;i++)await Promise.resolve()}
  async function initialize(){const p=h.MPosCore.PlatformSettings.initialize();answer(calls.at(-1),saved?{authoritative:true,snapshot:{settings:saved}}:{authoritative:false});await settle();if(!saved)answer(calls.at(-1),{authoritative:true,snapshot:{settings:calls.at(-1).settings}});await p;return p}
@@ -37,4 +37,11 @@ test('correlated test print preserves real disk acknowledgement and waits for te
 
 test('failed real settings commit never submits correlated print and releases test guard',async()=>{
  const x=host(null,true);await x.initialize();const initialTimers=x.timers.size;x.edit();const p=x.h.testPrinterFromPage();await x.settle();const write=x.calls.filter(c=>c.action==='platformSettingsWrite').at(-1);x.answer(write,{ok:false,message:'disk failure'});await assert.rejects(p,/disk failure/);assert.equal(x.prints.length,0);assert.equal(x.timers.size,initialTimers);
+});
+
+test('confirmed printer settings update production lexical state after disk acknowledgement',async()=>{
+ const h=host(null,false,true);await h.initialize();assert.equal(h.h.state,undefined);
+ const state=vm.runInContext('state',h.h);assert.equal(state.printers[0].name,'Old');
+ h.edit();const saving=h.h.savePrinterFromPage();await h.settle();const call=h.calls.filter(c=>c.action==='platformSettingsWrite').at(-1);
+ assert.equal(state.printers[0].name,'Old');h.answer(call,{authoritative:true,snapshot:{settings:call.settings}});await saving;assert.equal(state.printers[0].name,'New');
 });

@@ -1,5 +1,6 @@
 (function(global){
   'use strict';
+  const appState=()=>typeof state!=='undefined'?state:global.state;
   const bridge=global.webkit?.messageHandlers?.settings;
   if(!bridge||typeof global.__printerSettingsSnapshot!=='function')return;
   const originalSnapshot=global.__printerSettingsSnapshot,legacy=global.localStorage;
@@ -41,7 +42,7 @@
       if(!result.authoritative)result=await request('platformSettingsInitialize',{settings:clone(originalSnapshot())});
       if(!result.authoritative||!result.snapshot?.settings)throw Error('Не удалось открыть настройки Android');
       cache=clone(result.snapshot.settings);facade();global.__printerSettingsSnapshot=snapshot;
-      if(global.state){global.state.printers=clone(cache.printers);global.state.posNotifications=clone(cache.posNotifications)}
+      if(appState()){appState().printers=clone(cache.printers);appState().posNotifications=clone(cache.posNotifications)}
       return snapshot();
     })();
     return initialization;
@@ -52,7 +53,7 @@
     if(blocked)throw Error('Перезапустите M POS для восстановления настроек');
     if(busy)throw Error('Дождитесь сохранения настроек');
     busy=true;
-    const previous=clone(cache),oldState=global.state?{printers:global.state.printers,posNotifications:global.state.posNotifications}:null;
+    const previous=clone(cache),oldState=appState()?{printers:appState().printers,posNotifications:appState().posNotifications}:null;
     const effects=[],replaced=[],handlers=global.webkit.messageHandlers;
     let next,result,syncFailure;
     frame={next:clone(cache)};
@@ -69,7 +70,7 @@
     }catch(error){syncFailure=error}
     finally{
       frame=null;global.webkit.messageHandlers=handlers;for(const [name,fn]of replaced)global[name]=fn;
-      if(oldState){global.state.printers=oldState.printers;global.state.posNotifications=oldState.posNotifications}
+      if(oldState){appState().printers=oldState.printers;appState().posNotifications=oldState.posNotifications}
       // The asynchronous portion keeps the busy guard; synchronous failures release below.
       if(!next)busy=false;
     }
@@ -81,7 +82,7 @@
       const acknowledged=await request('platformSettingsWrite',{settings:next,expected:previous});
       if(!acknowledged.authoritative||!acknowledged.snapshot?.settings){blocked=true;throw Error('native settings commit status is uncertain')}
       cache=clone(acknowledged.snapshot.settings);
-      if(global.state){global.state.printers=clone(cache.printers);global.state.posNotifications=clone(cache.posNotifications)}
+      if(appState()){appState().printers=clone(cache.printers);appState().posNotifications=clone(cache.posNotifications)}
       // Browser keys are a best-effort compatibility copy, never the authority after cutover.
       try{for(const [key,field]of Object.entries(fields))legacy.setItem(key,JSON.stringify(cache[field]))}catch(_){/* native commit already confirmed */}
       for(const effect of effects)effect();return result;

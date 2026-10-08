@@ -29,7 +29,7 @@ class MPosShiftScreenControllerTest {
         val clipped = payload(); clipped.getJSONObject("rect").put("left", -10).put("width", 520)
         assertEquals(1000, MPosShiftScreenController.bounds(clipped, 1000, 800)!!.width)
     }
-    @Test fun currentModelRendersAndActionsHideSurfaceWhileLateRepliesAreIgnored() {
+    @Test fun currentModelKeepsBackgroundLocksActionsAndIgnoresLateReplies() {
         val host = FrameLayout(RuntimeEnvironment.getApplication()); host.layout(0, 0, 1000, 800)
         val requests = mutableListOf<JSONObject>(); val actions = mutableListOf<JSONObject>()
         val controller = MPosShiftScreenController(host.context, host, { requests.add(it) }, { actions.add(it) })
@@ -43,8 +43,12 @@ class MPosShiftScreenControllerTest {
         assertTrue(descendants(host).filterIsInstance<TextView>().any { it.text.toString() == "80,00 BYN" })
         descendants(host).filterIsInstance<Button>().single { it.text.toString() == "Закрыть смену" }.performClick()
         assertEquals("close", actions.single().getString("action")); assertEquals("s1", actions.single().getString("shiftId"))
-        assertEquals(View.GONE, host.getChildAt(0).visibility)
-        controller.result(response); assertEquals(View.GONE, host.getChildAt(0).visibility)
+        assertEquals(View.VISIBLE, host.getChildAt(0).visibility)
+        val close=descendants(host).filterIsInstance<Button>().single{it.text.toString()=="Закрыть смену"}
+        assertFalse(close.isEnabled);close.performClick();assertEquals(1,actions.size)
+        controller.result(response);assertFalse(close.isEnabled)
+        controller.handle(JSONObject().put("action","block").put("blocked",false));assertTrue(close.isEnabled)
+        controller.hide();controller.result(response);assertEquals(View.GONE,host.getChildAt(0).visibility)
     }
     @Test fun themeSwitchUsesPosPaletteInsteadOfSystemMonochrome() {
         val host = FrameLayout(RuntimeEnvironment.getApplication()); host.layout(0, 0, 1000, 800)

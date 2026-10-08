@@ -1,5 +1,6 @@
 (function(global){
   'use strict';
+  const appState=()=>typeof state!=='undefined'?state:global.state;
   const core=global.MPosCore,bridge=global.webkit?.messageHandlers?.settingsScreen;
   if(!core?.EmployeeCommands)return;
   const originalSave=global.saveEmployee,originalDelete=global.confirmDeleteEmployee;
@@ -13,7 +14,7 @@
     return new Promise((resolve,reject)=>{
       const requestId='employee-native-'+(++sequence);
       pending.set(requestId,{resolve,reject,timer:null});
-      try{if(bridge.postMessage({action:'employeeAuthorize',requestId,theme:global.state?.theme||'light',command:input})===false)throw Error('Нативное окно подтверждения недоступно')}
+      try{if(bridge.postMessage({action:'employeeAuthorize',requestId,theme:appState()?.theme||'light',command:input})===false)throw Error('Нативное окно подтверждения недоступно')}
       catch(e){pending.delete(requestId);reject(e)}
     });
   }

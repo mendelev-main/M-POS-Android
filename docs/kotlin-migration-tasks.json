@@ -900,9 +900,14 @@
             "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceToolbarModel.kt",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceToolbarModelTest.kt",
             "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceController.kt",
-            "tests/native-workspace.test.cjs"
+            "tests/native-workspace.test.cjs",
+            "tests/native-settings-ui.test.cjs",
+            "tests/native-platform-settings.test.cjs",
+            "tests/android-employee-command.test.cjs",
+            "tests/android-native-shift-screen.test.cjs",
+            "app/src/test/java/com/mendelev/mpos/shift/MPosShiftScreenControllerTest.kt"
           ],
-          "remaining": "Native owner/routes, System Back/runtime и toolbar labels/typed Back/layout/folder-close подключены. Остались общие native tabs/search controls, controls редактора раскладки и DOM presence глобального Back. Каталог/корзина read models — 109.09. Toolbar JS/Kotlin/lint passed Actions 37750512318 (7bd7ecc); 109.08 in_progress."
+          "remaining": "Native owner/routes, System Back/runtime и toolbar labels/typed Back/layout/folder-close подключены. Остались общие native tabs/search controls, controls редактора раскладки и DOM presence глобального Back. Каталог/корзина read models — 109.09. Toolbar JS/Kotlin/lint passed Actions 37750512318 (7bd7ecc); 109.08 in_progress. Production lexical-state wiring и native shift background исправлены; regression tests ожидают Actions, физическая проверка pending."
         },
         {
           "id": "109.09",
@@ -1111,7 +1116,7 @@
       "runId": 37750512318,
       "commit": "7bd7ecc",
       "testsAndLint": "success",
-      "apkBuild": "in_progress",
+      "apkBuild": "success",
       "physicalAcceptance": "pending"
     }
   ]

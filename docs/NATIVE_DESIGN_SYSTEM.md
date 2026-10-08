@@ -86,3 +86,9 @@ labels. Shared MPosNativeTheme/Manrope, both palettes, 48dp secondary buttons an
 horizontal scrolling remain; payment stays primary. Source HTML toolbar labels
 are not extracted for these controls. Typed callbacks bind to view token;
 busy/recovery disables controls. Physical tablet/font-scale checks pending.
+
+
+109.08 integration correction: production lexical state activates shared native
+workspace/settings surfaces. Shift cash Dialog keeps native themed summary behind
+it, disabling background buttons; visible legacy HTML modals keep the compatibility
+path. Manrope/palettes/touch targets unchanged. Tablet verification pending.

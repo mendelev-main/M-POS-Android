@@ -31,6 +31,8 @@ class MPosShiftScreenController(
     private val ink get() = theme.ink
     private val accent get() = theme.accent
     private fun shape(fill: Int, radius: Int = 12, border: Boolean = false) = theme.shape(fill, radius, border)
+    private var blocked = false
+    private val controls = mutableListOf<Button>()
     private var generation = 0L
     private var sessionEpoch = 0L
     private var pendingId: String? = null
@@ -42,24 +44,26 @@ class MPosShiftScreenController(
     }
     private fun dp(value: Int) = (value * context.resources.displayMetrics.density).roundToInt()
     fun handle(payload: JSONObject) {
+        if (payload.optString("action") == "block") { blocked=payload.optBoolean("blocked");enable();return }
         if (payload.optString("action") == "hide") { hide(); return }
         if (payload.optString("action") != "show") return
         val bounds = bounds(payload, host.width, host.height) ?: run { hide(); return }
         theme = MPosNativeTheme(context, payload.optString("theme") == "dark")
         sessionEpoch++
+        blocked=payload.optBoolean("blocked")
         scroll.setBackgroundColor(theme.bg)
         lastPayload = JSONObject(payload.toString())
         scroll.layoutParams = FrameLayout.LayoutParams(bounds.width, bounds.height).apply { leftMargin = bounds.left; topMargin = bounds.top }
         scroll.visibility = View.VISIBLE
-        content.removeAllViews(); title("Кассовая смена"); text(content, "Загрузка смены…")
+        controls.clear();content.removeAllViews(); title("Кассовая смена"); text(content, "Загрузка смены…")
         refresh()
     }
-    fun hide() { generation++; sessionEpoch++; pendingId = null; scroll.visibility = View.GONE }
+    fun hide() { generation++; sessionEpoch++; pendingId = null; scroll.visibility = View.GONE;blocked=false;controls.clear() }
     /** Root invalidation comes directly from Room; old controls/results must not survive it. */
     fun rootSessionChanged() {
         if (scroll.visibility != View.VISIBLE || lastPayload == null) return
         sessionEpoch++
-        content.removeAllViews(); title("Кассовая смена"); text(content, "Загрузка смены…")
+        controls.clear();content.removeAllViews(); title("Кассовая смена"); text(content, "Загрузка смены…")
         refresh()
     }
     private fun refresh() {
@@ -71,7 +75,7 @@ class MPosShiftScreenController(
     fun result(value: JSONObject) {
         if (value.optString("requestId") != pendingId || scroll.visibility != View.VISIBLE) return
         pendingId = null
-        content.removeAllViews(); title("Кассовая смена")
+        controls.clear();content.removeAllViews(); title("Кассовая смена")
         if (!value.optBoolean("ok")) {
             text(content, "Не удалось загрузить данные смены")
             button(content, "Повторить") { refresh() }
@@ -136,7 +140,7 @@ class MPosShiftScreenController(
         }
         button(card, "Закрыть смену") { emit("close", id) }
     }
-    private fun emit(name: String, id: String = "") { hide(); action(JSONObject().put("action", name).put("shiftId", id)) }
+    private fun emit(name: String, id: String = "") { if(blocked)return;if(name=="fallback")hide() else {blocked=true;enable()};action(JSONObject().put("action", name).put("shiftId", id)) }
     private fun title(label: String) { heading(content, label, 24f) }
     private fun heading(parent: LinearLayout, label: String, size: Float = 19f) { text(parent, label, size).apply { theme.text(this, size, 700) } }
     private fun text(parent: LinearLayout, label: String, size: Float = 15f, secondary: Boolean = false): TextView = TextView(context).apply {
@@ -161,9 +165,11 @@ class MPosShiftScreenController(
         parent.addView(Button(context).apply {
             text = label
             theme.button(this, primary = label == "Открыть смену", destructive = label == "Закрыть смену" || label == "Изъять наличные")
-            setOnClickListener { if (sessionEpoch == epoch && scroll.isVisible) onClick() }
+            controls+=this;isEnabled=!blocked
+            setOnClickListener { if (sessionEpoch == epoch && scroll.isVisible && !blocked) onClick() }
         }, if (weighted) LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(8) } else LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8); bottomMargin = dp(4) })
     }
+    private fun enable(){controls.forEach{it.isEnabled=!blocked}}
     private fun card(): LinearLayout = LinearLayout(context).apply {
         orientation = LinearLayout.VERTICAL; background = shape(theme.surface, 22, true); setPadding(dp(20), dp(16), dp(20), dp(20))
         content.addView(this, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(12) })

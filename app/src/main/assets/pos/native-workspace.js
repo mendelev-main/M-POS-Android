@@ -1,5 +1,6 @@
 (function(global){
   'use strict';
+  const appState=()=>typeof state!=='undefined'?state:global.state;
   const bridge=global.webkit?.messageHandlers?.workspace;
   if(!bridge)return;
   if(global.MPosNativeWorkspaceEnabled===undefined)global.MPosNativeWorkspaceEnabled=true;
@@ -25,7 +26,7 @@
     });
     const panel=root.querySelector('.cart-panel');
     const lines=[...panel.querySelectorAll('.cart-row')].map(node=>({key:bind(node,'cart'),removeKey:bind(node,'remove',{id:node.dataset.cartId}),name:text(node.querySelector('.cart-row-name')),amount:text(node.querySelector('.cart-row-linetotal')),details:[...node.querySelectorAll('.cart-row-sub')].map(text).join('\n')}));
-    return{actions,model:{blocked:blocked(),columns,tiles,navigation,title:navigation?.title??(folder?text(folder.querySelector('h2')):text(root.querySelector('.zone-title-btn'))),context:String(global.state.posPath||'')+'|'+String(global._posFolderModal?.id||global.state.posFolder||''),folder:!!folder,closeKey:folder&&!navigation?bind(folder.querySelector('header button')):null,
+    return{actions,model:{blocked:blocked(),columns,tiles,navigation,title:navigation?.title??(folder?text(folder.querySelector('h2')):text(root.querySelector('.zone-title-btn'))),context:String(appState().posPath||'')+'|'+String(global._posFolderModal?.id||appState().posFolder||''),folder:!!folder,closeKey:folder&&!navigation?bind(folder.querySelector('header button')):null,
       toolbar:folder?[]:[...root.querySelectorAll('.pos-left .pos-toolbar button,.no-shift-banner button')].filter(node=>!navigation||!node.classList.contains('pos-back')&&node.getAttribute('onclick')!=='toggleEditMode()').map(button),notice:folder?'':text(root.querySelector('.no-shift-banner span')),
       empty:text(grid.querySelector('.empty-hint,.pos-folder-empty'))||'В папке пока нет товаров.',cartTitle:text(panel.querySelector('.cart-order-title')),metadata:text(panel.querySelector('.order-meta')),lines,
       cartHeaderButtons:[...panel.querySelectorAll('.cart-head button,.order-meta button')].map(button),cartButtons:[...panel.querySelectorAll('.cart-foot button')].map(button),totals:[...panel.querySelectorAll('.total-row')].map(node=>({label:text(node.querySelector('.label')),value:text(node.querySelector('.value'))})),cartEmpty:text(panel.querySelector('.cart-empty'))}};
@@ -33,7 +34,7 @@
   const toolbarKey=()=>JSON.stringify([global.MPosCore?.WorkspaceNavigationLifecycle?.generation(),state.tab,state.posPath,state.posFolder,state.search,state.editMode,global._posFolderModal]);
   async function update(){
     scheduled=false;
-    if(!global.MPosNativeWorkspaceEnabled||!global.state?.loaded||global.state.tab!=='pos'||global.state.editMode||global.state.paymentPage||document.hidden){hide();return}
+    if(!global.MPosNativeWorkspaceEnabled||!appState()?.loaded||appState().tab!=='pos'||appState().editMode||appState().paymentPage||document.hidden){hide();return}
     if(document.getElementById('printer-page')||['warehouse-root','receiving-page-root'].some(id=>document.getElementById(id)?.children.length)){hide();return}
     const root=document.getElementById('screen-pos'),modal=document.querySelector('#modal-root .modal'),folder=modal?.classList.contains('pos-folder-modal')?modal:null;
     if(!root||!root.classList.contains('active')||modal&&!folder){hide();return}
@@ -86,7 +87,7 @@
     if(payload.action==='fallback'){global.MPosNativeWorkspaceEnabled=false;hide();return}
     if(payload.action!=='click')return;
     if(awaiting)return;
-    if(!global.MPosNativeWorkspaceEnabled||!global.state.loaded||global.state.tab!=='pos'||global.state.editMode||global.state.paymentPage||document.hidden||blocked()){bridge.postMessage({action:'result',token:current.token,blocked:blocked(),message:blocked()?'Перезапустите M POS для восстановления заказа':''});return;}
+    if(!global.MPosNativeWorkspaceEnabled||!appState().loaded||appState().tab!=='pos'||appState().editMode||appState().paymentPage||document.hidden||blocked()){bridge.postMessage({action:'result',token:current.token,blocked:blocked(),message:blocked()?'Перезапустите M POS для восстановления заказа':''});return;}
     const modal=document.querySelector('#modal-root .modal');if(modal&&modal!==current.folder)return;
     const entry=current.actions[Number(payload.key)];if(!/^\d+$/.test(String(payload.key))||!entry||entry.node?.isConnected===false||entry.node?.disabled||entry.node?.classList.contains('disabled'))return;
     const token=current.token;awaiting=token;message='';const promises=[];capture=promises;
@@ -95,7 +96,7 @@
       if(entry.kind==='tile')result=global.handlePosGridClick({target:entry.node,preventDefault(){}});
       else if(entry.kind==='cart')result=global.handleCartRowClick({target:entry.node,preventDefault(){}},entry.node.dataset.cartId);
       else if(entry.kind==='remove'){
-        if(!global.state.cart.some(i=>String(global.cartItemKey(i))===entry.id))return;
+        if(!appState().cart.some(i=>String(global.cartItemKey(i))===entry.id))return;
         result=global.removeFromCart(entry.id);
       }else result=entry.node.click();
       capture=null;await Promise.resolve(result);for(const promise of promises)await promise;

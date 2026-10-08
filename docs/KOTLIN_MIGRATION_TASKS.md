@@ -369,3 +369,26 @@ hidden плиток, кеширования и rollback. Локальные те
 **114/129 (88,37%)**, 109 **7/20**, крупных **107/110**.
 
 Проверка toolbar-кода `7bd7ecc`: [Actions 37750512318](https://github.com/mendelev-main/M-POS-Android/actions/runs/37750512318) — Tests and lint успешно (JS, правила версий, Kotlin, lint). APK собирается отдельным job; физическая приёмка pending.
+
+
+### 109.08 — исправление подключения native UI, 08.10.2026
+
+Проверка по сообщению с планшета выявила дефект: приложение объявляет `let state`,
+а workspace/settings UI читали `window.state`. В браузере эти значения различны;
+моки прежних тестов помещали state в window и пропускали дефект. Адаптеры workspace,
+settings UI, platform settings и employee confirmation теперь выбирают lexical
+state, сохраняя property fallback для совместимости. Regression fixtures используют
+`let state` без window.state: включение экрана/кнопок, граница подтверждения принтера,
+тема и подтверждение сотрудника. Это исправление интеграции, не новый закрытый этап.
+
+Экран смены больше не исчезает при открытии нативного cash Dialog: фон остаётся
+нативным, кнопки блокируются до закрытия формы, повторное нажатие не вызывает действие.
+Hidden compatibility overlay отличает native Dialog от видимого HTML modal;
+для видимого HTML modal native screen скрывается, чтобы не перекрывать окно.
+Ошибка открытия возвращает управление; смена раздела/rollback/скрытие приложения
+по-прежнему скрывают экран. Добавлены JS и native view проверки фонового слоя,
+блокировки, возврата и stale replies. Формулы и сохранение cash movement не изменены.
+
+Tests authored, GitHub Actions pending; локальные тесты/сборка APK не запускались.
+Физическая проверка исправлений pending. Прогресс **114/129 (88,37%)**, 109 **7/20**;
+109.08 остаётся in_progress, следующие controls — вкладки/поиск и DOM route targets.

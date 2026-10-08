@@ -6,13 +6,15 @@
   let renderRevision=0;
   const original=renderShiftScreen;
   renderShiftScreen=function(...args){renderRevision++;return original.apply(this,args).replace('<div class="screen content-screen','<div data-mpos-shift-screen class="screen content-screen');};
-  let queued=false,lastKey='',visible=false,nextId=0;
+  let queued=false,lastKey='',visible=false,nextId=0,lastBlocked=null;
   const ids=new WeakMap();
   function identity(value){if(!value||typeof value!=='object')return 0;if(!ids.has(value))ids.set(value,++nextId);return ids.get(value);}
-  function hide(){lastKey='';if(visible){visible=false;bridge.postMessage({action:'hide'});}}
+  function hide(){lastKey='';lastBlocked=null;if(visible){visible=false;bridge.postMessage({action:'hide'});}}
   function update(){
     queued=false;
-    if(!window.MPosNativeShiftScreenEnabled||!state.loaded||state.tab!=='shift'||document.querySelector('#modal-root .modal-overlay')){hide();return;}
+    const modal=document.querySelector('#modal-root .modal-overlay');
+    // A hidden compatibility overlay is edited by a native Dialog above this screen.
+    if(!window.MPosNativeShiftScreenEnabled||!state.loaded||state.tab!=='shift'||document.hidden||modal&&modal.style?.visibility!=='hidden'){hide();return;}
     const root=document.querySelector('[data-mpos-shift-screen]');
     if(!root){hide();return;}
     const r=root.getBoundingClientRect(),width=window.innerWidth,height=window.innerHeight;
@@ -20,8 +22,9 @@
     const theme=document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';
     const payload={theme,action:'show',rect:{left:r.left,top:r.top,width:r.width,height:r.height},viewportWidth:width,viewportHeight:height,currency:state.currency||'',establishmentName:state.company?.establishmentName||''};
     const key=JSON.stringify([payload,identity(state.shifts),identity(state.orders),renderRevision]);
-    if(key===lastKey)return;
-    lastKey=key;visible=true;bridge.postMessage(payload);
+    const blocked=!!modal;
+    if(key===lastKey){if(lastBlocked!==blocked){lastBlocked=blocked;bridge.postMessage({action:'block',blocked});}return;}
+    lastKey=key;lastBlocked=blocked;visible=true;bridge.postMessage({...payload,blocked});
   }
   function schedule(){if(!queued){queued=true;requestAnimationFrame(update);}}
   window.__mposShiftScreenAction=function(payload){
@@ -30,7 +33,7 @@
     if(name==='fallback'){window.MPosNativeShiftScreenEnabled=false;hide();return;}
     if(!window.MPosNativeShiftScreenEnabled||!state.loaded||state.tab!=='shift'||state.busy||document.querySelector('#modal-root .modal-overlay')){schedule();return;}
     if(['deposit','withdrawal','close'].includes(name)&&currentShift()?.id!==payload.shiftId){flash('Смена изменилась. Обновите экран.','err');lastKey='';schedule();return;}
-    lastKey='';visible=false;
+    lastBlocked=null;
     try{
       const result=name==='open'?openShiftModal():name==='close'?openCloseShiftModal():name==='report'?viewShiftModal(payload.shiftId):openCashMovementModal(name);
       Promise.resolve(result).catch(()=>{flash('Не удалось открыть форму смены','err');schedule();});

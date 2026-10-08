@@ -8,7 +8,7 @@ function host(configure=()=>{}){
  line.dataset.cartId='line-1';line.one['.cart-row-name']=node('Молоко');line.one['.cart-row-linetotal']=node('7,00 BYN');line.many['.cart-row-sub']=[node('3,50 / шт · ×2')];panel.many['.cart-row']=[line];panel.one['.cart-order-title']=node('Текущий заказ — 2 поз.');panel.one['.order-meta']=node('С собой');panel.many['.cart-head button,.order-meta button']=[];panel.many['.cart-foot button']=[park,pay];const total=node();total.one['.label']=node('Итого');total.one['.value']=node('7,00 BYN');panel.many['.total-row']=[total];
  root.one['.product-grid']=grid;root.one['.cart-panel']=panel;root.one['.zone-title-btn']=node('Рабочая зона');root.many['.pos-left .pos-toolbar button,.no-shift-banner button']=[];
  const h={state:{loaded:true,tab:'pos',editMode:false,cart:[{cartLineId:'line-1',productId:'p'}]},document:{readyState:'complete',hidden:false,body:node(),documentElement:{getAttribute:()=> 'light'},getElementById:id=>id==='screen-pos'?root:id==='app'?root:id==='modal-root'?node():null,querySelector:()=>modal,addEventListener(){}},innerWidth:1100,innerHeight:900,requestAnimationFrame:f=>frames.push(f),getComputedStyle:()=>({gridTemplateColumns:'200px 200px 200px 200px',gridColumnStart:'2',gridRowStart:'3',gridColumnEnd:'span 2',gridRowEnd:'span 1'}),addEventListener(){},MutationObserver:class{constructor(fn){observers.push(fn)}observe(){}},webkit:{messageHandlers:{workspace:{postMessage:p=>{sent.push(JSON.parse(JSON.stringify(p)));return true}}}},handlePosGridClick:e=>{events.push('tile');h.addToCart(e.target.parent.dataset.id)},handleCartRowClick:(e,id)=>events.push(['cart',id]),removeFromCart:id=>events.push(['remove',id]),cartItemKey:i=>i.cartLineId||i.productId,addToCart:id=>events.push(['add',id]),parkOrder:()=>{events.push('park');return new Promise(r=>resolve=r)},flash:s=>events.push(s)};
- park.onclick=()=>h.parkOrder();pay.onclick=()=>events.push('pay');configure(h);h.window=h;vm.createContext(h);vm.runInContext(adapter,h);
+ park.onclick=()=>h.parkOrder();pay.onclick=()=>events.push('pay');configure(h);h.window=h;vm.createContext(h);if(h.lexicalState){const initial=h.state;delete h.state;vm.runInContext('let state = '+JSON.stringify(initial),h);}vm.runInContext(adapter,h);
  const flush=()=>{while(frames.length)frames.shift()()};const mutate=()=>{observers[0]();flush()};flush();
  return{h,sent,events,root,grid,panel,card,tile,line,pay,park,total,flush,mutate,reply:()=>resolve(),action:p=>h.__nativeWorkspaceAction({action:'click',...p}),setModal:n=>{modal=n}};
 }
@@ -52,4 +52,11 @@ test('native navigation projects durable route once and discards stale acceptanc
 });
 test('explicit native toolbar rollback retains reviewed title and keys',()=>{
  const h=host(c=>{c.MPosNativeWorkspaceToolbarEnabled=false;c.MPosCore={WorkspaceNavigationLifecycle:{toolbar:()=>{throw Error('must not run')}}};});assert.equal(h.sent[0].model.title,'Рабочая зона');assert.equal(h.sent[0].model.navigation,undefined);
+});
+
+test('production lexical state activates workspace without window.state and preserves payment hiding',async()=>{
+ const h=host(c=>{c.lexicalState=true});assert.equal(h.h.state,undefined);
+ const show=h.sent.at(-1);assert.equal(show.action,'show');assert.equal(h.root.style.opacity,'0');
+ await h.action({token:show.token,key:show.model.tiles[0].key});assert.deepEqual(h.events,['tile',['add','p']]);
+ vm.runInContext("state.paymentPage='main'",h.h);h.mutate();assert.equal(h.sent.at(-1).action,'hide');assert.equal(h.root.style.opacity,'');
 });

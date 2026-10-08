@@ -16,7 +16,7 @@ function host(configure){
  const h={state:{loaded:true,tab:'settings'},document,innerWidth:1000,innerHeight:800,Event:class{},MutationObserver:class{observe(){}},requestAnimationFrame:f=>raf.push(f),addEventListener:()=>{},webkit:{messageHandlers:{settingsScreen:{postMessage:p=>{sent.push(JSON.parse(JSON.stringify(p)));return true}}}},flash:s=>events.push(s),renderSettingsScreen:()=>'<div class="screen content-screen active">',renderNetworkScreen:()=>'<div class="screen content-screen active">',showModal:()=>{modal=new Node('div','modal');modal.add(new Node('div','modal-title','Новый сотрудник'))},closeModal:()=>{events.push('close');modal?.detach();modal=null},saveEmployee:async()=>{events.push('save');const result=await new Promise(r=>done=r);if(result)h.closeModal();else h.flash('Проверьте пароль');return result}};
  let name,role,password,save;
  h.openEmployeeModal=()=>{h.showModal('reviewed');const container=modal.add(new Node('div','field'));container.add(new Node('label','','ФИО'));name=container.add(new Node('input'));name.id='ef-name';name.value='Сотрудник';role=modal.add(new Node('input'));role.type='checkbox';role.id='ef-admin';const wrap=modal.add(new Node());wrap.hidden=true;password=wrap.add(new Node('input'));password.type='password';password.id='ef-admin-password';role.onchange=()=>wrap.hidden=!role.checked;save=modal.add(new Node('button','btn btn-primary','Сохранить'));save.onclick=()=>h.saveEmployee();const cancel=modal.add(new Node('button','btn','Отмена'));cancel.onclick=()=>h.closeModal()};
- h.window=h;if(configure)configure(h);button.onclick=()=>h.openEmployeeModal();vm.createContext(h);if(configure)vm.runInContext(fs.readFileSync("app/src/main/assets/pos/native-connection-tests.js","utf8"),h);vm.runInContext(adapter,h);
+ h.window=h;if(configure)configure(h);button.onclick=()=>h.openEmployeeModal();vm.createContext(h);if(h.lexicalState){const initial=h.state;delete h.state;vm.runInContext('let state = '+JSON.stringify(initial),h);}if(configure)vm.runInContext(fs.readFileSync("app/src/main/assets/pos/native-connection-tests.js","utf8"),h);vm.runInContext(adapter,h);
  function flush(){for(let i=0;raf.length&&i<10;i++)raf.shift()()}
  function action(p){return h.__nativeSettingsAction(p)}
  function open(){h.openEmployeeModal();flush();return sent.filter(p=>p.action==='formShow').at(-1)}
@@ -58,4 +58,10 @@ test('reopened form cannot start another WEB request while its previous test is 
  x.h.closeModal();x.flush();const next=x.open();x.fields.save.onclick=()=>x.h.testWebOrder();await x.action({action:'click',token:next.token,key:'0',fields:{}});
  assert.equal(requests,1);assert.equal(x.sent.at(-1).message,'Дождитесь завершения предыдущей проверки');const count=x.sent.length;
  reply({ok:true,status:200});await p;assert.equal(x.sent.length,count);assert.ok(!x.events.includes('Тестовый заказ отправлен'));
+});
+
+test('production lexical state enables settings hub and native editing without window.state',async()=>{
+ const h=host(c=>{c.lexicalState=true});assert.equal(h.h.state,undefined);
+ const show=h.sent.find(p=>p.action==='show');assert.ok(show);assert.equal(h.pane.style.opacity,'0');
+ await h.action({action:'click',token:show.token,key:'0',fields:{}});h.flush();assert.ok(h.sent.some(p=>p.action==='formShow'));
 });
