@@ -638,3 +638,6 @@ MPosNativeProductEditorCommitEnabled (false возвращает прежнюю 
 Планшетная приёмка pending. Остались settings gates, WEB toggle товара и
 защищённые операции лояльности; 109.07 остаётся in_progress.
 Счётчик не завышен: **107/110; 109 — 6/20; детально 113/129 (87,60%)**.
+## Сетевые проверки Android — 08.10.2026
+
+См. [Android backend connectivity](ANDROID_BACKEND_CONNECTIVITY_RU.md): native HTTPS проверки и обмен Telegram-настройками/статистикой, явные HTTP 401/404 и Telegram ошибки, перезапуск SSE после ручной регистрации. Проверка на планшете pending; локальные тесты не запускались, выполняет Actions. Счётчики миграции не изменены. Владелец подтвердил обновление подписанных сборок.

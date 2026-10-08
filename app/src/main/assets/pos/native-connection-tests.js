@@ -50,10 +50,29 @@
       const request=(async()=>{
         try{
           const response=await global.fetch(base+'/api/orders/test',{method:'POST',headers:{'Content-Type':'application/json','X-Device-Key':config.deviceKey},body:'{}',cache:'no-store',signal:controller.signal});
-          return response.ok?{ok:true,message:'Тестовый заказ отправлен'}:{ok:false,message:'Не удалось создать тестовый заказ: HTTP '+response.status};
+          return response.ok?{ok:true,message:'Тестовый заказ отправлен'}:{ok:false,message:response.status===404?'Backend доступен, но маршрут тестового заказа отсутствует (HTTP 404). Это не отказ подключения':response.status===401?'Ключ устройства не зарегистрирован (HTTP 401). Выполните ручную синхронизацию меню':'Не удалось создать тестовый заказ: HTTP '+response.status};
         }catch(_error){return{ok:false,message:controller.signal.aborted?'Сервер не ответил вовремя. Проверьте WEB-заказы перед повтором':'Не удалось создать тестовый заказ. Проверьте подключение к backend'}}
       })();
       const result=await Promise.race([request,timeout]);clearTimeout(timer);notify(result.message);return result.ok;
+    },notify);
+  };
+  const originalBackend=global.testBackendConnection;
+  global.testBackendConnection=function(...args){
+    if(!enabled())return originalBackend?.apply(this,args);
+    const notify=feedback();return once('backend',async()=>{
+      if(!global.currentShiftEmployeeIsAdmin()){notify('Сетевые конфигурации доступны только администратору');return false}
+      if(!await global.saveNetworkSettings())return false;
+      const config=global.networkConfigFromState(),base=String(config.backendUrl||'').replace(/\/+$/,'');
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+      try{
+        const health=await global.fetch(base+'/health',{signal:controller.signal,cache:'no-store'});
+        const data=await health.json().catch(()=>null);
+        if(!health.ok||data?.ok!==true){notify('Backend не готов: HTTP '+health.status);return false}
+        const stream=await global.fetch(base+'/api/orders/events?deviceKey='+encodeURIComponent(config.deviceKey),{signal:controller.signal,cache:'no-store'});
+        if(!stream.ok){notify(stream.status===401?'Backend доступен, ключ устройства не зарегистрирован. Выполните ручную синхронизацию меню (HTTP 401)':'Поток заказов недоступен: HTTP '+stream.status);return false}
+        global.startWebOrderEvents?.();notify('Backend подключён, ключ устройства принят, поток заказов доступен');return true;
+      }catch(error){notify(controller.signal.aborted?'Backend не ответил вовремя':String(error?.message||'Нет связи с backend'));return false}
+      finally{clearTimeout(timer)}
     },notify);
   };
   // Keep reviewed printer configuration and native disk acknowledgement ordering.

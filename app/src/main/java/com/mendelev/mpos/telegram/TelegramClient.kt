@@ -69,7 +69,7 @@ class TelegramClient(
         executor.execute {
             runCatching { send(token, chatId, payload.optString("threadId"), text) }
                 .onSuccess { result(true, if (action == "test") "Telegram подключён" else "Отчёт отправлен") }
-                .onFailure { result(false, "Не удалось подключиться к Telegram. Проверьте сеть, токен, группу и тему") }
+                .onFailure { result(false, MPosTelegramFailure.message(it)) }
         }
     }
 
@@ -78,14 +78,16 @@ class TelegramClient(
         if (threadId.isNotBlank()) fields["message_thread_id"] = threadId
         val body = fields.entries.joinToString("&") { (key, value) -> "${encode(key)}=${encode(value)}" }.toByteArray()
         val connection = URL("https://api.telegram.org/bot$token/sendMessage").openConnection() as HttpURLConnection
-        connection.requestMethod = "POST"
-        connection.connectTimeout = 10_000
-        connection.readTimeout = 15_000
-        connection.doOutput = true
-        connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-        connection.outputStream.use { it.write(body) }
-        val response = (if (connection.responseCode in 200..299) connection.inputStream else connection.errorStream)?.bufferedReader()?.use { it.readText() }.orEmpty()
-        if (connection.responseCode !in 200..299 || !JSONObject(response.ifBlank { "{}" }).optBoolean("ok")) error("Telegram HTTP ${connection.responseCode}")
+        try {
+            connection.requestMethod = "POST"
+            connection.connectTimeout = 10_000
+            connection.readTimeout = 15_000
+            connection.doOutput = true
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+            connection.outputStream.use { it.write(body) }
+            val response = (if (connection.responseCode in 200..299) connection.inputStream else connection.errorStream)?.bufferedReader()?.use { it.readText() }.orEmpty()
+            if (connection.responseCode !in 200..299 || !JSONObject(response.ifBlank { "{}" }).optBoolean("ok")) throw MPosTelegramFailure.fromResponse(connection.responseCode, response)
+        } finally { connection.disconnect() }
     }
 
     private fun sendDocument(token: String, chatId: String, threadId: String, file: File, caption: String) {

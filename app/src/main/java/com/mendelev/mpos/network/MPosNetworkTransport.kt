@@ -25,6 +25,7 @@ class MPosNetworkTransport(
     private val availability = MPosAvailabilityHttp()
     private val availabilityJobs = java.util.concurrent.ConcurrentHashMap<String, Job>()
     private val catalog = MPosCatalogHttp()
+    private val backend = MPosBackendHttp()
     private val webAcks = MPosWebAckHttp()
     private val loyaltyProfiles = MPosLoyaltyProfileHttp()
     private val profileCalls = java.util.concurrent.ConcurrentHashMap<String, Call>()
@@ -48,6 +49,7 @@ class MPosNetworkTransport(
             "availabilityPublish" -> availabilityPublish(requestId,payload)
             "availabilityCancel" -> { availabilityJobs.remove(requestId)?.cancel(); profileCalls.remove(requestId)?.cancel() }
             "catalogExchange" -> catalogExchange(requestId,payload)
+            "backendExchange" -> backendExchange(requestId,payload)
             "catalogCancel" -> profileCalls.remove(requestId)?.cancel()
             "webAck" -> webAck(requestId,payload)
             "loyaltyProfile" -> loyaltyProfile(requestId, payload)
@@ -89,6 +91,24 @@ class MPosNetworkTransport(
             catch (error: Exception) { onResult(JSONObject().put("requestId",requestId).put("ok",false)
                 .put("timeout",error is java.io.InterruptedIOException).put("message","Не удалось связаться с сервером")) }
             finally { profileCalls.remove(requestId,call) }
+        }
+    }
+
+    private fun backendExchange(requestId: String, payload: JSONObject) {
+        val call = try { backend.client.newCall(backend.request(payload)) }
+        catch (_: Exception) { result(requestId, false, "Проверьте HTTPS адрес backend и ключ устройства"); return }
+        profileCalls.put(requestId, call)?.cancel()
+        scope.launch(Dispatchers.IO) {
+            try { call.execute().use { onResult(backend.decode(it, payload.getString("kind")).put("requestId", requestId)) } }
+            catch (error: Exception) {
+                val message = when (error) {
+                    is java.net.UnknownHostException -> "Не найден адрес backend. Проверьте адрес и DNS сети"
+                    is javax.net.ssl.SSLException -> "Не удалось проверить HTTPS сертификат backend"
+                    is java.io.InterruptedIOException -> "Backend не ответил вовремя"
+                    else -> "Нет связи с backend. Проверьте интернет на планшете"
+                }
+                result(requestId, false, message)
+            } finally { profileCalls.remove(requestId, call) }
         }
     }
 

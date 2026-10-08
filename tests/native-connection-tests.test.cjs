@@ -47,3 +47,13 @@ test('printer queue refusal, transport failure and unknown result are visible wi
 test('legacy callback and correlated native test are wired without changing reviewed source',()=>{
  const main=fs.readFileSync('app/src/main/java/com/mendelev/mpos/MainActivity.kt','utf8'),html=fs.readFileSync('app/src/main/assets/pos/pos.html','utf8');assert.match(main,/window\.onTelegramResult&&window\.onTelegramResult/);assert.doesNotMatch(main,/window\.handleTelegramResult/);assert.match(main,/window\.__nativeConnectionTestResult/);assert.ok(html.indexOf('src="native-connection-tests.js"')<html.indexOf('src="native-settings-ui.js"'));assert.ok(html.indexOf('src="native-connection-tests.js"')>html.indexOf('src="native-platform-settings.js"'));
 });
+
+test('WEB missing server test route reports contract mismatch rather than offline',async()=>{
+ const x=host(),p=x.h.testWebOrder();x.requests[0].resolve({ok:false,status:404});assert.equal(await p,false);assert.match(x.events[0],/маршрут тестового заказа отсутствует/);
+});
+test('backend health alone is insufficient; unregistered key is actionable without automatic sync',async()=>{
+ const x=host();x.h.saveNetworkSettings=()=>true;const p=x.h.testBackendConnection();await flush();assert.equal(x.requests[0].url,'https://backend.example/health');x.requests[0].resolve({ok:true,status:200,json:async()=>({ok:true})});await flush();assert.match(x.requests[1].url,/orders\/events\?deviceKey=/);x.requests[1].resolve({ok:false,status:401});assert.equal(await p,false);assert.match(x.events[0],/ручную синхронизацию/);assert.equal(x.sent.length,0);assert.equal(x.timers.size,0);
+});
+test('backend accepted key restarts stream only after successful explicit test',async()=>{
+ const x=host();x.h.saveNetworkSettings=()=>true;let started=0;x.h.startWebOrderEvents=()=>started++;const p=x.h.testBackendConnection();await flush();x.requests[0].resolve({ok:true,status:200,json:async()=>({ok:true})});await flush();x.requests[1].resolve({ok:true,status:200});assert.equal(await p,true);assert.equal(started,1);
+});
