@@ -925,7 +925,7 @@
             "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceShiftHeaderTest.kt",
             "docs/NATIVE_MIGRATION_EXECUTION_RU.md"
           ],
-          "remaining": "Native owner/routes/Back/runtime, toolbar, category/folder selection и fixed topbar tabs подключены. Остались search/filter controls, shift-tab control, редактор раскладки и global Back DOM presence. Source geometry/narrow topbar scroller сохраняются до native root presentation. Fixed header JS/Kotlin/lint прошёл Actions 37767655391 (b0196c5); physical acceptance pending. Live filtering now uses authoritative Room names and typed visibility; source grid scope/render-time search/presentation retained. Search JS/Kotlin/lint passed Actions 37769761293 (1564939); physical acceptance pending. Shift header completed and passed Actions 37772473180 (b38a2c4). All default opening entry points now use direct native form and state-driven background blocking; next Actions pending. Execution checklist tracks remaining controls."
+          "remaining": "Native navigation owner/routes/Back/runtime, toolbar, category/folder selection, fixed header tabs, Room live filtering and complete shift header/default opening entry points are connected. Shift header passed Actions 37772473180 (b38a2c4); all opening entries and native background blocking passed Actions 37773405619 (4c44c33), including APK. Remaining: complete layout editor actions/controls, residual search boundary and global Back DOM presence; source geometry/narrow topbar fallback until native root presentation. Execution checklist: docs/NATIVE_MIGRATION_EXECUTION_RU.md. Physical acceptance pending; 109.08 remains in_progress."
         },
         {
           "id": "109.09",

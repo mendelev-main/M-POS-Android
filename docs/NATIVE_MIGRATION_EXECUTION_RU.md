@@ -13,11 +13,17 @@
 - [x] ~~Live фильтрация текущих плиток по каталогу Room~~ — подключена, Actions 37769761293; presentation ещё временная.
 - [x] ~~Кнопка смены целиком~~ — status/label из Room, direct selection/opening,
   stale/busy/Back/cancel/fallback; main b38a2c4, Actions 37772473180 успешно.
-- [ ] **Все входы в открытие смены без скрытой HTML-формы** — переключить default
-  openShiftModal на native form; legacy form остаётся только explicit rollback.
-  Реализовано, включая state notifications и блокировку фона; Actions pending.
-- [ ] **Поиск и управление раскладкой** — закрыть оставшиеся controls/state
-  границы, сохранить scope и source behavior; domain catalog models входят в 109.09.
+- [x] ~~Все входы в открытие смены без скрытой HTML-формы~~ — default
+  openShiftModal использует native form; legacy form только explicit rollback.
+  State notifications и блокировка фона проверены; main 4c44c33, Actions 37773405619 успешно.
+- [ ] **Раскладка рабочей зоны целиком — следующий участок**: вход/«Готово»,
+  добавление и удаление плиток, создание/редактирование папок, перемещение товаров,
+  drag/reorder и сохранение. Проверить ограничения 20 root tiles, текущие права,
+  порядок/позиции, отмену, import/restart, stale и failed persistence. Закрывать
+  после production подключения всех действий и Actions, не одной кнопки.
+- [ ] **Оставшаяся граница поиска** — сохранить live/render-time scope и правила;
+  в reviewed workspace нет поля поиска, новое поле не добавлять ради счётчика.
+  Catalog read models/HTML extraction закрываются в 109.09.
 - [ ] **Состояние overlays для Back** — заменить оставшиеся DOM presence targets
   на владельцев состояния, сохранить приоритеты и защиту устаревших действий.
 - [ ] **Проверка полного критерия 109.08** — перечислить оставшиеся зависимости,
