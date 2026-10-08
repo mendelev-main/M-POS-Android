@@ -5,7 +5,7 @@
   const enabled=()=>global.MPosNativeWorkspaceNavigationEnabled!==false;
   const view=()=>({tab:state.tab,search:String(state.search||''),posPath:state.posPath??null,posFolder:state.posFolder||'',editMode:!!state.editMode});
   global.MPosCore.WorkspaceNavigationLifecycle=Object.freeze({
-    invalidate(){runtime++;sequence++;searchSequence++;initialization=null;loading=true;global.MPosCore.NativeOpenForm?.invalidate?.();global.MPosCore.LayoutUi?.invalidate?.();global.MPosCore.OverlayLifecycle?.invalidate?.();},
+    invalidate(){runtime++;sequence++;searchSequence++;initialization=null;loading=true;global.MPosCore.NativeOpenForm?.invalidate?.();global.MPosCore.LayoutUi?.invalidate?.();global.MPosCore.WorkspaceReadUi?.invalidate?.();global.MPosCore.OverlayLifecycle?.invalidate?.();},
     ready(){loading=false;},
     generation(){return runtime;},
     async header(){

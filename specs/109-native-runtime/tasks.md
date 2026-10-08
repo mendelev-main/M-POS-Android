@@ -23,7 +23,7 @@
 | 109.06 | Выполнено | **Корневая сессия и bootstrap**. Kotlin владеет currentShift, выбранным сотрудником и порядком старта; restart/import не оставляют устаревшее состояние. | 109.02, 109.04, 109.05 |
 | 109.07 | Выполнено | **Оставшаяся авторизация и права**. Edit/delete/settings и смена ролей проверяют актуальные права нативно без JS authority; пароль не попадает в bridge или журнал. | 109.06 |
 | 109.08 | Выполнено | **Навигация разделов и состояние workspace**. Tabs, поиск, выбор и Back работают из нативного состояния без DOM route targets. | 109.03, 109.06 |
-| 109.09 | Запланировано | **Каталог, корзина и редактор товара**. Read models, черновики и все действия workspace/product editor обходятся без HTML extraction и mounted JS handlers. | 109.07, 109.08 |
+| 109.09 | В работе | **Каталог, корзина и редактор товара**. Read models, черновики и все действия workspace/product editor обходятся без HTML extraction и mounted JS handlers. | 109.07, 109.08 |
 | 109.10 | Запланировано | **Оплата и split**. Нативные модели и direct commands для наличных/карты/split/скидок/подарков/доставки сохраняют суммы, busy/ack и локальный commit. | 109.09 |
 | 109.11 | Запланировано | **Чеки и возвраты**. История, детали и возвраты используют репозитории и нативные команды; повтор не создаёт второй возврат. | 109.07, 109.10 |
 | 109.12 | Запланировано | **Смены и сотрудники**. Выбор, редактирование, закрытие смен и сотрудники работают без DOM models/JS handlers с действующими правами. | 109.05, 109.07 |
@@ -527,3 +527,29 @@ Actions **37782566450**, main **c671e38**: JS/Kotlin tests и lint success;
 Следующий этап **109.09** — каталог/корзина/product editor без HTML extraction
 и mounted JS handlers. Geometry/DOM projection пока presentation зависимости;
 runtime WebView будет удалён по 109.19, физический gate — 110.
+
+### 109.09 — native workspace read model и типизированные действия, 08.10.2026
+
+Default workspace теперь MPosWorkspaceReadRepository/ReadModel: products, layout,
+posNavigation, root shift/recovery и parked count читаются из authoritative Room
+в согласованной transaction. Плитки, имена, цвета, символы, координаты, units,
+доступность simple/composite/unlimited, строки/скидки/итоги/доставка и кнопки
+формирует Kotlin. Pricing/loyalty/availability переиспользуют parity engines.
+No DOM labels/tile/cart extraction; только bounds и CSS geometry оболочки.
+Typed action table вызывает явные allowlisted команды без скрытых node.click()
+и simulated DOM events. Payment/WEB/parked/customer/settings пока handoff своих
+этапов; права, retry, persist-before-effects правила не менялись.
+
+Live search сохраняет initial mounted scope через native catalogScope, а render
+поиск категории пересекает папки. Folder query не меняет содержимое папки, как
+reviewed POS. IDs и dataset string coercion, fractional units, metadata/layout,
+manual-price products и legacy qty string суммирование сохранены. Старый renderer
+в отдельном native-workspace-legacy.js запускается только explicit
+MPosNativeWorkspaceReadModelsEnabled=false. Source sync и baseline restoration
+учитывают adapter без изменения reviewed source hash.
+
+**Честная оставшаяся граница:** корзина/config ещё передаются явным runtime order
+snapshot, это не native draft authority. Product modifier/manual-price/cart-item
+forms и product editor ещё source; они остаются внутри 109.09. Этап не закрыт,
+прогресс **115/129, 109 — 8/20**. JS/Room/native read-model проверки добавлены;
+выполняет Actions, локальные тесты/lint/APK не запускались.

@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const adapter=fs.readFileSync('app/src/main/assets/pos/native-workspace.js','utf8');
+const adapter="window.MPosNativeWorkspaceReadModelsEnabled=false;\n"+fs.readFileSync('app/src/main/assets/pos/native-workspace-legacy.js','utf8');
 function node(text='',classes=[]){return{textContent:text,style:{opacity:'',pointerEvents:'',getPropertyValue:()=> '#E4F3EE'},dataset:{},isConnected:true,disabled:false,classList:{contains:c=>classes.includes(c)},getAttribute:()=>null,querySelector(s){return this.one?.[s]??null},querySelectorAll(s){return this.many?.[s]??[]},getBoundingClientRect:()=>({left:100,top:80,width:900,height:700}),click(){this.onclick?.()},closest(){return this.parent},one:{},many:{}}}
 function host(configure=()=>{}){
  const sent=[],events=[],frames=[],observers=[];let modal=null,resolve;

@@ -15,6 +15,7 @@ class MPosWorkspaceNavigationRepository(private val database:MPosDatabase,privat
     private var searchNames:Map<String,String> = emptyMap()
     suspend fun navigateToolbar(input:JSONObject):JSONObject {
         require(input.getInt("version")==1)
+        if(input.getString("operation")=="workspaceView")return MPosWorkspaceReadRepository(database,owner).read(input)
         require(input.getString("route") in setOf("closeCategory","toggleEdit","openCategory","openFolder"))
         check(input.getJSONObject("expected").getLong("revision")==owner.state.value.revision){"workspace toolbar changed"}
         val proposal=execute(JSONObject(input.toString()).put("operation","prepareRoute"))

@@ -869,3 +869,11 @@ admin credential, пустой список сотрудников, bridge/read 
   обновление модели позволяет повторить. Payment/critical busy блокирует редактор.
 - Light/dark, landscape, крупный шрифт, клавиатура: все действия доступны,
   Manrope/акцент/опасные кнопки в стиле POS. Физическая приёмка отложена до 110.
+
+109.09 workspace read model (physical pending): сравнить root/category/folder
+плитки, цвета/символы, координаты/порядок, дробные units, рецепт/неограниченный
+остаток/отсутствие цены. Строки заказа: discount, modifier names, comments,
+customer/WEB metadata, delivery tariff и итог. Root open shift notice, parked
+count, кнопки оплатить/отложить/готов, swipe removal, native navigation. Import,
+slow response, busy/recovery/new modal не применяют старый action; retained Views
+сохраняют scroll. Light/dark/fontscale. Draft/forms cutover пока следующий участок.

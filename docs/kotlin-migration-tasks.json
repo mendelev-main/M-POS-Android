@@ -733,7 +733,7 @@
       "area": "UI/architecture",
       "dependencies": "100,101,102,103,104,105,106,107,108",
       "spec": "specs/109-native-runtime/spec.md",
-      "summary": "109.01–109.08 complete within their stable criteria. Native workspace navigation/search/header/routes, complete native layout editor with atomic Room CAS persistence and lifecycle-owned Back passed Actions 37782566450 (c671e38), tests/lint and signed APK success. Next 109.09: catalogue/cart/product editor models and commands without HTML extraction or mounted JS handlers. Geometry/presentation dependencies remain until their approved stages; WebView removal 109.19, physical acceptance 110.",
+      "summary": "109.01–109.08 complete. 109.09 in progress: native workspace domain read models and typed action dispatch connected, remaining native drafts/forms/product editor. WebView removal 109.19; physical acceptance 110.",
       "subtasks": [
         {
           "id": "109.01",
@@ -940,12 +940,21 @@
         {
           "id": "109.09",
           "title": "Каталог, корзина и редактор товара",
-          "status": "planned",
+          "status": "in_progress",
           "dependencies": [
             "109.07",
             "109.08"
           ],
-          "acceptance": "Read models, черновики и все действия workspace/product editor обходятся без HTML extraction и mounted JS handlers."
+          "acceptance": "Read models, черновики и все действия workspace/product editor обходятся без HTML extraction и mounted JS handlers.",
+          "evidence": [
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceReadModel.kt",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceReadRepository.kt",
+            "app/src/main/assets/pos/native-workspace.js",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceReadModelTest.kt",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceReadRepositoryTest.kt",
+            "tests/native-workspace-read-ui.test.cjs"
+          ],
+          "remaining": "Native Room catalogue/layout/navigation/root/parked read model and Kotlin cart presentation connected; no default HTML labels/tiles/cart extraction or hidden node click dispatch. Order draft/config is still an explicit runtime snapshot. Remaining: native order draft/commands/forms and full product editor, remove their mounted handlers; parity tests pending Actions. 109.09 is not complete; progress 115/129 unchanged."
         },
         {
           "id": "109.10",
