@@ -739,3 +739,16 @@ Back (окно папки → inline folder → root), очищение поис
 Этап 109.08 ещё в работе: native controls/read models, Android Back, DOM
 route targets и согласование нового runtime остаются. Поздний accept
 отменяет только свой выбор, сохраняя более новые tab/query. **114/129**, 109 **7/20**.
+
+
+### 109.08 — системный Back и restart/import, 08.10.2026
+
+Прежний порядок системного Back теперь выбирает Kotlin: import/modal/warehouse/
+receiving/background после native settings. Повторное нажатие и поздние ответы
+после замены окна/pause/destroy не выполняют старые эффекты. Root startup
+сбрасывает временного владельца навигации; только ready разрешает новый выбор,
+старые tab/search/route ответы не возвращают предыдущий runtime.
+DOM presence и экранные close handlers пока остаются переходными адаптерами.
+Тестовый FIFO fixture исправлен; Actions 37747195877 для 3f87071 успешен
+(tests/lint и APK). Новые Back/runtime проверки ожидают следующий Actions.
+Этап 109.08 не закрыт; **114/129**, внутри 109 **7/20**.

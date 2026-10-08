@@ -728,7 +728,7 @@
       "area": "UI/architecture",
       "dependencies": "100,101,102,103,104,105,106,107,108",
       "spec": "specs/109-native-runtime/spec.md",
-      "summary": "109.01–109.07 implemented; 109.08 tab/search command ownership in progress. CI test failures reproduced and fixtures corrected. Explicit local reproduction: 630 JS / 509 JVM passing; lint 0 errors / 15 warnings. New remote Actions result pending. Native workspace models, Back and WebView removal remain.",
+      "summary": "109.01–109.07 implemented. 109.08 native navigation state, acknowledged routes, Android Back policy and restart/import runtime invalidation implemented in increments; native controls and DOM removal remain. Route tests corrected and confirmed by Actions 37747195877; latest Back/runtime tests pending.",
       "subtasks": [
         {
           "id": "109.01",
@@ -891,9 +891,14 @@
             "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceNavigationRepository.kt",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceRouteOwnershipTest.kt",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceNavigationRepositoryTest.kt",
-            "tests/android-workspace-route-ownership.test.cjs"
+            "tests/android-workspace-route-ownership.test.cjs",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosSystemBackPolicy.kt",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosSystemBackController.kt",
+            "app/src/main/assets/pos/native-system-back.js",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosSystemBackTest.kt",
+            "tests/android-system-back.test.cjs"
           ],
-          "remaining": "Owner tab/query/category/folder/edit подключён; route prepare/accept с fresh Room проверкой папки. Остались native controls/read models, Android Back, DOM route targets и согласование нового runtime. Поздний accept имеет guarded discard без потери нового tab/query. Новые проверки ожидают Actions; 109.08 не закрыт."
+          "remaining": "Owner tab/query/category/folder/edit, acknowledged routes, native System Back policy и root runtime invalidation подключены. Остались native controls/read models и удаление DOM route targets/presence/close handlers. Новые Back/runtime проверки ожидают Actions; 109.08 не закрыт."
         },
         {
           "id": "109.09",
@@ -1075,6 +1080,15 @@
       "conclusion": "success",
       "commit": "98f5f73",
       "currentRouteIncrement": "tests authored; execution pending next Actions"
+    },
+    {
+      "date": "2026-10-08",
+      "scope": "Route ownership test fixture correction",
+      "execution": "GitHub Actions",
+      "runId": 37747195877,
+      "conclusion": "success",
+      "commit": "3f87071",
+      "newBackRuntimeIncrement": "Tests authored; next Actions pending"
     }
   ]
 }

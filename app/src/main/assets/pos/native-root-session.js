@@ -25,7 +25,7 @@
     },
     async begin(){
       if(!enabled())return null;
-      model=null;
+      model=null;core.WorkspaceNavigationLifecycle?.invalidate();
       return core.RootStartup.execute({operation:'begin'});
     },
     async recovered(ticket){
@@ -42,6 +42,7 @@
     async activated(ticket){
       const next=await core.RootStartup.execute({operation:'advance',generation:ticket.generation,completed:'activate'});
       if(next.step!=='ready')throw Error('Invalid native root startup phase');
+      core.WorkspaceNavigationLifecycle?.ready();
     },
     selectedEmployee(){return copy(model?.selectedEmployee);}
   });

@@ -55,3 +55,10 @@ test('storage acknowledgement applies root state before resolving the awaiting b
  h.__nativeStorageResult({requestId:'save',ok:true,rootSession:{currentShift:null,selectedEmployee:null,isAdmin:false},rootSequence:2});
  assert.deepEqual(events,['root','ack']);assert.equal(pending.size,0);
 });
+
+test('root restart invalidates workspace before recovery and releases it only after activation',async()=>{
+ const events=[],h=setup(async input=>{events.push(input.operation);return{generation:1,step:input.operation==='begin'?'recover':'ready'}});
+ h.MPosCore.WorkspaceNavigationLifecycle={invalidate:()=>events.push('invalidate'),ready:()=>events.push('ready')};
+ const ticket=await h.MPosCore.RootSession.begin();assert.deepEqual(events,['invalidate','begin']);
+ await h.MPosCore.RootSession.activated(ticket);assert.deepEqual(events,['invalidate','begin','advance','ready']);
+});

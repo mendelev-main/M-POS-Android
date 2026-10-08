@@ -253,14 +253,23 @@ class MainActivity : AppCompatActivity() {
         }
         webView.loadUrl(START_URL)
 
+        systemBack=com.mendelev.mpos.workspace.MPosSystemBackController(
+            evaluate={script,callback->webView.evaluateJavascript(script){callback(it)}},
+            background={moveTaskToBack(true)},rollback={handleLegacySystemBack()})
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (::settingsScreen.isInitialized && settingsScreen.consumeBack()) return
-                webView.evaluateJavascript(
-                    "(()=>{if(window._pendingBackupImport){cancelBackupImport();return true}if(document.querySelector('.modal-overlay')){closeModal();return true}if(document.getElementById('warehouse-root')?.children.length){closeWarehousePage();return true}if(document.getElementById('receiving-page-root')?.children.length){finishReceivingPage();return true}return false})()"
-                ) { handled -> if (handled != "true") moveTaskToBack(true) }
+                systemBack.handle()
             }
         })
+    }
+
+    private lateinit var systemBack:com.mendelev.mpos.workspace.MPosSystemBackController
+
+    private fun handleLegacySystemBack() {
+        webView.evaluateJavascript(
+                    "(()=>{if(window._pendingBackupImport){cancelBackupImport();return true}if(document.querySelector('.modal-overlay')){closeModal();return true}if(document.getElementById('warehouse-root')?.children.length){closeWarehousePage();return true}if(document.getElementById('receiving-page-root')?.children.length){finishReceivingPage();return true}return false})()"
+                ) { handled -> if (handled != "true") moveTaskToBack(true) }
     }
 
     override fun onResume() {
@@ -275,6 +284,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
+        if (::systemBack.isInitialized) systemBack.invalidate()
         diagnostics.record("lifecycle", "background")
         nativeNetworkTransport.onBackground()
         if (::webView.isInitialized) callJavaScript("window._availabilityAppActive=false;window.onAvailabilityAppState&&window.onAvailabilityAppState(false);")
@@ -282,6 +292,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        if (::systemBack.isInitialized) systemBack.close()
         if (::rootSession.isInitialized) rootSession.close()
         if (::employeeAuthorization.isInitialized) employeeAuthorization.close()
         if (::catalogAuthorization.isInitialized) catalogAuthorization.close()

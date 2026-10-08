@@ -1,33 +1,37 @@
 (function(global){
   'use strict';
   const commands=global.MPosCore?.WorkspaceNavigation;if(!commands)return;
-  const original=global.setTab,originalSearch=global.onSearch;let initialization=null,sequence=0,searchSequence=0;
+  const original=global.setTab,originalSearch=global.onSearch;let initialization=null,sequence=0,searchSequence=0,runtime=0,loading=false;
   const enabled=()=>global.MPosNativeWorkspaceNavigationEnabled!==false;
   const view=()=>({tab:state.tab,search:String(state.search||''),posPath:state.posPath??null,posFolder:state.posFolder||'',editMode:!!state.editMode});
+  global.MPosCore.WorkspaceNavigationLifecycle=Object.freeze({
+    invalidate(){runtime++;sequence++;searchSequence++;initialization=null;loading=true;},
+    ready(){loading=false;}
+  });
   function initialize(){
-    if(!initialization)initialization=commands.execute({version:1,operation:'initialize',...view()}).catch(error=>{initialization=null;throw error;});
+    if(!initialization){const epoch=runtime;const promise=commands.execute({version:1,operation:'initialize',...view()}).then(result=>{if(epoch!==runtime)throw Error('Navigation runtime changed');return result;}).catch(error=>{if(initialization===promise)initialization=null;throw error;});initialization=promise;}
     return initialization;
   }
   global.setTab=async function(tab){
     if(!enabled()||typeof tab!=='string')return original.apply(this,arguments);
-    const request=++sequence;
+    if(loading)return false;const epoch=runtime,request=++sequence;
     try{
-      await initialize();
+      await initialize();if(epoch!==runtime||loading)return false;
       const result=await commands.execute({version:1,operation:'selectTab',tab});
-      if(request!==sequence||!enabled())return false;
+      if(epoch!==runtime||loading||request!==sequence||!enabled())return false;
       if(typeof result?.snapshot?.tab!=='string'||!Number.isInteger(result.snapshot.revision))throw Error('Некорректное состояние навигации');
       state.tab=result.snapshot.tab;render();return true;
     }catch(error){if(request===sequence)flash(error?.message||'Не удалось переключить раздел');return false;}
   };
   if(typeof originalSearch==='function')global.onSearch=async function(value){
     if(!enabled())return originalSearch.apply(this,arguments);
-    const request=++searchSequence,query=String(value||'');
+    if(loading)return false;const epoch=runtime,request=++searchSequence,query=String(value||'');
     const context=JSON.stringify([state.tab,state.posPath,state.posFolder,state.editMode,global._posFolderModal]);
     const previousSearch=state.search,receiver=this;
     try{
-      await initialize();
+      await initialize();if(epoch!==runtime||loading)return false;
       const result=await commands.execute({version:1,operation:'selectSearch',search:query});
-      if(request!==searchSequence||!enabled()||previousSearch!==state.search||context!==JSON.stringify([state.tab,state.posPath,state.posFolder,state.editMode,global._posFolderModal]))return false;
+      if(epoch!==runtime||loading||request!==searchSequence||!enabled()||previousSearch!==state.search||context!==JSON.stringify([state.tab,state.posPath,state.posFolder,state.editMode,global._posFolderModal]))return false;
       if(typeof result?.snapshot?.search!=='string'||!Number.isInteger(result.snapshot.revision))throw Error('Некорректное состояние поиска');
       // Reviewed filtering remains a projection until native workspace read models replace it.
       originalSearch.call(receiver,result.snapshot.search);return true;
@@ -43,13 +47,13 @@
     const originalRoute=global[name];if(typeof originalRoute!=='function')continue;
     global[name]=function(...args){
       if(!routeEnabled())return originalRoute.apply(this,args);
-      if(routePending>=32)return Promise.resolve(false);
-      const originTab=state.tab,originPage=state.paymentPage;routePending++;
+      if(loading||routePending>=32)return Promise.resolve(false);
+      const originRuntime=runtime,originTab=state.tab,originPage=state.paymentPage;routePending++;
       const work=routeTail.then(async()=>{
-        if(state.tab!==originTab||state.paymentPage!==originPage)return false;
+        if(originRuntime!==runtime||loading||state.tab!==originTab||state.paymentPage!==originPage)return false;
         if(!routeEnabled())return originalRoute.apply(this,args);
         const before=stamp(),modal=modalNode();let proposal=null,accepted=false,acceptStarted=false,projected=false;
-        const stale=()=>before!==stamp()||modal!==modalNode();
+        const stale=()=>originRuntime!==runtime||loading||before!==stamp()||modal!==modalNode();
         try{
           await initialize();if(stale())return false;
           const prepared=await commands.execute({version:1,operation:'prepareRoute',route,expected:view(),

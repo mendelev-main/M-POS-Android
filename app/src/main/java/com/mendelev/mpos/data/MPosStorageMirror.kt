@@ -253,7 +253,7 @@ class MPosStorageMirror(
                     }
                     val next = startup.execute(input)
                     when (next.getString("step")) {
-                        "recover" -> startupRoot = null
+                        "recover" -> { startupRoot = null;workspaceNavigation.beginRuntime(next.getLong("generation")) }
                         "hydrate" -> {
                             val root = rootBootstrap()
                             startupRoot = root.toString()

@@ -387,3 +387,35 @@ Room-проверки свежих документов; JS-проверки FIF
 удаление DOM route targets и согласование нового runtime ещё
 не завершены. Прогресс **114/129 (88,37%)**, внутри 109 **7/20**;
 физическая приёмка pending.
+
+
+### 109.08 — системный Android Back и смена runtime, 08.10.2026
+
+MPosSystemBackPolicy выбирает прежнее действие из типизированных признаков:
+после нативных settings — pending import → modal → warehouse → receiving →
+background. История tab/category для системного Back не добавляется.
+MPosSystemBackController допускает один запрос, имеет timeout и сбрасывает
+поздние callback при pause/destroy. Background выполняется лишь после
+подтверждения неизменившегося экрана. Временный native-system-back адаптер
+передаёт presence/token, проверяет идентичность элементов/импорта и исполняет
+выбранный Kotlin эффект один раз. При замене окна старый ответ ничего не
+закрывает. Explicit MPosNativeSystemBackEnabled=false возвращает прежний
+обработчик. DOM presence и close handlers сохраняются до замены экранов.
+
+При rootStartup begin Kotlin очищает временную навигацию и предложения
+предыдущего runtime. JS lifecycle блокирует новые действия до ready,
+инвалидирует старые tab/search/route callbacks и не позволяет старому
+initialization error очистить уже новую initialization promise. Новый выбор
+сеется из восстановленного состояния после activate, включая import.
+Это не меняет business documents, backup v13, оплату, роли или сетевые эффекты.
+
+Написаны проверки всех 16 комбинаций Back, повторного нажатия, pause/destroy,
+timeout, stale DOM, явного rollback, root activation и старых ответов при
+импорте. Новые проверки локально не запускались (AGENTS.md §17), выполняет
+Actions после публикации. Ошибка тестового fixture d73436b исправлена в
+3f87071: ожидание постановки initialize в FIFO до выдачи ответа. Успешный
+Actions 37747195877 подтвердил tests/lint и APK build для исправления.
+
+109.08 остаётся in_progress: нативные controls/read models и устранение
+оставшихся DOM targets/presence ещё впереди. Прогресс **114/129**, внутри
+109 **7/20**; физические кейсы pending, APK локально не собиралась.

@@ -18,6 +18,12 @@ class MPosWorkspaceNavigationOwner {
     private val mutable=MutableStateFlow(State())
     private val proposals=linkedMapOf<String,Proposal>()
     val state:StateFlow<State> = mutable.asStateFlow()
+    private var runtimeGeneration=0L
+    fun beginRuntime(generation:Long) {
+        check(generation>runtimeGeneration){"stale navigation runtime"}
+        runtimeGeneration=generation;proposals.clear();accepted=null;queryEpoch=0
+        mutable.value=State(revision=mutable.value.revision+1)
+    }
 
     private fun snapshot(current:State)=JSONObject().put("tab",current.tab).put("search",current.search)
         .put("posPath",current.posPath?:JSONObject.NULL).put("posFolder",current.posFolder)

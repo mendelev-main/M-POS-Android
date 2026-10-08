@@ -29,3 +29,18 @@ test('search failure and rollback preserve existing query and reviewed filtering
  const h=host(),p=h.c.onSearch('кофе');h.calls[0].reject(Error('bridge unavailable'));assert.equal(await p,false);assert.equal(h.c.state.search,'keep');
  h.c.MPosNativeWorkspaceNavigationEnabled=false;await h.c.onSearch('чай');assert.equal(h.c.state.search,'чай');assert.equal(h.events.at(-1),'filter');
 });
+
+test('new runtime blocks navigation until ready and drops old initialization without clearing newer promise',async()=>{
+ const h=host(),old=h.c.setTab('receipts');h.c.MPosCore.WorkspaceNavigationLifecycle.invalidate();
+ assert.equal(await h.c.setTab('settings'),false);assert.equal(h.calls.length,1);
+ h.c.state.tab='pos';h.c.state.search='imported';h.c.MPosCore.WorkspaceNavigationLifecycle.ready();
+ const current=h.c.setTab('analytics');assert.equal(h.calls.length,2);assert.equal(h.calls[1].input.search,'imported');
+ h.calls[0].resolve({snapshot:{tab:'receipts',revision:2}});assert.equal(await old,false);
+ h.calls[1].resolve({snapshot:{tab:'pos',revision:3}});await h.ready();assert.equal(h.calls.length,3);
+ h.calls[2].resolve({snapshot:{tab:'analytics',revision:4}});assert.equal(await current,true);assert.equal(h.c.state.tab,'analytics');
+});
+test('late tab and search replies from before import cannot restore old UI',async()=>{
+ for(const kind of ['tab','search']){const h=host(),p=kind==='tab'?h.c.setTab('receipts'):h.c.onSearch('old query');h.calls[0].resolve({snapshot:{tab:'pos',revision:1}});await h.ready();
+ h.c.MPosCore.WorkspaceNavigationLifecycle.invalidate();h.c.state.tab='pos';h.c.state.search='imported';h.c.MPosCore.WorkspaceNavigationLifecycle.ready();
+ h.calls[1].resolve({snapshot:{tab:'receipts',search:'old query',revision:2}});assert.equal(await p,false);assert.equal(h.c.state.tab,'pos');assert.equal(h.c.state.search,'imported');assert.deepEqual(h.events,[]);}
+});

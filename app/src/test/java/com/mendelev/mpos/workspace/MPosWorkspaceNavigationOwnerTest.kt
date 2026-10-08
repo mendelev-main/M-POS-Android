@@ -44,4 +44,13 @@ class MPosWorkspaceNavigationOwnerTest {
     @Test(expected=IllegalStateException::class) fun searchBeforeInitializationIsRejected(){
         MPosWorkspaceNavigationOwner().handle(command("selectSearch").put("search", "чай"))
     }
+    @Test fun runtimeRestartDropsNavigationAndCannotReusePreviousSelectionOrProposal() {
+        val owner=MPosWorkspaceNavigationOwner();owner.handle(command("initialize","receipts").put("posPath","old").put("search","old"))
+        owner.beginRuntime(1);assertFalse(owner.state.value.initialized);assertNull(owner.state.value.posPath);assertEquals("",owner.state.value.search)
+        owner.handle(command("initialize","pos").put("search","imported"));assertEquals("pos",owner.state.value.tab);assertEquals("imported",owner.state.value.search)
+        assertThrows(IllegalStateException::class.java){owner.beginRuntime(1)}
+        assertEquals("imported",owner.state.value.search)
+        owner.beginRuntime(2);assertFalse(owner.state.value.initialized)
+    }
+
 }
