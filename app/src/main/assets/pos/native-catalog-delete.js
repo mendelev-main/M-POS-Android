@@ -21,7 +21,7 @@
   global.requestDelete=async function(type,id){
     if(!enabled())return original.apply(this,arguments);
     if(!['product','category'].includes(type))return false;
-    if(busy||blocked||global.criticalStorageRecoveryPending){flash(blocked?'Перезапустите M POS для восстановления данных':'Дождитесь завершения изменения данных');return false;}
+    if(busy||blocked||(typeof criticalStorageRecoveryPending!=='undefined'&&criticalStorageRecoveryPending)){flash(blocked?'Перезапустите M POS для восстановления данных':'Дождитесь завершения изменения данных');return false;}
     busy=true;const before=stamp();
     try{
       const entries=await Promise.all(['products','layout','posNavigation'].map(async key=>[key,await core.Storage.get(key,null)]));
@@ -35,7 +35,7 @@
         catch(e){pending.delete(requestId);reject(e);}
       });
       if(result.cancelled)return false;
-      if(before!==stamp()){blocked=true;global.criticalStorageRecoveryPending=true;throw Error('Каталог изменился во время удаления. Перезапустите приложение');}
+      if(before!==stamp()){blocked=true;criticalStorageRecoveryPending=true;throw Error('Каталог изменился во время удаления. Перезапустите приложение');}
       if(!Array.isArray(result.products)||!result.layout||!result.posNavigation)throw Error('Некорректное подтверждение удаления');
       const layout=result.layout;
       state.products=result.products;state.layoutTiles=layout.tiles||[];
@@ -49,7 +49,7 @@
       if(type==='product'&&global._pmEditingId===id&&document.getElementById('pe-save'))finishProductEditor();
       return true;
     }catch(error){
-      if(String(error?.message).includes('commit status is uncertain')){blocked=true;global.criticalStorageRecoveryPending=true;markStorageBroken(error);}
+      if(String(error?.message).includes('commit status is uncertain')){blocked=true;criticalStorageRecoveryPending=true;markStorageBroken(error);}
       flash(blocked?'Статус удаления не подтверждён. Перезапустите приложение':error?.message||'Не удалось удалить элемент каталога');return false;
     }finally{busy=false;}
   };

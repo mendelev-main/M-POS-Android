@@ -15,3 +15,10 @@ test('cancel and native guard rejection preserve products and do not mark storag
 test('typing has no deadline; retry resets commit deadline; timeout prevents resubmission and late update',async()=>{const h=host(),p=h.c.requestDelete('category','Empty');await h.ready();assert.equal(h.timers.size,0);h.reply({action:'committing'});assert.equal(h.timers.size,1);h.reply({action:'retry'});assert.equal(h.timers.size,0);h.reply({action:'committing'});[...h.timers.values()][0]();assert.equal(await p,false);h.reply(h.success());assert.equal(h.c.state.products.length,1);assert.equal(h.c.criticalStorageRecoveryPending,true);await h.c.requestDelete('product','p');assert.equal(h.sent.length,1);});
 test('projection changes during confirmation cannot overwrite current UI with an old result',async()=>{const h=host(),p=h.c.requestDelete('product','p');await h.ready();h.c.state.products[0].name='Changed';h.reply(h.success());assert.equal(await p,false);assert.equal(h.c.state.products[0].name,'Changed');assert.equal(h.c.criticalStorageRecoveryPending,true);});
 test('rollback preserves reviewed handlers',async()=>{const h=host();h.c.MPosNativeCatalogDeleteEnabled=false;await h.c.requestDelete('product','p');h.c.confirmDelete('product','p');assert.deepEqual(h.events,['legacy','legacy-confirm']);assert.equal(h.sent.length,0);});
+
+test('uncertain deletion sets the lexical POS recovery gate even when window property remains stale',async()=>{
+ const h=host();vm.runInContext('let criticalStorageRecoveryPending=false;',h.c);
+ const p=h.c.requestDelete('product','p');await h.ready();h.reply({uncertain:true,ok:false});assert.equal(await p,false);
+ assert.equal(vm.runInContext('criticalStorageRecoveryPending',h.c),true);
+ assert.equal(h.c.criticalStorageRecoveryPending,false);
+});

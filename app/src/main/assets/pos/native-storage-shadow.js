@@ -194,7 +194,7 @@
   });
   mposCore.ProductEditorCommands=Object.freeze({
     enabled:()=>global.MPosNativeProductEditorCommitEnabled!==false,
-    async commit(input){if(global.criticalStorageRecoveryPending)throw Error('Перезапустите M POS для восстановления данных');await Promise.all(['products','orders','employees','shifts','criticalStorageJournal'].map(initializeNative));return requireNative(await request('productEditorCommit',{payload:JSON.stringify(input)}),true);}
+    async commit(input){if(typeof criticalStorageRecoveryPending!=='undefined'&&criticalStorageRecoveryPending)throw Error('Перезапустите M POS для восстановления данных');await Promise.all(['products','orders','employees','shifts','criticalStorageJournal'].map(initializeNative));return requireNative(await request('productEditorCommit',{payload:JSON.stringify(input)}),true);}
   });
   mposCore.CompanyCommands=Object.freeze({
     async commit(input){await Promise.all(['company','employees','shifts','criticalStorageJournal'].map(initializeNative));return requireNative(await request('companyCommit',{payload:JSON.stringify(input)}),true);}

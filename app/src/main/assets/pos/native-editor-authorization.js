@@ -22,7 +22,7 @@
     else p.reject(Error(result.message||'Не удалось проверить разрешение редактора'));
   };
   async function authorize(operation){
-    if(busy||blocked||global.criticalStorageRecoveryPending){flash('Дождитесь завершения действия или перезапустите приложение');return false;}
+    if(busy||blocked||(typeof criticalStorageRecoveryPending!=='undefined'&&criticalStorageRecoveryPending)){flash('Дождитесь завершения действия или перезапустите приложение');return false;}
     if(operation==='stock'&&!global._pmEditingId)return false;
     busy=true;const before=context(),productId=global._pmEditingId??null,expected=JSON.parse(JSON.stringify(getProduct(productId)??null));
     try{

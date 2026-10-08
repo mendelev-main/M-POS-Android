@@ -444,3 +444,10 @@ test('company authority preserves imported extensions across restart and rejects
  await restart.context.MPosCore.Storage.remove('company');
  assert.equal(await restart.context.MPosCore.Storage.get('company','missing'),'missing');
 });
+
+test('product editor command respects the actual lexical recovery gate, not a stale window property',async()=>{
+ const h=host();vm.runInContext('let criticalStorageRecoveryPending=true;',h.context);
+ assert.equal(h.context.criticalStorageRecoveryPending,false);
+ await assert.rejects(h.context.MPosCore.ProductEditorCommands.commit({version:1}),/Перезапустите M POS/);
+ assert.equal(h.calls.includes('native:productEditorCommit'),false);
+});
