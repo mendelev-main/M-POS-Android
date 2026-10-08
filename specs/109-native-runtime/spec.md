@@ -1,6 +1,6 @@
 # 109 — Native runtime authority
 
-Current status (08 October 2026): **109.01–109.08 complete; 8/20 inside 109, 115/129 expanded, 107/110 major tasks.** Parent 109 remains in progress. 109.09 in progress: native workspace read model and typed actions connected; native draft/forms/product editor remain. 109.08 evidence: ../../docs/NATIVE_WORKSPACE_NAVIGATION_10908_RU.md. Physical acceptance pending 110; WebView removal 109.19.
+Current status (08 October 2026): **109.01–109.08 complete; 8/20 inside 109, 115/129 expanded, 107/110 major tasks.** Parent 109 remains in progress. 109.09 in progress: native workspace read model, typed actions and cart-line editor/save verified; remaining order drafts/forms/product editor pending. 109.08 evidence: ../../docs/NATIVE_WORKSPACE_NAVIGATION_10908_RU.md. Physical acceptance pending 110; WebView removal 109.19.
 
 Status: in_progress. Engineering completion remains 107/110.
 
@@ -721,3 +721,5 @@ atomic currentOrderSession save с CAS, recovery gate и stock preflight.
 Нет HTML формы или source save handler; отмена не пишет, фон остаётся native.
 Новые Room/controller/JS checks pending Actions. [Границы и проверки](../../docs/NATIVE_WORKSPACE_DOMAIN_10909_RU.md).
 109.09 остаётся in_progress, **115/129 (89,15%), 109 — 8/20**.
+
+109.09 проверка текущего участка: main **1b74e9a**, [Actions 37791354617](https://github.com/mendelev-main/M-POS-Android/actions/runs/37791354617) — JS/Kotlin/lint success. Каталог, native cart presentation и полный редактор строки вычеркнуты в execution checklist. Availability рассчитывается для видимых рецептов с одним ingredient lookup; отрицательные остатки и folder exit сохраняют source parity. Полный signed run 37791017299 на 5281321 — success; текущая APK сборка также success. Остальные cart drafts/commands/forms и product editor остаются в 109.09; **115/129, 8/20**. Physical acceptance pending 110.

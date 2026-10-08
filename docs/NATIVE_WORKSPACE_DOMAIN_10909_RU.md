@@ -28,7 +28,8 @@ MPosCartItemController владеет черновиком количества,
 Данные строки читаются из сохранённого currentOrderSession; JS передаёт явный
 список скидок и currency, но не DOM inputs. UI использует MPosNativeTheme,
 Manrope, light/dark, scroll и 48dp controls. Native workspace остаётся за
-формой, заблокированным. Отмена/Back не сохраняют данные.
+формой, заблокированным. Вход из папки закрывает её перед формой, как source
+showModal; после отмены/сохранения остаётся каталог категории. Отмена/Back не сохраняют данные.
 
 MPosCartItemRepository сохраняет совместимый session в одной Room transaction:
 проверяет navigation, recovery и SHA256 revision документа, повторно проверяет
@@ -50,7 +51,7 @@ Native ошибка не вызывает скрытого повторного 
 Добавлены Room проверки CAS/duplicate, свежих остатков, импортированного заказа,
 recovery и SQLite rollback shadow/projection; controller busy/cancel/theme/ID
 checks и JS late-read/ack/cancel checks. Выполнение — GitHub Actions,
-результат этой части pending. Локальные tests/lint/APK не запускались (§17).
+результат: main **1b74e9a**, [Actions 37791354617](https://github.com/mendelev-main/M-POS-Android/actions/runs/37791354617), JS/Kotlin/lint success. Подписанная APK сборка этого run также success. Предыдущая 5281321 — success (Actions 37791017299). Локальные tests/lint/APK не запускались (§17).
 
 ## Остаётся внутри 109.09
 
@@ -72,5 +73,8 @@ Read model корзины ещё принимает явный transient order/c
 - Проверить WEB заказ и сохранённую часть split: связь, отметки кухни и paid
   parts сохраняются; автоматической печати/повторной оплаты нет.
 - Импорт/перезапуск во время формы не применяют старый черновик к новому заказу.
+- Отрицательный simple остаток виден отрицательным; состав использует
+  ингредиенты вне раскладки. Открыть строку из папки и отменить/сохранить:
+  возврат к каталогу категории, как прежде.
 - Light/dark, длинные названия, клавиатура, landscape и увеличенный системный
   шрифт; за формой видна native рабочая зона, доступна прокрутка.
