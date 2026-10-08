@@ -59,7 +59,7 @@ class MPosSystemBackTest {
         controller.handle();assertEquals(1,calls.size);assertTrue(calls[0].first.contains("applyNative"));assertFalse(calls[0].first.contains("capture()"))
         owner.update(snapshot(2).put("revision",2));calls[0].second("true");assertEquals(0,backgrounds)
         val copy=owner.capture()!!;copy.put("modal",false);assertTrue(owner.capture()!!.getBoolean("modal"))
-        owner.update(snapshot().put("revision",1));assertEquals(2,owner.capture()!!.getLong("revision"))
+        owner.update(snapshot().put("revision",1));assertEquals(2L,owner.capture()!!.getLong("revision"))
         owner.update(snapshot().put("revision",3).put("enabled",false));assertNull(owner.capture());controller.close()
     }
 }

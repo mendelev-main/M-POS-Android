@@ -67,7 +67,7 @@ class MPosLayoutRepositoryTest {
     @Test fun folderCreateRenameMoveReorderDeletePreserveProductsAndReturnItemsToRoot()=runCase("Кофе") {db,owner,repo->
         val before=db.legacyStorageShadowDao().get("products")
         val created=commit(repo,owner,JSONObject().put("operation","saveFolder").put("name","Молочный кофе"))
-        val folder=created.getJSONObject("document").getJSONArray("categories").getJSONObject(0).getJSONArray("items").let{a->(0 until a.length()).map{a.getJSONObject(it)}.first{it.getString("type")=="folder"}.getString("id")
+        val folder=created.getJSONObject("document").getJSONArray("categories").getJSONObject(0).getJSONArray("items").let{a->(0 until a.length()).map{a.getJSONObject(it)}.first{it.getString("type")=="folder"}.getString("id")}
         commit(repo,owner,JSONObject().put("operation","saveFolder").put("id",folder).put("name","Латте"))
         commit(repo,owner,JSONObject().put("operation","moveProduct").put("id","p").put("folderId",folder))
         assertEquals("p",repo.execute(input(owner,parent=folder)).getJSONArray("tiles").getJSONObject(0).getString("id"))

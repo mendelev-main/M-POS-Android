@@ -89,7 +89,7 @@ class MPosLayoutController(private val context:Context,private val host:FrameLay
             val last=occupied.lastOrNull()?:0
             val targetRows=if(last in 0..128)(0..last+1).toSortedSet() else (occupied+0+(last.toLong()+1).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()).toSortedSet()
             for(row in targetRows){val line=LinearLayout(theme.uiContext)
-                for(col in 0 until 5){val cell=FrameLayout(theme.uiContext)
+                for(col in 0 until 5){val cell=FrameLayout(theme.uiContext).apply{minimumHeight=theme.dp(142)}
                     val tile=(0 until tiles.length()).map{tiles.getJSONObject(it)}.firstOrNull{it.getInt("row")==row&&it.getInt("col")==col}
                     if(tile!=null){val card=LinearLayout(theme.uiContext).apply{orientation=LinearLayout.VERTICAL;background=theme.shape(theme.surface,12,true);setPadding(theme.dp(8),theme.dp(8),theme.dp(8),theme.dp(8))}
                         card.addView(TextView(theme.uiContext).apply{text=tile.getString("label");theme.text(this,14f,600)})
@@ -98,7 +98,7 @@ class MPosLayoutController(private val context:Context,private val host:FrameLay
                         cell.addView(card,FrameLayout.LayoutParams(-1,-1))
                     }else cell.background=theme.shape(theme.bg,12,true)
                     cell.setOnDragListener{_,event->when(event.action){DragEvent.ACTION_DRAG_STARTED->!busy&&event.localState is Int;DragEvent.ACTION_DROP->{if(!busy)commit(JSONObject().put("operation","moveTile").put("index",event.localState as Int).put("col",col).put("row",row).put("cols",5));true};else->true}}
-                    line.addView(cell,LinearLayout.LayoutParams(0,theme.dp(142),1f).apply{setMargins(theme.dp(4),theme.dp(4),theme.dp(4),theme.dp(4))})
+                    line.addView(cell,LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1f).apply{setMargins(theme.dp(4),theme.dp(4),theme.dp(4),theme.dp(4))})
                 };rows.addView(line)}
         }else for(i in 0 until tiles.length()){
             val tile=tiles.getJSONObject(i);val row=LinearLayout(theme.uiContext).apply{orientation=LinearLayout.VERTICAL;background=theme.shape(theme.surface,12,true);setPadding(theme.dp(12),theme.dp(8),theme.dp(12),theme.dp(8))}
