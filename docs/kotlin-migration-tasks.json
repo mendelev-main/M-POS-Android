@@ -733,7 +733,7 @@
       "area": "UI/architecture",
       "dependencies": "100,101,102,103,104,105,106,107,108",
       "spec": "specs/109-native-runtime/spec.md",
-      "summary": "109.01–109.07 implemented. 109.08 native navigation state, acknowledged routes, Android Back policy and restart/import runtime invalidation implemented in increments; native controls and DOM removal remain. Route tests corrected and confirmed by Actions 37747195877; Back/runtime tests confirmed by Tests and lint in Actions 37748093813.",
+      "summary": "109.01–109.08 complete within their stable criteria. Native workspace navigation/search/header/routes, complete native layout editor with atomic Room CAS persistence and lifecycle-owned Back passed Actions 37782566450 (c671e38), tests/lint and signed APK success. Next 109.09: catalogue/cart/product editor models and commands without HTML extraction or mounted JS handlers. Geometry/presentation dependencies remain until their approved stages; WebView removal 109.19, physical acceptance 110.",
       "subtasks": [
         {
           "id": "109.01",
@@ -882,7 +882,7 @@
         {
           "id": "109.08",
           "title": "Навигация разделов и состояние workspace",
-          "status": "in_progress",
+          "status": "done",
           "dependencies": [
             "109.03",
             "109.06"
@@ -923,9 +923,19 @@
             "tests/fixtures/workspace-search.json",
             "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceShiftHeaderModel.kt",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceShiftHeaderTest.kt",
-            "docs/NATIVE_MIGRATION_EXECUTION_RU.md"
+            "docs/NATIVE_MIGRATION_EXECUTION_RU.md",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosLayoutRepository.kt",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosLayoutController.kt",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosBackStateOwner.kt",
+            "app/src/main/assets/pos/native-layout-ui.js",
+            "app/src/main/assets/pos/native-overlay-lifecycle.js",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosLayoutRepositoryTest.kt",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosLayoutControllerTest.kt",
+            "tests/native-layout-ui.test.cjs",
+            "tests/native-overlay-lifecycle.test.cjs",
+            "docs/NATIVE_WORKSPACE_NAVIGATION_10908_RU.md"
           ],
-          "remaining": "Native navigation owner/routes/Back/runtime, toolbar, category/folder selection, fixed header tabs, Room live filtering and complete shift header/default opening entry points are connected. Shift header passed Actions 37772473180 (b38a2c4); all opening entries and native background blocking passed Actions 37773405619 (4c44c33), including APK. Remaining: complete layout editor actions/controls, residual search boundary and global Back DOM presence; source geometry/narrow topbar fallback until native root presentation. Execution checklist: docs/NATIVE_MIGRATION_EXECUTION_RU.md. Physical acceptance pending; 109.08 remains in_progress."
+          "remaining": "109.08 complete: native navigation/header/search/typed category-folder routes; complete native layout editor with atomic Room CAS commits; lifecycle-owned System Back without DOM presence. Actions 37782566450 (c671e38) tests/lint success; signed APK success. Geometry, DOM catalogue/cart projection and source handlers explicitly remain in 109.09/root presentation; WebView removal is 109.19. Physical acceptance pending in 110."
         },
         {
           "id": "109.09",
@@ -1183,6 +1193,21 @@
         "testsAndLint": "failure",
         "correction": "Registered header adapter in source synchronization and unchanged source parity checks"
       }
+    },
+    {
+      "date": "2026-10-08",
+      "scope": "Complete 109.08 native layout editor, atomic Room persistence, lifecycle Back, strict IDs/search scopes",
+      "execution": "GitHub Actions",
+      "runId": 37782566450,
+      "commit": "c671e38",
+      "testsAndLint": "success",
+      "apkBuild": "success",
+      "physicalAcceptance": "pending",
+      "priorFailure": {
+        "runId": 37780826205,
+        "correction": "Fixed missing closing brace in newly added folder test; subsequent full verification successful"
+      },
+      "apkArtifact": "M-POS-Android-release-0.1.192-1"
     }
   ]
 }

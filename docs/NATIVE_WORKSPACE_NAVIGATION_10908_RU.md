@@ -66,5 +66,6 @@ MPosSystemBackTest, native-layout-ui.test.cjs, native-overlay-lifecycle.test.cjs
 AGENTS §17. Первый run 37780826205 остановился на ошибке компиляции нового теста;
 скобка исправлена в e867895. Actions **37781537606 (e867895)**: JS/Kotlin/lint и APK success.
 Actions **37781952323 (1e27c5f)**: storage-failure/folder validation tests success;
-APK ещё выполняется. Итоговая проверка дополненных search/strict ID cases pending.
+Итоговый Actions **37782566450 (c671e38)**: все JS/Kotlin tests и lint success;
+Подписанная APK success. Этап 109.08 закрыт, **115/129 (89,15%), 109 — 8/20**.
 Физические сценарии находятся в NATIVE_TABLET_ACCEPTANCE.md, pending в этапе 110.

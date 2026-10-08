@@ -22,7 +22,7 @@
 | 109.05 | Выполнено | **Авторизация и команда открытия смены**. Пароль проверяется нативно, live employee и запись смены защищены транзакцией; JS post-commit входит в 17. | 109.04 |
 | 109.06 | Выполнено | **Корневая сессия и bootstrap**. Kotlin владеет currentShift, выбранным сотрудником и порядком старта; restart/import не оставляют устаревшее состояние. | 109.02, 109.04, 109.05 |
 | 109.07 | Выполнено | **Оставшаяся авторизация и права**. Edit/delete/settings и смена ролей проверяют актуальные права нативно без JS authority; пароль не попадает в bridge или журнал. | 109.06 |
-| 109.08 | В работе | **Навигация разделов и состояние workspace**. Tabs, поиск, выбор и Back работают из нативного состояния без DOM route targets. | 109.03, 109.06 |
+| 109.08 | Выполнено | **Навигация разделов и состояние workspace**. Tabs, поиск, выбор и Back работают из нативного состояния без DOM route targets. | 109.03, 109.06 |
 | 109.09 | Запланировано | **Каталог, корзина и редактор товара**. Read models, черновики и все действия workspace/product editor обходятся без HTML extraction и mounted JS handlers. | 109.07, 109.08 |
 | 109.10 | Запланировано | **Оплата и split**. Нативные модели и direct commands для наличных/карты/split/скидок/подарков/доставки сохраняют суммы, busy/ack и локальный commit. | 109.09 |
 | 109.11 | Запланировано | **Чеки и возвраты**. История, детали и возвраты используют репозитории и нативные команды; повтор не создаёт второй возврат. | 109.07, 109.10 |
@@ -38,11 +38,11 @@
 
 ## Что подтверждено и что дальше
 
-Первые семь задач завершены в пределах своих критериев. 109.06 включает native root owner, Kotlin-порядок старта, native currentShift/selectedEmployee/isAdmin и refresh до подтверждения сохранения. Реализация и автоматические случаи указаны в evidence JSON-реестра и [спецификации](spec.md).
+Первые восемь задач завершены в пределах своих критериев. 109.06 включает native root owner, Kotlin-порядок старта, native currentShift/selectedEmployee/isAdmin и refresh до подтверждения сохранения. Реализация и автоматические случаи указаны в evidence JSON-реестра и [спецификации](spec.md).
 
-Текущая задача — **109.08**; 109.07 проверена успешным Actions на 98f5f73. JS-исполнение восстановления журнала относится к 109.15, доменные load/read models — к 109.09–109.14, эффекты после активации — к 109.16–109.18. Их код пока сохраняется. Родительская 109 остаётся `in_progress`; runtime WebView удаляется только в 109.19.
+Текущая задача — **109.09**; 109.08 завершена, Actions 37782566450 на c671e38: JS/Kotlin tests, lint и подписанная APK success. Подробная граница и evidence: docs/NATIVE_WORKSPACE_NAVIGATION_10908_RU.md. Родительская 109 in_progress; WebView удаляется в 109.19, физическая приёмка — 110.
 
-Текущая проверка: Actions 37773405619 (4c44c33) — JS, Kotlin, lint и APK успешно. Исторический срез завершения 109.06: **558/558 JS и 454/454 JVM**, без ошибок и пропусков; lint **0 ошибок / 15 прежних предупреждений**. Подробности — в разделе завершения 109.06 в spec. Физические сценарии остаются pending в 110; APK локально не собирается.
+Текущая проверка: Actions 37782566450 (c671e38) — JS, Kotlin, lint и APK успешно. Исторический срез завершения 109.06: **558/558 JS и 454/454 JVM**, без ошибок и пропусков; lint **0 ошибок / 15 прежних предупреждений**. Подробности — в разделе завершения 109.06 в spec. Физические сценарии остаются pending в 110; APK локально не собирается.
 
 После каждой завершённой задачи обновлять JSON, spec, эту таблицу, status/roadmap/parity и pending tablet cases; запускать `python3 scripts/migration-progress.py`. Стабильные IDs 109.01–109.20 не перенумеровывать. Задачи равного веса в счётчике не отражают процент нативных функций или трудозатрат.
 
@@ -507,3 +507,23 @@ projection и geometry оболочки принадлежат 109.09/root prese
 папки и reorder, stale import/navigation, key order, overlay replacement, native
 Back без DOM, busy/duplicate/fallback. Local tests/APK не запускались (AGENTS §17).
 Этап пока in_progress до результатов Actions, счётчик 114/129 не увеличен.
+
+### 109.08 завершён — 08.10.2026
+
+Полностью закрыт стабильный этап навигации workspace: native owner вкладок,
+query/live search, типизированные category/folder routes, complete shift control,
+все default входы открытия смены, complete native layout editor и lifecycle Back.
+Layout read/commit используют authoritative Room, transaction/digest CAS/FIFO;
+права, metadata, лимит 20, folder rules, strict IDs, ключи и backup v13 сохранены.
+Доказательства и граница: [109.08](../../docs/NATIVE_WORKSPACE_NAVIGATION_10908_RU.md).
+
+Actions **37782566450**, main **c671e38**: JS/Kotlin tests и lint success;
+Подписанная APK сборка success. Ранее e867895 прошёл полный Actions 37781537606
+с APK, 1e27c5f — rollback SQLite и folder validation checks. Локальная APK
+не собиралась. Physical acceptance pending в 110.
+
+**115/129 — 89,15%; внутри 109 8/20; крупных 107/110.** Это количество
+инженерных задач; знаменатель и scope не изменены, не native coverage.
+Следующий этап **109.09** — каталог/корзина/product editor без HTML extraction
+и mounted JS handlers. Geometry/DOM projection пока presentation зависимости;
+runtime WebView будет удалён по 109.19, физический gate — 110.

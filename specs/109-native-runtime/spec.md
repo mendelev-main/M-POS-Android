@@ -1,6 +1,6 @@
 # 109 — Native runtime authority
 
-Current status (08 October 2026): **109.01–109.07 complete; 7/20 inside 109, 114/129 expanded, 107/110 major tasks.** Parent 109 remains in progress. 109.08 is in progress: native navigation owner/routes/Back/runtime, toolbar, category/folder selection, fixed header tabs and live search filtering are implemented; remaining controls and DOM independence are documented in the latest increments below. Earlier sections retain historical evidence, not the current counter.
+Current status (08 October 2026): **109.01–109.08 complete; 8/20 inside 109, 115/129 expanded, 107/110 major tasks.** Parent 109 remains in progress. Next: 109.09 catalogue/cart/product editor models and commands without HTML extraction or mounted JS handlers. 109.08 evidence: ../../docs/NATIVE_WORKSPACE_NAVIGATION_10908_RU.md. Physical acceptance pending 110; WebView removal 109.19.
 
 Status: in_progress. Engineering completion remains 107/110.
 
@@ -666,3 +666,23 @@ projection и geometry оболочки принадлежат 109.09/root prese
 папки и reorder, stale import/navigation, key order, overlay replacement, native
 Back без DOM, busy/duplicate/fallback. Local tests/APK не запускались (AGENTS §17).
 Этап пока in_progress до результатов Actions, счётчик 114/129 не увеличен.
+
+### 109.08 завершён — 08.10.2026
+
+Полностью закрыт стабильный этап навигации workspace: native owner вкладок,
+query/live search, типизированные category/folder routes, complete shift control,
+все default входы открытия смены, complete native layout editor и lifecycle Back.
+Layout read/commit используют authoritative Room, transaction/digest CAS/FIFO;
+права, metadata, лимит 20, folder rules, strict IDs, ключи и backup v13 сохранены.
+Доказательства и граница: [109.08](../../docs/NATIVE_WORKSPACE_NAVIGATION_10908_RU.md).
+
+Actions **37782566450**, main **c671e38**: JS/Kotlin tests и lint success;
+Подписанная APK сборка success. Ранее e867895 прошёл полный Actions 37781537606
+с APK, 1e27c5f — rollback SQLite и folder validation checks. Локальная APK
+не собиралась. Physical acceptance pending в 110.
+
+**115/129 — 89,15%; внутри 109 8/20; крупных 107/110.** Это количество
+инженерных задач; знаменатель и scope не изменены, не native coverage.
+Следующий этап **109.09** — каталог/корзина/product editor без HTML extraction
+и mounted JS handlers. Geometry/DOM projection пока presentation зависимости;
+runtime WebView будет удалён по 109.19, физический gate — 110.
