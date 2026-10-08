@@ -17,7 +17,7 @@ object MPosWorkspaceReadModel {
         fun quantity(p:JSONObject):Any {
             if(p.opt("type")!="simple")return quantities.getOrPut(p){availability(p)}
             if(MPosJsonNumbers.truthy(p.opt("noStockTracking")))return JSONObject.NULL
-            val value=MPosJsonNumbers.number(p.opt("stock"))
+            val raw=p.opt("stock");val value=MPosJsonNumbers.number(if(raw is JSONArray)MPosAvailabilityEngine.text(raw) else raw)
             // POS tiles retain negative stock; publication advisory clamps it separately.
             return if(value.isNaN())0.0 else value
         }
