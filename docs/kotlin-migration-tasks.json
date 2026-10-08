@@ -952,9 +952,14 @@
             "app/src/main/assets/pos/native-workspace.js",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceReadModelTest.kt",
             "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceReadRepositoryTest.kt",
-            "tests/native-workspace-read-ui.test.cjs"
+            "tests/native-workspace-read-ui.test.cjs",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosCartItemRepository.kt",
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosCartItemController.kt",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosCartItemRepositoryTest.kt",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosCartItemControllerTest.kt",
+            "docs/NATIVE_WORKSPACE_DOMAIN_10909_RU.md"
           ],
-          "remaining": "Native Room catalogue/layout/navigation/root/parked read model and Kotlin cart presentation connected; no default HTML labels/tiles/cart extraction or hidden node click dispatch. Order draft/config is still an explicit runtime snapshot. Remaining: native order draft/commands/forms and full product editor, remove their mounted handlers; parity tests pending Actions. 109.09 is not complete; progress 115/129 unchanged."
+          "remaining": "Catalogue/read models and typed actions verified in Actions 37787596243 (main 5b94b88, tests/lint/signed APK success). Native cart-item quantity/comment/discount draft and atomic session save connected, verification pending new Actions. Remaining: native add/modifier/manual-price/remove/order-settings drafts/commands, full product editor; current order/config still transitional runtime snapshot. 109.09 is not complete; progress 115/129 unchanged."
         },
         {
           "id": "109.10",

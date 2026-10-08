@@ -79,7 +79,7 @@ object MPosWorkspaceReadModel {
             val item=items.getJSONObject(i);val id=MPosJsonNumbers.fallback(item.opt("cartLineId"),item.opt("productId"))
             val discount=(0 until discounts.length()).map{discounts.getJSONObject(it)}.firstOrNull{MPosSupplyParity.same(it.opt("id"),item.opt("discountId"))}
             var details=money(item.opt("price"))+" / шт · ×"+MPosAvailabilityEngine.text(item.opt("qty"))
-            if(MPosJsonNumbers.truthy(item.opt("discountId")))details+=" · "+(discount?.optString("name")?:"Скидка")
+            if(MPosJsonNumbers.truthy(item.opt("discountId")))details+=" · "+text(MPosJsonNumbers.fallback(discount?.opt("name"),"Скидка"))
             val mods=item.optJSONArray("selectedModifiers")?:JSONArray()
             if(mods.length()>0)details+="\n↳ "+(0 until mods.length()).joinToString(" · "){text(mods.getJSONObject(it).opt("name"))}
             if(MPosJsonNumbers.truthy(item.opt("comment")))details+="\nКомментарий: "+text(item.opt("comment"))

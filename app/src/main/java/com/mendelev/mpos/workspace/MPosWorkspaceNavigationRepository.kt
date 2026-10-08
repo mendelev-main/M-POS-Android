@@ -25,6 +25,7 @@ class MPosWorkspaceNavigationRepository(private val database:MPosDatabase,privat
     suspend fun execute(input:JSONObject):JSONObject {
         require(input.getInt("version")==1)
         if(input.getString("operation")=="workspaceView")return MPosWorkspaceReadRepository(database,owner).read(input)
+        if(input.getString("operation") in setOf("cartItemView","cartItemCommit"))return MPosCartItemRepository(database,owner).execute(input)
         if(input.getString("operation") in setOf("layoutView","layoutCommit"))return MPosLayoutRepository(database,owner).execute(input)
         if(input.getString("operation") in setOf("shiftHeaderView","selectShiftHeader"))return database.withTransaction {
             owner.handle(JSONObject().put("version",1).put("operation","read"));owner.checkExpected(input)

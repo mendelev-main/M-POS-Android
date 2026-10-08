@@ -1,5 +1,11 @@
 # Нативный стиль M POS
 
+109.09: строка корзины использует MPosCartItemController/MPosNativeTheme.
+Количество — компактный stepper, комментарий — textarea, скидки — кнопки
+выбора, primary — «Сохранить». Native workspace остаётся фоном; cancel/Back
+не записывают черновик. Manrope, обе темы, 48dp и scroll сохраняются.
+Физические кейсы: NATIVE_WORKSPACE_DOMAIN_10909_RU.md, pending 110.
+
 Источник — действующий интерфейс POS, CSS tokens pos.html и локальный Manrope.
 Задача — одинаковый визуальный язык Web/native, без нового бренда или новой логики.
 

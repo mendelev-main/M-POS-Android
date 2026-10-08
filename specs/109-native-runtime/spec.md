@@ -712,3 +712,12 @@ snapshot, это не native draft authority. Product modifier/manual-price/cart
 forms и product editor ещё source; они остаются внутри 109.09. Этап не закрыт,
 прогресс **115/129, 109 — 8/20**. JS/Room/native read-model проверки добавлены;
 выполняет Actions, локальные тесты/lint/APK не запускались.
+
+### 109.09 — редактор строки корзины, 08.10.2026
+
+Каталог/read models проверены в Actions 37787596243 (5b94b88): JS/Kotlin/lint
+и signed APK success. Подключены native количество/комментарий/скидка и
+atomic currentOrderSession save с CAS, recovery gate и stock preflight.
+Нет HTML формы или source save handler; отмена не пишет, фон остаётся native.
+Новые Room/controller/JS checks pending Actions. [Границы и проверки](../../docs/NATIVE_WORKSPACE_DOMAIN_10909_RU.md).
+109.09 остаётся in_progress, **115/129 (89,15%), 109 — 8/20**.

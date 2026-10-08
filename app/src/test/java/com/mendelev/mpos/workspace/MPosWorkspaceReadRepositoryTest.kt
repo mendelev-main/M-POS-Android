@@ -32,7 +32,7 @@ class MPosWorkspaceReadRepositoryTest {
             MPosRecoveryStorage(db).initialize("criticalStorageJournal",null)
             val keys=listOf("products","layout","posNavigation","parked","shifts","employees","criticalStorageJournal")
             val before=db.legacyStorageShadowDao().getAll(keys)
-            val model=repo.read(input.put("products","caller forged")).getJSONObject("model")
+            val model=MPosWorkspaceNavigationRepository(db,owner).execute(input.put("operation","workspaceView").put("products","caller forged")).getJSONObject("model")
             assertEquals("Room product",model.getJSONArray("tiles").getJSONObject(0).getString("name"));assertFalse(model.getBoolean("blocked"))
             assertEquals(before,db.legacyStorageShadowDao().getAll(keys))
             MPosRecoveryStorage(db).write("criticalStorageJournal","{}")

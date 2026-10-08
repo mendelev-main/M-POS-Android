@@ -5,8 +5,8 @@
   let revision=0,modal=null,warehouse=null,receiving=null,sequence=0;
   const identities=new WeakMap();let identity=0;
   const key=value=>{if(!value||typeof value!=='object')return value??null;if(!identities.has(value))identities.set(value,++identity);return identities.get(value);};
-  function state(){return{version:1,enabled:global.MPosNativeSystemBackEnabled!==false,pendingImport:!!global._pendingBackupImport,modal:!!(modal||core.NativeOpenForm?.activeToken?.()||core.LayoutUi?.activeToken?.()),warehouse:!!warehouse,receiving:!!receiving};}
-  function stamp(){return JSON.stringify([global.MPosNativeSystemBackEnabled!==false,key(global._pendingBackupImport),modal,warehouse,receiving,core.NativeOpenForm?.activeToken?.(),core.LayoutUi?.activeToken?.()]);}
+  function state(){return{version:1,enabled:global.MPosNativeSystemBackEnabled!==false,pendingImport:!!global._pendingBackupImport,modal:!!(modal||core.NativeOpenForm?.activeToken?.()||core.LayoutUi?.activeToken?.()||core.CartItemUi?.activeToken?.()),warehouse:!!warehouse,receiving:!!receiving};}
+  function stamp(){return JSON.stringify([global.MPosNativeSystemBackEnabled!==false,key(global._pendingBackupImport),modal,warehouse,receiving,core.NativeOpenForm?.activeToken?.(),core.LayoutUi?.activeToken?.(),core.CartItemUi?.activeToken?.()]);}
   let published='';
   function changed(){const next=stamp();if(next===published)return;published=next;revision++;bridge.postMessage({action:'backState',revision,...state()});global.dispatchEvent?.(new CustomEvent('mpos-native-overlay-state'));}
   core.OverlayLifecycle=Object.freeze({changed,snapshot:()=>({...state(),revision,stamp:stamp()}),invalidate(){modal=warehouse=receiving=null;changed();}});
