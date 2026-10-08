@@ -683,3 +683,18 @@ MPosNativeProductWebEnabled, MPosNativeLoyaltyAuthorizationEnabled. Прежни
 
 См. [Android backend connectivity](ANDROID_BACKEND_CONNECTIVITY_RU.md): native HTTPS проверки и обмен Telegram-настройками/статистикой, явные HTTP 401/404 и Telegram ошибки, перезапуск SSE после ручной регистрации. Проверка на планшете pending; локальные тесты не запускались, выполняет Actions. Счётчики миграции не изменены. Владелец подтвердил обновление подписанных сборок.
 
+### 109.08 начата: владелец выбранного раздела
+
+`MPosWorkspaceNavigationOwner` владеет tab и revision в StateFlow на время Activity.
+Первое initialize принимает стартовый раздел; повторная инициализация не заменяет
+нативный выбор. `setTab` отправляет прямую команду без DOM target, и только ответ
+меняет совместимую JS-проекцию и вызывает render. При быстрых кликах старый ответ
+не возвращает интерфейс к предыдущему разделу. Повторный выбор не создаёт историю
+Back и не увеличивает revision; поиск/корзина/смена не меняются. Таблица разделов
+не ужесточена: неизвестные строки сохраняются как в reviewed handler. Нестроковый
+legacy input и явный MPosNativeWorkspaceNavigationEnabled=false используют rollback.
+
+Проверки StateFlow, повторной инициализации, быстрых кликов и изоляции заказа
+написаны, локально не запускались — выполняет Actions. 109.08 в работе:
+поиск, выбор/Back, нативные controls/read models и остальные DOM route targets
+ещё остаются. **114/129; 109 — 7/20; 107/110 крупных**, физическая приёмка pending.

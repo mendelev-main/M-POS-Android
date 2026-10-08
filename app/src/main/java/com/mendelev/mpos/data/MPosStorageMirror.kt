@@ -66,6 +66,7 @@ class MPosStorageMirror(
 
     private suspend fun loyaltyVerificationConfiguration():JSONObject = MPosLoyaltyBalanceVerification(database).context("",requireAdmin=false)
 
+    private val workspaceNavigation = com.mendelev.mpos.workspace.MPosWorkspaceNavigationOwner()
     private val editorGrants = MPosEditorGrants()
 
     fun authorizeEditor(input: JSONObject, credential: String) {
@@ -400,6 +401,10 @@ class MPosStorageMirror(
                     }
                     command.version?.let{writeState.commit(command.key,it)};value.put("requestId",requestId)
                 }.onSuccess(::emitResult).onFailure { result(requestId,false,"native supply storage operation failed") }
+            }
+            "workspaceNavigation" -> {
+                attempt { workspaceNavigation.handle(JSONObject(requireNotNull(command.serialized))).put("requestId",requestId) }
+                    .onSuccess(::emitResult).onFailure { result(requestId,false,"Не удалось переключить раздел") }
             }
             "loyaltyAdjustmentStatus" -> {
                 attempt {

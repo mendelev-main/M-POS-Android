@@ -877,12 +877,19 @@
         {
           "id": "109.08",
           "title": "Навигация разделов и состояние workspace",
-          "status": "planned",
+          "status": "in_progress",
           "dependencies": [
             "109.03",
             "109.06"
           ],
-          "acceptance": "Tabs, поиск, выбор и Back работают из нативного состояния без DOM route targets."
+          "acceptance": "Tabs, поиск, выбор и Back работают из нативного состояния без DOM route targets.",
+          "evidence": [
+            "app/src/main/java/com/mendelev/mpos/workspace/MPosWorkspaceNavigationOwner.kt",
+            "app/src/main/assets/pos/native-workspace-navigation.js",
+            "app/src/test/java/com/mendelev/mpos/workspace/MPosWorkspaceNavigationOwnerTest.kt",
+            "tests/android-workspace-navigation.test.cjs"
+          ],
+          "remaining": "Первый increment: нативный owner выбранного раздела с FIFO, revision и stale-result guard подключён. Остались нативные controls/read models tabs/search/selection/Back и устранение DOM route targets. CI pending; 109.08 не закрыт."
         },
         {
           "id": "109.09",
