@@ -5,7 +5,7 @@
   const enabled=()=>global.MPosNativeWorkspaceNavigationEnabled!==false;
   const view=()=>({tab:state.tab,search:String(state.search||''),posPath:state.posPath??null,posFolder:state.posFolder||'',editMode:!!state.editMode});
   global.MPosCore.WorkspaceNavigationLifecycle=Object.freeze({
-    invalidate(){runtime++;sequence++;searchSequence++;initialization=null;loading=true;global.MPosCore.NativeOpenForm?.invalidate?.();},
+    invalidate(){runtime++;sequence++;searchSequence++;initialization=null;loading=true;global.MPosCore.NativeOpenForm?.invalidate?.();global.MPosCore.LayoutUi?.invalidate?.();global.MPosCore.OverlayLifecycle?.invalidate?.();},
     ready(){loading=false;},
     generation(){return runtime;},
     async header(){
@@ -76,7 +76,7 @@
   const previousRoutes=global.MPosCore.WorkspaceRoutes;
   global.MPosCore.WorkspaceRoutes=Object.freeze({hasPending:()=>routePending>0||!!previousRoutes?.hasPending()});
   const routeEnabled=()=>enabled()&&global.MPosNativeWorkspaceRouteEnabled!==false;
-  const modalNode=()=>global.document?.getElementById('modal-root')?.firstElementChild;
+  const modalNode=()=>global.MPosCore.OverlayLifecycle?.snapshot().stamp??global.document?.getElementById('modal-root')?.firstElementChild;
   const stamp=()=>JSON.stringify([view(),state.paymentPage,global._posFolderModal]);
   for(const [name,route]of [['openPosCategory','openCategory'],['closePosCategory','closeCategory'],['openPosFolder','openFolder'],['toggleEditMode','toggleEdit']]){
     const originalRoute=global[name];if(typeof originalRoute!=='function')continue;

@@ -1,6 +1,7 @@
 package com.mendelev.mpos.web
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
@@ -16,6 +17,10 @@ class LocalContentWebViewClient(
     private val assetLoader: WebViewAssetLoader,
     private val images: ProductImageStore,
 ) : WebViewClientCompat() {
+    override fun onPageStarted(view:WebView,url:String?,favicon:Bitmap?) {
+        activity.onRuntimePageStarting()
+        super.onPageStarted(view,url,favicon)
+    }
     override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
         val uri = request.url
         if (uri.scheme == "mpos-image") return uri.host?.let(images::response)

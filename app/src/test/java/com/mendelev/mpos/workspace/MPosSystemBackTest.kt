@@ -52,4 +52,14 @@ class MPosSystemBackTest {
         h.calls[0].second(JSONObject.quote(snapshot().toString()));assertEquals(1,h.calls.size)
         h.controller.handle();assertEquals(2,h.calls.size);h.controller.close()
     }
+    @Test fun nativeOwnerAvoidsDomCaptureAndDropsBackgroundAfterNewOverlay() {
+        val owner=MPosBackStateOwner();owner.update(snapshot().put("revision",1))
+        val calls=mutableListOf<Pair<String,(String?)->Unit>>();var backgrounds=0
+        val controller=MPosSystemBackController({script,reply->calls.add(script to reply)},{backgrounds++},{fail("unexpected rollback")},owner::capture,owner::isCurrent)
+        controller.handle();assertEquals(1,calls.size);assertTrue(calls[0].first.contains("applyNative"));assertFalse(calls[0].first.contains("capture()"))
+        owner.update(snapshot(2).put("revision",2));calls[0].second("true");assertEquals(0,backgrounds)
+        val copy=owner.capture()!!;copy.put("modal",false);assertTrue(owner.capture()!!.getBoolean("modal"))
+        owner.update(snapshot().put("revision",1));assertEquals(2,owner.capture()!!.getLong("revision"))
+        owner.update(snapshot().put("revision",3).put("enabled",false));assertNull(owner.capture());controller.close()
+    }
 }

@@ -9,7 +9,9 @@ import org.json.JSONTokener
 class MPosSystemBackController(
     private val evaluate:(String,(String?)->Unit)->Unit,
     private val background:()->Unit,
-    private val rollback:()->Unit
+    private val rollback:()->Unit,
+    private val nativeCapture:(()->JSONObject?)?=null,
+    private val nativeCurrent:((Long)->Boolean)?=null
 ) {
     private val handler=Handler(Looper.getMainLooper())
     private var generation=0L
@@ -24,6 +26,16 @@ class MPosSystemBackController(
         fun current()= !closed&&pending&&generation==ticket
         fun finish(){if(current()){pending=false;timeout?.let(handler::removeCallbacks);timeout=null}}
         timeout=Runnable{finish()}.also{handler.postDelayed(it,15000)}
+        val native=nativeCapture?.invoke()
+        if(native!=null) {
+            val revision=native.getLong("revision");val action=MPosSystemBackPolicy.choose(native)
+            val request=JSONObject().put("revision",revision).put("action",action.name)
+            try{evaluate("window.MPosCore?.SystemBack?.applyNative(${request})===true"){applied->
+                if(!current())return@evaluate
+                finish();if(applied=="true"&&action==MPosSystemBackPolicy.Action.BACKGROUND&&nativeCurrent?.invoke(revision)!=false)background()
+            }}catch(_:Exception){finish()}
+            return
+        }
         try {
             evaluate("window.MPosCore?.SystemBack?.capture()??null") capture@{ raw ->
                 if(!current())return@capture

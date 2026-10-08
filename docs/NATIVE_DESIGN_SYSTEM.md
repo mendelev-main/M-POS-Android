@@ -121,3 +121,10 @@ remain. Both themes and typed busy controls have native View tests; tablet pendi
 dialog without hidden HTML fields. Native workspace/shift background remains
 mounted and disabled beneath it; cancel restores controls via native opening
 state, without relying on a DOM mutation. Tablet acceptance pending.
+
+109.08: native layout editor использует MPosNativeTheme/Manrope и обе палитры.
+Сетка root: 5 колонок; toolbar прокручивается, контент вертикально прокручивается.
+«Готово» primary, удаление destructive; формы папки/перемещения native, имена
+переносятся, поля/кнопки ≥48dp. Сохранённые координаты сохраняются; для аномально
+разреженных импортированных сеток редактор создаёт только строки с содержимым,
+не миллионы пустых Views. Физическое сравнение pending 110.

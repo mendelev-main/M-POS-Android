@@ -5,7 +5,7 @@
   if(global.MPosNativeWorkspaceHeaderEnabled===undefined)global.MPosNativeWorkspaceHeaderEnabled=true;
   const view=()=>({tab:state.tab,search:String(state.search||''),posPath:state.posPath??null,posFolder:state.posFolder||'',editMode:!!state.editMode});
   const enabled=()=>global.MPosNativeWorkspaceHeaderEnabled!==false&&global.MPosNativeWorkspaceNavigationEnabled!==false;
-  const covered=()=>global.MPosCore?.NativeOpenForm?.activeToken?.()||document.querySelector('#modal-root .modal-overlay')||state.paymentPage||document.querySelector('#product-editor-root .product-editor')||document.getElementById('printer-page')||['warehouse-root','receiving-page-root'].some(id=>document.getElementById(id)?.children.length);
+  const covered=()=>global.MPosCore?.NativeOpenForm?.activeToken?.()||global.MPosCore?.LayoutUi?.activeToken?.()||document.querySelector('#modal-root .modal-overlay')||state.paymentPage||document.querySelector('#product-editor-root .product-editor')||document.getElementById('printer-page')||['warehouse-root','receiving-page-root'].some(id=>document.getElementById(id)?.children.length);
   let current=null,cache=null,scheduled=false,sequence=0,lastSignature='';
   function hide(){cache=null;lastSignature='';if(current){bridge.postMessage({action:'headerHide',token:current.token});for(const [node,opacity,pointer]of current.styles){node.style.opacity=opacity;node.style.pointerEvents=pointer;}current=null;}}
   const key=()=>JSON.stringify([lifecycle.generation(),view(),state.shifts]);
@@ -75,6 +75,7 @@
     observer.observe(document.body,{childList:true});observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
     global.addEventListener('resize',()=>{lastSignature='';schedule();});document.addEventListener('visibilitychange',schedule);document.addEventListener('scroll',schedule,true);schedule();
     global.addEventListener('mpos-native-open-state',schedule);
+    global.addEventListener('mpos-native-overlay-state',schedule);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observe,{once:true});else observe();
 })(window);

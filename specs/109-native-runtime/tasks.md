@@ -480,3 +480,30 @@ Actions следующего коммита pending. Физическая при
 109.08 остаётся in_progress; **114/129 (88,37%)**, внутри 109 **7/20**.
 
 All opening entries `4c44c33`: [Actions 37773405619](https://github.com/mendelev-main/M-POS-Android/actions/runs/37773405619) — Tests and lint и Build APK успешно. Второй полный участок вычеркнут в execution checklist; следующий — раскладка рабочей зоны с полным набором действий. Физическая приёмка pending.
+
+### 109.08 — завершение редактора и Back, проверка в Actions
+
+Production editor теперь MPosLayoutController: native add/remove/drag, создание,
+название/удаление папок, перемещение и reorder товаров, «Готово» и Back.
+MPosLayoutRepository читает products/layout/posNavigation из Room; commit делает
+CAS навигации и SHA256 документов и сохраняет через withTransaction в FIFO.
+Переданные caller tiles/navigation не являются источником данных. Metadata layout,
+ключи, backup v13, лимит 20, folder rules и действующие права сохранены.
+JS только проецирует сохранённый документ; поздний результат не заменяет импорт.
+При сбое доступны обновление модели и повтор; автоматического повтора записи нет.
+
+Back использует MPosBackStateOwner и lifecycle notifications вместо DOM presence:
+import → modal → warehouse → receiving → background. Новый overlay/import identity
+меняет revision; устаревший callback и повторный Back не исполняют действие.
+Reload очищает owner; explicit rollback сохраняет прежний путь. Folder parent
+редактора и формы принадлежат native controller, отмена не записывает документы.
+
+Граница поиска: reviewed POS не имеет поля ввода; новый control не добавлен.
+Query и live decision уже принадлежат Kotlin; render-time каталог, DOM tile
+projection и geometry оболочки принадлежат 109.09/root presentation. Нативные
+кнопки не ищут HTML onclick targets. Legacy редактор остаётся только rollback.
+
+Добавлены Room/controller/JS lifecycle tests: лимит, metadata, move collision,
+папки и reorder, stale import/navigation, key order, overlay replacement, native
+Back без DOM, busy/duplicate/fallback. Local tests/APK не запускались (AGENTS §17).
+Этап пока in_progress до результатов Actions, счётчик 114/129 не увеличен.

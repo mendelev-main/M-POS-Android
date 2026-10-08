@@ -15,6 +15,15 @@
   const effects={CANCEL_IMPORT:()=>global.cancelBackupImport(),CLOSE_MODAL:()=>global.closeModal(),
     CLOSE_WAREHOUSE:()=>global.closeWarehousePage(),FINISH_RECEIVING:()=>global.finishReceivingPage(),BACKGROUND:()=>{}};
   core.SystemBack=Object.freeze({
+    applyNative(input){
+      if(global.MPosNativeSystemBackEnabled===false||!core.OverlayLifecycle)return false;
+      core.OverlayLifecycle.changed();
+      const snapshot=core.OverlayLifecycle.snapshot();
+      if(input?.revision!==snapshot.revision||!Object.hasOwn(effects,input.action))return false;
+      const action=snapshot.pendingImport?'CANCEL_IMPORT':snapshot.modal?'CLOSE_MODAL':snapshot.warehouse?'CLOSE_WAREHOUSE':snapshot.receiving?'FINISH_RECEIVING':'BACKGROUND';
+      if(input.action!==action)return false;
+      try{if(action==='CLOSE_MODAL'&&core.LayoutUi?.activeToken?.())core.LayoutUi.back();else effects[action]();return true;}catch(_error){return false;}
+    },
     capture(){if(global.MPosNativeSystemBackEnabled===false)return null;const snapshot=read();pending={...snapshot,token:++sequence};const {stamp,...payload}=pending;return JSON.stringify(payload);},
     apply(input){
       if(!pending||input?.token!==pending.token)return false;

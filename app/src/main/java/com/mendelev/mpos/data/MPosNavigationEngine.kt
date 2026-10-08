@@ -54,6 +54,7 @@ object MPosNavigationEngine {
     }
     fun hasFolder(category: String, navigation: Any?, products: JSONArray, id: Any?): Boolean =
         categoryItems(category, normalize(navigation), products).any { it.opt("type") == "folder" && same(it.opt("id"), id) }
+    fun items(category:String,navigation:Any?,products:JSONArray):JSONArray = JSONArray(categoryItems(category,normalize(navigation),products))
 
     private fun reply()=JSONObject().put("ok",true).put("authoritative",true).put("source","native-navigation")
     private fun fail(message:String,form:Boolean=false)=reply().put("allowed",false).put("message",message).put("formError",form)

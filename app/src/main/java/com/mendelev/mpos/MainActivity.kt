@@ -61,6 +61,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cashMovementDialog: MPosCashMovementDialog
     private lateinit var workspaceHeader: com.mendelev.mpos.workspace.MPosWorkspaceHeaderController
     private lateinit var workspace: MPosWorkspaceController
+    private lateinit var layoutEditor:com.mendelev.mpos.workspace.MPosLayoutController
+    private val backState=com.mendelev.mpos.workspace.MPosBackStateOwner()
     private lateinit var settingsScreen: MPosSettingsScreenController
     private lateinit var shiftScreen: MPosShiftScreenController
     private lateinit var webView: WebView
@@ -231,6 +233,16 @@ class MainActivity : AppCompatActivity() {
                 callJavaScript("window.__nativeWorkspaceHeaderResult&&window.__nativeWorkspaceHeaderResult(${com.mendelev.mpos.data.MPosBridgeJson.serialize(payload)});")
             }
         }
+        layoutEditor=com.mendelev.mpos.workspace.MPosLayoutController(this,root) { action ->
+            when(action.optString("action")) {
+                "read","commit"->nativeStorageMirror.layoutCommand(action.getJSONObject("input")) { result ->
+                    val packet=JSONObject().put("action","layoutResult").put("requestId",action.getString("requestId")).put("result",result)
+                    if(action.getString("action")=="commit"&&result.optBoolean("allowed"))callJavaScript("window.MPosCore?.LayoutUi?.committed(${com.mendelev.mpos.data.MPosBridgeJson.serialize(JSONObject(action.toString()).put("result",result))});")
+                    else runOnUiThread{layoutEditor.handle(packet)}
+                }
+                else->callJavaScript("window.MPosCore?.LayoutUi?.action(${com.mendelev.mpos.data.MPosBridgeJson.serialize(action)});")
+            }
+        }
         settingsScreen = MPosSettingsScreenController(this, root) { action ->
             val serialized = com.mendelev.mpos.data.MPosBridgeJson.serialize(action)
             callJavaScript("window.__nativeSettingsAction&&window.__nativeSettingsAction($serialized);")
@@ -267,7 +279,7 @@ class MainActivity : AppCompatActivity() {
 
         systemBack=com.mendelev.mpos.workspace.MPosSystemBackController(
             evaluate={script,callback->webView.evaluateJavascript(script){callback(it)}},
-            background={moveTaskToBack(true)},rollback={handleLegacySystemBack()})
+            background={moveTaskToBack(true)},rollback={handleLegacySystemBack()},nativeCapture=backState::capture,nativeCurrent=backState::isCurrent)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (::settingsScreen.isInitialized && settingsScreen.consumeBack()) return
@@ -277,6 +289,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private lateinit var systemBack:com.mendelev.mpos.workspace.MPosSystemBackController
+
+    fun onRuntimePageStarting() {
+        backState.reset()
+        if(::systemBack.isInitialized)systemBack.invalidate()
+        if(::layoutEditor.isInitialized)layoutEditor.hide()
+        if(::workspaceHeader.isInitialized)workspaceHeader.hide()
+        if(::workspace.isInitialized)workspace.hide()
+    }
 
     private fun handleLegacySystemBack() {
         webView.evaluateJavascript(
@@ -313,6 +333,7 @@ class MainActivity : AppCompatActivity() {
         if (::shiftScreen.isInitialized) shiftScreen.hide()
         if (::workspace.isInitialized) workspace.hide()
         if (::workspaceHeader.isInitialized) workspaceHeader.hide()
+        if (::layoutEditor.isInitialized) layoutEditor.hide()
         if (::settingsScreen.isInitialized) settingsScreen.dismiss()
         if (::cashInputDialog.isInitialized) cashInputDialog.dismiss()
         if (::splitCashDialog.isInitialized) splitCashDialog.dismiss()
@@ -381,7 +402,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun handleWorkspace(payload: JSONObject) = runOnUiThread {
-        if(payload.optString("action").startsWith("header")){if(::workspaceHeader.isInitialized)workspaceHeader.handle(payload)}
+        if(payload.optString("action")=="backState")backState.update(payload)
+        else if(payload.optString("action").startsWith("layout")){if(::layoutEditor.isInitialized)layoutEditor.handle(payload)}
+        else if(payload.optString("action").startsWith("header")){if(::workspaceHeader.isInitialized)workspaceHeader.handle(payload)}
         else if (::workspace.isInitialized) workspace.handle(payload)
     }
 

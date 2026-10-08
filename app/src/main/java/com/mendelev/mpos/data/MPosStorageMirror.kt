@@ -47,6 +47,11 @@ class MPosStorageMirror(
                 .onSuccess(reply).onFailure(failure)
         })failure(IllegalStateException("native queue unavailable"))
     }
+    fun layoutCommand(input:JSONObject,reply:(JSONObject)->Unit) {
+        val serialized=input.toString()
+        val failure:(Throwable)->Unit={reply(JSONObject().put("ok",false).put("message","Раскладка изменилась. Обновите экран и повторите действие"))}
+        if(!queue.submit(failure){attempt{workspaceNavigationRepository.execute(JSONObject(serialized))}.onSuccess(reply).onFailure(failure)})failure(IllegalStateException("native queue unavailable"))
+    }
 
     fun close() = queue.close()
 
