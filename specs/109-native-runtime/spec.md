@@ -206,3 +206,24 @@ Tests cover forged markers, protected role creation/change, unrestricted ordinar
 Verification: 575/575 JS and 464/464 JVM passed with zero failures/errors/skips; lint 0 errors, 15 existing warnings. No local APK assembly or physical acceptance. 109.07 remains in_progress: product/category edit/delete, protected stock/editor input and settings authorization are still pending. Counters remain **6/20 inside 109, 113/129 expanded, 107/110 major milestones**.
 
 Final verification includes main commit 47646c0 (connection feedback fixes), retained during integration: 575 JS / 464 JVM, zero failures/errors/skips; lint 0 errors / 15 existing warnings in this cloud environment. These are automated checks; actual Telegram/WEB/LAN delivery remains pending physical acceptance.
+
+
+### 109.07: реквизиты организации — 08.10.2026
+
+`MPosCompanyCommand` сохраняет реквизиты в одной Room-транзакции с проверкой
+актуальной роли администратора, открытой смены и ожидаемого документа.
+Понижение сотрудника, закрытие/смена смены и устаревшая форма отклоняют запись.
+JS обновляет состояние только после подтверждения commit; неопределённый
+результат по таймауту блокирует повтор до перезапуска, автоматического повтора нет.
+Ключ `company` принадлежит Room через существующий workspace storage; старый
+shadow не перезаписывает его. Импорт/экспорт v13, JSON null/отсутствие и неизвестные
+поля сохраняются. Ручное редактирование по прежней логике оставляет четыре поля.
+Флаг `MPosNativeCompanyCommandsEnabled=false` возвращает прежние обработчики,
+сохраняя нативное хранилище. Внешний вид формы не менялся.
+
+Добавлены JS/JVM проверки подтверждения записи, прав, конфликта данных,
+таймаута и отката Room. **Локально не запускались** согласно AGENTS.md §17;
+результат проверяется в GitHub Actions (см. `docs/CI_AND_APK_SIGNING_RU.md`).
+Физическая приёмка ожидается. 109.07 остаётся в работе: следующие границы —
+защищённые операции редактора/категорий и остальные настройки.
+Прогресс: **107/110 крупных этапов; 6/20 внутри 109; 113/129 детальных задач**.

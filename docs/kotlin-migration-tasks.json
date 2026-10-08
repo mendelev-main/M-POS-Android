@@ -836,9 +836,13 @@
             "app/src/test/java/com/mendelev/mpos/data/MPosEmployeeCommandTest.kt",
             "app/src/test/java/com/mendelev/mpos/employee/MPosEmployeeAuthorizationDialogTest.kt",
             "tests/android-employee-command.test.cjs",
-            "specs/109-native-runtime/spec.md"
+            "specs/109-native-runtime/spec.md",
+            "app/src/main/java/com/mendelev/mpos/data/MPosCompanyCommand.kt",
+            "app/src/main/assets/pos/native-company-command.js",
+            "app/src/test/java/com/mendelev/mpos/data/MPosCompanyCommandTest.kt",
+            "tests/android-company-command.test.cjs"
           ],
-          "remaining": "Нативная авторизация сотрудников подключена. Остались edit/delete товаров и категорий, разблокировка защищённых полей редактора и защищённые settings действия; закрытие возможно только после проверки всех этих границ."
+          "remaining": "Нативная авторизация сотрудников и транзакционное сохранение реквизитов подключены; новые проверки реквизитов ожидают GitHub Actions. Остались edit/delete товаров и категорий, разблокировка защищённых полей редактора и остальные защищённые settings действия; подэтап не закрыт."
         },
         {
           "id": "109.08",

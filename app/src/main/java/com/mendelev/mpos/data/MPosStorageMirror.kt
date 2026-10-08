@@ -356,6 +356,14 @@ class MPosStorageMirror(
                     command.version?.let{writeState.commit(command.key,it)};value.put("requestId",requestId)
                 }.onSuccess(::emitResult).onFailure { result(requestId,false,"native supply storage operation failed") }
             }
+            "companyCommit" -> {
+                attempt { MPosCompanyCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
+                    .onSuccess(::emitResult).onFailure {
+                        val message = it.message.takeIf { value -> value in setOf("Реквизиты изменились. Откройте форму заново",
+                            "Изменять реквизиты может только администратор при открытой им смене") } ?: "Не удалось сохранить реквизиты"
+                        result(requestId, false, message)
+                    }
+            }
             "employeeCommit" -> {
                 attempt { MPosEmployeeCommand(database).commit(requireNotNull(command.serialized)).put("requestId", requestId) }
                     .onSuccess(::emitResult).onFailure { result(requestId, false, "local employee transaction failed") }

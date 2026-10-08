@@ -667,3 +667,17 @@ After the native bootstrap cutover: restart offline with imported v13 data; veri
 - Leave the password dialog open for over 30 seconds before confirming: no uncertain-commit gate while typing. Double submit, background/restart, and a late result after an actual commit timeout do not duplicate writes.
 - Change employee/role/shift while confirmation is open: stale command is refused without overwriting newer data; refresh/retry using current data.
 - Pending critical journal blocks employee changes; no journal replay, printing or availability retry is triggered by the password dialog.
+
+
+### Реквизиты организации (109.07) — pending
+
+- В открытой администратором смене изменить четыре поля, сохранить офлайн,
+  перезапустить приложение: значения должны сохраниться без смены оформления.
+- Открыть форму, затем закрыть смену или понизить сотрудника: сохранение
+  должно быть отклонено без изменения сохранённых реквизитов.
+- Сохранить более новые реквизиты до отправки старой формы: старая запись
+  должна отклониться с предложением открыть форму заново.
+- Экспортировать v13, импортировать на пустой установке и перезапустить:
+  реквизиты и остальные данные должны восстановиться.
+- При неопределённом результате сохранения повтор запрещён до перезапуска;
+  после перезапуска прочитать фактически сохранённые значения.

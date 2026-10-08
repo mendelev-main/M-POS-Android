@@ -432,3 +432,15 @@ test('current cart and native journal remain recoverable despite all compatibili
  assert.deepEqual(JSON.parse(h.room.workspace.currentOrderSession.payload),{items:[]});
  assert.equal(h.room.workspace.criticalStorageJournal.payload,'null');
 });
+
+test('company authority preserves imported extensions across restart and rejects stale cache as source',async()=>{
+ const company={establishmentName:'Cafe',legalName:'Company',address:'Street',deliveryAddress:'Dock',extension:{enabled:false}};
+ const h=host({data:new Map([['company',company]])});
+ assert.deepEqual(clone(await h.context.MPosCore.Storage.get('company',{})),company);
+ const imported={...company,legalName:'Imported'};
+ await h.context.MPosCore.Storage.set('company',imported);
+ const restart=host({room:h.room,data:new Map([['company',{legalName:'Stale'}]])});
+ assert.deepEqual(clone(await restart.context.MPosCore.Storage.get('company',{})),imported);
+ await restart.context.MPosCore.Storage.remove('company');
+ assert.equal(await restart.context.MPosCore.Storage.get('company','missing'),'missing');
+});

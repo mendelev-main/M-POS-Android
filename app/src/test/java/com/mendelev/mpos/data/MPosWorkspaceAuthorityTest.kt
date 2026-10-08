@@ -43,8 +43,8 @@ class MPosWorkspaceAuthorityTest {
         return requireNotNull(replies.poll(5, TimeUnit.SECONDS)).also { assertEquals(action, it.getString("requestId")) }
     }
 
-    @Test fun bothKeysMigrateOnceRetainExactJsonAndIgnoreObsoleteShadows() {
-        for ((key, document) in mapOf("layout" to layout, "posNavigation" to navigation)) {
+    @Test fun ownedKeysMigrateOnceRetainExactJsonAndIgnoreObsoleteShadows() {
+        for ((key, document) in mapOf("layout" to layout, "posNavigation" to navigation, "company" to "{\"legalName\":\"Cafe\",\"extension\":false}")) {
             call("put", key, "{\"old\":true}")
             assertTrue(call("workspaceInitialize", key, document).getBoolean("authoritative"))
             call("workspaceInitialize", key, "{\"stale\":true}")
