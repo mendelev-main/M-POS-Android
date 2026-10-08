@@ -912,7 +912,7 @@
             "tests/android-native-shift-screen.test.cjs",
             "app/src/test/java/com/mendelev/mpos/shift/MPosShiftScreenControllerTest.kt"
           ],
-          "remaining": "Native owner/routes/Back/runtime, toolbar, category/folder typed tile selection подключены. Остались native tabs/search controls, controls редактора раскладки и global Back DOM presence; catalogue/cart/read models — 109.09. Folder increment tests authored, Actions pending; physical acceptance pending."
+          "remaining": "Native owner/routes/Back/runtime, toolbar, category/folder typed tile selection подключены. Остались native tabs/search controls, controls редактора раскладки и global Back DOM presence; catalogue/cart/read models — 109.09. Folder increment JS/Kotlin/lint прошёл Actions 37764445102 (c7e976a); physical acceptance pending."
         },
         {
           "id": "109.09",
@@ -1141,6 +1141,16 @@
       "execution": "GitHub Actions",
       "runId": 37753269784,
       "commit": "a645d39",
+      "testsAndLint": "success",
+      "apkBuild": "in_progress",
+      "physicalAcceptance": "pending"
+    },
+    {
+      "date": "2026-10-08",
+      "scope": "Native folder tile typed selection and modal acknowledgement",
+      "execution": "GitHub Actions",
+      "runId": 37764445102,
+      "commit": "c7e976a",
       "testsAndLint": "success",
       "apkBuild": "in_progress",
       "physicalAcceptance": "pending"

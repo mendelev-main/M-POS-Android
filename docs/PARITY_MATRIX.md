@@ -734,3 +734,5 @@ Actions следующего коммита pending, физическая при
 
 109.08 in_progress: native tabs/search controls, редактор раскладки и global Back
 presence остаются. Прогресс **114/129 (88,37%)**, 109 **7/20**.
+
+Проверка folder-кода `c7e976a`: [Actions 37764445102](https://github.com/mendelev-main/M-POS-Android/actions/runs/37764445102) — Tests and lint успешно (JS, правила версий, Kotlin, lint). APK отдельным job; физическая приёмка pending.
