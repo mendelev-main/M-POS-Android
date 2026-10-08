@@ -66,3 +66,14 @@ test('native cart cancel does not save and stale read/recovery cannot project an
  const token=h.c.MPosCore.CartItemUi.activeToken();await h.c.MPosCore.CartItemUi.action({action:'cartItemCancel',token});
  assert.equal(pending.length,2);assert.equal(h.state().cart[0].cartLineId,'other');assert.deepEqual(h.events,[]);
 });
+test('opening native cart editor from folder closes that folder like the reviewed source form',async()=>{
+ const h=host(null,(c,events)=>{
+  c._posFolderModal={category:'Coffee',id:'folder'};
+  c.closeModal=()=>{c._posFolderModal=null;events.push(['close']);};
+  c.MPosCore.WorkspaceNavigation.cartItem=async()=>({ok:true,authoritative:true,model:{sessionRevision:'saved'}});
+ });await tick();
+ await h.c.__nativeWorkspaceAction({token:h.sent[0].token,action:'click',key:'2'});
+ assert.equal(h.c._posFolderModal,null);assert.deepEqual(h.events,[['close']]);
+ assert.equal(h.calls.at(-1).folderModal,null);assert.ok(h.sent.find(p=>p.action==='cartItemShow'));
+ h.c.MPosCore.CartItemUi.back();assert.deepEqual(h.events,[['close']]);
+});

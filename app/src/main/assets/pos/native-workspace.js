@@ -59,6 +59,7 @@
   };
   async function openCartLine(id){
     if(global.MPosNativeCartItemFormEnabled===false||typeof core.WorkspaceNavigation.cartItem!=='function')return global.openCartItemModal(id);
+    if(global._posFolderModal){global.closeModal();const closed=stamp();await update();if(closed!==stamp()||!normal()||!current)return;}
     const form={token:'cart-item-'+(++sequence),id,expected:view(),pending:false};cartForm=form;core.OverlayLifecycle?.changed();form.stamp=stamp();
     if(current)bridge.postMessage({action:'result',token:current.token,blocked:true});
     try{
