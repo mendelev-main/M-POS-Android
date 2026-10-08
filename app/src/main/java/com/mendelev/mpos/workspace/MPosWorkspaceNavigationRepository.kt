@@ -12,7 +12,7 @@ import org.json.JSONTokener
 class MPosWorkspaceNavigationRepository(private val database:MPosDatabase,private val owner:MPosWorkspaceNavigationOwner) {
     suspend fun navigateToolbar(input:JSONObject):JSONObject {
         require(input.getInt("version")==1)
-        require(input.getString("route") in setOf("closeCategory","toggleEdit"))
+        require(input.getString("route") in setOf("closeCategory","toggleEdit","openCategory"))
         check(input.getJSONObject("expected").getLong("revision")==owner.state.value.revision){"workspace toolbar changed"}
         val proposal=execute(JSONObject(input.toString()).put("operation","prepareRoute"))
         check(proposal.getBoolean("allowed"))

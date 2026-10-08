@@ -115,4 +115,24 @@ class MPosWorkspaceControllerTest {
         controller.hide()
     }
 
+    @Test fun categoryTileUsesNativeRouteInsteadOfOpaqueHtmlClickAndRejectsOldTile() {
+        val (controller,root,calls)=setup()
+        fun nativeModel(token:String):JSONObject {
+            val payload=model(token)
+            val snapshot=JSONObject().put("tab","pos").put("posPath",JSONObject.NULL).put("posFolder","").put("search","").put("editMode",false).put("revision",1)
+            val content=payload.getJSONObject("model")
+            content.put("navigation",MPosWorkspaceToolbarModel.calculate(snapshot,null,null))
+            content.getJSONArray("tiles").getJSONObject(2).put("route",JSONObject().put("operation","openCategory").put("value","Напитки"))
+            return payload
+        }
+        controller.handle(nativeModel("first"));ShadowLooper.idleMainLooper()
+        val tile=nodes(root).first{it.contentDescription=="Напитки"}
+        tile.performClick();tile.performClick();assertEquals(1,calls.size)
+        assertEquals("navigate",calls.single().getString("action"));assertFalse(calls.single().has("key"))
+        val command=calls.single().getJSONObject("command")
+        assertEquals("openCategory",command.getString("route"));assertEquals("Напитки",command.getString("value"))
+        controller.handle(JSONObject().put("action","result").put("token","first"));controller.handle(nativeModel("second"))
+        tile.performClick();assertEquals(1,calls.size);controller.hide()
+    }
+
 }

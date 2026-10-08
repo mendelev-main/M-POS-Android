@@ -392,3 +392,14 @@ Hidden compatibility overlay отличает native Dialog от видимог�
 Tests authored, GitHub Actions pending; локальные тесты/сборка APK не запускались.
 Физическая проверка исправлений pending. Прогресс **114/129 (88,37%)**, 109 **7/20**;
 109.08 остаётся in_progress, следующие controls — вкладки/поиск и DOM route targets.
+
+
+### 109.08 — типизированный выбор категории с native плитки
+
+Native category tile теперь передаёт openCategory + стабильный ID прямо в Kotlin
+через ту же FIFO/revision проверку. Mounted HTML click handler не вызывается;
+название карточки не подменяет ID. Прежние trim, очистка поиска/folder и выход из
+editMode сохранены; бизнес-документы не записываются. Старый view token и повторное
+нажатие отклоняются. Product/folder tiles и явный rollback пока используют reviewed
+handlers; их read models ещё впереди. Написаны JS, Room и native view проверки,
+выполнение следующего коммита в Actions pending. 109.08 in_progress; **114/129**.

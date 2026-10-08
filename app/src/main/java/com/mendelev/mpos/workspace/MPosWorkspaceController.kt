@@ -84,13 +84,20 @@ class MPosWorkspaceController(private val context: Context, private val host: Fr
         val tiles = model.optJSONArray("tiles") ?: JSONArray()
         for (i in 0 until tiles.length()) {
             val tile = tiles.getJSONObject(i)
+            val viewToken=token
             val cell = column().apply {
                 val fill = if (tile.optString("type") == "category") runCatching { tile.optString("color").toColorInt() }.getOrDefault(theme.soft) else theme.surface
                 background = theme.shape(if (theme.dark) theme.surface else fill, 16, true)
                 setPadding(theme.dp(12), theme.dp(12), theme.dp(12), theme.dp(12)); contentDescription = tile.optString("name")
                 isClickable = true; isFocusable = true; controls += this
                 if (tile.optBoolean("disabled")) { disabled += this; alpha = .42f }
-                setOnClickListener { emit(tile.optString("key")) }
+                setOnClickListener {
+                    if(viewToken==token) {
+                        val route=tile.optJSONObject("route")
+                        if(navigation!=null&&route!=null)emitNavigation(route.getString("operation"),route.getString("value"))
+                        else emit(tile.optString("key"))
+                    }
+                }
             }
             if (tile.optString("symbol").isNotBlank()) cell.addView(label(tile.optString("symbol"), 22f))
             cell.addView(label(tile.optString("name"), 16f, true).apply { maxLines = 4; ellipsize = TextUtils.TruncateAt.END }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
@@ -163,12 +170,12 @@ class MPosWorkspaceController(private val context: Context, private val host: Fr
         }
     }
     private fun emit(key: String) { if (busy || blocked || token.isBlank()) return; busy = true; enable(); action(JSONObject().put("action", "click").put("token", token).put("key", key)) }
-    private fun emitNavigation(operation:String) {
+    private fun emitNavigation(operation:String,value:String?=null) {
         val model=navigation?:return
         if(busy||blocked||token.isBlank())return
         busy=true;enable()
         action(JSONObject().put("action","navigate").put("token",token).put("command",JSONObject().put("version",1)
-            .put("route",operation).put("expected",JSONObject(model.getJSONObject("expected").toString()))
+            .put("route",operation).put("value",value?:JSONObject.NULL).put("expected",JSONObject(model.getJSONObject("expected").toString()))
             .put("folderModal",model.opt("folderModal")?:JSONObject.NULL)))
     }
     private fun enable() { controls.forEach { it.isEnabled = !busy && !blocked && it !in disabled } }

@@ -73,8 +73,20 @@ class MPosWorkspaceNavigationRepositoryTest {
         val after=owner.state.value
         try{repository.navigateToolbar(input);fail("duplicate toolbar action accepted")}catch(_:IllegalStateException){}
         assertEquals(after,owner.state.value)
-        try{repository.navigateToolbar(JSONObject(input.toString()).put("route","openCategory"));fail("unsupported toolbar action accepted")}catch(_:IllegalArgumentException){}
+        try{repository.navigateToolbar(JSONObject(input.toString()).put("route","openFolder"));fail("unsupported toolbar action accepted")}catch(_:IllegalArgumentException){}
         assertEquals(beforeProducts,db.legacyStorageShadowDao().get("products"));assertEquals(beforeNav,db.legacyStorageShadowDao().get("posNavigation"))
+    }
+
+    @Test fun typedCategorySelectionPreservesOrderDocumentsAndRejectsOldRevision()=runCase {db,owner,repository->
+        val documents=db.legacyStorageShadowDao();val products=documents.get("products");val navigation=documents.get("posNavigation")
+        val before=owner.handle(JSONObject().put("version",1).put("operation","read")).getJSONObject("snapshot")
+        val command=JSONObject().put("version",1).put("route","openCategory").put("value","  Напитки  ").put("expected",before)
+        val accepted=repository.navigateToolbar(command)
+        assertEquals("Напитки",owner.state.value.posPath);assertEquals("",owner.state.value.search)
+        assertEquals("render",accepted.getString("effect"));assertFalse(owner.state.value.editMode)
+        assertEquals(products,documents.get("products"));assertEquals(navigation,documents.get("posNavigation"))
+        try{repository.navigateToolbar(command);fail("stale category click accepted")}catch(_:IllegalStateException){}
+        assertEquals("Напитки",owner.state.value.posPath)
     }
 
 }

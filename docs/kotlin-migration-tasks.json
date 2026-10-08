@@ -907,7 +907,7 @@
             "tests/android-native-shift-screen.test.cjs",
             "app/src/test/java/com/mendelev/mpos/shift/MPosShiftScreenControllerTest.kt"
           ],
-          "remaining": "Native owner/routes, System Back/runtime и toolbar labels/typed Back/layout/folder-close подключены. Остались общие native tabs/search controls, controls редактора раскладки и DOM presence глобального Back. Каталог/корзина read models — 109.09. Toolbar JS/Kotlin/lint passed Actions 37750512318 (7bd7ecc); 109.08 in_progress. Production lexical-state wiring и native shift background исправлены; regression tests ожидают Actions, физическая проверка pending."
+          "remaining": "Native owner/routes, System Back/runtime и toolbar labels/typed Back/layout/folder-close подключены. Остались общие native tabs/search controls, controls редактора раскладки и DOM presence глобального Back. Каталог/корзина read models — 109.09. Toolbar JS/Kotlin/lint passed Actions 37750512318 (7bd7ecc); 109.08 in_progress. Production lexical-state wiring и native shift background исправлены; regression tests ожидают Actions, физическая проверка pending. Native category tile dispatch подключён без mounted HTML click; folder/product tiles сохраняют compatibility handler. Следующий Actions pending."
         },
         {
           "id": "109.09",

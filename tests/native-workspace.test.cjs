@@ -60,3 +60,12 @@ test('production lexical state activates workspace without window.state and pres
  await h.action({token:show.token,key:show.model.tiles[0].key});assert.deepEqual(h.events,['tile',['add','p']]);
  vm.runInContext("state.paymentPage='main'",h.h);h.mutate();assert.equal(h.sent.at(-1).action,'hide');assert.equal(h.root.style.opacity,'');
 });
+
+test('category route metadata uses stable category ID while product and rollback keep reviewed clicks',async()=>{
+ const navigation={title:'Рабочая зона',buttons:[],expected:{tab:'pos',posPath:null,posFolder:'',search:'',editMode:false,revision:1},folderModal:null};
+ const h=host(c=>{Object.assign(c.state,navigation.expected);c.MPosCore={WorkspaceNavigationLifecycle:{generation:()=>1,toolbar:async()=>navigation}};});
+ h.tile.dataset={tileType:'category',id:'Напитки'};h.card.one['.pcard-name'].textContent='Другое отображаемое имя';await tick();
+ assert.deepEqual(h.sent.at(-1).model.tiles[0].route,{operation:'openCategory',value:'Напитки'});
+ h.tile.dataset.tileType='product';h.mutate();await tick();assert.equal(h.sent.at(-1).model.tiles[0].route,undefined);
+ h.h.MPosNativeWorkspaceToolbarEnabled=false;h.tile.dataset.tileType='category';h.mutate();await tick();assert.equal(h.sent.at(-1).model.tiles[0].route,undefined);
+});

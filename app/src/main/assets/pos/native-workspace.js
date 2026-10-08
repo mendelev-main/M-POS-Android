@@ -22,7 +22,7 @@
     const columns=Math.max(1,global.getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length||4);
     const tiles=[...grid.querySelectorAll('.layout-tile')].filter(node=>!node.hidden).map((node,i)=>{
       const card=node.querySelector('.pcard');
-      return{key:bind(card,'tile'),name:text(card.querySelector('.pcard-name')),price:text(card.querySelector('.pcard-price')),stock:text(card.querySelector('.pcard-stock')),symbol:text(card.querySelector('.tile-symbol')),type:node.dataset.tileType||'product',disabled:card.classList.contains('disabled'),color:card.style.getPropertyValue('--category-color'),...position(node,i,columns)};
+      return{key:bind(card,'tile'),route:navigation&&node.dataset.tileType==='category'?{operation:'openCategory',value:String(node.dataset.id||'')}:undefined,name:text(card.querySelector('.pcard-name')),price:text(card.querySelector('.pcard-price')),stock:text(card.querySelector('.pcard-stock')),symbol:text(card.querySelector('.tile-symbol')),type:node.dataset.tileType||'product',disabled:card.classList.contains('disabled'),color:card.style.getPropertyValue('--category-color'),...position(node,i,columns)};
     });
     const panel=root.querySelector('.cart-panel');
     const lines=[...panel.querySelectorAll('.cart-row')].map(node=>({key:bind(node,'cart'),removeKey:bind(node,'remove',{id:node.dataset.cartId}),name:text(node.querySelector('.cart-row-name')),amount:text(node.querySelector('.cart-row-linetotal')),details:[...node.querySelectorAll('.cart-row-sub')].map(text).join('\n')}));
