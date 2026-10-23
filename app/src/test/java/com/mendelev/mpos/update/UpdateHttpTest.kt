@@ -2,6 +2,12 @@ package com.mendelev.mpos.update
 
 import java.io.File
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import java.util.concurrent.TimeUnit
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.*
@@ -40,6 +46,24 @@ class UpdateHttpTest {
             server.enqueue(MockResponse().setResponseCode(404))
             try { client.manifest(server.url("/missing").toString()); fail("Missing release accepted") }
             catch (_: NoPublishedUpdate) { }
+        }
+    }
+
+    @Test fun cancellationStopsAStreamingDownload() = runBlocking {
+        MockWebServer().use { server ->
+            server.start()
+            server.enqueue(MockResponse().setBody("x".repeat(64 * 1024)).throttleBody(1024, 100, TimeUnit.MILLISECONDS))
+            val progress = CompletableDeferred<Unit>()
+            val file = File.createTempFile("cancel-update", ".part")
+            try {
+                val job = launch(Dispatchers.IO) {
+                    UpdateHttp(true).download(server.url("/slow").toString(), file, 64 * 1024L) { progress.complete(Unit) }
+                }
+                withTimeout(5000) { progress.await() }
+                job.cancelAndJoin()
+                assertTrue(job.isCancelled)
+                assertTrue(file.length() < 64 * 1024)
+            } finally { file.delete() }
         }
     }
 

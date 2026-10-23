@@ -87,6 +87,13 @@ def main():
             adb("shell", "am", "force-stop", PACKAGE)
             launch()
             wait_text("Обновление готово к установке")
+            # Tampering with a ready APK must be detected immediately before granting installer access.
+            adb("shell", "run-as", PACKAGE, "sh", "-c", "'echo corrupted > files/updates/candidate.apk'")
+            wait_text("^Установить обновление$", click=True)
+            wait_text("Размер APK не совпадает")
+            assert "versionCode=1 " in adb("shell", "dumpsys", "package", PACKAGE)
+            wait_text("^Скачать обновление$", click=True)
+            wait_text("Обновление готово к установке")
             wait_text("^Установить обновление$", click=True)
             wait_text("^(Cancel|Отмена)$", click=True)
             wait_text("Установка не завершена")

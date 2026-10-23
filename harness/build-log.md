@@ -49,3 +49,11 @@
 Источники: текущий bootstrap, pinned Web source `1682c88334e6fb13586ce4b530157c59ca062e43`, документация Android/Kotlin/Coil и исходные Kotlin adapters Web. Внешние документы использованы для уточнения API/границ, а не как доказательство уже подключённых зависимостей.
 
 Проверки: `python3 scripts/harness.py preflight` — passed; `git diff --check` — passed. Изменена только документация, сборка/dependencies/runtime не менялись; Android tests/APK повторно не запускались. Этап 01 и продуктовые acceptance не начаты. Documentation-only commit с `[skip ci]` сохраняет последнее runtime CI evidence в предыдущей записи.
+
+## 2026-10-24 — 00.1, реализация и начало проверок
+
+Пользователь авторизовал реализацию обновления APK. Добавлены settings UI, ViewModel/OkHttp, ограниченные manifest/download, archive identity/signer/hash checks, FileProvider/system installer, private ready cache и restart recovery. Actions расширены отдельным stable publish, release assets и emulator self-update API 28/35. Новые keys не создавались.
+
+Локально: harness preflight, 3 Python tests, py_compile scripts и actionlint — passed. Android SDK локально отсутствует, Android проверки выполняет [run 40027720047](https://github.com/mendelev-main/M-POS-Android/actions/runs/40027720047). Результаты и исправления будут записаны после фактического выполнения.
+
+Первый run 40027720047: Kotlin/Compose compile и JVM tests прошли; lint нашёл два отсутствующих `includeSubdomains` в debug-only network security config. Исправлено явным `false` для localhost/127.0.0.1, release TLS-политика не ослаблялась. Дополнительно добавлены cancellation test и e2e corruption-before-install scenario.

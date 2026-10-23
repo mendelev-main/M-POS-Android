@@ -33,7 +33,7 @@ Signed job зависит от обеих jobs и запускается тол�
 
 `versionCode = 1000 + run_number * 100 + run_attempt`, `versionName = 0.1.<run>.<attempt>`; retry 1..99, run до 20000000, предел Android проверен tooling tests. Версия растёт при каждом run/retry. Не пересоздавать/переименовывать workflow со сбросом счётчика без новой версии, превышающей все опубликованные APK. Локальная debug версия 1 и другой package.
 
-Без GitHub Secrets release job завершается ошибкой и не публикует неподписанный APK. Fork PR выполняет код без secrets; не использовать pull_request_target для untrusted PR. Actions не публикует GitHub Release автоматически: APK доступен как Actions artifact 30 дней.
+Без GitHub Secrets release job завершается ошибкой и не публикует неподписанный APK. Fork PR выполняет код без secrets; не использовать pull_request_target для untrusted PR. По обычным push APK доступен как Actions artifact 30 дней. Для выпуска в канал планшетов используйте ручной `publish_release=true`: [механизм обновления](UPDATES.md). После всех проверок отдельная job публикует draft с APK/manifest/checksum, затем включает stable latest; каждую промежуточную сборку пользователям не предлагаем.
 
 ## Физическая проверка
 
