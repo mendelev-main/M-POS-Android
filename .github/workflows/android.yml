@@ -5,6 +5,15 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Publish verified APK to the stable tablet update channel'
+        type: boolean
+        default: false
+      release_notes:
+        description: 'Visible changes for tablet users'
+        type: string
+        default: 'M-POS: обновление приложения и улучшения.'
 
 permissions:
   contents: read
@@ -48,6 +57,10 @@ jobs:
           retention-days: 14
 
   emulator:
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [28, 35]
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
@@ -71,21 +84,29 @@ jobs:
       - name: Native launch and recreation smoke
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         with:
-          api-level: 35
+          api-level: ${{ matrix.api }}
           arch: x86_64
           profile: pixel_c
           disable-animations: true
-          script: ./gradlew --no-daemon connectedDebugAndroidTest
+          script: |
+            set -e
+            ./gradlew --no-daemon connectedDebugAndroidTest
+            python3 scripts/ci/update-e2e.py
       - name: UI reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: android-ui-reports
-          path: app/build/reports/androidTests/
+          name: android-ui-reports-api-${{ matrix.api }}
+          path: |
+            app/build/reports/androidTests/
+            app/build/reports/update-e2e/
           if-no-files-found: warn
           retention-days: 14
 
   signed-apk:
+    outputs:
+      version_name: ${{ steps.version.outputs.MPOS_VERSION_NAME }}
+      version_code: ${{ steps.version.outputs.MPOS_VERSION_CODE }}
     needs: [checks, emulator]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
@@ -102,6 +123,7 @@ jobs:
           distribution: temurin
           java-version: '17'
       - name: Version and permanent key preflight
+        id: version
         env:
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
@@ -120,16 +142,38 @@ jobs:
       - name: Verify APK identity, version and certificate
         run: |
           python3 scripts/release.py verify-apk app/build/outputs/apk/release/app-release.apk --build-tools "$ANDROID_HOME/build-tools/35.0.0" --code "$MPOS_VERSION_CODE" --name "$MPOS_VERSION_NAME"
-          sha256sum app/build/outputs/apk/release/app-release.apk > app/build/outputs/apk/release/app-release.apk.sha256
+      - name: Prepare verified stable-channel assets
+        env:
+          RELEASE_NOTES: "${{ inputs.release_notes || 'M-POS: обновление приложения и улучшения.' }}"
+        run: python3 scripts/prepare-release.py --apk app/build/outputs/apk/release/app-release.apk --output build/release-channel --code "$MPOS_VERSION_CODE" --name "$MPOS_VERSION_NAME"
       - name: Verified APK
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: M-POS-Native-${{ env.MPOS_VERSION_NAME }}
-          path: |
-            app/build/outputs/apk/release/app-release.apk
-            app/build/outputs/apk/release/app-release.apk.sha256
+          path: build/release-channel/
           if-no-files-found: error
           retention-days: 30
       - name: Remove temporary private key
         if: always()
         run: rm -rf "$RUNNER_TEMP/mpos-signing"
+
+  publish:
+    needs: signed-apk
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_release && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: stable-release-channel
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: M-POS-Native-${{ needs.signed-apk.outputs.version_name }}
+          path: build/release-channel
+      - name: Publish complete immutable release, then update stable pointer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/publish-release.py --assets build/release-channel

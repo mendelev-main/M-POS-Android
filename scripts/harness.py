@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def preflight(root=ROOT):
     errors = []
     required = ["AGENTS.md", "GOALS.md", "PLANS.md", "PROMPTS.md", "README.md",
-                "docs/SOURCE.md", "docs/DATA.md", "docs/PARITY.md", "docs/RELEASE.md",
+                "docs/SOURCE.md", "docs/UPDATES.md", "harness/build/00.1-updates.md", "docs/DATA.md", "docs/PARITY.md", "docs/RELEASE.md",
                 "harness/build-log.md", "config/reference.json", "config/android-release.json",
                 "gradle/wrapper/gradle-wrapper.jar", ".github/workflows/android.yml"]
     for name in required:
@@ -49,6 +49,8 @@ def preflight(root=ROOT):
         gradle = (root / "app/build.gradle.kts").read_text()
         if f'applicationId = "{cfg["applicationId"]}"' not in gradle:
             errors.append("Gradle/config applicationId mismatch")
+        if cfg["certificateSha256"] not in gradle:
+            errors.append("Runtime update certificate must match release config")
         ET.parse(root / "app/src/main/AndroidManifest.xml")
         for path in (root / "app/src/main").rglob("*"):
             if path.is_file() and (path.suffix in {".html", ".js"} or

@@ -1,0 +1,131 @@
+package com.mendelev.mpos.update
+
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mendelev.mpos.R
+import java.text.DateFormat
+import java.util.Date
+import kotlinx.coroutines.launch
+
+@Composable
+fun UpdatesScreen(model: UpdateViewModel, onBack: () -> Unit) {
+    val state by model.state.collectAsStateWithLifecycle()
+    BackHandler(enabled = state.stage == UpdateStage.VERIFYING) { }
+    val context = LocalContext.current
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val scope = rememberCoroutineScope()
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        model.installerClosed(if (context.packageManager.canRequestPackageInstalls())
+            context.getString(R.string.update_permission_granted) else context.getString(R.string.update_permission_required))
+    }
+    val installer = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        model.installerClosed()
+    }
+    LaunchedEffect(model) { model.openSettings() }
+    Column(
+        modifier = Modifier.safeDrawingPadding().verticalScroll(rememberScrollState()).widthIn(max = 760.dp).padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        TextButton(onClick = onBack, enabled = state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER)) {
+            Text(stringResource(R.string.settings_back))
+        }
+        Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineLarge)
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.update_title), style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.update_installed, model.repository.installedName, model.repository.installedCode))
+                Text(stringResource(R.string.update_channel))
+                if (state.lastChecked > 0) Text(stringResource(R.string.update_last_checked,
+                    DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(state.lastChecked))),
+                    style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(when (state.stage) {
+                    UpdateStage.RESTORING -> R.string.update_restoring
+                    UpdateStage.IDLE -> R.string.update_idle
+                    UpdateStage.CHECKING -> R.string.update_checking
+                    UpdateStage.CURRENT -> R.string.update_current
+                    UpdateStage.AVAILABLE -> R.string.update_available
+                    UpdateStage.DOWNLOADING -> R.string.update_downloading
+                    UpdateStage.READY -> R.string.update_ready
+                    UpdateStage.VERIFYING -> R.string.update_verifying
+                    UpdateStage.INSTALLER -> R.string.update_installer
+                    UpdateStage.ERROR -> R.string.update_error
+                }), style = MaterialTheme.typography.titleMedium)
+                state.candidate?.let { candidate ->
+                    Text(stringResource(R.string.update_candidate, candidate.versionName,
+                        "%.1f".format(candidate.apkBytes / (1024.0 * 1024))))
+                    if (candidate.notes.isNotBlank()) Text(candidate.notes)
+                }
+                if (state.stage == UpdateStage.DOWNLOADING) {
+                    LinearProgressIndicator(progress = { state.progress / 100f }, modifier = Modifier.fillMaxWidth())
+                    Text(stringResource(R.string.update_percent, state.progress))
+                    OutlinedButton(onClick = model::cancelDownload) { Text(stringResource(R.string.update_cancel)) }
+                } else if (state.stage in setOf(UpdateStage.CHECKING, UpdateStage.RESTORING, UpdateStage.VERIFYING)) {
+                    CircularProgressIndicator()
+                }
+                state.message?.let { Text(it, color = if (state.stage == UpdateStage.ERROR)
+                    MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant) }
+                if (!state.busy) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        if (state.stage == UpdateStage.READY) {
+                            Button(onClick = {
+                                if (!context.packageManager.canRequestPackageInstalls()) {
+                                    try { permission.launch(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}"))) }
+                                    catch (_: ActivityNotFoundException) { model.installerClosed(context.getString(R.string.update_settings_unavailable)) }
+                                } else scope.launch {
+                                    val intent = model.prepareInstallation() ?: return@launch
+                                    if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                                        model.installerClosed(context.getString(R.string.update_return_to_install))
+                                        return@launch
+                                    }
+                                    try { installer.launch(intent) }
+                                    catch (_: ActivityNotFoundException) { model.installerClosed(context.getString(R.string.update_installer_unavailable)) }
+                                    catch (_: SecurityException) { model.installerClosed(context.getString(R.string.update_permission_required)) }
+                                }
+                            }) { Text(stringResource(R.string.update_install)) }
+                        } else if (state.candidate != null) {
+                            Button(onClick = model::download) { Text(stringResource(R.string.update_download)) }
+                        }
+                        OutlinedButton(onClick = model::check) { Text(stringResource(R.string.update_check)) }
+                    }
+                }
+            }
+        }
+        Text(stringResource(R.string.update_explanation), style = MaterialTheme.typography.bodyMedium)
+        Spacer(Modifier.height(12.dp))
+    }
+}

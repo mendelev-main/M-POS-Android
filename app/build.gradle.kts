@@ -40,7 +40,10 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
+    defaultConfig {
+        buildConfigField("String", "UPDATE_CERT_SHA256", "\"d484cd0166df7f043f65c25e058aba4d3a2b59ea058e6f39948e3e5684b12da4\"")
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -53,11 +56,17 @@ dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2025.10.00")
     implementation(composeBom)
     implementation("androidx.activity:activity-compose:1.11.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.1")
+    implementation("androidx.core:core-ktx:1.16.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     androidTestImplementation(composeBom)
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.test:runner:1.6.2")

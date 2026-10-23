@@ -82,6 +82,9 @@ def main():
         if os.environ.get("GITHUB_ENV"):
             with open(os.environ["GITHUB_ENV"], "a") as output:
                 output.write(content)
+        if os.environ.get("GITHUB_OUTPUT"):
+            with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+                output.write(content)
         print(content, end="")
     elif args.command == "signing-setup":
         signing_setup(args.directory)
