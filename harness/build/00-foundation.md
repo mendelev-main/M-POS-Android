@@ -1,6 +1,6 @@
 # Этап 00 — Фундамент
 
-Статус: implemented, проверки см. build-log
+Статус: implemented; checks и emulator ci-verified; signed release pending secrets, device acceptance pending. Evidence: harness/build-log.md.
 
 ## Объём
 
