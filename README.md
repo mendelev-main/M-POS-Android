@@ -14,6 +14,8 @@
 
 [GitHub Actions](https://github.com/mendelev-main/M-POS-Android/actions) прогоняет проверки, Android tests/lint/debug и emulator smoke; после успешных проверок main — signed release APK. PR из fork не получают signing secrets. Настройка ключа: [docs/RELEASE.md](docs/RELEASE.md).
 
+Фундамент проверен [полным успешным Actions run](https://github.com/mendelev-main/M-POS-Android/actions/runs/40023385742): bootstrap APK `0.1.3.1` подписан новым постоянным ключом. Физическая установка и функциональные этапы ещё впереди.
+
 Приложения устанавливаются рядом: native `com.mendelev.mpos`, Web `com.mendelev.mpos.web`. Debug имеет дополнительный `.debug`. Данные из Web сами не появляются; перенос через проверенный импорт будет отдельным этапом.
 
 ## Навигация

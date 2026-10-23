@@ -4,7 +4,7 @@
 
 | Этап | Содержание | Зависимость | Статус |
 |---|---|---|---|
-| 00 | Harness, документация, Kotlin bootstrap, Actions, identity/signing | — | implemented; checks/emulator verified, signing pending secrets |
+| 00 | Harness, документация, Kotlin bootstrap, Actions, identity/signing | — | ci-verified: checks/emulator/signed APK; device pending |
 | 01 | Товары, категории, фото, единицы, рецептуры, модификаторы | 00 | planned |
 | 02 | Рабочая зона, раскладка, папки, корзина, текущие/отложенные чеки | 01 | planned |
 | 03 | Оплата, скидки, возврат, история чеков, сохранность операций | 02 | planned |
