@@ -19,6 +19,7 @@
 - HTTPS и стандартная TLS-проверка; перенаправления ограничены GitHub release asset hosts. Произвольные endpoint/credentials из Intent в release не принимаются.
 - `.part` не устанавливается. Готовый APK и его metadata хранятся в app-private `files/updates`. Metadata пишется атомарно. После restart готовый APK проверяется заново; повреждённый/устаревший удаляется. Незавершённая загрузка начинается заново, HTTP resume не обещается.
 - Отмена загрузки проверяется между блоками IO; блокирующее чтение ограничено read timeout 15 секунд. Пока отмена не завершена, новая операция не начинается.
+- Маленькие служебные markers/lastChecked хранятся в приватных SharedPreferences; это не хранилище кассы. Готовый descriptor — AtomicFile. DataStore для пользовательских preferences остаётся следующим этапом стека.
 - Никакие товары/backup/ключи подписи в release assets не включаются. Android signing JKS остаётся только Actions Secret и приватной резервной копией.
 
 ## Выпуск версии

@@ -1,6 +1,8 @@
 package com.mendelev.mpos.update
 
 import android.content.Intent
+import android.util.Log
+import com.mendelev.mpos.BuildConfig
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import java.io.IOException
@@ -27,6 +29,7 @@ class UpdateViewModel(val repository: UpdateRepository) : ViewModel() {
     private val mutableState = MutableStateFlow(UpdateUiState())
     val state = mutableState.asStateFlow()
     private var operation: Job? = null
+    private var firstOpen = true
 
     init {
         operation = viewModelScope.launch {
@@ -43,6 +46,8 @@ class UpdateViewModel(val repository: UpdateRepository) : ViewModel() {
     }
 
     fun openSettings() {
+        // Initialization already restores/checks. Do not race it or erase the post-update receipt.
+        if (firstOpen) { firstOpen = false; return }
         if (!state.value.busy && state.value.stage != UpdateStage.READY) check()
     }
 
@@ -98,6 +103,8 @@ class UpdateViewModel(val repository: UpdateRepository) : ViewModel() {
 
     private fun handleError(error: Exception) {
         if (error is CancellationException) throw error
+        // Release diagnostics exclude request URLs and credentials. Fixtures are loopback-only in DEBUG.
+        Log.w("MposUpdate", "stage=${state.value.stage}; error=${error.javaClass.simpleName}", if (BuildConfig.DEBUG) error else null)
         val message = when (error) {
             is java.net.UnknownHostException -> "Нет соединения с сервером. Проверьте интернет и повторите."
             is java.net.SocketTimeoutException -> "Сервер не ответил вовремя. Повторите попытку."

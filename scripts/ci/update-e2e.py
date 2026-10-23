@@ -111,6 +111,9 @@ def main():
             launch(fixture=False)
             wait_text("Установлена версия 0.0.2-e2e")
             wait_text("Приложение успешно обновлено")
+            reports = ROOT / "app/build/reports/update-e2e"
+            reports.mkdir(parents=True, exist_ok=True)
+            (reports / "updated-settings.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True).stdout)
             print("UPDATE E2E PASSED: check/download/restore/cancel/system install 1→2; app-private data preserved")
             server.shutdown()
 

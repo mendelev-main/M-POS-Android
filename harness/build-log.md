@@ -57,3 +57,5 @@
 Локально: harness preflight, 3 Python tests, py_compile scripts и actionlint — passed. Android SDK локально отсутствует, Android проверки выполняет [run 40027720047](https://github.com/mendelev-main/M-POS-Android/actions/runs/40027720047). Результаты и исправления будут записаны после фактического выполнения.
 
 Первый run 40027720047: Kotlin/Compose compile и JVM tests прошли; lint нашёл два отсутствующих `includeSubdomains` в debug-only network security config. Исправлено явным `false` для localhost/127.0.0.1, release TLS-политика не ослаблялась. Дополнительно добавлены cancellation test и e2e corruption-before-install scenario.
+
+Run 40028108139: checks success (8/8 JVM + 3 Python, compile/lint/debug). API 35 e2e прошёл check/download/restart/corruption/cancel/install 1→2 и сохранил sentinel, затем не увидел success receipt из-за init/openSettings race; исправлена повторная initial check. API 28 остановился на IO download failure, добавлена debug-only diagnostic trace для выяснения причины. Установка/release заблокированы gates до зелёного e2e; успешный продуктовый выпуск пока не заявляется.
