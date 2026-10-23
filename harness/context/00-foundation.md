@@ -7,3 +7,7 @@
 ## Обновление 2026-10-24
 
 Владелец авторизовал gh, четыре signing secrets установлены подготовленным скриптом. Полный run 40023385742 — success, подписанный APK 0.1.3.1/versionCode 1301 с закреплённым native certificate опубликован в Actions artifact. Блокер secrets снят; hardware acceptance остаётся pending. Исследование и реализация этапа 01 не начаты.
+
+## Целевой стек, 2026-10-24
+
+Создан `docs/STACK.md` (ADR-002) по запросу описать технологии для полного native parity. Это техническое решение, а не реализация 01. Отделены фактически установленные versions/dependencies от выбранных будущих компонентов. Все стадии сохраняют Kotlin domain, локальную Room transaction и независимую identity. Дополнительно определены Hilt/KSP, Coil, typed navigation/JSON, OkHttp/SSE, WorkManager, нативные PDF/XLSX/ESC-POS и Keystore. Версии будущих библиотек проверять при начале соответствующего этапа.

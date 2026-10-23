@@ -11,3 +11,9 @@
 - Перед 09: исследовать backend contracts и тестовое окружение, retry/idempotency/menu ownership. Production endpoint/key сюда не вписывать.
 
 Изменения решений оформлять датированной записью: причина → затронутые acceptance IDs → миграция → проверки.
+
+## ADR-002 — целевой стек, 2026-10-24
+
+По запросу пользователя стек описан исходя из полного функционального соответствия Web. Решение: [STACK.md](STACK.md). Уточнены Lifecycle/Coroutines/Navigation Compose, Hilt, Room/KSP, DataStore, serialization, Coil, OkHttp/streaming SSE и WorkManager; платформенные адаптеры файлов, печати, отчётов и секретов. Выбраны роль каждой технологии и этап подключения, без установки новых dependencies в этой документационной задаче.
+
+Деньги/единицы остаются в Kotlin domain, операции — в Room transactions; WorkManager не подменяет постоянный realtime transport. Версии будущих библиотек проверяются при подключении, текущая CI-проверенная база сохранена. Поведенческие P/W/S/I/H/C/B/D/N критерии и порядок этапов не изменены.
