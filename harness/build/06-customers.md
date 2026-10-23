@@ -1,0 +1,25 @@
+# Этап 06 — Клиенты и лояльность
+
+Статус: planned
+
+## Объём
+
+Клиенты, consent/privacy, loyalty allocations, зал/столы/бронирования.
+
+## Зависимости и источники
+
+Порядок/зависимости: `PLANS.md`. Источник: `docs/SOURCE.md`, карта: `docs/PARITY.md`; архитектура/данные: `docs/ARCHITECTURE.md`, `docs/DATA.md`. Перед реализацией уточнить сценарии по pinned исходнику, добавить тестовые fixtures и acceptance details для этой итерации.
+
+## Приёмка
+
+C01: валидация контакта; C02: gift не поглощает доставку/другие строки; C03: outbox повтор; C04: роли/согласия; C05: booking conflicts.
+
+Для каждого критерия записать implemented / ci-verified / device-verified и evidence. Проверить happy path, отказ хранения, повтор действия и restart там, где есть сохранение. Детальные UI и integration сценарии уточняются при начале этапа.
+
+## Вне этапа
+
+Production клиентские данные в fixtures.
+
+## Контекст и результат
+
+Значимые решения в `harness/context/06-customers.md` при начале работ; наблюдаемые результаты в `harness/build-log.md`.

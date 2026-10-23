@@ -1,0 +1,22 @@
+# Local build/environment
+.gradle/
+.kotlin/
+/build/
+/app/build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+__pycache__/
+*.pyc
+# Signing/private material
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+*.env
+.env*
+credentials.json
+*keystore*.base64
+signing-private/

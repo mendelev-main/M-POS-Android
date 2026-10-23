@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">M-POS</string>
+    <string name="foundation_title">M-POS</string>
+    <string name="foundation_status">Нативное приложение · этап 00</string>
+    <string name="foundation_next">Следующий этап — товары и категории. Продажи пока недоступны.</string>
+</resources>
