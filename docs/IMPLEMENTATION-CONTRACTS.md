@@ -9,6 +9,7 @@
 | Команда | Вход и атомарная запись | Результат / отказ |
 |---|---|---|
 | SaveProduct | commandId, draftId/productId, expectedRevision, validated fields; product + components/modifiers + opening movement при создании | ID/revision; Validation, Conflict, StorageFailure |
+| SetProductStock (в SaveProduct) | productId, targetQuantity, expectedStockRevision, commandId; delta/balance/revision/result/audit вместе с изменённой карточкой; причина не требуется | новый stock; Conflict/Validation/StorageFailure |
 | RenameCategory | categoryId, expectedRevision, новое имя; категория/согласованные ссылки layout | прежний ID, новая revision; Duplicate/Conflict |
 | ChangeCart | sessionId, expectedRevision, actionId, кандидат строк/параметров; session/reservation projection | новая сессия/preview; OutOfStock/StaleCatalog |
 | ParkCurrent / ResumeParked | commandId, current/parked revisions; перенос и очистка/активация в одной transaction | один владелец строк/резерва; NonEmptyCurrent/Conflict |

@@ -21,6 +21,10 @@
 - Production applicationId `com.mendelev.mpos` и закреплённый сертификат неизменны после первого выпуска. Web — `com.mendelev.mpos.web`. Providers использовать `${applicationId}`.
 - Не коммитить ключи, пароли, реальные backup/клиентские данные. Не запускать реальные оплаты, отправку Telegram, печать или production sync ради теста; использовать fake adapters.
 
+## Единый UI
+
+Дизайн — из pinned Web, обязательный контракт `docs/DESIGN-SYSTEM.md` и `config/ui-design.json` (пока specification-only). Использовать shared Mpos theme/components в M01: Close/Back/Primary/Secondary/Danger/Dialog/Field. Не вводить локальные радиусы, крестики и стили кнопок для каждого feature без documented variant. Stock редактируется в карточке без обязательной причины; ledger/revision остаются обязательными (ADR-005).
+
 ## Проверки
 
 `python3 scripts/harness.py preflight` — структура, ссылки, skills, идентичность и границы native.

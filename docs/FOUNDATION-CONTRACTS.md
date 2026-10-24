@@ -6,6 +6,8 @@
 
 Вход: текущий bootstrap/updater00.1 без Room. Выход: пользователь создаёт категорию, создаёт простой товар с начальным остатком, ищет/редактирует его, перезапускает приложение и видит committed данные. Некорректный ввод, конфликт, повтор нажатия и ошибка записи не создают частичный объект/дубли.
 
+Пользователь не ограничивает итоговый scope штучными товарами: все типы/единицы старого приложения обязательны в завершённом01. Порядок01a/01b — внутренний инкремент, не сокращение продукта.
+
 01a использует простую единицу `piece` и явно отображает «шт»; масса/объём, base/display conversion, stock flags и recipes вводятся 01b. Модификаторы/фото —01c. Формы не показывают неработающие поля будущих функций. Рабочая зона/продажи/сайт/импорт реальных данных не входят. До 05 режим single-owner обозначен честно, без заявления о ролевой защите кассира.
 
 ## Native validation defaults
@@ -18,7 +20,7 @@
 | Цена продажи | BYN,0…999999999.99, до 2 знаков после запятой;0 означает ручную цену в будущем 02 |
 | Себестоимость simple | BYN за 1 шт;0…999999999.99999999, до 8 знаков; не применяется округление продажи |
 | Начальное количество |0…999999999.999999999, до 9 знаков; отрицательное opening в 01a запрещено, flags ещё не включены |
-| Изменение остатка | только при создании через opening movement; существующий stock в редакторе read-only |
+| Изменение остатка | создание через opening; правка через product_card delta; существующий stock редактируется без обязательной причины; save с expectedStockRevision и delta movement |
 | Складские flags | noStockTracking=false, allowNegativeStock=false до 01b; состояние не угадывается по цене |
 | Повтор/конфликт | commandId+fingerprint; expectedRevision; повтор прежнего результата/Conflict соответственно |
 
@@ -38,14 +40,14 @@
 | categories | id PK, name, normalizedKey UNIQUE, sortOrder, revision |
 | products | id PK, categoryId nullable FK restrictive, name/searchKey, type=simple, unit=piece, currency=BYN, priceText/costText, revision |
 | stock_balances | productId PK/FK restrictive, quantityText, unit, stockRevision; writable только stock transaction |
-| stock_movements | id PK, productId FK restrictive, deltaText/unit, reason=opening, document/command refs, timestamp; UNIQUE commandId+effectKey |
+| stock_movements | id PK, productId FK restrictive, deltaText/unit, source=opening/product_card, reason nullable, document/command refs, timestamp; UNIQUE commandId+effectKey |
 | operation_results | scope+commandId PK, inputFingerprint, resultType/resultId/revision; принятый результат в той же transaction |
 | editor_drafts | draftId PK, targetId?, expectedRevision?, versioned payload, updatedAt; не committed Product |
 | audit_events | eventId PK, commandId, actorId, action, targetId, safe outcome/time; без пароля/PII payload |
 
 Opening=0 тоже задаёт stock balance; допустимо не создавать zero movement, но эта политика фиксируется fixture и не выдаёт второй opening по повтору. Foreign keys удаления продуктов/категорий не каскадируют историю. Новая категория имеет стабильный ID; исходное имя не является FK.
 
-Транзакции: CreateProduct(product+balance+ненулевой opening+result+audit+consumed draft); UpdateProduct(product revision+result+audit+draft); RenameCategory(category+result+audit); DeleteUnreferenced(category/product+result+audit). Проверки uses и revision внутри transaction. Сервис не вызывает сеть. Cancel editor удаляет только свой draft; очистка draft при сохранении происходит согласованно с committed product.
+Транзакции: CreateProduct(product+balance+ненулевой opening+result+audit+consumed draft); UpdateProduct(product revision+stock delta/balance/revision если поле изменено+result+audit+draft); RenameCategory(category+result+audit); DeleteUnreferenced(category/product+result+audit). Проверки uses и revision внутри transaction. Сервис не вызывает сеть. Cancel editor удаляет только свой draft; очистка draft при сохранении происходит согласованно с committed product.
 
 01a удаляет товар только если нет движений/других ссылок; ненулевой opening уже является историей и блокирует delete. Нулевой товар без движения и связей может быть удалён с подтверждением. Архивирование отдельным future action. При изменении последующих схем этот guard расширяется, не обходится ради UI.
 
@@ -55,14 +57,18 @@ M02 определяет IDs/DecimalValue/Quantity/Currency/Error/CommandContext
 
 Existing UpdateRepository не переносится и не обнуляет markers. AppCoordinator публикует состояние открытия БД; future maintenance/install guard получает общий контракт. Реализация полноценного installer/financial guard —03, поскольку в 01a нет оплаты.
 
+## Визуальный контракт
+
+[DESIGN-SYSTEM.md](DESIGN-SYSTEM.md) обязателен: Manrope/палитра/формы/компоновка из Web. До уникального UI каталога реализовать shared theme/buttons/close/dialog/fields и component gallery. Значения/происхождение в [config/ui-design.json](../config/ui-design.json). Bootstrap/updater постепенно приводятся к общей theme, не считаются уже визуально принятыми.
+
 ## Экранные маршруты
 
 Start → «Товары» → список с поиском/фильтром/созданием → editor. Категории доступны отдельной командой из каталога. «Настройки → Обновления» сохраняется. На широком экране можно показать список+details, но один draftId независимо от ширины; back учитывает dirty state.
 
-Editor: name/category/price/cost/opening при создании; stock read-only при редактировании; Save/Cancel. Saving блокирует повторное намерение, repository всё равно защищает commandId. Успех выходит в список и выделяет сохранённую запись. Validation показывает поле, StorageFailure сохраняет ввод/предлагает повтор, Conflict предлагает перечитать без молчаливой перезаписи. Loading/empty/no search results/read failure различимы.
+Editor: name/category/price/cost/opening при создании; stock editable при редактировании без поля причины; Save/Cancel. Saving блокирует повторное намерение, repository всё равно защищает commandId. Успех выходит в список и выделяет сохранённую запись. Validation показывает поле, StorageFailure сохраняет ввод/предлагает повтор, Conflict предлагает перечитать без молчаливой перезаписи. Loading/empty/no search results/read failure различимы.
 
 ## Fixtures для первой PR
 
-F01: «  Чай  »/цена 2,50BYN/opening10 → название «Чай», price=`2.5`, stock10 после reopen. F02: цена`2,501`/`12abc`/пустое имя → отказ, ничего не создано. F03: один commandId дважды → один product/opening. F04: тот же ID с другим input → Conflict. F05: injected DB failure после product insert до stock/result → ни product, ни movement/result. F06: category rename/delete при связях → ID сохранён/удаление отклонено. F07: rotation/process recreation → draft, committed данные не подменены. F08: concurrent updates одной revision → одна победа/один Conflict. F09: existing updater preferences/APK channel после появления Room сохранны. F10: parser/converter roundtrip граничных значений и переполнение.
+F01: «  Чай  »/цена 2,50BYN/opening10 → название «Чай», price=`2.5`, stock10 после reopen. F02: цена`2,501`/`12abc`/пустое имя → отказ, ничего не создано. F03: один commandId дважды → один product/opening. F04: тот же ID с другим input → Conflict. F05: injected DB failure после product insert до stock/result → ни product, ни movement/result. F06: category rename/delete при связях → ID сохранён/удаление отклонено. F07: rotation/process recreation → draft, committed данные не подменены. F08: concurrent updates одной revision → одна победа/один Conflict. F09: existing updater preferences/APK channel после появления Room сохранны. F10: parser/converter roundtrip граничных значений и переполнение. F11: stock10→8 в карточке без причины →delta−2/stock8/result после reopen; повтор не списывает второй раз. F12: concurrent sale изменяет stockRevision →stock save Conflict, ни частичной карточки, ни потерянной продажи. F13: stock не трогали, поменяли только name →актуальный stock не перезаписан.
 
 JVM — parser/normalization/validation. Room instrumentation — FK/UNIQUE/transaction/reopen/concurrent revision. Compose — форма/navigation/failure/draft. Реальный планшет — клавиатура/ширина/restart. До first PR проверить актуальные официальные версии Room/KSP и совместимость с закреплённой Kotlin/AGP, не добавлять их на основании одного текста спецификации.

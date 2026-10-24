@@ -4,6 +4,8 @@
 
 Подробности будущей системы: [модель](DOMAIN-MODEL.md), [состояния](STATE-MACHINES.md), [сохранность](RESILIENCE.md), [доступ/аудит](ACCESS-AND-AUDIT.md), [приёмка](SYSTEM-ACCEPTANCE.md). Эти документы описывают требования, не установленные бизнес-компоненты.
 
+Обязательный визуальный стандарт пользователя: [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md). Theme/shared components относятся к M01; интерфейс воспроизводит Web, с едиными close/buttons/fields/dialog variants.
+
 Решение ADR-001, 2026-10-23: Kotlin, Jetpack Compose Material 3, single Activity; offline-first. Минимум Android 9/API 28 как в Web. UI ориентирован на планшет, адаптивен к доступной ширине; landscape — основной сценарий приёмки, ориентацию жёстко не фиксируем.
 
 Границы21 логической области и отличие от Gradle modules: [MODULES.md](MODULES.md).

@@ -33,7 +33,7 @@ UUID/стабильная строка — технический ID. Назва
 | 01 RecipeComponent | ownerProductId, componentProductId, quantity, unit, order | qty>0, выход владельца>0, граф без цикла |
 | 01 ModifierGroup/Option | стабильные IDs, productId, min/max, option productId/qty/delta | исходные ограничения валидируются до нормализации |
 | 01 PhotoRef | id, relativePath, mediaType, byteSize, checksum, state | path внутри своего хранилища; активная ссылка указывает на готовый файл |
-| 01 StockMovement | id, productId simple, delta, baseUnit, reason, documentId, commandId, timestamp | opening создаётся с новым товаром атомарно; историческое движение неизменно |
+| 01 StockMovement | id, productId simple, delta, baseUnit, source, reason optional, documentId, commandId, timestamp | opening создаётся с новым товаром атомарно; историческое движение неизменно |
 | 02 LayoutFolder/Tile | id, parentId?, tileType, targetId, order, revision | category/folder не одно понятие; нет циклов папок |
 | 02 OrderSession/Line | id, revision, current/parked, lineId, config snapshot, qty, catalog versions, параметры | один current на локальную кассу; один владелец каждой строки/резерва |
 | 03 Receipt/LineSnapshot | id, sourceSessionId, commandId, итог/валюта/policyVersion, снимки строк/расхода | после commit неизменны; возврат отдельным документом |
@@ -64,6 +64,8 @@ Reservation — потребность current/parked, не StockMovement. До�
 Физическое удаление запрещено при исторических/активных ссылках. Для UI отключение/архивирование требует отдельного контракта, не каскадного удаления receipts/movements. Фото истории включается в snapshot только если это действительно нужно; вечное хранение всех версий изображений не предполагается автоматически.
 
 Для01a денежная единицаBYN подтверждена пользователем; candidate схемы, converter bounds и input limits в [FOUNDATION-CONTRACTS.md](FOUNDATION-CONTRACTS.md). До01b/03 остаются отдельные precision/rounding gates.
+
+Stock правится в карточке без обязательной причины по решению пользователя. SetProductStock сравнивает expectedStockRevision и сохраняет delta в общем ledger; unchanged stock input не перезаписывает баланс при save других полей.
 
 ## Минимальные доказательства
 

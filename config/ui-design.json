@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "status": "specification-not-yet-consumed-by-app",
+  "reference": {
+    "repository": "mendelev-main/M-POS-Android-Web",
+    "commit": "1682c88334e6fb13586ce4b530157c59ca062e43",
+    "path": "app/src/main/assets/pos/pos.html",
+    "sha256": "907d601b20f7505a3b9ca7db27a314f90ae7516e4117cbf69b5b519a167bdd1c"
+  },
+  "colors": {
+    "light": {
+      "bg": "#F5F4F0",
+      "surface": "#FFFFFF",
+      "ink": "#1B1F2A",
+      "muted": "#767C8C",
+      "accent": "#0E8F6F",
+      "accent-ink": "#FFFFFF",
+      "accent-soft": "#E4F3EE",
+      "navy": "#22273A",
+      "danger": "#E0483E",
+      "danger-soft": "#FBE7E5",
+      "success": "#26733A",
+      "success-ink": "#FFFFFF",
+      "success-soft": "#E3F6E8",
+      "success-border": "#C9EBCF",
+      "warning": "#8A5A17",
+      "warning-soft": "#FFF4E9",
+      "warning-border": "#F5DCB8",
+      "info": "#31558F",
+      "info-soft": "#E8F0FF",
+      "info-border": "#C7D7F2",
+      "control-off": "#B9BEC8",
+      "border": "#E7E4DD"
+    },
+    "dark": {
+      "bg": "#171A21",
+      "surface": "#222631",
+      "ink": "#F4F6FA",
+      "muted": "#A9B0BF",
+      "accent": "#31B98D",
+      "accent-ink": "#07140F",
+      "accent-soft": "#173B31",
+      "navy": "#10131A",
+      "danger": "#FF6B61",
+      "danger-soft": "#432522",
+      "success": "#8FE0BE",
+      "success-ink": "#07140F",
+      "success-soft": "#1D4638",
+      "success-border": "#43C38D",
+      "warning": "#E9C989",
+      "warning-soft": "#3A3022",
+      "warning-border": "#5A4A30",
+      "info": "#BFD5FF",
+      "info-soft": "#26334A",
+      "info-border": "#3C506F",
+      "control-off": "#5A6170",
+      "border": "#353B49"
+    }
+  },
+  "native": {
+    "fontFamily": "Manrope",
+    "radiusDp": {
+      "control": 10,
+      "close": 12,
+      "button": 16,
+      "card": 16,
+      "editorCard": 20,
+      "dialog": 22
+    },
+    "sizeDp": {
+      "controlMin": 48,
+      "primaryMin": 48,
+      "paymentMin": 52,
+      "closeVisual": 44,
+      "closeTouch": 48,
+      "closeIcon": 22,
+      "dialogMaxWidth": 460,
+      "dialogGutter": 20,
+      "dialogPadding": 28,
+      "closeStroke": 2
+    },
+    "spaceDp": [
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      18,
+      20,
+      24,
+      28,
+      32
+    ]
+  },
+  "notes": [
+    "CSS values are source evidence; dp/sp mapping is a native standard, not measured pixel parity.",
+    "Semantic component roles must use shared tokens; app does not read this file yet."
+  ]
+}

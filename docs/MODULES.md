@@ -8,7 +8,7 @@
 
 | ID / область | Владеет | Нужные предпосылки | Ввод / документ |
 |---|---|---|---|
-| M01 Оболочка и настройки | навигация, запуск, группы config, composition root, общие состояния | M02; подключает только готовые features | bootstrap→01; [базовые контракты](FOUNDATION-CONTRACTS.md) |
+| M01 Оболочка и настройки | навигация, запуск, группы config, composition root, общие состояния и design system | M02; подключает только готовые features | bootstrap→01; [базовые контракты](FOUNDATION-CONTRACTS.md) |
 | M02 Предметные типы | IDs, quantity/unit, money/currency, revisions, ошибки, clock/command contracts | без Compose/БД/HTTP | 01; [модель](DOMAIN-MODEL.md) |
 | M03 Локальное хранение | Room lifecycle, migrations, transaction runner, schema/constraints | M02 | 01; [foundation](FOUNDATION-CONTRACTS.md), [recovery](RESILIENCE.md) |
 | M04 Файлы и изображения | picker/staging/private files, PhotoRef storage, SAF adapters | M02; metadata через M03 | 01c,07; [каталог](CATALOG-WORKSPACE-SPEC.md), [recovery](RESILIENCE.md) |
@@ -37,6 +37,8 @@ M01 собирает routes/providers, но не считает сумму/ос�
 M13 не зависит от экрана/команды M09: ledger оплат и read port достаточны для закрытия/сверки. M09 проверяет active shift через порт M13. M15 только читает подтверждённые данные, не изменяет receipts ради красивого графика. M16 предлагает validated allocations через checkout contract; добавление loyalty не создаёт вторую реализацию оплаты. M17 может существовать без server клиента.
 
 M05 знает delivery policy/статус эффекта, а transport конкретного сервиса — его adapter. Один общий outbox не означает одинаковый auto retry для принтера и HTTP. M18 не отправляет восстановленные external jobs автоматически. M20 не владеет локальной кассой: сеть отсутствует — допустимые локальные операции продолжаются.
+
+Обязательная общая UI-база M01: [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md). core/ui/theme/components/preview создаются в01a; общий язык из Web, не default Material. M07 stock editor принимает поправку без причины через M10 ledger command.
 
 ## Физическая структура на старте
 

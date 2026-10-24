@@ -12,7 +12,7 @@
 
 | ID / срок | Уже описано | Что ещё уточнить до его кода | Источник результата |
 |---|---|---|---|
-| D01 Перед 01a | первый scope, BYN, validation defaults, первая schema candidate, UI/failure cases | в PR проверить совместимые Room/KSP versions, оформить реальную schema/fixtures; небольшие лимиты candidate принимаются как native defaults | [FOUNDATION-CONTRACTS.md](FOUNDATION-CONTRACTS.md) |
+| D01 Перед 01a | первый scope, BYN, design system из Web, stock editor без причины, validation defaults, первая schema candidate, UI/failure cases | в PR проверить совместимые Room/KSP versions, оформить реальную schema/fixtures; небольшие лимиты candidate принимаются как native defaults | [FOUNDATION-CONTRACTS.md](FOUNDATION-CONTRACTS.md) |
 | D02 Перед 03a–03c | state machines/atomic sale/refund/минимальная смена | точные money/discount/split/refund allocation examples, cash/shift reconciliation, поддержка partial refund | [OPERATIONS-SPEC.md](OPERATIONS-SPEC.md), [MANAGEMENT-REPORTS-SPEC.md](MANAGEMENT-REPORTS-SPEC.md) |
 | D03 Перед 04 | suppliers, procurement/receiving, baseline/cancel protocols | метод valuation/cost, редактирование частично полученной закупки, поля receiving fixtures | [WAREHOUSE-SPEC.md](WAREHOUSE-SPEC.md) |
 | D04 Перед 05 | staff/admin границы, capability proposal, report snapshots/formulas | окончательная role/auth matrix, период/timezone/возвратный cut-off, exports data schema | [MANAGEMENT-REPORTS-SPEC.md](MANAGEMENT-REPORTS-SPEC.md), [ACCESS-AND-AUDIT.md](ACCESS-AND-AUDIT.md) |

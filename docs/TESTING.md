@@ -1,5 +1,7 @@
 # Проверки и приёмка
 
+Visual DS01–DS07: [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md), парные screenshots/источники [UI-REFERENCE.md](UI-REFERENCE.md). Stock editor F11–F13: direct change без причины, atomic history/retry/conflict. Пока planned.
+
 Сквозные маршруты SYS-01–SYS-13, проектные RES/ACC cases и gates: [SYSTEM-ACCEPTANCE.md](SYSTEM-ACCEPTANCE.md), [RESILIENCE.md](RESILIENCE.md), [ACCESS-AND-AUDIT.md](ACCESS-AND-AUDIT.md). Это будущие проверки, не прошедшие тесты.
 
 | Уровень | Что доказывает | Когда |

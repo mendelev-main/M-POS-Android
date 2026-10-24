@@ -99,3 +99,8 @@ Verify run40074952217: API35 production success. API28 также прошёл H
 ## 2026-10-24 — карта модулей и граница достаточной документации
 
 Добавлены21 логический паспорт, dependency/rollout plan,8 пакетов документации, контракт01a с выбранной пользователемBYN/schema candidate/validation/F01–F10, подробные warehouse/management/reporting/customer/hall specs. Минимальная смена03a явно поставлена передsale, складское ядро начинается01a. Архитектура initial:app сохранена. Семь поздних пакетов не блокируют01a; first code по отдельной задаче пользователя. Проверки: `python3 scripts/harness.py preflight`, локальные Markdown links, парность code fences, уникальность21 module IDs/8 package IDs и `git diff --check` — passed. Android tests не запускались: docs-only. APK/бизнес-код не менялись, parity planned.
+
+
+## 2026-10-24 — требования пользователя: stock editor и общий дизайн
+
+ADR-005 отменил запрет stock в карточке: UI без причины, внутри transactional delta/history/revision; docs/F11–F13 обновлены. По pinned Web описаны Manrope/light-dark/palette/shapes/buttons/dialog/close/input patterns, shared Compose components и DS01–DS07, config/ui-design.json сохраняет source hash/tokens и пока не используется app. Источники CSS изучены, paired screenshot/device evidence pending. Проверки: harness preflight, локальные Markdown links/code fences, JSON tokens/обязательные роли/source SHA и git diff --check — passed. Kotlin/Gradle/APK не менялись.

@@ -42,3 +42,12 @@
 Пользователь явно выбрал BYN для первого каталога. В [FOUNDATION-CONTRACTS.md](FOUNDATION-CONTRACTS.md) заданы native defaults для ввода/хранения и схема-кандидат01a. Они позволяют начать simple/category без ещё одного общего документа; реальная Room schema/versions/fixtures оформляются в кодовой PR. Непрерывная recipe division01b, financial allocations03 и роли05 остаются gates. Семь поздних пакетовD02–D08 закрываются перед своими этапами, не блокируют01a.
 
 Затронуты P01/P02/P03/P10, будущие W/S/H зависимости. Проверки — planned fixturesF01–F10 и существующие acceptance, текущая задача docs-only. Продуктовые статусы не повышаются.
+
+
+## ADR-005 — прямой stock editor и единый дизайн,2026-10-24
+
+Пользователь уточнил: порядок первых типов товара несущественен, полный итоговый функционал как Web; остаток можно редактировать в карточке **без причины**; дизайн берётся из старого приложения и одинаков во всех окнах. Это отменяет прежний запрет прямого редактирования остатка из ADR-003/01a. Исторические записи выше сохраняют контекст, действующее правило — здесь и CATALOG-WORKSPACE-SPEC/FOUNDATION-CONTRACTS.
+
+UI stock поле редактируемое; причина nullable/не спрашивается. Команда пишет delta source=product_card, сравнивает stockRevision, сохраняет product/ledger/result/audit атомарно. Продажа между открытием/save не теряется. Это не supplier receiving и не переписывание истории. P01/P10/I04 уточнены, fixturesF11–F13 planned.
+
+Дизайн: [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md), [UI-REFERENCE.md](UI-REFERENCE.md), [tokens](../config/ui-design.json). Manrope/палитра/компоновка из pinned Web; единые Close/Back/Primary/Secondary/Danger/Dialog/Field в M01 core/ui. Не каждый feature выбирает свои radii/icons. Это обязательное требование к следующей реализации; существующий bootstrap ещё не проходит visual parity. DS01–DS07 planned.

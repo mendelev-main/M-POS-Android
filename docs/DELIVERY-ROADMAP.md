@@ -30,7 +30,8 @@ flowchart TD
 3. M10 minimum: opening movement/balance/revision для нового simple, без складской админки.
 4. M06 minimum: явный actor single-owner и guard contract, без имитации готовых ролей.
 5. M07/M01: category/simple commands → ViewModel → список/поиск/редактор; navigation сохраняет контекст.
-6. Проверить rollback/retry/reopen/process recreation, затем APK на планшете. Это завершает выбранные части P01/P02/P03/P10, не весь этап 01.
+6. Перед feature UI создать общую M-POS theme/components по [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md); каталог и updater используют один набор.
+7. Проверить rollback/retry/reopen/process recreation, затем APK на планшете. Это завершает выбранные части P01/P02/P03/P10, не весь этап 01.
 
 Подробный schema/validation/UI scope: [FOUNDATION-CONTRACTS.md](FOUNDATION-CONTRACTS.md). Неподтверждённый денежный rounding продаж не препятствует каталогу с явными ограничениями ввода; checkout до его утверждения отсутствует.
 

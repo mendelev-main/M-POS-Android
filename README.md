@@ -20,6 +20,8 @@
 
 ## Навигация
 
+- [Единый дизайн из старого приложения](docs/DESIGN-SYSTEM.md), [источники визуальных стандартов](docs/UI-REFERENCE.md).
+
 - [21 логический модуль и зависимости](docs/MODULES.md), [порядок построения](docs/DELIVERY-ROADMAP.md), [сколько документации осталось](docs/DOCUMENTATION-PLAN.md), [контракт первого01a](docs/FOUNDATION-CONTRACTS.md).
 
 - [Функциональная спецификация и маршрут реализации](docs/FUNCTIONAL-SPEC.md).

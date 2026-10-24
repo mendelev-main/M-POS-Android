@@ -38,7 +38,7 @@ Preview показывает изменения base balances и стоимос�
 
 ## Queries и доступ
 
-StockList/MovementHistory/LowStock/PurchaseStatus/ReceivingHistory/InventoryHistory — read models. Показывают единицы, применённый период, filter и текущую revision. Один товар в разных физических размерностях не суммируется. Не допускается запись stock простым изменением UI-таблицы. Права supplier/manage, receiving/commit, inventory/apply проверяются отдельно.
+StockList/MovementHistory/LowStock/PurchaseStatus/ReceivingHistory/InventoryHistory — read models. Показывают единицы, применённый период, filter и текущую revision. Один товар в разных физических размерностях не суммируется. Правка stock в карточке без причины разрешена пользователем: общая SetProductStock команда пишет delta/revision/result, UI не обходит ledger. Произвольная таблица не пишет balance напрямую. Права supplier/manage, receiving/commit, inventory/apply проверяются отдельно.
 
 ## Перед D03 и приёмка
 

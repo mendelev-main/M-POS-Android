@@ -22,6 +22,10 @@
 
 [Контракты инкремента](../../docs/FOUNDATION-CONTRACTS.md); [карта модулей](../../docs/MODULES.md), [порядок/документационные gates](../../docs/DOCUMENTATION-PLAN.md).
 
+## Требования пользователя2026-10-24
+
+Редактирование остатка в карточке без ввода причины; внутри atomic delta/revision, F11–F13. Дизайн/общие компоненты по [DESIGN-SYSTEM.md](../../docs/DESIGN-SYSTEM.md), DS01–DS07. Полный типовой scope Web не сокращается выбранной последовательностью01a/01b.
+
 ## Приёмка
 
 Все P IDs с JVM/Room/UI evidence; фото и restart на устройстве.
