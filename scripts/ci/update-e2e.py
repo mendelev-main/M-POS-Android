@@ -154,7 +154,7 @@ def main():
                 reports.mkdir(parents=True, exist_ok=True)
                 expected_product = adb("shell", "run-as", PACKAGE, "cat", "files/qa/productName.txt").strip()
                 assert expected_product, "UI setup must create a real catalog record"
-                for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor"):
+                for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor"):
                     captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
                     assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
                     (reports / f"{name}.png").write_bytes(captured.stdout)

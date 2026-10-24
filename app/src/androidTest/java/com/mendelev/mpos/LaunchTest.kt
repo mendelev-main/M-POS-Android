@@ -25,6 +25,12 @@ class LaunchTest {
         compose.onNodeWithText("Создать категорию").performClick()
         val category="Напитки QA ${UUID.randomUUID().toString().take(6)}"
         compose.onNodeWithTag("categoryName").performTextInput(category)
+        compose.onNodeWithTag("categorySymbol").performTextInput("КФ")
+        compose.onNodeWithTag("categoryColor:#DDEBFF").performScrollTo().performClick()
+        compose.runOnIdle { (compose.activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager)
+            .hideSoftInputFromWindow(compose.activity.window.decorView.windowToken,0) }
+        compose.waitForIdle()
+        screenshot("category-editor")
         compose.onNodeWithText("Сохранить категорию").performClick()
         waitText("Создать категорию")
         compose.onNodeWithContentDescription("Закрыть").performClick()

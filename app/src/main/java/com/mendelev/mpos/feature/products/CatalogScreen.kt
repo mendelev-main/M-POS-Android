@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.data.local.CategoryEntity
+import com.mendelev.mpos.domain.catalog.CategoryAppearance
 import com.mendelev.mpos.domain.catalog.CatalogRules
 import com.mendelev.mpos.domain.catalog.unitLabel
 import com.mendelev.mpos.domain.catalog.quantityUnit
@@ -45,6 +46,8 @@ import java.util.UUID
     var categories by rememberSaveable { mutableStateOf(false) }
     var categoryId by rememberSaveable { mutableStateOf<String?>(null) }
     var categoryName by rememberSaveable { mutableStateOf("") }
+    var categoryColor by rememberSaveable { mutableStateOf(CategoryAppearance.DEFAULT_COLOR) }
+    var categorySymbol by rememberSaveable { mutableStateOf("") }
     var categoryRevision by rememberSaveable { mutableStateOf<Long?>(null) }
     var categoryCommand by rememberSaveable { mutableStateOf("") }
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
@@ -152,11 +155,12 @@ import java.util.UUID
             itemsIndexed(state.categories,key={_,c -> c.id}) { index,c ->
                 Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    Text(c.name, Modifier.weight(1f).clickable {
+                    MposCategoryBadge(c.color,c.symbol)
+                    Text(c.name, Modifier.weight(1f).clickable(enabled=!state.busy) {
                         if(d!=null) model.change { it.copy(categoryId=c.id) } else filter=c.id
                         categories=false
                     }.padding(vertical=16.dp))
-                    MposButton("Изменить", { categoryId=c.id;categoryName=c.name;categoryRevision=c.revision;categoryCommand=UUID.randomUUID().toString() }, enabled=!state.busy, style=ActionStyle.Secondary)
+                    MposButton("Изменить", { categoryId=c.id;categoryName=c.name;categoryColor=c.color;categorySymbol=c.symbol;categoryRevision=c.revision;categoryCommand=UUID.randomUUID().toString() }, enabled=!state.busy, style=ActionStyle.Secondary,modifier=Modifier.testTag("categoryEdit:${c.id}"))
                 }
                 Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                     MposButton("Выше",{model.moveCategory(c.id,-1)},enabled=!state.busy && index>0,style=ActionStyle.Secondary,
@@ -169,14 +173,26 @@ import java.util.UUID
             }
         }
         if(state.categories.isEmpty()) Text("Категорий пока нет")
-        MposButton("Создать категорию", { categoryId=UUID.randomUUID().toString();categoryRevision=null;categoryName="";categoryCommand=UUID.randomUUID().toString() })
+        MposButton("Создать категорию", { categoryId=UUID.randomUUID().toString();categoryRevision=null;categoryName="";categoryColor=CategoryAppearance.DEFAULT_COLOR;categorySymbol="";categoryCommand=UUID.randomUUID().toString() })
     }
     if(categoryId!=null) MposDialog(if(categoryRevision==null) "Новая категория" else "Изменить категорию", { categoryId=null }, !state.busy) {
         if(state.error && state.message!=null) MposNotice(state.message!!, true)
-        MposField(categoryName, { categoryName=it;categoryCommand=UUID.randomUUID().toString(); model.dismissMessage() }, "Название категории", Modifier.testTag("categoryName"), !state.busy)
+        Column(Modifier.heightIn(max=380.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+            MposField(categoryName, { categoryName=it;categoryCommand=UUID.randomUUID().toString(); model.dismissMessage() }, "Название категории", Modifier.testTag("categoryName"), !state.busy)
+            MposField(categorySymbol, { categorySymbol=it;categoryCommand=UUID.randomUUID().toString(); model.dismissMessage() }, "Обозначение на плитке (до 3 символов)", Modifier.testTag("categorySymbol"), !state.busy)
+            Text("Например: ☕, К или КФ. Пустое обозначение допустимо.",style=MaterialTheme.typography.bodySmall)
+            Text("Цвет категории",style=MaterialTheme.typography.titleSmall)
+            MposColorPicker(CategoryAppearance.palette,categoryColor,{
+                categoryColor=it;categoryCommand=UUID.randomUUID().toString();model.dismissMessage()
+            },enabled=!state.busy)
+            Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                MposCategoryBadge(categoryColor,Regex("\\X").findAll(categorySymbol.take(256)).take(3).joinToString("") { it.value })
+                Text(categoryName.ifBlank { "Предпросмотр категории" })
+            }
+        }
         Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             MposButton("Отмена", { categoryId=null;model.dismissMessage() }, enabled=!state.busy, style=ActionStyle.Secondary)
-            MposButton("Сохранить категорию", { model.categorySave(categoryId!!,categoryRevision,categoryName,categoryCommand) { categoryId=null } }, busy=state.busy)
+            MposButton("Сохранить категорию", { model.categorySave(categoryId!!,categoryRevision,categoryName,categoryCommand,categoryColor,categorySymbol) { categoryId=null } }, busy=state.busy)
         }
         if(categoryRevision!=null) MposButton("Удалить категорию", { deleteCategory=true }, enabled=!state.busy, style=ActionStyle.Danger)
     }

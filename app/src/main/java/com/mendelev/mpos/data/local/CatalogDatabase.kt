@@ -7,7 +7,9 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Entity(tableName = "categories", indices = [Index(value = ["normalizedKey"], unique = true)])
-data class CategoryEntity(@PrimaryKey val id: String, val name: String, val normalizedKey: String, val sortOrder: Int, val revision: Long)
+data class CategoryEntity(@PrimaryKey val id: String, val name: String, val normalizedKey: String, val sortOrder: Int, val revision: Long,
+    @ColumnInfo(defaultValue = "'#EEF1F5'") val color: String = "#EEF1F5",
+    @ColumnInfo(defaultValue = "''") val symbol: String = "")
 
 @Entity(tableName = "products", foreignKeys = [ForeignKey(entity = CategoryEntity::class, parentColumns = ["id"], childColumns = ["categoryId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("categoryId")])
 data class ProductEntity(@PrimaryKey val id: String, val categoryId: String?, val name: String, val searchKey: String,
@@ -102,7 +104,7 @@ interface CatalogDao {
 }
 
 @Database(entities = [CategoryEntity::class, ProductEntity::class, BalanceEntity::class, MovementEntity::class,
-    ResultEntity::class, AuditEntity::class, DraftEntity::class, ConfigEntity::class, RecipeComponentEntity::class, ModifierGroupEntity::class, ModifierOptionEntity::class], version = 3, exportSchema = true)
+    ResultEntity::class, AuditEntity::class, DraftEntity::class, ConfigEntity::class, RecipeComponentEntity::class, ModifierGroupEntity::class, ModifierOptionEntity::class], version = 4, exportSchema = true)
 abstract class CatalogDatabase : RoomDatabase() {
     abstract fun catalog(): CatalogDao
     companion object {
@@ -129,10 +131,16 @@ abstract class CatalogDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_modifier_options_productId ON modifier_options(productId)")
             }
         }
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE categories ADD COLUMN color TEXT NOT NULL DEFAULT '#EEF1F5'")
+                db.execSQL("ALTER TABLE categories ADD COLUMN symbol TEXT NOT NULL DEFAULT ''")
+            }
+        }
         @Volatile private var instance: CatalogDatabase? = null
         fun get(context: Context): CatalogDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(context.applicationContext, CatalogDatabase::class.java, "mpos.db")
-                .addMigrations(MIGRATION_1_2,MIGRATION_2_3).build().also { instance = it }
+                .addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4).build().also { instance = it }
         }
     }
 }

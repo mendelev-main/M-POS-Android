@@ -194,11 +194,11 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
             mutable.update { it.copy(busy=false,message="Порядок категорий сохранён",error=false) }
         }
     }
-    fun categorySave(id: String, revision: Long?, name: String, commandId: String, done: () -> Unit) {
+    fun categorySave(id: String, revision: Long?, name: String, commandId: String, color: String = CategoryAppearance.DEFAULT_COLOR, symbol: String = "", done: () -> Unit) {
         if(state.value.busy) return
         mutable.update { it.copy(busy=true, message=null) }
         commands.trySend {
-            withContext(Dispatchers.IO) { repo.saveCategory(id,revision,name,commandId) }
+            withContext(Dispatchers.IO) { repo.saveCategory(id,revision,name,commandId,color,symbol) }
             mutable.update { it.copy(busy=false, message=null) }; done()
         }
     }

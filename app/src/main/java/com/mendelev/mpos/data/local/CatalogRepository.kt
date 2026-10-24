@@ -8,7 +8,7 @@ import org.json.JSONObject
 
 data class CatalogEditorSnapshot(val product: ProductEntity, val balance: BalanceEntity?, val components: List<RecipeComponentEntity>, val modifierGroups: List<ModifierGroupInput>)
 
-class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhotoStore? = null, private val afterCategoryOrderWrite: (() -> Unit)? = null, private val afterProductWrite: (() -> Unit)? = null) {
+class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhotoStore? = null, private val afterCategoryOrderWrite: (() -> Unit)? = null, private val afterCategoryWrite: (() -> Unit)? = null, private val afterProductWrite: (() -> Unit)? = null) {
     val dao = db.catalog()
     val products = dao.products()
     val categories = dao.categories()
@@ -100,16 +100,20 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
             input.id
         }
     }
-    suspend fun saveCategory(id: String, expectedRevision: Long?, rawName: String, commandId: String): String {
+    suspend fun saveCategory(id: String, expectedRevision: Long?, rawName: String, commandId: String, color: String = CategoryAppearance.DEFAULT_COLOR, symbol: String = ""): String {
         val name = CatalogRules.name(rawName, 100); val key = CatalogRules.key(name)
-        val fp = CatalogRules.fingerprint("category", id, expectedRevision, name)
+        val cleanColor=CategoryAppearance.color(color); val cleanSymbol=CategoryAppearance.symbol(symbol)
+        val legacyFp = CatalogRules.fingerprint("category", id, expectedRevision, name)
+        val fp = if(cleanColor==CategoryAppearance.DEFAULT_COLOR && cleanSymbol.isEmpty()) legacyFp
+            else CatalogRules.fingerprint("categoryAppearance",legacyFp,cleanColor,cleanSymbol)
         return db.withTransaction {
             repeat(commandId, fp)?.let { return@withTransaction it }
             val old = dao.category(id)
             if (old?.revision != expectedRevision) throw CatalogFailure("conflict", "Категория изменилась. Откройте её заново")
             if (dao.categoryByKey(key)?.id?.let { it != id } == true) throw CatalogFailure("name", "Такая категория уже существует")
-            val category = CategoryEntity(id, name, key, old?.sortOrder ?: dao.nextCategoryOrder(), (old?.revision ?: 0) + 1)
+            val category = CategoryEntity(id, name, key, old?.sortOrder ?: dao.nextCategoryOrder(), (old?.revision ?: 0) + 1, cleanColor, cleanSymbol)
             if (old == null) dao.insertCategory(category) else dao.updateCategory(category)
+            afterCategoryWrite?.invoke()
             record(commandId, fp, id, "category.save"); id
         }
     }

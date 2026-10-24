@@ -47,3 +47,7 @@ Run40097725989/5b13d8d:16 instrumentation passed eachAPI,API28 full updater E2E 
 
 
 Итог Android16/P03:7cf27d9/run40099706934 checks+emulator36 success,24JVM/4Python/20instrumentation (3orderRoom+1orderCompose).2explicitUI+UpdateE2E passed; signer/archive modern PackageInfoFlags/min36 real APK verified through updater. Новый minSdk36 и матрица36 закреплены, no28/35 jobs. Docs-only после run, main/stable не менялись. Остаток audit:category color/symbol, device/provider/font-scale/low-space before full01.
+
+## P03 — category appearance
+
+Продолжение01: палитра/обозначение по pinned product-categories.js и source-product-stock tests category create/rename + grapheme truncation. Schema4 миграция3→4; defaults сохраняют старый replay. Native явно отклоняет >3 graphemes вместо Web silent truncate, введённое остаётся в форме; preview ограничен3. Shared MposCategoryBadge/ColorPicker, Saveable editor, transaction/CAS/audit/fault seam. Контракт docs/CATEGORY-APPEARANCE.md. Локально17 domain tests на cached Kotlin2.1.20/JDK17 и4Python/preflight passed; это supplemental, проектный Kotlin2.2.21/Android compile/Room/UI ждут CI36. Не выпускать/main не менять,02 не начинать.

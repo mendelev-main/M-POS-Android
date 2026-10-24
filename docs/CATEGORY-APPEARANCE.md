@@ -1,0 +1,13 @@
+# Цвет и обозначение категории — P03
+
+Источник: pinned Web1682c883, `product-categories.js` (`openCategoryModal`, `saveCategory`, `limitTileSymbol`), regression `tests/source-product-stock.test.cjs`: category create/rename и Unicode graphemes. Online channels относятся к09, плитки рабочей зоны — к02.
+
+В редакторе доступны десять исходных pastel цветов, обозначение и предпросмотр. Общие MposDialog/Field/Button сохраняют единые Close/Cancel/Save. Палитра использует touch48dp, selected semantics и перенос строк; поля прокручиваются отдельно от действий. В списке категорий видны цвет и обозначение. Поля восстанавливаются при recreation Activity; Cancel не сохраняет изменения.
+
+Цвет хранится как непрозрачный `#RRGGBB`, нормализуется uppercase; домен допускает любой корректный RGB для будущего импорта, текущая UI предлагает исходную палитру. Default `#EEF1F5`, обозначение пустое. Отрисовка символа на pastel фоне использует тёмный текст и в dark theme.
+
+Обозначение — до3 Unicode grapheme clusters, с trim, без control characters; защитный предел256 UTF-16 code units. `👨‍🍳❤️🇧🇾` — три символа. Используется `Pattern`/`\\X`, поддержанный Android16 ([официальный API](https://developer.android.com/reference/java/util/regex/Pattern)). Native UX уточнение: Web обрезает четвёртый символ; native показывает ошибку и оставляет введённое для исправления, без молчаливой потери текста. Preview показывает первые3 кластера. Пустое обозначение разрешено.
+
+Room schema4/MIGRATION_3_4 добавляет color/symbol с defaults без перезаписи ID, порядка, revision, товаров, stock и истории. Миграции1→4/2→4 сохраняются, destructive fallback отсутствует. Сохранение имени/цвета/обозначения атомарно с revision CAS, operation result и audit. Изменённый payload с тем же commandId отвергается; legacy fingerprint для default appearance сохраняет replay старых команд. Переименование передаёт весь metadata snapshot; reorder меняет только порядок/revision, ссылки товаров остаются по stable ID.
+
+Проверки: CategoryAppearanceTest JVM (RGB/границы/Unicode), одноимённый Room test (reopen/replay/rename/order/references, stale/invalid/fault rollback, schema3 migration), CategoryAppearanceUiTest (validation/recreation/selected/cancel); LaunchTest сохраняет screenshot category-editor для visual review. Статус до CI — implemented; результат фиксируется в harness/build-log.md. Физические tablet/font-scale/IME проверки отдельно, полный этап01 ещё не закрыт.
