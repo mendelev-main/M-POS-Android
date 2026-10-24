@@ -20,8 +20,8 @@ PACKAGE = "com.mendelev.mpos.debug"
 PORT = 18765
 
 
-def adb(*args, check=True):
-    return subprocess.run(["adb", *args], check=check, capture_output=True, text=True, timeout=45).stdout
+def adb(*args, check=True, timeout=45):
+    return subprocess.run(["adb", *args], check=check, capture_output=True, text=True, timeout=timeout).stdout
 
 
 def ui_nodes():
@@ -53,13 +53,13 @@ def launch(fixture=True):
         args += ["--es", "mpos.testUpdateUrl", f"http://10.0.2.2:{PORT}/update.json"]
     # PackageManager exposes the new version before all replacement/lifecycle work is finished.
     # Simulate a user opening the app after the installer completes, not a microsecond race.
-    args.insert(3, "-W")
     for attempt in range(4):
-        adb(*args)
         try:
+            # Do not use am -W: API 28 can retain a waiter for an Activity killed by package replacement.
+            adb(*args, timeout=15)
             wait_text("^Настройки$", timeout=12, click=True)
             return
-        except AssertionError:
+        except (AssertionError, subprocess.TimeoutExpired):
             if attempt == 3:
                 raise
 
