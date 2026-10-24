@@ -14,7 +14,7 @@
 
 Bootstrap 0.1.3.1 не содержит updater. Новую подписанную версию с ним нужно один раз установить вручную поверх старой, без удаления приложения. Далее — настройки и системное подтверждение. Это полный APK: пропущенные промежуточные версии устанавливать по очереди не требуется; совместимость будущих данных обеспечивают migration paths.
 
-Для проверки самого механизма можно вручную установить предыдущий выпуск с updater, затем обновить его до последнего из настроек. Всегда использовать native release package и постоянный сертификат; APK Web к этому каналу не относится.
+Текущий выпуск — [0.1.9.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.9.1). Для проверки механизма вручную установите [0.1.8.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.8.1), затем в настройках скачайте и установите 0.1.9.1. Всегда использовать native release package и постоянный сертификат; APK Web к этому каналу не относится.
 
 ## Доверие и хранение
 
@@ -46,6 +46,8 @@ Release `v<versionName>` содержит:
 API Github с пользовательским токеном на планшете не используется. Latest metadata и APK берутся по публичным HTTPS asset URL. Проблемы GitHub/сети отображаются как временная ошибка с повтором; Google Play для этого канала не требуется.
 
 ## Проверки
+
+Отдельный Actions → **Verify published update channel** → `base_release=v0.1.8.1` проверяет уже опубликованный latest на Android 9/15, без выпуска APK и signing secrets. Driver допускает только emulator serial и отказывается работать с физическим планшетом. [Run 40075276435](https://github.com/mendelev-main/M-POS-Android/actions/runs/40075276435) прошёл на API 28/35: production 1801→1901, публичные HTTPS assets, восстановление загрузки после restart, первое разрешение источника, Cancel/retry, фактическая новая версия, persisted receipt/lastChecked.
 
 U01–U06 в `harness/build/00.1-updates.md`. JVM tests: версия/identity/minSdk/URL/signers, ограничение manifest, short/oversized body и redirect. Emulator: проверка/загрузка, restart и восстановление готового APK, Cancel, затем реальный системный install 1→2 и сохранение app-private файла. Debug fixture endpoint допускает только loopback/фиксированный emulator host 10.0.2.2 и debug signer/package; release его игнорирует.
 
