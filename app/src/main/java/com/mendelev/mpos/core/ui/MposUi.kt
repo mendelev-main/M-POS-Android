@@ -119,10 +119,11 @@ enum class ActionStyle { Primary, Secondary, Danger }
 @Composable fun MposSelect(label: String, value: String, options: List<Pair<String, String>>,
     onChange: (String) -> Unit, enabled: Boolean = true, modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
+    val keyboard=androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     Column(modifier) {
         Text(label, style=MaterialTheme.typography.labelMedium)
         Box {
-            MposButton(options.find { it.first == value }?.second ?: value, { expanded=true }, enabled=enabled, style=ActionStyle.Secondary)
+            MposButton(options.find { it.first == value }?.second ?: value, { keyboard?.hide();expanded=true }, enabled=enabled, style=ActionStyle.Secondary)
             DropdownMenu(expanded=expanded, onDismissRequest={expanded=false}, modifier=Modifier.heightIn(max=300.dp)) {
                 options.forEach { (key, text) -> DropdownMenuItem(text={Text(text)}, onClick={expanded=false;onChange(key)}) }
             }

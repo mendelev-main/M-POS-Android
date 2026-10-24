@@ -4,6 +4,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Before
 import java.util.UUID
 
 class LaunchTest {
@@ -16,6 +17,7 @@ class LaunchTest {
             bitmap.recycle()
         }
     }
+    @Before fun prepareCatalog() { CatalogUiTestSupport.prepare(compose) }
     private fun waitText(text: String) { compose.waitUntil(20_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
     @Test fun catalogSavesAndDraftSurvivesRecreation() {
         waitText("Добавить товар")

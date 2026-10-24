@@ -4,13 +4,19 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Before
 import java.util.UUID
 
 class CatalogConfigurationUiTest {
     @get:Rule val compose=createAndroidComposeRule<MainActivity>()
+    @Before fun prepareCatalog() { CatalogUiTestSupport.prepare(compose) }
     private fun waitText(text: String) { compose.waitUntil(20_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
     private fun select(tag: String, current: String, next: String) {
+        compose.runOnIdle { (compose.activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager)
+            .hideSoftInputFromWindow(compose.activity.window.decorView.windowToken,0) }
+        compose.waitForIdle()
         compose.onNode(hasText(current) and hasAnyAncestor(hasTestTag(tag))).performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText(next).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText(next).performClick()
     }
     @Test fun massDisplayAndRecipeDraftPersistThroughRecreationAndSave() {
@@ -48,5 +54,6 @@ class CatalogConfigurationUiTest {
         compose.onNodeWithTag("recipeYield").performScrollTo().assertTextContains("3")
         compose.onNodeWithTag("ingredientQuantity0").performScrollTo().assertTextContains("0.4")
         compose.onNodeWithText("Назад").performClick()
+        waitText("Добавить товар")
     }
 }

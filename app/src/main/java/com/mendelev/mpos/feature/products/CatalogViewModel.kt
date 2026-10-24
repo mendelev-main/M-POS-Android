@@ -79,6 +79,8 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
         try {
             withContext(Dispatchers.IO) { repo.initialize() }
             val restored = withContext(Dispatchers.IO) { repo.dao.draft()?.let { ProductDraft.parse(it.payload) } }
+            // Persist generated session defaults for legacy drafts before a picker can leave the activity.
+            if(restored!=null) withContext(Dispatchers.IO) { repo.saveDraft(DraftEntity(payload=restored.json())) }
             mutable.update { it.copy(loading=false, fatal=false, draft=restored, message=null) }
             withContext(Dispatchers.IO) { runCatching { repo.cleanupPhotos() } } // cleanup cannot invalidate an otherwise usable catalogue.
             viewModelScope.launch { repo.products.catch { mutable.update { it.copy(fatal=true, message="Не удалось прочитать товары. Данные не удалены", error=true) } }.collect { p -> mutable.update { it.copy(products=p) } } }

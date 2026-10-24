@@ -14,11 +14,13 @@ import com.mendelev.mpos.feature.products.CatalogViewModel
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Before
 import java.io.ByteArrayInputStream
 import java.util.UUID
 
 class CatalogExtrasUiTest {
     @get:Rule val compose=createAndroidComposeRule<MainActivity>()
+    @Before fun prepareCatalog() { CatalogUiTestSupport.prepare(compose) }
     private fun waitText(text: String) { compose.waitUntil(20_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
     @Test fun modifierAndPhotoEditorRetainsDraftCancelsPickerAndSavesConfiguration() {
         waitText("Добавить товар")
@@ -38,10 +40,11 @@ class CatalogExtrasUiTest {
         compose.onNodeWithTag("modifierQty0-0").performScrollTo().performTextReplacement("0.05")
         compose.onNodeWithTag("modifierPrice0-0").performScrollTo().performTextReplacement("1.50")
         val instrumentation=InstrumentationRegistry.getInstrumentation()
-        val monitor=instrumentation.addMonitor(IntentFilter(Intent.ACTION_GET_CONTENT),Instrumentation.ActivityResult(Activity.RESULT_CANCELED,null),true)
+        val monitor=instrumentation.addMonitor(IntentFilter(Intent.ACTION_GET_CONTENT).apply { addDataType("image/*");addCategory(Intent.CATEGORY_OPENABLE) },Instrumentation.ActivityResult(Activity.RESULT_CANCELED,null),true)
         try {
             compose.onNodeWithText("Добавить фото").performScrollTo().performClick()
             compose.waitForIdle()
+            compose.waitUntil(10_000) { monitor.hits==1 }
             assertEquals(1,monitor.hits)
         } finally { instrumentation.removeMonitor(monitor) }
         lateinit var model: CatalogViewModel
@@ -80,5 +83,6 @@ class CatalogExtrasUiTest {
         compose.waitUntil(20_000) { model.state.value.draft!=null && !model.state.value.busy }
         assertEquals(prepared,model.state.value.draft!!.photoId)
         compose.onNodeWithText("Назад").performClick()
+        waitText("Добавить товар")
     }
 }
