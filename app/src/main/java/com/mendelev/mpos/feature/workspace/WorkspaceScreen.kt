@@ -47,10 +47,14 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
     var quantityOwner by rememberSaveable { mutableStateOf("") }
     var clearOwner by rememberSaveable { mutableStateOf("") }
     var quantityRevision by rememberSaveable { mutableStateOf(0L) }
+    var revalidationToken by rememberSaveable { mutableStateOf<String?>(null) }
+    var revalidationOwner by rememberSaveable { mutableStateOf("") }
+    var revalidationRevision by rememberSaveable { mutableStateOf(0L) }
+    var revalidationOpen by rememberSaveable { mutableStateOf(false) }
     var ordersDialog by rememberSaveable { mutableStateOf<String?>(null) }
     var clearRevision by rememberSaveable { mutableStateOf<Long?>(null) }
     val busy=ui.pending>0
-    val modal=configId!=null || manageId!=null || quantityId!=null || clearRevision!=null || ordersDialog!=null
+    val modal=revalidationOpen || configId!=null || manageId!=null || quantityId!=null || clearRevision!=null || ordersDialog!=null
     fun configure(p: WorkspaceProduct) {
         if(editing) {
             manageId=p.id;manageType="product";manageName=p.name
@@ -99,7 +103,11 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                 }
                 val cart: @Composable (Modifier)->Unit = { modifier ->
                     CartPanel(s,ui.pending,modifier,{id -> quantityId=id;quantity=s.cart.lines.first { it.id==id }.quantity;quantityRevision=s.cartRevision;quantityOwner=s.cart.sessionId;model.dismiss()},
-                        {id,delta -> model.step(id,delta,s.cart.sessionId)},{id -> model.remove(id,s.cart.sessionId)},{clearRevision=s.cartRevision;clearOwner=s.cart.sessionId},{ordersDialog="details"},{ordersDialog="park"},{ordersDialog="list"})
+                        {id,delta -> model.step(id,delta,s.cart.sessionId)},{id -> model.remove(id,s.cart.sessionId)},{clearRevision=s.cartRevision;clearOwner=s.cart.sessionId},{ordersDialog="details"},{ordersDialog="park"},{ordersDialog="list"},{
+                            revalidationOwner=s.cart.sessionId;revalidationRevision=s.cartRevision
+                            revalidationToken=runCatching { CartRevalidator.preview(s.cart,s.products,s.graph,s.balances,OrderReservations.total(s.parked.map {it.cart})).token }.getOrNull()
+                            revalidationOpen=true;model.dismiss()
+                        })
                 }
                 if(maxWidth>=840.dp) Row(horizontalArrangement=Arrangement.spacedBy(20.dp)) { grid(Modifier.weight(1f));cart(Modifier.width(340.dp).fillMaxHeight()) }
                 else Column(verticalArrangement=Arrangement.spacedBy(16.dp)) { grid(Modifier.weight(1f));cart(Modifier.fillMaxWidth().height(300.dp)) }
@@ -107,6 +115,8 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
         }
     }
     if(s!=null) {
+        if(revalidationOpen) WorkspaceRevalidationDialog(s,ui,revalidationOwner,revalidationRevision,revalidationToken,
+            {revalidationOpen=false;model.dismiss()},{token -> model.revalidate(revalidationRevision,revalidationOwner,token) {revalidationOpen=false}})
         WorkspaceOrdersDialogs(ordersDialog,{ordersDialog=it},s,ui,model)
         val folderItem=s.layout.find { it.type=="folder" && it.id==folder }
         if(folderItem!=null && !modal) MposDialog(folderItem.name,{folder=null},!busy,wide=true) {
@@ -236,7 +246,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
 }
 
 @Composable private fun CartPanel(s: WorkspaceSnapshot,pending: Int,modifier: Modifier,onQuantity: (String)->Unit,
-    onStep: (String,Int)->Unit,onRemove: (String)->Unit,onClear: ()->Unit, onDetails: ()->Unit,onPark: ()->Unit,onParked: ()->Unit) {
+    onStep: (String,Int)->Unit,onRemove: (String)->Unit,onClear: ()->Unit, onDetails: ()->Unit,onPark: ()->Unit,onParked: ()->Unit,onRevalidate: ()->Unit) {
     Surface(modifier,shape=MaterialTheme.shapes.large,color=MaterialTheme.colorScheme.surface) {
         Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             Text("Текущий заказ",style=MaterialTheme.typography.titleLarge)
@@ -264,6 +274,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
             }
             Text("Предварительно: ${money(CatalogRules.canonical(CartEngine.total(s.cart)))}",style=MaterialTheme.typography.titleMedium,modifier=Modifier.testTag("workspaceTotal"))
             if(pending>0) Text("Сохраняем…",style=MaterialTheme.typography.bodySmall)
+            if(s.cart.lines.any {CartEngine.stale(it,s.products)}) MposButton("Пересчитать заказ",onRevalidate,enabled=pending==0,modifier=Modifier.testTag("workspaceRevalidate"))
             OrderButtons(pending,s,onDetails,onPark,onParked,onClear)
         }
     }

@@ -95,6 +95,14 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
             else candidate.copy(createdAt=if(state.cart.lines.isEmpty() && candidate.lines.isNotEmpty()) System.currentTimeMillis() else candidate.createdAt)
         write("current",WorkspaceCodec.cart(next),state.cartRevision,commandId,fp)
     }
+    suspend fun revalidate(expectedRevision: Long, expectedSessionId: String, previewToken: String, commandId: String) = db.withTransaction {
+        val fp=CatalogRules.fingerprint("workspace.revalidate",expectedRevision,expectedSessionId,previewToken)
+        if(repeat(commandId,fp)) return@withTransaction
+        val state=snapshot();requireCurrent(state,expectedRevision,expectedSessionId)
+        val preview=CartRevalidator.preview(state.cart,state.products,state.graph,state.balances,OrderReservations.total(state.parked.map {it.cart}))
+        if(preview.token!=previewToken) throw CatalogFailure("conflict","Данные изменились. Откройте пересчёт и проверьте изменения заново")
+        write("current",WorkspaceCodec.cart(preview.after),state.cartRevision,commandId,fp)
+    }
     suspend fun park(expectedRevision: Long, expectedSessionId: String, label: String, commandId: String) = db.withTransaction {
         val fp=CatalogRules.fingerprint("workspace.park",expectedRevision,expectedSessionId,label)
         if(repeat(commandId,fp)) return@withTransaction

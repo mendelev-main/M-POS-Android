@@ -58,6 +58,10 @@ class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
         val command=UUID.randomUUID().toString()
         enqueue {repo.cart(CartAction.SetDetails(details,revision),command,owner);withContext(Dispatchers.Main) {done()} }
     }
+    fun revalidate(revision: Long,owner: String,token: String,done: () -> Unit) {
+        val command=UUID.randomUUID().toString()
+        enqueue {repo.revalidate(revision,owner,token,command);withContext(Dispatchers.Main) {done()} }
+    }
     fun park(label: String,revision: Long,owner: String,done: () -> Unit) {
         val command=UUID.randomUUID().toString()
         enqueue {repo.park(revision,owner,label,command);withContext(Dispatchers.Main) {done()} }

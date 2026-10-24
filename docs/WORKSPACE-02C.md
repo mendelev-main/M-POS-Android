@@ -1,0 +1,15 @@
+# Рабочая зона 02c — подтверждаемый пересчёт
+
+W03/W06, часть этапа02. Текущий заказ сохраняет прежний snapshot до явного подтверждения. Для отложенного заказа сначала открыть его через02b, затем пересчитать; остальные parked продолжают резервировать свои исторические snapshots. Оплаты и автоматический пересчёт всех заказов не входят.
+
+Источник: pinned1682c883 cart-composition.js, android-pos-stock.js reservationSnapshot/checkedStockConsumption и tests/source-product-stock.test.cjs. Web считает доступность с резервами parked. Native сохраняет историческую рецептуру и по контракту CATALOG-WORKSPACE-SPEC требует review/confirm; отдельный preview — осознанный native safety workflow, а не заявление о наличии аналогичного экрана в Web.
+
+Пример: две порции по2 BYN после изменения цены на3 показывают4→6 BYN. Смена рецептуры0.0004→0.0008 кг показывает изменение полного расхода. Количество, line IDs, sessionId, createdAt, подпись, тип и контакты неизменны. Каждая строка пересобирается по новым product/ingredient revisions и выбранным option IDs; новая доплата и количество модификатора участвуют в расчёте. Строки не сливаются при совпадении новых ключей, чтобы сохранить видимую структуру заказа.
+
+Ручная базовая цена сохраняется, пока товар по-прежнему имеет цену0. Переход на фиксированную цену показывает новую цену. Переход fixed→manual без прежней ручной цены требует удалить/добавить строку. Неизвестный option, новая обязательная группа, удалённая ссылка, смена базовой единицы, цикл, precision underflow и shortage запрещают применение; старый заказ остаётся целиком. Состав не урезается молча.
+
+Preview проверяет весь кандидат и резерв остальных parked, исключая прежний current reserve; noStockTracking/allowNegativeStock применяются RecipeCalculator по каждому simple. Резерв исторического current не прибавляется второй раз. При shortage пользователь уменьшает количество или исправляет заказ и открывает preview заново. Физические stock/ledger не записываются.
+
+В окне показаны старая/новая сумма, изменения строк/вариантов и полный расход ингредиентов до/после. Общие Dialog/Close/Primary/Secondary. Cancel/Back не меняют данные; recreate сохраняет факт открытия, owner/revision/token. Если snapshot изменился, Apply отключён и требуется заново открыть окно. Token включает полные before/after snapshots, balances и чужие reserves; confirmation повторяет расчёт внутри Room transaction и сверяет token, revision и owner. Result/audit пишутся вместе с current; повтор commandId возвращает ранее сохранённый результат даже после park. Отказ записи откатывает current/result/audit. Room SQLschema5 и cart payload2 не меняются.
+
+Проверки:5 чистых доменных сценариев (дробное количество/цена, manual, общий резерв/token, неизвестные опции, recipe+modifier0.0004кг);2 Room сценария (fault/replay/stale preview/owner, concurrent winner/reopen);1 Compose (review/cancel/recreate/confirm). CI результаты в build-log. Физические проверки по решению пользователя позже. Fixed-slot drag, folder widths, modifier preview и остальные критерии полного02 остаются открытыми.

@@ -40,3 +40,5 @@ W IDs с tests, rotation/process death и планшетным walkthrough.
 
 
 02b: [parked/ownership/metadata](../../docs/WORKSPACE-02B.md) ci-verified API36/run40140796798; Room schema5 не меняется, payload current1→2 мигрирует atomically. W03/W04/W05 проверяются отдельно, full02/revalidation02c не закрыты.
+
+02c: [пересчёт с подтверждением](../../docs/WORKSPACE-02C.md) implemented/CI pending. W03/W06 частично; physical и прочие UI критерии отдельно.
