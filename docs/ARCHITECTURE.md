@@ -10,7 +10,7 @@
 
 Границы21 логической области и отличие от Gradle modules: [MODULES.md](MODULES.md).
 
-Сейчас один `:app` и bootstrap без бизнес-данных. В этапе 01 добавляем разделение `feature/products`, `domain`, `data/local`; отдельные Gradle modules выделяем при реальной необходимости. Не создаём заранее пустые модули всех функций.
+Сейчас один `:app`; в01a добавлены `core/ui`, `domain/catalog`, `data/local`, `feature/products` и первая Room schema. Общие UI-компоненты и ручная factory применены; Hilt ещё не подключён. отдельные Gradle modules выделяем при реальной необходимости. Не создаём заранее пустые модули всех функций.
 
 Целевая структура: Compose → ViewModel (immutable UiState/действия, StateFlow) → use cases → repository → Room. Доменные расчёты на чистом Kotlin с JVM tests, без Android Context. Room — единственный владелец локальных продуктов, продаж, движений, сессий и durable outbox; DataStore для неоперационных предпочтений. Фото — app-private files с ID/metadata, системные pickers. DB migrations с тестами, destructive fallback запрещён для рабочих данных.
 

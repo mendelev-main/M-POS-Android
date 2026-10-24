@@ -27,7 +27,7 @@ python3 scripts/install-signing-secrets.py --source /absolute/private/path/crede
 
 ## Workflow
 
-PR/push main/manual: harness + tooling tests; Android JVM tests/lint/debug build; отдельная emulator job запускает реальный Compose smoke и recreate. JVM business tests появятся с доменной реализацией 01. Все actions закреплены по commit SHA.
+PR/push main/manual: harness + tooling tests; Android JVM tests/lint/debug build; отдельная emulator job запускает реальный Compose smoke и recreate. В01a добавлены catalog JVM/Room/Compose tests и проверка сохранения Room через APK replacement. Все actions закреплены по commit SHA.
 
 Signed job зависит от обеих jobs и запускается только main, не PR. Сначала проверяются наличие secrets, JKS/alias/password, восстановление private key и совпадение сертификата; затем assembleRelease и `apksigner verify` + проверка package/version/certificate. Artifact загружается только после verifier, содержит APK и checksum. Reports — отдельные artifacts, ключ в них не входит. Ключ временно в RUNNER_TEMP и удаляется always. Скрипты не выводят приватные ошибки keytool.
 
@@ -37,6 +37,6 @@ Signed job зависит от обеих jobs и запускается тол�
 
 ## Физическая проверка
 
-Скачать artifact → распаковать → установить APK рядом с Web. Затем следующий native APK установить как обновление и проверить данные. Подтверждение записи SQLite/UX/периферии требует приёмки соответствующего этапа. Bootstrap пока не содержит пользовательских товаров.
+Скачать artifact → распаковать → установить APK рядом с Web. Затем следующий native APK установить как обновление и проверить данные. Подтверждение записи SQLite/UX/периферии требует приёмки соответствующего этапа. Каталог01a содержит пользовательские товары/остатки; physical update checklist включает их сохранность.
 
 Технические основания: [applicationId](https://developer.android.com/build/configure-app-module), [APK signing](https://developer.android.com/studio/publish/app-signing), [GitHub Secrets](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets).

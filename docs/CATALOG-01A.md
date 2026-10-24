@@ -1,6 +1,6 @@
 # Каталог01a — реализация и проверка
 
-Статус: реализован код, итоговая CI-приёмка ожидается. Это первый инкремент01, не весь каталог/касса.
+Статус: **01a ci-verified** по [run40085597352](https://github.com/mendelev-main/M-POS-Android/actions/runs/40085597352), commitd74444c; checks/API28/API35/sign/publish success, stable0.1.16.1/code2601. Physical pending. Это первый инкремент01, не весь каталог/касса.
 
 ## Что доступно
 
@@ -27,3 +27,6 @@ Room2.8.4, KSP2.2.21-2.0.4 для Kotlin2.2.21. Основание: [Room releas
 JVM: parser/canonical decimal/search key/malformed/overflow/fingerprint,8 предыдущих updater cases. Room instrumentation: actual rollback after product write, repeat create/stock adjustment, payload conflict, stale stock, metadata-only preservation, category duplicate/references/rename, concurrent revisions, disk reopen+draft/config. Compose: создать категорию/товар, выбрать категорию, recreate, stock10→8, common close/gallery.
 
 External updater acceptance должен сохранить Room товар/stock8 через реальную package replacement1→2, а также прежние hash/corruption/Cancel/restart checks. Отчёты содержат screenshot каталога, editor, shared dialog, ApplicationIcon и updated catalog. Физический планшет/клавиатура/полный visual parity и будущие schema migrations остаются отдельной приёмкой.
+
+
+Базовый evidence: [run40083703323](https://github.com/mendelev-main/M-POS-Android/actions/runs/40083703323), commit19e9345:11 JVM +4 Python,5 instrumentation наAPI28/35, explicit UI setup после UTP cleanup, actual self-update с Room stock8, signed stable0.1.14.1. Итоговые variable-font weights/onPrimaryContainer проверены вrun40085597352; оба emulator сохранили Room product/stock8 через реальную заменуAPK. Просмотрены screenshots каталога/редактора/общего окна/иконки: корректные веса, зелёная price panel, без обрезки. APK2601 скачан после publish, размер/SHA256/package/manifest cert pin сверены, постоянный сертификат сохранён.

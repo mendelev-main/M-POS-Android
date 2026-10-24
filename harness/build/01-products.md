@@ -1,6 +1,6 @@
 # Этап 01 — Товары
 
-Статус: planned
+Статус: инкремент01a ci-verified с CI evidence в [CATALOG-01A.md](../../docs/CATALOG-01A.md); полный этап01b/01c planned, device pending
 
 ## Объём
 

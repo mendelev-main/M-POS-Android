@@ -2,7 +2,7 @@
 
 Новое приложение на Kotlin и Jetpack Compose, Android 9+ (API 28). Поведение переносим поэтапно из [M-POS-Android-Web](https://github.com/mendelev-main/M-POS-Android-Web). WebView и JS runtime в новом приложении не используются.
 
-**Сейчас:** фундамент 00 и механизм 00.1 готовы: обновление APK из настроек, стабильный GitHub Release-канал и системное подтверждение Android. Начальный экран подтверждает запуск; каталог и продажи пока не реализованы. Следующий этап: **01 — товары**, затем **02 — рабочая зона**. Полного функционального соответствия пока нет.
+**Сейчас:** реализован первый каталог **01a**: категории и простые товары в BYN, поиск/фильтр, редактор остатка без причины, Room ledger/revisions и восстановление черновика. Подключены общие UI-компоненты/Manrope и иконка пользователя. CI-приёмка: [run40085597352](https://github.com/mendelev-main/M-POS-Android/actions/runs/40085597352), Android9/15 и signed release0.1.16.1. Updater00.1 сохранён. **Далее01b/01c:** единицы, рецептуры, модификаторы и фото; затем02 — рабочая зона. Продажи пока не реализованы.
 
 ## Начать работу
 
@@ -14,11 +14,13 @@
 
 [GitHub Actions](https://github.com/mendelev-main/M-POS-Android/actions) прогоняет проверки, Android tests/lint/debug и emulator smoke; после успешных проверок main — signed release APK. PR из fork не получают signing secrets. Настройка ключа: [docs/RELEASE.md](docs/RELEASE.md). Выпуск обновлений: ручной `publish_release=true`, [инструкция](docs/UPDATES.md).
 
-Фундамент первоначально проверен [Actions run](https://github.com/mendelev-main/M-POS-Android/actions/runs/40023385742); механизм обновлений и первый stable APK `0.1.8.1` — [полным run](https://github.com/mendelev-main/M-POS-Android/actions/runs/40071871635). Текущий выпуск — [0.1.9.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.9.1); обновление 0.1.8.1→0.1.9.1 через публичный канал проверено на Android 9/15 в [run 40075276435](https://github.com/mendelev-main/M-POS-Android/actions/runs/40075276435). [Готовые выпуски](https://github.com/mendelev-main/M-POS-Android/releases). Физическая установка и функциональные этапы ещё впереди.
+Фундамент первоначально проверен [Actions run](https://github.com/mendelev-main/M-POS-Android/actions/runs/40023385742); механизм обновлений и первый stable APK `0.1.8.1` — [полным run](https://github.com/mendelev-main/M-POS-Android/actions/runs/40071871635). Текущий выпуск — [0.1.16.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.16.1); обновление 0.1.8.1→0.1.9.1 через публичный канал проверено на Android 9/15 в [run 40075276435](https://github.com/mendelev-main/M-POS-Android/actions/runs/40075276435). [Готовые выпуски](https://github.com/mendelev-main/M-POS-Android/releases). Физическая установка и функциональные этапы ещё впереди.
 
 Приложения устанавливаются рядом: native `com.mendelev.mpos`, Web `com.mendelev.mpos.web`. Debug имеет дополнительный `.debug`. Данные из Web сами не появляются; перенос через проверенный импорт будет отдельным этапом.
 
 ## Навигация
+
+- [Первый каталог01a: возможности и ограничения](docs/CATALOG-01A.md), [иконка/Manrope](docs/BRANDING.md).
 
 - [Единый дизайн из старого приложения](docs/DESIGN-SYSTEM.md), [источники визуальных стандартов](docs/UI-REFERENCE.md).
 

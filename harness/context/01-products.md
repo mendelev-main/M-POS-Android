@@ -5,3 +5,6 @@
 Room2.8.4/KSP2.2.21-2.0.4 выбраны по официальным release notes для закреплённой Kotlin2.2.21; зависимости проверяет CI. SDK локально отсутствует; Android tests/lint/compile выполняет Actions. Legacy PNG1254x1254 сохранён без изменения; adaptive foreground вручную перенесён в vector с чёрным фоном, Android задаёт mask. Key/package неизменны.
 
 Новые проверки: parser/precision/fingerprint JVM; actual Room rollback, duplicate/conflict/stock/category constraints/concurrent updates/reopen/draft; Compose создать/stockedit/recreate/shared-close. Сначала результатCI, затем parity/release.
+
+
+Итог01a: run40085597352/commitd74444c — checks/API28/API35/sign/publish success, stable0.1.16.1/code2601.11 JVM+4Python,5 instrumentation накаждомAPI плюс explicit UI setup/external update. Room product/stock8 пережили заменуAPK. FontVariation.weight задан явно после visual QA, onPrimaryContainer исправлен; screenshot review прошёл. Иконка отрисованаAndroid чётко. Постоянный key/package сохранены. Полный01b/01c/device/visual parity остаются следующими критериями; manual category order ещё planned.

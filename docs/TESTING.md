@@ -14,7 +14,7 @@ Visual DS01–DS07: [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md), парные screensho
 | Signed release validation | APK package, версия, certificate SHA-256, apksigner verify | Только main после зелёных checks и secrets |
 | Device acceptance | Планшет UX, restart, два приложения рядом, update, принтер/файлы | На соответствующем этапе |
 
-Сейчас bootstrap не содержит доменных функций, поэтому JVM business tests пока отсутствуют; не подменять их фиктивным тестом константы. Compose instrumentation проверяет реальный экран и переживание recreate. Для Room transaction добавить tests с ошибкой записи, повтором операции, restart и конкурентными командами.
+В01a есть11 JVM tests (3 catalog/parser/fingerprint,8 updater) и5 instrumentation cases:4 actual Room сценария (rollback/duplicates/revisions/reopen/constraints) и1 сквозной Compose каталог/category/stock/recreate/common-close. External updater scenario отдельно создаёт данные explicit instrumentation после UTP cleanup и проверяет Room после package replacement. Фактический результат и ссылки — [CATALOG-01A.md](CATALOG-01A.md). Будущие изменения Room schema требуют migration tests; schema1 — первая база, не имитация миграции из несуществующейv0.
 
 Подробный каталог будущих fixtures и уровней проверок: [IMPLEMENTATION-CONTRACTS.md](IMPLEMENTATION-CONTRACTS.md). Это требования к новым тестам, не evidence их выполнения.
 
