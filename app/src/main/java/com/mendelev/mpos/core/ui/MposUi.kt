@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontVariation
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
@@ -23,14 +25,18 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.mendelev.mpos.R
 
-private val manrope = FontFamily(Font(R.font.manrope, FontWeight.Normal), Font(R.font.manrope, FontWeight.Medium), Font(R.font.manrope, FontWeight.SemiBold), Font(R.font.manrope, FontWeight.Bold), Font(R.font.manrope, FontWeight.ExtraBold))
+@OptIn(ExperimentalTextApi::class)
+private fun manropeFont(weight: FontWeight) = Font(R.font.manrope, weight=weight,
+    variationSettings=FontVariation.Settings(FontVariation.weight(weight.weight)))
+private val manrope = FontFamily(manropeFont(FontWeight.Normal), manropeFont(FontWeight.Medium),
+    manropeFont(FontWeight.SemiBold), manropeFont(FontWeight.Bold), manropeFont(FontWeight.ExtraBold))
 @Composable fun MposTheme(content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
-    val colors = if (dark) darkColorScheme(primary=Color(0xFF31B98D), onPrimary=Color(0xFF07140F), primaryContainer=Color(0xFF173B31),
+    val colors = if (dark) darkColorScheme(primary=Color(0xFF31B98D), onPrimary=Color(0xFF07140F), primaryContainer=Color(0xFF173B31), onPrimaryContainer=Color(0xFF31B98D),
         background=Color(0xFF171A21), surface=Color(0xFF222631), onSurface=Color(0xFFF4F6FA), onBackground=Color(0xFFF4F6FA),
         onSurfaceVariant=Color(0xFFA9B0BF), outline=Color(0xFF353B49), error=Color(0xFFFF6B61),
         surfaceContainerHighest=Color(0xFF222631), errorContainer=Color(0xFF432522), onErrorContainer=Color(0xFFFF6B61))
-    else lightColorScheme(primary=Color(0xFF0E8F6F), onPrimary=Color.White, primaryContainer=Color(0xFFE4F3EE),
+    else lightColorScheme(primary=Color(0xFF0E8F6F), onPrimary=Color.White, primaryContainer=Color(0xFFE4F3EE), onPrimaryContainer=Color(0xFF0E8F6F),
         background=Color(0xFFF5F4F0), surface=Color.White, onSurface=Color(0xFF1B1F2A), onBackground=Color(0xFF1B1F2A),
         onSurfaceVariant=Color(0xFF767C8C), outline=Color(0xFFE7E4DD), error=Color(0xFFE0483E),
         surfaceContainerHighest=Color.White, errorContainer=Color(0xFFFBE7E5), onErrorContainer=Color(0xFF1B1F2A))

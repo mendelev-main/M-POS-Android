@@ -39,7 +39,7 @@ import java.util.UUID
     BackHandler(enabled=state.draft!=null) { closeEditor() }
     val d = state.draft
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        Surface(color=androidx.compose.ui.graphics.Color(0xFF22273A), contentColor=androidx.compose.ui.graphics.Color.White) {
+        Surface(color=if(androidx.compose.foundation.isSystemInDarkTheme()) androidx.compose.ui.graphics.Color(0xFF10131A) else androidx.compose.ui.graphics.Color(0xFF22273A), contentColor=androidx.compose.ui.graphics.Color.White) {
             Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=12.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(10.dp)) {
                 Text("M-POS", style=MaterialTheme.typography.titleLarge)
                 Text("Локальный владелец", Modifier.weight(1f), style=MaterialTheme.typography.bodySmall, color=androidx.compose.ui.graphics.Color.White.copy(alpha=0.62f))

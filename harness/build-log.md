@@ -114,3 +114,6 @@ Commit68e8266/run40082159622: checks success (11 JVM tests, lint/debug build); A
 
 
 Run40082878290: checks success; API28/35 actual instrumentation5/5 success в каждом. После suite Android UTP удалил target/test packages (подтверждено logcat), поэтому read QA fixture до install был невозможен. Driver теперь после свежего install выполняет один explicit LaunchTest через am instrument (без UTP cleanup), сохраняет реальный продукт/stock8/screenshots и затем проверяет APK replacement. Гейты Room/UI и production security не ослаблены; APK runtime2d7e707 не меняется.
+
+
+Run40083703323/commit19e9345: checks/API28/API35/signed/publish success, stable0.1.14.1/code2401. Оба emulator выдали CATALOG UPDATE PASSED для сохранённого товара/stock8 через реальную1→2 замену, затем UPDATE E2E PASSED. Просмотреныcatalog/editor/shared-dialog/icon PNG; иконка чёткая/не обрезана. На UI выявлены реальные visual defects: default variable-font axis делал Manrope слишком тонким, onPrimaryContainer оставался Material-purple. Исправляются явным FontVariation.weight и M-POS semantic color; новый выпуск должен пройти те же gates и повторный визуальный просмотр.
