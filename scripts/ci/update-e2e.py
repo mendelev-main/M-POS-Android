@@ -21,7 +21,7 @@ PORT = 18765
 
 
 def adb(*args, check=True):
-    return subprocess.run(["adb", *args], check=check, capture_output=True, text=True).stdout
+    return subprocess.run(["adb", *args], check=check, capture_output=True, text=True, timeout=45).stdout
 
 
 def ui_nodes():
@@ -31,6 +31,7 @@ def ui_nodes():
 
 
 def wait_text(pattern, timeout=75, click=False):
+    print(f"E2E UI: {pattern}; click={click}", flush=True)
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
@@ -132,6 +133,7 @@ def main():
         handler = lambda *args, **kwargs: http.server.SimpleHTTPRequestHandler(*args, directory=str(folder), **kwargs)
         with socketserver.TCPServer(("127.0.0.1", PORT), handler) as server:
             threading.Thread(target=server.serve_forever, daemon=True).start()
+            print(f"E2E: install base package {PACKAGE}", flush=True)
             adb("uninstall", PACKAGE, check=False)
             adb("install", str(base))
             if not production:
@@ -178,7 +180,7 @@ def main():
                 assert wait_text("^Последняя проверка:") == checked
             reports = ROOT / "app/build/reports/update-e2e"
             reports.mkdir(parents=True, exist_ok=True)
-            (reports / "updated-settings.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True).stdout)
+            (reports / "updated-settings.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20).stdout)
             print(f"UPDATE E2E PASSED: package={PACKAGE}, check/download/restore/cancel/system install {base_code}→{target_code}; app-private data preserved")
             server.shutdown()
 
@@ -191,8 +193,14 @@ if __name__ == "__main__":
     except Exception:
         reports = ROOT / "app/build/reports/update-e2e"
         reports.mkdir(parents=True, exist_ok=True)
-        (reports / "logcat.txt").write_text(adb("logcat", "-d", "-t", "1000", check=False))
-        (reports / "screen.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True).stdout)
+        try:
+            (reports / "logcat.txt").write_text(adb("logcat", "-d", "-t", "1000", check=False))
+        except Exception as error:
+            (reports / "capture-error.txt").write_text(str(error))
+        try:
+            (reports / "screen.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20).stdout)
+        except Exception:
+            pass
         try:
             adb("shell", "uiautomator", "dump", "/sdcard/update-window.xml", check=False)
             (reports / "window.xml").write_text(adb("shell", "cat", "/sdcard/update-window.xml", check=False))
