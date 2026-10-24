@@ -5,3 +5,11 @@
 02a implementation: pure CartEngine/LayoutEngine; current snapshot graph stores only dependency closure, one aggregate RecipeCalculator reserve before rounding. Delta Add/Step read latest in transaction; absolute qty/Clear/layout CAS. Schema5 workspace_documents current/layout + operation_results/audit same DB. Unknown payload does not reset. Shared AppBar/Photo/Tile and wide Dialog folder variant. Saved placement reset lets owner remove a layout reference before catalog delete. Current stock/recipe conflict leaves cart; no financial action.
 
 Local checks:22 pure domain tests cached Kotlin2.1.20/JDK17 (supplemental),4Python/preflight/diff passed.7 pinned source regressions passed. `harness.py android` blocked before wrapper (sandbox ~/.gradle lock; no localSDK). Project Kotlin2.2.21/lint/APK/Room/UI to CI36. Added6Room tests +1Compose scenario, update E2E explicit seed3 tests + cart qty5/total15 survives package replacement. CI pending. Device user-deferred.
+
+
+CI follow-up0e6dd0b/run40106275939 pending. First4e7d301 checks31JVM/lint/APK pass,6Room/new migrations pass; UI duplicate folder label corrected with Popup-scoped matcher. Schema5 captured from KSP. Tiny reserve underflow regression reproduced before fix and local22 passed after; keep precision validation on decreases as well as increases, not stock-shortage guard on decreases. Main/stable unchanged.
+
+
+## Итог проверки,2026-10-25
+
+[run40106275939](https://github.com/mendelev-main/M-POS-Android/actions/runs/40106275939), commit0e6dd0b: checks/emulator36 success;31JVM/4Python/lint/assembleDebug,31instrumentation (6workspace Room+1workspace UI), затем3explicit UI seed tests. CATALOG UPDATE PASSED/WORKSPACE UPDATE PASSED/UPDATE E2E PASSED: package1→2, stock8 и current cart quantity5/total15 сохранены. Actual logs и screenshots просмотрены. После tested commit — только docs. Schema5 byte-equal final KSP, включена в0e6dd0b. Не менять main/stable/signing identity. Полная02 ещё не закрыта: parked/ownership/order parameters02b, explicit revalidation02c, fixed-slot drag, count-based folder sizing/config preview/performance и user-deferred physical walkthrough. Следующую часть продолжать по этому контексту, не переоткрывать01/device blocker.

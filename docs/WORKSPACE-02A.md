@@ -13,3 +13,10 @@ Add/step — delta intents с commandId, сериализованы transaction/
 RecipeCalculator агрегирует запросы всех строк по snapshot graph до decimal scale12; не умножать округлённый per-unit расход. Current reserve — derived projection из сохранённой корзины, ledger не меняется. При increase/add проверяется полный кандидат против текущих balances и per-simple flags. При decrease/remove не блокировать исправление дефицитного заказа; precision/underflow всё равно валидируются, чтобы ненулевой резерв не стал нулём. Parked резервов пока нет; они добавляются02b в ту же transaction boundary.
 
 Проверки: pure key/manual/qty/recipe/flags/stale/rounding; Room replay/fault/reopen/concurrent taps/layout references/migration4→5+older chains; Compose folder/configuration/cart recreation; update E2E сохраняет и текущую корзину. CI36, без9/15. Готовность фиксируется в PARITY и harness отдельно от planned W04/W05/W07/device.
+
+
+## Evidence и остаток
+
+[run40106275939](https://github.com/mendelev-main/M-POS-Android/actions/runs/40106275939), commit0e6dd0b: checks/emulator36 success;31JVM/4Python/lint/assembleDebug,31instrumentation (6workspace Room+1workspace UI), затем3explicit UI seed tests. CATALOG UPDATE PASSED/WORKSPACE UPDATE PASSED/UPDATE E2E PASSED: package1→2, stock8 и current cart quantity5/total15 сохранены. Схема5 byte-equal повторному KSP artifact, migration fixtures1→5/2→5/3→5/4→5 проверены действующим suite. Screenshots workspace/folder/configuration просмотрены: shared typography/colors/buttons/Close, без системных overlay/перекрытий. Точный Web count-based folder width (сейчас общий wide dialog), config live total preview, fixed-slot drag, larger catalog performance/Coil, orientation/font-scale/provider/device остаются дальнейшими критериями, не скрываются под словом «готово». Physical acceptance отложена владельцем; оплаты не появилось.
+
+Следующая02b: durable parked transfer без двойного резерва, current/parked ownership и параметры заказа; затем02c явный пересчёт устаревших строк с разницей и полный UI walkthrough. Продажу03 не начинать автоматически.

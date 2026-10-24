@@ -1,6 +1,6 @@
 # Этап 02 — Рабочая зона
 
-Статус: 02a implemented, CI36 pending; device отложен владельцем2026-10-24
+Статус: 02a ci-verified API36/run40106275939; device отложен владельцем2026-10-24
 
 ## Объём
 
@@ -34,3 +34,6 @@ W IDs с tests, rotation/process death и планшетным walkthrough.
 
 
 Первый инкремент: [WORKSPACE-02A.md](../../docs/WORKSPACE-02A.md), schema5/current cart/layout. W01/W02/W06 частично, current availability W03; parked02b и full revalidation02c остаются planned.
+
+
+Итог первого инкремента: [run40106275939](https://github.com/mendelev-main/M-POS-Android/actions/runs/40106275939), commit0e6dd0b: checks/emulator36 success;31JVM/4Python/lint/assembleDebug,31instrumentation (6workspace Room+1workspace UI), затем3explicit UI seed tests. CATALOG UPDATE PASSED/WORKSPACE UPDATE PASSED/UPDATE E2E PASSED: package1→2, stock8 и current cart quantity5/total15 сохранены. Полные W01/W02/W03/W06 и W04/W05/W07 ещё не закрыты; ограничения/следующие части в WORKSPACE-02A.

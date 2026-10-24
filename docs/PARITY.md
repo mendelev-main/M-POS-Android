@@ -9,7 +9,7 @@
 | Acceptance IDs | Web features / adapters | Этап | Статус |
 |---|---|---|---|
 | P01–P10 | product-catalog/configuration/persistence/categories, product-photo | 01 | Core01a/01b/01c, P03 order/appearance/schema4 ci-verified API36 (run40101394875); device/full01 pending; evidence ниже |
-| W01–W07 | pos.html, cart-composition/presentation, receipts, android-pos-stock | 02 | planned |
+| W01–W07 | pos.html, cart-composition/presentation, receipts, android-pos-stock | 02 | 02a layout/current cart ci-verified API36/run40106275939; W04/W05/full W06/W07 planned, device отложен владельцем |
 | S01–S05 | payment, receipts, android-safety, stockConsumption | 03 | planned |
 | I01–I04 | inventory, receiving-ui/drafts, purchase-orders, suppliers, warehouse-reporting, android-inventory | 04 | planned |
 | H01–H04 | shifts, employees, analytics, administration guards | 05 | planned |
@@ -61,3 +61,8 @@ P06 — groups/options/domain checks/selection preview; P08 — private staged p
 ## P03 — цвет и обозначение категории
 
 [run40101394875](https://github.com/mendelev-main/M-POS-Android/actions/runs/40101394875), a19cb3e, attempt2: checks и emulator36 success;26JVM/4Python/lint/assembleDebug,24instrumentation +2explicit UI seed; CATALOG UPDATE PASSED/UPDATE E2E PASSED (1→2, stock8/data preserved). Palette10 из pinned Web, Unicode3 graphemes, preview/selected semantics/Saveable form, rename/order/stable product refs, validation/conflict/replay/actual rollback и migrations1→4/2→4/3→4. Native >3 символов даёт ошибку вместо Web silent truncation; [контракт](CATEGORY-APPEARANCE.md). Visual screenshot reviewed; физическая приёмка/full01 остаются pending.
+
+
+## 02a — рабочая зона и текущая корзина
+
+[run40106275939](https://github.com/mendelev-main/M-POS-Android/actions/runs/40106275939), commit0e6dd0b: checks/emulator36 success;31JVM/4Python/lint/assembleDebug,31instrumentation (6workspace Room+1workspace UI), затем3explicit UI seed tests. CATALOG UPDATE PASSED/WORKSPACE UPDATE PASSED/UPDATE E2E PASSED: package1→2, stock8 и current cart quantity5/total15 сохранены. W01: category/product tiles/search/folders/order CAS; W02: configured merge/manual/qty/remove/clear; W03: current aggregate reserve/shortage/per-simple flags, без parked; W06: durable snapshots/revision stale marker и safe deletion. Ни один полный W диапазон не объявляется закрытым. [Контракт/остаток](WORKSPACE-02A.md): parked02b, параметры заказа, полный revalidation02c, fixed slots/drag и физическая приёмка. Native папка пока использует общий wide dialog вместо Web count-based widths; modifier total preview и точная плотность/адаптивность — дальнейшая UI часть. Screenshots reviewed без перекрытий, pixel-perfect parity не заявляется. Ledger не изменяется, оплаты нет.

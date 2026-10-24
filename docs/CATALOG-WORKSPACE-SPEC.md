@@ -82,7 +82,7 @@ Domain разворачивает recipes/modifiers и учитывает все
 | 01a | Room catalog/category + simple CRUD + opening movement | P01/P02/P03/P10, отказ записи/restart |
 | 01b | единицы/флаги/состав | P04/P05/P07, precision/cycle fixtures |
 | 01c | modifiers/photo/dependency guard | P06/P08/P09, staging/связи/UI |
-| 02a | layout + persistent cart | W01/W02/W06, rotation/конкурентные taps |
+| 02a | layout + persistent cart, [текущий scope](WORKSPACE-02A.md) | W01/W02/W06 частично, rotation/конкурентные taps |
 | 02b | recipe availability + parked transfer | W03/W04/W05, резервы/rollback |
 | 02c | tablet walkthrough + revalidation | W07 и все W, физическая приёмка |
 
