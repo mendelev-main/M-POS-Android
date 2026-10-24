@@ -41,7 +41,7 @@ class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
     private fun enqueue(block: suspend () -> Unit) {
         if(state.value.loading || state.value.fatal) return
         mutable.update { it.copy(pending=it.pending+1,message=null) }
-        commands.trySend { block();val next=repo.snapshot();publish(next) }
+        commands.trySend { block();val next=repo.snapshot();publish(next);mutable.update { it.copy(message=null) } }
     }
     fun add(p: WorkspaceProduct, selected: Set<String> = emptySet(), manual: String? = null, done: () -> Unit = {}) {
         val action=CartAction.Add(p.id,p.revision,selected.toSet(),manual,UUID.randomUUID().toString());val command=UUID.randomUUID().toString()

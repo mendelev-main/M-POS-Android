@@ -59,6 +59,7 @@ class WorkspaceRulesTest {
         reject { CartEngine.apply(CurrentCart(),add("tea"),ps,gs,balances) }
         val cart=CartEngine.apply(CurrentCart(),add("tea",selected=setOf("m")),ps,gs,balances)
         assertEquals(mapOf("milk" to BigDecimal("0.0004")),CartEngine.reserved(cart))
+        reject { CartEngine.apply(cart,CartAction.SetQuantity(cart.lines.single().id,"0.000000001",0),ps,gs,balances) }
         reject { CartEngine.apply(cart,add("tea",selected=setOf("m")),ps,gs,balances) }
         val negative=gs.map { if(it.id=="milk") (it as RecipeProduct.Simple).copy(allowNegativeStock=true) else it }
         assertEquals(1,CartEngine.apply(CurrentCart(),add("tea",selected=setOf("m")),ps,negative,mapOf("milk" to BigDecimal.ZERO)).lines.size)

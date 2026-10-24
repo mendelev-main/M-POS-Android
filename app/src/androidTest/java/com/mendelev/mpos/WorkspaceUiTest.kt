@@ -51,7 +51,7 @@ class WorkspaceUiTest {
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.layout.any {it.type=="folder" && it.name==folderName}}
         val folder=model.state.value.snapshot!!.layout.first {it.type=="folder" && it.name==folderName}.id
         compose.onNodeWithTag("workspaceProduct:$coffee").performClick()
-        compose.onNodeWithText("Корень категории").performClick();compose.onNodeWithText(folderName).performClick()
+        compose.onNodeWithText("Корень категории").performClick();compose.onNode(hasText(folderName) and hasAnyAncestor(isPopup())).performClick()
         compose.onNodeWithText("Переместить").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.layout.any {it.id==coffee && it.folderId==folder}}
         compose.onNodeWithTag("workspaceEdit").performClick()

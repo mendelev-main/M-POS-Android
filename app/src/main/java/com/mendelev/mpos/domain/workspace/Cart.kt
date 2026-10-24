@@ -25,7 +25,7 @@ object CartEngine {
     fun stale(line: CartLine, products: List<WorkspaceProduct>) = line.references.any { (id,rev) -> products.find { it.id==id }?.revision!=rev }
     fun requests(cart: CurrentCart)=cart.lines.flatMap { line -> line.requests.map { it.copy(quantity=it.quantity*line.quantity.toBigDecimal()) } }
     fun reserved(cart: CurrentCart): Map<String,BigDecimal> = if(cart.lines.isEmpty()) emptyMap() else RecipeCalculator(cart.graph).consumption(requests(cart))
-    private fun remaining(cart: CurrentCart,lines: List<CartLine>)=if(lines.isEmpty()) CurrentCart() else cart.copy(lines=lines)
+    private fun remaining(cart: CurrentCart,lines: List<CartLine>)=(if(lines.isEmpty()) CurrentCart() else cart.copy(lines=lines)).also { reserved(it) }
     fun total(cart: CurrentCart)=cart.lines.fold(BigDecimal.ZERO) { sum,line -> sum+line.unitPrice.toBigDecimal()*line.quantity.toBigDecimal() }
     private fun quantity(raw: String)=CatalogRules.decimal(raw,9,"Количество").also {
         if(it.toBigDecimal().signum()<=0) throw CatalogFailure("quantity","Количество должно быть больше нуля")
@@ -54,6 +54,7 @@ object CartEngine {
                 } else quantity((action as CartAction.SetQuantity).quantity).toBigDecimal()
                 if(next.signum()<=0) return remaining(cart,cart.lines.filterNot { it.id==id })
                 val result=cart.copy(lines=cart.lines.map { if(it.id==id) it.copy(quantity=quantity(CatalogRules.canonical(next))) else it })
+                reserved(result) // A decrease may resolve a shortage, but must not silently round a tiny reserve to zero.
                 if(next>line.quantity.toBigDecimal()) { requireFresh(cart,products);check(result,balances,products) }
                 return result
             }
