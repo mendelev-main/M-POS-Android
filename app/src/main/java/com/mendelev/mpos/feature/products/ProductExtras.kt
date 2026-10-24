@@ -17,17 +17,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
-@Composable fun ProductPhoto(id: String?, store: ProductPhotoStore?, modifier: Modifier = Modifier) {
-    val bitmap by produceState<Bitmap?>(null,id,store) {
-        value=if(id==null) null else withContext(Dispatchers.IO) { store?.read(id) }
-    }
-    if(id!=null) {
-        val image=bitmap
-        if(image!=null) Image(image.asImageBitmap(),"Фото товара",modifier.testTag("productPhoto"),contentScale=ContentScale.Crop)
-        else Text("Фото недоступно",modifier,style=MaterialTheme.typography.bodySmall)
-    }
-}
-
 @Composable fun ProductPhotoEditor(model: CatalogViewModel, d: ProductDraft, enabled: Boolean, onPick: () -> Unit) {
     Text("Фото товара",style=MaterialTheme.typography.titleMedium)
     ProductPhoto(d.photoId,model.photos,Modifier.size(160.dp))

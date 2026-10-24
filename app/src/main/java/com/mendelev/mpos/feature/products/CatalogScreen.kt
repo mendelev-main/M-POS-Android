@@ -30,7 +30,7 @@ import com.mendelev.mpos.domain.catalog.unitLabel
 import com.mendelev.mpos.domain.catalog.quantityUnit
 import java.util.UUID
 
-@Composable fun CatalogScreen(model: CatalogViewModel, onSettings: () -> Unit, onGallery: () -> Unit) {
+@Composable fun CatalogScreen(model: CatalogViewModel, onSettings: () -> Unit, onGallery: () -> Unit, onWorkspace: () -> Unit = {}) {
     val state by model.state.collectAsStateWithLifecycle()
     val context=LocalContext.current
     var photoSession by rememberSaveable { mutableStateOf<String?>(null) }
@@ -57,14 +57,11 @@ import java.util.UUID
     BackHandler(enabled=state.draft!=null) { closeEditor() }
     val d = state.draft
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        Surface(color=if(androidx.compose.foundation.isSystemInDarkTheme()) androidx.compose.ui.graphics.Color(0xFF10131A) else androidx.compose.ui.graphics.Color(0xFF22273A), contentColor=androidx.compose.ui.graphics.Color.White) {
-            Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=12.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                Text("M-POS", style=MaterialTheme.typography.titleLarge)
-                Text("Локальный владелец", Modifier.weight(1f), style=MaterialTheme.typography.bodySmall, color=androidx.compose.ui.graphics.Color.White.copy(alpha=0.62f))
-                if(d==null) {
-                    if(com.mendelev.mpos.BuildConfig.DEBUG) MposNavigationAction("Компоненты", onGallery)
-                    MposNavigationAction("Настройки", onSettings)
-                }
+        MposAppBar(subtitle="Локальный владелец") {
+            if(d==null) {
+                MposNavigationAction("Рабочая зона",onWorkspace)
+                if(com.mendelev.mpos.BuildConfig.DEBUG) MposNavigationAction("Компоненты",onGallery)
+                MposNavigationAction("Настройки",onSettings)
             }
         }
         if(state.loading) Box(Modifier.fillMaxSize(), contentAlignment=Alignment.Center) { CircularProgressIndicator() }

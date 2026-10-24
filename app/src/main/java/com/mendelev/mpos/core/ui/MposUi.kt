@@ -80,10 +80,10 @@ enum class ActionStyle { Primary, Secondary, Danger }
     }
 }
 
-@Composable fun MposDialog(title: String, onClose: () -> Unit, closable: Boolean = true, content: @Composable ColumnScope.() -> Unit) {
-    Dialog(onDismissRequest={ if(closable) onClose() }) {
+@Composable fun MposDialog(title: String, onClose: () -> Unit, closable: Boolean = true, wide: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
+    Dialog(onDismissRequest={ if(closable) onClose() }, properties=androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth=!wide)) {
         Surface(shape=RoundedCornerShape(22.dp), color=MaterialTheme.colorScheme.surface) {
-            Column(Modifier.widthIn(max=460.dp).padding(28.dp), verticalArrangement=Arrangement.spacedBy(16.dp)) {
+            Column(Modifier.widthIn(max=if(wide) 900.dp else 460.dp).then(if(wide) Modifier.fillMaxWidth() else Modifier).padding(28.dp), verticalArrangement=Arrangement.spacedBy(16.dp)) {
                 Row(verticalAlignment=Alignment.CenterVertically) {
                     Text(title, Modifier.weight(1f), style=MaterialTheme.typography.titleMedium)
                     MposCloseButton(onClose, closable)

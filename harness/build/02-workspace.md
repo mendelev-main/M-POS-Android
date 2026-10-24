@@ -1,6 +1,6 @@
 # Этап 02 — Рабочая зона
 
-Статус: planned
+Статус: 02a implemented, CI36 pending; device отложен владельцем2026-10-24
 
 ## Объём
 
@@ -31,3 +31,6 @@ W IDs с tests, rotation/process death и планшетным walkthrough.
 ## Контекст и результат
 
 Значимые решения в `harness/context/02-workspace.md` при начале работ; наблюдаемые результаты в `harness/build-log.md`.
+
+
+Первый инкремент: [WORKSPACE-02A.md](../../docs/WORKSPACE-02A.md), schema5/current cart/layout. W01/W02/W06 частично, current availability W03; parked02b и full revalidation02c остаются planned.

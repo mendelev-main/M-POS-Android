@@ -100,3 +100,8 @@ Design system — часть M01: `core/ui/theme` (colors/type/shape/spacing), `
 В01a сначала реализовать tokens/theme+Primary/Secondary/Close/Dialog/TextField/Notice и component gallery, затем экран каталога. Не копировать JSX/CSS/WebView. Все feature screens используют common components. Повторяющийся новый элемент сначала добавляется общим variant, затем применяется во всех местах; исключение оформляется решением с примером/причиной. Updater получает ту же theme при общей UI интеграции.
 
 ПриёмкаDS01: источники/Manrope/palette; DS02: все dialog close одинаковы; DS03: button/input states light/dark; DS04: keyboard/font scale/48dp target; DS05: paired screenshots Web/native на одинаковых сценариях; DS06: no lost dirty form приX/Back; DS07: component gallery показывает все variants. Статус planned; сравнение скриншотов и physical tablet pending.
+
+
+## Рабочая зона02a — shared variants
+
+MposAppBar переносит существующий navy/Manrope header каталога в общий компонент; рабочая зона использует те же navigation actions. MposWorkspaceTile: radius18dp/min-height144dp/gap12dp из pos.html pcard/product-grid; фото — общий sampled private ProductPhoto. MposDialog wide=true — только ширина до900dp для папки, те же header/Close22dp surface/28dp padding/buttons; обычные диалоги не меняют ширину. Раскладка/корзина: grid слева + cart340dp при ширине≥840dp, при меньшей ширине cart снизу; физическая orientation/font-scale приёмка позже. Full fixed-slot/drag parity не заявляется, контракт WORKSPACE-02A.md.

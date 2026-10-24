@@ -1,0 +1,7 @@
+# 02 — рабочая зона
+
+2026-10-24 владелец авторизовал следующую часть; physical tablet acceptance01/02 позже, не blocker. Используем mpos-phase/mpos-domain, develop без stable release. Источники pinned1682c883: pos-navigation,cart-composition,android-pos-stock/android-safety и соответствующие source-product-stock regressions. Первый02a scope/решения/schema5/границы по docs/WORKSPACE-02A.md. Оплат/parked не включаем; W01/W02/W06 будут частично, без заявления full02.
+
+02a implementation: pure CartEngine/LayoutEngine; current snapshot graph stores only dependency closure, one aggregate RecipeCalculator reserve before rounding. Delta Add/Step read latest in transaction; absolute qty/Clear/layout CAS. Schema5 workspace_documents current/layout + operation_results/audit same DB. Unknown payload does not reset. Shared AppBar/Photo/Tile and wide Dialog folder variant. Saved placement reset lets owner remove a layout reference before catalog delete. Current stock/recipe conflict leaves cart; no financial action.
+
+Local checks:22 pure domain tests cached Kotlin2.1.20/JDK17 (supplemental),4Python/preflight/diff passed.7 pinned source regressions passed. `harness.py android` blocked before wrapper (sandbox ~/.gradle lock; no localSDK). Project Kotlin2.2.21/lint/APK/Room/UI to CI36. Added6Room tests +1Compose scenario, update E2E explicit seed3 tests + cart qty5/total15 survives package replacement. CI pending. Device user-deferred.

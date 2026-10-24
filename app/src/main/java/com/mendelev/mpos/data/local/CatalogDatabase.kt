@@ -53,6 +53,16 @@ data class DraftEntity(@PrimaryKey val id: String = "product", val payload: Stri
 @Entity(tableName = "app_config")
 data class ConfigEntity(@PrimaryKey val id: Int = 1, val registerId: String, val ownerId: String, val currency: String = "BYN")
 
+@Entity(tableName = "workspace_documents")
+data class WorkspaceDocument(@PrimaryKey val id: String, val revision: Long, val payload: String)
+
+@Dao
+interface WorkspaceDao {
+    @Query("SELECT * FROM workspace_documents ORDER BY id") fun observe(): Flow<List<WorkspaceDocument>>
+    @Query("SELECT * FROM workspace_documents WHERE id=:id") suspend fun document(id: String): WorkspaceDocument?
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun put(value: WorkspaceDocument)
+}
+
 data class ProductRow(@Embedded val product: ProductEntity, val quantity: String, val stockRevision: Long, val categoryName: String?)
 
 @Dao
@@ -67,6 +77,9 @@ interface CatalogDao {
     @Query("DELETE FROM modifier_groups WHERE ownerId=:id") suspend fun clearModifierGroups(id: String)
     @Insert suspend fun insertModifierGroups(values: List<ModifierGroupEntity>)
     @Insert suspend fun insertModifierOptions(values: List<ModifierOptionEntity>)
+    @Query("SELECT * FROM stock_balances") suspend fun allBalances(): List<BalanceEntity>
+    @Query("SELECT * FROM modifier_groups ORDER BY ownerId, position") suspend fun allModifierGroups(): List<ModifierGroupEntity>
+    @Query("SELECT * FROM modifier_options ORDER BY ownerId, position") suspend fun allModifierOptions(): List<ModifierOptionEntity>
     @Query("SELECT * FROM products") suspend fun allProducts(): List<ProductEntity>
     @Query("SELECT * FROM recipe_components ORDER BY ownerId, position") suspend fun allComponents(): List<RecipeComponentEntity>
     @Query("SELECT * FROM recipe_components ORDER BY ownerId, position") fun components(): Flow<List<RecipeComponentEntity>>
@@ -104,9 +117,10 @@ interface CatalogDao {
 }
 
 @Database(entities = [CategoryEntity::class, ProductEntity::class, BalanceEntity::class, MovementEntity::class,
-    ResultEntity::class, AuditEntity::class, DraftEntity::class, ConfigEntity::class, RecipeComponentEntity::class, ModifierGroupEntity::class, ModifierOptionEntity::class], version = 4, exportSchema = true)
+    ResultEntity::class, AuditEntity::class, DraftEntity::class, ConfigEntity::class, RecipeComponentEntity::class, ModifierGroupEntity::class, ModifierOptionEntity::class, WorkspaceDocument::class], version = 5, exportSchema = true)
 abstract class CatalogDatabase : RoomDatabase() {
     abstract fun catalog(): CatalogDao
+    abstract fun workspace(): WorkspaceDao
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -137,10 +151,15 @@ abstract class CatalogDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE categories ADD COLUMN symbol TEXT NOT NULL DEFAULT ''")
             }
         }
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS workspace_documents (id TEXT NOT NULL PRIMARY KEY, revision INTEGER NOT NULL, payload TEXT NOT NULL)")
+            }
+        }
         @Volatile private var instance: CatalogDatabase? = null
         fun get(context: Context): CatalogDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(context.applicationContext, CatalogDatabase::class.java, "mpos.db")
-                .addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4).build().also { instance = it }
+                .addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4,MIGRATION_4_5).build().also { instance = it }
         }
     }
 }

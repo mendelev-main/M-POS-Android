@@ -147,14 +147,16 @@ def main():
                 # under an explicit instrumentation lifetime, then keep the target for replacement.
                 test_apk = ROOT / "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
                 adb("install", "-r", str(test_apk))
-                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest",
+                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.WorkspaceUiTest",
                              PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
-                assert "OK (2 tests)" in result and "FAILURES" not in result, result[-4000:]
+                assert "OK (3 tests)" in result and "FAILURES" not in result, result[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
                 expected_product = adb("shell", "run-as", PACKAGE, "cat", "files/qa/productName.txt").strip()
                 assert expected_product, "UI setup must create a real catalog record"
-                for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor"):
+                expected_workspace_line = adb("shell", "run-as", PACKAGE, "cat", "files/qa/workspaceLineName.txt").strip()
+                assert expected_workspace_line, "UI setup must create a real persistent current cart"
+                for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration"):
                     captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
                     assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
                     (reports / f"{name}.png").write_bytes(captured.stdout)
@@ -210,6 +212,12 @@ def main():
                 wait_text("^8 шт$")
                 (reports / "updated-catalog.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("CATALOG UPDATE PASSED: Room product and stock=8 survived actual package replacement", flush=True)
+                wait_text("^Рабочая зона$", click=True)
+                wait_text("^" + re.escape(expected_workspace_line) + "$")
+                wait_text("^Предварительно: 15 BYN$")
+                wait_text("^3 BYN × 5 шт$")
+                (reports / "updated-workspace.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
+                print("WORKSPACE UPDATE PASSED: current cart configuration, quantity=5 and total=15 survived package replacement", flush=True)
             print(f"UPDATE E2E PASSED: package={PACKAGE}, check/download/restore/cancel/system install {base_code}→{target_code}; app-private data preserved")
             server.shutdown()
 

@@ -139,12 +139,14 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
         if (repeat(commandId, fp) != null) return@withTransaction
         if (dao.category(id)?.revision != revision) throw CatalogFailure("conflict", "Категория изменилась")
         if (dao.categoryUses(id) > 0) throw CatalogFailure("used", "В категории есть товары. Сначала переместите их")
+        db.requireNoWorkspaceCategory(id)
         dao.deleteCategory(id); record(commandId, fp, id, "category.delete")
     }
     suspend fun deleteProduct(id: String, revision: Long, commandId: String) = db.withTransaction {
         val fp = CatalogRules.fingerprint("deleteProduct", id, revision)
         if (repeat(commandId, fp) != null) return@withTransaction
         if (dao.product(id)?.revision != revision) throw CatalogFailure("conflict", "Товар изменился")
+        db.requireNoWorkspaceProduct(id)
         val draft=dao.draft()?.let { JSONObject(it.payload) }
         if(draft!=null && draft.optString("id")!=id) {
             val components=draft.optJSONArray("components")
