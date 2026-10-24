@@ -73,6 +73,7 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
         }
     } }
     fun retryOpen() { mutable.update { it.copy(loading=true) }; start() }
+    fun invalidNumber() { mutable.update { it.copy(message="Сначала исправьте количество ингредиента", error=true) } }
     fun dismissMessage() { mutable.update { it.copy(message=null, field=null) } }
     fun edit(row: ProductRow? = null) {
         if(state.value.busy || state.value.draft!=null) return
@@ -86,8 +87,7 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
         }
     }
     private suspend fun loadDraft(id: String): ProductDraft {
-        val p = repo.dao.product(id) ?: throw CatalogFailure("conflict", "Товар больше не существует")
-        val b = repo.dao.balance(id)
+        val (p,b,components) = repo.editorSnapshot(id)
         fun display(value: String) = CatalogRules.canonical(quantityUnit(p.unit).convert(value.toBigDecimal(), quantityUnit(p.displayUnit)))
         val cost = CatalogRules.canonical(p.cost.toBigDecimal().multiply(quantityUnit(p.displayUnit).convert(java.math.BigDecimal.ONE, quantityUnit(p.unit))))
         return ProductDraft(id=p.id, expectedRevision=p.revision, expectedStockRevision=b?.revision,
@@ -95,7 +95,7 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
             type=p.type, unit=p.unit, displayUnit=p.displayUnit, noStockTracking=p.noStockTracking,
             allowNegativeStock=p.allowNegativeStock, minimumStock=p.minimumStock?.let(::display) ?: "",
             purchaseLabel=p.purchaseLabel, packSize=p.packSize?.let(::display) ?: "", recipeYield=p.recipeYield,
-            components=repo.dao.recipe(id).map { IngredientInput(it.productId,it.quantity,it.unit) })
+            components=components.map { IngredientInput(it.productId,it.quantity,it.unit) })
     }
     fun changeDisplayUnit(next: String) {
         val d = state.value.draft ?: return

@@ -9,6 +9,10 @@ class CatalogRepository(private val db: CatalogDatabase, private val afterProduc
     val products = dao.products()
     val categories = dao.categories()
     val components = dao.components()
+    suspend fun editorSnapshot(id: String): Triple<ProductEntity, BalanceEntity?, List<RecipeComponentEntity>> = db.withTransaction {
+        val product=dao.product(id) ?: throw CatalogFailure("conflict", "Товар больше не существует")
+        Triple(product,dao.balance(id),dao.recipe(id))
+    }
     suspend fun initialize() { dao.config(ConfigEntity(registerId = UUID.randomUUID().toString(), ownerId = UUID.randomUUID().toString())) }
     private suspend fun repeat(command: String, fingerprint: String): String? = dao.result(command)?.let {
         if (it.fingerprint != fingerprint) throw CatalogFailure("conflict", "Команда уже использована для другого изменения")

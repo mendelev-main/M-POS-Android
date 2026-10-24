@@ -133,6 +133,6 @@ enum class ActionStyle { Primary, Secondary, Danger }
 @Composable fun MposFlag(label: String, checked: Boolean, onChange: (Boolean) -> Unit, enabled: Boolean = true) {
     Row(Modifier.fillMaxWidth().heightIn(min=48.dp), verticalAlignment=Alignment.CenterVertically) {
         Text(label, Modifier.weight(1f), style=MaterialTheme.typography.bodyMedium)
-        Switch(checked=checked, onCheckedChange=onChange, enabled=enabled)
+        Switch(checked=checked, onCheckedChange=onChange, enabled=enabled, modifier=Modifier.semantics { contentDescription=label })
     }
 }

@@ -35,7 +35,9 @@ private fun units(base: String? = null) = QuantityUnit.entries.filter {
         MposFlag("Не учитывать остаток", d.noStockTracking, { v -> model.change { it.copy(noStockTracking=v) } }, enabled)
         MposFlag("Разрешить продажу в минус", d.allowNegativeStock, { v -> model.change { it.copy(allowNegativeStock=v) } }, enabled)
         MposField(d.minimumStock, { v -> model.change { it.copy(minimumStock=v) } }, "Минимальный остаток, ${unitLabel(d.displayUnit)} (необязательно)", enabled=enabled, numeric=true)
-        MposField(d.purchaseLabel, { v -> model.change { it.copy(purchaseLabel=v) } }, "Упаковка закупки (например, коробка)", enabled=enabled)
+        MposSelect("Единица закупки", d.purchaseLabel,
+            listOf("" to "Не задано") + units(d.unit) + listOf("pack" to "Упаковка", "box" to "Коробка", "bottle" to "Бутылка"),
+            { v -> model.change { it.copy(purchaseLabel=v) } }, enabled)
         MposField(d.packSize, { v -> model.change { it.copy(packSize=v) } }, "Количество в упаковке, ${unitLabel(d.displayUnit)} (необязательно)", enabled=enabled, numeric=true)
     } else {
         MposField(d.recipeYield, { v -> model.change { it.copy(recipeYield=v) } }, "Выход рецепта, ${unitLabel(d.unit)}", Modifier.testTag("recipeYield"), enabled, true)
@@ -50,7 +52,7 @@ private fun units(base: String? = null) = QuantityUnit.entries.filter {
                     try {
                         val converted=CatalogRules.canonical(quantityUnit(c.unit).convert(c.quantity.replace(',', '.').toBigDecimal(),quantityUnit(v)))
                         model.change { draft -> draft.copy(components=draft.components.mapIndexed { i, row -> if(i==index) row.copy(unit=v, quantity=converted) else row }) }
-                    } catch(_: Exception) { /* Invalid quantity remains editable; save displays a validation error. */ }
+                    } catch(_: Exception) { model.invalidNumber() }
                 }, enabled)
                 MposButton("Убрать ингредиент ${index+1}", { model.change { it.copy(components=it.components.filterIndexed { i, _ -> i!=index }) } }, enabled=enabled, style=ActionStyle.Secondary)
                 HorizontalDivider()

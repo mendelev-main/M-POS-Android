@@ -44,7 +44,8 @@ data class ProductInput(
         val validatedStock = CatalogRules.decimal(stockValue.removePrefix("-"), 12, "Остаток")
         if (negative && (stockEdited || expectedRevision == null) && !allowNegativeStock)
             throw CatalogFailure("Остаток", "Для отрицательного остатка разрешите продажу в минус")
-        if (purchaseLabel.length > 100) throw CatalogFailure("pack", "Название упаковки: до 100 символов")
+        if (purchaseLabel.isNotEmpty() && purchaseLabel !in listOf("pack", "box", "bottle"))
+            quantityUnit(purchaseLabel).convert(BigDecimal.ONE, base)
         val normalized = copy(name = CatalogRules.name(name), price = CatalogRules.decimal(price, 2, "Цена"),
             cost = if (type == "simple") CatalogRules.decimal(cost, 12, "Себестоимость") else "0",
             stock = if (negative && validatedStock != "0") "-$validatedStock" else validatedStock,
@@ -56,13 +57,14 @@ data class ProductInput(
         if (type == "composite") {
             if (noStockTracking || allowNegativeStock || minimumStock != null || packSize != null || purchaseLabel.isNotBlank())
                 throw CatalogFailure("type", "Складские параметры доступны только простому товару")
+            if (normalized.stock != "0") throw CatalogFailure("recipe", "У составного товара нет собственного остатка")
             if (normalized.recipeYield.toBigDecimal().signum() <= 0 || components.isEmpty())
                 throw CatalogFailure("recipe", "Задайте положительный выход и состав")
         } else if (components.isNotEmpty()) throw CatalogFailure("recipe", "Простой товар не может иметь состав")
         return normalized
     }
     fun fingerprint(): String {
-        val legacy = arrayOf(id, expectedRevision, name, categoryId, price, cost,
+        val legacy = arrayOf<Any?>(id, expectedRevision, name, categoryId, price, cost,
             if (stockEdited || expectedRevision == null) stock else null, expectedStockRevision, stockEdited)
         // Existing completed 01a commands remain replayable after migration.
         if (type == "simple" && unit == "piece" && displayUnit == "piece" && !noStockTracking && !allowNegativeStock &&

@@ -46,7 +46,7 @@ class CatalogConfigurationTest {
     @Test fun recipeCommandsValidateFullGraphAndRollbackFaultsAndProtectReferences() = runBlocking {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         try {
-            val repo=CatalogRepository(db);repo.initialize();repo.saveProduct(input("flour").copy(unit="kg",stock="1"))
+            val repo=CatalogRepository(db);repo.initialize();repo.saveProduct(input("flour").copy(unit="kg",displayUnit="kg",stock="1"))
             val dough=input("dough").copy(type="composite",recipeYield="3",components=listOf(IngredientInput("flour","0.4","g")))
             repo.saveProduct(dough);repo.saveProduct(dough)
             assertNull(repo.dao.balance("dough"));assertEquals(2,repo.dao.products().first().size)
@@ -97,8 +97,8 @@ class CatalogConfigurationTest {
             for(i in 0 until entities.length()) {
                 val e=entities.getJSONObject(i);val table=e.getString("tableName")
                 legacy.execSQL(e.getString("createSql").replace("\${TABLE_NAME}",table))
-                val indices=e.getJSONArray("indices")
-                for(j in 0 until indices.length()) legacy.execSQL(indices.getJSONObject(j).getString("createSql").replace("\${TABLE_NAME}",table))
+                val indices=e.optJSONArray("indices")
+                for(j in 0 until (indices?.length() ?: 0)) legacy.execSQL(indices!!.getJSONObject(j).getString("createSql").replace("\${TABLE_NAME}",table))
             }
             val setup=schema.getJSONArray("setupQueries")
             for(i in 0 until setup.length()) legacy.execSQL(setup.getString(i))
