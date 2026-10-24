@@ -10,6 +10,10 @@
 
 Порядок/зависимости: `PLANS.md`. Источник: `docs/SOURCE.md`, карта: `docs/PARITY.md`; архитектура/данные: `docs/ARCHITECTURE.md`, `docs/DATA.md`. Перед реализацией уточнить сценарии по pinned исходнику, добавить тестовые fixtures и acceptance details для этой итерации.
 
+## Спецификация
+
+[Сценарии, отказы и открытые контракты](../../docs/OPERATIONS-SPEC.md); [команды и регрессионные examples](../../docs/IMPLEMENTATION-CONTRACTS.md). Статус planned; описание не является evidence реализации.
+
 ## Приёмка
 
 C01: валидация контакта; C02: gift не поглощает доставку/другие строки; C03: outbox повтор; C04: роли/согласия; C05: booking conflicts.

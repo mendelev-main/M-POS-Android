@@ -1,5 +1,7 @@
 # Первые два этапа: требования
 
+Подробные сценарии, native решения и последовательность инкрементов: [CATALOG-WORKSPACE-SPEC.md](CATALOG-WORKSPACE-SPEC.md). Контракты команд и fixtures: [IMPLEMENTATION-CONTRACTS.md](IMPLEMENTATION-CONTRACTS.md). Все P/W пока planned.
+
 ## 01 — товары
 
 | ID | Сценарий и ожидаемый результат |

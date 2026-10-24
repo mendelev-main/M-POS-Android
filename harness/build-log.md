@@ -84,3 +84,8 @@ Verify run40074952217: API35 production success. API28 также прошёл H
 [Run 40075276435](https://github.com/mendelev-main/M-POS-Android/actions/runs/40075276435), driver commit e4a5756cfd6812917fa5a6c3d39e41e7c8376558: verify (28) job120817170338 и verify (35) job120817170303 — success. Оба выдали UPDATE E2E PASSED для com.mendelev.mpos, 1801→1901. Проверены публичные HTTPS manifest/APK, restart/restore, первое разрешение unknown source, Cancel/retry, системная установка, версия и persisted receipt/lastChecked. 4 Python tests в каждой job passed. Удаление -W и повтор открытия по видимому UI устранили гонку CI driver Android 9 без изменения APK.
 
 Текущий stable v0.1.9.1, постоянные package/certificate сохранены. U01–U06 ci-verified; физический планшет/OEM, будущие Room migrations и защита кассового commit остаются своими отдельными критериями. Локально финально выполняются preflight, 4 Python tests, actionlint и diff-check; SDK локально отсутствует, Android evidence — указанные Actions runs.
+
+
+## 2026-10-24 — спецификация функциональности перед реализацией
+
+По запросу пользователя расширена документация 01–09: каталог/карточки/единицы/рецепты/фото/модификаторы, persistent cart/резервы/parked, операции склада/продаж/ролей/клиентов/backup/оборудования/сайта. Созданы пять связанных спецификаций, примеры Given/When/Then и команды с transaction/revision/idempotency. Планы и navigation обновлены, native отличия от Web зафиксированы ADR-003. Исходный pin сохранён; все продуктовые IDs planned. APK/бизнес-код не менялись. Проверки этой итерации: `python3 scripts/harness.py preflight`, локальные Markdown links, `git diff --check` — passed. Android tests не запускались: изменена только документация.

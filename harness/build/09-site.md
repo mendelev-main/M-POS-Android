@@ -10,6 +10,10 @@ HTTPS endpoint/device auth, SSE заказы, ручной sync меню/фот�
 
 Порядок/зависимости: `PLANS.md`. Источник: `docs/SOURCE.md`, карта: `docs/PARITY.md`; архитектура/данные: `docs/ARCHITECTURE.md`, `docs/DATA.md`. Перед реализацией уточнить сценарии по pinned исходнику, добавить тестовые fixtures и acceptance details для этой итерации.
 
+## Спецификация
+
+[Сценарии, отказы и открытые контракты](../../docs/SETTINGS-SITE-SPEC.md); [команды и регрессионные examples](../../docs/IMPLEMENTATION-CONTRACTS.md). Статус planned; описание не является evidence реализации.
+
 ## Приёмка
 
 N01: offline/HTTP/abort; N02: SSE reconnect/id/retry; N03: дедупликация заказа; N04: manual sync; N05: локальная касса без сети; N06: backend contract fixtures и staging приёмка.

@@ -17,3 +17,12 @@
 По запросу пользователя стек описан исходя из полного функционального соответствия Web. Решение: [STACK.md](STACK.md). Уточнены Lifecycle/Coroutines/Navigation Compose, Hilt, Room/KSP, DataStore, serialization, Coil, OkHttp/streaming SSE и WorkManager; платформенные адаптеры файлов, печати, отчётов и секретов. Выбраны роль каждой технологии и этап подключения, без установки новых dependencies в этой документационной задаче.
 
 Деньги/единицы остаются в Kotlin domain, операции — в Room transactions; WorkManager не подменяет постоянный realtime transport. Версии будущих библиотек проверяются при подключении, текущая CI-проверенная база сохранена. Поведенческие P/W/S/I/H/C/B/D/N критерии и порядок этапов не изменены.
+
+
+## ADR-003 — правила каталога/черновиков для реализации, 2026-10-24
+
+По задаче детализации документации приняты безопасные native правила P/W в [CATALOG-WORKSPACE-SPEC.md](CATALOG-WORKSPACE-SPEC.md): стабильные categoryId, запрет удаления связанных объектов, явный opening stock movement, отсутствие прямой перезаписи остатка карточкой, optimistic revision и повторяемые команды, атомарный перенос current/parked, revalidation изменённого каталога. Некорректное число не становится нулём как при Web parseFloat fallback. Отрицательная цена товара запрещена, нулевая требует ручной цены.
+
+Это решения для будущего кода, не уже созданная схема/миграция. Возможные последствия: первая Room schema должна поддержать revisions/связи и opening movements, 02 — устойчивые sessions, 03 — исторические snapshots. Контроль: fixtures CAT/UNIT/RECIPE/MOD/STOCK/CART/PARK/DRAFT в [IMPLEMENTATION-CONTRACTS.md](IMPLEMENTATION-CONTRACTS.md).
+
+Открыты до соответствующих этапов: точные лимиты полей/изображений (01), денежные fixtures/валюта/rounding/частичный возврат (03), оценка закупочной стоимости (04), роли/бизнес-день (05), server loyalty/consent (06), replace/merge backup (07), профиль оборудования (08), API payloads/idempotency/ownership (09). Протокольные наблюдения Web не считаются согласованным backend контрактом.

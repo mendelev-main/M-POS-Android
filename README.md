@@ -20,6 +20,8 @@
 
 ## Навигация
 
+- [Функциональная спецификация и маршрут реализации](docs/FUNCTIONAL-SPEC.md).
+
 - [Цели и границы](GOALS.md), [этапы](PLANS.md), [запросы для агента](PROMPTS.md).
 - [Harness](harness/README.md), [журнал проверок](harness/build-log.md).
 - [Источник и происхождение](docs/SOURCE.md), [требования товаров и кассы](docs/PRODUCTS-WORKSPACE.md).

@@ -10,6 +10,10 @@ LAN ESC/POS, ящик, PDF/XLSX, Telegram; preferences и диагностика
 
 Порядок/зависимости: `PLANS.md`. Источник: `docs/SOURCE.md`, карта: `docs/PARITY.md`; архитектура/данные: `docs/ARCHITECTURE.md`, `docs/DATA.md`. Перед реализацией уточнить сценарии по pinned исходнику, добавить тестовые fixtures и acceptance details для этой итерации.
 
+## Спецификация
+
+[Сценарии, отказы и открытые контракты](../../docs/OPERATIONS-SPEC.md); [команды и регрессионные examples](../../docs/IMPLEMENTATION-CONTRACTS.md). Статус planned; описание не является evidence реализации.
+
 ## Приёмка
 
 D01: mock transports; D02: печать не удваивает продажу; D03: ящик по cash/role; D04: fake Telegram; D05: физические образцы печати/экспорта.
