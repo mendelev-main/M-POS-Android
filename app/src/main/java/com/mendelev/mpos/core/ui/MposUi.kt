@@ -28,10 +28,12 @@ private val manrope = FontFamily(Font(R.font.manrope, FontWeight.Normal), Font(R
     val dark = isSystemInDarkTheme()
     val colors = if (dark) darkColorScheme(primary=Color(0xFF31B98D), onPrimary=Color(0xFF07140F), primaryContainer=Color(0xFF173B31),
         background=Color(0xFF171A21), surface=Color(0xFF222631), onSurface=Color(0xFFF4F6FA), onBackground=Color(0xFFF4F6FA),
-        onSurfaceVariant=Color(0xFFA9B0BF), outline=Color(0xFF353B49), error=Color(0xFFFF6B61))
+        onSurfaceVariant=Color(0xFFA9B0BF), outline=Color(0xFF353B49), error=Color(0xFFFF6B61),
+        surfaceContainerHighest=Color(0xFF222631), errorContainer=Color(0xFF432522), onErrorContainer=Color(0xFFFF6B61))
     else lightColorScheme(primary=Color(0xFF0E8F6F), onPrimary=Color.White, primaryContainer=Color(0xFFE4F3EE),
         background=Color(0xFFF5F4F0), surface=Color.White, onSurface=Color(0xFF1B1F2A), onBackground=Color(0xFF1B1F2A),
-        onSurfaceVariant=Color(0xFF767C8C), outline=Color(0xFFE7E4DD), error=Color(0xFFE0483E))
+        onSurfaceVariant=Color(0xFF767C8C), outline=Color(0xFFE7E4DD), error=Color(0xFFE0483E),
+        surfaceContainerHighest=Color.White, errorContainer=Color(0xFFFBE7E5), onErrorContainer=Color(0xFF1B1F2A))
     MaterialTheme(colorScheme=colors, typography=Typography(
         displayLarge=TextStyle(fontFamily=manrope, fontSize=57.sp), displayMedium=TextStyle(fontFamily=manrope, fontSize=45.sp), displaySmall=TextStyle(fontFamily=manrope, fontSize=36.sp),
         headlineLarge=TextStyle(fontFamily=manrope, fontWeight=FontWeight.ExtraBold, fontSize=32.sp), headlineMedium=TextStyle(fontFamily=manrope, fontWeight=FontWeight.Bold, fontSize=28.sp), headlineSmall=TextStyle(fontFamily=manrope, fontWeight=FontWeight.Bold, fontSize=24.sp),
@@ -75,7 +77,7 @@ enum class ActionStyle { Primary, Secondary, Danger }
 @Composable fun MposDialog(title: String, onClose: () -> Unit, closable: Boolean = true, content: @Composable ColumnScope.() -> Unit) {
     Dialog(onDismissRequest={ if(closable) onClose() }) {
         Surface(shape=RoundedCornerShape(22.dp), color=MaterialTheme.colorScheme.surface) {
-            Column(Modifier.widthIn(max=460.dp).padding(24.dp), verticalArrangement=Arrangement.spacedBy(16.dp)) {
+            Column(Modifier.widthIn(max=460.dp).padding(28.dp), verticalArrangement=Arrangement.spacedBy(16.dp)) {
                 Row(verticalAlignment=Alignment.CenterVertically) {
                     Text(title, Modifier.weight(1f), style=MaterialTheme.typography.titleMedium)
                     MposCloseButton(onClose, closable)

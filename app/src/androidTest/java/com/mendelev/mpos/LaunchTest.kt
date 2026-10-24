@@ -19,9 +19,18 @@ class LaunchTest {
     private fun waitText(text: String) { compose.waitUntil(20_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
     @Test fun catalogSavesAndDraftSurvivesRecreation() {
         waitText("Добавить товар")
+        compose.onNodeWithText("Категории").performClick()
+        compose.onNodeWithText("Создать категорию").performClick()
+        val category="Напитки QA"
+        compose.onNodeWithTag("categoryName").performTextInput(category)
+        compose.onNodeWithText("Сохранить категорию").performClick()
+        waitText("Создать категорию")
+        compose.onNodeWithContentDescription("Закрыть").performClick()
         compose.onNodeWithText("Добавить товар").performClick()
         val name="Чай ${UUID.randomUUID().toString().take(6)}"
         compose.onNodeWithTag("productName").performTextInput(name)
+        compose.onNodeWithText("Без категории").performClick()
+        compose.onNodeWithText(category).performClick()
         compose.onNodeWithTag("productPrice").performTextReplacement("2,50")
         compose.onNodeWithTag("productStock").performScrollTo().performTextReplacement("10")
         compose.activityRule.scenario.recreate()
