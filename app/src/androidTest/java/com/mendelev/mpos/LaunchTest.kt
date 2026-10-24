@@ -21,7 +21,7 @@ class LaunchTest {
         waitText("Добавить товар")
         compose.onNodeWithText("Категории").performClick()
         compose.onNodeWithText("Создать категорию").performClick()
-        val category="Напитки QA"
+        val category="Напитки QA ${UUID.randomUUID().toString().take(6)}"
         compose.onNodeWithTag("categoryName").performTextInput(category)
         compose.onNodeWithText("Сохранить категорию").performClick()
         waitText("Создать категорию")

@@ -18,6 +18,7 @@ class CatalogRulesTest {
         assertThrows(CatalogFailure::class.java) { CatalogRules.name("a".repeat(201)) }
     }
     @Test fun fingerprintsHaveUnambiguousBoundaries() {
+        assertNotEquals(CatalogRules.fingerprint(null), CatalogRules.fingerprint("<null>"))
         assertNotEquals(CatalogRules.fingerprint("ab","c"),CatalogRules.fingerprint("a","bc"))
         assertEquals(CatalogRules.fingerprint("x",null,2),CatalogRules.fingerprint("x",null,2))
     }

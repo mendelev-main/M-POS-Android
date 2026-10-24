@@ -21,7 +21,7 @@ object CatalogRules {
     }
     fun canonical(n: BigDecimal): String = if (n.signum() == 0) "0" else n.stripTrailingZeros().toPlainString()
     fun fingerprint(vararg parts: Any?): String {
-        val bytes = parts.joinToString("") { val s = it?.toString() ?: "<null>"; "${s.length}:$s" }.toByteArray(Charsets.UTF_8)
+        val bytes = parts.joinToString("") { if (it == null) "N;" else { val s = it.toString(); "S${s.length}:$s" } }.toByteArray(Charsets.UTF_8)
         return MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
     }
 }

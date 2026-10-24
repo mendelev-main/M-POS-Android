@@ -26,7 +26,8 @@ class CatalogRepositoryTest {
             val original=input(); repo.saveProduct(original);repo.saveProduct(original)
             assertEquals(1,repo.dao.products().first().size);assertEquals(1,repo.dao.movementCount("p"))
             expectFailure { repo.saveProduct(original.copy(name="Другой")) }
-            repo.saveProduct(input(command="adjust",revision=1,stockRevision=1,stock="8",edited=true))
+            val adjust=input(command="adjust",revision=1,stockRevision=1,stock="8",edited=true)
+            repo.saveProduct(adjust);repo.saveProduct(adjust)
             assertEquals("8",repo.dao.balance("p")!!.quantity);assertEquals(2,repo.dao.movementCount("p"))
             expectFailure { repo.saveProduct(input(command="stale",revision=2,stockRevision=1,stock="5",edited=true,name="Потеря")) }
             assertEquals("Чай",repo.dao.product("p")!!.name);assertEquals("8",repo.dao.balance("p")!!.quantity)
