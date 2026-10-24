@@ -73,7 +73,8 @@ class UpdateHttp(
                     var previous = -1
                     while (true) {
                         currentCoroutineContext().ensureActive()
-                        val count = input.read(buffer)
+                        val count = try { input.read(buffer) }
+                        catch (error: IOException) { throw IOException("APK download interrupted after $written of $expectedBytes bytes", error) }
                         if (count == -1) break
                         written += count
                         require(written <= expectedBytes) { "Размер APK превышает ожидаемый" }

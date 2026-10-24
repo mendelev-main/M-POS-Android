@@ -10,6 +10,10 @@ on:
         description: 'Publish verified APK to the stable tablet update channel'
         type: boolean
         default: false
+      verify_upgrade_from:
+        description: 'Optional previous release tag for a real stable-channel upgrade smoke test'
+        type: string
+        default: ''
       release_notes:
         description: 'Visible changes for tablet users'
         type: string
@@ -177,3 +181,52 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 scripts/publish-release.py --assets build/release-channel
+
+  production-upgrade:
+    needs: [signed-apk, publish]
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_release && inputs.verify_upgrade_from != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: M-POS-Native-${{ needs.signed-apk.outputs.version_name }}
+          path: build/release-channel
+      - name: Download the earlier signed public release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_TAG: ${{ inputs.verify_upgrade_from }}
+        run: |
+          python3 -c 'import os,re; assert re.fullmatch(r"v[0-9][0-9A-Za-z._-]{0,79}", os.environ["BASE_TAG"])'
+          gh release download "$BASE_TAG" --repo mendelev-main/M-POS-Android --pattern mpos-native.apk --dir build/upgrade-base
+          sdkmanager "platforms;android-36" "build-tools;35.0.0"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Actual release-to-release update via public HTTPS channel and system installer
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_c
+          disable-animations: true
+          script: python3 scripts/ci/update-e2e.py --base-apk build/upgrade-base/mpos-native.apk --manifest build/release-channel/update.json
+      - name: Real release upgrade evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: stable-release-upgrade-reports
+          path: app/build/reports/update-e2e/
+          if-no-files-found: warn
+          retention-days: 14

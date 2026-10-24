@@ -103,7 +103,7 @@ class UpdateViewModel(val repository: UpdateRepository) : ViewModel() {
 
     private fun handleError(error: Exception) {
         if (error is CancellationException) throw error
-        // Release diagnostics exclude request URLs and credentials. Fixtures are loopback-only in DEBUG.
+        // Release diagnostics exclude request URLs and credentials. Fixtures are loopback/emulator-host-only in DEBUG.
         Log.w("MposUpdate", "stage=${state.value.stage}; error=${error.javaClass.simpleName}", if (BuildConfig.DEBUG) error else null)
         val message = when (error) {
             is java.net.UnknownHostException -> "Нет соединения с сервером. Проверьте интернет и повторите."

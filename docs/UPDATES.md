@@ -38,7 +38,7 @@ API Github с пользовательским токеном на планше�
 
 ## Проверки
 
-U01–U06 в `harness/build/00.1-updates.md`. JVM tests: версия/identity/minSdk/URL/signers, ограничение manifest, short/oversized body и redirect. Emulator: проверка/загрузка, restart и восстановление готового APK, Cancel, затем реальный системный install 1→2 и сохранение app-private файла. Debug fixture endpoint допускает только loopback и debug signer/package; release его игнорирует.
+U01–U06 в `harness/build/00.1-updates.md`. JVM tests: версия/identity/minSdk/URL/signers, ограничение manifest, short/oversized body и redirect. Emulator: проверка/загрузка, restart и восстановление готового APK, Cancel, затем реальный системный install 1→2 и сохранение app-private файла. Debug fixture endpoint допускает только loopback/фиксированный emulator host 10.0.2.2 и debug signer/package; release его игнорирует.
 
 Physical pending: разрешение неизвестного источника на пользовательском Android/OEM, подтверждение, сохранение будущих Room данных, ограничения корпоративного устройства, отсутствие места и прерывание питания. Emulator evidence не подменяет эти проверки.
 

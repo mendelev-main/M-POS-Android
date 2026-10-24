@@ -50,5 +50,6 @@ class UpdatePolicyTest {
         }
         assertTrue(UpdatePolicy.isLocalUrl("http://127.0.0.1:8765/update.json"))
         assertFalse(UpdatePolicy.isLocalUrl("http://192.168.1.2:8765/update.json"))
+        assertTrue(UpdatePolicy.isLocalUrl("http://10.0.2.2:8765/update.json"))
     }
 }

@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // Test fixture override is restricted to loopback in DEBUG; release never accepts an endpoint from Intent.
+        // Test fixture override is restricted to loopback/emulator host in DEBUG; release never accepts an endpoint from Intent.
         val fixture = if (BuildConfig.DEBUG) intent.getStringExtra("mpos.testUpdateUrl")
             ?.takeIf(UpdatePolicy::isLocalUrl) else null
         setContent { FoundationScreen(fixture) }

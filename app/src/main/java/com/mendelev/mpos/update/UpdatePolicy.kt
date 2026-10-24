@@ -74,7 +74,7 @@ class UpdatePolicy(
     companion object {
         fun isLocalUrl(value: String): Boolean = runCatching {
             val uri = URI(value)
-            uri.scheme == "http" && uri.host in setOf("127.0.0.1", "localhost") &&
+            uri.scheme == "http" && uri.host in setOf("127.0.0.1", "localhost", "10.0.2.2") &&
                 uri.port in 1024..65535 && uri.rawUserInfo == null && uri.rawFragment == null && uri.rawQuery == null
         }.getOrDefault(false)
 
