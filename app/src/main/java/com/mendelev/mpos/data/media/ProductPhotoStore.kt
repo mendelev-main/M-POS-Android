@@ -50,24 +50,35 @@ class ProductPhotoStore(private val root: File, private val checkpoint: (String)
             try { Canvas(flattened).apply { drawColor(Color.WHITE);drawBitmap(decoded,0f,0f,null) } } finally { decoded.recycle() }
             val bytes=try {
                 checkpoint("decoded")
-                var result: ByteArray?=null
-                for(quality in listOf(82,70,55)) {
-                    val output=java.io.ByteArrayOutputStream()
-                    if(!flattened.compress(Bitmap.CompressFormat.JPEG,quality,output)) throw CatalogFailure("photo","Не удалось подготовить фото")
-                    if(output.size()<=600_000) { result=output.toByteArray();break }
-                }
-                result ?: throw CatalogFailure("photo","Не удалось уменьшить фото. Выберите другое изображение")
+                encodeJpeg(flattened)
             } finally { flattened.recycle() }
             val id="${UUID.randomUUID()}.jpg"
             pending=File(staging,"$id.pending")
             FileOutputStream(pending).use { it.write(bytes);it.fd.sync() }
             checkpoint("beforePublish")
             if(!pending.renameTo(file(id))) throw CatalogFailure("photo","Не удалось сохранить файл фото")
-            val directory=Os.open(photos.absolutePath,OsConstants.O_RDONLY or OsConstants.O_DIRECTORY,0)
+            val directory=Os.open(photos.absolutePath,OsConstants.O_RDONLY,0)
             try { Os.fsync(directory) } finally { Os.close(directory) }
             checkpoint("published")
             id
         } finally { source.delete();pending?.delete() }
+    }
+    private fun encodeJpeg(original: Bitmap): ByteArray {
+        var maxDimension=1200
+        repeat(8) {
+            val longest=maxOf(original.width,original.height)
+            val width=maxOf(1,original.width*minOf(longest,maxDimension)/longest)
+            val height=maxOf(1,original.height*minOf(longest,maxDimension)/longest)
+            val bitmap=if(width==original.width && height==original.height) original else Bitmap.createScaledBitmap(original,width,height,true)
+            try {
+                for(quality in listOf(82,70,55)) {
+                    val output=java.io.ByteArrayOutputStream()
+                    if(bitmap.compress(Bitmap.CompressFormat.JPEG,quality,output) && output.size()<=600_000) return output.toByteArray()
+                }
+            } finally { if(bitmap!==original) bitmap.recycle() }
+            maxDimension=maxDimension*3/4
+        }
+        throw CatalogFailure("photo","Не удалось уменьшить фото. Выберите другое изображение")
     }
     fun read(id: String, edge: Int = 256): Bitmap? = synchronized(lock) {
         runCatching {
