@@ -94,3 +94,6 @@ fun quantityCode(unit: QuantityUnit): String = unit.name.lowercase(Locale.ROOT)
 fun unitLabel(code: String): String = when (code) {
     "piece" -> "шт"; "kg" -> "кг"; "g" -> "г"; "l" -> "л"; "ml" -> "мл"; else -> code
 }
+
+
+data class CategoryOrderEntry(val id: String, val revision: Long)

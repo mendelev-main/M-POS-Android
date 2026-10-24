@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -146,14 +147,24 @@ import java.util.UUID
         }
     }
     if(categories && categoryId==null) MposDialog("Категории", { categories=false }, !state.busy) {
-        LazyColumn(Modifier.heightIn(max=300.dp), verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            items(state.categories,key={it.id}) { c ->
+        if(state.error && state.message!=null) MposNotice(state.message!!,true)
+        LazyColumn(Modifier.heightIn(max=300.dp).testTag("categoryList"), verticalArrangement=Arrangement.spacedBy(8.dp)) {
+            itemsIndexed(state.categories,key={_,c -> c.id}) { index,c ->
+                Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                     Text(c.name, Modifier.weight(1f).clickable {
                         if(d!=null) model.change { it.copy(categoryId=c.id) } else filter=c.id
                         categories=false
                     }.padding(vertical=16.dp))
                     MposButton("Изменить", { categoryId=c.id;categoryName=c.name;categoryRevision=c.revision;categoryCommand=UUID.randomUUID().toString() }, enabled=!state.busy, style=ActionStyle.Secondary)
+                }
+                Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                    MposButton("Выше",{model.moveCategory(c.id,-1)},enabled=!state.busy && index>0,style=ActionStyle.Secondary,
+                        modifier=Modifier.testTag("categoryUp:${c.id}"))
+                    MposButton("Ниже",{model.moveCategory(c.id,1)},enabled=!state.busy && index<state.categories.lastIndex,style=ActionStyle.Secondary,
+                        modifier=Modifier.testTag("categoryDown:${c.id}"))
+                }
+                HorizontalDivider()
                 }
             }
         }

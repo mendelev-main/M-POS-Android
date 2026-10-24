@@ -1,6 +1,6 @@
 # M-POS — нативный Android
 
-Новое приложение на Kotlin и Jetpack Compose, Android 9+ (API 28). Поведение переносим поэтапно из [M-POS-Android-Web](https://github.com/mendelev-main/M-POS-Android-Web). WebView и JS runtime в новом приложении не используются.
+Новое приложение на Kotlin и Jetpack Compose, Android 16+ (API 36). Поведение переносим поэтапно из [M-POS-Android-Web](https://github.com/mendelev-main/M-POS-Android-Web). WebView и JS runtime в новом приложении не используются.
 
 **Сейчас:** реализован первый каталог **01a**: категории и простые товары в BYN, поиск/фильтр, редактор остатка без причины, Room ledger/revisions и восстановление черновика. Подключены общие UI-компоненты/Manrope и иконка пользователя. CI-приёмка: [run40085597352](https://github.com/mendelev-main/M-POS-Android/actions/runs/40085597352), Android9/15 и signed release0.1.16.1. Updater00.1 сохранён. **В develop:**01b — единицы, рецептуры и флаги с Room migration/editor; CI-verified Android9/15 ([run40094842882](https://github.com/mendelev-main/M-POS-Android/actions/runs/40094842882)), [контракт01b](docs/CATALOG-01B.md). 01c — модификаторы и фото с миграцией schema3, [контракт01c](docs/CATALOG-01C.md), [CI Android9/15](https://github.com/mendelev-main/M-POS-Android/actions/runs/40098187895). До02 остаются ручной порядок категорий и финальная приёмка01. Продажи пока не реализованы.
 
@@ -12,7 +12,7 @@ Harness — наш рабочий контур для агента: план →
 2. Изучите [план](PLANS.md), [карту переноса](docs/PARITY.md) и файл текущего этапа в `harness/build/`.
 3. Проверка инфраструктуры: `python3 scripts/harness.py preflight` и `python3 -m unittest discover -s scripts/tests -v`.
 4. Android Studio: откройте репозиторий как Gradle project, JDK 17; SDK Platform 36, Build Tools 35.0.0. `python3 scripts/harness.py android` запускает JVM tests, Android lint и debug build. Первый запуск скачивает зависимости.
-5. UI smoke test: запущенный emulator/device API 28+ → `./gradlew connectedDebugAndroidTest`.
+5. UI smoke test: запущенный emulator/device API 36+ → `./gradlew connectedDebugAndroidTest`.
 
 [GitHub Actions](https://github.com/mendelev-main/M-POS-Android/actions) прогоняет проверки, Android tests/lint/debug и emulator smoke; после успешных проверок main — signed release APK. PR из fork не получают signing secrets. Настройка ключа: [docs/RELEASE.md](docs/RELEASE.md). Работа в `develop`, готовый PR → `main`, полный CI и автоматическая публикация после merge; [основной workflow](docs/DEVELOPMENT-WORKFLOW.md). Ручной повторный выпуск требует `publish_release=true`, [инструкция](docs/UPDATES.md).
 

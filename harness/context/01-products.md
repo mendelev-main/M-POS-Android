@@ -39,3 +39,8 @@ Run40097725989/5b13d8d:16 instrumentation passed eachAPI,API28 full updater E2E 
 
 
 Итог01c: eb40b22/[run40098187895](https://github.com/mendelev-main/M-POS-Android/actions/runs/40098187895) — checks/API28/API35 success,23JVM/4Python/16instrumentation/API. Затем2explicit UI tests (Extras+Launch) и updater package replacement на каждомAPI: CATALOG UPDATE PASSED/UPDATE E2E PASSED. KSPschema3 совпадает с Git; screenshots28/35 reviewed. После этого только документация. Native bounded image adapter/GetContent сейчас; Coil/PickVisualMedia target позднее (ADR-006); не считать их установленными. Main/stable/key не менялись. Остаются category order и финальная01/device acceptance;02 не начинать автоматически.
+
+
+## Android16+ и порядок категорий
+
+Новое требование владельца: minSdk36, только emulator36 вместо28/35. Метаданныеrelease и debug fixture36, config/harness/release verifier синхронизированы. Существующая история CI28/35 остаётся историей. P03 reorder: полная CAS list IDs/revisions, atomic dense sort/repeat/audit, append MAX+1 после holes. Tests CategoryOrderTest3+CategoryOrderUiTest1. До02 после финального audit остаются category color/symbol и device acceptance; не заявлять полный Web parity. Контракты docs/ANDROID-SUPPORT.md и docs/CATALOG-ACCEPTANCE.md. НовыйCI пока pending.

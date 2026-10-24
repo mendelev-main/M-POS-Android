@@ -131,7 +131,7 @@ def main():
             signature = subprocess.check_output([str(tools / "apksigner"), "verify", "--print-certs", str(apk)], text=True)
             cert = re.search(r"Signer #1 certificate SHA-256 digest: ([0-9a-f]{64})", signature).group(1)
             manifest = {"schemaVersion": 1, "channel": "stable", "applicationId": PACKAGE, "versionCode": 2,
-                        "versionName": "0.0.2-e2e-debug", "minSdk": 28, "apkUrl": f"http://10.0.2.2:{PORT}/mpos-native.apk",
+                        "versionName": "0.0.2-e2e-debug", "minSdk": 36, "apkUrl": f"http://10.0.2.2:{PORT}/mpos-native.apk",
                         "apkBytes": apk.stat().st_size, "sha256": hashlib.sha256(apk.read_bytes()).hexdigest(),
                         "certificateSha256": cert, "notes": "Проверка обновления с сохранением данных"}
             (folder / "update.json").write_text(json.dumps(manifest))

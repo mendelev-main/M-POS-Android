@@ -33,7 +33,7 @@ Bootstrap 0.1.3.1 не содержит updater. Новую подписанну
 
 Actions → Android → Run workflow → ветка main → `publish_release=true` + описание `release_notes`. Подписанные сборки обычных push/manual с false остаются artifacts, пользовательского обновления не создают.
 
-Порядок: harness/JVM/lint + emulator API 28/35 с self-update → signed APK → verify identity/signature/version → assets → отдельная publish job с contents:write. Все прочие jobs остаются contents:read. Publish скачивает проверенный artifact этого run, сверяет checksum/commit, запрещает движение stable назад, создаёт draft с полным набором assets, только затем публикует latest. Уже выпущенные assets не перезаписываются; новый run/retry даёт новую версию. Прерванный publish может оставить draft — он не предлагается планшетам.
+Порядок: harness/JVM/lint + emulator API36 с self-update → signed APK → verify identity/signature/version → assets → отдельная publish job с contents:write. Все прочие jobs остаются contents:read. Publish скачивает проверенный artifact этого run, сверяет checksum/commit, запрещает движение stable назад, создаёт draft с полным набором assets, только затем публикует latest. Уже выпущенные assets не перезаписываются; новый run/retry даёт новую версию. Прерванный publish может оставить draft — он не предлагается планшетам.
 
 Release `v<versionName>` содержит:
 
@@ -41,16 +41,19 @@ Release `v<versionName>` содержит:
 - `update.json` — schemaVersion/channel/applicationId/versionCode/versionName/minSdk/apkUrl/apkBytes/sha256/certificateSha256/notes/commit;
 - `mpos-native.apk.sha256` — checksum с переносимым именем файла.
 
-Для дополнительной приёмки `verify_upgrade_from=v<предыдущая версия>` запускает после публикации Android 15 smoke: предыдущий production APK устанавливается в emulator, новое обновление обнаруживается по настоящему публичному HTTPS адресу, скачивается, Cancel сохраняет прежнюю версию, повторный install повышает versionCode. Проверяются persisted install receipt и lastChecked; debug endpoint/run-as в этом режиме не используются. Это post-publish проверка канала, а не замена pre-publish gates API 28/35.
+Для дополнительной приёмки `verify_upgrade_from=v<предыдущая версия>` запускает после публикации Android16 smoke: предыдущий production APK устанавливается в emulator, новое обновление обнаруживается по настоящему публичному HTTPS адресу, скачивается, Cancel сохраняет прежнюю версию, повторный install повышает versionCode. Проверяются persisted install receipt и lastChecked; debug endpoint/run-as в этом режиме не используются. Это post-publish проверка канала, а не замена pre-publish gates API36.
 
 API Github с пользовательским токеном на планшете не используется. Latest metadata и APK берутся по публичным HTTPS asset URL. Проблемы GitHub/сети отображаются как временная ошибка с повтором; Google Play для этого канала не требуется.
 
 ## Проверки
 
-Отдельный Actions → **Verify published update channel** → `base_release=v0.1.8.1` проверяет уже опубликованный latest на Android 9/15, без выпуска APK и signing secrets. Driver допускает только emulator serial и отказывается работать с физическим планшетом. [Run 40075276435](https://github.com/mendelev-main/M-POS-Android/actions/runs/40075276435) прошёл на API 28/35: production 1801→1901, публичные HTTPS assets, восстановление загрузки после restart, первое разрешение источника, Cancel/retry, фактическая новая версия, persisted receipt/lastChecked.
+Отдельный Actions → **Verify published update channel** → `base_release=v0.1.8.1` проверяет уже опубликованный latest на Android16, без выпуска APK и signing secrets. Driver допускает только emulator serial и отказывается работать с физическим планшетом. [Run 40075276435](https://github.com/mendelev-main/M-POS-Android/actions/runs/40075276435) прошёл на API 28/35: production 1801→1901, публичные HTTPS assets, восстановление загрузки после restart, первое разрешение источника, Cancel/retry, фактическая новая версия, persisted receipt/lastChecked.
 
 U01–U06 в `harness/build/00.1-updates.md`. JVM tests: версия/identity/minSdk/URL/signers, ограничение manifest, short/oversized body и redirect. Emulator: проверка/загрузка, restart и восстановление готового APK, Cancel, затем реальный системный install 1→2 и сохранение app-private файла. Debug fixture endpoint допускает только loopback/фиксированный emulator host 10.0.2.2 и debug signer/package; release его игнорирует.
 
 Physical pending: разрешение неизвестного источника на пользовательском Android/OEM, подтверждение, сохранение будущих Room данных, ограничения корпоративного устройства, отсутствие места и прерывание питания. Emulator evidence не подменяет эти проверки.
 
 Технические основания: [PackageManager installs permission](https://developer.android.com/reference/android/content/pm/PackageManager#canRequestPackageInstalls()), [FileProvider](https://developer.android.com/reference/androidx/core/content/FileProvider), [Android app updates](https://developer.android.com/google/play/app-updates), [GitHub release assets](https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases).
+
+
+Действующая платформа с24.10.2026 — [Android16+](ANDROID-SUPPORT.md), minSdk36 в новых APK/manifest. Прежняя ветка GET_SIGNATURES для API28/29 удалена; archive signer читается современным PackageInfoFlags. Исторические отчёты выше остаются evidence прежних выпусков, не текущей матрицей.

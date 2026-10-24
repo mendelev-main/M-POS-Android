@@ -168,3 +168,10 @@ Run40097725989/5b13d8d: checks success;16 instrumentation tests passed API28/35 
 
 
 Финальный [run40098187895](https://github.com/mendelev-main/M-POS-Android/actions/runs/40098187895), commit eb40b22: checks job120884740790 success (23JVM/0failures,4Python,lint/assembleDebug). API28 job120884740526 и API35 job120884740685 success:16 instrumentation tests each, включая4Extras media/repository/migration +1ExtrasUI +1legacySession и прежние10. External driver на fresh-installed base проходит2UI setup tests, собирает extras-editor screenshot; затем обаAPI печатают CATALOG UPDATE PASSED (stock8 survived replacement), UPDATE E2E PASSED (check/download/restore/cancel/system install1→2/private data preserved). Signing/publish/production-upgrade skipped на develop. Отчёты test XML/joblogs и KSPschema3 сверены; screenshotextras28/35 просмотрен без перекрытий. Runtime/test после eb40b22 не менялся, финальные изменения docs-only. preflight/4Python/diff проверяются перед финальным push. Физический picker/provider/HEIF/orientation/font scale/low-storage всё ещё device pending; category order и остальная финальная приёмка01 отдельно.01c не публиковался. ADR-006 фиксирует текущий bounded native loader/GetContent и будущий Coil/PickVisualMedia, без заявления о неустановленных dependencies.
+
+
+## 2026-10-24 — Android16+ и manual category order
+
+Владелец изменил целевую платформу: minSdk36, CI emulator36 вместо28/35 (такжеpublished-channel и production upgrade). compileSdk/targetSdk36/BuildTools35.0.0 остаются. config→release manifest minSdk36; verifier проверяет sdkVersion реальногоAPK; harness следит за Gradle/config. Старые manifest читаются наAPI36 для сравнения версий, это не поддержка старых устройств.
+
+P03 reorder implemented: full IDs/revisions CAS, unique list, atomic order/revisions/result/audit, fault seam, append MAX+1 после holes.3 Room tests +1 Compose, stock/categoryId не изменяются. docs/ANDROID-SUPPORT и CATALOG-ACCEPTANCE фиксируют политику/remaining scope. Локальные preflight/4Python/actionlint/diff passed. Android SDK локально отсутствует; новый API36 CI pending. Main/stable не меняем.

@@ -8,7 +8,7 @@ import org.json.JSONObject
 
 data class CatalogEditorSnapshot(val product: ProductEntity, val balance: BalanceEntity?, val components: List<RecipeComponentEntity>, val modifierGroups: List<ModifierGroupInput>)
 
-class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhotoStore? = null, private val afterProductWrite: (() -> Unit)? = null) {
+class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhotoStore? = null, private val afterCategoryOrderWrite: (() -> Unit)? = null, private val afterProductWrite: (() -> Unit)? = null) {
     val dao = db.catalog()
     val products = dao.products()
     val categories = dao.categories()
@@ -108,10 +108,27 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
             val old = dao.category(id)
             if (old?.revision != expectedRevision) throw CatalogFailure("conflict", "Категория изменилась. Откройте её заново")
             if (dao.categoryByKey(key)?.id?.let { it != id } == true) throw CatalogFailure("name", "Такая категория уже существует")
-            val category = CategoryEntity(id, name, key, old?.sortOrder ?: dao.categoryCount(), (old?.revision ?: 0) + 1)
+            val category = CategoryEntity(id, name, key, old?.sortOrder ?: dao.nextCategoryOrder(), (old?.revision ?: 0) + 1)
             if (old == null) dao.insertCategory(category) else dao.updateCategory(category)
             record(commandId, fp, id, "category.save"); id
         }
+    }
+    suspend fun reorderCategories(order: List<CategoryOrderEntry>, commandId: String) = db.withTransaction {
+        val fp=CatalogRules.fingerprint("categoryOrder",*order.flatMap { listOf(it.id,it.revision.toString()) }.toTypedArray())
+        if(repeat(commandId,fp)!=null) return@withTransaction
+        val current=dao.categorySnapshot()
+        if(order.map { it.id }.distinct().size!=order.size || current.map { it.id }.toSet()!=order.map { it.id }.toSet() ||
+            order.any { entry -> current.find { it.id==entry.id }?.revision!=entry.revision })
+            throw CatalogFailure("categoryOrder","Список категорий изменился. Повторите перестановку по обновлённому списку")
+        val byId=current.associateBy { it.id }
+        order.forEachIndexed { index,entry ->
+            val old=byId.getValue(entry.id)
+            if(old.sortOrder!=index) {
+                dao.updateCategory(old.copy(sortOrder=index,revision=old.revision+1))
+                afterCategoryOrderWrite?.invoke()
+            }
+        }
+        record(commandId,fp,"categories","category.reorder")
     }
     suspend fun deleteCategory(id: String, revision: Long, commandId: String) = db.withTransaction {
         val fp = CatalogRules.fingerprint("deleteCategory", id, revision)

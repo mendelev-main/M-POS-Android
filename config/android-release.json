@@ -3,5 +3,6 @@
   "webApplicationId": "com.mendelev.mpos.web",
   "certificateSha256": "d484cd0166df7f043f65c25e058aba4d3a2b59ea058e6f39948e3e5684b12da4",
   "versionCodeFormula": "1000 + GITHUB_RUN_NUMBER * 100 + GITHUB_RUN_ATTEMPT",
-  "versionNameBase": "0.1"
+  "versionNameBase": "0.1",
+  "minSdk": 36
 }

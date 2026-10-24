@@ -55,7 +55,7 @@ data class ProductRow(@Embedded val product: ProductEntity, val quantity: String
 
 @Dao
 interface CatalogDao {
-    @Query("SELECT * FROM categories ORDER BY sortOrder, name") fun categories(): Flow<List<CategoryEntity>>
+    @Query("SELECT * FROM categories ORDER BY sortOrder, name, id") fun categories(): Flow<List<CategoryEntity>>
     @Query("SELECT p.*, COALESCE(b.quantity, '0') AS quantity, COALESCE(b.revision, 0) AS stockRevision, c.name AS categoryName FROM products p LEFT JOIN stock_balances b ON p.id=b.productId LEFT JOIN categories c ON c.id=p.categoryId ORDER BY p.name, p.id")
     fun products(): Flow<List<ProductRow>>
     @Query("SELECT * FROM modifier_groups WHERE ownerId=:id ORDER BY position") suspend fun modifierGroups(id: String): List<ModifierGroupEntity>
@@ -79,6 +79,8 @@ interface CatalogDao {
     @Query("SELECT * FROM operation_results WHERE commandId=:id") suspend fun result(id: String): ResultEntity?
     @Query("SELECT * FROM editor_drafts WHERE id='product'") suspend fun draft(): DraftEntity?
     @Query("SELECT * FROM app_config WHERE id=1") suspend fun config(): ConfigEntity?
+    @Query("SELECT * FROM categories ORDER BY sortOrder, name, id") suspend fun categorySnapshot(): List<CategoryEntity>
+    @Query("SELECT COALESCE(MAX(sortOrder), -1) + 1 FROM categories") suspend fun nextCategoryOrder(): Int
     @Query("SELECT COUNT(*) FROM categories") suspend fun categoryCount(): Int
     @Query("SELECT COUNT(*) FROM products WHERE categoryId=:id") suspend fun categoryUses(id: String): Int
     @Query("SELECT COUNT(*) FROM stock_movements WHERE productId=:id") suspend fun movementCount(id: String): Int

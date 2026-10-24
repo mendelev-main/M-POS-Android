@@ -181,6 +181,19 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
             mutable.update { it.copy(draft=null, busy=false, message="Товар удалён", error=false) }
         }
     }
+    fun moveCategory(id: String, direction: Int) {
+        if(state.value.busy || direction !in listOf(-1,1)) return
+        val current=state.value.categories
+        val index=current.indexOfFirst { it.id==id };val destination=index+direction
+        if(index<0 || destination !in current.indices) return
+        val order=current.toMutableList().apply { val item=removeAt(index);add(destination,item) }
+        val command=UUID.randomUUID().toString()
+        mutable.update { it.copy(busy=true,message=null,field=null) }
+        commands.trySend {
+            withContext(Dispatchers.IO) { repo.reorderCategories(order.map { CategoryOrderEntry(it.id,it.revision) },command) }
+            mutable.update { it.copy(busy=false,message="Порядок категорий сохранён",error=false) }
+        }
+    }
     fun categorySave(id: String, revision: Long?, name: String, commandId: String, done: () -> Unit) {
         if(state.value.busy) return
         mutable.update { it.copy(busy=true, message=null) }

@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.mendelev.mpos"
-        minSdk = 28
+        minSdk = 36
         targetSdk = 36
         versionCode = providers.environmentVariable("MPOS_VERSION_CODE").orElse("1").get().toInt()
         versionName = providers.environmentVariable("MPOS_VERSION_NAME").orElse("0.1.0-dev").get()

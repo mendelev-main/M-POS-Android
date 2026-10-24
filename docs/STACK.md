@@ -8,7 +8,7 @@
 
 | Компонент | Зафиксировано в репозитории | Назначение |
 |---|---|---|
-| Платформа | Android 9+, minSdk 28 | Автономная работа на Android-планшетах |
+| Платформа | Android 16+, minSdk 36 | Автономная работа на Android-планшетах |
 | Язык | Kotlin 2.2.21 | UI, бизнес-логика, данные и платформенные адаптеры |
 | UI | Jetpack Compose, Compose BOM 2025.10.00, Material 3 | Нативные экраны и общие компоненты |
 | Activity | activity-compose 1.11.0, single Activity | Хост Compose и Android lifecycle |
@@ -41,7 +41,7 @@
 | Даты и время | java.time.Instant, ZoneId, Clock через DI | История операций, смены, business day и воспроизводимые тесты | По первой датированной сущности |
 | Защита секретов | Android Keystore + AES-GCM, app-private encrypted payload | Device credentials/Telegram token, когда появятся интеграции | При первом сохраняемом секрете, до 08–09 |
 
-Для всех строк «подключать» конкретные версии выбираются и проверяются в соответствующей реализации. Совместимость проверять с Kotlin 2.2.21, AGP, minSdk 28, KSP, Hilt и Room; версии новых dependencies закреплять через `gradle/libs.versions.toml` при начале 01. Никаких `+`, floating snapshots или незафиксированных обновлений. Если нужна смена сборочной базы — отдельное решение и полный CI.
+Для всех строк «подключать» конкретные версии выбираются и проверяются в соответствующей реализации. Совместимость проверять с Kotlin 2.2.21, AGP, minSdk 36, KSP, Hilt и Room; версии новых dependencies закреплять через `gradle/libs.versions.toml` при начале 01. Никаких `+`, floating snapshots или незафиксированных обновлений. Если нужна смена сборочной базы — отдельное решение и полный CI.
 
 [Рекомендации Android](https://developer.android.com/topic/architecture/recommendations) служат основанием для слоёв, управления состоянием и DI. Для Kotlin используются [coroutines](https://kotlinlang.org/docs/coroutines-guide.html) и [serialization](https://kotlinlang.org/docs/serialization.html); Hilt описан в [официальной документации](https://developer.android.com/training/dependency-injection/hilt-android). Выбор этих компонентов — решение проекта, а не заявление, что Google требует именно весь этот набор.
 
