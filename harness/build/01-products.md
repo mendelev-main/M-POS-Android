@@ -47,4 +47,4 @@
 01c: [контракт modifier/photo](../../docs/CATALOG-01C.md), migrations2→3/1→3, command guards/staging fault tests/UI. РезультатыCI — build-log; физическая приёмка отдельно.
 
 
-Текущая поддержка — [Android16+](../../docs/ANDROID-SUPPORT.md); предыдущие API28/35 evidence исторические. Порядок категорий и [финальный audit](../../docs/CATALOG-ACCEPTANCE.md) добавлены; coreCI36 pending, full01/device ещё не закрыты.
+Текущая поддержка — [Android16+](../../docs/ANDROID-SUPPORT.md); предыдущие API28/35 evidence исторические. Порядок категорий и [финальный audit](../../docs/CATALOG-ACCEPTANCE.md) добавлены; coreCI36 ci-verified20instrumentation/run40099706934, full01/device ещё не закрыты.

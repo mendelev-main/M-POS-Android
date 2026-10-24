@@ -2,9 +2,11 @@
 
 Новое приложение на Kotlin и Jetpack Compose, Android 16+ (API 36). Поведение переносим поэтапно из [M-POS-Android-Web](https://github.com/mendelev-main/M-POS-Android-Web). WebView и JS runtime в новом приложении не используются.
 
-**Сейчас:** реализован первый каталог **01a**: категории и простые товары в BYN, поиск/фильтр, редактор остатка без причины, Room ledger/revisions и восстановление черновика. Подключены общие UI-компоненты/Manrope и иконка пользователя. CI-приёмка: [run40085597352](https://github.com/mendelev-main/M-POS-Android/actions/runs/40085597352), Android9/15 и signed release0.1.16.1. Updater00.1 сохранён. **В develop:**01b — единицы, рецептуры и флаги с Room migration/editor; CI-verified Android9/15 ([run40094842882](https://github.com/mendelev-main/M-POS-Android/actions/runs/40094842882)), [контракт01b](docs/CATALOG-01B.md). 01c — модификаторы и фото с миграцией schema3, [контракт01c](docs/CATALOG-01C.md), [CI Android9/15](https://github.com/mendelev-main/M-POS-Android/actions/runs/40098187895). До02 остаются ручной порядок категорий и финальная приёмка01. Продажи пока не реализованы.
+**Сейчас:** реализован первый каталог **01a**: категории и простые товары в BYN, поиск/фильтр, редактор остатка без причины, Room ledger/revisions и восстановление черновика. Подключены общие UI-компоненты/Manrope и иконка пользователя. CI-приёмка: [run40085597352](https://github.com/mendelev-main/M-POS-Android/actions/runs/40085597352), Android9/15 и signed release0.1.16.1. Updater00.1 сохранён. **В develop:**01b — единицы, рецептуры и флаги с Room migration/editor; CI-verified Android9/15 ([run40094842882](https://github.com/mendelev-main/M-POS-Android/actions/runs/40094842882)), [контракт01b](docs/CATALOG-01B.md). 01c — модификаторы и фото с миграцией schema3, [контракт01c](docs/CATALOG-01C.md), [CI Android9/15](https://github.com/mendelev-main/M-POS-Android/actions/runs/40098187895). Ручной порядок категорий добавлен; актуальная [проверка Android16](https://github.com/mendelev-main/M-POS-Android/actions/runs/40099706934). До02 остаются цвет/символ категорий и [финальная приёмка01](docs/CATALOG-ACCEPTANCE.md). Продажи пока не реализованы.
 
 Harness — наш рабочий контур для агента: план → реализация → проверки → сохранение результата. [Кратко: зачем, как и где](harness/README.md).
+
+Действующая платформа — [Android16+](docs/ANDROID-SUPPORT.md); старые CI-ссылки9/15 ниже описывают историю. Текущая проверка выполняется только наAPI36.
 
 ## Начать работу
 

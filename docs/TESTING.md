@@ -32,3 +32,6 @@ Device checklist 00: установить Web и native release одноврем
 
 
 Проверки01c и границы их доказательств: [CATALOG-01C.md](CATALOG-01C.md). Push develop не запускает CI автоматически, [основной workflow](DEVELOPMENT-WORKFLOW.md).
+
+
+Действующий gate с24.10.2026: Android16/API36, [run40099706934](https://github.com/mendelev-main/M-POS-Android/actions/runs/40099706934).24 JVM,4Python,20instrumentation +2 explicit UI setup +updateE2E. Ранее API28/35 — история; новые тесты на этих ОС не запускаются. Платформа — [ANDROID-SUPPORT.md](ANDROID-SUPPORT.md).

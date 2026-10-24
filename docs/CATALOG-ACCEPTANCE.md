@@ -26,3 +26,6 @@ Native требование P03 из CATALOG-WORKSPACE-SPEC/PRODUCTS-WORKSPACE. 
 Различать текущие контрактные P IDs и расширенный полный Web scope: category color/symbol и другие неперенесённые поля не считать готовыми по факту прохода core tests. Изменение этих полей/будущая схема оформляются отдельным инкрементом до соответствующего UI. Полный этап01 не помечается завершённым одним проходом CI; остаток явно указан здесь и PARITY.
 
 Точная новая Android16 CI evidence — harness/build-log.md. Ранее01a/01b/01c прошли Android9/15 при старой поддерживаемой платформе; новые требования по ANDROID-SUPPORT.md заменяют ту runtime-матрицу, не переписывают исторические результаты.
+
+
+CI-verified на Android16: [run40099706934](https://github.com/mendelev-main/M-POS-Android/actions/runs/40099706934), commit7cf27d9.24 JVM/4Python/lint/assembleDebug и20 instrumentation, включая3CategoryOrderTest+CategoryOrderUiTest. Затем2 explicit UI setup tests и updater E2E с package replacement/data preservation. После проверенного commit — только документы. Category colour/symbol и device criteria остаются открытыми; полное закрытие01 не заявляется.

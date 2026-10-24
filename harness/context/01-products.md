@@ -44,3 +44,6 @@ Run40097725989/5b13d8d:16 instrumentation passed eachAPI,API28 full updater E2E 
 ## Android16+ и порядок категорий
 
 Новое требование владельца: minSdk36, только emulator36 вместо28/35. Метаданныеrelease и debug fixture36, config/harness/release verifier синхронизированы. Существующая история CI28/35 остаётся историей. P03 reorder: полная CAS list IDs/revisions, atomic dense sort/repeat/audit, append MAX+1 после holes. Tests CategoryOrderTest3+CategoryOrderUiTest1. До02 после финального audit остаются category color/symbol и device acceptance; не заявлять полный Web parity. Контракты docs/ANDROID-SUPPORT.md и docs/CATALOG-ACCEPTANCE.md. НовыйCI пока pending.
+
+
+Итог Android16/P03:7cf27d9/run40099706934 checks+emulator36 success,24JVM/4Python/20instrumentation (3orderRoom+1orderCompose).2explicitUI+UpdateE2E passed; signer/archive modern PackageInfoFlags/min36 real APK verified through updater. Новый minSdk36 и матрица36 закреплены, no28/35 jobs. Docs-only после run, main/stable не менялись. Остаток audit:category color/symbol, device/provider/font-scale/low-space before full01.

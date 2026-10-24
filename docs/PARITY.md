@@ -51,3 +51,8 @@ P06 — groups/options/domain checks/selection preview; P08 — private staged p
 
 
 Итог01c: [run40098187895](https://github.com/mendelev-main/M-POS-Android/actions/runs/40098187895), commit eb40b22 — checks/API28/API35 success;23 JVM,4Python,16 instrumentation/API и2 explicit UI setup tests перед внешним updater. Media/DB faults, migration1→3/2→3, stable IDs/draft/session/photo checks passed; оба API: CATALOG UPDATE PASSED и UPDATE E2E PASSED. Schema3 export сверён, screenshots28/35 просмотрены. Новые runtime/test изменения после проверенного commit не вносились. Физический picker/provider/HEIC/font scale и ручной порядок категорий остаются pending; весь01 не закрыт.
+
+
+## Текущая Android16 evidence и P03 order
+
+Владелец изменил minimum на16/API36; oldAPI28/35 runs выше исторические. [run40099706934](https://github.com/mendelev-main/M-POS-Android/actions/runs/40099706934), commit7cf27d9 — checks/emulator36 success,24JVM/4Python/20instrumentation. Core01a–01c regressed на новойплатформе; P03 ручной порядок/reopen/replay/conflicts/actual rollback/concurrent winner и Compose move/recreate ci-verified. Update E2E: actual package replacement1→2/private data preserved/stock8. Signing/publish skipped. [Platform](ANDROID-SUPPORT.md), [оставшиеся acceptance](CATALOG-ACCEPTANCE.md): category color/symbol и физические сценарии не закрыты.
