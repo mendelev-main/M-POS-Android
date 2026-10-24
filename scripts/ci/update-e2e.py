@@ -63,6 +63,34 @@ def launch(fixture=True):
                 raise
 
 
+class UnsafeDeviceError(RuntimeError):
+    pass
+
+
+def require_emulator(serial):
+    if not re.fullmatch(r"emulator-[0-9]+", serial):
+        raise UnsafeDeviceError("This destructive acceptance test may only use a disposable Android Emulator, never a physical tablet")
+
+
+def request_installation():
+    wait_text("^Установить обновление$", click=True)
+    # Production builds must exercise Android's first-time unknown-source permission UI.
+    deadline = time.monotonic() + 45
+    while time.monotonic() < deadline:
+        nodes = ui_nodes()
+        if any(re.search(r"^(Cancel|Отмена)$", node.get("text", ""), re.I) for node in nodes):
+            return
+        if any(re.search(r"Allow from this source|Разрешить установку", node.get("text", ""), re.I) for node in nodes):
+            switches = [node for node in nodes if node.get("checkable") == "true"]
+            if not switches or switches[0].get("checked") != "true":
+                wait_text("Allow from this source|Разрешить установку", click=True)
+            adb("shell", "input", "keyevent", "KEYCODE_BACK")
+            wait_text("^Установить обновление$", click=True)
+            continue
+        time.sleep(1)
+    raise AssertionError("Android installer/permission flow did not open")
+
+
 def main():
     global PACKAGE
     parser = argparse.ArgumentParser()
@@ -72,6 +100,7 @@ def main():
     production = args.base_apk is not None
     if production != (args.manifest is not None):
         parser.error("--base-apk and --manifest must be supplied together")
+    require_emulator(adb("get-serialno").strip())
     if production:
         PACKAGE = "com.mendelev.mpos"
     with tempfile.TemporaryDirectory() as tmp:
@@ -105,7 +134,8 @@ def main():
             threading.Thread(target=server.serve_forever, daemon=True).start()
             adb("uninstall", PACKAGE, check=False)
             adb("install", str(base))
-            adb("shell", "appops", "set", PACKAGE, "REQUEST_INSTALL_PACKAGES", "allow")
+            if not production:
+                adb("shell", "appops", "set", PACKAGE, "REQUEST_INSTALL_PACKAGES", "allow")
             if not production:
                 adb("shell", "run-as", PACKAGE, "mkdir", "-p", "files")
                 adb("shell", "run-as", PACKAGE, "sh", "-c", "'echo preserved-before-update > files/updater-e2e-sentinel'")
@@ -126,11 +156,11 @@ def main():
                 assert f"versionCode={base_code} " in adb("shell", "dumpsys", "package", PACKAGE)
                 wait_text("^Скачать обновление$", click=True)
                 wait_text("Обновление готово к установке")
-            wait_text("^Установить обновление$", click=True)
+            request_installation()
             wait_text("^(Cancel|Отмена)$", click=True)
             wait_text("Установка не завершена")
             assert f"versionCode={base_code} " in adb("shell", "dumpsys", "package", PACKAGE)
-            wait_text("^Установить обновление$", click=True)
+            request_installation()
             wait_text("^(Update|Install|Обновить|Установить)$", click=True)
             deadline = time.monotonic() + 90
             while time.monotonic() < deadline:
@@ -156,6 +186,8 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+    except UnsafeDeviceError:
+        raise
     except Exception:
         reports = ROOT / "app/build/reports/update-e2e"
         reports.mkdir(parents=True, exist_ok=True)
