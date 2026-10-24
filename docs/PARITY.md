@@ -35,3 +35,11 @@ P04/P05/P06/P07/P08, ручной порядок категорий, recipe/modi
 ## Начало01b
 
 P04/P05/P07: реализована часть чистого домена в RecipeCalculator; единицы/yield/вложенность/flags/дефицит/cost. [Контракт и ограничения](CATALOG-01B.md). Room migration/UI ещё pending; полные IDs не закрыты.
+
+
+## 01b — Room/редактор
+
+P04/P05/P07: units/base/display, minimum/packaging, nested recipes/yield/cost, simple stock flags подключены к Room schema2/редактору; migration1→2 и новые Room/Compose tests implemented. P09 дополнен FK/delete guard ингредиента; P10 — expanded draft/reopen/migration fixture. Полные acceptance ещё требуют CI и device evidence; [контракт01b](CATALOG-01B.md), точные результаты в build-log. P06/P08, ручной порядок категорий и physical parity не закрыты.
+
+
+01b CI evidence: [run40094842882](https://github.com/mendelev-main/M-POS-Android/actions/runs/40094842882), commit6acfe83 — checks/API28/API35 success.19 JVM,4 Python,10 instrumentation на каждом API и updater E2E с реальным package replacement. Реализованные части P04/P05/P07 (domain/configuration/editor), P09(recipe delete guard), P10(migration/expanded draft/rollback) — ci-verified. Физическая приёмка, P06/P08 и остальные незакрытые критерии01 остаются pending. После run менялась подпись единицы в поле цены, не бизнес-логика; точное ограничение evidence в CATALOG-01B/build-log.

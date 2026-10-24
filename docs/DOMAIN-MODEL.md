@@ -53,7 +53,7 @@ Quantity = точное decimal значение + unit/dimension. Money calcula
 
 Для Room предлагается каноническая decimal string без exponent/locale (например `0.0004`) с единым converter; в SQL не выполнять SUM/сравнение этих строк как чисел. Агрегаты считаются domain либо отдельным представлением с доказанной точностью. Конкретный converter, предел длины/scale и индексы утверждаются перед первой схемой. `REAL`/Double для точных величин не допускаются.
 
-Нормирование recipeYield может дать бесконечную десятичную дробь (1/3). До 01b нужен fixture, который закрепляет стратегию вычисления/precision и накопления расхода; текущие примеры с конечными дробями не закрывают этот вопрос. Display rounding не изменяет сохранённый расход. Денежные границы скидок/распределений закрываются до 03 отдельно.
+Нормирование recipeYield может дать бесконечную десятичную дробь (1/3). Стратегия/fixtures01b закреплены в [CATALOG-01B.md](CATALOG-01B.md) и RecipeCalculatorTest: точные промежуточные дроби, агрегирование до decimal scale12. Display rounding не изменяет сохранённый расход. Денежные границы скидок/распределений закрываются до 03 отдельно.
 
 ## Остаток, резерв, история
 
@@ -72,4 +72,4 @@ Stock правится в карточке без обязательной пр�
 P10: первая Room schema, export schema, round-trip decimal/IDs, failure transaction, restart. P03/P09: FK/удаление/rename. W03/W04: резерв без двойного расхода. S01–S03: unique commandId, fingerprint conflict, один receipt/ledger effect. I02: baseline invalidation независимо от числового баланса. B02/B05: раздельные версии и поддержанные миграционные пути. Это будущие проверки, пока planned.
 
 
-Уточнение01b: precision для recipeYield закреплена в [CATALOG-01B.md](CATALOG-01B.md): exact rational intermediates, aggregate per ingredient, final scale12 HALF_EVEN; underflow — явная ошибка. Pure ядро реализовано, интеграция/миграция/UI pending.
+Уточнение01b: precision для recipeYield закреплена в [CATALOG-01B.md](CATALOG-01B.md): exact rational intermediates, aggregate per ingredient, final scale12 HALF_EVEN; underflow — явная ошибка. Ядро подключено к Room schema2/редактору; результат CI отражён в build-log.

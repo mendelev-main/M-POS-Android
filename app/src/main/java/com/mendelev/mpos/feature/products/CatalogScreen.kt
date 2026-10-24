@@ -79,7 +79,7 @@ import java.util.UUID
                                     MposButton(state.categories.find { it.id==d.categoryId }?.name ?: "Без категории", { categories=true }, enabled=!state.busy, style=ActionStyle.Secondary)
                                     if(d.categoryId!=null) MposButton("Убрать", { model.change { it.copy(categoryId=null) } }, enabled=!state.busy, style=ActionStyle.Secondary)
                                 }
-                                MposField(d.price, { v -> model.change { it.copy(price=v) } }, "Цена продажи, BYN", Modifier.testTag("productPrice"), !state.busy, true,
+                                MposField(d.price, { v -> model.change { it.copy(price=v) } }, "Цена продажи, BYN за ${unitLabel(d.unit)}", Modifier.testTag("productPrice"), !state.busy, true,
                                     state.message.takeIf { state.field=="Цена" })
                                 ProductConfiguration(model,state,d)
                             }

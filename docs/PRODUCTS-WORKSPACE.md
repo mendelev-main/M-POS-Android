@@ -1,6 +1,6 @@
 # Первые два этапа: требования
 
-Подробные сценарии, native решения и последовательность инкрементов: [CATALOG-WORKSPACE-SPEC.md](CATALOG-WORKSPACE-SPEC.md). Контракты команд и fixtures: [IMPLEMENTATION-CONTRACTS.md](IMPLEMENTATION-CONTRACTS.md). Все P/W пока planned.
+Подробные сценарии, native решения и последовательность инкрементов: [CATALOG-WORKSPACE-SPEC.md](CATALOG-WORKSPACE-SPEC.md). Контракты команд и fixtures: [IMPLEMENTATION-CONTRACTS.md](IMPLEMENTATION-CONTRACTS.md). Текущие статусы и CI evidence01a/01b — в [карте переноса](PARITY.md); полный этап01 и W ещё не закрыты.
 
 ## 01 — товары
 
