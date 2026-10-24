@@ -104,3 +104,13 @@ Verify run40074952217: API35 production success. API28 также прошёл H
 ## 2026-10-24 — требования пользователя: stock editor и общий дизайн
 
 ADR-005 отменил запрет stock в карточке: UI без причины, внутри transactional delta/history/revision; docs/F11–F13 обновлены. По pinned Web описаны Manrope/light-dark/palette/shapes/buttons/dialog/close/input patterns, shared Compose components и DS01–DS07, config/ui-design.json сохраняет source hash/tokens и пока не используется app. Источники CSS изучены, paired screenshot/device evidence pending. Проверки: harness preflight, локальные Markdown links/code fences, JSON tokens/обязательные роли/source SHA и git diff --check — passed. Kotlin/Gradle/APK не менялись.
+
+
+## 2026-10-24 — реализация01a и пользовательская иконка
+
+Commit68e8266/run40082159622: checks success (11 JVM tests, lint/debug build); API28 actual instrumentation5/5 success. E2E driver затем не получил временный window XML на переходе Activity — обработано как transient empty UI, без ослабления проверок приложения.
+
+Финальная реализация commit2d7e707 включает core UI/Manrope/palette, category/simple CRUD, Room schema1, decimal/command/revision, ledger/audit, draft queue и direct stock без причины, application icon. Дополнены category UI, nullable fingerprint, repeated stock adjustment, screenshot capture и реальное сохранение Room продукта через APK replacement. Run40082878290 выполняет checks/API28/API35/sign/publish; доказательство результата добавляется после выполнения. Новые secrets/ключи не создавались.
+
+
+Run40082878290: checks success; API28/35 actual instrumentation5/5 success в каждом. После suite Android UTP удалил target/test packages (подтверждено logcat), поэтому read QA fixture до install был невозможен. Driver теперь после свежего install выполняет один explicit LaunchTest через am instrument (без UTP cleanup), сохраняет реальный продукт/stock8/screenshots и затем проверяет APK replacement. Гейты Room/UI и production security не ослаблены; APK runtime2d7e707 не меняется.

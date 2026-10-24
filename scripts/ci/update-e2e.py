@@ -107,15 +107,6 @@ def main():
     if production:
         PACKAGE = "com.mendelev.mpos"
     expected_product = None
-    if not production:
-        reports = ROOT / "app/build/reports/update-e2e"
-        reports.mkdir(parents=True, exist_ok=True)
-        expected_product = adb("shell", "run-as", PACKAGE, "cat", "files/qa/productName.txt").strip()
-        assert expected_product, "Instrumentation must leave a real catalog record for update acceptance"
-        for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon"):
-            captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
-            assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
-            (reports / f"{name}.png").write_bytes(captured.stdout)
     with tempfile.TemporaryDirectory() as tmp:
         folder = Path(tmp)
         base = folder / "base.apk"
@@ -146,13 +137,25 @@ def main():
         with socketserver.TCPServer(("127.0.0.1", PORT), handler) as server:
             threading.Thread(target=server.serve_forever, daemon=True).start()
             print(f"E2E: install base package {PACKAGE}", flush=True)
-            if production:
-                adb("uninstall", PACKAGE, check=False)
-                adb("install", str(base))
-            else:
-                # Retain the catalog/database created by instrumentation; update must preserve it.
-                adb("shell", "am", "force-stop", PACKAGE)
-                adb("install", "-r", str(base))
+            adb("uninstall", PACKAGE, check=False)
+            adb("install", str(base))
+            if not production:
+                # Gradle UTP uninstalls target/test apps after its suite. Seed via the real UI
+                # under an explicit instrumentation lifetime, then keep the target for replacement.
+                test_apk = ROOT / "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
+                adb("install", "-r", str(test_apk))
+                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.LaunchTest",
+                             PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
+                assert "OK (1 test)" in result and "FAILURES" not in result, result[-4000:]
+                reports = ROOT / "app/build/reports/update-e2e"
+                reports.mkdir(parents=True, exist_ok=True)
+                expected_product = adb("shell", "run-as", PACKAGE, "cat", "files/qa/productName.txt").strip()
+                assert expected_product, "UI setup must create a real catalog record"
+                for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon"):
+                    captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
+                    assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
+                    (reports / f"{name}.png").write_bytes(captured.stdout)
+                adb("uninstall", PACKAGE + ".test")
             if not production:
                 adb("shell", "appops", "set", PACKAGE, "REQUEST_INSTALL_PACKAGES", "allow")
             if not production:
