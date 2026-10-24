@@ -15,6 +15,7 @@
 - Production источник фиксирован: публичный `mendelev-main/M-POS-Android`, стабильные GitHub Releases. Токен GitHub в APK отсутствует.
 - Manifest ограничен 64 KiB; notes — 8000 символов, APK — 200 MiB. Учитываются размер файла, SHA-256, applicationId, versionCode/versionName, minSdk и закреплённый signer.
 - Принимается только APK с versionCode выше установленного. Подмена package на Web, downgrade, другой signer и повреждённая загрузка отвергаются до запуска установщика.
+- На API 28/29 запрос archive включает GET_SIGNATURES вместе с GET_SIGNING_CERTIFICATES, чтобы Android вызвал collectCertificates; сравнение точного текущего signer остаётся обязательным. Основание: [AOSP Android 9 PackageManager](https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-9.0.0_r47/core/java/android/content/pm/PackageManager.java).
 - Runtime проверяет архивные signing metadata через PackageManager; окончательную криптографическую проверку устанавливаемого APK выполняет Android. В CI используется `apksigner verify`.
 - HTTPS и стандартная TLS-проверка; перенаправления ограничены GitHub release asset hosts. Произвольные endpoint/credentials из Intent в release не принимаются.
 - `.part` не устанавливается. Готовый APK и его metadata хранятся в app-private `files/updates`. Metadata пишется атомарно. После restart готовый APK проверяется заново; повреждённый/устаревший удаляется. Незавершённая загрузка начинается заново, HTTP resume не обещается.
