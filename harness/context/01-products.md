@@ -8,3 +8,8 @@ Room2.8.4/KSP2.2.21-2.0.4 выбраны по официальным release not
 
 
 Итог01a: run40085597352/commitd74444c — checks/API28/API35/sign/publish success, stable0.1.16.1/code2601.11 JVM+4Python,5 instrumentation накаждомAPI плюс explicit UI setup/external update. Room product/stock8 пережили заменуAPK. FontVariation.weight задан явно после visual QA, onPrimaryContainer исправлен; screenshot review прошёл. Иконка отрисованаAndroid чётко. Постоянный key/package сохранены. Полный01b/01c/device/visual parity остаются следующими критериями; manual category order ещё planned.
+
+
+## 01b — первый шаг в develop
+
+RecipeCalculator — чистый domain без Android и записи stock. Компоненты в физической единице, Web batch qty не переносить напрямую. Precision: рациональные intermediates, агрегирование перед scale12 HALF_EVEN; zero underflow reject. Детали/оставшиеся зависимости в docs/CATALOG-01B.md. Следующий шаг — schema2 migration1→2 и commands, затем UI.

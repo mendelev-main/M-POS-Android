@@ -134,3 +134,10 @@ Run40084614575/commit95672bf: checks success, API35 полный instrumentation
 По решению владельца: инкременты в develop без push CI; готовый PR — быстрые Android checks, draft пропускается; main — полный emulator/sign/publish. Сохранены signing gates, identity и счётчик android.yml. Однократная активация инфраструктуры без выпуска APK. Локальные результаты проверки записываются после запуска; Android SDK на этом компьютере отсутствует.
 
 Проверено: harness preflight passed; 4 Python tests passed; actionlint android.yml/android-pr.yml и git diff --check без ошибок. Android build/emulator не запускались: runtime не менялся, локально нет SDK.
+
+
+## 2026-10-24 — 01b pure domain, develop
+
+Добавлены RecipeCalculator/QuantityUnit и6 поведенческих тестов: exact conversion, дробный выход/вложенность/агрегирование,0.4г, per-ingredient flags/reservations/cost, invalid graph/input, precision underflow. Начат P04/P05/P07; persistence/migration/UI pending, schema1 не менялась. Источники и precision policy: docs/CATALOG-01B.md. Harness кратко описан в harness/README.md, ссылка из README; исправлено устаревшее описание ручного выпуска в README.
+
+Проверки: harness preflight passed;4 Python tests passed; git diff --check passed. Pure domain отдельно скомпилирован локальным cached Kotlin compiler2.1.20/JDK17 (только дополнительный SDK-free check, не замена закреплённому проектному2.2.21); JUnit4.13.2 RecipeCalculatorTest + CatalogRulesTest: OK(9 tests). Компилятор запущен через org.jetbrains.kotlin.cli.jvm.K2JVMCompiler с Catalog.kt/RecipeCalculator.kt и двумя test sources, output build/recipe-domain-check, затем org.junit.runner.JUnitCore. Полный python3 scripts/harness.py android attempted: wrapper остановлен до сборки — Could not create parent directory for lock file ~/.gradle/wrapper/dists/gradle-8.13-bin/.../gradle-8.13-bin.zip.lck (sandbox). Android SDK также отсутствует. Проектный Gradle/lint/Android и Room/UI tests для01b не заявлены пройденными. Push develop без CI/релиза по принятой политике.

@@ -70,3 +70,6 @@ Stock правится в карточке без обязательной пр�
 ## Минимальные доказательства
 
 P10: первая Room schema, export schema, round-trip decimal/IDs, failure transaction, restart. P03/P09: FK/удаление/rename. W03/W04: резерв без двойного расхода. S01–S03: unique commandId, fingerprint conflict, один receipt/ledger effect. I02: baseline invalidation независимо от числового баланса. B02/B05: раздельные версии и поддержанные миграционные пути. Это будущие проверки, пока planned.
+
+
+Уточнение01b: precision для recipeYield закреплена в [CATALOG-01B.md](CATALOG-01B.md): exact rational intermediates, aggregate per ingredient, final scale12 HALF_EVEN; underflow — явная ошибка. Pure ядро реализовано, интеграция/миграция/UI pending.

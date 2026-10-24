@@ -25,3 +25,6 @@ Native решения для первоначального каталога и 
 ## Перенос Web backup (этап 07)
 
 Не читать sandbox соседнего package. Пользователь выбирает файл через Storage Access Framework. Сначала parse/validate/version/relations/units и preview, затем атомарный импорт в БД с staging для фото. Ошибка не оставляет наполовину импортированные продажи. Администраторская сессия не импортируется. Неизвестные поля/форматы — отчёт, а не молчаливое удаление. Проверить round-trip на синтетических fixtures v13; реальный backup в Git не хранить.
+
+
+Уточнение01b: precision для recipeYield закреплена в [CATALOG-01B.md](CATALOG-01B.md): exact rational intermediates, aggregate per ingredient, final scale12 HALF_EVEN; underflow — явная ошибка. Pure ядро реализовано, интеграция/миграция/UI pending.

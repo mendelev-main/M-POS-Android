@@ -4,6 +4,8 @@
 
 **Сейчас:** реализован первый каталог **01a**: категории и простые товары в BYN, поиск/фильтр, редактор остатка без причины, Room ledger/revisions и восстановление черновика. Подключены общие UI-компоненты/Manrope и иконка пользователя. CI-приёмка: [run40085597352](https://github.com/mendelev-main/M-POS-Android/actions/runs/40085597352), Android9/15 и signed release0.1.16.1. Updater00.1 сохранён. **Далее01b/01c:** единицы, рецептуры, модификаторы и фото; затем02 — рабочая зона. Продажи пока не реализованы.
 
+Harness — наш рабочий контур для агента: план → реализация → проверки → сохранение результата. [Кратко: зачем, как и где](harness/README.md).
+
 ## Начать работу
 
 1. Откройте корень этого репозитория в Codex; прочитайте [AGENTS.md](AGENTS.md).
@@ -12,7 +14,7 @@
 4. Android Studio: откройте репозиторий как Gradle project, JDK 17; SDK Platform 36, Build Tools 35.0.0. `python3 scripts/harness.py android` запускает JVM tests, Android lint и debug build. Первый запуск скачивает зависимости.
 5. UI smoke test: запущенный emulator/device API 28+ → `./gradlew connectedDebugAndroidTest`.
 
-[GitHub Actions](https://github.com/mendelev-main/M-POS-Android/actions) прогоняет проверки, Android tests/lint/debug и emulator smoke; после успешных проверок main — signed release APK. PR из fork не получают signing secrets. Настройка ключа: [docs/RELEASE.md](docs/RELEASE.md). Выпуск обновлений: ручной `publish_release=true`, [инструкция](docs/UPDATES.md).
+[GitHub Actions](https://github.com/mendelev-main/M-POS-Android/actions) прогоняет проверки, Android tests/lint/debug и emulator smoke; после успешных проверок main — signed release APK. PR из fork не получают signing secrets. Настройка ключа: [docs/RELEASE.md](docs/RELEASE.md). Работа в `develop`, готовый PR → `main`, полный CI и автоматическая публикация после merge; [основной workflow](docs/DEVELOPMENT-WORKFLOW.md). Ручной повторный выпуск требует `publish_release=true`, [инструкция](docs/UPDATES.md).
 
 Фундамент первоначально проверен [Actions run](https://github.com/mendelev-main/M-POS-Android/actions/runs/40023385742); механизм обновлений и первый stable APK `0.1.8.1` — [полным run](https://github.com/mendelev-main/M-POS-Android/actions/runs/40071871635). Текущий выпуск — [0.1.16.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.16.1); обновление 0.1.8.1→0.1.9.1 через публичный канал проверено на Android 9/15 в [run 40075276435](https://github.com/mendelev-main/M-POS-Android/actions/runs/40075276435). [Готовые выпуски](https://github.com/mendelev-main/M-POS-Android/releases). Физическая установка и функциональные этапы ещё впереди.
 

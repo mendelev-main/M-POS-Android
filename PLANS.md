@@ -6,7 +6,7 @@
 |---|---|---|---|
 | 00 | Harness, документация, Kotlin bootstrap, Actions, identity/signing | — | ci-verified: checks/emulator/signed APK; device pending |
 | 00.1 | Проверка/скачивание APK, системная установка, GitHub Release канал | 00 | ci-verified API 28/35, production 1801→1901; device pending |
-| 01 | Товары, категории, фото, единицы, рецептуры, модификаторы | 00 | 01a ci-verified API28/35, signed0.1.16.1; 01b/01c planned, device pending |
+| 01 | Товары, категории, фото, единицы, рецептуры, модификаторы | 00 | 01a ci-verified API28/35, signed0.1.16.1; 01b начат: pure domain; Room/UI pending; 01c planned, device pending |
 | 02 | Рабочая зона, раскладка, папки, корзина, текущие/отложенные чеки | 01 | planned |
 | 03 | Минимальная смена03a → оплата, скидки, возврат, история и сохранность | 02 | planned |
 | 04 | Склад, приёмка, поставщики, закупки, инвентаризация | 03 | planned |

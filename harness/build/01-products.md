@@ -1,6 +1,6 @@
 # Этап 01 — Товары
 
-Статус: инкремент01a ci-verified с CI evidence в [CATALOG-01A.md](../../docs/CATALOG-01A.md); полный этап01b/01c planned, device pending
+Статус: инкремент01a ci-verified с CI evidence в [CATALOG-01A.md](../../docs/CATALOG-01A.md); 01b начат (pure domain), Room/UI pending; 01c planned, device pending
 
 ## Объём
 
@@ -39,3 +39,6 @@
 ## Контекст и результат
 
 Значимые решения в `harness/context/01-products.md` при начале работ; наблюдаемые результаты в `harness/build-log.md`.
+
+
+Начало01b: [precision и доменный контракт](../../docs/CATALOG-01B.md). P04/P05/P07 пока частично implemented, migration/UI не закрыты.
