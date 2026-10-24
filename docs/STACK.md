@@ -2,7 +2,7 @@
 
 Решение ADR-002 от 2026-10-24. Цель — самостоятельное нативное Android-приложение на Kotlin с функциональностью [M-POS-Android-Web](https://github.com/mendelev-main/M-POS-Android-Web/tree/1682c88334e6fb13586ce4b530157c59ca062e43): товары, кассовая зона, продажи, склад, смены, клиенты, лояльность, отчёты, оборудование и сайт.
 
-Это выбранный целевой стек. **Установлен bootstrap 00; в 00.1 подключаются обновления:** Lifecycle ViewModel/Compose 2.9.1, core-ktx 1.16.0 и OkHttp 4.12.0, а также org.json/MockWebServer в tests. Остальные будущие компоненты ещё не подключены. Строка «подключить» означает архитектурное решение для будущего этапа, а не наличие зависимости или готовой функции. Функциональное соответствие проверяется по [PARITY.md](PARITY.md), происхождение требований — по [SOURCE.md](SOURCE.md).
+Это выбранный целевой стек. **Установлен bootstrap 00; в 00.1 подключены обновления:** Lifecycle ViewModel/Compose 2.9.1, core-ktx 1.16.0 и OkHttp 4.12.0, а также org.json/MockWebServer в tests. Updater использует платформенный org.json для небольшого release manifest; kotlinx.serialization для предметных DTO остаётся будущим компонентом. Остальные будущие компоненты ещё не подключены. Строка «подключить» означает архитектурное решение для будущего этапа, а не наличие зависимости или готовой функции. Функциональное соответствие проверяется по [PARITY.md](PARITY.md), происхождение требований — по [SOURCE.md](SOURCE.md).
 
 ## 1. Платформа и установленная база
 
@@ -25,8 +25,8 @@
 
 | Область | Выбранная технология | Какую задачу M-POS решает | Когда подключать |
 |---|---|---|---|
-| Экранные состояния | AndroidX Lifecycle ViewModel, StateFlow, lifecycle-aware Compose collection | Состояния каталога, корзины, форм и ошибок; восстановление после смены конфигурации | 01 |
-| Асинхронность | Kotlin Coroutines, Flow, structured concurrency | IO, наблюдение за БД, отмена задач, ограничение времени операций | 01 |
+| Экранные состояния | AndroidX Lifecycle ViewModel, StateFlow, lifecycle-aware Compose collection | Состояния каталога, корзины, форм и ошибок; восстановление после смены конфигурации | 00.1 для updater; 01 для features |
+| Асинхронность | Kotlin Coroutines, Flow, structured concurrency | IO, наблюдение за БД, отмена задач, ограничение времени операций | 00.1 для updater; 01 для features |
 | Навигация | AndroidX Navigation Compose с типизированными routes | Товары, редакторы, рабочая зона, настройки; передача ID записи между экранами | 01, развитие в 02 |
 | Зависимости | Hilt, constructor injection | ViewModel, repositories, DB, workers и замена адаптеров в тестах | 01 |
 | Локальная БД | AndroidX Room поверх SQLite, DAO, transactions, schema export и migrations | Товары, категории, рецептуры; далее чеки, склад, смены, клиенты и outbox | 01 |
@@ -34,7 +34,7 @@
 | Предпочтения | Jetpack DataStore Preferences | Тема, раскладка интерфейса и неоперационные настройки устройства | По первой потребности в 01–02; расширение в 08–09 |
 | JSON | kotlinx.serialization-json и Kotlin serialization plugin | Версионированные DTO, навигация, backup и сетевые контракты | 01; backup в 07, сеть в 08–09 |
 | Изображения | Coil Compose, локальные app-private файлы, Photo Picker/Activity Result APIs | Фото товаров, thumbnails, освобождение ресурсов и отмена загрузки | 01 |
-| HTTP | OkHttp + Okio, типизированные Kotlin API adapters, kotlinx.serialization | Backend HTTPS, Telegram multipart и скачивание файлов | 08–09 |
+| HTTP | OkHttp + Okio, типизированные Kotlin API adapters, kotlinx.serialization | Backend HTTPS, Telegram multipart и скачивание файлов | 00.1 updater; 08–09 integrations |
 | Входящие события | Потоковое чтение OkHttp/Okio + отдельный SSE decoder | Заказы сайта, event/id/retry, Last-Event-ID, reconnect и дедупликация | 09 |
 | Фоновая доставка | WorkManager CoroutineWorker + durable outbox в Room | Повторяемые отправки при восстановлении сети, переживающие restart | 08–09; структура outbox с 03 |
 | Деньги и количества | java.math.BigDecimal, Long minor units, явные value types и converters | Десятичные расчёты без Double, дробный расход ингредиентов | С 01, финансовые правила в 03 |

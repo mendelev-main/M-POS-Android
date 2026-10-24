@@ -18,4 +18,4 @@
 
 ## Инфраструктура обновлений (00.1)
 
-U01–U06: [план](../harness/build/00.1-updates.md), [механизм](UPDATES.md). Native-only возможность, продуктовые P/W acceptance не изменяет. Статус in-progress до CI/e2e evidence.
+U01–U06: [план](../harness/build/00.1-updates.md), [механизм](UPDATES.md). Native-only возможность, продуктовые P/W acceptance не изменяет. Статус ci-verified по run 40071871635 (API 28/35, signed stable release); production-to-production trial и device acceptance фиксируются в build-log.

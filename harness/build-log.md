@@ -65,3 +65,11 @@ Run 40029014261: API 28 download diagnostic показал ProtocolException/une
 API 35 run 40029014261 подтвердил self-install и data sentinel, но e2e driver запустил Activity в промежутке после смены versionCode и до завершения package replacement; screenshot был launcher. Driver теперь повторяет `am start -W` с ограниченным ожиданием видимого приложения. Это не обход installed-version/data проверок.
 
 Run 40071404333: API 35 полный e2e success. Переход fixture на emulator host устранил EOF API 28, затем APK корректно остановился на пустом archive.signingInfo. В AOSP Android 9/10 getPackageArchiveInfo вызывает collectCertificates только при GET_SIGNATURES; исправлен набор flags для API≤29 (GET_SIGNATURES | GET_SIGNING_CERTIFICATES). Signer equality, версия, hash и package gates сохранены. Новый run должен подтвердить API 28 installation.
+
+Run 40071871635 (commit 9ed4ed2120ec528694bd75d173185e4273a3eb61): checks success; оба emulator jobs API 28/35 — success. В каждом пройдены check/download/restart recovery, corruption rejection, Cancel, system self-install 1→2, сохранённый app-private sentinel и сообщение после обновления. Скриншот API 35 просмотрен: версия 2, success receipt, настройки доступны. Signed release/publish проверяются следующими jobs этого же run.
+
+## 2026-10-24 — 00.1, первый полный выпуск
+
+[Run 40071871635](https://github.com/mendelev-main/M-POS-Android/actions/runs/40071871635), commit 9ed4ed2120ec528694bd75d173185e4273a3eb61: checks, emulator API 28/35, signed-apk и publish — success. 8 JVM tests и 3 Python tests, compile/lint, actual debug self-update 1→2 с restart/corruption/Cancel/data sentinel. Signed stable APK 0.1.8.1, versionCode 1801, package com.mendelev.mpos, прежний pinned certificate. Release v0.1.8.1 опубликован с APK/update.json/checksum; анонимный public latest endpoint проверяется отдельно после загрузки assets.
+
+Следующая приёмка: второй выпуск и production-upgrade job из v0.1.8.1 через настоящий HTTPS stable endpoint, без debug hooks. Пользовательский планшет/OEM permission остаётся physical-pending.
