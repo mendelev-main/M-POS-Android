@@ -48,3 +48,6 @@
 
 
 Текущая поддержка — [Android16+](../../docs/ANDROID-SUPPORT.md); предыдущие API28/35 evidence исторические. Порядок категорий и [финальный audit](../../docs/CATALOG-ACCEPTANCE.md) добавлены; coreCI36 ci-verified20instrumentation/run40099706934, full01/device ещё не закрыты.
+
+
+P03 appearance: [цвет/обозначение/schema4](../../docs/CATEGORY-APPEARANCE.md) ci-verified API36/run40101394875/attempt2,26JVM/24instrumentation+2explicitUI/updateE2E; device отдельно.

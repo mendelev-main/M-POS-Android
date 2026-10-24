@@ -8,7 +8,7 @@
 
 | Acceptance IDs | Web features / adapters | Этап | Статус |
 |---|---|---|---|
-| P01–P10 | product-catalog/configuration/persistence/categories, product-photo | 01 | 01a частично ci-verified: simple/category/stock/draft; 01b/01c planned; evidence ниже |
+| P01–P10 | product-catalog/configuration/persistence/categories, product-photo | 01 | Core01a/01b/01c, P03 order/appearance/schema4 ci-verified API36 (run40101394875); device/full01 pending; evidence ниже |
 | W01–W07 | pos.html, cart-composition/presentation, receipts, android-pos-stock | 02 | planned |
 | S01–S05 | payment, receipts, android-safety, stockConsumption | 03 | planned |
 | I01–I04 | inventory, receiving-ui/drafts, purchase-orders, suppliers, warehouse-reporting, android-inventory | 04 | planned |
@@ -56,3 +56,8 @@ P06 — groups/options/domain checks/selection preview; P08 — private staged p
 ## Текущая Android16 evidence и P03 order
 
 Владелец изменил minimum на16/API36; oldAPI28/35 runs выше исторические. [run40099706934](https://github.com/mendelev-main/M-POS-Android/actions/runs/40099706934), commit7cf27d9 — checks/emulator36 success,24JVM/4Python/20instrumentation. Core01a–01c regressed на новойплатформе; P03 ручной порядок/reopen/replay/conflicts/actual rollback/concurrent winner и Compose move/recreate ci-verified. Update E2E: actual package replacement1→2/private data preserved/stock8. Signing/publish skipped. [Platform](ANDROID-SUPPORT.md), [оставшиеся acceptance](CATALOG-ACCEPTANCE.md): category color/symbol и физические сценарии не закрыты.
+
+
+## P03 — цвет и обозначение категории
+
+[run40101394875](https://github.com/mendelev-main/M-POS-Android/actions/runs/40101394875), a19cb3e, attempt2: checks и emulator36 success;26JVM/4Python/lint/assembleDebug,24instrumentation +2explicit UI seed; CATALOG UPDATE PASSED/UPDATE E2E PASSED (1→2, stock8/data preserved). Palette10 из pinned Web, Unicode3 graphemes, preview/selected semantics/Saveable form, rename/order/stable product refs, validation/conflict/replay/actual rollback и migrations1→4/2→4/3→4. Native >3 символов даёт ошибку вместо Web silent truncation; [контракт](CATEGORY-APPEARANCE.md). Visual screenshot reviewed; физическая приёмка/full01 остаются pending.
