@@ -20,6 +20,7 @@ class WorkspaceRepositoryTest {
         val catalog=CatalogRepository(db);catalog.initialize();catalog.saveCategory("c",null,"Напитки","category")
         catalog.saveProduct(input());WorkspaceRepository(db).initialize()
     }
+    private suspend fun WorkspaceRepository.applyCart(action: CartAction,command: String)=cart(action,command,snapshot().cart.sessionId)
     private fun add(id: String="line")=CartAction.Add("tea",1,emptySet(),null,id)
     private suspend fun reject(block: suspend () -> Unit) {try {block();fail("Expected rejection")} catch(_:CatalogFailure) {}}
     @Test fun cartAndLayoutReopenReplayAndDoNotWriteStock() = runBlocking {
@@ -28,7 +29,7 @@ class WorkspaceRepositoryTest {
         var db=open()
         try {
             seed(db);var repo=WorkspaceRepository(db)
-            val action=add();repo.cart(action,"add");repo.cart(action,"add")
+            val action=add();repo.applyCart(action,"add");repo.applyCart(action,"add")
             repo.layout(LayoutAction.SaveFolder("f","c","Популярное"),0,"folder")
             repo.layout(LayoutAction.MoveProduct("tea","f"),1,"move")
             val before=repo.snapshot()
@@ -36,15 +37,15 @@ class WorkspaceRepositoryTest {
             assertEquals(before,repo.snapshot())
             assertEquals("1",before.cart.lines.single().quantity);assertEquals("f",before.layout.first { it.id=="tea" }.folderId)
             assertEquals("20",db.catalog().balance("tea")!!.quantity);assertEquals(1,db.catalog().movementCount("tea"))
-            reject {repo.cart(action.copy(manualPrice="3"),"add")}
-            reject {repo.cart(CartAction.SetQuantity("line","4",0),"stale-cart")}
+            reject {repo.applyCart(action.copy(manualPrice="3"),"add")}
+            reject {repo.applyCart(CartAction.SetQuantity("line","4",0),"stale-cart")}
             reject {repo.layout(LayoutAction.SaveFolder("g","c","Другая"),0,"stale-layout")}
             val product=db.catalog().product("tea")!!
             CatalogRepository(db).saveProduct(input().copy(expectedRevision=product.revision,stockEdited=false,name="Переименован",commandId="rename"))
             val changed=repo.snapshot();assertTrue(CartEngine.stale(changed.cart.lines.single(),changed.products))
             assertEquals("tea",changed.cart.lines.single().name)
-            reject {repo.cart(CartAction.Step("line",1),"stale-increase")}
-            repo.cart(CartAction.Step("line",-1),"remove")
+            reject {repo.applyCart(CartAction.Step("line",1),"stale-increase")}
+            repo.applyCart(CartAction.Step("line",-1),"remove")
             assertTrue(repo.snapshot().cart.lines.isEmpty())
         } finally {db.close();context.deleteDatabase(name)}
     }
@@ -52,9 +53,9 @@ class WorkspaceRepositoryTest {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         try {
             seed(db);val repo=WorkspaceRepository(db)
-            coroutineScope {(1..20).map { n -> async(Dispatchers.IO) {repo.cart(add("line-$n"),"tap-$n")} }.awaitAll()}
+            coroutineScope {(1..20).map { n -> async(Dispatchers.IO) {repo.applyCart(add("line-$n"),"tap-$n")} }.awaitAll()}
             val snap=repo.snapshot();assertEquals("20",snap.cart.lines.single().quantity);assertEquals(20L,snap.cartRevision)
-            reject {repo.cart(add("overflow"),"overflow")}
+            reject {repo.applyCart(add("overflow"),"overflow")}
             assertEquals("20",repo.snapshot().cart.lines.single().quantity)
             assertEquals("20",db.catalog().balance("tea")!!.quantity)
         } finally {db.close()}
@@ -64,11 +65,11 @@ class WorkspaceRepositoryTest {
         try {
             seed(db);val repo=WorkspaceRepository(db);val before=repo.snapshot()
             val failing=WorkspaceRepository(db,afterWrite={throw java.io.IOException("injected")})
-            try {failing.cart(add(),"fault-cart");fail()} catch(_:java.io.IOException) {}
+            try {failing.applyCart(add(),"fault-cart");fail()} catch(_:java.io.IOException) {}
             try {failing.layout(LayoutAction.SaveFolder("f","c","Папка"),0,"fault-layout");fail()} catch(_:java.io.IOException) {}
             assertEquals(before,repo.snapshot());assertNull(db.catalog().result("fault-cart"));assertNull(db.catalog().result("fault-layout"))
             assertEquals(0,db.openHelper.readableDatabase.query("SELECT * FROM audit_events WHERE commandId LIKE 'fault-%'").use {it.count})
-            repo.cart(add(),"fault-cart");assertEquals(1L,repo.snapshot().cartRevision)
+            repo.applyCart(add(),"fault-cart");assertEquals(1L,repo.snapshot().cartRevision)
         } finally {db.close()}
     }
     @Test fun activeCartAndExplicitLayoutProtectCatalogDependencies() = runBlocking {
@@ -76,9 +77,9 @@ class WorkspaceRepositoryTest {
         try {
             val catalog=CatalogRepository(db);catalog.initialize();catalog.saveCategory("c",null,"c","category")
             catalog.saveProduct(input(stock="0").copy(noStockTracking=true))
-            val repo=WorkspaceRepository(db);repo.initialize();repo.cart(add(),"add")
+            val repo=WorkspaceRepository(db);repo.initialize();repo.applyCart(add(),"add")
             reject {catalog.deleteProduct("tea",1,"delete-in-cart")}
-            repo.cart(CartAction.Clear(1),"clear")
+            repo.applyCart(CartAction.Clear(1),"clear")
             repo.layout(LayoutAction.SaveFolder("f","c","Папка"),0,"folder")
             reject {catalog.deleteProduct("tea",1,"delete-in-layout")}
             repo.layout(LayoutAction.ResetProduct("tea"),1,"reset")
@@ -122,7 +123,8 @@ class WorkspaceRepositoryTest {
         try {
             seed(db);val payload="{\"version\":99}"
             db.workspace().put(WorkspaceDocument("current",7,payload))
-            val repo=WorkspaceRepository(db);repo.initialize()
+            val repo=WorkspaceRepository(db)
+            reject {repo.initialize()}
             reject {repo.snapshot()}
             assertEquals(payload,db.workspace().document("current")!!.payload)
             assertEquals(7L,db.workspace().document("current")!!.revision)

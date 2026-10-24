@@ -7,8 +7,8 @@ import org.json.JSONObject
 
 /** Storage-only codecs. An unknown payload never becomes an empty customer order. */
 object WorkspaceCodec {
-    private fun root(raw: String)=JSONObject(raw).also {
-        if(it.getInt("version")!=1) throw CatalogFailure("workspace","Неизвестный формат рабочей зоны")
+    private fun root(raw: String, versions: Set<Int> = setOf(1))=JSONObject(raw).also {
+        if(it.getInt("version") !in versions) throw CatalogFailure("workspace","Неизвестный формат рабочей зоны")
     }
     private fun <T> JSONArray.list(block: (JSONObject)->T): List<T> = (0 until length()).map { block(getJSONObject(it)) }
     private fun objects(values: List<JSONObject>)=JSONArray().also { a -> values.forEach(a::put) }
@@ -18,7 +18,11 @@ object WorkspaceCodec {
     fun layout(raw: String): List<LayoutItem> = root(raw).getJSONArray("items").list {
         LayoutItem(it.getString("type"),it.getString("id"),it.getString("categoryId"),it.getString("folderId"),it.getString("name"))
     }
-    fun cart(cart: CurrentCart): String=JSONObject().put("version",1).put("lines",objects(cart.lines.map { line ->
+    fun cartVersion(raw: String)=root(raw,setOf(1,2)).getInt("version")
+    fun cart(cart: CurrentCart): String=JSONObject().put("version",2).put("sessionId",cart.sessionId).put("createdAt",cart.createdAt)
+        .put("details",JSONObject().put("label",cart.details.label).put("type",cart.details.type).put("comment",cart.details.comment)
+            .put("address",cart.details.address).put("phone",cart.details.phone))
+        .put("lines",objects(cart.lines.map { line ->
         JSONObject().put("id",line.id).put("productId",line.productId).put("name",line.name).put("basePrice",line.basePrice)
             .put("manual",line.manual).put("unitPrice",line.unitPrice).put("quantity",line.quantity).put("unit",line.unit)
             .put("options",objects(line.options.map { JSONObject().put("id",it.id).put("name",it.name).put("quantity",it.quantity).put("priceDelta",it.priceDelta) }))
@@ -35,7 +39,7 @@ object WorkspaceCodec {
         j
     })).toString()
     fun cart(raw: String): CurrentCart {
-        val j=root(raw)
+        val j=root(raw,setOf(1,2))
         val graph=j.getJSONArray("graph").list { p ->
             val id=p.getString("id");val unit=QuantityUnit.valueOf(p.getString("unit"))
             when(p.getString("type")) {
@@ -53,6 +57,17 @@ object WorkspaceCodec {
                 },l.getJSONArray("requests").list {
                     RecipeRequest(it.getString("id"),it.getString("quantity").toBigDecimal(),QuantityUnit.valueOf(it.getString("unit")))
                 },l.getJSONArray("references").list { it.getString("id") to it.getLong("revision") }.toMap())
-        },graph)
+        },graph,sessionId=if(j.getInt("version")==1) "" else j.getString("sessionId").also {
+            if(it.isBlank() || it.length>100) throw CatalogFailure("workspace","Не найден владелец заказа")
+        },createdAt=if(j.getInt("version")==1) 0 else j.getLong("createdAt"),details=if(j.getInt("version")==1) OrderDetails() else j.getJSONObject("details").let {
+            OrderRules.details(OrderDetails(it.getString("label"),it.getString("type"),it.getString("comment"),it.getString("address"),it.getString("phone")))
+        })
     }
+    fun parked(order: ParkedOrder): String=JSONObject().put("version",1).put("parkedAt",order.parkedAt).put("cart",JSONObject(cart(order.cart))).toString()
+    fun parked(id: String, revision: Long, payload: String): ParkedOrder {
+        val j=root(payload);val cart=cart(j.getJSONObject("cart").toString())
+        if(id!="parked:${cart.sessionId}" || cart.lines.isEmpty()) throw CatalogFailure("workspace","Некорректный владелец отложенного заказа")
+        return ParkedOrder(cart.sessionId,revision,cart,j.getLong("parkedAt"))
+    }
+    fun registry(raw: String) { root(raw) }
 }

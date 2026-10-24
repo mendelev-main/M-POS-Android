@@ -35,7 +35,7 @@ class WorkspaceUiTest {
             repo.saveProduct(ProductInput(milk,null,"Молоко POS $suffix",null,"1","1","10",null,true,"ui-milk-$suffix",unit="l",displayUnit="l"))
             repo.saveProduct(ProductInput(coffee,null,name,category,"0","1","0",null,true,"ui-coffee-$suffix",noStockTracking=true,
                 modifierGroups=listOf(ModifierGroupInput("milk-group","Молоко","1","1",listOf(ModifierOptionInput("milk-option",milk,"Молоко","0.1","0.5"))))))
-            val work=WorkspaceRepository(db);work.initialize();work.cart(CartAction.Clear(work.snapshot().cartRevision),"ui-clear-$suffix")
+            val work=WorkspaceRepository(db);work.initialize();work.cart(CartAction.Clear(work.snapshot().cartRevision),"ui-clear-$suffix",work.snapshot().cart.sessionId)
         }
         compose.onNodeWithText("Рабочая зона").performClick();waitText("Текущий заказ")
         lateinit var model: WorkspaceViewModel

@@ -13,19 +13,21 @@ data class CartLine(val id: String, val productId: String, val name: String, val
         CatalogRules.fingerprint(*options.sortedBy { it.id }.flatMap { listOf(it.id,it.quantity,it.priceDelta) }.toTypedArray()),
         CatalogRules.fingerprint(*references.toSortedMap().flatMap { (id,rev) -> listOf(id,rev.toString()) }.toTypedArray()))
 }
-data class CurrentCart(val lines: List<CartLine> = emptyList(), val graph: List<RecipeProduct> = emptyList())
+data class CurrentCart(val lines: List<CartLine> = emptyList(), val graph: List<RecipeProduct> = emptyList(),
+    val sessionId: String = "", val createdAt: Long = 0, val details: OrderDetails = OrderDetails())
 sealed interface CartAction {
     data class Add(val productId: String, val expectedProductRevision: Long, val selected: Set<String>, val manualPrice: String?, val lineId: String): CartAction
     data class Step(val lineId: String, val delta: Int): CartAction
     data class SetQuantity(val lineId: String, val quantity: String, val expectedRevision: Long): CartAction
     data class Remove(val lineId: String): CartAction
+    data class SetDetails(val details: OrderDetails,val expectedRevision: Long): CartAction
     data class Clear(val expectedRevision: Long): CartAction
 }
 object CartEngine {
     fun stale(line: CartLine, products: List<WorkspaceProduct>) = line.references.any { (id,rev) -> products.find { it.id==id }?.revision!=rev }
     fun requests(cart: CurrentCart)=cart.lines.flatMap { line -> line.requests.map { it.copy(quantity=it.quantity*line.quantity.toBigDecimal()) } }
     fun reserved(cart: CurrentCart): Map<String,BigDecimal> = if(cart.lines.isEmpty()) emptyMap() else RecipeCalculator(cart.graph).consumption(requests(cart))
-    private fun remaining(cart: CurrentCart,lines: List<CartLine>)=(if(lines.isEmpty()) CurrentCart() else cart.copy(lines=lines)).also { reserved(it) }
+    private fun remaining(cart: CurrentCart,lines: List<CartLine>)=(if(lines.isEmpty()) cart.copy(lines=emptyList(),graph=emptyList(),details=OrderDetails(),createdAt=0) else cart.copy(lines=lines)).also { reserved(it) }
     fun total(cart: CurrentCart)=cart.lines.fold(BigDecimal.ZERO) { sum,line -> sum+line.unitPrice.toBigDecimal()*line.quantity.toBigDecimal() }
     private fun quantity(raw: String)=CatalogRules.decimal(raw,9,"Количество").also {
         if(it.toBigDecimal().signum()<=0) throw CatalogFailure("quantity","Количество должно быть больше нуля")
@@ -33,14 +35,15 @@ object CartEngine {
     private fun requireFresh(cart: CurrentCart, products: List<WorkspaceProduct>) {
         if(cart.lines.any { stale(it,products) }) throw CatalogFailure("stale","Каталог изменился. Удалите устаревшие позиции и добавьте заново")
     }
-    private fun check(cart: CurrentCart, balances: Map<String,BigDecimal>, products: List<WorkspaceProduct>) {
-        val shortage=RecipeCalculator(cart.graph).shortages(requests(cart),balances).firstOrNull()
+    private fun check(cart: CurrentCart, balances: Map<String,BigDecimal>, products: List<WorkspaceProduct>, reservations: Map<String,BigDecimal>) {
+        val shortage=RecipeCalculator(cart.graph).shortages(requests(cart),balances,reservations).firstOrNull()
         if(shortage!=null) throw CatalogFailure("stock","Недостаточно остатка: ${products.find { it.id==shortage.productId }?.name ?: "Ингредиент недоступен"}")
     }
     fun apply(cart: CurrentCart, action: CartAction, products: List<WorkspaceProduct>, graph: List<RecipeProduct>,
-        balances: Map<String,BigDecimal>): CurrentCart {
+        balances: Map<String,BigDecimal>, reservations: Map<String,BigDecimal> = emptyMap()): CurrentCart {
         when(action) {
             is CartAction.Clear -> return CurrentCart()
+            is CartAction.SetDetails -> return cart.copy(details=OrderRules.details(action.details))
             is CartAction.Remove -> {
                 if(cart.lines.none { it.id==action.lineId }) throw CatalogFailure("conflict","Строка больше не существует")
                 return remaining(cart,cart.lines.filterNot { it.id==action.lineId })
@@ -55,7 +58,7 @@ object CartEngine {
                 if(next.signum()<=0) return remaining(cart,cart.lines.filterNot { it.id==id })
                 val result=cart.copy(lines=cart.lines.map { if(it.id==id) it.copy(quantity=quantity(CatalogRules.canonical(next))) else it })
                 reserved(result) // A decrease may resolve a shortage, but must not silently round a tiny reserve to zero.
-                if(next>line.quantity.toBigDecimal()) { requireFresh(cart,products);check(result,balances,products) }
+                if(next>line.quantity.toBigDecimal()) { requireFresh(cart,products);check(result,balances,products,reservations) }
                 return result
             }
             is CartAction.Add -> {
@@ -85,7 +88,7 @@ object CartEngine {
                 val lines=if(same!=null) cart.lines.map { if(it.id==same.id) it.copy(quantity=quantity(CatalogRules.canonical(it.quantity.toBigDecimal()+BigDecimal.ONE))) else it }
                     else { if(cart.lines.size>=500 || cart.lines.any { it.id==line.id }) throw CatalogFailure("cart","Проверьте число строк заказа");cart.lines+line }
                 val needed=lines.flatMap { it.references.keys }.toSet()
-                return CurrentCart(lines,graph.filter { it.id in needed }.map { if(it is RecipeProduct.Composite) it.copy(components=it.components.toList()) else it }).also { check(it,balances,products) }
+                return cart.copy(lines=lines,graph=graph.filter { it.id in needed }.map { if(it is RecipeProduct.Composite) it.copy(components=it.components.toList()) else it }).also { check(it,balances,products,reservations) }
             }
         }
     }

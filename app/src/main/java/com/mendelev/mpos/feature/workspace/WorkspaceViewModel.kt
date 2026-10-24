@@ -34,7 +34,7 @@ class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
     }
     private fun publish(snap: WorkspaceSnapshot) { mutable.update {
         val old=it.snapshot
-        if(old!=null && (old.cartRevision>snap.cartRevision || old.layoutRevision>snap.layoutRevision)) it
+        if(old!=null && (old.cartRevision>snap.cartRevision || old.layoutRevision>snap.layoutRevision || old.ordersRevision>snap.ordersRevision)) it
         else it.copy(loading=false,snapshot=snap)
     } }
     fun dismiss() { mutable.update { it.copy(message=null) } }
@@ -43,16 +43,34 @@ class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
         mutable.update { it.copy(pending=it.pending+1,message=null) }
         commands.trySend { block();val next=repo.snapshot();publish(next);mutable.update { it.copy(message=null) } }
     }
-    fun add(p: WorkspaceProduct, selected: Set<String> = emptySet(), manual: String? = null, done: () -> Unit = {}) {
-        val action=CartAction.Add(p.id,p.revision,selected.toSet(),manual,UUID.randomUUID().toString());val command=UUID.randomUUID().toString()
-        enqueue { repo.cart(action,command);withContext(Dispatchers.Main) { done() } }
+    private fun cart(action: CartAction, expectedOwner: String? = null, done: () -> Unit = {}) {
+        val owner=expectedOwner ?: state.value.snapshot?.cart?.sessionId ?: return
+        val command=UUID.randomUUID().toString()
+        enqueue { repo.cart(action,command,owner);withContext(Dispatchers.Main) {done()} }
     }
-    fun step(id: String,delta: Int) { val command=UUID.randomUUID().toString();enqueue { repo.cart(CartAction.Step(id,delta),command) } }
-    fun remove(id: String) { val command=UUID.randomUUID().toString();enqueue { repo.cart(CartAction.Remove(id),command) } }
-    fun quantity(id: String,value: String,revision: Long,done: () -> Unit) {
-        val command=UUID.randomUUID().toString();enqueue { repo.cart(CartAction.SetQuantity(id,value,revision),command);withContext(Dispatchers.Main) { done() } }
+    fun add(p: WorkspaceProduct, selected: Set<String> = emptySet(), manual: String? = null, expectedOwner: String? = null, done: () -> Unit = {}) =
+        cart(CartAction.Add(p.id,p.revision,selected.toSet(),manual,UUID.randomUUID().toString()),expectedOwner,done)
+    fun step(id: String,delta: Int,owner: String? = null) = cart(CartAction.Step(id,delta),owner)
+    fun remove(id: String,owner: String? = null) = cart(CartAction.Remove(id),owner)
+    fun quantity(id: String,value: String,revision: Long,owner: String? = null,done: () -> Unit) = cart(CartAction.SetQuantity(id,value,revision),owner,done)
+    fun clear(revision: Long,owner: String? = null) = cart(CartAction.Clear(revision),owner)
+    fun details(details: OrderDetails,revision: Long,owner: String,done: () -> Unit) {
+        val command=UUID.randomUUID().toString()
+        enqueue {repo.cart(CartAction.SetDetails(details,revision),command,owner);withContext(Dispatchers.Main) {done()} }
     }
-    fun clear(revision: Long) { val command=UUID.randomUUID().toString();enqueue { repo.cart(CartAction.Clear(revision),command) } }
+    fun park(label: String,revision: Long,owner: String,done: () -> Unit) {
+        val command=UUID.randomUUID().toString()
+        enqueue {repo.park(revision,owner,label,command);withContext(Dispatchers.Main) {done()} }
+    }
+    fun resume(id: String,parkedRevision: Long,currentRevision: Long,owner: String,label: String? = null,
+        replaceEmptyDetails: Boolean = false,done: () -> Unit) {
+        val command=UUID.randomUUID().toString()
+        enqueue {repo.resume(id,parkedRevision,currentRevision,owner,command,label,replaceEmptyDetails);withContext(Dispatchers.Main) {done()} }
+    }
+    fun deleteParked(id: String,revision: Long,done: () -> Unit) {
+        val command=UUID.randomUUID().toString()
+        enqueue {repo.deleteParked(id,revision,command);withContext(Dispatchers.Main) {done()} }
+    }
     fun layout(action: LayoutAction,revision: Long,done: () -> Unit = {}) {
         val command=UUID.randomUUID().toString();enqueue { repo.layout(action,revision,command);withContext(Dispatchers.Main) { done() } }
     }

@@ -37,3 +37,6 @@ W IDs с tests, rotation/process death и планшетным walkthrough.
 
 
 Итог первого инкремента: [run40106275939](https://github.com/mendelev-main/M-POS-Android/actions/runs/40106275939), commit0e6dd0b: checks/emulator36 success;31JVM/4Python/lint/assembleDebug,31instrumentation (6workspace Room+1workspace UI), затем3explicit UI seed tests. CATALOG UPDATE PASSED/WORKSPACE UPDATE PASSED/UPDATE E2E PASSED: package1→2, stock8 и current cart quantity5/total15 сохранены. Полные W01/W02/W03/W06 и W04/W05/W07 ещё не закрыты; ограничения/следующие части в WORKSPACE-02A.
+
+
+02b: [parked/ownership/metadata](../../docs/WORKSPACE-02B.md) implemented, CI36 pending; Room schema5 не меняется, payload current1→2 мигрирует atomically. W03/W04/W05 проверяются отдельно, full02/revalidation02c не закрыты.

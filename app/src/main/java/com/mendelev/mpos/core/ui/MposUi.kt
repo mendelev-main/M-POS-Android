@@ -95,9 +95,9 @@ enum class ActionStyle { Primary, Secondary, Danger }
 }
 
 @Composable fun MposField(value: String, onChange: (String) -> Unit, label: String, modifier: Modifier = Modifier,
-    enabled: Boolean = true, numeric: Boolean = false, error: String? = null) {
+    enabled: Boolean = true, numeric: Boolean = false, error: String? = null, singleLine: Boolean = true) {
     OutlinedTextField(value=value, onValueChange=onChange, label={ Text(label) }, enabled=enabled,
-        modifier=modifier.fillMaxWidth().heightIn(min=48.dp), shape=RoundedCornerShape(10.dp), singleLine=true,
+        modifier=modifier.fillMaxWidth().heightIn(min=48.dp), shape=RoundedCornerShape(10.dp), singleLine=singleLine, minLines=if(singleLine) 1 else 3, maxLines=if(singleLine) 1 else 5,
         isError=error!=null, supportingText=if(error!=null) {{ Text(error) }} else null,
         keyboardOptions=androidx.compose.foundation.text.KeyboardOptions(keyboardType=if(numeric) androidx.compose.ui.text.input.KeyboardType.Decimal else androidx.compose.ui.text.input.KeyboardType.Text),
         colors=OutlinedTextFieldDefaults.colors(unfocusedBorderColor=MaterialTheme.colorScheme.outline))
