@@ -45,33 +45,35 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Preview(showBackground = true, widthDp = 1000, heightDp = 700)
 @Composable
 fun FoundationScreen(fixtureUrl: String? = null) {
-    var settings by rememberSaveable { mutableStateOf(false) }
+    var route by rememberSaveable { mutableStateOf("catalog") }
     val context = LocalContext.current
     val preferences = context.getSharedPreferences("debugUpdateFixture", MODE_PRIVATE)
     val fixture = if (BuildConfig.DEBUG) fixtureUrl ?: preferences.getString("url", null) else null
     if (BuildConfig.DEBUG && fixtureUrl != null) preferences.edit().putString("url", fixtureUrl).apply()
-    BackHandler(enabled = settings) { settings = false }
-    MaterialTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
-            if (settings) {
-                val model: UpdateViewModel = viewModel(factory = object : ViewModelProvider.Factory {
-                    @Suppress("UNCHECKED_CAST")
-                    override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                        UpdateViewModel(UpdateRepository(context.applicationContext, fixture)) as T
-                })
-                UpdatesScreen(model) { settings = false }
-            } else Column(
-                modifier = Modifier.safeDrawingPadding().padding(32.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(stringResource(R.string.foundation_title), style = MaterialTheme.typography.displayMedium)
-                Text(stringResource(R.string.foundation_status), style = MaterialTheme.typography.titleLarge)
-                Text(stringResource(R.string.foundation_next), style = MaterialTheme.typography.bodyLarge)
-                Button(onClick = { settings = true }) { Text(stringResource(R.string.settings_title)) }
+    BackHandler(enabled = route != "catalog") { route = "catalog" }
+    com.mendelev.mpos.core.ui.MposTheme {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            when (route) {
+                "settings" -> {
+                    val model: UpdateViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            UpdateViewModel(UpdateRepository(context.applicationContext, fixture)) as T
+                    })
+                    UpdatesScreen(model) { route = "catalog" }
+                }
+                "gallery" -> com.mendelev.mpos.feature.products.ComponentGallery { route = "catalog" }
+                else -> {
+                    val model: com.mendelev.mpos.feature.products.CatalogViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            com.mendelev.mpos.feature.products.CatalogViewModel(com.mendelev.mpos.data.local.CatalogRepository(
+                                com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                    })
+                    com.mendelev.mpos.feature.products.CatalogScreen(model, { route = "settings" }, { route = "gallery" })
+                }
             }
         }
     }
