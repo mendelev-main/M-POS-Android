@@ -14,6 +14,10 @@ HTTPS endpoint/device auth, SSE заказы, ручной sync меню/фот�
 
 [Сценарии, отказы и открытые контракты](../../docs/SETTINGS-SITE-SPEC.md); [команды и регрессионные examples](../../docs/IMPLEMENTATION-CONTRACTS.md). Статус planned; описание не является evidence реализации.
 
+## Системные контракты
+
+[Outbox/reconciliation](../../docs/RESILIENCE.md), независимые local/server states из [STATE-MACHINES.md](../../docs/STATE-MACHINES.md); SYS-10/SYS-13.
+
 ## Приёмка
 
 N01: offline/HTTP/abort; N02: SSE reconnect/id/retry; N03: дедупликация заказа; N04: manual sync; N05: локальная касса без сети; N06: backend contract fixtures и staging приёмка.

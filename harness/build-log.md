@@ -89,3 +89,8 @@ Verify run40074952217: API35 production success. API28 также прошёл H
 ## 2026-10-24 — спецификация функциональности перед реализацией
 
 По запросу пользователя расширена документация 01–09: каталог/карточки/единицы/рецепты/фото/модификаторы, persistent cart/резервы/parked, операции склада/продаж/ролей/клиентов/backup/оборудования/сайта. Созданы пять связанных спецификаций, примеры Given/When/Then и команды с transaction/revision/idempotency. Планы и navigation обновлены, native отличия от Web зафиксированы ADR-003. Исходный pin сохранён; все продуктовые IDs planned. APK/бизнес-код не менялись. Проверки этой итерации: `python3 scripts/harness.py preflight`, локальные Markdown links, `git diff --check` — passed. Android tests не запускались: изменена только документация.
+
+
+## 2026-10-24 — системная документация перед кодом
+
+Добавлены логическая модель/версии/ownership, состояния и переходы, границы commit/restart, фото staging, миграции/restore activation, outbox/reconciliation, доступ/аудит и сквозные SYS cases. Связаны планы01/02/03/05/07/09 и существующая спецификация. Открытые gates обозначены явно: деньги каталога, precision при1/3, минимальная смена до05, окончательные роли, backend и restore protocols. Источник Web pin сохранён; продуктовые IDs planned. APK/код/dependencies не менялись. Проверки: `python3 scripts/harness.py preflight`, локальные Markdown links, парность code fences новых документов и `git diff --check` — passed. Android checks не запускались: изменена только документация.

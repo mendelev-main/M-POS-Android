@@ -14,6 +14,10 @@
 
 [Сценарии, отказы и открытые контракты](../../docs/OPERATIONS-SPEC.md); [команды и регрессионные examples](../../docs/IMPLEMENTATION-CONTRACTS.md). Статус planned; описание не является evidence реализации.
 
+## Системные gates
+
+Перед кодом определить минимальные правила активной смены до полного этапа05, денежную policy, outcome внешнего платежа и поддерживаемый объём возврата. См. [состояния](../../docs/STATE-MACHINES.md), [commit/recovery](../../docs/RESILIENCE.md), [gates](../../docs/SYSTEM-ACCEPTANCE.md). Ссылка на будущий05 не разрешает молча создать фиктивную смену.
+
 ## Приёмка
 
 S01: commit атомарен; S02: повтор idempotent; S03: historical refund; S04: decimal rounding/split; S05: история после restart.

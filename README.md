@@ -25,6 +25,7 @@
 - [Цели и границы](GOALS.md), [этапы](PLANS.md), [запросы для агента](PROMPTS.md).
 - [Harness](harness/README.md), [журнал проверок](harness/build-log.md).
 - [Источник и происхождение](docs/SOURCE.md), [требования товаров и кассы](docs/PRODUCTS-WORKSPACE.md).
+- [Модель данных](docs/DOMAIN-MODEL.md), [состояния](docs/STATE-MACHINES.md), [восстановление](docs/RESILIENCE.md), [доступ/аудит](docs/ACCESS-AND-AUDIT.md), [системная приёмка](docs/SYSTEM-ACCEPTANCE.md).
 - [Технологический стек](docs/STACK.md), [архитектура](docs/ARCHITECTURE.md), [данные и расчёты](docs/DATA.md), [тестирование](docs/TESTING.md).
 - [Обновление с планшета](docs/UPDATES.md).
 - [Открытые решения](docs/DECISIONS.md), [сборки и подпись](docs/RELEASE.md).

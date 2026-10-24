@@ -14,6 +14,10 @@
 
 [Сценарии и инкременты](../../docs/CATALOG-WORKSPACE-SPEC.md), [контракты и fixtures](../../docs/IMPLEMENTATION-CONTRACTS.md). Взять первый незакрытый инкремент; полный диапазон acceptance не считать выполненным после одного шага.
 
+## Системные контракты
+
+[OrderSession переходы](../../docs/STATE-MACHINES.md), reservation ownership и revision из [модели](../../docs/DOMAIN-MODEL.md); SYS-02/SYS-03 и failure/restart cases. Revalidation не уничтожает draft.
+
 ## Приёмка
 
 W IDs с tests, rotation/process death и планшетным walkthrough.

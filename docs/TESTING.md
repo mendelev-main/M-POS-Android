@@ -1,5 +1,7 @@
 # Проверки и приёмка
 
+Сквозные маршруты SYS-01–SYS-13, проектные RES/ACC cases и gates: [SYSTEM-ACCEPTANCE.md](SYSTEM-ACCEPTANCE.md), [RESILIENCE.md](RESILIENCE.md), [ACCESS-AND-AUDIT.md](ACCESS-AND-AUDIT.md). Это будущие проверки, не прошедшие тесты.
+
 | Уровень | Что доказывает | Когда |
 |---|---|---|
 | Harness preflight | Документы/ссылки, skills, планы, package и native граница | Каждый PR/push |

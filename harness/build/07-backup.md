@@ -14,6 +14,10 @@
 
 [Сценарии, отказы и открытые контракты](../../docs/OPERATIONS-SPEC.md); [команды и регрессионные examples](../../docs/IMPLEMENTATION-CONTRACTS.md). Статус planned; описание не является evidence реализации.
 
+## Системные контракты
+
+[Restore activation/миграции](../../docs/RESILIENCE.md), отдельные версии APK/schema/format и сверка pending effects; SYS-09/SYS-12.
+
 ## Приёмка
 
 B01: malformed отказ без потери данных; B02: roundtrip; B03: dangling фото; B04: disk-full/interrupt/restart; B05: unknown versions.
