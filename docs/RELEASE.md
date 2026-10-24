@@ -27,13 +27,13 @@ python3 scripts/install-signing-secrets.py --source /absolute/private/path/crede
 
 ## Workflow
 
-PR/push main/manual: harness + tooling tests; Android JVM tests/lint/debug build; отдельная emulator job запускает реальный Compose smoke и recreate. В01a добавлены catalog JVM/Room/Compose tests и проверка сохранения Room через APK replacement. Все actions закреплены по commit SHA.
+Работа ведётся в `develop` по [основному workflow](DEVELOPMENT-WORKFLOW.md). Push в develop не запускает Android CI. Готовый PR в main: harness, tooling tests, JVM tests/lint/debug build; draft PR пропускает Android job. Push main/manual: полные проверки и отдельная emulator job запускает реальный Compose smoke и recreate. В01a добавлены catalog JVM/Room/Compose tests и проверка сохранения Room через APK replacement. Все actions закреплены по commit SHA.
 
 Signed job зависит от обеих jobs и запускается только main, не PR. Сначала проверяются наличие secrets, JKS/alias/password, восстановление private key и совпадение сертификата; затем assembleRelease и `apksigner verify` + проверка package/version/certificate. Artifact загружается только после verifier, содержит APK и checksum. Reports — отдельные artifacts, ключ в них не входит. Ключ временно в RUNNER_TEMP и удаляется always. Скрипты не выводят приватные ошибки keytool.
 
 `versionCode = 1000 + run_number * 100 + run_attempt`, `versionName = 0.1.<run>.<attempt>`; retry 1..99, run до 20000000, предел Android проверен tooling tests. Версия растёт при каждом run/retry. Не пересоздавать/переименовывать workflow со сбросом счётчика без новой версии, превышающей все опубликованные APK. Локальная debug версия 1 и другой package.
 
-Без GitHub Secrets release job завершается ошибкой и не публикует неподписанный APK. Fork PR выполняет код без secrets; не использовать pull_request_target для untrusted PR. По обычным push APK доступен как Actions artifact 30 дней. Для выпуска в канал планшетов используйте ручной `publish_release=true`: [механизм обновления](UPDATES.md). После всех проверок отдельная job публикует draft с APK/manifest/checksum, затем включает stable latest; каждую промежуточную сборку пользователям не предлагаем.
+Без GitHub Secrets release job завершается ошибкой и не публикует неподписанный APK. Fork PR выполняет код без secrets; не использовать pull_request_target для untrusted PR. После push в main проверенный APK доступен как artifact 30 дней и автоматически публикуется в канал планшетов. Ручной запуск по умолчанию только проверяет/собирает; для ручного выпуска требуется `publish_release=true`: [механизм обновления](UPDATES.md). После всех проверок отдельная job публикует draft с APK/manifest/checksum, затем включает stable latest; каждую промежуточную сборку пользователям не предлагаем.
 
 ## Физическая проверка
 

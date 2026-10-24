@@ -127,3 +127,10 @@ Run40084614575/commit95672bf: checks success, API35 полный instrumentation
 [Run40085597352](https://github.com/mendelev-main/M-POS-Android/actions/runs/40085597352), commitd74444c: checks/API28/API35/signed-apk/publish success.11 JVM и4Python;5 instrumentation наAPI28/35. Оба external E2E подтвердили CATALOG UPDATE PASSED (Room product/stock8), затем UPDATE E2E PASSED (check/download/restore/corruption/Cancel/system install1→2). Stablev0.1.16.1/code2601. СкачанныйAPK2669060bytes совпал с manifest SHA256/size/package/version/cert pin. PNGcatalog/editor/dialog/icon просмотрены; исправлены тонкий variable font и Material-purple panel. Иконка не обрезана; full physical parity pending.
 
 Паритет повышен только для реализованных частей01a/P01/P02/P03/P09/P10; весь01 не закрыт. Рецептуры/единицы/модификаторы/фото и ручная перестановка категорий впереди. До release новые ключи не создавались. Локальные финальные docs/preflight/link/diff checks фиксируются в этой итерации; Android SDK локально отсутствует, evidence толькоCI.
+
+
+## 2026-10-24 — основной workflow develop → main
+
+По решению владельца: инкременты в develop без push CI; готовый PR — быстрые Android checks, draft пропускается; main — полный emulator/sign/publish. Сохранены signing gates, identity и счётчик android.yml. Однократная активация инфраструктуры без выпуска APK. Локальные результаты проверки записываются после запуска; Android SDK на этом компьютере отсутствует.
+
+Проверено: harness preflight passed; 4 Python tests passed; actionlint android.yml/android-pr.yml и git diff --check без ошибок. Android build/emulator не запускались: runtime не менялся, локально нет SDK.

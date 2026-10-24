@@ -3,7 +3,11 @@ name: Android
 on:
   push:
     branches: [main]
-  pull_request:
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "harness/**"
+      - ".agents/**"
   workflow_dispatch:
     inputs:
       publish_release:
@@ -163,7 +167,7 @@ jobs:
 
   publish:
     needs: signed-apk
-    if: github.event_name == 'workflow_dispatch' && inputs.publish_release && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish_release))
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
