@@ -29,6 +29,7 @@ class LaunchTest {
         waitText("Создать категорию")
         compose.onNodeWithContentDescription("Закрыть").performClick()
         compose.onNodeWithText("Добавить товар").performClick()
+        CatalogUiTestSupport.waitEditor(compose)
         val name="Чай ${UUID.randomUUID().toString().take(6)}"
         compose.onNodeWithTag("productName").performTextInput(name)
         compose.onNodeWithText("Без категории").performClick()
@@ -41,6 +42,7 @@ class LaunchTest {
         compose.onNodeWithTag("saveProduct").performClick()
         waitText("Добавить товар")
         compose.onNodeWithText(name).performClick()
+        CatalogUiTestSupport.waitEditor(compose)
         compose.onNodeWithTag("productStock").performScrollTo().performTextReplacement("8")
         compose.onNodeWithTag("saveProduct").performClick()
         waitText("8 шт")

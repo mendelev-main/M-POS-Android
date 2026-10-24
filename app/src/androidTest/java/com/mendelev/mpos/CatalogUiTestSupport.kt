@@ -1,12 +1,16 @@
 package com.mendelev.mpos
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.mendelev.mpos.feature.products.CatalogViewModel
 
 /** A failed preceding UI test must not supply its unfinished editor to another test. */
 object CatalogUiTestSupport {
+    fun waitEditor(compose: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>,MainActivity>) {
+        compose.waitUntil(20_000) { compose.onAllNodesWithTag("productName").fetchSemanticsNodes().isNotEmpty() }
+    }
     fun prepare(compose: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>,MainActivity>) {
         lateinit var model: CatalogViewModel
         compose.runOnIdle { model=ViewModelProvider(compose.activity)[CatalogViewModel::class.java] }

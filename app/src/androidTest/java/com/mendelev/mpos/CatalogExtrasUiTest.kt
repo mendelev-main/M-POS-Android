@@ -27,10 +27,12 @@ class CatalogExtrasUiTest {
         val suffix=UUID.randomUUID().toString().take(6)
         val milk="Молоко $suffix";val coffee="Кофе $suffix"
         compose.onNodeWithText("Добавить товар").performClick()
+        CatalogUiTestSupport.waitEditor(compose)
         compose.onNodeWithTag("productName").performTextInput(milk)
         compose.onNodeWithTag("saveProduct").performClick()
         waitText("Добавить товар")
         compose.onNodeWithText("Добавить товар").performClick()
+        CatalogUiTestSupport.waitEditor(compose)
         compose.onNodeWithTag("productName").performTextInput(coffee)
         compose.onNodeWithTag("productPrice").performTextReplacement("3")
         compose.onNodeWithText("Добавить группу").performScrollTo().performClick()
@@ -71,6 +73,7 @@ class CatalogExtrasUiTest {
         compose.onNodeWithTag("saveProduct").performClick()
         waitText("Добавить товар")
         compose.onNodeWithText(coffee).performClick()
+        CatalogUiTestSupport.waitEditor(compose)
         compose.waitUntil(20_000) { model.state.value.draft!=null && !model.state.value.busy }
         assertEquals(prepared,model.state.value.draft!!.photoId)
         assertEquals(groupId,model.state.value.draft!!.modifierGroups.single().id)
@@ -80,6 +83,7 @@ class CatalogExtrasUiTest {
         compose.onNodeWithText("Отбросить").performClick()
         waitText("Добавить товар")
         compose.onNodeWithText(coffee).performClick()
+        CatalogUiTestSupport.waitEditor(compose)
         compose.waitUntil(20_000) { model.state.value.draft!=null && !model.state.value.busy }
         assertEquals(prepared,model.state.value.draft!!.photoId)
         compose.onNodeWithText("Назад").performClick()
