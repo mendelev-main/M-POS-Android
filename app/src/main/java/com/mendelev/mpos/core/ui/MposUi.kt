@@ -6,7 +6,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
@@ -113,4 +113,26 @@ enum class ActionStyle { Primary, Secondary, Danger }
 @Composable fun MposNavigationAction(label: String, onClick: () -> Unit) {
     TextButton(onClick=onClick, modifier=Modifier.heightIn(min=48.dp), shape=RoundedCornerShape(100.dp),
         colors=ButtonDefaults.textButtonColors(contentColor=Color.White)) { Text(label) }
+}
+
+/** Shared select and flag controls: the same button shape, text and hit area in all editors. */
+@Composable fun MposSelect(label: String, value: String, options: List<Pair<String, String>>,
+    onChange: (String) -> Unit, enabled: Boolean = true, modifier: Modifier = Modifier) {
+    var expanded by remember { mutableStateOf(false) }
+    Column(modifier) {
+        Text(label, style=MaterialTheme.typography.labelMedium)
+        Box {
+            MposButton(options.find { it.first == value }?.second ?: value, { expanded=true }, enabled=enabled, style=ActionStyle.Secondary)
+            DropdownMenu(expanded=expanded, onDismissRequest={expanded=false}, modifier=Modifier.heightIn(max=300.dp)) {
+                options.forEach { (key, text) -> DropdownMenuItem(text={Text(text)}, onClick={expanded=false;onChange(key)}) }
+            }
+        }
+    }
+}
+
+@Composable fun MposFlag(label: String, checked: Boolean, onChange: (Boolean) -> Unit, enabled: Boolean = true) {
+    Row(Modifier.fillMaxWidth().heightIn(min=48.dp), verticalAlignment=Alignment.CenterVertically) {
+        Text(label, Modifier.weight(1f), style=MaterialTheme.typography.bodyMedium)
+        Switch(checked=checked, onCheckedChange=onChange, enabled=enabled)
+    }
 }

@@ -21,6 +21,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.data.local.CategoryEntity
 import com.mendelev.mpos.domain.catalog.CatalogRules
+import com.mendelev.mpos.domain.catalog.unitLabel
+import com.mendelev.mpos.domain.catalog.quantityUnit
 import java.util.UUID
 
 @Composable fun CatalogScreen(model: CatalogViewModel, onSettings: () -> Unit, onGallery: () -> Unit) {
@@ -57,7 +59,7 @@ import java.util.UUID
                 MposButton("Назад", { closeEditor() }, enabled=!state.busy, style=ActionStyle.Secondary)
                 Column(Modifier.weight(1f)) {
                     Text(if(d.expectedRevision==null) "Новый товар" else "Карточка товара", style=MaterialTheme.typography.titleLarge)
-                    Text("Простой товар · BYN · шт", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${if(d.type=="simple") "Простой" else "Составной"} товар · BYN · ${unitLabel(d.displayUnit)}", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 MposButton("Сохранить", model::save, busy=state.busy, modifier=Modifier.testTag("saveProduct"))
             }
@@ -79,11 +81,7 @@ import java.util.UUID
                                 }
                                 MposField(d.price, { v -> model.change { it.copy(price=v) } }, "Цена продажи, BYN", Modifier.testTag("productPrice"), !state.busy, true,
                                     state.message.takeIf { state.field=="Цена" })
-                                MposField(d.cost, { v -> model.change { it.copy(cost=v) } }, "Себестоимость, BYN за шт", Modifier.testTag("productCost"), !state.busy, true,
-                                    state.message.takeIf { state.field=="Себестоимость" })
-                                MposField(d.stock, { v -> model.change { it.copy(stock=v,stockEdited=true) } }, "Остаток, шт", Modifier.testTag("productStock"), !state.busy, true,
-                                    state.message.takeIf { state.field=="Остаток" })
-                                Text("Остаток можно изменить без указания причины. История изменений сохраняется автоматически.", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                                ProductConfiguration(model,state,d)
                             }
                         }
                         if(d.expectedRevision!=null) MposButton("Удалить товар", { confirmDelete=true }, enabled=!state.busy, style=ActionStyle.Danger)
@@ -92,7 +90,7 @@ import java.util.UUID
                         Column(Modifier.padding(24.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
                             Text("Цена продажи", style=MaterialTheme.typography.labelMedium)
                             Text("${d.price} BYN", style=MaterialTheme.typography.titleLarge)
-                            Text(if(d.price.trim() in listOf("0","0,00","0.00")) "Ручная цена при добавлении в заказ" else "Цена за одну штуку", style=MaterialTheme.typography.bodySmall)
+                            Text(if(d.price.trim() in listOf("0","0,00","0.00")) "Ручная цена при добавлении в заказ" else "Цена за ${unitLabel(d.unit)}", style=MaterialTheme.typography.bodySmall)
                             Text("Сохранение выполняется локально", style=MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -120,7 +118,8 @@ import java.util.UUID
                                     Text(row.product.name, fontWeight=FontWeight.Bold)
                                     Text(row.categoryName ?: "Без категории", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
-                                Text("${row.quantity} шт", style=MaterialTheme.typography.bodyMedium)
+                                Text(if(row.product.type=="composite") "По составу" else if(row.product.noStockTracking) "Без учёта" else
+                                    "${CatalogRules.canonical(quantityUnit(row.product.unit).convert(row.quantity.toBigDecimal(),quantityUnit(row.product.displayUnit)))} ${unitLabel(row.product.displayUnit)}", style=MaterialTheme.typography.bodyMedium)
                                 Text("${row.product.price} BYN", fontWeight=FontWeight.Bold)
                             }
                         }

@@ -8,6 +8,7 @@ class CatalogRepository(private val db: CatalogDatabase, private val afterProduc
     val dao = db.catalog()
     val products = dao.products()
     val categories = dao.categories()
+    val components = dao.components()
     suspend fun initialize() { dao.config(ConfigEntity(registerId = UUID.randomUUID().toString(), ownerId = UUID.randomUUID().toString())) }
     private suspend fun repeat(command: String, fingerprint: String): String? = dao.result(command)?.let {
         if (it.fingerprint != fingerprint) throw CatalogFailure("conflict", "Команда уже использована для другого изменения")
@@ -25,15 +26,41 @@ class CatalogRepository(private val db: CatalogDatabase, private val afterProduc
             val old = dao.product(input.id)
             if (old?.revision != input.expectedRevision) throw CatalogFailure("conflict", "Товар изменился. Перечитайте карточку перед сохранением")
             if (input.categoryId != null && dao.category(input.categoryId) == null) throw CatalogFailure("category", "Категория больше не существует")
+            if (old != null && (old.type != input.type || old.unit != input.unit))
+                throw CatalogFailure("type", "Тип и базовая единица уже назначены. Создайте отдельный товар")
             val balance = dao.balance(input.id)
             if (old != null && input.stockEdited && balance?.revision != input.expectedStockRevision)
                 throw CatalogFailure("conflict", "Остаток изменился. Перечитайте карточку: введённое значение не сохранено")
-            val product = ProductEntity(input.id, input.categoryId, input.name, CatalogRules.key(input.name), input.price, input.cost, (old?.revision ?: 0) + 1)
+            val display = quantityUnit(input.displayUnit); val base = quantityUnit(input.unit)
+            fun baseQuantity(value: String) = CatalogRules.canonical(display.convert(value.toBigDecimal(), base)).also {
+                val n = it.toBigDecimal()
+                if (n.scale() > 12 || n.precision() - n.scale() > 18) throw CatalogFailure("precision", "Количество вне допустимой точности склада")
+            }
+            val baseCost = CatalogRules.canonical(input.cost.toBigDecimal().divide(display.convert(java.math.BigDecimal.ONE, base)))
+            if (baseCost.toBigDecimal().scale() > 12) throw CatalogFailure("precision", "Себестоимость вне допустимой точности")
+            val product = ProductEntity(input.id, input.categoryId, input.name, CatalogRules.key(input.name), input.price, baseCost,
+                (old?.revision ?: 0) + 1, unit=input.unit, type=input.type, displayUnit=input.displayUnit,
+                noStockTracking=input.noStockTracking, allowNegativeStock=input.allowNegativeStock,
+                minimumStock=input.minimumStock?.let(::baseQuantity), purchaseLabel=input.purchaseLabel,
+                packSize=input.packSize?.let(::baseQuantity), recipeYield=input.recipeYield)
             if (old == null) dao.insertProduct(product) else dao.updateProduct(product)
             afterProductWrite?.invoke() // fault seam: rollback must be proved against the actual Room transaction.
-            if (old == null || input.stockEdited) {
-                val target = input.stock.toBigDecimal(); val delta = target - (balance?.quantity?.toBigDecimal() ?: java.math.BigDecimal.ZERO)
-                val next = BalanceEntity(input.id, input.stock, (balance?.revision ?: 0) + if (delta.signum() != 0 || old == null) 1 else 0)
+            dao.clearRecipe(input.id)
+            val nextComponents = input.components.mapIndexed { index, c ->
+                RecipeComponentEntity(input.id, index, c.productId, c.quantity, c.unit)
+            }
+            val graph = recipeSnapshot(dao.allProducts(), dao.allComponents() + nextComponents)
+            val calculator = RecipeCalculator(graph)
+            // Validate every root: changing a nested yield/unit must not break an existing parent recipe.
+            graph.filterIsInstance<RecipeProduct.Composite>().forEach {
+                val request = listOf(RecipeRequest(it.id, java.math.BigDecimal.ONE, it.unit))
+                calculator.consumption(request); calculator.cost(request)
+            }
+            dao.insertComponents(nextComponents)
+            if (input.type == "simple" && (old == null || input.stockEdited)) {
+                val targetText = baseQuantity(input.stock)
+                val target = targetText.toBigDecimal(); val delta = target - (balance?.quantity?.toBigDecimal() ?: java.math.BigDecimal.ZERO)
+                val next = BalanceEntity(input.id, targetText, (balance?.revision ?: 0) + if (delta.signum() != 0 || old == null) 1 else 0)
                 if (balance == null) dao.insertBalance(next) else dao.updateBalance(next)
                 if (delta.signum() != 0) dao.movement(MovementEntity(UUID.randomUUID().toString(), input.id, CatalogRules.canonical(delta),
                     if (old == null) "opening" else "product_card", input.commandId, System.currentTimeMillis()))
@@ -67,7 +94,8 @@ class CatalogRepository(private val db: CatalogDatabase, private val afterProduc
         val fp = CatalogRules.fingerprint("deleteProduct", id, revision)
         if (repeat(commandId, fp) != null) return@withTransaction
         if (dao.product(id)?.revision != revision) throw CatalogFailure("conflict", "Товар изменился")
+        if (dao.recipeUses(id) > 0) throw CatalogFailure("used", "Товар используется в рецептуре: сначала измените состав")
         if (dao.movementCount(id) > 0) throw CatalogFailure("used", "Есть складская история: удалить товар нельзя")
-        dao.deleteBalance(id); dao.deleteProduct(id); dao.clearDraft(); record(commandId, fp, id, "product.delete")
+        dao.clearRecipe(id); dao.deleteBalance(id); dao.deleteProduct(id); dao.clearDraft(); record(commandId, fp, id, "product.delete")
     }
 }

@@ -30,10 +30,57 @@ data class ProductInput(
     val id: String, val expectedRevision: Long?, val name: String, val categoryId: String?,
     val price: String, val cost: String, val stock: String, val expectedStockRevision: Long?,
     val stockEdited: Boolean, val commandId: String,
+    val type: String = "simple", val unit: String = "piece", val displayUnit: String = unit,
+    val noStockTracking: Boolean = false, val allowNegativeStock: Boolean = false,
+    val minimumStock: String? = null, val purchaseLabel: String = "", val packSize: String? = null,
+    val recipeYield: String = "1", val components: List<IngredientInput> = emptyList(),
 ) {
-    fun validated(): ProductInput = copy(name = CatalogRules.name(name),
-        price = CatalogRules.decimal(price, 2, "Цена"), cost = CatalogRules.decimal(cost, 8, "Себестоимость"),
-        stock = CatalogRules.decimal(stock, 9, "Остаток"))
-    fun fingerprint(): String = CatalogRules.fingerprint(id, expectedRevision, name, categoryId, price, cost,
-        if (stockEdited || expectedRevision == null) stock else null, expectedStockRevision, stockEdited)
+    fun validated(): ProductInput {
+        if (type !in listOf("simple", "composite")) throw CatalogFailure("type", "Выберите тип товара")
+        val base = quantityUnit(unit); val display = quantityUnit(displayUnit)
+        display.convert(BigDecimal.ONE, base)
+        val stockValue = stock.trim().replace(',', '.')
+        val negative = stockValue.startsWith('-')
+        val validatedStock = CatalogRules.decimal(stockValue.removePrefix("-"), 12, "Остаток")
+        if (negative && (stockEdited || expectedRevision == null) && !allowNegativeStock)
+            throw CatalogFailure("Остаток", "Для отрицательного остатка разрешите продажу в минус")
+        if (purchaseLabel.length > 100) throw CatalogFailure("pack", "Название упаковки: до 100 символов")
+        val normalized = copy(name = CatalogRules.name(name), price = CatalogRules.decimal(price, 2, "Цена"),
+            cost = if (type == "simple") CatalogRules.decimal(cost, 12, "Себестоимость") else "0",
+            stock = if (negative && validatedStock != "0") "-$validatedStock" else validatedStock,
+            minimumStock = minimumStock?.takeIf { it.isNotBlank() }?.let { CatalogRules.decimal(it, 12, "Минимум") },
+            packSize = packSize?.takeIf { it.isNotBlank() }?.let { CatalogRules.decimal(it, 12, "Упаковка") },
+            purchaseLabel = purchaseLabel.trim(), recipeYield = CatalogRules.decimal(recipeYield, 12, "Выход"),
+            components = components.map { it.copy(quantity = CatalogRules.decimal(it.quantity, 12, "Ингредиент")) })
+        if (normalized.packSize?.toBigDecimal()?.signum() == 0) throw CatalogFailure("pack", "Размер упаковки должен быть больше нуля")
+        if (type == "composite") {
+            if (noStockTracking || allowNegativeStock || minimumStock != null || packSize != null || purchaseLabel.isNotBlank())
+                throw CatalogFailure("type", "Складские параметры доступны только простому товару")
+            if (normalized.recipeYield.toBigDecimal().signum() <= 0 || components.isEmpty())
+                throw CatalogFailure("recipe", "Задайте положительный выход и состав")
+        } else if (components.isNotEmpty()) throw CatalogFailure("recipe", "Простой товар не может иметь состав")
+        return normalized
+    }
+    fun fingerprint(): String {
+        val legacy = arrayOf(id, expectedRevision, name, categoryId, price, cost,
+            if (stockEdited || expectedRevision == null) stock else null, expectedStockRevision, stockEdited)
+        // Existing completed 01a commands remain replayable after migration.
+        if (type == "simple" && unit == "piece" && displayUnit == "piece" && !noStockTracking && !allowNegativeStock &&
+            minimumStock == null && purchaseLabel.isEmpty() && packSize == null && recipeYield == "1" && components.isEmpty())
+            return CatalogRules.fingerprint(*legacy)
+        return CatalogRules.fingerprint(*legacy, type, unit, displayUnit, noStockTracking, allowNegativeStock,
+            minimumStock, purchaseLabel, packSize, recipeYield,
+            *components.flatMap { listOf(it.productId, it.quantity, it.unit) }.toTypedArray())
+    }
+
+}
+
+data class IngredientInput(val productId: String, val quantity: String, val unit: String)
+
+fun quantityUnit(code: String): QuantityUnit = QuantityUnit.entries.find { it.name.lowercase(Locale.ROOT) == code }
+    ?: throw CatalogFailure("unit", "Выберите единицу измерения")
+
+fun quantityCode(unit: QuantityUnit): String = unit.name.lowercase(Locale.ROOT)
+fun unitLabel(code: String): String = when (code) {
+    "piece" -> "шт"; "kg" -> "кг"; "g" -> "г"; "l" -> "л"; "ml" -> "мл"; else -> code
 }

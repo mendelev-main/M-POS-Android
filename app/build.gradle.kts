@@ -41,6 +41,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+    sourceSets.getByName("androidTest").assets.srcDir("$projectDir/schemas")
     buildFeatures { compose = true; buildConfig = true }
     defaultConfig {
         buildConfigField("String", "UPDATE_CERT_SHA256", "\"d484cd0166df7f043f65c25e058aba4d3a2b59ea058e6f39948e3e5684b12da4\"")
