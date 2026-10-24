@@ -21,3 +21,6 @@
 - [Android applicationId](https://developer.android.com/build/configure-app-module).
 - [Подпись APK](https://developer.android.com/studio/publish/app-signing).
 - [AGP 8.13: JDK/Gradle/SDK compatibility](https://developer.android.com/build/releases/agp-8-13-0-release-notes).
+
+
+Уточнение модульных паспортов2026-10-24: дополнительно прочитаны suppliers/delete guards, purchase-orders/receiving draft, shifts totals/cash handlers, analyticsOrders/analyticsData и hall-bookings/bookingOverlap/saveNewBooking из того же pin. Выбранные native правила и открытые контракты указаны в WAREHOUSE-SPEC, MANAGEMENT-REPORTS-SPEC, CUSTOMERS-HALL-SPEC. Это чтение исходников, не запуск/верификация Web; небезопасные literal credentials из Web не переносятся.

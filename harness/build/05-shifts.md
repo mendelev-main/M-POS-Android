@@ -18,6 +18,10 @@
 
 [Доступ/аудит](../../docs/ACCESS-AND-AUDIT.md), runtime session и проверка capabilities в команде; [системные gates](../../docs/SYSTEM-ACCEPTANCE.md).
 
+## Модульная детализация
+
+[Контракты инкремента](../../docs/MANAGEMENT-REPORTS-SPEC.md); [карта модулей](../../docs/MODULES.md), [порядок/документационные gates](../../docs/DOCUMENTATION-PLAN.md).
+
 ## Приёмка
 
 H01: повтор закрытия не дублирует; H02: деньги сверены; H03: use-case permissions; H04: admin session не переживает restart.

@@ -18,6 +18,10 @@
 
 До 01a: [модель/типы](../../docs/DOMAIN-MODEL.md), явная денежная единица цены, decimal limits и первая Room schema. До 01b: precision при неконечном делении recipeYield. Миграции/фото fault cases — [RESILIENCE.md](../../docs/RESILIENCE.md); приёмка SYS-01/SYS-02.
 
+## Модульная детализация
+
+[Контракты инкремента](../../docs/FOUNDATION-CONTRACTS.md); [карта модулей](../../docs/MODULES.md), [порядок/документационные gates](../../docs/DOCUMENTATION-PLAN.md).
+
 ## Приёмка
 
 Все P IDs с JVM/Room/UI evidence; фото и restart на устройстве.

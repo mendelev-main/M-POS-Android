@@ -50,7 +50,7 @@ Sale Committed не возвращается в draft. Ошибка печати
 
 ## Смена и инвентаризация
 
-Shift: Closed/нет активной → Open → Closed. Закрытие сериализуется с sale/наличными движениями, финальный snapshot включает определённый набор committed операций. Повтор CloseShift возвращает прежний итог. В 03 до появления полной модели 05 должен быть явный согласованный режим эксплуатации, а не скрытая фиктивная смена; зависимость продаж/смены закрывается перед 03.
+Shift: Closed/нет активной → Open → Closed. Закрытие сериализуется с sale/наличными движениями, финальный snapshot включает определённый набор committed операций. Повтор CloseShift возвращает прежний итог. Минимальная смена теперь запланирована в03a до продажи, full управление остаётся05; [план](DELIVERY-ROADMAP.md). Single-owner не подменяется скрытой фиктивной сменой; cash/refund formulas утверждаютсяD02.
 
 Inventory: Draft → Counting → Completed либо CancelledRemainder. Строка Uncounted → Counted(baseline) → Applied(documentId). Из Counted при stale baseline — RequiresRecount, без движения. После restart незавершённый физический подсчёт требует повторного ввода baseline (native перенос Web safety). Applied неизменна; отмена остатка сохраняет applied историю. Повтор applied command не корректирует stock снова.
 

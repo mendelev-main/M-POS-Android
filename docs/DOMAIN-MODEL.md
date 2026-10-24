@@ -63,6 +63,8 @@ Reservation — потребность current/parked, не StockMovement. До�
 
 Физическое удаление запрещено при исторических/активных ссылках. Для UI отключение/архивирование требует отдельного контракта, не каскадного удаления receipts/movements. Фото истории включается в snapshot только если это действительно нужно; вечное хранение всех версий изображений не предполагается автоматически.
 
+Для01a денежная единицаBYN подтверждена пользователем; candidate схемы, converter bounds и input limits в [FOUNDATION-CONTRACTS.md](FOUNDATION-CONTRACTS.md). До01b/03 остаются отдельные precision/rounding gates.
+
 ## Минимальные доказательства
 
 P10: первая Room schema, export schema, round-trip decimal/IDs, failure transaction, restart. P03/P09: FK/удаление/rename. W03/W04: резерв без двойного расхода. S01–S03: unique commandId, fingerprint conflict, один receipt/ledger effect. I02: baseline invalidation независимо от числового баланса. B02/B05: раздельные версии и поддержанные миграционные пути. Это будущие проверки, пока planned.

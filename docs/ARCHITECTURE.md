@@ -6,6 +6,8 @@
 
 Решение ADR-001, 2026-10-23: Kotlin, Jetpack Compose Material 3, single Activity; offline-first. Минимум Android 9/API 28 как в Web. UI ориентирован на планшет, адаптивен к доступной ширине; landscape — основной сценарий приёмки, ориентацию жёстко не фиксируем.
 
+Границы21 логической области и отличие от Gradle modules: [MODULES.md](MODULES.md).
+
 Сейчас один `:app` и bootstrap без бизнес-данных. В этапе 01 добавляем разделение `feature/products`, `domain`, `data/local`; отдельные Gradle modules выделяем при реальной необходимости. Не создаём заранее пустые модули всех функций.
 
 Целевая структура: Compose → ViewModel (immutable UiState/действия, StateFlow) → use cases → repository → Room. Доменные расчёты на чистом Kotlin с JVM tests, без Android Context. Room — единственный владелец локальных продуктов, продаж, движений, сессий и durable outbox; DataStore для неоперационных предпочтений. Фото — app-private files с ID/metadata, системные pickers. DB migrations с тестами, destructive fallback запрещён для рабочих данных.

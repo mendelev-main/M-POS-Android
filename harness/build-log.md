@@ -94,3 +94,8 @@ Verify run40074952217: API35 production success. API28 также прошёл H
 ## 2026-10-24 — системная документация перед кодом
 
 Добавлены логическая модель/версии/ownership, состояния и переходы, границы commit/restart, фото staging, миграции/restore activation, outbox/reconciliation, доступ/аудит и сквозные SYS cases. Связаны планы01/02/03/05/07/09 и существующая спецификация. Открытые gates обозначены явно: деньги каталога, precision при1/3, минимальная смена до05, окончательные роли, backend и restore protocols. Источник Web pin сохранён; продуктовые IDs planned. APK/код/dependencies не менялись. Проверки: `python3 scripts/harness.py preflight`, локальные Markdown links, парность code fences новых документов и `git diff --check` — passed. Android checks не запускались: изменена только документация.
+
+
+## 2026-10-24 — карта модулей и граница достаточной документации
+
+Добавлены21 логический паспорт, dependency/rollout plan,8 пакетов документации, контракт01a с выбранной пользователемBYN/schema candidate/validation/F01–F10, подробные warehouse/management/reporting/customer/hall specs. Минимальная смена03a явно поставлена передsale, складское ядро начинается01a. Архитектура initial:app сохранена. Семь поздних пакетов не блокируют01a; first code по отдельной задаче пользователя. Проверки: `python3 scripts/harness.py preflight`, локальные Markdown links, парность code fences, уникальность21 module IDs/8 package IDs и `git diff --check` — passed. Android tests не запускались: docs-only. APK/бизнес-код не менялись, parity planned.

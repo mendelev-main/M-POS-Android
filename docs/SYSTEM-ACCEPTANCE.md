@@ -34,10 +34,10 @@ Emulator API 28/35 — текущая база CI. Физический план
 
 | Gate | Что закрыть | Где записать |
 |---|---|---|
-| 01a | limits полей, decimal converter/пределы, initial currency policy, Room schema, single-owner граница | context01 + schema/fixtures |
+| 01a | BYN подтверждена, limits/converter/scope candidate заданы; оформить реальную schema/совместимые versions/fixtures при реализации | [FOUNDATION-CONTRACTS.md](FOUNDATION-CONTRACTS.md) + code review |
 | 01b | precision при recipeYield=3, стоимость вложенности, graph limits | domain fixtures + [DATA.md](DATA.md) |
 | 02 | layout hierarchy, stable merge key, revalidation/reservation ownership | context02 + JVM/Room examples |
-| 03 | денежная policy, способ/части оплаты/возврата, минимальные правила активной смены до полноценного05 | ADR + S04 fixtures + изменение плана при необходимости |
+| 03 | денежная policy, способ/части оплаты/возврата, минимальная смена03a до полноценного05, cash/refund contractD02 | ADR + S04 fixtures + изменение плана при необходимости |
 | 04/05 | valuation закупки, baseline lifecycle; роли, бизнес-день/закрытие | context04/05 + I/H fixtures |
 | 06 | consent и server loyalty/offline rules | product decision + fake contract |
 | 07 | форматы/replace-merge/activation checkpoints, поведение pending external effects | B fixtures + restore protocol |

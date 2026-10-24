@@ -14,6 +14,10 @@
 
 [Сценарии, отказы и открытые контракты](../../docs/OPERATIONS-SPEC.md); [команды и регрессионные examples](../../docs/IMPLEMENTATION-CONTRACTS.md). Статус planned; описание не является evidence реализации.
 
+## Модульная детализация
+
+[Контракты инкремента](../../docs/CUSTOMERS-HALL-SPEC.md); [карта модулей](../../docs/MODULES.md), [порядок/документационные gates](../../docs/DOCUMENTATION-PLAN.md).
+
 ## Приёмка
 
 C01: валидация контакта; C02: gift не поглощает доставку/другие строки; C03: outbox повтор; C04: роли/согласия; C05: booking conflicts.

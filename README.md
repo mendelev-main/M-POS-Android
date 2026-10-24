@@ -20,6 +20,8 @@
 
 ## Навигация
 
+- [21 логический модуль и зависимости](docs/MODULES.md), [порядок построения](docs/DELIVERY-ROADMAP.md), [сколько документации осталось](docs/DOCUMENTATION-PLAN.md), [контракт первого01a](docs/FOUNDATION-CONTRACTS.md).
+
 - [Функциональная спецификация и маршрут реализации](docs/FUNCTIONAL-SPEC.md).
 
 - [Цели и границы](GOALS.md), [этапы](PLANS.md), [запросы для агента](PROMPTS.md).
