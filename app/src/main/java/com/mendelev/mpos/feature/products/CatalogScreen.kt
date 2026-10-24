@@ -39,13 +39,13 @@ import java.util.UUID
     BackHandler(enabled=state.draft!=null) { closeEditor() }
     val d = state.draft
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        Surface(color=MaterialTheme.colorScheme.surface) {
+        Surface(color=androidx.compose.ui.graphics.Color(0xFF22273A), contentColor=androidx.compose.ui.graphics.Color.White) {
             Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=12.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(10.dp)) {
                 Text("M-POS", style=MaterialTheme.typography.titleLarge)
-                Text("Локальный владелец", Modifier.weight(1f), style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Локальный владелец", Modifier.weight(1f), style=MaterialTheme.typography.bodySmall, color=androidx.compose.ui.graphics.Color.White.copy(alpha=0.62f))
                 if(d==null) {
-                    MposButton("Компоненты", onGallery, style=ActionStyle.Secondary)
-                    MposButton("Настройки", onSettings, style=ActionStyle.Secondary)
+                    if(com.mendelev.mpos.BuildConfig.DEBUG) MposNavigationAction("Компоненты", onGallery)
+                    MposNavigationAction("Настройки", onSettings)
                 }
             }
         }

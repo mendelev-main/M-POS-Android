@@ -26,7 +26,9 @@ def adb(*args, check=True, timeout=45):
 
 def ui_nodes():
     adb("shell", "uiautomator", "dump", "/sdcard/update-window.xml", check=False)
-    raw = adb("shell", "cat", "/sdcard/update-window.xml")
+    raw = adb("shell", "cat", "/sdcard/update-window.xml", check=False)
+    if "<?xml" not in raw:
+        return []  # UIAutomator may not produce a window during a process/Activity transition.
     return list(ET.fromstring(raw[raw.index("<?xml"):]).iter("node"))
 
 
@@ -104,6 +106,16 @@ def main():
     require_emulator(adb("get-serialno").strip())
     if production:
         PACKAGE = "com.mendelev.mpos"
+    expected_product = None
+    if not production:
+        reports = ROOT / "app/build/reports/update-e2e"
+        reports.mkdir(parents=True, exist_ok=True)
+        expected_product = adb("shell", "run-as", PACKAGE, "cat", "files/qa/productName.txt").strip()
+        assert expected_product, "Instrumentation must leave a real catalog record for update acceptance"
+        for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon"):
+            captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
+            assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
+            (reports / f"{name}.png").write_bytes(captured.stdout)
     with tempfile.TemporaryDirectory() as tmp:
         folder = Path(tmp)
         base = folder / "base.apk"
@@ -134,8 +146,13 @@ def main():
         with socketserver.TCPServer(("127.0.0.1", PORT), handler) as server:
             threading.Thread(target=server.serve_forever, daemon=True).start()
             print(f"E2E: install base package {PACKAGE}", flush=True)
-            adb("uninstall", PACKAGE, check=False)
-            adb("install", str(base))
+            if production:
+                adb("uninstall", PACKAGE, check=False)
+                adb("install", str(base))
+            else:
+                # Retain the catalog/database created by instrumentation; update must preserve it.
+                adb("shell", "am", "force-stop", PACKAGE)
+                adb("install", "-r", str(base))
             if not production:
                 adb("shell", "appops", "set", PACKAGE, "REQUEST_INSTALL_PACKAGES", "allow")
             if not production:
@@ -181,6 +198,12 @@ def main():
             reports = ROOT / "app/build/reports/update-e2e"
             reports.mkdir(parents=True, exist_ok=True)
             (reports / "updated-settings.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20).stdout)
+            if not production:
+                wait_text("^Назад$", click=True)
+                wait_text("^" + re.escape(expected_product) + "$")
+                wait_text("^8 шт$")
+                (reports / "updated-catalog.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
+                print("CATALOG UPDATE PASSED: Room product and stock=8 survived actual package replacement", flush=True)
             print(f"UPDATE E2E PASSED: package={PACKAGE}, check/download/restore/cancel/system install {base_code}→{target_code}; app-private data preserved")
             server.shutdown()
 

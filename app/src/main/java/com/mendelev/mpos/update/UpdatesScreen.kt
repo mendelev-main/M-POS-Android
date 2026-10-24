@@ -38,6 +38,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mendelev.mpos.R
+import com.mendelev.mpos.core.ui.MposButton
+import com.mendelev.mpos.core.ui.ActionStyle
 import java.text.DateFormat
 import java.util.Date
 import kotlinx.coroutines.launch
@@ -61,9 +63,7 @@ fun UpdatesScreen(model: UpdateViewModel, onBack: () -> Unit) {
         modifier = Modifier.safeDrawingPadding().verticalScroll(rememberScrollState()).widthIn(max = 760.dp).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        TextButton(onClick = onBack, enabled = state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER)) {
-            Text(stringResource(R.string.settings_back))
-        }
+        MposButton(stringResource(R.string.settings_back), onBack, enabled = state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER), style = ActionStyle.Secondary)
         Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineLarge)
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -93,7 +93,7 @@ fun UpdatesScreen(model: UpdateViewModel, onBack: () -> Unit) {
                 if (state.stage == UpdateStage.DOWNLOADING) {
                     LinearProgressIndicator(progress = { state.progress / 100f }, modifier = Modifier.fillMaxWidth())
                     Text(stringResource(R.string.update_percent, state.progress))
-                    OutlinedButton(onClick = model::cancelDownload) { Text(stringResource(R.string.update_cancel)) }
+                    MposButton(stringResource(R.string.update_cancel), model::cancelDownload, style = ActionStyle.Secondary)
                 } else if (state.stage in setOf(UpdateStage.CHECKING, UpdateStage.RESTORING, UpdateStage.VERIFYING)) {
                     CircularProgressIndicator()
                 }
@@ -102,7 +102,7 @@ fun UpdatesScreen(model: UpdateViewModel, onBack: () -> Unit) {
                 if (!state.busy) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         if (state.stage == UpdateStage.READY) {
-                            Button(onClick = {
+                            MposButton(stringResource(R.string.update_install), onClick = {
                                 if (!context.packageManager.canRequestPackageInstalls()) {
                                     try { permission.launch(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}"))) }
                                     catch (_: ActivityNotFoundException) { model.installerClosed(context.getString(R.string.update_settings_unavailable)) }
@@ -116,11 +116,11 @@ fun UpdatesScreen(model: UpdateViewModel, onBack: () -> Unit) {
                                     catch (_: ActivityNotFoundException) { model.installerClosed(context.getString(R.string.update_installer_unavailable)) }
                                     catch (_: SecurityException) { model.installerClosed(context.getString(R.string.update_permission_required)) }
                                 }
-                            }) { Text(stringResource(R.string.update_install)) }
+                            })
                         } else if (state.candidate != null) {
-                            Button(onClick = model::download) { Text(stringResource(R.string.update_download)) }
+                            MposButton(stringResource(R.string.update_download), model::download)
                         }
-                        OutlinedButton(onClick = model::check) { Text(stringResource(R.string.update_check)) }
+                        MposButton(stringResource(R.string.update_check), model::check, style = ActionStyle.Secondary)
                     }
                 }
             }

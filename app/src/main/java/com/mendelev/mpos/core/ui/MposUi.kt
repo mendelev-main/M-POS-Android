@@ -33,6 +33,9 @@ private val manrope = FontFamily(Font(R.font.manrope, FontWeight.Normal), Font(R
         background=Color(0xFFF5F4F0), surface=Color.White, onSurface=Color(0xFF1B1F2A), onBackground=Color(0xFF1B1F2A),
         onSurfaceVariant=Color(0xFF767C8C), outline=Color(0xFFE7E4DD), error=Color(0xFFE0483E))
     MaterialTheme(colorScheme=colors, typography=Typography(
+        displayLarge=TextStyle(fontFamily=manrope, fontSize=57.sp), displayMedium=TextStyle(fontFamily=manrope, fontSize=45.sp), displaySmall=TextStyle(fontFamily=manrope, fontSize=36.sp),
+        headlineLarge=TextStyle(fontFamily=manrope, fontWeight=FontWeight.ExtraBold, fontSize=32.sp), headlineMedium=TextStyle(fontFamily=manrope, fontWeight=FontWeight.Bold, fontSize=28.sp), headlineSmall=TextStyle(fontFamily=manrope, fontWeight=FontWeight.Bold, fontSize=24.sp),
+        titleSmall=TextStyle(fontFamily=manrope, fontWeight=FontWeight.Bold, fontSize=14.sp), labelSmall=TextStyle(fontFamily=manrope, fontWeight=FontWeight.Bold, fontSize=11.sp),
         titleLarge=TextStyle(fontFamily=manrope, fontWeight=FontWeight.ExtraBold, fontSize=22.sp),
         titleMedium=TextStyle(fontFamily=manrope, fontWeight=FontWeight.Bold, fontSize=18.sp),
         bodyLarge=TextStyle(fontFamily=manrope, fontSize=16.sp), bodyMedium=TextStyle(fontFamily=manrope, fontSize=15.sp),
@@ -97,4 +100,9 @@ enum class ActionStyle { Primary, Secondary, Danger }
         shape=RoundedCornerShape(16.dp)) {
         Text(text, Modifier.padding(16.dp), color=if(isError) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface)
     }
+}
+
+@Composable fun MposNavigationAction(label: String, onClick: () -> Unit) {
+    TextButton(onClick=onClick, modifier=Modifier.heightIn(min=48.dp), shape=RoundedCornerShape(100.dp),
+        colors=ButtonDefaults.textButtonColors(contentColor=Color.White)) { Text(label) }
 }

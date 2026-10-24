@@ -47,8 +47,8 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
             withContext(Dispatchers.IO) { repo.initialize() }
             val restored = withContext(Dispatchers.IO) { repo.dao.draft()?.let { ProductDraft.parse(it.payload) } }
             mutable.update { it.copy(loading=false, fatal=false, draft=restored, message=null) }
-            viewModelScope.launch { repo.products.collect { p -> mutable.update { it.copy(products=p) } } }
-            viewModelScope.launch { repo.categories.collect { c -> mutable.update { it.copy(categories=c) } } }
+            viewModelScope.launch { repo.products.catch { mutable.update { it.copy(fatal=true, message="Не удалось прочитать товары. Данные не удалены", error=true) } }.collect { p -> mutable.update { it.copy(products=p) } } }
+            viewModelScope.launch { repo.categories.catch { mutable.update { it.copy(fatal=true, message="Не удалось прочитать категории. Данные не удалены", error=true) } }.collect { c -> mutable.update { it.copy(categories=c) } } }
         } catch(c: CancellationException) { throw c } catch(_: Exception) {
             mutable.update { it.copy(loading=false, fatal=true, message="Не удалось открыть каталог. Данные не удалены", error=true) }
         }
