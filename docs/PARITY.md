@@ -9,7 +9,7 @@
 | Acceptance IDs | Web features / adapters | Этап | Статус |
 |---|---|---|---|
 | P01–P10 | product-catalog/configuration/persistence/categories, product-photo | 01 | Core01a/01b/01c, P03 order/appearance/schema4 ci-verified API36 (run40101394875); device/full01 pending; evidence ниже |
-| W01–W07 | pos.html, cart-composition/presentation, receipts, android-pos-stock | 02 | 02a ci-verified API36/run40106275939; 02b parked/reserve/metadata implemented, CI36 pending; full W06/W07 planned, device отложен владельцем |
+| W01–W07 | pos.html, cart-composition/presentation, receipts, android-pos-stock | 02 | 02a ci-verified API36/run40106275939; 02b ci-verified API36/run40140796798; 02c revalidation implemented/CI36 pending; full W06/W07 не закрыты, device отложен владельцем |
 | S01–S05 | payment, receipts, android-safety, stockConsumption | 03 | planned |
 | I01–I04 | inventory, receiving-ui/drafts, purchase-orders, suppliers, warehouse-reporting, android-inventory | 04 | planned |
 | H01–H04 | shifts, employees, analytics, administration guards | 05 | planned |

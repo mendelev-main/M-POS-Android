@@ -34,12 +34,39 @@ def ui_nodes():
     return list(ET.fromstring(raw[raw.index("<?xml"):]).iter("node"))
 
 
+_launcher_recovery_used = False
+
+
+def launcher_anr_close(nodes):
+    """Only the emulator's Quickstep launcher ANR, never an M-POS or generic ANR."""
+    labels = [n for n in nodes if n.get("resource-id") == "android:id/alertTitle"]
+    if len(labels) != 1 or labels[0].get("package") != "android" or labels[0].get("text") != "Quickstep isn't responding":
+        return None
+    return next((n for n in nodes if n.get("package") == "android" and n.get("resource-id") == "android:id/aerr_close"
+                 and n.get("text") == "Close app" and n.get("enabled") == "true"), None)
+
+
 def wait_text(pattern, timeout=75, click=False):
+    global _launcher_recovery_used
     print(f"E2E UI: {pattern}; click={click}", flush=True)
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
-            for node in ui_nodes():
+            nodes = ui_nodes()
+            launcher_close = launcher_anr_close(nodes)
+            if launcher_close is not None and not _launcher_recovery_used:
+                require_emulator(adb("get-serialno").strip())
+                reports = ROOT / "app/build/reports/update-e2e"
+                reports.mkdir(parents=True, exist_ok=True)
+                (reports / "quickstep-anr.xml").write_text(adb("shell", "cat", "/sdcard/update-window.xml"))
+                capture = subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, check=True, timeout=20)
+                (reports / "quickstep-anr.png").write_bytes(capture.stdout)
+                _launcher_recovery_used = True
+                x1, y1, x2, y2 = map(int, re.findall(r"\d+", launcher_close.get("bounds", "")))
+                print("E2E INFRA: closing Quickstep launcher ANR once; M-POS assertions remain mandatory", flush=True)
+                adb("shell", "input", "tap", str((x1+x2)//2), str((y1+y2)//2))
+                continue
+            for node in nodes:
                 if re.search(pattern, node.get("text", ""), re.I) and node.get("enabled", "true") == "true":
                     if click:
                         x1, y1, x2, y2 = map(int, re.findall(r"\d+", node.get("bounds", "")))

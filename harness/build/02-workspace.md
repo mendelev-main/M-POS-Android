@@ -1,6 +1,6 @@
 # Этап 02 — Рабочая зона
 
-Статус: 02a ci-verified API36/run40106275939; device отложен владельцем2026-10-24
+Статус: 02a/02b ci-verified API36; 02c implemented/CI36 pending; device отложен владельцем2026-10-24
 
 ## Объём
 
