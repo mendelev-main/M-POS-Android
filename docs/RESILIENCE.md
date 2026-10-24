@@ -67,3 +67,6 @@ Retry/backoff имеет пределы нагрузки и видимый ст�
 ## Приёмка отказов
 
 Добавить к существующим fixtures: RES-01 kill после commit до UI; RES-02 фото на каждой границе; RES-03 migration и повтор open; RES-04 restore activation на каждом checkpoint; RES-05 HTTP принят/ответ потерян; RES-06 печать partial; RES-07 отказ места; RES-08 два worker/просроченный lease; RES-09 clock change/reboot. Связь: P08/P10, W04/W06, S01–S03, B01–B05, D02, N02/N03. Все проверки будущие, planned.
+
+
+Реализованный subset RES-02/P08 в01c: private staging/immutable file/Room activation и faults copied/decoded/beforePublish/published, отказ DB commit и reopen, защита active/draft photo при cleanup. [Контракт и ограничения](CATALOG-01C.md); точное CI evidence — build-log. Это не закрывает restore07, реальный low-storage и физическую приёмку providers.

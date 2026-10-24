@@ -43,3 +43,11 @@ P04/P05/P07: units/base/display, minimum/packaging, nested recipes/yield/cost, s
 
 
 01b CI evidence: [run40094842882](https://github.com/mendelev-main/M-POS-Android/actions/runs/40094842882), commit6acfe83 — checks/API28/API35 success.19 JVM,4 Python,10 instrumentation на каждом API и updater E2E с реальным package replacement. Реализованные части P04/P05/P07 (domain/configuration/editor), P09(recipe delete guard), P10(migration/expanded draft/rollback) — ci-verified. Физическая приёмка, P06/P08 и остальные незакрытые критерии01 остаются pending. После run менялась подпись единицы в поле цены, не бизнес-логика; точное ограничение evidence в CATALOG-01B/build-log.
+
+
+## 01c — ci-verified subsetP06/P08/P09/P10
+
+P06 — groups/options/domain checks/selection preview; P08 — private staged photo/references/editor; P09 — modifier/draft delete guards; P10 — schema2→3/1→3/reopen/fault tests. [Контракт](CATALOG-01C.md). Наличие кода не означает CI/device acceptance; точный run в build-log. Ручной порядок категорий/physical cases ещё pending.
+
+
+Итог01c: [run40098187895](https://github.com/mendelev-main/M-POS-Android/actions/runs/40098187895), commit eb40b22 — checks/API28/API35 success;23 JVM,4Python,16 instrumentation/API и2 explicit UI setup tests перед внешним updater. Media/DB faults, migration1→3/2→3, stable IDs/draft/session/photo checks passed; оба API: CATALOG UPDATE PASSED и UPDATE E2E PASSED. Schema3 export сверён, screenshots28/35 просмотрены. Новые runtime/test изменения после проверенного commit не вносились. Физический picker/provider/HEIC/font scale и ручной порядок категорий остаются pending; весь01 не закрыт.

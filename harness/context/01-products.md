@@ -23,3 +23,19 @@ Added CatalogConfigurationTest + CatalogConfigurationUiTest; schema2 взята 
 
 
 Итог01b: run40094842882/6acfe83 checks/API28/API35 success.19 JVM,4 Python,10 instrumentation/API + updater CATALOG UPDATE PASSED/UPDATE E2E PASSED. Migration1→2 valid against Room2; schema2 exported committed. Signing/publish skipped, main/stable не менялись. После проверенного commit уточнён текст поля цены (BYN за base unit), полного повторного CI ради подписи не было. Следующий предусмотренный этап внутри01 —01c modifiers/photo, затем category order/remaining acceptance;02 ещё не начинать автоматически.
+
+
+## 01c — modifiers/photo
+
+ScopeP06/P08/P09. Pure ModifierRules validate raw limits, signed delta/cardinality/final nonnegative price; configureModifiers feeds base+selected into RecipeCalculator (no sale). Schema3 + migration2→3 (chain1→2→3); FK group/option refs; fingerprints defaults backward compatible. Photo immutable staged/normalizedJPEG private file before draft/Product reference;16MiB/40MP→1200px/600000bytes, codecsJPEG/PNG/WebP/HEIF. Session-bound GetContent callback, old photo remains until Save, cleanup referenced product+draft protected/age24h. No photo upload. Details docs/CATALOG-01C.md.
+
+Implemented tests: ModifierRulesTest4, ProductExtrasTest4, CatalogExtrasUiTest1; old schema1 migration test traverses both migrations. First CI40096819346 on682ec0c pending. Subsequent source parity refinement (JPEG geometry retries) still to verify. Physical picker/providers and finalUI pending; don't start02.
+
+
+01c validation follow-up:40097122743 checks pass,media/Room/migrations pass28/35; UI fixtures required MIME/category on picker monitor and IME synchronization, suites now isolate unfinished editors.5b13d8d also persists generated legacy sessionId before editor is enabled; CatalogPhotoSessionTest covers restored callback queue/new ViewModel lifetime. Current run40097725989 pending. No main/release changes.
+
+
+Run40097725989/5b13d8d:16 instrumentation passed eachAPI,API28 full updater E2E passed. API35 explicit UI reseed (after UTP removes target) exposed missing wait after async editor open. eb40b22 adds waitEditor for every Add/Edit, no assertions removed. Current40098187895 pending. Captured extras editor28 reviewed; physical parity pending.
+
+
+Итог01c: eb40b22/[run40098187895](https://github.com/mendelev-main/M-POS-Android/actions/runs/40098187895) — checks/API28/API35 success,23JVM/4Python/16instrumentation/API. Затем2explicit UI tests (Extras+Launch) и updater package replacement на каждомAPI: CATALOG UPDATE PASSED/UPDATE E2E PASSED. KSPschema3 совпадает с Git; screenshots28/35 reviewed. После этого только документация. Native bounded image adapter/GetContent сейчас; Coil/PickVisualMedia target позднее (ADR-006); не считать их установленными. Main/stable/key не менялись. Остаются category order и финальная01/device acceptance;02 не начинать автоматически.
