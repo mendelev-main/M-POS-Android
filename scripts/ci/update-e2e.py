@@ -25,6 +25,8 @@ def adb(*args, check=True, timeout=45):
 
 
 def ui_nodes():
+    # A failed dump must never reuse a previous screen and tap coordinates from a stale window.
+    adb("shell", "rm", "-f", "/sdcard/update-window.xml", check=False)
     adb("shell", "uiautomator", "dump", "/sdcard/update-window.xml", check=False)
     raw = adb("shell", "cat", "/sdcard/update-window.xml", check=False)
     if "<?xml" not in raw:
@@ -60,6 +62,7 @@ def launch(fixture=True):
             # Do not use am -W: API 28 can retain a waiter for an Activity killed by package replacement.
             adb(*args, timeout=15)
             wait_text("^Настройки$", timeout=12, click=True)
+            wait_text("^Обновления приложения$", timeout=12)
             return
         except (AssertionError, subprocess.TimeoutExpired):
             if attempt == 3:

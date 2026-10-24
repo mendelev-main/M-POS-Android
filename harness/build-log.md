@@ -117,3 +117,6 @@ Run40082878290: checks success; API28/35 actual instrumentation5/5 success в к
 
 
 Run40083703323/commit19e9345: checks/API28/API35/signed/publish success, stable0.1.14.1/code2401. Оба emulator выдали CATALOG UPDATE PASSED для сохранённого товара/stock8 через реальную1→2 замену, затем UPDATE E2E PASSED. Просмотреныcatalog/editor/shared-dialog/icon PNG; иконка чёткая/не обрезана. На UI выявлены реальные visual defects: default variable-font axis делал Manrope слишком тонким, onPrimaryContainer оставался Material-purple. Исправляются явным FontVariation.weight и M-POS semantic color; новый выпуск должен пройти те же gates и повторный визуальный просмотр.
+
+
+Run40084614575/commit95672bf: checks success, API35 полный instrumentation+catalog update+updater success. Новые screenshots35 просмотрены: Manrope400/700/800 корректен, price panel зелёный, clipping нет. API28 instrumentation5/5 прошёл, external updater послеrestart остался на каталоге: driver переиспользовал старый update-window.xml при transient UI dump, считая heading Settings кнопкой. Исправлен driver: удаляет прежний XML перед dump и подтверждает реальный экран «Обновления приложения» после перехода. Runtime APK не меняется; gates повторяются для окончательного выпуска.
