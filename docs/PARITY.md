@@ -9,7 +9,7 @@
 | Acceptance IDs | Web features / adapters | Этап | Статус |
 |---|---|---|---|
 | P01–P10 | product-catalog/configuration/persistence/categories, product-photo | 01 | Core01a/01b/01c, P03 order/appearance/schema4 ci-verified API36 (run40101394875); device/full01 pending; evidence ниже |
-| W01–W07 | pos.html, cart-composition/presentation, receipts, android-pos-stock | 02 | 02a layout/current cart ci-verified API36/run40106275939; W04/W05/full W06/W07 planned, device отложен владельцем |
+| W01–W07 | pos.html, cart-composition/presentation, receipts, android-pos-stock | 02 | 02a ci-verified API36/run40106275939; 02b parked/reserve/metadata implemented, CI36 pending; full W06/W07 planned, device отложен владельцем |
 | S01–S05 | payment, receipts, android-safety, stockConsumption | 03 | planned |
 | I01–I04 | inventory, receiving-ui/drafts, purchase-orders, suppliers, warehouse-reporting, android-inventory | 04 | planned |
 | H01–H04 | shifts, employees, analytics, administration guards | 05 | planned |
@@ -66,3 +66,12 @@ P06 — groups/options/domain checks/selection preview; P08 — private staged p
 ## 02a — рабочая зона и текущая корзина
 
 [run40106275939](https://github.com/mendelev-main/M-POS-Android/actions/runs/40106275939), commit0e6dd0b: checks/emulator36 success;31JVM/4Python/lint/assembleDebug,31instrumentation (6workspace Room+1workspace UI), затем3explicit UI seed tests. CATALOG UPDATE PASSED/WORKSPACE UPDATE PASSED/UPDATE E2E PASSED: package1→2, stock8 и current cart quantity5/total15 сохранены. W01: category/product tiles/search/folders/order CAS; W02: configured merge/manual/qty/remove/clear; W03: current aggregate reserve/shortage/per-simple flags, без parked; W06: durable snapshots/revision stale marker и safe deletion. Ни один полный W диапазон не объявляется закрытым. [Контракт/остаток](WORKSPACE-02A.md): parked02b, параметры заказа, полный revalidation02c, fixed slots/drag и физическая приёмка. Native папка пока использует общий wide dialog вместо Web count-based widths; modifier total preview и точная плотность/адаптивность — дальнейшая UI часть. Screenshots reviewed без перекрытий, pixel-perfect parity не заявляется. Ledger не изменяется, оплаты нет.
+
+
+## 02b — отложенные заказы и общий резерв
+
+W03: current+parked aggregate reserve и исключение прежнего собственного резерва; W04: atomic park/resume/swap/delete, replay/rollback/concurrency/ABA и защита от задержанных команд другого заказа; W05: подпись, here/takeaway/delivery, комментарий/контакты; W06: durable snapshot/owner, legacy payload migration и parked delete guards — ci-verified в указанном объёме. Полные W диапазоны не закрыты: explicit revalidation02c и остальные UI/device критерии впереди. [Контракт](WORKSPACE-02B.md).
+
+[run40140796798](https://github.com/mendelev-main/M-POS-Android/actions/runs/40140796798), runtime commit091b2f3: checks121011943215 и emulator36 job121011943276 success. 35 JVM tests/0 failures,4Python,lint/assembleDebug;38 instrumentation tests на Android16/API36 и4 explicit UI seed tests перед внешним updater. Реальная установка APK1→2 сохранила stock8, current quantity5/total15 BYN и parked label/type delivery/total5 BYN. Полные metadata отдельно проверены Room reopen и Compose restore, не приписываются внешнему APK assertion. SQLschema5 byte-equal KSP export, migration cart payload1→2 проверена в Room. Signing/publish/production-upgrade skipped на develop.
+
+Просмотрены screenshots order-details/parked-swap/parked-orders: общие Close/buttons/fields/dialogs, читаемые действия без перекрытий в показанных состояниях; форма параметров прокручивается. Полная визуальная/device приёмка не заявляется. После проверенного runtime — только документация. Следующая часть02c: явный пересчёт устаревшего заказа с показом изменений и подтверждением. Fixed slots/drag, count-based folder width, modifier total preview/performance и физическая приёмка остаются открытыми. Main/stable/signing identity не менялись.

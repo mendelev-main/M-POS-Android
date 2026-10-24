@@ -200,3 +200,17 @@ Run40105704419/4e7d301: checks success31JVM/lint/assembleDebug; KSPschema5 retri
 ## 2026-10-25 — итог02a
 
 [run40106275939](https://github.com/mendelev-main/M-POS-Android/actions/runs/40106275939), commit0e6dd0b: checks/emulator36 success;31JVM/4Python/lint/assembleDebug,31instrumentation (6workspace Room+1workspace UI), затем3explicit UI seed tests. CATALOG UPDATE PASSED/WORKSPACE UPDATE PASSED/UPDATE E2E PASSED: package1→2, stock8 и current cart quantity5/total15 сохранены. Job120908509464 checks и120908509648 emulator36 success, signing/publish/production-upgrade skipped. JVM XML31/0failures, KSPschema5 byte-equal Git export; screenshots workspace/workspace-folder/workspace-configuration reviewed. Shared UI без перекрытий; count-dependent folder width/config total preview ещё UI gap, не заявлять full Web visual parity. После runtime0e6dd0b — только документация; physical tests deferred user, full02/parked/revalidation pending. Main/stable/key неизменны.
+
+
+## 2026-10-25 — 02b parked/orders
+
+091b2f3 adds atomic park/resume/swap/delete, persistent logical session ownership, cart payload1→2 migration in actual Room transaction, registry-backed revisions/ABA, metadata and shared-reserve/deletion guards. Room SQLschema5 unchanged; no fake schema6. Source contract WORKSPACE-02B.md; six pinned Web tests passed (resume/storage failure/double park/delete/duplicate labels). Supplemental cached Kotlin2.1.20/JDK17 local26domain tests passed, codec compiled,4Python/preflight/diff passed. Android local command stopped before Gradle wrapper at sandbox ~/.gradle lock; no SDK, actual compiler/Room/UI to CI36.
+
+New tests:4OrderRules JVM;6ParkedOrdersRepositoryTest actual write-seam rollback at all3park/3resume/2delete/4swap mutation points + metadata/reopen/legacy lookup/concurrent ownership/ABA; ParkedOrdersUiTest (details/park/cancel/swap/delete/recreate) and updated old workspace scoped API tests. External update seed now4UI tests and verifies parked label/type/total5 plus current quantity5/total15 after replacement. [run40140796798](https://github.com/mendelev-main/M-POS-Android/actions/runs/40140796798) pending. No release/main/key changes; physical still user-deferred.
+
+
+## 2026-10-25 — итог02b
+
+[run40140796798](https://github.com/mendelev-main/M-POS-Android/actions/runs/40140796798), runtime commit091b2f3: checks121011943215 и emulator36 job121011943276 success. 35 JVM tests/0 failures,4Python,lint/assembleDebug;38 instrumentation tests на Android16/API36 и4 explicit UI seed tests перед внешним updater. Реальная установка APK1→2 сохранила stock8, current quantity5/total15 BYN и parked label/type delivery/total5 BYN. Полные metadata отдельно проверены Room reopen и Compose restore, не приписываются внешнему APK assertion. SQLschema5 byte-equal KSP export, migration cart payload1→2 проверена в Room. Signing/publish/production-upgrade skipped на develop.
+
+Просмотрены screenshots order-details/parked-swap/parked-orders: общие Close/buttons/fields/dialogs, читаемые действия без перекрытий в показанных состояниях; форма параметров прокручивается. Полная визуальная/device приёмка не заявляется. После проверенного runtime — только документация. Следующая часть02c: явный пересчёт устаревшего заказа с показом изменений и подтверждением. Fixed slots/drag, count-based folder width, modifier total preview/performance и физическая приёмка остаются открытыми. Main/stable/signing identity не менялись.
