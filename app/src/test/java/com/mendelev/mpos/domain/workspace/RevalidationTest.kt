@@ -51,9 +51,13 @@ class RevalidationTest {
         val old=CartEngine.apply(CurrentCart(sessionId="owner"),CartAction.Add("p",1,setOf("o"),null,"line"),configured,gs,stock)
         val changed=gs.map {if(it is RecipeProduct.Composite) it.copy(components=listOf(RecipeComponent("milk",BigDecimal("0.0008"),QuantityUnit.KG))) else it}
         val plan=CartRevalidator.preview(old,configured.map {it.copy(revision=2)},changed,stock,emptyMap())
-        assertEquals(0,BigDecimal("0.0008").compareTo(plan.oldReserve.getValue("milk")))
-        assertEquals(0,BigDecimal("0.0012").compareTo(plan.newReserve.getValue("milk")))
+        assertEquals(0,BigDecimal("0.0008").compareTo(plan.oldConsumption.getValue("milk")))
+        assertEquals(0,BigDecimal("0.0012").compareTo(plan.newConsumption.getValue("milk")))
         assertEquals("2.5",plan.after.lines.single().unitPrice)
+        val untracked=changed.map {if(it is RecipeProduct.Simple) it.copy(noStockTracking=true) else it}
+        val untrackedPlan=CartRevalidator.preview(old,configured,untracked,emptyMap(),emptyMap())
+        assertEquals(plan.newConsumption,untrackedPlan.newConsumption)
+        assertTrue(CartEngine.reserved(untrackedPlan.after).isEmpty())
     }
 
 }

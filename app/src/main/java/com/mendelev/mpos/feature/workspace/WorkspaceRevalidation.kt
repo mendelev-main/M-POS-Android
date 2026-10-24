@@ -32,11 +32,13 @@ import java.math.BigDecimal
                     Text("Варианты: ${a.options.joinToString { "${it.name} × ${it.quantity} (${it.priceDelta})" }.ifBlank {"нет"}} → ${b.options.joinToString { "${it.name} × ${it.quantity} (${it.priceDelta})" }.ifBlank {"нет"}}",style=MaterialTheme.typography.bodySmall)
                 }
                 Text("Расход ингредиентов",style=MaterialTheme.typography.titleSmall)
-                val ids=(plan.oldReserve.keys+plan.newReserve.keys).sorted()
+                val ids=(plan.oldConsumption.keys+plan.newConsumption.keys).sorted()
                 ids.forEach {id ->
-                    val old=plan.oldReserve[id] ?: BigDecimal.ZERO;val next=plan.newReserve[id] ?: BigDecimal.ZERO
-                    val unit=plan.after.graph.find {it.id==id}?.unit ?: plan.before.graph.find {it.id==id}?.unit
-                    Text("${s.products.find {it.id==id}?.name ?: id}: ${amount(old)} → ${amount(next)} ${when(unit) {QuantityUnit.PIECE->"шт";QuantityUnit.KG->"кг";QuantityUnit.G->"г";QuantityUnit.L->"л";QuantityUnit.ML->"мл";null->""}}")
+                    val old=plan.oldConsumption[id] ?: BigDecimal.ZERO;val next=plan.newConsumption[id] ?: BigDecimal.ZERO
+                    fun unitLabelOf(cart: CurrentCart)=when(cart.graph.find {it.id==id}?.unit) {
+                        QuantityUnit.PIECE->"шт";QuantityUnit.KG->"кг";QuantityUnit.G->"г";QuantityUnit.L->"л";QuantityUnit.ML->"мл";null->""
+                    }
+                    Text("${s.products.find {it.id==id}?.name ?: id}: ${amount(old)} ${unitLabelOf(plan.before)} → ${amount(next)} ${unitLabelOf(plan.after)}")
                 }
                 Text("Количество и параметры заказа сохранятся. Остатки склада не изменятся.",style=MaterialTheme.typography.bodySmall)
             }

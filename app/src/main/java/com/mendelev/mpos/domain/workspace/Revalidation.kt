@@ -4,7 +4,7 @@ import com.mendelev.mpos.domain.catalog.*
 import java.math.BigDecimal
 
 data class CartRevalidation(val before: CurrentCart, val after: CurrentCart,
-    val oldReserve: Map<String,BigDecimal>, val newReserve: Map<String,BigDecimal>, val token: String)
+    val oldConsumption: Map<String,BigDecimal>, val newConsumption: Map<String,BigDecimal>, val token: String)
 
 /** Preview is pure. Confirmation recomputes it inside the same transaction as the write. */
 object CartRevalidator {
@@ -23,12 +23,15 @@ object CartRevalidator {
         }
         val needed=lines.flatMap {it.references.keys}.toSet()
         val next=cart.copy(lines=lines,graph=graph.filter {it.id in needed})
-        val oldReserve=CartEngine.reserved(cart);val newReserve=CartEngine.reserved(next)
+        fun composition(value: CurrentCart)=RecipeCalculator(value.graph.map {
+            if(it is RecipeProduct.Simple) it.copy(noStockTracking=false) else it
+        }).consumption(CartEngine.requests(value))
+        val oldConsumption=composition(cart);val newConsumption=composition(next)
         val shortage=RecipeCalculator(next.graph).shortages(CartEngine.requests(next),balances,otherReservations).firstOrNull()
         if(shortage!=null) throw CatalogFailure("stock","Недостаточно остатка: ${products.find {it.id==shortage.productId}?.name ?: shortage.productId}. Уменьшите количество или исправьте заказ")
         fun quantities(values: Map<String,BigDecimal>)=CatalogRules.fingerprint(*values.toSortedMap().flatMap {(id,q)->listOf(id,CatalogRules.canonical(q))}.toTypedArray())
         // Include full snapshots, not just total: recipe, option and revision changes require another review.
         val token=CatalogRules.fingerprint(cart.toString(),next.toString(),quantities(balances),quantities(otherReservations))
-        return CartRevalidation(cart,next,oldReserve,newReserve,token)
+        return CartRevalidation(cart,next,oldConsumption,newConsumption,token)
     }
 }
