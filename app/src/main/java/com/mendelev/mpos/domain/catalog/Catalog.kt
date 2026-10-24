@@ -34,6 +34,7 @@ data class ProductInput(
     val noStockTracking: Boolean = false, val allowNegativeStock: Boolean = false,
     val minimumStock: String? = null, val purchaseLabel: String = "", val packSize: String? = null,
     val recipeYield: String = "1", val components: List<IngredientInput> = emptyList(),
+    val modifierGroups: List<ModifierGroupInput> = emptyList(), val photoId: String? = null,
 ) {
     fun validated(): ProductInput {
         if (type !in listOf("simple", "composite")) throw CatalogFailure("type", "Выберите тип товара")
@@ -61,9 +62,16 @@ data class ProductInput(
             if (normalized.recipeYield.toBigDecimal().signum() <= 0 || components.isEmpty())
                 throw CatalogFailure("recipe", "Задайте положительный выход и состав")
         } else if (components.isNotEmpty()) throw CatalogFailure("recipe", "Простой товар не может иметь состав")
-        return normalized
+        if(photoId != null && !Regex("[0-9a-f-]{36}\\.jpg").matches(photoId)) throw CatalogFailure("photo", "Некорректная ссылка на фото")
+        return normalized.copy(modifierGroups=ModifierRules.validate(id,modifierGroups))
     }
     fun fingerprint(): String {
+        if(photoId==null && modifierGroups.isEmpty()) return configurationFingerprint()
+        val parts=modifierGroups.flatMap { g -> listOf(g.id,g.name,g.minimum,g.maximum,g.options.size.toString()) +
+            g.options.flatMap { listOf(it.id,it.productId,it.posName,it.quantity,it.priceDelta) } }
+        return CatalogRules.fingerprint("product-01c",configurationFingerprint(),photoId,modifierGroups.size,*parts.toTypedArray())
+    }
+    private fun configurationFingerprint(): String {
         val legacy = arrayOf<Any?>(id, expectedRevision, name, categoryId, price, cost,
             if (stockEdited || expectedRevision == null) stock else null, expectedStockRevision, stockEdited)
         // Existing completed 01a commands remain replayable after migration.

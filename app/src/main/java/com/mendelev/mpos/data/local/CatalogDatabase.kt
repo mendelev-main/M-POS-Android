@@ -16,13 +16,24 @@ data class ProductEntity(@PrimaryKey val id: String, val categoryId: String?, va
     @ColumnInfo(defaultValue = "0") val noStockTracking: Boolean = false,
     @ColumnInfo(defaultValue = "0") val allowNegativeStock: Boolean = false,
     val minimumStock: String? = null, @ColumnInfo(defaultValue = "''") val purchaseLabel: String = "",
-    val packSize: String? = null, @ColumnInfo(defaultValue = "'1'") val recipeYield: String = "1")
+    val packSize: String? = null, @ColumnInfo(defaultValue = "'1'") val recipeYield: String = "1", val photoId: String? = null)
 
 @Entity(tableName = "recipe_components", primaryKeys = ["ownerId", "position"], foreignKeys = [
     ForeignKey(entity = ProductEntity::class, parentColumns = ["id"], childColumns = ["ownerId"], onDelete = ForeignKey.CASCADE),
     ForeignKey(entity = ProductEntity::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)
 ], indices = [Index("productId")])
 data class RecipeComponentEntity(val ownerId: String, val position: Int, val productId: String, val quantity: String, val unit: String)
+
+@Entity(tableName = "modifier_groups", primaryKeys = ["ownerId", "id"], foreignKeys = [
+    ForeignKey(entity = ProductEntity::class, parentColumns = ["id"], childColumns = ["ownerId"], onDelete = ForeignKey.CASCADE)])
+data class ModifierGroupEntity(val ownerId: String, val id: String, val name: String, val minimum: Int, val maximum: Int, val position: Int)
+
+@Entity(tableName = "modifier_options", primaryKeys = ["ownerId", "id"], foreignKeys = [
+    ForeignKey(entity = ModifierGroupEntity::class, parentColumns = ["ownerId", "id"], childColumns = ["ownerId", "groupId"], onDelete = ForeignKey.CASCADE),
+    ForeignKey(entity = ProductEntity::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)
+], indices = [Index(value = ["ownerId", "groupId"]), Index("productId")])
+data class ModifierOptionEntity(val ownerId: String, val id: String, val groupId: String, val productId: String, val posName: String,
+    val quantity: String, val priceDelta: String, val position: Int)
 
 @Entity(tableName = "stock_balances", foreignKeys = [ForeignKey(entity = ProductEntity::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)])
 data class BalanceEntity(@PrimaryKey val productId: String, val quantity: String, val revision: Long)
@@ -47,6 +58,13 @@ interface CatalogDao {
     @Query("SELECT * FROM categories ORDER BY sortOrder, name") fun categories(): Flow<List<CategoryEntity>>
     @Query("SELECT p.*, COALESCE(b.quantity, '0') AS quantity, COALESCE(b.revision, 0) AS stockRevision, c.name AS categoryName FROM products p LEFT JOIN stock_balances b ON p.id=b.productId LEFT JOIN categories c ON c.id=p.categoryId ORDER BY p.name, p.id")
     fun products(): Flow<List<ProductRow>>
+    @Query("SELECT * FROM modifier_groups WHERE ownerId=:id ORDER BY position") suspend fun modifierGroups(id: String): List<ModifierGroupEntity>
+    @Query("SELECT * FROM modifier_options WHERE ownerId=:id ORDER BY position") suspend fun modifierOptions(id: String): List<ModifierOptionEntity>
+    @Query("SELECT COUNT(*) FROM modifier_options WHERE productId=:id") suspend fun modifierUses(id: String): Int
+    @Query("DELETE FROM modifier_options WHERE ownerId=:id") suspend fun clearModifierOptions(id: String)
+    @Query("DELETE FROM modifier_groups WHERE ownerId=:id") suspend fun clearModifierGroups(id: String)
+    @Insert suspend fun insertModifierGroups(values: List<ModifierGroupEntity>)
+    @Insert suspend fun insertModifierOptions(values: List<ModifierOptionEntity>)
     @Query("SELECT * FROM products") suspend fun allProducts(): List<ProductEntity>
     @Query("SELECT * FROM recipe_components ORDER BY ownerId, position") suspend fun allComponents(): List<RecipeComponentEntity>
     @Query("SELECT * FROM recipe_components ORDER BY ownerId, position") fun components(): Flow<List<RecipeComponentEntity>>
@@ -82,7 +100,7 @@ interface CatalogDao {
 }
 
 @Database(entities = [CategoryEntity::class, ProductEntity::class, BalanceEntity::class, MovementEntity::class,
-    ResultEntity::class, AuditEntity::class, DraftEntity::class, ConfigEntity::class, RecipeComponentEntity::class], version = 2, exportSchema = true)
+    ResultEntity::class, AuditEntity::class, DraftEntity::class, ConfigEntity::class, RecipeComponentEntity::class, ModifierGroupEntity::class, ModifierOptionEntity::class], version = 3, exportSchema = true)
 abstract class CatalogDatabase : RoomDatabase() {
     abstract fun catalog(): CatalogDao
     companion object {
@@ -100,10 +118,19 @@ abstract class CatalogDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_recipe_components_productId ON recipe_components (productId)")
             }
         }
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE products ADD COLUMN photoId TEXT")
+                db.execSQL("CREATE TABLE IF NOT EXISTS modifier_groups (ownerId TEXT NOT NULL, id TEXT NOT NULL, name TEXT NOT NULL, minimum INTEGER NOT NULL, maximum INTEGER NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(ownerId, id), FOREIGN KEY(ownerId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE CASCADE)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS modifier_options (ownerId TEXT NOT NULL, id TEXT NOT NULL, groupId TEXT NOT NULL, productId TEXT NOT NULL, posName TEXT NOT NULL, quantity TEXT NOT NULL, priceDelta TEXT NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(ownerId, id), FOREIGN KEY(ownerId, groupId) REFERENCES modifier_groups(ownerId, id) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY(productId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_modifier_options_ownerId_groupId ON modifier_options(ownerId, groupId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_modifier_options_productId ON modifier_options(productId)")
+            }
+        }
         @Volatile private var instance: CatalogDatabase? = null
         fun get(context: Context): CatalogDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(context.applicationContext, CatalogDatabase::class.java, "mpos.db")
-                .addMigrations(MIGRATION_1_2).build().also { instance = it }
+                .addMigrations(MIGRATION_1_2,MIGRATION_2_3).build().also { instance = it }
         }
     }
 }

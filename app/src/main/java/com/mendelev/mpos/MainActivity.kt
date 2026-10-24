@@ -70,7 +70,8 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T =
                             com.mendelev.mpos.feature.products.CatalogViewModel(com.mendelev.mpos.data.local.CatalogRepository(
-                                com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                                com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext),
+                                photos=com.mendelev.mpos.data.media.ProductPhotoStore(context.applicationContext.filesDir))) as T
                     })
                     com.mendelev.mpos.feature.products.CatalogScreen(model, { route = "settings" }, { route = "gallery" })
                 }

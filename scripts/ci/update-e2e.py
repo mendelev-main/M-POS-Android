@@ -147,14 +147,14 @@ def main():
                 # under an explicit instrumentation lifetime, then keep the target for replacement.
                 test_apk = ROOT / "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
                 adb("install", "-r", str(test_apk))
-                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.LaunchTest",
+                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest",
                              PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
-                assert "OK (1 test)" in result and "FAILURES" not in result, result[-4000:]
+                assert "OK (2 tests)" in result and "FAILURES" not in result, result[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
                 expected_product = adb("shell", "run-as", PACKAGE, "cat", "files/qa/productName.txt").strip()
                 assert expected_product, "UI setup must create a real catalog record"
-                for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon"):
+                for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor"):
                     captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
                     assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
                     (reports / f"{name}.png").write_bytes(captured.stdout)

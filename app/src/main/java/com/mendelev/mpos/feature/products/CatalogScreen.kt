@@ -1,6 +1,9 @@
 package com.mendelev.mpos.feature.products
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,6 +30,15 @@ import java.util.UUID
 
 @Composable fun CatalogScreen(model: CatalogViewModel, onSettings: () -> Unit, onGallery: () -> Unit) {
     val state by model.state.collectAsStateWithLifecycle()
+    val context=LocalContext.current
+    var photoSession by rememberSaveable { mutableStateOf<String?>(null) }
+    val photoPicker=rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        val session=photoSession
+        photoSession=null
+        if(uri!=null && session!=null) model.importPhoto(session) {
+            context.contentResolver.openInputStream(uri) ?: throw java.io.IOException("Photo stream unavailable")
+        }
+    }
     var search by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf<String?>(null) }
     var categories by rememberSaveable { mutableStateOf(false) }
@@ -82,6 +94,10 @@ import java.util.UUID
                                 MposField(d.price, { v -> model.change { it.copy(price=v) } }, "Цена продажи, BYN за ${unitLabel(d.unit)}", Modifier.testTag("productPrice"), !state.busy, true,
                                     state.message.takeIf { state.field=="Цена" })
                                 ProductConfiguration(model,state,d)
+                                HorizontalDivider()
+                                ProductModifierEditor(model,state,d)
+                                HorizontalDivider()
+                                ProductPhotoEditor(model,d,!state.busy) { photoSession=d.sessionId;photoPicker.launch("image/*") }
                             }
                         }
                         if(d.expectedRevision!=null) MposButton("Удалить товар", { confirmDelete=true }, enabled=!state.busy, style=ActionStyle.Danger)
@@ -114,6 +130,7 @@ import java.util.UUID
                     items(rows,key={ it.product.id }) { row ->
                         Surface(Modifier.fillMaxWidth().clickable { model.edit(row) }, shape=RoundedCornerShape(16.dp), border=BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
                             Row(Modifier.padding(18.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(16.dp)) {
+                                ProductPhoto(row.product.photoId,model.photos,Modifier.size(56.dp))
                                 Column(Modifier.weight(1f)) {
                                     Text(row.product.name, fontWeight=FontWeight.Bold)
                                     Text(row.categoryName ?: "Без категории", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
