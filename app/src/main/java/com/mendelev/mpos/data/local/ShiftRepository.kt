@@ -49,6 +49,7 @@ class ShiftRepository(private val db: CatalogDatabase,private val clock: Clock=C
         val fp=CatalogRules.fingerprint("shift.close.v1",id,revision,token,counted,actor)
         replay(command,fp)?.let {return@withTransaction it}
         val state=snapshot();check(state.revision<Long.MAX_VALUE)
+        SplitPaymentRepository(db).requireNone()
         val shift=ShiftRules.close(state,id,revision,token,counted,actor,clock.millis())
         dao.update(shift.entity());afterWrite?.invoke();record(command,fp,shift,state.revision,"close");shift.id
     }}

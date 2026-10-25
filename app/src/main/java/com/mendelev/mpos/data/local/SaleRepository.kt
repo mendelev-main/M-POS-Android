@@ -70,6 +70,7 @@ class SaleRepository(private val db: CatalogDatabase,private val clock: Clock=Cl
             check(db.sales().receipt(old.resultId)?.commandId==d.commandId) {"Не найден сохранённый чек"}
             return@withTransaction old.resultId
         }
+        val progress=SplitPaymentRepository(db).requireReady(submitted)
         if(CheckoutRepository(db).load()!=submitted) conflict()
         val shiftRepo=ShiftRepository(db)
         val shift=shiftRepo.requireActive(d.shiftId,d.shiftRevision)
@@ -111,6 +112,7 @@ class SaleRepository(private val db: CatalogDatabase,private val clock: Clock=Cl
         db.shifts().register(ShiftRegisterEntity(revision=shiftState.revision+1,lastShiftId=shift.id));wrote()
         db.workspace().put(WorkspaceDocument("current",work.cartRevision+1,WorkspaceCodec.cart(CurrentCart(sessionId=UUID.randomUUID().toString()))));wrote()
         db.workspace().put(WorkspaceDocument("checkout",saved.revision+1,JSONObject().put("version",1).put("discarded",true).put("receiptId",id).toString()));wrote()
+        if(progress!=null) {SplitPaymentRepository(db).finish(progress);wrote()}
         db.catalog().result(ResultEntity(d.commandId,fp,id));wrote()
         db.catalog().audit(AuditEntity(UUID.randomUUID().toString(),d.commandId,d.actorId,"sale.commit",id,now));wrote()
         // No external adapter is configured. No synthetic print/sync jobs or network side effects.

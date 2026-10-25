@@ -52,6 +52,7 @@ class CheckoutRepository(private val db: CatalogDatabase,private val afterWrite:
     }
     suspend fun revision(): Long=db.withTransaction {db.workspace().document(key)?.revision ?: 0}
     suspend fun save(expectedRevision: Long,draft: CheckoutDraft): SavedCheckout=InstallationGate.write {db.withTransaction {
+        SplitPaymentRepository(db).requireNone()
         val old=db.workspace().document(key)
         if((old?.revision ?: 0)!=expectedRevision) conflict()
         require(expectedRevision in 0 until Long.MAX_VALUE)
@@ -79,6 +80,7 @@ class CheckoutRepository(private val db: CatalogDatabase,private val afterWrite:
     }}
     /** Does not clear the cart and cannot cancel any externally executed payment. */
     suspend fun discard(expectedRevision: Long)=InstallationGate.write {db.withTransaction {
+        SplitPaymentRepository(db).requireNone()
         val old=db.workspace().document(key) ?: conflict()
         if(old.revision!=expectedRevision) conflict()
         require(expectedRevision<Long.MAX_VALUE)

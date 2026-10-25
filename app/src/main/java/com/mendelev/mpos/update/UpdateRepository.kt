@@ -81,6 +81,7 @@ class UpdateRepository(private val context: Context, fixtureUrl: String? = null)
     /** Recheck bytes and signer immediately before granting the installer access. */
     suspend fun installationIntent(update: UpdateDescriptor): Intent = withContext(Dispatchers.IO) {
         com.mendelev.mpos.core.operations.InstallationGate.prepare(installationOwner) {
+        com.mendelev.mpos.data.local.SplitPaymentRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context)).requireInstallAllowed()
         verify(update, apk)
         check(prefs.edit().putLong("installTarget", update.versionCode).commit()) { "Не удалось сохранить состояние установки" }
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.updates", apk)
