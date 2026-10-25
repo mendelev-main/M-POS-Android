@@ -95,6 +95,10 @@ jobs:
           api-level: ${{ matrix.api }}
           arch: x86_64
           profile: pixel_c
+          avd-name: mpos-ci-api36
+          ram-size: 3072M
+          cores: 2
+          pre-emulator-launch-script: python3 scripts/ci/configure-emulator.py --avd mpos-ci-api36
           disable-animations: true
           script: |
             set -e

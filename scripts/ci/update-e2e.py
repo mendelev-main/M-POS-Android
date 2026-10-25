@@ -265,6 +265,17 @@ if __name__ == "__main__":
     except Exception:
         reports = ROOT / "app/build/reports/update-e2e"
         reports.mkdir(parents=True, exist_ok=True)
+        for name, command in {
+            "last-anr.txt": ("shell", "dumpsys", "activity", "lastanr"),
+            "cpuinfo.txt": ("shell", "dumpsys", "cpuinfo"),
+            "meminfo.txt": ("shell", "dumpsys", "meminfo"),
+            "events.txt": ("logcat", "-b", "events", "-d"),
+            "display.txt": ("shell", "dumpsys", "display"),
+        }.items():
+            try:
+                (reports / name).write_text(adb(*command, check=False, timeout=20))
+            except Exception as error:
+                (reports / name).write_text(str(error))
         try:
             (reports / "logcat.txt").write_text(adb("logcat", "-d", "-t", "1000", check=False))
         except Exception as error:
