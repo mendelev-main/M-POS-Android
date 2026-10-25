@@ -197,9 +197,9 @@ def main():
                 financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest",
                                 PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
                 assert "OK (1 test)" in financial and "FAILURES" not in financial, financial[-4000:]
-                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
+                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
                              PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
-                assert "OK (5 tests)" in result and "FAILURES" not in result, result[-4000:]
+                assert "OK (6 tests)" in result and "FAILURES" not in result, result[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
                 expected_shift = adb("shell", "run-as", PACKAGE, "cat", "files/qa/shiftId.txt").strip()
@@ -216,7 +216,7 @@ def main():
                 assert expected_workspace_line, "UI setup must create a real persistent current cart"
                 expected_parked_label = adb("shell", "run-as", PACKAGE, "cat", "files/qa/parkedLabel.txt").strip()
                 assert expected_parked_label, "UI setup must create a real parked order"
-                for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders"):
+                for name in ("sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders"):
                     captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
                     assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
                     (reports / f"{name}.png").write_bytes(captured.stdout)

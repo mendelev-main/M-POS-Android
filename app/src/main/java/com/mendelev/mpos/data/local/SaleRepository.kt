@@ -44,6 +44,21 @@ class SaleRepository(private val db: CatalogDatabase,private val clock: Clock=Cl
     suspend fun history()=db.sales().history()
     suspend fun receipt(id: String)=db.sales().receipt(id)?.let {it to ReceiptCodec.decode(it.payload)}
     suspend fun outcome(command: String)=db.sales().command(command)
+    suspend fun unacknowledged(): String?=db.withTransaction {
+        val doc=db.workspace().document("checkout") ?: return@withTransaction null
+        val j=JSONObject(doc.payload)
+        if(j.optBoolean("discarded",false) && j.has("receiptId")) j.getString("receiptId").also {
+            check(db.sales().receipt(it)!=null) {"Не найден результат оплаты"}
+        } else null
+    }
+    suspend fun acknowledge(id: String)=InstallationGate.write {db.withTransaction {
+        val doc=db.workspace().document("checkout") ?: return@withTransaction
+        val j=JSONObject(doc.payload)
+        if(j.optBoolean("discarded",false) && j.optString("receiptId")==id) {
+            check(doc.revision<Long.MAX_VALUE)
+            db.workspace().put(doc.copy(revision=doc.revision+1,payload="{\"version\":1,\"discarded\":true}"))
+        }
+    }}
     /** The caller retains the submitted snapshot until outcome lookup/replay resolves any lost response. */
     suspend fun commit(saved: SavedCheckout): String=InstallationGate.write {db.withTransaction {
         val d=CheckoutCodec.decode(CheckoutCodec.encode(saved.draft))
@@ -95,7 +110,7 @@ class SaleRepository(private val db: CatalogDatabase,private val clock: Clock=Cl
         }
         db.shifts().register(ShiftRegisterEntity(revision=shiftState.revision+1,lastShiftId=shift.id));wrote()
         db.workspace().put(WorkspaceDocument("current",work.cartRevision+1,WorkspaceCodec.cart(CurrentCart(sessionId=UUID.randomUUID().toString()))));wrote()
-        db.workspace().put(WorkspaceDocument("checkout",saved.revision+1,"{\"version\":1,\"discarded\":true}"));wrote()
+        db.workspace().put(WorkspaceDocument("checkout",saved.revision+1,JSONObject().put("version",1).put("discarded",true).put("receiptId",id).toString()));wrote()
         db.catalog().result(ResultEntity(d.commandId,fp,id));wrote()
         db.catalog().audit(AuditEntity(UUID.randomUUID().toString(),d.commandId,d.actorId,"sale.commit",id,now));wrote()
         // No external adapter is configured. No synthetic print/sync jobs or network side effects.

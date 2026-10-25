@@ -47,6 +47,10 @@ class SaleRepositoryTest {
             assertEquals(200L,ShiftRepository(db).snapshot().last!!.expectedCash);assertEquals(-10L,ShiftRepository(db).snapshot().last!!.difference)
             db.close();db=open()
             assertEquals(receipt,SaleRepository(db).receipt(id));assertEquals(id,SaleRepository(db).commit(draft));assertEquals(1,SaleRepository(db).history().size)
+            assertEquals(id,SaleRepository(db).unacknowledged())
+            SaleRepository(db).acknowledge("another-receipt");assertEquals(id,SaleRepository(db).unacknowledged())
+            SaleRepository(db).acknowledge(id);assertNull(SaleRepository(db).unacknowledged())
+            assertEquals(id,SaleRepository(db).commit(draft));assertNull(SaleRepository(db).unacknowledged())
         } finally {db.close();context.deleteDatabase(name)}
     }
     @Test fun eachWriteFailureAndSqlRefusalLeaveNoPartialSaleThenConcurrentRetryWritesOnce(): Unit=runBlocking {
