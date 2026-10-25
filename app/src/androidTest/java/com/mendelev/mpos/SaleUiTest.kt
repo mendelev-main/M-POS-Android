@@ -23,7 +23,14 @@ class SaleUiTest {
     private fun shot(name: String) {
         compose.waitForIdle()
         val tag=when(name) {"sale-preview"->"salePreviewTotal";"sale-history"->"receiptDetails";else->"saleSuccess"}
-        val b=compose.onNode(isRoot() and hasAnyDescendant(hasTestTag(tag))).captureToImage().asAndroidBitmap()
+        val root=compose.onNode(isRoot() and hasAnyDescendant(hasTestTag(tag)))
+        root.assertExists()
+        val b=if(name=="sale-preview" || name=="sale-history") {
+            // Dialog lives in another Android Window. PixelCopy via the activity can capture the background at its bounds.
+            val automation=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation
+            automation.waitForIdle(200,5_000)
+            checkNotNull(automation.takeScreenshot()) {"Android dialog screenshot unavailable"}
+        } else root.captureToImage().asAndroidBitmap()
         val f=File(compose.activity.filesDir,"qa/$name.png");f.parentFile!!.mkdirs();f.outputStream().use {b.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};b.recycle()
     }
     @Test fun cashRefusalPreparedRestoreCommitAndHistoricalReceipt(): Unit {
