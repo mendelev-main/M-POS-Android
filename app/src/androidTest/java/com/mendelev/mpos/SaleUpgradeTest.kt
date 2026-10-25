@@ -36,7 +36,9 @@ class SaleUpgradeTest {
             assertEquals(mapOf("p" to "1"),historical.consumption);assertEquals("9",db.catalog().balance("p")!!.quantity)
             assertEquals(2,db.catalog().movementCount("p"));assertEquals(200L,ShiftRepository(db).snapshot().currentCash)
             assertEquals(1,db.sales().history().size);assertEquals(receipt.id,db.catalog().result("upgrade-sale")!!.resultId)
-            assertTrue(WorkspaceRepository(db).snapshot().cart.lines.isEmpty());assertNull(CheckoutRepository(db).load())
+            val workspace=WorkspaceRepository(db).snapshot()
+            assertTrue(workspace.cart.lines.isEmpty());assertEquals(receipt.id,workspace.completedReceiptId)
+            assertNull(CheckoutRepository(db).load())
             assertEquals(2L,CheckoutRepository(db).revision())
             assertEquals(receipt.id,SaleRepository(db).commit(SavedCheckout(1,historical.checkout)))
         } finally {db.close()}

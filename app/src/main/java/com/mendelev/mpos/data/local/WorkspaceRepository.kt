@@ -11,7 +11,7 @@ import java.util.UUID
 data class WorkspaceSnapshot(val products: List<WorkspaceProduct>, val categories: List<CategoryEntity>,
     val graph: List<RecipeProduct>, val balances: Map<String,BigDecimal>, val cart: CurrentCart,
     val cartRevision: Long, val layout: List<LayoutItem>, val layoutRevision: Long,
-    val parked: List<ParkedOrder> = emptyList(), val ordersRevision: Long = 0,val home: HomeLayout = HomeLayout(),val homeRevision: Long = 0)
+    val parked: List<ParkedOrder> = emptyList(), val ordersRevision: Long = 0,val home: HomeLayout = HomeLayout(),val homeRevision: Long = 0,val completedReceiptId: String? = null)
 
 class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrite: (() -> Unit)? = null) {
     private val dao=db.catalog();private val work=db.workspace()
@@ -56,7 +56,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         val home=work.document("home") ?: error("Главный экран не открыт")
         WorkspaceSnapshot(products,categories,recipeSnapshot(entities,dao.allComponents()),dao.allBalances().associate { it.productId to it.quantity.toBigDecimal() },
             current,cart.revision,
-            LayoutEngine.project(WorkspaceCodec.layout(layout.payload),products,categories.map { it.id }.toSet()+""),layout.revision,parked,book.revision,HomeEngine.project(WorkspaceCodec.home(home.payload),products,categories.map {it.id}),home.revision)
+            LayoutEngine.project(WorkspaceCodec.layout(layout.payload),products,categories.map { it.id }.toSet()+""),layout.revision,parked,book.revision,HomeEngine.project(WorkspaceCodec.home(home.payload),products,categories.map {it.id}),home.revision,SaleRepository(db).unacknowledged())
     }
     private suspend fun repeat(commandId: String, fp: String, legacyFp: String? = null): Boolean {
         val old=dao.result(commandId) ?: return false

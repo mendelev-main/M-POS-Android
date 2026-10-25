@@ -78,6 +78,10 @@ class SaleUiTest {
         assertEquals(receipt.first.id,runBlocking {SaleRepository(db).unacknowledged()})
         compose.activityRule.scenario.recreate();compose.waitUntil(20_000) {!model.state.value.pending}
         compose.onNodeWithTag("saleSuccess").assertExists()
+        compose.onNodeWithText("Назад").performClick()
+        compose.waitUntil(20_000) {compose.onAllNodesWithText("Чек сохранён").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("workspaceCheckout").assertIsEnabled().performClick()
+        compose.waitUntil(20_000) {!model.state.value.pending && compose.onAllNodesWithTag("saleSuccess").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("saleDone").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceCheckout").fetchSemanticsNodes().isNotEmpty()}
         assertNull(runBlocking {SaleRepository(db).unacknowledged()})

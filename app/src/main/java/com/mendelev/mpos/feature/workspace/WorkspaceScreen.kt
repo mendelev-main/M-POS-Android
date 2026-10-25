@@ -321,7 +321,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
             if(s.cart.lines.any {CartEngine.stale(it,s.products)}) MposButton("Пересчитать заказ",onRevalidate,enabled=pending==0,modifier=Modifier.testTag("workspaceRevalidate"))
             OrderButtons(pending,s,onDetails,onPark,onParked,onClear)
             Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                MposButton("К оплате",onCheckout,Modifier.weight(1f).testTag("workspaceCheckout"),enabled=pending==0 && s.cart.lines.isNotEmpty())
+                MposButton(if(s.completedReceiptId!=null) "Чек сохранён" else "К оплате",onCheckout,Modifier.weight(1f).testTag("workspaceCheckout"),enabled=pending==0 && (s.cart.lines.isNotEmpty() || s.completedReceiptId!=null))
                 MposButton("Чеки",onHistory,enabled=pending==0,style=ActionStyle.Secondary)
             }
         }
