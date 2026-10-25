@@ -50,3 +50,5 @@ W IDs с tests, rotation/process death и планшетным walkthrough.
 02e: [home slots и drag](../../docs/WORKSPACE-02E.md) ci-verified API36/run40177332732. W01/W06; оставшиеся performance/physical критерии не закрыты.
 
 Итог02e:45JVM/6Python/lint/build,44instrumentation+4UIseed, actual updater включая home slot8 success; оставшиеся performance/adaptivity/physical критерии отдельно.
+
+02f: [большой каталог/Coil/адаптация](../../docs/WORKSPACE-02F.md) implemented/CI pending; W01/W03/W07/DS04, physical acceptance отдельно.

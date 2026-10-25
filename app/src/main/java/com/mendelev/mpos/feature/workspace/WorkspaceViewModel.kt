@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.*
 import java.util.UUID
 
 data class WorkspaceUi(val loading: Boolean = true, val fatal: Boolean = false, val pending: Int = 0,
-    val snapshot: WorkspaceSnapshot? = null, val message: String? = null)
+    val snapshot: WorkspaceSnapshot? = null, val message: String? = null, val availability: WorkspaceAvailability? = null)
 class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
     private val mutable=MutableStateFlow(WorkspaceUi());val state=mutable.asStateFlow()
     private val commands=Channel<suspend () -> Unit>(Channel.UNLIMITED)
@@ -32,11 +32,17 @@ class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
             catch(_:Exception) { mutable.update { it.copy(loading=false,fatal=true,message="Рабочая зона недоступна. Перезапустите приложение") } }
         }
     }
-    private fun publish(snap: WorkspaceSnapshot) { mutable.update {
-        val old=it.snapshot
-        if(old!=null && (old.cartRevision>snap.cartRevision || old.layoutRevision>snap.layoutRevision || old.ordersRevision>snap.ordersRevision || old.homeRevision>snap.homeRevision)) it
-        else it.copy(loading=false,snapshot=snap)
-    } }
+    private fun publish(snap: WorkspaceSnapshot) {
+        val previous=state.value
+        val old=previous.snapshot
+        val availability=if(old!=null && old.products==snap.products && old.graph==snap.graph && old.cart==snap.cart && old.balances==snap.balances && old.parked==snap.parked)
+            previous.availability else runCatching {WorkspaceAvailability(snap.products,snap.graph,snap.cart,snap.balances,snap.parked.map {it.cart})}.getOrNull()
+        mutable.update {
+            val current=it.snapshot
+            if(current!=null && (current.cartRevision>snap.cartRevision || current.layoutRevision>snap.layoutRevision || current.ordersRevision>snap.ordersRevision || current.homeRevision>snap.homeRevision)) it
+            else it.copy(loading=false,snapshot=snap,availability=availability)
+        }
+    }
     fun dismiss() { mutable.update { it.copy(message=null) } }
     private fun enqueue(block: suspend () -> Unit) {
         if(state.value.loading || state.value.fatal) return

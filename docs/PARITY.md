@@ -95,3 +95,7 @@ W01/W02 UI: ширины папок по числу колонок, адапта
 W01/W06: настраиваемый home(max20)/пустые места/nearest free, atomic CAS/replay/rollback, category/folder drag Reorder и доступное управление — ci-verified API36/run40177332732. [Контракт/границы](WORKSPACE-02E.md). SQLschema5 без изменений; полный02/performance/device не закрыты.
 
 02e evidence: [run40177332732](https://github.com/mendelev-main/M-POS-Android/actions/runs/40177332732)/d53328e,45JVM/6Python/lint/build,44instrumentation+4explicit UIseed и actual updater success с custom product slot8/current/parked/catalog preserved. Screenshot updated-home reviewed; точные ограничения/remaining scope WORKSPACE-02E. Полный02/performance/physical не закрыты.
+
+## 02f — производительность и адаптивность
+
+W01/W03/W07/DS04: background/lazy availability/search/selection, shared bounded Coil thumbnail cache и row/bottom/toggle под fontScale/viewport — implemented/CI pending. [Контракт/метрики/ограничения](WORKSPACE-02F.md). Денежные и stock use cases не меняются, physical/full02 пока не закрыты.

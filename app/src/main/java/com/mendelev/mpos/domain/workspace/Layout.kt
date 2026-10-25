@@ -18,8 +18,9 @@ object LayoutEngine {
             (it.type=="folder" && it.categoryId in categories || it.type=="product" && byId[it.id]?.categoryId==it.categoryId) && seen.add("${it.type}:${it.id}")
         }
         val folders=valid.filter { it.type=="folder" }.associateBy { it.id }
+        val placed=valid.filter {it.type=="product"}.mapTo(hashSetOf()) {it.id}
         return valid.map { if(it.type=="product" && folders[it.folderId]?.categoryId!=it.categoryId) it.copy(folderId="") else it } +
-            products.filter { p -> valid.none { it.type=="product" && it.id==p.id } }.map { LayoutItem("product",it.id,it.categoryId) }
+            products.filter { p -> p.id !in placed }.map { LayoutItem("product",it.id,it.categoryId) }
     }
     fun apply(saved: List<LayoutItem>, products: List<WorkspaceProduct>, categories: Set<String>, action: LayoutAction): List<LayoutItem> {
         val items=project(saved,products,categories).toMutableList()

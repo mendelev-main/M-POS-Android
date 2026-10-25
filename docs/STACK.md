@@ -146,3 +146,8 @@ WorkManager используется для конечных persistent зада
 - **09 — сайт:** backend DTO, streaming SSE, coordinator, sync policy и настройки endpoint.
 
 Стек считается реализованным по мере появления кода и evidence; целевая архитектура сама по себе не закрывает acceptance. Полное соответствие включает поведение, данные, отказы и физические интеграции, а не только наличие аналогичных экранов.
+
+
+## Реализация фото02f
+
+Coil3.3.0/coil-compose подключён; shared application loader16MiB, private file thumbnails256px и AsyncImage. [Контракт/проверки](WORKSPACE-02F.md). Предыдущие описания adapter01c — история до этого инкремента. PickVisualMedia остаётся отдельной задачей, permissions/photo staging не меняются.

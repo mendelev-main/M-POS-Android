@@ -168,6 +168,17 @@ def main():
         with socketserver.TCPServer(("127.0.0.1", PORT), handler) as server:
             threading.Thread(target=server.serve_forever, daemon=True).start()
             print(f"E2E: install base package {PACKAGE}", flush=True)
+            if not production:
+                # Preserve connected-test measurements before the fixture performs its fresh install.
+                reports = ROOT / "app/build/reports/update-e2e"
+                reports.mkdir(parents=True, exist_ok=True)
+                for name in ("performance.json", "workspace-portrait150.png", "workspace-landscape150.png"):
+                    captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}"], capture_output=True, timeout=20, check=True)
+                    if name.endswith(".json"):
+                        assert json.loads(captured.stdout)["products"] == 2000
+                    else:
+                        assert captured.stdout.startswith(b"\x89PNG"), "Invalid adaptive screenshot"
+                    (reports / name).write_bytes(captured.stdout)
             adb("uninstall", PACKAGE, check=False)
             adb("install", str(base))
             if not production:

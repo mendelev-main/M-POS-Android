@@ -4,6 +4,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -73,15 +75,17 @@ import com.mendelev.mpos.domain.workspace.*
         {dialog=null;model.dismiss()},!busy) {
         if(ui.message!=null) MposNotice(ui.message!!,true)
         when(dialog) {
-            "categories","add"->Column(Modifier.heightIn(max=400.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+            "categories","add"->{
                 val entries=s.categories.map {HomeTile("category",it.id,0) to it.name}+listOf(HomeTile("category","",0) to "Без категории")+
                     if(dialog=="add") s.products.map {HomeTile("product",it.id,0) to it.name} else emptyList()
-                entries.forEach {(tile,name)->
+                LazyColumn(Modifier.heightIn(max=400.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                items(entries,key={it.first.type+":"+it.first.id}) {(tile,name)->
                     val exists=s.home.tiles.any {it.type==tile.type && it.id==tile.id}
                     MposButton((if(dialog=="add" && exists) "Уже добавлено: " else "")+name,{
                         if(dialog=="categories") {onCategory(tile.id);dialog=null}
                         else model.home(HomeAction.Add(tile.type,tile.id),revision) {dialog=null}
                     },enabled=!busy && (dialog=="categories" || !exists),style=ActionStyle.Secondary,modifier=Modifier.testTag("homeChoice:${tile.type}:${tile.id}"))
+                }
                 }
             }
             "manage"->{

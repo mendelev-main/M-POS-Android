@@ -38,10 +38,10 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
     fun observe(): Flow<WorkspaceSnapshot> = combine(dao.products(),dao.categories(),work.observe()) { _,_,_ -> Unit }.mapLatest { snapshot() }
     suspend fun snapshot(): WorkspaceSnapshot = db.withTransaction {
         val entities=dao.allProducts().sortedWith(compareBy<ProductEntity> { it.name }.thenBy { it.id })
-        val groups=dao.allModifierGroups();val options=dao.allModifierOptions()
+        val groups=dao.allModifierGroups().groupBy {it.ownerId};val options=dao.allModifierOptions().groupBy {it.ownerId to it.groupId}
         val products=entities.map { p -> WorkspaceProduct(p.id,p.name,p.categoryId ?: "",p.price,p.revision,p.unit,
-            groups.filter { it.ownerId==p.id }.map { g -> ModifierGroupInput(g.id,g.name,g.minimum.toString(),g.maximum.toString(),
-                options.filter { it.ownerId==p.id && it.groupId==g.id }.map { ModifierOptionInput(it.id,it.productId,it.posName,it.quantity,it.priceDelta) }) },p.photoId) }
+            groups[p.id].orEmpty().map { g -> ModifierGroupInput(g.id,g.name,g.minimum.toString(),g.maximum.toString(),
+                options[p.id to g.id].orEmpty().map { ModifierOptionInput(it.id,it.productId,it.posName,it.quantity,it.priceDelta) }) },p.photoId) }
         val categories=dao.categorySnapshot()
         val cart=work.document("current") ?: error("Рабочая зона не открыта")
         val layout=work.document("layout") ?: error("Раскладка не открыта")

@@ -22,12 +22,16 @@ import com.mendelev.mpos.data.media.ProductPhotoStore
 import com.mendelev.mpos.domain.catalog.*
 import com.mendelev.mpos.domain.workspace.*
 import java.util.UUID
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import androidx.compose.ui.platform.LocalDensity
 
 private fun money(value: String)=value.replace('.',',')+" BYN"
 
 @Composable fun WorkspaceScreen(model: WorkspaceViewModel, photos: ProductPhotoStore, onCatalog: () -> Unit, onSettings: () -> Unit) {
     val ui by model.state.collectAsStateWithLifecycle()
     val s=ui.snapshot
+    var compactOrder by rememberSaveable { mutableStateOf(false) }
     var category by rememberSaveable { mutableStateOf<String?>(null) }
     var folder by rememberSaveable { mutableStateOf<String?>(null) }
     var search by rememberSaveable { mutableStateOf("") }
@@ -100,7 +104,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                         },enabled=!busy,style=ActionStyle.Secondary)
                         if(category==null && search.isBlank()) WorkspaceHome(s,ui,editing,model,photos,Modifier.weight(1f),{category=it;search=""},::configure)
                         else WorkspaceGrid(s,category,null,search,editing,photos,Modifier.weight(1f),ui.pending<100,
-                            {category=it;search=""},{folder=it.id},::configure,::manage,onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
+                            {category=it;search=""},{folder=it.id},::configure,::manage,availabilityIndex=ui.availability,onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
                     }
                 }
                 val cart: @Composable (Modifier)->Unit = { modifier ->
@@ -111,8 +115,19 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                             revalidationOpen=true;model.dismiss()
                         })
                 }
-                if(maxWidth>=840.dp) Row(horizontalArrangement=Arrangement.spacedBy(20.dp)) { grid(Modifier.weight(1f));cart(Modifier.width(340.dp).fillMaxHeight()) }
-                else Column(verticalArrangement=Arrangement.spacedBy(16.dp)) { grid(Modifier.weight(1f));cart(Modifier.fillMaxWidth().height(300.dp)) }
+                val scale=LocalDensity.current.fontScale.coerceIn(1f,2f)
+                val cartWidth=(340*scale).dp
+                if(maxWidth>=cartWidth+(460*scale).dp+20.dp) Row(horizontalArrangement=Arrangement.spacedBy(20.dp)) {
+                    grid(Modifier.weight(1f));cart(Modifier.width(cartWidth).fillMaxHeight())
+                } else if(maxHeight>=(650*scale).dp) Column(verticalArrangement=Arrangement.spacedBy(16.dp)) {
+                    grid(Modifier.weight(1f));cart(Modifier.fillMaxWidth().height((300*scale).dp))
+                } else Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                        MposButton("Товары",{compactOrder=false},style=if(compactOrder) ActionStyle.Secondary else ActionStyle.Primary,modifier=Modifier.testTag("workspaceShowCatalog"))
+                        MposButton("Заказ (${s.cart.lines.size})",{compactOrder=true},style=if(compactOrder) ActionStyle.Primary else ActionStyle.Secondary,modifier=Modifier.testTag("workspaceShowOrder"))
+                    }
+                    if(compactOrder) cart(Modifier.weight(1f).fillMaxWidth()) else grid(Modifier.weight(1f))
+                }
             }
         }
     }
@@ -132,7 +147,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                     val rows=(count+fittingColumns-1)/fittingColumns
                     val gridHeight=if(count==0) 72 else (rows*144+(rows-1)*12).coerceAtMost(420)
                     WorkspaceGrid(s,folderItem.categoryId,folderItem.id,"",editing,photos,Modifier.heightIn(max=gridHeight.dp),ui.pending<100,
-                        {},{},::configure,::manage,folderColumns=fittingColumns,onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
+                        {},{},::configure,::manage,availabilityIndex=ui.availability,folderColumns=fittingColumns,onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
                 }
             }
         }
@@ -220,18 +235,18 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
 
 @Composable private fun WorkspaceGrid(s: WorkspaceSnapshot,category: String?,folder: String?,search: String,editing: Boolean,
     photos: ProductPhotoStore,modifier: Modifier,enabled: Boolean,onCategory: (String)->Unit,onFolder: (LayoutItem)->Unit,
-    onProduct: (WorkspaceProduct)->Unit,onManage: (LayoutItem)->Unit,folderColumns: Int? = null,onReorder: ((LayoutItem,Int)->Unit)? = null) {
+    onProduct: (WorkspaceProduct)->Unit,onManage: (LayoutItem)->Unit,availabilityIndex: WorkspaceAvailability? = null,folderColumns: Int? = null,onReorder: ((LayoutItem,Int)->Unit)? = null) {
     val query=CatalogRules.key(search)
-    val products=s.products.associateBy { it.id }
-    val availability=remember(s.products,s.cart,s.graph,s.balances,s.parked) {
-        s.products.associate { p -> p.id to runCatching {
-            if(s.cart.lines.any { CartEngine.stale(it,s.products) }) "Проверьте текущий заказ"
-            else if(RecipeCalculator(s.graph).shortages(CartEngine.requests(s.cart)+RecipeRequest(p.id,java.math.BigDecimal.ONE,quantityUnit(p.unit)),s.balances,OrderReservations.total(s.parked.map {it.cart})).isEmpty()) "Доступен"
-            else "Недостаточно для 1 ${unitLabel(p.unit)}"
-        }.getOrDefault("Требуется проверка состава") }
+    val products=remember(s.products) {s.products.associateBy {it.id}}
+    val projectionKey=remember(s.products,s.layout,query,category,folder) {Any()}
+    val result by produceState<Pair<Any,List<LayoutItem>>?>(null,projectionKey) {
+        value=projectionKey to withContext(Dispatchers.Default) {
+            if(query.isNotEmpty()) s.products.filter {(category==null || it.categoryId==category) && CatalogRules.key(it.name).contains(query)}.map {LayoutItem("product",it.id,it.categoryId)}
+            else s.layout.filter {it.categoryId==category && it.folderId==(folder ?: "")}
+        }
     }
-    val tiles=if(query.isNotEmpty()) s.products.filter { (category==null || it.categoryId==category) && CatalogRules.key(it.name).contains(query) }.map { LayoutItem("product",it.id,it.categoryId) }
-        else s.layout.filter { it.categoryId==category && it.folderId==(folder ?: "") }
+    val projection=result?.takeIf {it.first===projectionKey}?.second
+    val tiles=projection.orEmpty()
     val gridState=rememberLazyGridState()
     val drag=workspaceDrag(gridState,editing && enabled && query.isEmpty() && category!=null && onReorder!=null,s.layoutRevision,"$category/$folder/${tiles.map {it.type to it.id}}") {from,to->
         tiles.getOrNull(from)?.let {onReorder?.invoke(it,to.coerceIn(0,tiles.lastIndex))}
@@ -259,13 +274,13 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                         Text(if(p.price.toBigDecimal().signum()==0) "Ввести цену" else money(p.price),style=MaterialTheme.typography.bodyMedium)
                         if(editing) Text("Настроить размещение",style=MaterialTheme.typography.bodySmall)
                         else {
-                            Text(availability[p.id] ?: "",style=MaterialTheme.typography.bodySmall)
+                            WorkspaceAvailabilityLabel(availabilityIndex,p)
                             if(p.groups.isNotEmpty() && folder==null) Text("Выбор модификаторов",style=MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
             }
-            if(tiles.isEmpty()) item(span={GridItemSpan(maxLineSpan)}) { Text(if(query.isEmpty()) "Здесь пока нет товаров" else "Ничего не найдено") }
+            if(tiles.isEmpty()) item(span={GridItemSpan(maxLineSpan)}) { Text(if(projection==null) "Ищем товары…" else if(query.isEmpty()) "Здесь пока нет товаров" else "Ничего не найдено") }
         }
     }
 }
@@ -303,4 +318,18 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
             OrderButtons(pending,s,onDetails,onPark,onParked,onClear)
         }
     }
+}
+
+@Composable private fun WorkspaceAvailabilityLabel(index: WorkspaceAvailability?,product: WorkspaceProduct) {
+    val status by produceState<ProductAvailability?>(null,index,product.id) {
+        value=null
+        value=withContext(Dispatchers.Default) {index?.status(product.id) ?: ProductAvailability.INVALID}
+    }
+    Text(when(status) {
+        ProductAvailability.AVAILABLE->"Доступен"
+        ProductAvailability.SHORTAGE->"Недостаточно для 1 ${unitLabel(product.unit)}"
+        ProductAvailability.STALE->"Проверьте текущий заказ"
+        ProductAvailability.INVALID->"Требуется проверка состава"
+        null->"Проверяем доступность…"
+    },style=MaterialTheme.typography.bodySmall)
 }
