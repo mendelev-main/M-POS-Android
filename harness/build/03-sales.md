@@ -51,3 +51,5 @@ S01: commit атомарен; S02: повтор idempotent; S03: historical refu
 03b.1: [денежное ядро и последующие шаги](../../docs/SALE-03B.md), S04 pure ci-verified/run40223239353; S01/S02/S05 и actual checkout planned. Дополнительные D02 примеры подтверждены владельцем25.10.2026.
 
 03a выпущен0.1.46.1, public API36 upgrade5101→5601 passed40223234154.03b.1 pure [CI40223239353](https://github.com/mendelev-main/M-POS-Android/actions/runs/40223239353):55JVM/6Python/lint/build passed; actual sale/history next03b.2.
+
+03b.2a checkout persistence ci-verified [40224718420](https://github.com/mendelev-main/M-POS-Android/actions/runs/40224718420)/c753666:55JVM/53instrumentation/6Python/lint/build и прежний actual updater passed. Новый draft Room reopen/rollback/conflicts/gate covered; atomic sale/history/UI далее, S01/S02/S05 остаются planned. Подчасть не выпускается отдельно.
