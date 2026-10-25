@@ -1,6 +1,6 @@
 # 03b — оплата и история: контракт инкрементов
 
-Статус:03b.1 money engine ci-verified; checkout/sale/history runtime planned. Это не готовая кнопка оплаты. Предпосылки:03a выпущен stable0.1.46.1, [MONEY-03](MONEY-03.md) и ответы владельца25.10.2026. BYN, API36+, единый дизайн pinned Web. Физические тесты по-прежнему позже.
+Статус:03b.1/03b.2a/03b.2b repository ci-verified; checkout/history UI planned. Это не готовая кнопка оплаты. Предпосылки:03a выпущен stable0.1.46.1, [MONEY-03](MONEY-03.md) и ответы владельца25.10.2026. BYN, API36+, единый дизайн pinned Web. Физические тесты по-прежнему позже.
 
 ## Источники и D02
 
@@ -30,7 +30,7 @@ InstallationGate расширяется на sale/сохранение checkout/
 
 ## Границы приёмки
 
-S04 ci-verified только pure money часть, S01/S02/S05 planned до vertical sale; S03 в03c. Не присваивать financial ci-verified всему03b по денежным unit tests. Дальнейшие инкременты03b не выпускаются отдельно автоматически; готовый функциональный блок —PRdevelop→main по workflow владельца.
+S04 pure money ci-verified; S01/S02/S05 ci-verified в repository scope03b.2b. Checkout/history UI и end-to-end кассира planned; S03 в03c. Не присваивать financial ci-verified всему03b по денежным unit tests. Дальнейшие инкременты03b не выпускаются отдельно автоматически; готовый функциональный блок —PRdevelop→main по workflow владельца.
 
 Evidence03b.1: [Android PR manual40223239353](https://github.com/mendelev-main/M-POS-Android/actions/runs/40223239353)/91acd06,55JVM/0failures,6Python/lint/assembleDebug passed.5new SaleMoney tests,46supplemental local cached Kotlin2.1.20 tests passed; actual pinned compiler вCI.45selected pinned Web payment/split/discount/delivery tests passed, SHA256 source совпали сconfig/reference.json. SQLschema6/cart payload2/UI не менялись, новый emulator suite не требовался для unused pure engine. S01/S02/S05 и actual checkout остаются planned.
 
@@ -48,4 +48,6 @@ Evidence03b.2a: [full develop40224718420](https://github.com/mendelev-main/M-POS
 
 ShiftSnapshot.currentCash=opening + committed cash − delivery cash-out; checked Long math, новый sale инвалидирует close preview. Закрытая смена хранит expected/count/difference, следующая переносит counted. Sale/close/installer сериализуются InstallationGate + Room transaction. Schema6→7 сохраняет прежние смены/черновики/stock; пути1–5 дополнены до7.
 
-Тестовый scope: все9 write boundaries простого чека/настоящий SQLite INSERT refusal/replay/reopen/concurrent duplicate/stale close/stock shortage/closed shift; nested calculation framework с tracked0.0004kg, untracked и negative ingredients, parked reserve и cash/card delivery; schema6→7. Actual APK test использует отдельную app-private sale-upgrade.db и проверяет snapshot/ledger/result/current/checkout/shift cash+replay после замены APK. UI checkout/history и физические тесты ещё не реализованы; S01/S02/S05 только repository scope после CI, не весь03b.2.
+Тестовый scope: все9 write boundaries простого чека/настоящий SQLite INSERT refusal/replay/reopen/concurrent duplicate/stale close/stock shortage/closed shift; recipe calculation с tracked0.0004kg, untracked и negative ingredients, parked reserve и cash/card delivery; schema6→7. Actual APK test использует отдельную app-private sale-upgrade.db и проверяет snapshot/ledger/result/current/checkout/shift cash+replay после замены APK. UI checkout/history и физические тесты ещё не реализованы; S01/S02/S05 только repository scope после CI, не весь03b.2.
+
+Evidence03b.2b: [full API36 CI40226577890](https://github.com/mendelev-main/M-POS-Android/actions/runs/40226577890)/bb40ae2(runtime7a66de2):56JVM/60instrumentation/0failures/6Python/lint/build success. Новые6SaleRepository cases +SaleUpgradeTest passed. Все прежние migration1–5 теперь проверены до7, новый6→7 test сохраняет0.0004 stock/shift140/draftrevision.9post-write faults/SQLite abort/concurrent replay/close race/installer admission/refusal/cash delivery/recipeflags/parked reserve/reopen/history verified repository scope. Actual debugAPK1→2 сохраняет отдельную financial fixture DB сreceipt/ledger/result/shiftcash/clearedcurrent/tombstone, повтор не дублирует sale. СтарыеUI catalog/current/parked/home/shift fixtures также passed. Generated7.json сохранён byte-identical CI export. Updated-shift1600×1125 просмотрен: currentCash140 и opening140, общий дизайн без перекрытий. Следующий03b.2c —shared checkout/history UI, restore/reconfirm/error/receipt и Compose acceptance. Полный03b.2/physical/refund ещё не закрыты; stable/main не менялись.

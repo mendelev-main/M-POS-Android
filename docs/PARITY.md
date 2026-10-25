@@ -10,7 +10,7 @@
 |---|---|---|---|
 | P01–P10 | product-catalog/configuration/persistence/categories, product-photo | 01 | Core01a/01b/01c, P03 order/appearance/schema4 ci-verified API36 (run40101394875); device/full01 pending; evidence ниже |
 | W01–W07 | pos.html, cart-composition/presentation, receipts, android-pos-stock | 02 | 02a ci-verified API36/run40106275939; 02b ci-verified API36/run40140796798; 02c revalidation ci-verified API36/run40172190371; 02d UI ci-verified API36/run40172821096; 02e slots/drag ci-verified API36/run40177332732; 02f perf/adaptive ci-verified API36/run40184227465; full W06/W07 не закрыты, device отложен владельцем |
-| S01–S05 | payment, receipts, android-safety, stockConsumption | 03 | planned |
+| S01–S05 | payment, receipts, android-safety, stockConsumption | 03 | S01/S02/S05 repository ci-verified/run40226577890; S04 pure ci-verified; UI/full03 и S03 planned |
 | I01–I04 | inventory, receiving-ui/drafts, purchase-orders, suppliers, warehouse-reporting, android-inventory | 04 | planned |
 | H01–H04 | shifts, employees, analytics, administration guards | 05 | planned |
 | C01–C05 | loyalty, privacy, hall-bookings, customer adapters | 06 | planned |
@@ -115,3 +115,5 @@ W01/W03/W07/DS04: background/lazy availability/search/selection, shared bounded 
 03a release0.1.46.1/main9ab4d4f:40214423719 success; U public channel [40223234154](https://github.com/mendelev-main/M-POS-Android/actions/runs/40223234154) API36 production5101→5601/Cancel/retry/receipt/settings passed.03b.1 [40223239353](https://github.com/mendelev-main/M-POS-Android/actions/runs/40223239353)/91acd06:55JVM/6Python/lint/build, S04 pure только. S01/S02/S05/checkout planned; physical позже.
 
 03b.2a checkout inputs only: [CI40224718420](https://github.com/mendelev-main/M-POS-Android/actions/runs/40224718420)/c753666 passed55JVM/53instrumentation/6Python/lint/build + actual updater. CheckoutRepository сохраняет подготовленные вводы/revisions/tombstone и выдерживает rollback/concurrent save/reopen/stale cart/closed shift/installer gate/explicit free delivery. Это не S01/S02/S05: receipt/stock commit/shift totals/history/UI ещё planned. Данные нового checkout проверены reopen отдельной БД; actual updater проверяет прежние catalog/current/parked/home/shift fixtures, а не новый checkout. Physical позже.
+
+03b.2b S01/S02/S05 repository scope ci-verified [40226577890](https://github.com/mendelev-main/M-POS-Android/actions/runs/40226577890)/bb40ae2:56JVM/60instrumentation/6Python/lint/build; atomic receipt+stock+shift+current+checkout+result/audit,9fault boundaries/SQLite abort/replay/reopen/close race/installer gate/exact recipe flags/parked reserves/delivery. Actual debug1→2 dedicated financial DB сохраняет receipt/ledger/result/shiftcash/cleared current/tombstone и replay idempotency; прежниеUI fixtures такжеpassed. Schema7 из CI export. Это не UI оплаты/истории и не S03; next03b.2c, physical позже.

@@ -1,6 +1,6 @@
 # Этап 03 — Продажи
 
-Статус: 03a ci-verified; sale/refund planned
+Статус: 03a/03b.1/03b.2a/03b.2b repository ci-verified; checkout/history UI и refund planned
 
 ## Объём
 
@@ -53,3 +53,5 @@ S01: commit атомарен; S02: повтор idempotent; S03: historical refu
 03a выпущен0.1.46.1, public API36 upgrade5101→5601 passed40223234154.03b.1 pure [CI40223239353](https://github.com/mendelev-main/M-POS-Android/actions/runs/40223239353):55JVM/6Python/lint/build passed; actual sale/history next03b.2.
 
 03b.2a checkout persistence ci-verified [40224718420](https://github.com/mendelev-main/M-POS-Android/actions/runs/40224718420)/c753666:55JVM/53instrumentation/6Python/lint/build и прежний actual updater passed. Новый draft Room reopen/rollback/conflicts/gate covered; atomic sale/history/UI далее, S01/S02/S05 остаются planned. Подчасть не выпускается отдельно.
+
+03b.2b S01/S02/S05 repository ci-verified [40226577890](https://github.com/mendelev-main/M-POS-Android/actions/runs/40226577890)/bb40ae2:56JVM/60instrumentation/6Python/lint/build +2scale/5UIseed/financial seed+verify actualAPK1→2 passed. Scope SALE-03B; next03b.2c shared checkout/history UI. Не переходить к refund03c до завершения этой вертикали.

@@ -28,3 +28,5 @@ Native решения для первоначального каталога и 
 
 
 Уточнение01b: precision для recipeYield закреплена в [CATALOG-01B.md](CATALOG-01B.md): exact rational intermediates, aggregate per ingredient, final scale12 HALF_EVEN; underflow — явная ошибка. Ядро подключено к Room schema2/редактору; результат CI отражён в build-log.
+
+03b.2b вводит Room7: receipts (unique command/session/shift+number) и historical receipt_products FK RESTRICT. Receipt payload1 хранит cart2/checkout1, округлённые суммы/платежи/сдачу/доставку, historical ingredient graph/flags/costs/category и exact consumption. Current/checkout очищаются только той же sale transaction, result/audit и stock ledger входят в commit. Доставка хранится в receipt.deliveryCashOut один раз; shift currentCash выводится из opening + receipt.cash − deliveryCashOut. Закрытие сохраняет expected/count/difference. UI оплаты/истории ещё отдельно; статус evidence в SALE-03B/build-log.
