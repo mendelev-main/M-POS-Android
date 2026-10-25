@@ -19,35 +19,36 @@ class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 repo.initialize()
-                launch { repo.observe().catch { mutable.update { s -> s.copy(loading=false,fatal=true,message="Не удалось прочитать рабочую зону") } }
+                launch { repo.observe().catch { updateUi { s -> s.copy(loading=false,fatal=true,message="Не удалось прочитать рабочую зону") } }
                     .collect { publish(it) } }
                 for(command in commands) {
                     try { command() }
                     catch(e: CancellationException) { throw e }
-                    catch(e: CatalogFailure) { mutable.update { it.copy(message=e.message) } }
-                    catch(_: Exception) { mutable.update { it.copy(message="Не удалось сохранить. Повторите действие") } }
-                    finally { mutable.update { it.copy(pending=it.pending-1) } }
+                    catch(e: CatalogFailure) { updateUi { it.copy(message=e.message) } }
+                    catch(_: Exception) { updateUi { it.copy(message="Не удалось сохранить. Повторите действие") } }
+                    finally { updateUi { it.copy(pending=it.pending-1) } }
                 }
             } catch(e:CancellationException) { throw e }
-            catch(_:Exception) { mutable.update { it.copy(loading=false,fatal=true,message="Рабочая зона недоступна. Перезапустите приложение") } }
+            catch(_:Exception) { updateUi { it.copy(loading=false,fatal=true,message="Рабочая зона недоступна. Перезапустите приложение") } }
         }
     }
-    private fun publish(snap: WorkspaceSnapshot) {
+    private suspend fun publish(snap: WorkspaceSnapshot) {
         val previous=state.value
         val old=previous.snapshot
         val availability=if(old!=null && old.products==snap.products && old.graph==snap.graph && old.cart==snap.cart && old.balances==snap.balances && old.parked==snap.parked)
             previous.availability else runCatching {WorkspaceAvailability(snap.products,snap.graph,snap.cart,snap.balances,snap.parked.map {it.cart})}.getOrNull()
-        mutable.update {
+        updateUi {
             val current=it.snapshot
             if(current!=null && (current.cartRevision>snap.cartRevision || current.layoutRevision>snap.layoutRevision || current.ordersRevision>snap.ordersRevision || current.homeRevision>snap.homeRevision)) it
             else it.copy(loading=false,snapshot=snap,availability=availability)
         }
     }
+    private suspend fun updateUi(change: (WorkspaceUi) -> WorkspaceUi) = withContext(Dispatchers.Main.immediate) { mutable.update(change) }
     fun dismiss() { mutable.update { it.copy(message=null) } }
     private fun enqueue(block: suspend () -> Unit) {
         if(state.value.loading || state.value.fatal) return
         mutable.update { it.copy(pending=it.pending+1,message=null) }
-        commands.trySend { block();val next=repo.snapshot();publish(next);mutable.update { it.copy(message=null) } }
+        commands.trySend { block();val next=repo.snapshot();publish(next);updateUi { it.copy(message=null) } }
     }
     private fun cart(action: CartAction, expectedOwner: String? = null, done: () -> Unit = {}) {
         val owner=expectedOwner ?: state.value.snapshot?.cart?.sessionId ?: return

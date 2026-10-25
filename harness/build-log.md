@@ -280,3 +280,7 @@ External updater подтвердил CATALOG/WORKSPACE/PARKED/HOME UPDATE PASSE
 ## 2026-10-25 — начало02f
 
 Реализованы on-demand availability/cache и background search, owner indexes, Coil3.3.0 shared16MiB/256px image loader, adaptive cart layout.38supplemental cached Kotlin2.1.20/JDK17 domain tests passed; added2JVM/1mediaAndroid/2UI(scale+2000products) cases. Документированы CI15s budget и synthetic fixture границы, screenshots/metrics перед install. Actual pinned compiler/Room/Coil/UI to CI, нет заявления verified до результата. Local Android blocker и дальнейшие проверки записываются по факту.
+
+Actual local Android command остановился до wrapper на sandbox ~/.gradle lock; pinned Android compiler/Coil tests не заявляются локально пройденными.6Python/preflight/diff passed. API size(Int)/MemoryCache.maxSizeBytes(Long) сверены с исходниками Coil tag3.3.0 через официальный GitHub contents API. Runtime a56382a, [run40178918977](https://github.com/mendelev-main/M-POS-Android/actions/runs/40178918977) pending.
+
+02f run40178918977/a56382a: checks47JVM/lint/build success; instrumentation failed4/47. Wrong-thread Compose Dialog stack ends at WorkspaceViewModel IO publication: all worker UI publications now hop Main.immediate, expensive index stays IO. Synthetic cleanup explicitly deletes RESTRICT stock_balances first. Android16 large-screen requestedOrientation was ignored; fixture now uses UiAutomation display rotation, restores/unfreezes in finally. Parked timeout also remains under regression gate; no success claim. Repeat full CI required.

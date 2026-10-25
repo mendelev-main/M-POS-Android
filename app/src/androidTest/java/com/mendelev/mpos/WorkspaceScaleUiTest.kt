@@ -1,7 +1,7 @@
 package com.mendelev.mpos
 
 import android.content.Context
-import android.content.pm.ActivityInfo
+import android.app.UiAutomation
 import android.content.res.Configuration
 import android.os.Build
 import android.os.ParcelFileDescriptor
@@ -76,6 +76,7 @@ class WorkspaceScaleUiTest {
             runBlocking {
                 repo.cart(CartAction.Clear(repo.snapshot().cartRevision),"bench-finish-$suffix",repo.snapshot().cart.sessionId)
                 db.withTransaction {
+                    db.openHelper.writableDatabase.execSQL("DELETE FROM stock_balances WHERE productId IN (SELECT id FROM products WHERE categoryId = ?)",arrayOf(category))
                     db.openHelper.writableDatabase.execSQL("DELETE FROM products WHERE categoryId = ?",arrayOf(category))
                     db.openHelper.writableDatabase.execSQL("DELETE FROM categories WHERE id = ?",arrayOf(category))
                 }
@@ -84,7 +85,8 @@ class WorkspaceScaleUiTest {
     }
     @Test fun portraitAndLandscapeAtLargeFontKeepOrderAndControlsAccessible() {
         require(Build.HARDWARE in setOf("ranchu","goldfish")) {"Font-scale fixture is emulator-only"}
-        val originalOrientation=compose.activity.resources.configuration.orientation
+        val automation=InstrumentationRegistry.getInstrumentation().uiAutomation
+        val originalRotation=compose.activity.display!!.rotation
         val original=Settings.System.getFloat(compose.activity.contentResolver,Settings.System.FONT_SCALE,1f)
         val suffix=UUID.randomUUID().toString();val id="scale-$suffix";val db=CatalogDatabase.get(compose.activity.applicationContext);val repo=WorkspaceRepository(db)
         runBlocking {
@@ -95,7 +97,7 @@ class WorkspaceScaleUiTest {
         }
         try {
             compose.onNodeWithText("Рабочая зона").performClick()
-            compose.activityRule.scenario.onActivity {it.requestedOrientation=ActivityInfo.SCREEN_ORIENTATION_PORTRAIT}
+            check(automation.setRotation(UiAutomation.ROTATION_FREEZE_90))
             shell("settings put system font_scale 1.5")
             compose.waitUntil(20_000) {compose.activity.resources.configuration.orientation==Configuration.ORIENTATION_PORTRAIT && compose.activity.resources.configuration.fontScale>1.4f}
             compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceTotal").fetchSemanticsNodes().isNotEmpty() || compose.onAllNodesWithTag("workspaceShowOrder").fetchSemanticsNodes().isNotEmpty()}
@@ -106,7 +108,7 @@ class WorkspaceScaleUiTest {
             compose.onNodeWithTag("workspaceTotal").assertTextEquals("Предварительно: 4 BYN").assertIsDisplayed()
             compose.onNodeWithTag("workspaceParked").assertIsDisplayed()
             screenshot("workspace-portrait150")
-            compose.activityRule.scenario.onActivity {it.requestedOrientation=ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE}
+            check(automation.setRotation(UiAutomation.ROTATION_FREEZE_0))
             compose.waitUntil(20_000) {compose.activity.resources.configuration.orientation==Configuration.ORIENTATION_LANDSCAPE}
             compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceTotal").fetchSemanticsNodes().isNotEmpty()}
             compose.onNodeWithTag("workspaceTotal").assertTextEquals("Предварительно: 4 BYN").assertIsDisplayed()
@@ -114,8 +116,9 @@ class WorkspaceScaleUiTest {
             screenshot("workspace-landscape150")
         } finally {
             shell("settings put system font_scale $original")
-            compose.activityRule.scenario.onActivity {it.requestedOrientation=ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED}
-            compose.waitUntil(20_000) {kotlin.math.abs(compose.activity.resources.configuration.fontScale-original)<0.01f && compose.activity.resources.configuration.orientation==originalOrientation}
+            check(automation.setRotation(originalRotation))
+            compose.waitUntil(20_000) {kotlin.math.abs(compose.activity.resources.configuration.fontScale-original)<0.01f && compose.activity.display!!.rotation==originalRotation}
+            check(automation.setRotation(UiAutomation.ROTATION_UNFREEZE))
         }
     }
 }
