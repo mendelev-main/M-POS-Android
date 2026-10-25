@@ -23,7 +23,7 @@ class ShiftRepositoryTest {
     private val context=InstrumentationRegistry.getInstrumentation().targetContext
     private val clock=Clock.fixed(Instant.parse("2026-10-25T10:00:00Z"),ZoneId.of("Europe/Minsk"))
     private suspend fun reject(block: suspend () -> Unit) {try {block();fail("Expected refusal")} catch(_:CatalogFailure) {}}
-    @Test fun openCloseReplayConcurrencyAndReopenPreserveWorkspace()=runBlocking {
+    @Test fun openCloseReplayConcurrencyAndReopenPreserveWorkspace(): Unit=runBlocking {
         val name="shift-${UUID.randomUUID()}.db"
         fun db()=Room.databaseBuilder(context,CatalogDatabase::class.java,name).build()
         var database=db()
@@ -52,7 +52,7 @@ class ShiftRepositoryTest {
     private suspend fun dbUnique(db: CatalogDatabase,value: ShiftEntity) {
         try {db.shifts().insert(value);fail("Database must prevent second active slot")} catch(_:android.database.sqlite.SQLiteConstraintException) {}
     }
-    @Test fun everyOpenAndCloseWriteFailureRollsBackShiftRegisterResultAndAudit()=runBlocking {
+    @Test fun everyOpenAndCloseWriteFailureRollsBackShiftRegisterResultAndAudit(): Unit=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         try {
             val repo=ShiftRepository(db,clock);repo.initialize();val before=repo.snapshot()
@@ -78,7 +78,7 @@ class ShiftRepositoryTest {
             assertEquals(active,repo.snapshot());assertNull(db.catalog().result("sql-fault"))
         } finally {db.close()}
     }
-    @Test fun installationWaitsForCommittedWriteAndBlocksNewShiftCommands()=runBlocking {
+    @Test fun installationWaitsForCommittedWriteAndBlocksNewShiftCommands(): Unit=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build();val entered=CountDownLatch(1);val resume=CountDownLatch(1)
         try {
             val repo=ShiftRepository(db,clock);repo.initialize();val s=repo.snapshot();var first=true
@@ -86,6 +86,8 @@ class ShiftRepositoryTest {
             coroutineScope {
                 val write=async(Dispatchers.IO) {slow.open("slow",0,null,s.ownerId)}
                 assertTrue(withContext(Dispatchers.IO) {entered.await(10,TimeUnit.SECONDS)})
+                val cancelled=async {InstallationGate.prepare {error("Cancelled preparation must never run")}}
+                yield();cancelled.cancelAndJoin()
                 val install=async {InstallationGate.prepare {assertEquals(1L,repo.snapshot().revision);"intent"}}
                 yield();assertFalse(install.isCompleted);resume.countDown();write.await();assertEquals("intent",install.await())
             }
@@ -95,7 +97,7 @@ class ShiftRepositoryTest {
             InstallationGate.release();repo.close("allowed",active.active!!.id,active.revision,ShiftRules.token(active),0,active.ownerId)
         } finally {resume.countDown();InstallationGate.release();db.close()}
     }
-    @Test fun migration5To6PreservesLegacyCatalogAndWorkspaceDocuments()=runBlocking {
+    @Test fun migration5To6PreservesLegacyCatalogAndWorkspaceDocuments(): Unit=runBlocking {
         val name="shift-migrate-${UUID.randomUUID()}.db"
         val schema=InstrumentationRegistry.getInstrumentation().context.assets.open("com.mendelev.mpos.data.local.CatalogDatabase/5.json").bufferedReader().use {JSONObject(it.readText()).getJSONObject("database")}
         val old=context.openOrCreateDatabase(name,Context.MODE_PRIVATE,null)
