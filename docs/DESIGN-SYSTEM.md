@@ -109,3 +109,7 @@ MposAppBar переносит существующий navy/Manrope header ка�
 ## Рабочая зона02d — ширина папки
 
 Shared MposDialog maxWidth — ограничение ширины без отдельного оформления Close/header/buttons/radius/padding. Для папок280/448/660/872dp по1–4колонкам из pinned pos.html611; narrow viewport уменьшает колонки по доступной ширине. wide900dp остаётся общим вариантом для других сценариев. [Контракт](WORKSPACE-02D.md).
+
+## Рабочая зона02e — пустое место и цель перетаскивания
+
+Пустое место: фон background, общая граница outlineVariant/1dp, shapes.large, высота144dp как минимальная плитка. Стандартный Material surfaceVariant не используется, чтобы не вносить фиолетовую заливку. Цель жеста выделяется primary/2dp по общей shape. Home product tile использует общий ProductPhoto и принятую подсказку «Ввести цену» для manual0. Все действия Add/Move/Remove/Reset используют существующие MposButton/Field/Dialog/Close. [Контракт](WORKSPACE-02E.md).

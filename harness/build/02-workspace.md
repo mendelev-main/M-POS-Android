@@ -1,6 +1,6 @@
 # Этап 02 — Рабочая зона
 
-Статус: 02a/02b ci-verified API36; 02c ci-verified API36/run40172190371; device отложен владельцем2026-10-24
+Статус: инкременты02a–02e ci-verified API36 (последний run40177332732); полный02/performance/device не закрыт, physical отложен владельцем
 
 ## Объём
 
@@ -47,4 +47,6 @@ W IDs с tests, rotation/process death и планшетным walkthrough.
 
 Итог02d: run40172821096/da8db71 —41JVM/6Python/lint/build,41instrumentation+4UIseed, actual updater success. Fixed-slot drag и физическая приёмка не закрыты.
 
-02e: [home slots и drag](../../docs/WORKSPACE-02E.md) implemented/CI pending. W01/W06; оставшиеся performance/physical критерии не закрыты.
+02e: [home slots и drag](../../docs/WORKSPACE-02E.md) ci-verified API36/run40177332732. W01/W06; оставшиеся performance/physical критерии не закрыты.
+
+Итог02e:45JVM/6Python/lint/build,44instrumentation+4UIseed, actual updater включая home slot8 success; оставшиеся performance/adaptivity/physical критерии отдельно.

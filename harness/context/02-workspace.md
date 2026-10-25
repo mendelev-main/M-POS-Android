@@ -65,3 +65,12 @@ Screenshots workspace-folder/workspace-configuration просмотрены: к�
 ## 02e начало — 2026-10-25
 
 Авторизован следующий инкремент. mpos-phase/mpos-domain; pinned pos-navigation различает home fixed5col slots/max20 и category/folder list reorder. Контракт WORKSPACE-02E, native bounded100places и адаптация линейных мест в narrow viewport. Homedoc payload1 создаётся рядом со старыми документами, SQL5/cart2/layout1 без изменений. CAS/result/audit/fault/replay/delete guards; долгий tap/target highlight/edge scroll/cancel/recreate; number-place и прежние step controls. Каталог новых категорий доступен через All categories/search после customized root. Source regression suite и CI далее. Physical отложен пользователем,03 не начинаем.
+
+
+## 02e итог и следующий шаг
+
+[run40177332732](https://github.com/mendelev-main/M-POS-Android/actions/runs/40177332732), final runtime d53328e: checks121120840559 и emulator36 job121120840445 success.45JVM/0failures,6Python,lint/assembleDebug;44instrumentation/0failures/0skipped, затем4explicit UI seed. HomeLayoutUiTest действительно выполнил long-press root drag, accessible place8, recreate и category drag;2Room tests прошли legacy init/fault/replay/reopen/unknown format/concurrent winner/delete guards. Supplemental36domain tests и442pinned source regressions прошли локально; actual Android local blocked до wrapper ~/.gradle lock.
+
+External updater подтвердил CATALOG/WORKSPACE/PARKED/HOME UPDATE PASSED и UPDATE E2E PASSED: actual APK1→2, stock8/current qty5 total15 BYN/parked delivery label total5 BYN/custom home product slot8 сохранены. Signing/publish/production-upgrade skipped на develop. Предварительный run40176727737/b389b39 также прошёл, промежуточный40177268042 отменён после визуального review для проверки финальных изменений вместе. Final updated-home.png1600×1125 просмотрен: нейтральные empty places, product на месте8, общие кнопки, без системных overlay/перекрытий. Физическая/paired Web parity не заявляется.
+
+02e W01/W06 в описанном scope ci-verified. Room SQLschema5, cart2 и category layout1 прежние; новый home document payload1. Main/stable/signing identity неизменны, релиз не публикуется. Следующий остаток02 — большой каталог/performance/Coil и адаптивность/font-scale/orientation; физический планшет позже по решению владельца. Полный02/device не закрыты,03 автоматически не начинать.

@@ -9,7 +9,7 @@
 | Acceptance IDs | Web features / adapters | Этап | Статус |
 |---|---|---|---|
 | P01–P10 | product-catalog/configuration/persistence/categories, product-photo | 01 | Core01a/01b/01c, P03 order/appearance/schema4 ci-verified API36 (run40101394875); device/full01 pending; evidence ниже |
-| W01–W07 | pos.html, cart-composition/presentation, receipts, android-pos-stock | 02 | 02a ci-verified API36/run40106275939; 02b ci-verified API36/run40140796798; 02c revalidation ci-verified API36/run40172190371; 02d UI ci-verified API36/run40172821096; full W06/W07 не закрыты, device отложен владельцем |
+| W01–W07 | pos.html, cart-composition/presentation, receipts, android-pos-stock | 02 | 02a ci-verified API36/run40106275939; 02b ci-verified API36/run40140796798; 02c revalidation ci-verified API36/run40172190371; 02d UI ci-verified API36/run40172821096; 02e slots/drag ci-verified API36/run40177332732; full W06/W07 не закрыты, device отложен владельцем |
 | S01–S05 | payment, receipts, android-safety, stockConsumption | 03 | planned |
 | I01–I04 | inventory, receiving-ui/drafts, purchase-orders, suppliers, warehouse-reporting, android-inventory | 04 | planned |
 | H01–H04 | shifts, employees, analytics, administration guards | 05 | planned |
@@ -92,4 +92,6 @@ W01/W02 UI: ширины папок по числу колонок, адапта
 
 ## 02e — slots/drag
 
-W01/W06: настраиваемый home(max20)/пустые места/nearest free, atomic CAS/replay/rollback, category/folder drag Reorder и доступное управление — implemented/CI pending. [Контракт/границы](WORKSPACE-02E.md). SQLschema5 без изменений; полный02/performance/device не закрыты.
+W01/W06: настраиваемый home(max20)/пустые места/nearest free, atomic CAS/replay/rollback, category/folder drag Reorder и доступное управление — ci-verified API36/run40177332732. [Контракт/границы](WORKSPACE-02E.md). SQLschema5 без изменений; полный02/performance/device не закрыты.
+
+02e evidence: [run40177332732](https://github.com/mendelev-main/M-POS-Android/actions/runs/40177332732)/d53328e,45JVM/6Python/lint/build,44instrumentation+4explicit UIseed и actual updater success с custom product slot8/current/parked/catalog preserved. Screenshot updated-home reviewed; точные ограничения/remaining scope WORKSPACE-02E. Полный02/performance/physical не закрыты.
