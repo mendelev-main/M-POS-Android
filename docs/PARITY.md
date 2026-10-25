@@ -78,4 +78,6 @@ W03: current+parked aggregate reserve и исключение прежнего �
 
 ## 02c — пересчёт текущего заказа
 
-W03/W06: pure preview нового snapshot/суммы/состава и explicit transactional confirm с owner/revision/token, без изменения склада — implemented, CI pending. [Контракт и ограничения](WORKSPACE-02C.md). Полный02/device не закрыты.
+W03/W06: pure preview нового snapshot/суммы/состава и explicit transactional confirm с owner/revision/token, без изменения склада — implemented; domain/Room/UI checks passed, общий CI gate pending из-за системного ANR эмулятора во внешнем updater. [Контракт и ограничения](WORKSPACE-02C.md). Полный02/device не закрыты.
+
+Финальный2ce31c2: [run40144720147](https://github.com/mendelev-main/M-POS-Android/actions/runs/40144720147),40JVM/5Python/lint/build success,41instrumentation+4explicit UI seed passed; external updater blocked системным android «System UI isn’t responding», общий run failure. Финальный APK replacement не объявляется пройденным. Детали в WORKSPACE-02C/build-log; полный02/device не закрыты.
