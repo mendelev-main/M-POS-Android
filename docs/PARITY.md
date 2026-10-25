@@ -105,3 +105,5 @@ W01/W03/W07/DS04: background/lazy availability/search/selection, shared bounded 
 Перед03a выполнена [сверка01/02](PHASE-02-REVIEW.md); device критерии остаются pending. Подготовлены SHIFT-03A/MONEY-03, подтверждённая часть D02 не означает реализацию S01–S05.
 
 Выпуск01b–02f: PR1/merge87f57ae, main run40198464669 checks/emulator/signing/publish success, stable0.1.41.1/code5101/minSdk36. U01–U06 public channel [run40199534929](https://github.com/mendelev-main/M-POS-Android/actions/runs/40199534929) ci-verified API36: production2601→5101,Cancel/retry/restored download/receipt/settings. Physical остаётся pending.
+
+03a H01/H02 minimal:open/close/carry/revision/atomic result/audit/installation boundary,Room6/shared UI — implemented/CI pending. [Scope](SHIFT-03A.md). S01–S05/employee roles/полные отчёты05 не реализованы.

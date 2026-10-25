@@ -119,10 +119,11 @@ interface CatalogDao {
 }
 
 @Database(entities = [CategoryEntity::class, ProductEntity::class, BalanceEntity::class, MovementEntity::class,
-    ResultEntity::class, AuditEntity::class, DraftEntity::class, ConfigEntity::class, RecipeComponentEntity::class, ModifierGroupEntity::class, ModifierOptionEntity::class, WorkspaceDocument::class], version = 5, exportSchema = true)
+    ResultEntity::class, AuditEntity::class, DraftEntity::class, ConfigEntity::class, RecipeComponentEntity::class, ModifierGroupEntity::class, ModifierOptionEntity::class, WorkspaceDocument::class, ShiftEntity::class, ShiftRegisterEntity::class], version = 6, exportSchema = true)
 abstract class CatalogDatabase : RoomDatabase() {
     abstract fun catalog(): CatalogDao
     abstract fun workspace(): WorkspaceDao
+    abstract fun shifts(): ShiftDao
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -158,10 +159,18 @@ abstract class CatalogDatabase : RoomDatabase() {
                 db.execSQL("CREATE TABLE IF NOT EXISTS workspace_documents (id TEXT NOT NULL PRIMARY KEY, revision INTEGER NOT NULL, payload TEXT NOT NULL)")
             }
         }
+        val MIGRATION_5_6 = object : Migration(5,6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS shifts (id TEXT NOT NULL PRIMARY KEY, registerId TEXT NOT NULL, actorId TEXT NOT NULL, actorName TEXT NOT NULL, openedAt INTEGER NOT NULL, zoneId TEXT NOT NULL, openingCash INTEGER NOT NULL, sourceShiftId TEXT, closedAt INTEGER, countedCash INTEGER, expectedCash INTEGER, difference INTEGER, activeSlot INTEGER)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_shifts_activeSlot ON shifts(activeSlot)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS shift_register (id INTEGER NOT NULL PRIMARY KEY, revision INTEGER NOT NULL, lastShiftId TEXT, FOREIGN KEY(lastShiftId) REFERENCES shifts(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_shift_register_lastShiftId ON shift_register(lastShiftId)")
+            }
+        }
         @Volatile private var instance: CatalogDatabase? = null
         fun get(context: Context): CatalogDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(context.applicationContext, CatalogDatabase::class.java, "mpos.db")
-                .addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4,MIGRATION_4_5).build().also { instance = it }
+                .addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4,MIGRATION_4_5,MIGRATION_5_6).build().also { instance = it }
         }
     }
 }

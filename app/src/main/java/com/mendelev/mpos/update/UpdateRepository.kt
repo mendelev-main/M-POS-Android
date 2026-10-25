@@ -79,12 +79,14 @@ class UpdateRepository(private val context: Context, fixtureUrl: String? = null)
 
     /** Recheck bytes and signer immediately before granting the installer access. */
     suspend fun installationIntent(update: UpdateDescriptor): Intent = withContext(Dispatchers.IO) {
+        com.mendelev.mpos.core.operations.InstallationGate.prepare {
         verify(update, apk)
         check(prefs.edit().putLong("installTarget", update.versionCode).commit()) { "Не удалось сохранить состояние установки" }
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.updates", apk)
         Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/vnd.android.package-archive")
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             .putExtra(Intent.EXTRA_RETURN_RESULT, true)
+        }
     }
 
     fun completedUpdate(): Boolean {

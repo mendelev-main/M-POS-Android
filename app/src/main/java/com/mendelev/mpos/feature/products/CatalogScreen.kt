@@ -30,7 +30,7 @@ import com.mendelev.mpos.domain.catalog.unitLabel
 import com.mendelev.mpos.domain.catalog.quantityUnit
 import java.util.UUID
 
-@Composable fun CatalogScreen(model: CatalogViewModel, onSettings: () -> Unit, onGallery: () -> Unit, onWorkspace: () -> Unit = {}) {
+@Composable fun CatalogScreen(model: CatalogViewModel, onSettings: () -> Unit, onGallery: () -> Unit, onWorkspace: () -> Unit = {}, onShift: () -> Unit = {}) {
     val state by model.state.collectAsStateWithLifecycle()
     val context=LocalContext.current
     var photoSession by rememberSaveable { mutableStateOf<String?>(null) }
@@ -60,6 +60,7 @@ import java.util.UUID
         MposAppBar(subtitle="Локальный владелец") {
             if(d==null) {
                 MposNavigationAction("Рабочая зона",onWorkspace)
+                MposNavigationAction("Смена",onShift)
                 if(com.mendelev.mpos.BuildConfig.DEBUG) MposNavigationAction("Компоненты",onGallery)
                 MposNavigationAction("Настройки",onSettings)
             }

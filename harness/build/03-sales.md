@@ -43,3 +43,5 @@ S01: commit атомарен; S02: повтор idempotent; S03: historical refu
 ## Подготовка03a —2026-10-25
 
 [Сверка01/02](../../docs/PHASE-02-REVIEW.md), [минимальная смена](../../docs/SHIFT-03A.md), [утверждённая часть D02](../../docs/MONEY-03.md). Разрешены line HALF_UP2 и полный cross-shift cash refund; скидочные/split allocations отдельно. Runtime03 отсутствует; эта подготовка не закрывает S/H acceptance. Сначала релиз готового01/02 в main, затем реализация03a в develop.
+
+03a implementation: [SHIFT-03A](../../docs/SHIFT-03A.md), H01/H02 minimal implemented/CI pending; schema6/общий экран смены/installation gate. S01–S05 и full05 по-прежнему planned.

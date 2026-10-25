@@ -28,7 +28,7 @@ import androidx.compose.ui.platform.LocalDensity
 
 private fun money(value: String)=value.replace('.',',')+" BYN"
 
-@Composable fun WorkspaceScreen(model: WorkspaceViewModel, photos: ProductPhotoStore, onCatalog: () -> Unit, onSettings: () -> Unit) {
+@Composable fun WorkspaceScreen(model: WorkspaceViewModel, photos: ProductPhotoStore, onCatalog: () -> Unit, onSettings: () -> Unit, onShift: () -> Unit = {}) {
     val ui by model.state.collectAsStateWithLifecycle()
     val s=ui.snapshot
     var compactOrder by rememberSaveable { mutableStateOf(false) }
@@ -86,6 +86,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
         MposAppBar("M-POS · Рабочая зона") {
             MposNavigationAction("Товары",onCatalog)
+            MposNavigationAction("Смена",onShift)
             MposNavigationAction("Настройки",onSettings)
         }
         if(ui.loading) Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) { CircularProgressIndicator() }

@@ -98,6 +98,7 @@ class UpdateViewModel(val repository: UpdateRepository) : ViewModel() {
     }
 
     fun installerClosed(message: String = "Установка не завершена. Можно повторить установку проверенного APK.") {
+        viewModelScope.launch {com.mendelev.mpos.core.operations.InstallationGate.release()}
         mutableState.update { it.copy(stage = UpdateStage.READY, message = message) }
     }
 

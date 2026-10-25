@@ -1,6 +1,6 @@
 # 03a — минимальная смена: контракт перед реализацией
 
-Статус: specification-only, runtime ещё отсутствует. Задача — явный допуск будущей продажи в открытую смену, а не полное управление кассой05. Предпосылки — [сверка01/02](PHASE-02-REVIEW.md), текущие Room schema5/постоянный native package, [данные](DATA.md), [состояния](STATE-MACHINES.md). mpos-phase/mpos-domain; UI из общего DESIGN-SYSTEM.
+Статус: implemented/CI pending. Задача — явный допуск будущей продажи в открытую смену, а не полное управление кассой05. Предпосылки — [сверка01/02](PHASE-02-REVIEW.md), текущие Room schema5/постоянный native package, [данные](DATA.md), [состояния](STATE-MACHINES.md). mpos-phase/mpos-domain; UI из общего DESIGN-SYSTEM.
 
 ## Источник и принятые границы
 
@@ -18,7 +18,7 @@ CloseShift(commandId, shiftId, expectedRevision, previewToken, countedCashMinor,
 
 До появления продаж expectedCash=openingCash; пример opening0/counted0 →difference0, повтор open переносит0. Общий контракт ожидаемой кассы: opening + cash net sales − cash refunds + deposits − withdrawals; card не меняет наличные. Уплаченная купюра50 при наличной продаже40/сдаче10 увеличивает кассу на40. Наличная выдача refund не дублируется withdrawal. Полная реализация sale/allocations и cash movements вводится позже с отдельными gates.
 
-Будущий CommitSale проверяет active shiftId и revision внутри той же БД transaction. При гонке close/sale либо sale включена до close, либо отклонена после close. Черновик current/parked не является оплатой: закрытие смены его сохраняет, для оплаты требуется новая смена. Runtime03a ещё не разрешает продажу и не создаёт фиктивных receipt.
+Будущий CommitSale проверяет active shiftId и revision внутри той же БД transaction. При гонке close/sale либо sale включена до close, либо отклонена после close. Черновик current/parked не является оплатой: закрытие смены его сохраняет, для оплаты требуется новая смена. Runtime03a не разрешает продажу и не создаёт фиктивных receipt.
 
 ## Экран и отказ
 
@@ -40,3 +40,11 @@ H01/H02 в03a покрывают только минимальные open/close/
 Владелец подтвердил BYN/net line HALF_UP2:0.05×3×(1−10%)=0.135→0.14; итог складывается из округлённых строк. Возвраты первого этапа — только полный чек. Наличный refund сегодняшней смены уменьшает её cash ровно один раз; исходная продажа остаётся исторически во вчерашней смене. Подробности [денежного контракта](MONEY-03.md).
 
 Открыты до соответствующего sale-кода: виды/порядок скидок и их allocation, доставка/loyalty/gift и split rounding fixtures, card outcome/reversal contract (без SDK — только отметка способа), полный refund mixed payments/delivery. Это не требует молча принимать новые финансовые правила при реализации минимального open/close.
+
+## Реализация03a
+
+RoomSQLschema6:shifts(unique nullable activeSlot=1)/shift_register(singleton revision/last FK); первая init не создаёт скрытую смену. Open/close/result/audit одной Room transaction; repeat/fingerprint/CAS/clock/owner и exact minor input. Current/parked/home не изменяются. Admission requireActive работает только внутри Room transaction и будет использован будущей продажей; сам по себе это не реализованный CommitSale. Closed status определяется closedAt, immutable domain copy сохраняет expected/counted/difference и источник переноса.
+
+InstallationGate сериализует shift writes и подготовку installer; после подготовки новые shift commands отвергаются до installerClosed (Cancel/ошибка запуска/возврат). При убийстве процесса незавершённая Room transaction откатывается, новый процесс заново читает committed state. Это gate текущих shift writes, не выдуманная реализация будущего финансового recovery. UI state публикуется Main, I/O — IO. Одновременные open в repository и уникальность active slot проверяются отдельно.
+
+Проверки implemented:3pure (exact input/overflow/carry/difference/stale/owner/clock),4Room (open/close/replay/concurrency/reopen/DB unique/workspace unchanged;4write fault boundaries+SQLite trigger refusal;installation race;5→6 preservation),1UI (invalid counted/recreate/close140/carry140/open). Прежние migration1/2/3/4 тесты доведены до6. Driver5explicit UIseed проверяет active shiftId/opening140 после actual APK1→2 и сохраняет снимки open/closed/update. Schema6 export и actual Android результаты получать из CI.
