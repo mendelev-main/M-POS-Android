@@ -21,7 +21,10 @@ class SaleUiTest {
     @get:Rule val compose=createAndroidComposeRule<MainActivity>()
     private fun hideKeyboard() {compose.runOnIdle {(compose.activity.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).hideSoftInputFromWindow(compose.activity.window.decorView.windowToken,0)}}
     private fun shot(name: String) {
-        compose.waitForIdle();val b=compose.onRoot().captureToImage().asAndroidBitmap();val f=File(compose.activity.filesDir,"qa/$name.png");f.parentFile!!.mkdirs();f.outputStream().use {b.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};b.recycle()
+        compose.waitForIdle()
+        val tag=when(name) {"sale-preview"->"salePreviewTotal";"sale-history"->"receiptDetails";else->"saleSuccess"}
+        val b=compose.onNode(isRoot() and hasAnyDescendant(hasTestTag(tag))).captureToImage().asAndroidBitmap()
+        val f=File(compose.activity.filesDir,"qa/$name.png");f.parentFile!!.mkdirs();f.outputStream().use {b.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};b.recycle()
     }
     @Test fun cashRefusalPreparedRestoreCommitAndHistoricalReceipt(): Unit {
         val db=CatalogDatabase.get(compose.activity.applicationContext);val suffix=UUID.randomUUID().toString();val id="sale-ui-$suffix";val name="Чай для оплаты $suffix"

@@ -1,6 +1,6 @@
 # Сохранность данных, восстановление и миграции
 
-Статус: требования к будущей реализации. Room ещё не подключён. Web `android-safety.js` использует journal roll-forward поверх localStorage; native сохраняет атомарность через Room transaction и не переносит Web journal буквально. Источник наблюдения: [SOURCE.md](SOURCE.md), pinned commit, `docs/STORAGE_WRITE_BOUNDARY_RU.md` в Web.
+Статус: общий контракт сохранности; Room7 и atomic sale/history repository уже проверены CI03b.2b (SALE-03B). Backup/outbox для будущих адаптеров и полный recovery UI реализуются по своим этапам. Web `android-safety.js` использует journal roll-forward поверх localStorage; native сохраняет атомарность через Room transaction и не переносит Web journal буквально. Источник наблюдения: [SOURCE.md](SOURCE.md), pinned commit, `docs/STORAGE_WRITE_BOUNDARY_RU.md` в Web.
 
 ## Порядок локальной команды
 

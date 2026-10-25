@@ -374,3 +374,7 @@ Room7/receipts/historical refs, SaleRepository transactional commit/replay/outco
 ## 2026-10-25 —03b.2c implementation
 
 SaleViewModel/shared screens/navigation, prepared persistence/confirmation/result restore/history, receiptId tombstone/ack contract. New Compose SaleUiTest и screenshots в explicit updater seed (6UIseeds вместо5); actual financial fixture остаётся. Preflight/6Python/diff passed. Local harness android остановлен доGradle: cannot create ~/.gradle/wrapper/...zip.lck; actual Android/Room/UI pending CI, физический планшет позже.
+
+03b.2c дополнение:47supplemental local domain tests cached Kotlin2.1.20/JDK17 и45selected pinned source payment/split/discount/delivery regressions passed; SHA256 payment/android-safety/android-pos-stock/source-test совпали сreference. Runs40228736121/40228831606 superseded workflow concurrency после layout/test coverage доработок, не полное evidence. Current483f137/run40229104688 checks passed, emulator pending; итог ниже после наблюдения.
+
+Run40229104688/483f137:checks success; API36 suite62tests/1failure. SaleUiTest остановился на screenshot preview: onRoot capture нашёл2isRoot (activity+dialog), не ошибка расчёта/commit. Остальные61tests, включаяSaleViewModelTest card delivery/SQLite failure/retry/mixed discount, passed. Screenshot helper изменён на root, содержащий конкретный semantics tag, без fallback/подавленияошибок. ДальнейшиеUI шаги этого failedrun не считаются пройденными; updater не запускался после suitefailure.
