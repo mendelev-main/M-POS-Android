@@ -37,11 +37,13 @@ class ShiftRepositoryTest {
             dbUnique(database, database.shifts().shift(id)!!.copy(id="duplicate"))
             database.withTransaction {assertEquals(id,repo.requireActive(id,active.revision).id)}
             val token=ShiftRules.token(active)
-            repo.close("close",id,active.revision,token,14000,s.ownerId)
+            val closes=coroutineScope {listOf("close","close-other").map {key->async(Dispatchers.IO) {runCatching {repo.close(key,id,active.revision,token,14000,s.ownerId)}}}.awaitAll()}
+            assertEquals(1,closes.count {it.isSuccess})
+            val closeCommand=if(closes[0].isSuccess) "close" else "close-other"
             val closed=repo.snapshot();assertNull(closed.active);assertEquals(14000L,closed.last!!.difference)
-            assertEquals(id,repo.close("close",id,active.revision,token,14000,s.ownerId))
+            assertEquals(id,repo.close(closeCommand,id,active.revision,token,14000,s.ownerId))
             assertEquals(id,repo.open("open$winner",0,null,s.ownerId));assertEquals(closed,repo.snapshot())
-            reject {repo.close("close",id,active.revision,token,13999,s.ownerId)}
+            reject {repo.close(closeCommand,id,active.revision,token,13999,s.ownerId)}
             reject {database.withTransaction {repo.requireActive(id,active.revision)}}
             val next=repo.open("next",closed.revision,id,s.ownerId)
             assertEquals(14000L,repo.snapshot().active!!.openingCash);assertEquals(id,repo.snapshot().active!!.sourceShiftId)
@@ -86,16 +88,17 @@ class ShiftRepositoryTest {
             coroutineScope {
                 val write=async(Dispatchers.IO) {slow.open("slow",0,null,s.ownerId)}
                 assertTrue(withContext(Dispatchers.IO) {entered.await(10,TimeUnit.SECONDS)})
-                val cancelled=async {InstallationGate.prepare {error("Cancelled preparation must never run")}}
+                val cancelled=async {InstallationGate.prepare("cancelled") {error("Cancelled preparation must never run")}}
                 yield();cancelled.cancelAndJoin()
-                val install=async {InstallationGate.prepare {assertEquals(1L,repo.snapshot().revision);"intent"}}
+                val install=async {InstallationGate.prepare("owner") {assertEquals(1L,repo.snapshot().revision);"intent"}}
                 yield();assertFalse(install.isCompleted);resume.countDown();write.await();assertEquals("intent",install.await())
             }
             val active=repo.snapshot()
+            InstallationGate.release("another-window")
             try {repo.close("blocked",active.active!!.id,active.revision,ShiftRules.token(active),0,active.ownerId);fail()} catch(_:IllegalStateException) {}
             assertEquals(active,repo.snapshot());assertNull(db.catalog().result("blocked"))
-            InstallationGate.release();repo.close("allowed",active.active!!.id,active.revision,ShiftRules.token(active),0,active.ownerId)
-        } finally {resume.countDown();InstallationGate.release();db.close()}
+            InstallationGate.release("owner");repo.close("allowed",active.active!!.id,active.revision,ShiftRules.token(active),0,active.ownerId)
+        } finally {resume.countDown();InstallationGate.release("owner");db.close()}
     }
     @Test fun migration5To6PreservesLegacyCatalogAndWorkspaceDocuments(): Unit=runBlocking {
         val name="shift-migrate-${UUID.randomUUID()}.db"
@@ -103,7 +106,7 @@ class ShiftRepositoryTest {
         val old=context.openOrCreateDatabase(name,Context.MODE_PRIVATE,null)
         try {
             val entities=schema.getJSONArray("entities")
-            for(i in 0 until entities.length()) {val e=entities.getJSONObject(i);val table=e.getString("tableName");old.execSQL(e.getString("createSql").replace("\${TABLE_NAME}",table));val indices=e.getJSONArray("indices");for(j in 0 until indices.length()) old.execSQL(indices.getJSONObject(j).getString("createSql").replace("\${TABLE_NAME}",table))}
+            for(i in 0 until entities.length()) {val e=entities.getJSONObject(i);val table=e.getString("tableName");old.execSQL(e.getString("createSql").replace("\${TABLE_NAME}",table));e.optJSONArray("indices")?.let {indices->for(j in 0 until indices.length()) old.execSQL(indices.getJSONObject(j).getString("createSql").replace("\${TABLE_NAME}",table))}}
             val setup=schema.getJSONArray("setupQueries");for(i in 0 until setup.length()) old.execSQL(setup.getString(i))
             old.execSQL("INSERT INTO app_config VALUES(1,'legacy-register','legacy-owner','BYN')")
             old.execSQL("INSERT INTO products(id,name,searchKey,price,cost,revision,currency,unit,type) VALUES('p','Чай','чай','2','1',1,'BYN','piece','simple')")

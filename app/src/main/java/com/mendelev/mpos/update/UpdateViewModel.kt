@@ -97,7 +97,7 @@ class UpdateViewModel(val repository: UpdateRepository) : ViewModel() {
         } catch (error: Exception) {
             // Cancellation can happen while returning the prepared Intent from IO to the UI.
             kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
-                com.mendelev.mpos.core.operations.InstallationGate.release()
+                repository.releaseInstallation()
             }
             if(error is CancellationException) mutableState.update {it.copy(stage=UpdateStage.READY)}
             handleError(error); null
@@ -105,7 +105,7 @@ class UpdateViewModel(val repository: UpdateRepository) : ViewModel() {
     }
 
     fun installerClosed(message: String = "Установка не завершена. Можно повторить установку проверенного APK.") {
-        viewModelScope.launch {com.mendelev.mpos.core.operations.InstallationGate.release()}
+        viewModelScope.launch {repository.releaseInstallation()}
         mutableState.update { it.copy(stage = UpdateStage.READY, message = message) }
     }
 
