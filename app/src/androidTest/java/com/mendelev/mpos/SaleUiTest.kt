@@ -53,7 +53,8 @@ class SaleUiTest {
         compose.onNodeWithTag("saleChange:0").assertTextEquals("Сдача 1: 3,00 BYN");shot("sale-preview")
         val command=model.state.value.preview!!.draft.commandId
         compose.activityRule.scenario.recreate()
-        compose.waitUntil(20_000) {!model.state.value.pending && compose.onAllNodesWithTag("checkoutRestored").fetchSemanticsNodes().isNotEmpty()}
+        compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview==null && model.state.value.draft!=null}
+        compose.onNodeWithTag("checkoutFields").performScrollToIndex(0)
         compose.onNodeWithTag("checkoutRestored").assertExists()
         compose.onNodeWithTag("salePrepare").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview!=null}

@@ -87,7 +87,6 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
         MposAppBar("M-POS · Рабочая зона") {
             MposNavigationAction("Товары",onCatalog)
             MposNavigationAction("Смена",onShift)
-            MposNavigationAction("Чеки",onHistory)
             MposNavigationAction("Настройки",onSettings)
         }
         if(ui.loading) Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) { CircularProgressIndicator() }
@@ -118,7 +117,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                             revalidationOwner=s.cart.sessionId;revalidationRevision=s.cartRevision
                             revalidationToken=runCatching { CartRevalidator.preview(s.cart,s.products,s.graph,s.balances,OrderReservations.total(s.parked.map {it.cart})).token }.getOrNull()
                             revalidationOpen=true;model.dismiss()
-                        },onCheckout)
+                        },onCheckout,onHistory)
                 }
                 val scale=LocalDensity.current.fontScale.coerceIn(1f,2f)
                 val cartWidth=(340*scale).dp
@@ -291,7 +290,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
 }
 
 @Composable private fun CartPanel(s: WorkspaceSnapshot,pending: Int,modifier: Modifier,onQuantity: (String)->Unit,
-    onStep: (String,Int)->Unit,onRemove: (String)->Unit,onClear: ()->Unit, onDetails: ()->Unit,onPark: ()->Unit,onParked: ()->Unit,onRevalidate: ()->Unit,onCheckout: ()->Unit) {
+    onStep: (String,Int)->Unit,onRemove: (String)->Unit,onClear: ()->Unit, onDetails: ()->Unit,onPark: ()->Unit,onParked: ()->Unit,onRevalidate: ()->Unit,onCheckout: ()->Unit,onHistory: ()->Unit) {
     Surface(modifier,shape=MaterialTheme.shapes.large,color=MaterialTheme.colorScheme.surface) {
         Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             Text("Текущий заказ",style=MaterialTheme.typography.titleLarge)
@@ -321,7 +320,10 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
             if(pending>0) Text("Сохраняем…",style=MaterialTheme.typography.bodySmall)
             if(s.cart.lines.any {CartEngine.stale(it,s.products)}) MposButton("Пересчитать заказ",onRevalidate,enabled=pending==0,modifier=Modifier.testTag("workspaceRevalidate"))
             OrderButtons(pending,s,onDetails,onPark,onParked,onClear)
-            MposButton("К оплате",onCheckout,Modifier.fillMaxWidth().testTag("workspaceCheckout"),enabled=pending==0 && s.cart.lines.isNotEmpty())
+            Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                MposButton("К оплате",onCheckout,Modifier.weight(1f).testTag("workspaceCheckout"),enabled=pending==0 && s.cart.lines.isNotEmpty())
+                MposButton("Чеки",onHistory,enabled=pending==0,style=ActionStyle.Secondary)
+            }
         }
     }
 }
