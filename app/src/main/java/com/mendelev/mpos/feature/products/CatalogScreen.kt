@@ -1,11 +1,15 @@
 package com.mendelev.mpos.feature.products
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -20,16 +24,30 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.data.local.CategoryEntity
+import com.mendelev.mpos.domain.catalog.CategoryAppearance
 import com.mendelev.mpos.domain.catalog.CatalogRules
+import com.mendelev.mpos.domain.catalog.unitLabel
+import com.mendelev.mpos.domain.catalog.quantityUnit
 import java.util.UUID
 
-@Composable fun CatalogScreen(model: CatalogViewModel, onSettings: () -> Unit, onGallery: () -> Unit) {
+@Composable fun CatalogScreen(model: CatalogViewModel, onSettings: () -> Unit, onGallery: () -> Unit, onWorkspace: () -> Unit = {}) {
     val state by model.state.collectAsStateWithLifecycle()
+    val context=LocalContext.current
+    var photoSession by rememberSaveable { mutableStateOf<String?>(null) }
+    val photoPicker=rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        val session=photoSession
+        photoSession=null
+        if(uri!=null && session!=null) model.importPhoto(session) {
+            context.contentResolver.openInputStream(uri) ?: throw java.io.IOException("Photo stream unavailable")
+        }
+    }
     var search by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf<String?>(null) }
     var categories by rememberSaveable { mutableStateOf(false) }
     var categoryId by rememberSaveable { mutableStateOf<String?>(null) }
     var categoryName by rememberSaveable { mutableStateOf("") }
+    var categoryColor by rememberSaveable { mutableStateOf(CategoryAppearance.DEFAULT_COLOR) }
+    var categorySymbol by rememberSaveable { mutableStateOf("") }
     var categoryRevision by rememberSaveable { mutableStateOf<Long?>(null) }
     var categoryCommand by rememberSaveable { mutableStateOf("") }
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
@@ -39,14 +57,11 @@ import java.util.UUID
     BackHandler(enabled=state.draft!=null) { closeEditor() }
     val d = state.draft
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        Surface(color=if(androidx.compose.foundation.isSystemInDarkTheme()) androidx.compose.ui.graphics.Color(0xFF10131A) else androidx.compose.ui.graphics.Color(0xFF22273A), contentColor=androidx.compose.ui.graphics.Color.White) {
-            Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=12.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                Text("M-POS", style=MaterialTheme.typography.titleLarge)
-                Text("Локальный владелец", Modifier.weight(1f), style=MaterialTheme.typography.bodySmall, color=androidx.compose.ui.graphics.Color.White.copy(alpha=0.62f))
-                if(d==null) {
-                    if(com.mendelev.mpos.BuildConfig.DEBUG) MposNavigationAction("Компоненты", onGallery)
-                    MposNavigationAction("Настройки", onSettings)
-                }
+        MposAppBar(subtitle="Локальный владелец") {
+            if(d==null) {
+                MposNavigationAction("Рабочая зона",onWorkspace)
+                if(com.mendelev.mpos.BuildConfig.DEBUG) MposNavigationAction("Компоненты",onGallery)
+                MposNavigationAction("Настройки",onSettings)
             }
         }
         if(state.loading) Box(Modifier.fillMaxSize(), contentAlignment=Alignment.Center) { CircularProgressIndicator() }
@@ -57,7 +72,7 @@ import java.util.UUID
                 MposButton("Назад", { closeEditor() }, enabled=!state.busy, style=ActionStyle.Secondary)
                 Column(Modifier.weight(1f)) {
                     Text(if(d.expectedRevision==null) "Новый товар" else "Карточка товара", style=MaterialTheme.typography.titleLarge)
-                    Text("Простой товар · BYN · шт", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${if(d.type=="simple") "Простой" else "Составной"} товар · BYN · ${unitLabel(d.displayUnit)}", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 MposButton("Сохранить", model::save, busy=state.busy, modifier=Modifier.testTag("saveProduct"))
             }
@@ -77,13 +92,13 @@ import java.util.UUID
                                     MposButton(state.categories.find { it.id==d.categoryId }?.name ?: "Без категории", { categories=true }, enabled=!state.busy, style=ActionStyle.Secondary)
                                     if(d.categoryId!=null) MposButton("Убрать", { model.change { it.copy(categoryId=null) } }, enabled=!state.busy, style=ActionStyle.Secondary)
                                 }
-                                MposField(d.price, { v -> model.change { it.copy(price=v) } }, "Цена продажи, BYN", Modifier.testTag("productPrice"), !state.busy, true,
+                                MposField(d.price, { v -> model.change { it.copy(price=v) } }, "Цена продажи, BYN за ${unitLabel(d.unit)}", Modifier.testTag("productPrice"), !state.busy, true,
                                     state.message.takeIf { state.field=="Цена" })
-                                MposField(d.cost, { v -> model.change { it.copy(cost=v) } }, "Себестоимость, BYN за шт", Modifier.testTag("productCost"), !state.busy, true,
-                                    state.message.takeIf { state.field=="Себестоимость" })
-                                MposField(d.stock, { v -> model.change { it.copy(stock=v,stockEdited=true) } }, "Остаток, шт", Modifier.testTag("productStock"), !state.busy, true,
-                                    state.message.takeIf { state.field=="Остаток" })
-                                Text("Остаток можно изменить без указания причины. История изменений сохраняется автоматически.", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                                ProductConfiguration(model,state,d)
+                                HorizontalDivider()
+                                ProductModifierEditor(model,state,d)
+                                HorizontalDivider()
+                                ProductPhotoEditor(model,d,!state.busy) { photoSession=d.sessionId;photoPicker.launch("image/*") }
                             }
                         }
                         if(d.expectedRevision!=null) MposButton("Удалить товар", { confirmDelete=true }, enabled=!state.busy, style=ActionStyle.Danger)
@@ -92,7 +107,7 @@ import java.util.UUID
                         Column(Modifier.padding(24.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
                             Text("Цена продажи", style=MaterialTheme.typography.labelMedium)
                             Text("${d.price} BYN", style=MaterialTheme.typography.titleLarge)
-                            Text(if(d.price.trim() in listOf("0","0,00","0.00")) "Ручная цена при добавлении в заказ" else "Цена за одну штуку", style=MaterialTheme.typography.bodySmall)
+                            Text(if(d.price.trim() in listOf("0","0,00","0.00")) "Ручная цена при добавлении в заказ" else "Цена за ${unitLabel(d.unit)}", style=MaterialTheme.typography.bodySmall)
                             Text("Сохранение выполняется локально", style=MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -116,11 +131,13 @@ import java.util.UUID
                     items(rows,key={ it.product.id }) { row ->
                         Surface(Modifier.fillMaxWidth().clickable { model.edit(row) }, shape=RoundedCornerShape(16.dp), border=BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
                             Row(Modifier.padding(18.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(16.dp)) {
+                                ProductPhoto(row.product.photoId,model.photos,Modifier.size(56.dp))
                                 Column(Modifier.weight(1f)) {
                                     Text(row.product.name, fontWeight=FontWeight.Bold)
                                     Text(row.categoryName ?: "Без категории", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
-                                Text("${row.quantity} шт", style=MaterialTheme.typography.bodyMedium)
+                                Text(if(row.product.type=="composite") "По составу" else if(row.product.noStockTracking) "Без учёта" else
+                                    "${CatalogRules.canonical(quantityUnit(row.product.unit).convert(row.quantity.toBigDecimal(),quantityUnit(row.product.displayUnit)))} ${unitLabel(row.product.displayUnit)}", style=MaterialTheme.typography.bodyMedium)
                                 Text("${row.product.price} BYN", fontWeight=FontWeight.Bold)
                             }
                         }
@@ -130,26 +147,49 @@ import java.util.UUID
         }
     }
     if(categories && categoryId==null) MposDialog("Категории", { categories=false }, !state.busy) {
-        LazyColumn(Modifier.heightIn(max=300.dp), verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            items(state.categories,key={it.id}) { c ->
+        if(state.error && state.message!=null) MposNotice(state.message!!,true)
+        LazyColumn(Modifier.heightIn(max=300.dp).testTag("categoryList"), verticalArrangement=Arrangement.spacedBy(8.dp)) {
+            itemsIndexed(state.categories,key={_,c -> c.id}) { index,c ->
+                Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    Text(c.name, Modifier.weight(1f).clickable {
+                    MposCategoryBadge(c.color,c.symbol)
+                    Text(c.name, Modifier.weight(1f).clickable(enabled=!state.busy) {
                         if(d!=null) model.change { it.copy(categoryId=c.id) } else filter=c.id
                         categories=false
                     }.padding(vertical=16.dp))
-                    MposButton("Изменить", { categoryId=c.id;categoryName=c.name;categoryRevision=c.revision;categoryCommand=UUID.randomUUID().toString() }, enabled=!state.busy, style=ActionStyle.Secondary)
+                    MposButton("Изменить", { categoryId=c.id;categoryName=c.name;categoryColor=c.color;categorySymbol=c.symbol;categoryRevision=c.revision;categoryCommand=UUID.randomUUID().toString() }, enabled=!state.busy, style=ActionStyle.Secondary,modifier=Modifier.testTag("categoryEdit:${c.id}"))
+                }
+                Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                    MposButton("Выше",{model.moveCategory(c.id,-1)},enabled=!state.busy && index>0,style=ActionStyle.Secondary,
+                        modifier=Modifier.testTag("categoryUp:${c.id}"))
+                    MposButton("Ниже",{model.moveCategory(c.id,1)},enabled=!state.busy && index<state.categories.lastIndex,style=ActionStyle.Secondary,
+                        modifier=Modifier.testTag("categoryDown:${c.id}"))
+                }
+                HorizontalDivider()
                 }
             }
         }
         if(state.categories.isEmpty()) Text("Категорий пока нет")
-        MposButton("Создать категорию", { categoryId=UUID.randomUUID().toString();categoryRevision=null;categoryName="";categoryCommand=UUID.randomUUID().toString() })
+        MposButton("Создать категорию", { categoryId=UUID.randomUUID().toString();categoryRevision=null;categoryName="";categoryColor=CategoryAppearance.DEFAULT_COLOR;categorySymbol="";categoryCommand=UUID.randomUUID().toString() })
     }
     if(categoryId!=null) MposDialog(if(categoryRevision==null) "Новая категория" else "Изменить категорию", { categoryId=null }, !state.busy) {
         if(state.error && state.message!=null) MposNotice(state.message!!, true)
-        MposField(categoryName, { categoryName=it;categoryCommand=UUID.randomUUID().toString(); model.dismissMessage() }, "Название категории", Modifier.testTag("categoryName"), !state.busy)
+        Column(Modifier.heightIn(max=380.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+            MposField(categoryName, { categoryName=it;categoryCommand=UUID.randomUUID().toString(); model.dismissMessage() }, "Название категории", Modifier.testTag("categoryName"), !state.busy)
+            MposField(categorySymbol, { categorySymbol=it;categoryCommand=UUID.randomUUID().toString(); model.dismissMessage() }, "Обозначение на плитке (до 3 символов)", Modifier.testTag("categorySymbol"), !state.busy)
+            Text("Например: ☕, К или КФ. Пустое обозначение допустимо.",style=MaterialTheme.typography.bodySmall)
+            Text("Цвет категории",style=MaterialTheme.typography.titleSmall)
+            MposColorPicker(CategoryAppearance.palette,categoryColor,{
+                categoryColor=it;categoryCommand=UUID.randomUUID().toString();model.dismissMessage()
+            },enabled=!state.busy)
+            Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                MposCategoryBadge(categoryColor,Regex("\\X").findAll(categorySymbol.take(256)).take(3).joinToString("") { it.value })
+                Text(categoryName.ifBlank { "Предпросмотр категории" })
+            }
+        }
         Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             MposButton("Отмена", { categoryId=null;model.dismissMessage() }, enabled=!state.busy, style=ActionStyle.Secondary)
-            MposButton("Сохранить категорию", { model.categorySave(categoryId!!,categoryRevision,categoryName,categoryCommand) { categoryId=null } }, busy=state.busy)
+            MposButton("Сохранить категорию", { model.categorySave(categoryId!!,categoryRevision,categoryName,categoryCommand,categoryColor,categorySymbol) { categoryId=null } }, busy=state.busy)
         }
         if(categoryRevision!=null) MposButton("Удалить категорию", { deleteCategory=true }, enabled=!state.busy, style=ActionStyle.Danger)
     }

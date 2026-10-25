@@ -51,3 +51,17 @@
 UI stock поле редактируемое; причина nullable/не спрашивается. Команда пишет delta source=product_card, сравнивает stockRevision, сохраняет product/ledger/result/audit атомарно. Продажа между открытием/save не теряется. Это не supplier receiving и не переписывание истории. P01/P10/I04 уточнены, fixturesF11–F13 planned.
 
 Дизайн: [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md), [UI-REFERENCE.md](UI-REFERENCE.md), [tokens](../config/ui-design.json). Manrope/палитра/компоновка из pinned Web; единые Close/Back/Primary/Secondary/Danger/Dialog/Field в M01 core/ui. Не каждый feature выбирает свои radii/icons. Это обязательное требование к следующей реализации; существующий bootstrap ещё не проходит visual parity. DS01–DS07 planned.
+
+
+## ADR-006 — ограниченный локальный media adapter01c,2026-10-24
+
+Для текущего каталога01c фото нормализуется в bounded immutable JPEG и читается небольшим нативным адаптером с downsampling на Dispatchers.IO; Compose produceState управляет временем запроса. Coil остаётся целевым image loader для рабочей зоны02 (кэш/массовые плитки/отмена запросов), но зависимость в01c не подключена. Не считать текущий адаптер реализацией возможностей Coil. Перед расширением каталога/плиток оценить memory/cache/scroll и подключить Coil по STACK, не разрастить собственный loader.
+
+Текущий picker — GetContent(image/*) Activity Result contract с grant одного URI, системный provider без доступа ко всей медиатеке. Это явное уточнение initial STACK: отдельный PickVisualMedia/backport пока не подключён; реальная галерея/документ-provider остаётся device acceptance. Подготовка и хранение не зависят от вида picker; URI сразу копируется, в БД только app-private photoId. Окончательный UX выбора/поддержка HEIC проверяются на целевом планшете. Функциональные требования сохранности и отказов P08 остаются обязательными.
+
+Причина: закрыть проверяемый локальный сценарий с ограниченными файлами без преждевременного подключения cache/network слоя. Это техническая граница текущего инкремента, не сокращение итогового фото-функционала. Источники/лимиты/proof в [CATALOG-01C.md](CATALOG-01C.md).
+
+
+## ADR-007 — Android16+ и сокращение CI,2026-10-24
+
+Владелец явно установил Android16+ как целевую платформу. minSdk36, текущий runtime gate API36; API28/35 больше не прогоняются. compileSdk/targetSdk36 и BuildTools35.0.0 сохраняются. [Политика/метаданные](ANDROID-SUPPORT.md). Старые evidence не переписываются, minimum в новых release assets проверяется по config/actual APK. Работа и проверка в develop, без выпуска инкремента.

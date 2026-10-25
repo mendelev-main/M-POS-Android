@@ -31,7 +31,7 @@ Android adapters `android-pos-stock.js`/`android-safety.js` рассматрив
 
 ## Категории и удаление — P03/P09
 
-Категория: ID, имя, порядок, цвет/символ. Native решение: ссылки по ID; переименование не меняет productId/categoryId и сохраняет раскладку. Пустая категория удаляется с подтверждением; используемая блокируется со списком зависимостей. Чтобы удалить, сначала перенести товары в другую/«Без категории» одной явной командой; автоматического переноса нет.
+Категория: ID, имя, порядок, цвет/символ. Контракт текущей реализации цвета/Unicode и schema4 — [CATEGORY-APPEARANCE.md](CATEGORY-APPEARANCE.md). Native решение: ссылки по ID; переименование не меняет productId/categoryId и сохраняет раскладку. Пустая категория удаляется с подтверждением; используемая блокируется со списком зависимостей. Чтобы удалить, сначала перенести товары в другую/«Без категории» одной явной командой; автоматического переноса нет.
 
 До отдельного согласования физическое удаление товара разрешено только при отсутствии рецептур, модификаторов, раскладки, черновиков, складской и продажной истории. Иначе команда отклоняется с объяснением. Архивирование — отдельное будущее действие с правилами активных заказов; не подменять им незаметно кнопку удаления. Исторические документы никогда не удаляются каскадом вместе с товаром.
 
@@ -82,8 +82,11 @@ Domain разворачивает recipes/modifiers и учитывает все
 | 01a | Room catalog/category + simple CRUD + opening movement | P01/P02/P03/P10, отказ записи/restart |
 | 01b | единицы/флаги/состав | P04/P05/P07, precision/cycle fixtures |
 | 01c | modifiers/photo/dependency guard | P06/P08/P09, staging/связи/UI |
-| 02a | layout + persistent cart | W01/W02/W06, rotation/конкурентные taps |
-| 02b | recipe availability + parked transfer | W03/W04/W05, резервы/rollback |
-| 02c | tablet walkthrough + revalidation | W07 и все W, физическая приёмка |
+| 02a | layout + persistent cart, [текущий scope](WORKSPACE-02A.md) | W01/W02/W06 частично, rotation/конкурентные taps |
+| 02b | [общий резерв, parked transfer и параметры](WORKSPACE-02B.md) | W03/W04/W05, резервы/rollback |
+| 02c | [пересчёт с подтверждением](WORKSPACE-02C.md) | W03/W06: preview/rollback/replay; физический walkthrough по решению владельца позже |
+| 02d | [размеры папок и сумма конфигурации](WORKSPACE-02D.md) | W01/W02: folder/recreate/partial preview/strict Add |
+| 02e | [home slots и drag](WORKSPACE-02E.md) | W01/W06: CAS/fault/replay/legacy/recreate/actual updater |
+| 02f | [большой каталог, фото и адаптация](WORKSPACE-02F.md) | W01/W03/W07/DS04: lazy расчёт/поиск, bounded cache, 2000 товаров, portrait/landscape150% |
 
 01a/02a — внутренние инкременты, не закрытие всего P/W диапазона. Test cases и команды: [IMPLEMENTATION-CONTRACTS.md](IMPLEMENTATION-CONTRACTS.md).

@@ -6,7 +6,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
@@ -80,10 +80,10 @@ enum class ActionStyle { Primary, Secondary, Danger }
     }
 }
 
-@Composable fun MposDialog(title: String, onClose: () -> Unit, closable: Boolean = true, content: @Composable ColumnScope.() -> Unit) {
-    Dialog(onDismissRequest={ if(closable) onClose() }) {
+@Composable fun MposDialog(title: String, onClose: () -> Unit, closable: Boolean = true, wide: Boolean = false, maxWidth: androidx.compose.ui.unit.Dp? = null, content: @Composable ColumnScope.() -> Unit) {
+    Dialog(onDismissRequest={ if(closable) onClose() }, properties=androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth=!(wide || maxWidth!=null))) {
         Surface(shape=RoundedCornerShape(22.dp), color=MaterialTheme.colorScheme.surface) {
-            Column(Modifier.widthIn(max=460.dp).padding(28.dp), verticalArrangement=Arrangement.spacedBy(16.dp)) {
+            Column(Modifier.widthIn(max=maxWidth ?: if(wide) 900.dp else 460.dp).then(if(wide || maxWidth!=null) Modifier.fillMaxWidth() else Modifier).padding(28.dp), verticalArrangement=Arrangement.spacedBy(16.dp)) {
                 Row(verticalAlignment=Alignment.CenterVertically) {
                     Text(title, Modifier.weight(1f), style=MaterialTheme.typography.titleMedium)
                     MposCloseButton(onClose, closable)
@@ -95,9 +95,9 @@ enum class ActionStyle { Primary, Secondary, Danger }
 }
 
 @Composable fun MposField(value: String, onChange: (String) -> Unit, label: String, modifier: Modifier = Modifier,
-    enabled: Boolean = true, numeric: Boolean = false, error: String? = null) {
+    enabled: Boolean = true, numeric: Boolean = false, error: String? = null, singleLine: Boolean = true) {
     OutlinedTextField(value=value, onValueChange=onChange, label={ Text(label) }, enabled=enabled,
-        modifier=modifier.fillMaxWidth().heightIn(min=48.dp), shape=RoundedCornerShape(10.dp), singleLine=true,
+        modifier=modifier.fillMaxWidth().heightIn(min=48.dp), shape=RoundedCornerShape(10.dp), singleLine=singleLine, minLines=if(singleLine) 1 else 3, maxLines=if(singleLine) 1 else 5,
         isError=error!=null, supportingText=if(error!=null) {{ Text(error) }} else null,
         keyboardOptions=androidx.compose.foundation.text.KeyboardOptions(keyboardType=if(numeric) androidx.compose.ui.text.input.KeyboardType.Decimal else androidx.compose.ui.text.input.KeyboardType.Text),
         colors=OutlinedTextFieldDefaults.colors(unfocusedBorderColor=MaterialTheme.colorScheme.outline))
@@ -113,4 +113,27 @@ enum class ActionStyle { Primary, Secondary, Danger }
 @Composable fun MposNavigationAction(label: String, onClick: () -> Unit) {
     TextButton(onClick=onClick, modifier=Modifier.heightIn(min=48.dp), shape=RoundedCornerShape(100.dp),
         colors=ButtonDefaults.textButtonColors(contentColor=Color.White)) { Text(label) }
+}
+
+/** Shared select and flag controls: the same button shape, text and hit area in all editors. */
+@Composable fun MposSelect(label: String, value: String, options: List<Pair<String, String>>,
+    onChange: (String) -> Unit, enabled: Boolean = true, modifier: Modifier = Modifier) {
+    var expanded by remember { mutableStateOf(false) }
+    val keyboard=androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    Column(modifier) {
+        Text(label, style=MaterialTheme.typography.labelMedium)
+        Box {
+            MposButton(options.find { it.first == value }?.second ?: value, { keyboard?.hide();expanded=true }, enabled=enabled, style=ActionStyle.Secondary)
+            DropdownMenu(expanded=expanded, onDismissRequest={expanded=false}, modifier=Modifier.heightIn(max=300.dp)) {
+                options.forEach { (key, text) -> DropdownMenuItem(text={Text(text)}, onClick={expanded=false;onChange(key)}) }
+            }
+        }
+    }
+}
+
+@Composable fun MposFlag(label: String, checked: Boolean, onChange: (Boolean) -> Unit, enabled: Boolean = true) {
+    Row(Modifier.fillMaxWidth().heightIn(min=48.dp), verticalAlignment=Alignment.CenterVertically) {
+        Text(label, Modifier.weight(1f), style=MaterialTheme.typography.bodyMedium)
+        Switch(checked=checked, onCheckedChange=onChange, enabled=enabled, modifier=Modifier.semantics { contentDescription=label })
+    }
 }

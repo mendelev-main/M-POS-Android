@@ -6,11 +6,11 @@ Visual DS01–DS07: [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md), парные screensho
 
 | Уровень | Что доказывает | Когда |
 |---|---|---|
-| Harness preflight | Документы/ссылки, skills, планы, package и native граница | Каждый PR/push |
-| Python unit tests | Версионирование и fail-closed проверка APK metadata/signature | Каждый PR/push |
+| Harness preflight | Документы/ссылки, skills, планы, package и native граница | Локально по изменению; готовый PR/main |
+| Python unit tests | Версионирование и fail-closed проверка APK metadata/signature | Локально по изменению; готовый PR/main |
 | JVM unit | Доменные сценарии: количества/деньги/резервы/идемпотентность | С 01 по реализации; Gradle job уже готова |
-| Android lint + assembleDebug | Анализ и компилируемость | Каждый PR/push |
-| Emulator instrumentation | Реальный запуск Compose bootstrap; далее UI/Room migration tests | Каждый PR/push |
+| Android lint + assembleDebug | Анализ и компилируемость | Локально по изменению; готовый PR/main |
+| Emulator instrumentation | Compose/Room/migration/media tests | main или ручная диагностика develop |
 | Signed release validation | APK package, версия, certificate SHA-256, apksigner verify | Только main после зелёных checks и secrets |
 | Device acceptance | Планшет UX, restart, два приложения рядом, update, принтер/файлы | На соответствующем этапе |
 
@@ -29,3 +29,9 @@ Golden regression examples для следующих этапов:
 Device checklist 00: установить Web и native release одновременно; проверить разные имена/package и независимые данные; поставить следующий native APK поверх первого и проверить данные/подпись; проверить debug рядом с release. До фактического выполнения статус pending.
 
 Отчёт всегда содержит commit, команду или Actions URL, результат и непроверенные случаи. Исторические CI другого репозитория не являются evidence.
+
+
+Проверки01c и границы их доказательств: [CATALOG-01C.md](CATALOG-01C.md). Push develop не запускает CI автоматически, [основной workflow](DEVELOPMENT-WORKFLOW.md).
+
+
+Действующий gate с24.10.2026: Android16/API36, [run40099706934](https://github.com/mendelev-main/M-POS-Android/actions/runs/40099706934).24 JVM,4Python,20instrumentation +2 explicit UI setup +updateE2E. Ранее API28/35 — история; новые тесты на этих ОС не запускаются. Платформа — [ANDROID-SUPPORT.md](ANDROID-SUPPORT.md).

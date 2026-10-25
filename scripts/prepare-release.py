@@ -23,7 +23,7 @@ def prepare(apk, folder, code, name, notes):
         raise ValueError("Invalid APK size")
     digest = hashlib.sha256(apk.read_bytes()).hexdigest()
     manifest = {"schemaVersion": 1, "channel": "stable", "applicationId": config["applicationId"],
-        "versionCode": code, "versionName": name, "minSdk": 28,
+        "versionCode": code, "versionName": name, "minSdk": config["minSdk"],
         "apkUrl": f"https://github.com/{REPOSITORY}/releases/download/v{name}/mpos-native.apk",
         "apkBytes": size, "sha256": digest, "certificateSha256": config["certificateSha256"],
         "notes": notes, "commit": os.environ.get("GITHUB_SHA", "local")}

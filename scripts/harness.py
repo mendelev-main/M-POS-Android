@@ -49,6 +49,8 @@ def preflight(root=ROOT):
         gradle = (root / "app/build.gradle.kts").read_text()
         if f'applicationId = "{cfg["applicationId"]}"' not in gradle:
             errors.append("Gradle/config applicationId mismatch")
+        if cfg.get("minSdk") != 36 or not re.search(r"minSdk\s*=\s*36\b",gradle):
+            errors.append("Android 16/API36 is the minimum supported platform")
         if cfg["certificateSha256"] not in gradle:
             errors.append("Runtime update certificate must match release config")
         ET.parse(root / "app/src/main/AndroidManifest.xml")

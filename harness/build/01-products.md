@@ -1,6 +1,6 @@
 # Этап 01 — Товары
 
-Статус: инкремент01a ci-verified с CI evidence в [CATALOG-01A.md](../../docs/CATALOG-01A.md); полный этап01b/01c planned, device pending
+Статус: инкремент01a ci-verified с CI evidence в [CATALOG-01A.md](../../docs/CATALOG-01A.md); 01b domain/Room schema2/editor ci-verified API28/35, run40094842882; 01c ci-verified API28/35, run40098187895; device pending
 
 ## Объём
 
@@ -39,3 +39,15 @@
 ## Контекст и результат
 
 Значимые решения в `harness/context/01-products.md` при начале работ; наблюдаемые результаты в `harness/build-log.md`.
+
+
+Начало01b: [precision и доменный контракт](../../docs/CATALOG-01B.md). P04/P05/P07: domain/Room migration/editor implemented; точный CI результат — build-log. Полный этап01 не закрыт.
+
+
+01c: [контракт modifier/photo](../../docs/CATALOG-01C.md), migrations2→3/1→3, command guards/staging fault tests/UI. РезультатыCI — build-log; физическая приёмка отдельно.
+
+
+Текущая поддержка — [Android16+](../../docs/ANDROID-SUPPORT.md); предыдущие API28/35 evidence исторические. Порядок категорий и [финальный audit](../../docs/CATALOG-ACCEPTANCE.md) добавлены; coreCI36 ci-verified20instrumentation/run40099706934, full01/device ещё не закрыты.
+
+
+P03 appearance: [цвет/обозначение/schema4](../../docs/CATEGORY-APPEARANCE.md) ci-verified API36/run40101394875/attempt2,26JVM/24instrumentation+2explicitUI/updateE2E; device отдельно.

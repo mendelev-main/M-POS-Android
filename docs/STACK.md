@@ -2,13 +2,13 @@
 
 Решение ADR-002 от 2026-10-24. Цель — самостоятельное нативное Android-приложение на Kotlin с функциональностью [M-POS-Android-Web](https://github.com/mendelev-main/M-POS-Android-Web/tree/1682c88334e6fb13586ce4b530157c59ca062e43): товары, кассовая зона, продажи, склад, смены, клиенты, лояльность, отчёты, оборудование и сайт.
 
-Это выбранный целевой стек. **Установлен bootstrap 00; в 00.1 подключены обновления:** Lifecycle ViewModel/Compose 2.9.1, core-ktx 1.16.0 и OkHttp 4.12.0, а также org.json/MockWebServer в tests. Updater использует платформенный org.json для небольшого release manifest; kotlinx.serialization для предметных DTO остаётся будущим компонентом. В01a подключены Room2.8.4/KSP2.2.21-2.0.4, bundled Manrope и shared Compose theme/components; Room schema1 экспортирована. Остальные будущие компоненты (Hilt/DataStore/WorkManager/Coil/serialization) пока не подключены. Строка «подключить» означает архитектурное решение для будущего этапа, а не наличие зависимости или готовой функции. Функциональное соответствие проверяется по [PARITY.md](PARITY.md), происхождение требований — по [SOURCE.md](SOURCE.md).
+Это выбранный целевой стек. **Установлен bootstrap 00; в 00.1 подключены обновления:** Lifecycle ViewModel/Compose 2.9.1, core-ktx 1.16.0 и OkHttp 4.12.0, а также org.json/MockWebServer в tests. Updater использует платформенный org.json для небольшого release manifest; kotlinx.serialization для предметных DTO остаётся будущим компонентом. В01a подключены Room2.8.4/KSP2.2.21-2.0.4, bundled Manrope и shared Compose theme/components; Room schemas1–3 экспортированы; в develop01b/01c добавлены units/recipes/modifiers/private photos. В02f подключён Coil3.3.0 для общих локальных thumbnails. Остальные будущие компоненты (Hilt/DataStore/WorkManager/serialization) пока не подключены. Строка «подключить» означает архитектурное решение для будущего этапа, а не наличие зависимости или готовой функции. Функциональное соответствие проверяется по [PARITY.md](PARITY.md), происхождение требований — по [SOURCE.md](SOURCE.md).
 
 ## 1. Платформа и установленная база
 
 | Компонент | Зафиксировано в репозитории | Назначение |
 |---|---|---|
-| Платформа | Android 9+, minSdk 28 | Автономная работа на Android-планшетах |
+| Платформа | Android 16+, minSdk 36 | Автономная работа на Android-планшетах |
 | Язык | Kotlin 2.2.21 | UI, бизнес-логика, данные и платформенные адаптеры |
 | UI | Jetpack Compose, Compose BOM 2025.10.00, Material 3 | Нативные экраны и общие компоненты |
 | Activity | activity-compose 1.11.0, single Activity | Хост Compose и Android lifecycle |
@@ -41,7 +41,7 @@
 | Даты и время | java.time.Instant, ZoneId, Clock через DI | История операций, смены, business day и воспроизводимые тесты | По первой датированной сущности |
 | Защита секретов | Android Keystore + AES-GCM, app-private encrypted payload | Device credentials/Telegram token, когда появятся интеграции | При первом сохраняемом секрете, до 08–09 |
 
-Для всех строк «подключать» конкретные версии выбираются и проверяются в соответствующей реализации. Совместимость проверять с Kotlin 2.2.21, AGP, minSdk 28, KSP, Hilt и Room; версии новых dependencies закреплять через `gradle/libs.versions.toml` при начале 01. Никаких `+`, floating snapshots или незафиксированных обновлений. Если нужна смена сборочной базы — отдельное решение и полный CI.
+Для всех строк «подключать» конкретные версии выбираются и проверяются в соответствующей реализации. Совместимость проверять с Kotlin 2.2.21, AGP, minSdk 36, KSP, Hilt и Room; версии новых dependencies закреплять через `gradle/libs.versions.toml` при начале 01. Никаких `+`, floating snapshots или незафиксированных обновлений. Если нужна смена сборочной базы — отдельное решение и полный CI.
 
 [Рекомендации Android](https://developer.android.com/topic/architecture/recommendations) служат основанием для слоёв, управления состоянием и DI. Для Kotlin используются [coroutines](https://kotlinlang.org/docs/coroutines-guide.html) и [serialization](https://kotlinlang.org/docs/serialization.html); Hilt описан в [официальной документации](https://developer.android.com/training/dependency-injection/hilt-android). Выбор этих компонентов — решение проекта, а не заявление, что Google требует именно весь этот набор.
 
@@ -85,7 +85,7 @@ BigDecimal преобразуется в БД без потери точност
 
 ## 5. Фото, файлы и перенос данных
 
-Фото выбираются через системный Photo Picker там, где он доступен; на других поддерживаемых устройствах используется SAF fallback через Activity Result API. App-private file store хранит собственную копию и metadata; Coil отображает её в Compose. Не полагаться на вечную доступность внешнего URI и не запрашивать доступ ко всей медиатеке ради одного фото. Импорт и работа с большими изображениями ограничивают размеры/память. [Coil Compose](https://coil-kt.github.io/coil/compose/) — выбранный UI image loader.
+Системный GetContent(image/*) через Activity Result копирует выбранное фото в app-private store с metadata; PickVisualMedia остаётся отдельным расширением. Не полагаться на вечную доступность внешнего URI и не запрашивать доступ ко всей медиатеке ради одного фото. Импорт ограничивает размеры и память. В02f прежний bounded native decode/produceState из01c заменён на [Coil Compose](https://coil-kt.github.io/coil/compose/)3.3.0: один ImageLoader/16MiB, thumbnails256px, без сетевого модуля и duplicate disk cache. История решения — [ADR-006](DECISIONS.md), текущий контракт — [WORKSPACE-02F](WORKSPACE-02F.md).
 
 Backup: версионированный JSON через kotlinx.serialization, фото в согласованном формате контейнера, SAF для выбора/создания файла. Точный совместимый контейнер Web v13 исследуется в 07; ZIP не объявляется входным форматом Web без проверки. Фото проходят staging, связи и версии проверяются до замены рабочих данных. Для больших наборов использовать ограниченное по памяти чтение/запись и проверенные fixtures.
 
@@ -146,3 +146,8 @@ WorkManager используется для конечных persistent зада
 - **09 — сайт:** backend DTO, streaming SSE, coordinator, sync policy и настройки endpoint.
 
 Стек считается реализованным по мере появления кода и evidence; целевая архитектура сама по себе не закрывает acceptance. Полное соответствие включает поведение, данные, отказы и физические интеграции, а не только наличие аналогичных экранов.
+
+
+## Реализация фото02f
+
+Coil3.3.0/coil-compose подключён; shared application loader16MiB, private file thumbnails256px и AsyncImage. [Контракт/проверки](WORKSPACE-02F.md). Предыдущие описания adapter01c — история до этого инкремента. PickVisualMedia остаётся отдельной задачей, permissions/photo staging не меняются.

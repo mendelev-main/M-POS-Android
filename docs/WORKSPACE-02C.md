@@ -1,0 +1,29 @@
+# Рабочая зона 02c — подтверждаемый пересчёт
+
+W03/W06, часть этапа02. Текущий заказ сохраняет прежний snapshot до явного подтверждения. Для отложенного заказа сначала открыть его через02b, затем пересчитать; остальные parked продолжают резервировать свои исторические snapshots. Оплаты и автоматический пересчёт всех заказов не входят.
+
+Источник: pinned1682c883 cart-composition.js, android-pos-stock.js reservationSnapshot/checkedStockConsumption и tests/source-product-stock.test.cjs. Web считает доступность с резервами parked. Native сохраняет историческую рецептуру и по контракту CATALOG-WORKSPACE-SPEC требует review/confirm; отдельный preview — осознанный native safety workflow, а не заявление о наличии аналогичного экрана в Web.
+
+Пример: две порции по2 BYN после изменения цены на3 показывают4→6 BYN. Смена рецептуры0.0004→0.0008 кг показывает изменение полного расхода. Количество, line IDs, sessionId, createdAt, подпись, тип и контакты неизменны. Каждая строка пересобирается по новым product/ingredient revisions и выбранным option IDs; новая доплата и количество модификатора участвуют в расчёте. Строки не сливаются при совпадении новых ключей, чтобы сохранить видимую структуру заказа.
+
+Ручная базовая цена сохраняется, пока товар по-прежнему имеет цену0. Переход на фиксированную цену показывает новую цену. Переход fixed→manual без прежней ручной цены требует удалить/добавить строку. Неизвестный option, новая обязательная группа, удалённая ссылка, смена базовой единицы, цикл, precision underflow и shortage запрещают применение; старый заказ остаётся целиком. Состав не урезается молча.
+
+Preview проверяет весь кандидат и резерв остальных parked, исключая прежний current reserve; noStockTracking/allowNegativeStock применяются RecipeCalculator по каждому simple. Резерв исторического current не прибавляется второй раз. При shortage пользователь уменьшает количество или исправляет заказ и открывает preview заново. Физические stock/ledger не записываются.
+
+В окне показаны старая/новая сумма, изменения строк/вариантов и полный расход ингредиентов до/после. Общие Dialog/Close/Primary/Secondary. Cancel/Back не меняют данные; recreate сохраняет факт открытия, owner/revision/token. Если snapshot изменился, Apply отключён и требуется заново открыть окно. Token включает полные before/after snapshots, balances и чужие reserves; confirmation повторяет расчёт внутри Room transaction и сверяет token, revision и owner. Result/audit пишутся вместе с current; повтор commandId возвращает ранее сохранённый результат даже после park. Отказ записи откатывает current/result/audit. Room SQLschema5 и cart payload2 не меняются.
+
+Проверки:5 чистых доменных сценариев (дробное количество/цена, manual, общий резерв/token, неизвестные опции, recipe+modifier0.0004кг);2 Room сценария (fault/replay/stale preview/owner, concurrent winner/reopen);1 Compose (review/cancel/recreate/confirm). CI результаты в build-log. Физические проверки по решению пользователя позже. Fixed-slot drag, folder widths, modifier preview и остальные критерии полного02 остаются открытыми.
+
+Отображаемый состав включает ингредиенты noStockTracking; складская проверка исключает их. Единицы подписаны отдельно для старого и нового состава. Доменные тесты проверяют, что отключение tracking не скрывает расход из review.
+
+
+## Наблюдаемый результат
+
+Финальный runtime2ce31c2, [run40144720147](https://github.com/mendelev-main/M-POS-Android/actions/runs/40144720147): checks121023650500 success —40JVM/0failures,5Python,lint/assembleDebug. Emulator job121023650607:41/41instrumentation passed (включая2RevalidationRepository+1RevalidationUI);4explicit UI seed tests passed. External updater остановился до Settings: screen.png и window.xml показывают android:id/alertTitle «System UI isn't responding». Quickstep-only recovery корректно не закрыла этот другой диалог. Общий job/run failure, установка APK1→2 в этом run НЕ пройдена. Предыдущие02b updater evidence остаются историей, не доказательством финального02c.
+
+W03/W06 revalidation domain/Room/UI automated tests passed на финальном commit; статус инкремента implemented, full CI gate pending из-за external emulator infrastructure. Не ставить full02/ci-verified/device-verified. Новые повторы после трёх завершённых emulator executions (первая попытка+retry+финальный run; промежуточный40144591508 отменён) остановлены, чтобы не расходовать ресурсы при повторяющемся SystemUI/Quickstep ANR. Android application runtime exception не наблюдалась, но это не доказывает причину системного зависания. Состав noStockTracking виден в review и исключён из warehouse reserve; physical tests deferred пользователем. Нативный пересчёт не меняет SQLschema5/payload2, stock/ledger, main/stable/signing. Дальше: устранить нестабильность disposable emulator/external updater и закрыть его gate; затем оставшиеся UI02 (fixed slots/drag/folder widths/modifier total preview).
+
+
+## Gate восстановлен
+
+[run40172190371](https://github.com/mendelev-main/M-POS-Android/actions/runs/40172190371), commit3a9a4d0 (runtime приложения прежний2ce31c2): checks121105200829 и emulator36 job121105200646 success.40JVM/0failures,6Python/lint/assemble;41instrumentation+4explicit UI seed. Logs: CATALOG/WORKSPACE/PARKED UPDATE PASSED и UPDATE E2E PASSED, actual package1→2, stock8/current qty5 total15/parked delivery label total5 сохранены. AVD1600×1125/200dpi; screenshot updated-workspace.png имеет1600×1125, просмотрен без системного overlay/перекрытий. Quickstep recovery в логах не вызывался. Это закрывает ранее заблокированный CI gate02c; причина прошлых ANR не доказана, но новая конфигурация успешно прошла сценарий без подавления системных диалогов. Signing/publish skipped на develop, physical deferred.

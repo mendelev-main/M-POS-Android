@@ -68,7 +68,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api: [28, 35]
+        api: [36]
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
@@ -95,6 +95,10 @@ jobs:
           api-level: ${{ matrix.api }}
           arch: x86_64
           profile: pixel_c
+          avd-name: mpos-ci-api36
+          ram-size: 3072M
+          cores: 2
+          pre-emulator-launch-script: python3 scripts/ci/configure-emulator.py --avd mpos-ci-api36
           disable-animations: true
           script: |
             set -e
@@ -221,7 +225,7 @@ jobs:
       - name: Actual release-to-release update via public HTTPS channel and system installer
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         with:
-          api-level: 35
+          api-level: 36
           arch: x86_64
           profile: pixel_c
           disable-animations: true

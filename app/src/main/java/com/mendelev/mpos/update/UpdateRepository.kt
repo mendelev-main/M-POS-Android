@@ -99,13 +99,8 @@ class UpdateRepository(private val context: Context, fixtureUrl: String? = null)
     private fun verify(update: UpdateDescriptor, file: File) {
         require(file.isFile && file.length() == update.apkBytes) { "Размер APK не совпадает с описанием" }
         require(UpdatePolicy.sha256(file) == update.sha256) { "Контрольная сумма APK не совпадает" }
-        // Android 9/10 PackageManager only invokes collectCertificates for GET_SIGNATURES.
-        // Request both flags there, then still compare the actual current signer to our exact pin.
-        @Suppress("DEPRECATION")
-        val flags = PackageManager.GET_SIGNING_CERTIFICATES or
-            if (Build.VERSION.SDK_INT <= 29) PackageManager.GET_SIGNATURES else 0
-        @Suppress("DEPRECATION")
-        val info = context.packageManager.getPackageArchiveInfo(file.absolutePath, flags)
+        val flags=PackageManager.PackageInfoFlags.of(PackageManager.GET_SIGNING_CERTIFICATES.toLong())
+        val info=context.packageManager.getPackageArchiveInfo(file.absolutePath,flags)
             ?: error("Не удалось прочитать APK")
         val signatures = info.signingInfo?.apkContentsSigners?.map { certHash(it.toByteArray()) }?.toSet().orEmpty()
         policy.validateArchive(update, ApkIdentity(info.packageName, info.longVersionCode,

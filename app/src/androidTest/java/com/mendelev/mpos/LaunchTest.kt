@@ -4,6 +4,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Before
 import java.util.UUID
 
 class LaunchTest {
@@ -16,6 +17,7 @@ class LaunchTest {
             bitmap.recycle()
         }
     }
+    @Before fun prepareCatalog() { CatalogUiTestSupport.prepare(compose) }
     private fun waitText(text: String) { compose.waitUntil(20_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
     @Test fun catalogSavesAndDraftSurvivesRecreation() {
         waitText("Добавить товар")
@@ -23,13 +25,21 @@ class LaunchTest {
         compose.onNodeWithText("Создать категорию").performClick()
         val category="Напитки QA ${UUID.randomUUID().toString().take(6)}"
         compose.onNodeWithTag("categoryName").performTextInput(category)
+        compose.onNodeWithTag("categorySymbol").performTextInput("КФ")
+        compose.onNodeWithTag("categoryColor:#DDEBFF").performScrollTo().performClick()
+        compose.runOnIdle { (compose.activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager)
+            .hideSoftInputFromWindow(compose.activity.window.decorView.windowToken,0) }
+        compose.waitForIdle()
+        screenshot("category-editor")
         compose.onNodeWithText("Сохранить категорию").performClick()
         waitText("Создать категорию")
         compose.onNodeWithContentDescription("Закрыть").performClick()
         compose.onNodeWithText("Добавить товар").performClick()
+        CatalogUiTestSupport.waitEditor(compose)
         val name="Чай ${UUID.randomUUID().toString().take(6)}"
         compose.onNodeWithTag("productName").performTextInput(name)
         compose.onNodeWithText("Без категории").performClick()
+        compose.onNodeWithTag("categoryList").performScrollToNode(hasText(category))
         compose.onNodeWithText(category).performClick()
         compose.onNodeWithTag("productPrice").performTextReplacement("2,50")
         compose.onNodeWithTag("productStock").performScrollTo().performTextReplacement("10")
@@ -39,6 +49,7 @@ class LaunchTest {
         compose.onNodeWithTag("saveProduct").performClick()
         waitText("Добавить товар")
         compose.onNodeWithText(name).performClick()
+        CatalogUiTestSupport.waitEditor(compose)
         compose.onNodeWithTag("productStock").performScrollTo().performTextReplacement("8")
         compose.onNodeWithTag("saveProduct").performClick()
         waitText("8 шт")

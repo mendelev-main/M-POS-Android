@@ -25,6 +25,9 @@ def validate_apk_outputs(badging, signature, config, expected_code, expected_nam
     package = re.search(r"^package: name='([^']+)' versionCode='(\d+)' versionName='([^']+)'", badging, re.M)
     if not package or package.groups() != (config["applicationId"], str(expected_code), expected_name):
         raise ValueError("APK package/version differs from release config")
+    minimum = re.search(r"^sdkVersion:'(\d+)'", badging, re.M)
+    if not minimum or int(minimum.group(1)) != config["minSdk"]:
+        raise ValueError("APK minSdk differs from release config")
     fingerprints = re.findall(r"^Signer #\d+ certificate SHA-256 digest: ([0-9a-fA-F]{64})\s*$", signature, re.M)
     if len(fingerprints) != 1 or fingerprints[0].lower() != config["certificateSha256"].lower():
         raise ValueError("APK signing certificate differs from pinned native certificate")

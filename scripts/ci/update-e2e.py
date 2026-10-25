@@ -34,12 +34,39 @@ def ui_nodes():
     return list(ET.fromstring(raw[raw.index("<?xml"):]).iter("node"))
 
 
+_launcher_recovery_used = False
+
+
+def launcher_anr_close(nodes):
+    """Only the emulator's Quickstep launcher ANR, never an M-POS or generic ANR."""
+    labels = [n for n in nodes if n.get("resource-id") == "android:id/alertTitle"]
+    if len(labels) != 1 or labels[0].get("package") != "android" or labels[0].get("text") != "Quickstep isn't responding":
+        return None
+    return next((n for n in nodes if n.get("package") == "android" and n.get("resource-id") == "android:id/aerr_close"
+                 and n.get("text") == "Close app" and n.get("enabled") == "true"), None)
+
+
 def wait_text(pattern, timeout=75, click=False):
+    global _launcher_recovery_used
     print(f"E2E UI: {pattern}; click={click}", flush=True)
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
-            for node in ui_nodes():
+            nodes = ui_nodes()
+            launcher_close = launcher_anr_close(nodes)
+            if launcher_close is not None and not _launcher_recovery_used:
+                require_emulator(adb("get-serialno").strip())
+                reports = ROOT / "app/build/reports/update-e2e"
+                reports.mkdir(parents=True, exist_ok=True)
+                (reports / "quickstep-anr.xml").write_text(adb("shell", "cat", "/sdcard/update-window.xml"))
+                capture = subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, check=True, timeout=20)
+                (reports / "quickstep-anr.png").write_bytes(capture.stdout)
+                _launcher_recovery_used = True
+                x1, y1, x2, y2 = map(int, re.findall(r"\d+", launcher_close.get("bounds", "")))
+                print("E2E INFRA: closing Quickstep launcher ANR once; M-POS assertions remain mandatory", flush=True)
+                adb("shell", "input", "tap", str((x1+x2)//2), str((y1+y2)//2))
+                continue
+            for node in nodes:
                 if re.search(pattern, node.get("text", ""), re.I) and node.get("enabled", "true") == "true":
                     if click:
                         x1, y1, x2, y2 = map(int, re.findall(r"\d+", node.get("bounds", "")))
@@ -110,6 +137,7 @@ def main():
     if production:
         PACKAGE = "com.mendelev.mpos"
     expected_product = None
+    expected_home = None
     with tempfile.TemporaryDirectory() as tmp:
         folder = Path(tmp)
         base = folder / "base.apk"
@@ -131,7 +159,7 @@ def main():
             signature = subprocess.check_output([str(tools / "apksigner"), "verify", "--print-certs", str(apk)], text=True)
             cert = re.search(r"Signer #1 certificate SHA-256 digest: ([0-9a-f]{64})", signature).group(1)
             manifest = {"schemaVersion": 1, "channel": "stable", "applicationId": PACKAGE, "versionCode": 2,
-                        "versionName": "0.0.2-e2e-debug", "minSdk": 28, "apkUrl": f"http://10.0.2.2:{PORT}/mpos-native.apk",
+                        "versionName": "0.0.2-e2e-debug", "minSdk": 36, "apkUrl": f"http://10.0.2.2:{PORT}/mpos-native.apk",
                         "apkBytes": apk.stat().st_size, "sha256": hashlib.sha256(apk.read_bytes()).hexdigest(),
                         "certificateSha256": cert, "notes": "Проверка обновления с сохранением данных"}
             (folder / "update.json").write_text(json.dumps(manifest))
@@ -147,14 +175,38 @@ def main():
                 # under an explicit instrumentation lifetime, then keep the target for replacement.
                 test_apk = ROOT / "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
                 adb("install", "-r", str(test_apk))
-                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.LaunchTest",
-                             PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
-                assert "OK (1 test)" in result and "FAILURES" not in result, result[-4000:]
+                # UTP removes apps after connected tests. Capture scale evidence in an explicit
+                # instrumentation lifetime, just like the existing persistent update seed.
+                scale = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.WorkspaceScaleUiTest",
+                            PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
+                assert "OK (2 tests)" in scale and "FAILURES" not in scale, scale[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
+                for name in ("performance.json", "workspace-portrait150.png", "workspace-landscape150.png"):
+                    captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}"], capture_output=True, timeout=20, check=True)
+                    if name.endswith(".json"):
+                        assert json.loads(captured.stdout)["products"] == 2000
+                    else:
+                        assert captured.stdout.startswith(b"\x89PNG"), "Invalid adaptive screenshot"
+                    (reports / name).write_bytes(captured.stdout)
+                # Keep updater fixtures independent of the performance/rotation fixture data.
+                adb("uninstall", PACKAGE)
+                adb("install", str(base))
+                adb("install", "-r", str(test_apk))
+                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest",
+                             PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
+                assert "OK (4 tests)" in result and "FAILURES" not in result, result[-4000:]
+                reports = ROOT / "app/build/reports/update-e2e"
+                reports.mkdir(parents=True, exist_ok=True)
+                expected_home = adb("shell", "run-as", PACKAGE, "cat", "files/qa/homeTileName.txt").strip()
+                assert expected_home, "UI setup must preserve a custom home tile"
                 expected_product = adb("shell", "run-as", PACKAGE, "cat", "files/qa/productName.txt").strip()
                 assert expected_product, "UI setup must create a real catalog record"
-                for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon"):
+                expected_workspace_line = adb("shell", "run-as", PACKAGE, "cat", "files/qa/workspaceLineName.txt").strip()
+                assert expected_workspace_line, "UI setup must create a real persistent current cart"
+                expected_parked_label = adb("shell", "run-as", PACKAGE, "cat", "files/qa/parkedLabel.txt").strip()
+                assert expected_parked_label, "UI setup must create a real parked order"
+                for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders"):
                     captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
                     assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
                     (reports / f"{name}.png").write_bytes(captured.stdout)
@@ -210,6 +262,24 @@ def main():
                 wait_text("^8 шт$")
                 (reports / "updated-catalog.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("CATALOG UPDATE PASSED: Room product and stock=8 survived actual package replacement", flush=True)
+                wait_text("^Рабочая зона$", click=True)
+                wait_text("^" + re.escape(expected_workspace_line) + "$")
+                wait_text("^Предварительно: 15 BYN$")
+                wait_text("^3 BYN × 5 шт$")
+                (reports / "updated-workspace.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
+                print("WORKSPACE UPDATE PASSED: current cart configuration, quantity=5 and total=15 survived package replacement", flush=True)
+                wait_text(r"^Отложенные \(1\)$", click=True)
+                wait_text("^" + re.escape(expected_parked_label) + "$")
+                wait_text("^Доставка$")
+                wait_text("^5 BYN$")
+                (reports / "updated-parked.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
+                print("PARKED UPDATE PASSED: delivery order label, type and total5 survived package replacement", flush=True)
+                adb("shell", "input", "keyevent", "KEYCODE_BACK")
+                wait_text(re.escape(expected_home))
+                wait_text("^Изменить раскладку$", click=True)
+                wait_text(r"(?:^|\n)Место 8(?:$|\n)")
+                (reports / "updated-home.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
+                print("HOME UPDATE PASSED: custom product tile and slot8 survived package replacement", flush=True)
             print(f"UPDATE E2E PASSED: package={PACKAGE}, check/download/restore/cancel/system install {base_code}→{target_code}; app-private data preserved")
             server.shutdown()
 
@@ -222,6 +292,17 @@ if __name__ == "__main__":
     except Exception:
         reports = ROOT / "app/build/reports/update-e2e"
         reports.mkdir(parents=True, exist_ok=True)
+        for name, command in {
+            "last-anr.txt": ("shell", "dumpsys", "activity", "lastanr"),
+            "cpuinfo.txt": ("shell", "dumpsys", "cpuinfo"),
+            "meminfo.txt": ("shell", "dumpsys", "meminfo"),
+            "events.txt": ("logcat", "-b", "events", "-d"),
+            "display.txt": ("shell", "dumpsys", "display"),
+        }.items():
+            try:
+                (reports / name).write_text(adb(*command, check=False, timeout=20))
+            except Exception as error:
+                (reports / name).write_text(str(error))
         try:
             (reports / "logcat.txt").write_text(adb("logcat", "-d", "-t", "1000", check=False))
         except Exception as error:

@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.mendelev.mpos"
-        minSdk = 28
+        minSdk = 36
         targetSdk = 36
         versionCode = providers.environmentVariable("MPOS_VERSION_CODE").orElse("1").get().toInt()
         versionName = providers.environmentVariable("MPOS_VERSION_NAME").orElse("0.1.0-dev").get()
@@ -41,6 +41,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+    sourceSets.getByName("androidTest").assets.srcDir("$projectDir/schemas")
     buildFeatures { compose = true; buildConfig = true }
     defaultConfig {
         buildConfigField("String", "UPDATE_CERT_SHA256", "\"d484cd0166df7f043f65c25e058aba4d3a2b59ea058e6f39948e3e5684b12da4\"")
@@ -56,6 +57,7 @@ android {
 ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 
 dependencies {
+    implementation("io.coil-kt.coil3:coil-compose:3.3.0")
     implementation("androidx.room:room-runtime:2.8.4")
     implementation("androidx.room:room-ktx:2.8.4")
     ksp("androidx.room:room-compiler:2.8.4")

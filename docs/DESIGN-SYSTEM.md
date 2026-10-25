@@ -100,3 +100,21 @@ Design system — часть M01: `core/ui/theme` (colors/type/shape/spacing), `
 В01a сначала реализовать tokens/theme+Primary/Secondary/Close/Dialog/TextField/Notice и component gallery, затем экран каталога. Не копировать JSX/CSS/WebView. Все feature screens используют common components. Повторяющийся новый элемент сначала добавляется общим variant, затем применяется во всех местах; исключение оформляется решением с примером/причиной. Updater получает ту же theme при общей UI интеграции.
 
 ПриёмкаDS01: источники/Manrope/palette; DS02: все dialog close одинаковы; DS03: button/input states light/dark; DS04: keyboard/font scale/48dp target; DS05: paired screenshots Web/native на одинаковых сценариях; DS06: no lost dirty form приX/Back; DS07: component gallery показывает все variants. Статус planned; сравнение скриншотов и physical tablet pending.
+
+
+## Рабочая зона02a — shared variants
+
+MposAppBar переносит существующий navy/Manrope header каталога в общий компонент; рабочая зона использует те же navigation actions. MposWorkspaceTile: radius18dp/min-height144dp/gap12dp из pos.html pcard/product-grid; фото — общий sampled private ProductPhoto. MposDialog wide=true — только ширина до900dp для папки, те же header/Close, radius22dp, padding28dp и кнопки; обычные диалоги не меняют ширину. Раскладка/корзина: grid слева + cart340dp при ширине≥840dp, при меньшей ширине cart снизу; физическая orientation/font-scale приёмка позже. Full fixed-slot/drag parity не заявляется, контракт WORKSPACE-02A.md.
+
+## Рабочая зона02d — ширина папки
+
+Shared MposDialog maxWidth — ограничение ширины без отдельного оформления Close/header/buttons/radius/padding. Для папок280/448/660/872dp по1–4колонкам из pinned pos.html611; narrow viewport уменьшает колонки по доступной ширине. wide900dp остаётся общим вариантом для других сценариев. [Контракт](WORKSPACE-02D.md).
+
+## Рабочая зона02e — пустое место и цель перетаскивания
+
+Пустое место: фон background, общая граница outlineVariant/1dp, shapes.large, высота144dp как минимальная плитка. Стандартный Material surfaceVariant не используется, чтобы не вносить фиолетовую заливку. Цель жеста выделяется primary/2dp по общей shape. Home product tile использует общий ProductPhoto и принятую подсказку «Ввести цену» для manual0. Все действия Add/Move/Remove/Reset используют существующие MposButton/Field/Dialog/Close. [Контракт](WORKSPACE-02E.md).
+
+
+## Адаптация рабочей зоны02f
+
+Текущие правила заменяют исходный порог840dp из02a: cart340×fontScale dp (scale1–2), рядом с grid при наличии ещё460×scale dp +20dp. При достаточной высоте cart снизу300×scale dp; иначе общие кнопки «Товары / Заказ» переключают полную панель. Footer и основные действия должны оставаться доступны при крупном шрифте; сохраняются общий Manrope, цвета, размеры touch targets и единые Close/buttons. Контракт и границы emulator/physical — [WORKSPACE-02F](WORKSPACE-02F.md).

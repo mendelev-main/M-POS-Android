@@ -20,6 +20,7 @@ class ManifestTests(unittest.TestCase):
             result = module.prepare(apk, output, 1401, "0.1.4.1", "Описание выпуска")
             self.assertEqual(result["sha256"], hashlib.sha256(apk.read_bytes()).hexdigest())
             self.assertEqual(result["apkBytes"], apk.stat().st_size)
+            self.assertEqual(result["minSdk"],36)
             self.assertEqual(result["applicationId"], "com.mendelev.mpos")
             self.assertIn("/releases/download/v0.1.4.1/mpos-native.apk", result["apkUrl"])
             self.assertEqual(json.loads((output / "update.json").read_text()), result)

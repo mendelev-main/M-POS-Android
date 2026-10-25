@@ -18,12 +18,12 @@ class ReleaseTests(unittest.TestCase):
                 version(run, attempt)
 
     def test_only_expected_native_package_version_and_single_certificate_pass(self):
-        cfg = {"applicationId": "com.mendelev.mpos", "certificateSha256": "ab" * 32}
-        badging = "package: name='com.mendelev.mpos' versionCode='1101' versionName='0.1.1.1' platformBuildVersionName='16'"
+        cfg = {"applicationId": "com.mendelev.mpos", "certificateSha256": "ab" * 32, "minSdk": 36}
+        badging = "package: name='com.mendelev.mpos' versionCode='1101' versionName='0.1.1.1' platformBuildVersionName='16'\nsdkVersion:'36'"
         signature = "Signer #1 certificate SHA-256 digest: " + cfg["certificateSha256"] + "\n"
         validate_apk_outputs(badging, signature, cfg, 1101, "0.1.1.1")
         for changed in [badging.replace("com.mendelev.mpos'", "com.mendelev.mpos.web'"),
-                        badging.replace("1101", "1102"), badging.replace("0.1.1.1", "0.1.1.2"), "invalid"]:
+                        badging.replace("1101", "1102"), badging.replace("sdkVersion:'36'", "sdkVersion:'28'"), badging.replace("0.1.1.1", "0.1.1.2"), "invalid"]:
             with self.assertRaises(ValueError):
                 validate_apk_outputs(changed, signature, cfg, 1101, "0.1.1.1")
         for changed in [signature.replace("ab", "cd"), "", signature + signature.replace("#1", "#2")]:

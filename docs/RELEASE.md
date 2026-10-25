@@ -40,3 +40,6 @@ Signed job зависит от обеих jobs и запускается тол�
 Скачать artifact → распаковать → установить APK рядом с Web. Затем следующий native APK установить как обновление и проверить данные. Подтверждение записи SQLite/UX/периферии требует приёмки соответствующего этапа. Каталог01a содержит пользовательские товары/остатки; physical update checklist включает их сохранность.
 
 Технические основания: [applicationId](https://developer.android.com/build/configure-app-module), [APK signing](https://developer.android.com/studio/publish/app-signing), [GitHub Secrets](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets).
+
+
+Новые APK с24.10.2026: minSdk36 по [ANDROID-SUPPORT.md](ANDROID-SUPPORT.md). config/android-release.json задаёт minimum для update.json; harness сверяет Gradle, release.py verify-apk сверяет aapt sdkVersion. Подпись/version/package gates сохранены. CI runtime теперь API36, workflow identity/run counter прежние.
