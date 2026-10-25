@@ -13,10 +13,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.data.local.WorkspaceSnapshot
+import com.mendelev.mpos.data.media.ProductPhotoStore
 import com.mendelev.mpos.domain.workspace.*
 
 @OptIn(ExperimentalLayoutApi::class)
-@Composable internal fun WorkspaceHome(s: WorkspaceSnapshot,ui: WorkspaceUi,editing: Boolean,model: WorkspaceViewModel,
+@Composable internal fun WorkspaceHome(s: WorkspaceSnapshot,ui: WorkspaceUi,editing: Boolean,model: WorkspaceViewModel,photos: ProductPhotoStore,
     modifier: Modifier,onCategory: (String)->Unit,onProduct: (WorkspaceProduct)->Unit) {
     var dialog by rememberSaveable {mutableStateOf<String?>(null)}
     var type by rememberSaveable {mutableStateOf("")};var id by rememberSaveable {mutableStateOf("")}
@@ -24,7 +25,7 @@ import com.mendelev.mpos.domain.workspace.*
     val busy=ui.pending>0
     val state=rememberLazyGridState()
     val tiles=s.home.tiles.associateBy {it.slot}
-    val drag=workspaceDrag(state,editing && !busy,s.homeRevision,"home") {from,to->
+    val drag=workspaceDrag(state,editing && !busy,s.homeRevision,"home:${s.home.tiles}") {from,to->
         tiles[from]?.let {model.home(HomeAction.Move(it.type,it.id,to),s.homeRevision)}
     }
     fun title(tile: HomeTile)=if(tile.type=="category") s.categories.find {it.id==tile.id}?.name ?: "Без категории"
@@ -55,10 +56,11 @@ import com.mendelev.mpos.domain.workspace.*
                         MposWorkspaceTile({if(editing) manage(tile) else if(tile.type=="category") onCategory(tile.id) else s.products.find {it.id==tile.id}?.let(onProduct)},
                             Modifier.testTag(tag).then(highlight),!busy) {
                             if(tile.type=="category") s.categories.find {it.id==tile.id}?.let {MposCategoryBadge(it.color,it.symbol)}
+                            if(tile.type=="product") s.products.find {it.id==tile.id}?.photoId?.let {ProductPhoto(it,photos,Modifier.fillMaxWidth().height(72.dp))}
                             Text(title(tile),style=MaterialTheme.typography.titleSmall,maxLines=3)
                             if(editing) Text("Место ${index+1}",style=MaterialTheme.typography.bodySmall)
                             else if(tile.type=="category") Text("Товаров: ${s.products.count {it.categoryId==tile.id}}",style=MaterialTheme.typography.bodySmall)
-                            else Text(s.products.find {it.id==tile.id}?.price?.replace('.',',').orEmpty()+" BYN")
+                            else s.products.find {it.id==tile.id}?.let {p->Text(if(p.price.toBigDecimal().signum()==0) "Ввести цену" else p.price.replace('.',',')+" BYN")}
                         }
                     }
                 }

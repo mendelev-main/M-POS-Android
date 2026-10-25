@@ -261,3 +261,7 @@ Screenshots workspace-folder/workspace-configuration просмотрены: к�
 ## 2026-10-25 — начало02e
 
 HomeEngine/home payload1/transactional repository; long-press root slots + category/folder list reorder и accessible controls. Added4pure/2Room/1UI; WorkspaceUiTest seed+updater проверяют отдельную custom home product/slot8. Local supplemental cached Kotlin2.1.20/JDK17 domain+codec compile/36tests passed;6Python/preflight/diff passed. Actual project Kotlin/Android/Room/Compose to CI. SQLschema5 не менялась. Результаты Android ещё не получены, не заявлять ci-verified.
+
+02e source check: полный `node --test ../reference/tests/source-product-stock.test.cjs` прошёл442tests/0failures. HEAD reference1682c883 и SHA256 теста/pos-navigation/cart-composition совпали с config/reference.json, working tree reference clean. Local Android попытка остановилась до wrapper на sandbox ~/.gradle lock, SDK отсутствует. Runtime b389b39 отправлен develop, [run40176727737](https://github.com/mendelev-main/M-POS-Android/actions/runs/40176727737) pending.
+
+Review follow-up: drag cancellation key включает identity/positions projection (не только persisted revision), чтобы изменение автоматического списка категорий во время жеста не выбрало другой ID на том же индексе. Root product tile использует общий ProductPhoto и текст «Ввести цену» для manual0. Первый run проверяет b389b39, follow-up будет проверен отдельным финальным run; не приписывать ему новые изменения до CI.

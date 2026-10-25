@@ -98,7 +98,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                         if(editing && category!=null && search.isBlank()) MposButton("Создать папку",{
                             manageId=UUID.randomUUID().toString();manageType="folder";manageName="";manageRevision=s.layoutRevision;confirmFolderDelete=false
                         },enabled=!busy,style=ActionStyle.Secondary)
-                        if(category==null && search.isBlank()) WorkspaceHome(s,ui,editing,model,Modifier.weight(1f),{category=it;search=""},::configure)
+                        if(category==null && search.isBlank()) WorkspaceHome(s,ui,editing,model,photos,Modifier.weight(1f),{category=it;search=""},::configure)
                         else WorkspaceGrid(s,category,null,search,editing,photos,Modifier.weight(1f),ui.pending<100,
                             {category=it;search=""},{folder=it.id},::configure,::manage,onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
                     }
@@ -233,7 +233,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
     val tiles=if(query.isNotEmpty()) s.products.filter { (category==null || it.categoryId==category) && CatalogRules.key(it.name).contains(query) }.map { LayoutItem("product",it.id,it.categoryId) }
         else s.layout.filter { it.categoryId==category && it.folderId==(folder ?: "") }
     val gridState=rememberLazyGridState()
-    val drag=workspaceDrag(gridState,editing && enabled && query.isEmpty() && category!=null && onReorder!=null,s.layoutRevision,"$category/$folder") {from,to->
+    val drag=workspaceDrag(gridState,editing && enabled && query.isEmpty() && category!=null && onReorder!=null,s.layoutRevision,"$category/$folder/${tiles.map {it.type to it.id}}") {from,to->
         tiles.getOrNull(from)?.let {onReorder?.invoke(it,to.coerceIn(0,tiles.lastIndex))}
     }
     LazyVerticalGrid(if(folderColumns==null) GridCells.Adaptive(150.dp) else GridCells.Fixed(folderColumns),modifier.then(drag.modifier).testTag(if(folder==null) "workspaceGrid" else "workspaceFolderGrid"),state=gridState,
