@@ -1,6 +1,6 @@
 # 03b — оплата и история: контракт инкрементов
 
-Статус:03b.1 money engine implemented/CI pending; checkout/sale/history runtime planned. Это не готовая кнопка оплаты. Предпосылки:03a выпущен stable0.1.46.1, [MONEY-03](MONEY-03.md) и ответы владельца25.10.2026. BYN, API36+, единый дизайн pinned Web. Физические тесты по-прежнему позже.
+Статус:03b.1 money engine ci-verified; checkout/sale/history runtime planned. Это не готовая кнопка оплаты. Предпосылки:03a выпущен stable0.1.46.1, [MONEY-03](MONEY-03.md) и ответы владельца25.10.2026. BYN, API36+, единый дизайн pinned Web. Физические тесты по-прежнему позже.
 
 ## Источники и D02
 
@@ -30,4 +30,6 @@ InstallationGate расширяется на sale/сохранение checkout/
 
 ## Границы приёмки
 
-S04 пока только pure money часть, S01/S02/S05 planned до vertical sale; S03 в03c. Не присваивать financial ci-verified всему03b по денежным unit tests. Дальнейшие инкременты03b не выпускаются отдельно автоматически; готовый функциональный блок —PRdevelop→main по workflow владельца.
+S04 ci-verified только pure money часть, S01/S02/S05 planned до vertical sale; S03 в03c. Не присваивать financial ci-verified всему03b по денежным unit tests. Дальнейшие инкременты03b не выпускаются отдельно автоматически; готовый функциональный блок —PRdevelop→main по workflow владельца.
+
+Evidence03b.1: [Android PR manual40223239353](https://github.com/mendelev-main/M-POS-Android/actions/runs/40223239353)/91acd06,55JVM/0failures,6Python/lint/assembleDebug passed.5new SaleMoney tests,46supplemental local cached Kotlin2.1.20 tests passed; actual pinned compiler вCI.45selected pinned Web payment/split/discount/delivery tests passed, SHA256 source совпали сconfig/reference.json. SQLschema6/cart payload2/UI не менялись, новый emulator suite не требовался для unused pure engine. S01/S02/S05 и actual checkout остаются planned.

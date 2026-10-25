@@ -14,7 +14,7 @@
 
 Bootstrap 0.1.3.1 не содержит updater. Новую подписанную версию с ним нужно один раз установить вручную поверх старой, без удаления приложения. Далее — настройки и системное подтверждение. Это полный APK: пропущенные промежуточные версии устанавливать по очереди не требуется; совместимость будущих данных обеспечивают migration paths.
 
-Текущий выпуск — [0.1.41.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.41.1), каталог01b/01c и рабочая зона02a–02f для Android16+. Версия0.1.16.1 — предыдущий stable каталог01a. Для проверки механизма вручную установите [0.1.8.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.8.1), затем в настройках скачайте и установите текущий stable release. Всегда использовать native release package и постоянный сертификат; APK Web к этому каналу не относится.
+Текущий выпуск — [0.1.46.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.46.1), минимальная смена03a поверх каталога и рабочей зоны для Android16+. Предыдущий stable0.1.41.1 содержит01b–02f. Для проверки механизма вручную установите [0.1.8.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.8.1), затем в настройках скачайте и установите текущий stable release. Всегда использовать native release package и постоянный сертификат; APK Web к этому каналу не относится.
 
 ## Доверие и хранение
 
@@ -59,3 +59,5 @@ Physical pending: разрешение неизвестного источник
 Действующая платформа с24.10.2026 — [Android16+](ANDROID-SUPPORT.md), minSdk36 в новых APK/manifest. Прежняя ветка GET_SIGNATURES для API28/29 удалена; archive signer читается современным PackageInfoFlags. Исторические отчёты выше остаются evidence прежних выпусков, не текущей матрицей.
 
 Актуальный stable0.1.41.1/API36: [main release40198464669](https://github.com/mendelev-main/M-POS-Android/actions/runs/40198464669) — checks/emulator/signing/publish success; [public channel40199534929](https://github.com/mendelev-main/M-POS-Android/actions/runs/40199534929) — настоящий production upgrade0.1.16.1/code2601→0.1.41.1/code5101, публичные HTTPS assets, permission/Cancel/retry/restart и persisted install receipt/lastChecked passed. Фото настроек после обновления просмотрено. Данные каталога/current/parked/home дополнительно проверены debug replacement в main CI; physical приёмка позже.
+
+Stable0.1.46.1/code5601/commit9ab4d4f:main release40214423719 checks/emulator/signing/publish success. [Public channel40223234154](https://github.com/mendelev-main/M-POS-Android/actions/runs/40223234154) API36 подтвердил production5101→5601,public HTTPS/check/download/restore/permission/Cancel/retry/system install/settings receipt; updated-settings screenshot reviewed. Предварительный40216662749 остановился на SystemUI startupANR до установки новогоAPK; PR3 перенёс geometry/RAM/cores конфигурацию main suite в оба production upgrade jobs, retry прошёл без подавления системных диалогов. Physical acceptance по-прежнему позже.

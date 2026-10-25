@@ -110,4 +110,6 @@ W01/W03/W07/DS04: background/lazy availability/search/selection, shared bounded 
 
 03a evidence [run40206673038](https://github.com/mendelev-main/M-POS-Android/actions/runs/40206673038)/fc7cde5:50JVM/52instrumentation+2scale+5UIseed,6Python/lint/build, migrations1–5→6, actual updater сохраняет active shiftId/opening140BYN и прежний catalog/current/parked/home. Closed/carry screenshot reviewed. H01/H02 только минимальный scope;MG02(sale+close)/MG03(refund) и S01–S05 planned, physical later.
 
-03b.1 S04 pure money: line HALF_UP/fixed-per-unit/cash-change/equal split/delivery cash-out/overflow implemented/CI pending. [Контракт](SALE-03B.md). Нет checkout/sale/history runtime; S01/S02/S05 не закрыты.
+03b.1 S04 pure money: line HALF_UP/fixed-per-unit/cash-change/equal split/delivery cash-out/overflow ci-verified/run40223239353. [Контракт](SALE-03B.md). Нет checkout/sale/history runtime; S01/S02/S05 не закрыты.
+
+03a release0.1.46.1/main9ab4d4f:40214423719 success; U public channel [40223234154](https://github.com/mendelev-main/M-POS-Android/actions/runs/40223234154) API36 production5101→5601/Cancel/retry/receipt/settings passed.03b.1 [40223239353](https://github.com/mendelev-main/M-POS-Android/actions/runs/40223239353)/91acd06:55JVM/6Python/lint/build, S04 pure только. S01/S02/S05/checkout planned; physical позже.

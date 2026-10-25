@@ -48,4 +48,6 @@ S01: commit атомарен; S02: повтор idempotent; S03: historical refu
 
 Итог03a: [run40206673038](https://github.com/mendelev-main/M-POS-Android/actions/runs/40206673038)/fc7cde5,50JVM/52instrumentation+2scale+5UIseed,6Python/lint/build, Room6 migrations/fault/replay/concurrency/installation gate и actual updater сactive140BYN passed. Physical later. Следующий03b только после выпуска03a и применимых D02 fixtures.
 
-03b.1: [денежное ядро и последующие шаги](../../docs/SALE-03B.md), S04 pure implemented/CI pending; S01/S02/S05 и actual checkout planned. Дополнительные D02 примеры подтверждены владельцем25.10.2026.
+03b.1: [денежное ядро и последующие шаги](../../docs/SALE-03B.md), S04 pure ci-verified/run40223239353; S01/S02/S05 и actual checkout planned. Дополнительные D02 примеры подтверждены владельцем25.10.2026.
+
+03a выпущен0.1.46.1, public API36 upgrade5101→5601 passed40223234154.03b.1 pure [CI40223239353](https://github.com/mendelev-main/M-POS-Android/actions/runs/40223239353):55JVM/6Python/lint/build passed; actual sale/history next03b.2.
