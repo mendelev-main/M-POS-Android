@@ -125,9 +125,11 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
             val width=listOf(280,448,660,872)[columns-1].dp
             MposDialog(folderItem.name,{folder=null},!busy,maxWidth=width) {
                 if(ui.message!=null) MposNotice(ui.message!!,true)
-                BoxWithConstraints(Modifier.fillMaxWidth().heightIn(max=420.dp)) {
+                BoxWithConstraints(Modifier.fillMaxWidth()) {
                     val fittingColumns=((maxWidth+12.dp)/162.dp).toInt().coerceAtLeast(1).coerceAtMost(columns)
-                    WorkspaceGrid(s,folderItem.categoryId,folderItem.id,"",editing,photos,Modifier.heightIn(max=420.dp),ui.pending<100,
+                    val rows=(count+fittingColumns-1)/fittingColumns
+                    val gridHeight=if(count==0) 72 else (rows*144+(rows-1)*12).coerceAtMost(420)
+                    WorkspaceGrid(s,folderItem.categoryId,folderItem.id,"",editing,photos,Modifier.heightIn(max=gridHeight.dp),ui.pending<100,
                         {},{},::configure,::manage,folderColumns=fittingColumns)
                 }
             }
