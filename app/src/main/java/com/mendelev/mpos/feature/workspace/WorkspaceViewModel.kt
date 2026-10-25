@@ -34,7 +34,7 @@ class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
     }
     private fun publish(snap: WorkspaceSnapshot) { mutable.update {
         val old=it.snapshot
-        if(old!=null && (old.cartRevision>snap.cartRevision || old.layoutRevision>snap.layoutRevision || old.ordersRevision>snap.ordersRevision)) it
+        if(old!=null && (old.cartRevision>snap.cartRevision || old.layoutRevision>snap.layoutRevision || old.ordersRevision>snap.ordersRevision || old.homeRevision>snap.homeRevision)) it
         else it.copy(loading=false,snapshot=snap)
     } }
     fun dismiss() { mutable.update { it.copy(message=null) } }
@@ -74,6 +74,9 @@ class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
     fun deleteParked(id: String,revision: Long,done: () -> Unit) {
         val command=UUID.randomUUID().toString()
         enqueue {repo.deleteParked(id,revision,command);withContext(Dispatchers.Main) {done()} }
+    }
+    fun home(action: HomeAction,revision: Long,done: () -> Unit = {}) {
+        val command=UUID.randomUUID().toString();enqueue {repo.home(action,revision,command);withContext(Dispatchers.Main) {done()}}
     }
     fun layout(action: LayoutAction,revision: Long,done: () -> Unit = {}) {
         val command=UUID.randomUUID().toString();enqueue { repo.layout(action,revision,command);withContext(Dispatchers.Main) { done() } }

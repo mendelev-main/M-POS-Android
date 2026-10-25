@@ -12,6 +12,12 @@ object WorkspaceCodec {
     }
     private fun <T> JSONArray.list(block: (JSONObject)->T): List<T> = (0 until length()).map { block(getJSONObject(it)) }
     private fun objects(values: List<JSONObject>)=JSONArray().also { a -> values.forEach(a::put) }
+    fun home(value: HomeLayout): String=JSONObject().put("version",1).put("customized",value.customized).put("tiles",objects(value.tiles.map {
+        JSONObject().put("type",it.type).put("id",it.id).put("slot",it.slot)
+    })).toString()
+    fun home(raw: String): HomeLayout=root(raw).let {j->HomeEngine.validate(HomeLayout(j.getBoolean("customized"),j.getJSONArray("tiles").list {
+        HomeTile(it.getString("type"),it.getString("id"),it.getInt("slot"))
+    }))}
     fun layout(items: List<LayoutItem>): String=JSONObject().put("version",1).put("items",objects(items.map {
         JSONObject().put("type",it.type).put("id",it.id).put("categoryId",it.categoryId).put("folderId",it.folderId).put("name",it.name)
     })).toString()

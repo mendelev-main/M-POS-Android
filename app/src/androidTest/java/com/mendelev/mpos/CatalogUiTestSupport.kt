@@ -19,5 +19,11 @@ object CatalogUiTestSupport {
             compose.runOnIdle { model.discard() }
             compose.waitUntil(20_000) { model.state.value.draft==null && !model.state.value.busy }
         }
+        // Each disposable UI fixture starts with the default home, independently of prior layout scenarios.
+        kotlinx.coroutines.runBlocking {
+            val work=com.mendelev.mpos.data.local.WorkspaceRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(compose.activity.applicationContext))
+            work.initialize();work.home(com.mendelev.mpos.domain.workspace.HomeAction.Reset,work.snapshot().homeRevision,"ui-home-reset-${java.util.UUID.randomUUID()}")
+        }
+
     }
 }

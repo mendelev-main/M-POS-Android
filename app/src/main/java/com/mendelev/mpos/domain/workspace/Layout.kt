@@ -8,6 +8,7 @@ sealed interface LayoutAction {
     data class DeleteFolder(val id: String): LayoutAction
     data class MoveProduct(val productId: String, val folderId: String): LayoutAction
     data class ResetProduct(val productId: String): LayoutAction
+    data class Reorder(val type: String,val id: String,val index: Int): LayoutAction
     data class Step(val type: String, val id: String, val delta: Int): LayoutAction
 }
 object LayoutEngine {
@@ -45,6 +46,13 @@ object LayoutEngine {
                 items.remove(old);items.add(old.copy(folderId=action.folderId))
             }
             is LayoutAction.ResetProduct -> return items.filterNot { it.type=="product" && it.id==action.productId }
+            is LayoutAction.Reorder -> {
+                val old=items.find {it.type==action.type && it.id==action.id} ?: throw CatalogFailure("layout","Плитка больше не существует")
+                val indexes=items.indices.filter {items[it].categoryId==old.categoryId && items[it].folderId==old.folderId}
+                if(action.index !in indexes.indices) throw CatalogFailure("layout","Некорректная позиция")
+                val siblings=indexes.map {items[it]}.toMutableList();siblings.remove(old);siblings.add(action.index,old)
+                indexes.forEachIndexed {i,index->items[index]=siblings[i]}
+            }
             is LayoutAction.Step -> {
                 if(action.delta !in listOf(-1,1)) throw CatalogFailure("layout","Некорректный шаг раскладки")
                 val old=items.find { it.type==action.type && it.id==action.id } ?: throw CatalogFailure("layout","Плитка больше не существует")

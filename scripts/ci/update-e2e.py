@@ -137,6 +137,7 @@ def main():
     if production:
         PACKAGE = "com.mendelev.mpos"
     expected_product = None
+    expected_home = None
     with tempfile.TemporaryDirectory() as tmp:
         folder = Path(tmp)
         base = folder / "base.apk"
@@ -179,13 +180,15 @@ def main():
                 assert "OK (4 tests)" in result and "FAILURES" not in result, result[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
+                expected_home = adb("shell", "run-as", PACKAGE, "cat", "files/qa/homeTileName.txt").strip()
+                assert expected_home, "UI setup must preserve a custom home tile"
                 expected_product = adb("shell", "run-as", PACKAGE, "cat", "files/qa/productName.txt").strip()
                 assert expected_product, "UI setup must create a real catalog record"
                 expected_workspace_line = adb("shell", "run-as", PACKAGE, "cat", "files/qa/workspaceLineName.txt").strip()
                 assert expected_workspace_line, "UI setup must create a real persistent current cart"
                 expected_parked_label = adb("shell", "run-as", PACKAGE, "cat", "files/qa/parkedLabel.txt").strip()
                 assert expected_parked_label, "UI setup must create a real parked order"
-                for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "order-details", "parked-swap", "parked-orders"):
+                for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders"):
                     captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
                     assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
                     (reports / f"{name}.png").write_bytes(captured.stdout)
@@ -253,6 +256,12 @@ def main():
                 wait_text("^5 BYN$")
                 (reports / "updated-parked.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("PARKED UPDATE PASSED: delivery order label, type and total5 survived package replacement", flush=True)
+                adb("shell", "input", "keyevent", "KEYCODE_BACK")
+                wait_text(re.escape(expected_home))
+                wait_text("^Изменить раскладку$", click=True)
+                wait_text(r"(?:^|\n)Место 8(?:$|\n)")
+                (reports / "updated-home.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
+                print("HOME UPDATE PASSED: custom product tile and slot8 survived package replacement", flush=True)
             print(f"UPDATE E2E PASSED: package={PACKAGE}, check/download/restore/cancel/system install {base_code}→{target_code}; app-private data preserved")
             server.shutdown()
 

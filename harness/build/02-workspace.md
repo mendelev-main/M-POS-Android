@@ -46,3 +46,5 @@ W IDs с tests, rotation/process death и планшетным walkthrough.
 02d: [размеры папок и live total](../../docs/WORKSPACE-02D.md) ci-verified API36/run40172821096. Fixed-slot drag остаётся отдельной частью W01; полный02 не закрыт.
 
 Итог02d: run40172821096/da8db71 —41JVM/6Python/lint/build,41instrumentation+4UIseed, actual updater success. Fixed-slot drag и физическая приёмка не закрыты.
+
+02e: [home slots и drag](../../docs/WORKSPACE-02E.md) implemented/CI pending. W01/W06; оставшиеся performance/physical критерии не закрыты.

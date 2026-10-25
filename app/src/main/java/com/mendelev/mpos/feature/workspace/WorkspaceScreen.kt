@@ -2,6 +2,7 @@ package com.mendelev.mpos.feature.workspace
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.*
@@ -97,8 +98,9 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                         if(editing && category!=null && search.isBlank()) MposButton("Создать папку",{
                             manageId=UUID.randomUUID().toString();manageType="folder";manageName="";manageRevision=s.layoutRevision;confirmFolderDelete=false
                         },enabled=!busy,style=ActionStyle.Secondary)
-                        WorkspaceGrid(s,category,null,search,editing,photos,Modifier.weight(1f),ui.pending<100,
-                            {category=it;search=""},{folder=it.id},::configure,::manage)
+                        if(category==null && search.isBlank()) WorkspaceHome(s,ui,editing,model,Modifier.weight(1f),{category=it;search=""},::configure)
+                        else WorkspaceGrid(s,category,null,search,editing,photos,Modifier.weight(1f),ui.pending<100,
+                            {category=it;search=""},{folder=it.id},::configure,::manage,onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
                     }
                 }
                 val cart: @Composable (Modifier)->Unit = { modifier ->
@@ -130,7 +132,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                     val rows=(count+fittingColumns-1)/fittingColumns
                     val gridHeight=if(count==0) 72 else (rows*144+(rows-1)*12).coerceAtMost(420)
                     WorkspaceGrid(s,folderItem.categoryId,folderItem.id,"",editing,photos,Modifier.heightIn(max=gridHeight.dp),ui.pending<100,
-                        {},{},::configure,::manage,folderColumns=fittingColumns)
+                        {},{},::configure,::manage,folderColumns=fittingColumns,onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
                 }
             }
         }
@@ -218,7 +220,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
 
 @Composable private fun WorkspaceGrid(s: WorkspaceSnapshot,category: String?,folder: String?,search: String,editing: Boolean,
     photos: ProductPhotoStore,modifier: Modifier,enabled: Boolean,onCategory: (String)->Unit,onFolder: (LayoutItem)->Unit,
-    onProduct: (WorkspaceProduct)->Unit,onManage: (LayoutItem)->Unit,folderColumns: Int? = null) {
+    onProduct: (WorkspaceProduct)->Unit,onManage: (LayoutItem)->Unit,folderColumns: Int? = null,onReorder: ((LayoutItem,Int)->Unit)? = null) {
     val query=CatalogRules.key(search)
     val products=s.products.associateBy { it.id }
     val availability=remember(s.products,s.cart,s.graph,s.balances,s.parked) {
@@ -230,7 +232,11 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
     }
     val tiles=if(query.isNotEmpty()) s.products.filter { (category==null || it.categoryId==category) && CatalogRules.key(it.name).contains(query) }.map { LayoutItem("product",it.id,it.categoryId) }
         else s.layout.filter { it.categoryId==category && it.folderId==(folder ?: "") }
-    LazyVerticalGrid(if(folderColumns==null) GridCells.Adaptive(150.dp) else GridCells.Fixed(folderColumns),modifier.testTag(if(folder==null) "workspaceGrid" else "workspaceFolderGrid"),
+    val gridState=rememberLazyGridState()
+    val drag=workspaceDrag(gridState,editing && enabled && query.isEmpty() && category!=null && onReorder!=null,s.layoutRevision,"$category/$folder") {from,to->
+        tiles.getOrNull(from)?.let {onReorder?.invoke(it,to.coerceIn(0,tiles.lastIndex))}
+    }
+    LazyVerticalGrid(if(folderColumns==null) GridCells.Adaptive(150.dp) else GridCells.Fixed(folderColumns),modifier.then(drag.modifier).testTag(if(folder==null) "workspaceGrid" else "workspaceFolderGrid"),state=gridState,
         horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         if(category==null && query.isEmpty()) {
             items(s.categories,key={"category:${it.id}"}) { c -> MposWorkspaceTile({onCategory(c.id)},Modifier.testTag("workspaceCategory:${c.id}")) {
@@ -242,11 +248,12 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
         } else {
             if(folder!=null && tiles.isEmpty()) item(span={GridItemSpan(maxLineSpan)}) {Text("В папке пока нет товаров")}
             items(tiles,key={"${it.type}:${it.id}"}) { tile ->
-                if(tile.type=="folder") MposWorkspaceTile({if(editing) onManage(tile) else onFolder(tile)},Modifier.testTag("workspaceFolder:${tile.id}"),enabled) {
+                val highlight=if(drag.target==tiles.indexOf(tile)) Modifier.border(2.dp,MaterialTheme.colorScheme.primary,MaterialTheme.shapes.large) else Modifier
+                if(tile.type=="folder") MposWorkspaceTile({if(editing) onManage(tile) else onFolder(tile)},Modifier.testTag("workspaceFolder:${tile.id}").then(highlight),enabled) {
                     Text("Папка",style=MaterialTheme.typography.labelMedium);Text(tile.name,style=MaterialTheme.typography.titleMedium)
                     Text("Товаров: ${s.layout.count { it.type=="product" && it.folderId==tile.id }}",style=MaterialTheme.typography.bodySmall)
                 } else products[tile.id]?.let { p ->
-                    MposWorkspaceTile({onProduct(p)},Modifier.testTag("workspaceProduct:${p.id}"),enabled) {
+                    MposWorkspaceTile({onProduct(p)},Modifier.testTag("workspaceProduct:${p.id}").then(highlight),enabled) {
                         if(p.photoId!=null && folder==null) ProductPhoto(p.photoId,photos,Modifier.fillMaxWidth().height(72.dp))
                         Text(p.name,style=MaterialTheme.typography.titleSmall,maxLines=if(folder!=null) 2 else Int.MAX_VALUE,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         Text(if(p.price.toBigDecimal().signum()==0) "Ввести цену" else money(p.price),style=MaterialTheme.typography.bodyMedium)

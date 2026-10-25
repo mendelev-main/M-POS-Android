@@ -257,3 +257,7 @@ W03/W06 revalidation domain/Room/UI automated tests passed на финально
 Screenshots workspace-folder/workspace-configuration просмотрены: компактная папка с1товаром, единые Close/buttons, сумма3 BYN при manual2.50+milk0.50; перекрытий в показанных состояниях нет. Снимки на1600×1125/200dpi, viewport1280×900dp. Это второй последовательный успешный полный run с новой AVD конфигурацией (после40172190371); Quickstep recovery в обоих логах не вызывалась. Причина прошлых ANR окончательно не доказана, системные ошибки не подавлялись. Физическая font-scale/orientation/планшетная приёмка отложена пользователем;4колонки/прочие размеры не объявляются device-verified по одному screenshot.
 
 02c gate закрыт,02d UI в указанном scope ci-verified. SQLschema5/payload2, main/stable/key не менялись. Следующая часть W01: persistent fixed slots и drag с atomic CAS/replay/rollback, пустые места и доступная альтернатива перемещению. Большой каталог/performance/Coil и physical acceptance остаются открытыми. Полный02 не закрыт,03 не начинать автоматически.
+
+## 2026-10-25 — начало02e
+
+HomeEngine/home payload1/transactional repository; long-press root slots + category/folder list reorder и accessible controls. Added4pure/2Room/1UI; WorkspaceUiTest seed+updater проверяют отдельную custom home product/slot8. Local supplemental cached Kotlin2.1.20/JDK17 domain+codec compile/36tests passed;6Python/preflight/diff passed. Actual project Kotlin/Android/Room/Compose to CI. SQLschema5 не менялась. Результаты Android ещё не получены, не заявлять ci-verified.

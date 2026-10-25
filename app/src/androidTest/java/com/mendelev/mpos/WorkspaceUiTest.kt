@@ -85,6 +85,20 @@ class WorkspaceUiTest {
         compose.onNodeWithTag("workspaceTotal").assertTextEquals("Предварительно: 15 BYN")
         screenshot("workspace")
         File(compose.activity.filesDir,"qa/workspaceLineName.txt").writeText(name)
+        val homeName="Быстрая плитка $suffix"
+        runBlocking {
+            val db=CatalogDatabase.get(compose.activity.applicationContext);val work=WorkspaceRepository(db)
+            CatalogRepository(db).saveProduct(ProductInput("home-upgrade-$suffix",null,homeName,null,"1","0","0",null,true,"home-product-$suffix",noStockTracking=true))
+            work.home(HomeAction.Reset,work.snapshot().homeRevision,"home-reset-$suffix")
+            work.snapshot().home.tiles.forEach {work.home(HomeAction.Remove(it.type,it.id),work.snapshot().homeRevision,"home-remove-${it.id}-$suffix")}
+            work.home(HomeAction.Add("product","home-upgrade-$suffix"),work.snapshot().homeRevision,"home-add-$suffix")
+            work.home(HomeAction.Move("product","home-upgrade-$suffix",7),work.snapshot().homeRevision,"home-move-$suffix")
+        }
+        File(compose.activity.filesDir,"qa/homeTileName.txt").writeText(homeName)
+        compose.onNodeWithText("Все категории").performClick()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceHomeProduct:home-upgrade-$suffix").fetchSemanticsNodes().isNotEmpty()}
+        screenshot("workspace-home")
+
         compose.onNodeWithText("Товары").performClick();waitText("Добавить товар")
     }
 }

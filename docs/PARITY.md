@@ -89,3 +89,7 @@ W01/W02 UI: ширины папок по числу колонок, адапта
 02c gate закрыт: [run40172190371](https://github.com/mendelev-main/M-POS-Android/actions/runs/40172190371)/3a9a4d0,40JVM/6Python/41instrumentation+4UIseed, external updater success с current/parked/catalog data preserved. Android36, AVD viewport1280×900dp сохранён при снижении physical resolution. Полный02/device и отдельный02d UI этим run не закрыты.
 
 02d итог: [run40172821096](https://github.com/mendelev-main/M-POS-Android/actions/runs/40172821096)/da8db71,41JVM/6Python/lint/build,41instrumentation+4UIseed и actual updater success; папка/config screenshots reviewed без перекрытий. Точный scope WORKSPACE-02D; fixed slots/drag и full02/device остаются открытыми.
+
+## 02e — slots/drag
+
+W01/W06: настраиваемый home(max20)/пустые места/nearest free, atomic CAS/replay/rollback, category/folder drag Reorder и доступное управление — implemented/CI pending. [Контракт/границы](WORKSPACE-02E.md). SQLschema5 без изменений; полный02/performance/device не закрыты.

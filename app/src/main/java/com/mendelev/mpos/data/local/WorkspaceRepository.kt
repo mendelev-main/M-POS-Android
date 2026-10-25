@@ -11,7 +11,7 @@ import java.util.UUID
 data class WorkspaceSnapshot(val products: List<WorkspaceProduct>, val categories: List<CategoryEntity>,
     val graph: List<RecipeProduct>, val balances: Map<String,BigDecimal>, val cart: CurrentCart,
     val cartRevision: Long, val layout: List<LayoutItem>, val layoutRevision: Long,
-    val parked: List<ParkedOrder> = emptyList(), val ordersRevision: Long = 0)
+    val parked: List<ParkedOrder> = emptyList(), val ordersRevision: Long = 0,val home: HomeLayout = HomeLayout(),val homeRevision: Long = 0)
 
 class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrite: (() -> Unit)? = null) {
     private val dao=db.catalog();private val work=db.workspace()
@@ -27,6 +27,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
                     sessionId=UUID.randomUUID().toString(),createdAt=if(cart.lines.isEmpty()) 0 else System.currentTimeMillis()))))
             }
             if(work.document("layout")==null) work.put(WorkspaceDocument("layout",0,WorkspaceCodec.layout(emptyList())))
+            if(work.document("home")==null) work.put(WorkspaceDocument("home",0,WorkspaceCodec.home(HomeLayout())))
             if(work.document("orders")==null) {
                 if(work.documents().any {it.id.startsWith("parked:")}) throw CatalogFailure("workspace","Не найден журнал отложенных заказов")
                 work.put(WorkspaceDocument("orders",0,"{\"version\":1}"))
@@ -52,9 +53,10 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
             .sortedWith {a,b -> OrderRules.compareLabels(a.cart.details.label,b.cart.details.label).takeIf {it!=0} ?: b.parkedAt.compareTo(a.parkedAt)}
         val owners=listOf(current.sessionId)+parked.map {it.id}
         if(owners.distinct().size!=owners.size) throw CatalogFailure("orderOwner","Заказ имеет двух владельцев")
+        val home=work.document("home") ?: error("Главный экран не открыт")
         WorkspaceSnapshot(products,categories,recipeSnapshot(entities,dao.allComponents()),dao.allBalances().associate { it.productId to it.quantity.toBigDecimal() },
             current,cart.revision,
-            LayoutEngine.project(WorkspaceCodec.layout(layout.payload),products,categories.map { it.id }.toSet()+""),layout.revision,parked,book.revision)
+            LayoutEngine.project(WorkspaceCodec.layout(layout.payload),products,categories.map { it.id }.toSet()+""),layout.revision,parked,book.revision,HomeEngine.project(WorkspaceCodec.home(home.payload),products,categories.map {it.id}),home.revision)
     }
     private suspend fun repeat(commandId: String, fp: String, legacyFp: String? = null): Boolean {
         val old=dao.result(commandId) ?: return false
@@ -140,12 +142,27 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         work.delete("parked:$id");afterWrite?.invoke()
         advanceOrders(state);record("deleteParked",id,commandId,fp)
     }
+    suspend fun home(action: HomeAction,expectedRevision: Long,commandId: String) = db.withTransaction {
+        val intent=when(action) {
+            is HomeAction.Add->listOf("add",action.type,action.id)
+            is HomeAction.Move->listOf("move",action.type,action.id,action.slot.toString())
+            is HomeAction.Remove->listOf("remove",action.type,action.id)
+            is HomeAction.Reset->listOf("reset")
+        }
+        val fp=CatalogRules.fingerprint("workspace.home",expectedRevision,*intent.toTypedArray())
+        if(repeat(commandId,fp)) return@withTransaction
+        val state=snapshot()
+        if(state.homeRevision!=expectedRevision) throw CatalogFailure("conflict","Главный экран изменился. Повторите по обновлённой раскладке")
+        val next=HomeEngine.apply(state.home,state.products,state.categories.map {it.id},action)
+        write("home",WorkspaceCodec.home(next),state.homeRevision,commandId,fp)
+    }
     suspend fun layout(action: LayoutAction, expectedRevision: Long, commandId: String) = db.withTransaction {
         val intent=when(action) {
             is LayoutAction.SaveFolder -> listOf("folder",action.id,action.categoryId,action.name)
             is LayoutAction.DeleteFolder -> listOf("deleteFolder",action.id)
             is LayoutAction.MoveProduct -> listOf("move",action.productId,action.folderId)
             is LayoutAction.ResetProduct -> listOf("reset",action.productId)
+            is LayoutAction.Reorder -> listOf("reorder",action.type,action.id,action.index.toString())
             is LayoutAction.Step -> listOf("step",action.type,action.id,action.delta.toString())
         }
         val fp=CatalogRules.fingerprint("workspace.layout",expectedRevision,*intent.toTypedArray())
@@ -159,6 +176,10 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
 
 /** Called inside catalog delete transactions, with the same database and serialization. */
 suspend fun CatalogDatabase.requireNoWorkspaceProduct(id: String) {
+    workspace().document("home")?.let {
+        if(WorkspaceCodec.home(it.payload).tiles.any {tile->tile.type=="product" && tile.id==id})
+            throw CatalogFailure("used","Товар размещён на главном экране")
+    }
     workspace().document("current")?.let {
         if(WorkspaceCodec.cart(it.payload).lines.any { line -> id in line.references })
             throw CatalogFailure("used","Товар используется в текущем заказе")
@@ -173,6 +194,10 @@ suspend fun CatalogDatabase.requireNoWorkspaceProduct(id: String) {
     }
 }
 suspend fun CatalogDatabase.requireNoWorkspaceCategory(id: String) {
+    workspace().document("home")?.let {
+        if(WorkspaceCodec.home(it.payload).tiles.any {tile->tile.type=="category" && tile.id==id})
+            throw CatalogFailure("used","Категория размещена на главном экране")
+    }
     workspace().document("layout")?.let {
         if(WorkspaceCodec.layout(it.payload).any { item -> item.type=="folder" && item.categoryId==id })
             throw CatalogFailure("used","Сначала удалите папки категории из раскладки")
