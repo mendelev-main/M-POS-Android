@@ -83,8 +83,13 @@ class ParkedOrdersUiTest {
         compose.onNodeWithContentDescription("Закрыть").performClick()
         compose.onNodeWithTag("workspacePark").performClick();compose.onNodeWithTag("orderSubmit").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.parked.size==1}
-        compose.onNodeWithTag("workspaceProduct:$productId").performClick()
-        compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.cart.lines.size==1}
+        compose.onNodeWithTag("workspaceProduct:$productId").assertIsEnabled().performClick()
+        try {
+            compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.cart.lines.size==1}
+        } catch(e: androidx.compose.ui.test.ComposeTimeoutException) {
+            val state=model.state.value
+            throw AssertionError("Add after park: pending=${state.pending}, message=${state.message}, owner=${state.snapshot?.cart?.sessionId}, lines=${state.snapshot?.cart?.lines?.size}",e)
+        }
         compose.onNodeWithTag("workspaceParked").performClick();compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("parkedOpen:$ownerA").assertExists();screenshot("parked-orders")
         assertEquals(labelA,model.state.value.snapshot!!.parked.single().cart.details.label)

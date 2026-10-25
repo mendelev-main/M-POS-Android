@@ -60,14 +60,17 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
     var clearRevision by rememberSaveable { mutableStateOf<Long?>(null) }
     val busy=ui.pending>0
     val modal=revalidationOpen || configId!=null || manageId!=null || quantityId!=null || clearRevision!=null || ordersDialog!=null
+    // Lazy item callbacks can outlive a composition; always target the current persisted owner.
+    val currentSnapshot by rememberUpdatedState(s)
     fun configure(p: WorkspaceProduct) {
+        val active=currentSnapshot
         if(editing) {
             manageId=p.id;manageType="product";manageName=p.name
-            moveFolder=s?.layout?.find { it.type=="product" && it.id==p.id }?.folderId ?: ""
-            manageRevision=s?.layoutRevision ?: 0L
+            moveFolder=active?.layout?.find { it.type=="product" && it.id==p.id }?.folderId ?: ""
+            manageRevision=active?.layoutRevision ?: 0L
         } else if(p.groups.isNotEmpty() || p.price.toBigDecimal().signum()==0) {
-            configId=p.id;configRevision=p.revision;configOwner=s?.cart?.sessionId ?: "";selected=emptyList();manual="";model.dismiss()
-        } else model.add(p,expectedOwner=s?.cart?.sessionId)
+            configId=p.id;configRevision=p.revision;configOwner=active?.cart?.sessionId ?: "";selected=emptyList();manual="";model.dismiss()
+        } else model.add(p,expectedOwner=active?.cart?.sessionId)
     }
     fun manage(item: LayoutItem) {
         manageId=item.id;manageType=item.type;manageName=item.name;moveFolder=item.folderId
@@ -102,9 +105,9 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                         if(editing && category!=null && search.isBlank()) MposButton("Создать папку",{
                             manageId=UUID.randomUUID().toString();manageType="folder";manageName="";manageRevision=s.layoutRevision;confirmFolderDelete=false
                         },enabled=!busy,style=ActionStyle.Secondary)
-                        if(category==null && search.isBlank()) WorkspaceHome(s,ui,editing,model,photos,Modifier.weight(1f),{category=it;search=""},::configure)
+                        if(category==null && search.isBlank()) WorkspaceHome(s,ui,editing,model,photos,Modifier.weight(1f),{category=it;search=""},{configure(it)})
                         else WorkspaceGrid(s,category,null,search,editing,photos,Modifier.weight(1f),ui.pending<100,
-                            {category=it;search=""},{folder=it.id},::configure,::manage,availabilityIndex=ui.availability,onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
+                            {category=it;search=""},{folder=it.id},{configure(it)},{manage(it)},availabilityIndex=ui.availability,onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
                     }
                 }
                 val cart: @Composable (Modifier)->Unit = { modifier ->
@@ -147,7 +150,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                     val rows=(count+fittingColumns-1)/fittingColumns
                     val gridHeight=if(count==0) 72 else (rows*144+(rows-1)*12).coerceAtMost(420)
                     WorkspaceGrid(s,folderItem.categoryId,folderItem.id,"",editing,photos,Modifier.heightIn(max=gridHeight.dp),ui.pending<100,
-                        {},{},::configure,::manage,availabilityIndex=ui.availability,folderColumns=fittingColumns,onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
+                        {},{},{configure(it)},{manage(it)},availabilityIndex=ui.availability,folderColumns=fittingColumns,onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
                 }
             }
         }

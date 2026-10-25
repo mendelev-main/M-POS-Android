@@ -104,7 +104,7 @@ class WorkspaceScaleUiTest {
             if(compose.onAllNodesWithTag("workspaceShowOrder").fetchSemanticsNodes().isNotEmpty()) compose.onNodeWithTag("workspaceShowOrder").performClick()
             compose.onNodeWithTag("workspaceTotal").assertTextEquals("Предварительно: 2 BYN").assertIsDisplayed()
             compose.onNodeWithTag("workspacePlus:scale-line-$suffix").performScrollTo().performClick()
-            compose.waitUntil(20_000) {runBlocking {repo.snapshot()}.cart.lines.single().quantity=="2"}
+            compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("workspaceTotal") and hasText("Предварительно: 4 BYN")).fetchSemanticsNodes().isNotEmpty()}
             compose.onNodeWithTag("workspaceTotal").assertTextEquals("Предварительно: 4 BYN").assertIsDisplayed()
             compose.onNodeWithTag("workspaceParked").assertIsDisplayed()
             screenshot("workspace-portrait150")
