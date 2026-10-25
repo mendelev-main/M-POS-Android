@@ -47,3 +47,5 @@ S01: commit атомарен; S02: повтор idempotent; S03: historical refu
 03a implementation: [SHIFT-03A](../../docs/SHIFT-03A.md), H01/H02 minimal ci-verified API36/run40206673038; schema6/общий экран смены/installation gate. S01–S05 и full05 по-прежнему planned.
 
 Итог03a: [run40206673038](https://github.com/mendelev-main/M-POS-Android/actions/runs/40206673038)/fc7cde5,50JVM/52instrumentation+2scale+5UIseed,6Python/lint/build, Room6 migrations/fault/replay/concurrency/installation gate и actual updater сactive140BYN passed. Physical later. Следующий03b только после выпуска03a и применимых D02 fixtures.
+
+03b.1: [денежное ядро и последующие шаги](../../docs/SALE-03B.md), S04 pure implemented/CI pending; S01/S02/S05 и actual checkout planned. Дополнительные D02 примеры подтверждены владельцем25.10.2026.

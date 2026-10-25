@@ -24,3 +24,9 @@ shift-closed.png1600×1125 после Compose captureToImage просмотре�
 Local41supplemental domain tests cached Kotlin2.1.20/JDK17 и442pinned source regressions passed;6Python/preflight/diff passed. Local android blocked до wrapper sandbox ~/.gradle lock/SDK отсутствует, actual pinned Kotlin2.2.21/Android проверены CI. История ошибок40204979930(JUnit return type),40205417469(optional schema indices),40205795493(success, compositor screenshot stale) сохранена выше; gates не ослаблялись.
 
 03a H01/H02 minimal ci-verified в scopeSHIFT-03A. Нет sale/refund/deposit/withdrawal/employee auth/эквайринга;S01–S05 и full05 остаются planned. Следующий шаг перед03b — релиз готового03a через PRdevelop→main, затем утверждение оставшихся discount/split/delivery/mixed-refund examples и реализация sale transaction/admission/stock snapshot/installation recovery. User tablet tests later сохранено.
+
+## Начало03b — денежный контракт
+
+03a выпущен0.1.46.1/main9ab4d4f; public check остановлен SystemUI startupANR на old0.1.41.1, исправляется infrastructure PR3. Владелец подтвердил cash40/card60/given50→change10/cash+40, remainder-first10/3, fixed1/unit ×qty2 и отдельный delivery5, одну скидку, delivery cash-out как Web. SALE-03B/MONEY-03 описывают03b.1 pure policy и следующую durable/atomic часть.
+
+SaleMoney/5tests implemented; local46supplemental domain tests passed cached Kotlin2.1.20 (5new). Первый local test выявил Kotlin BigDecimal / scale:0.135 давал13minor, заменено на точный movePointLeft(2), approved0.14 regression проходит. Actual pinned compiler CI pending. Checkout/sale/history остаются planned, SQLschema6/current payload2 не меняются. Следующий обязательный шаг03b.2: persisted inputs/format, sale tx/recovery/admission/shift totals/stock snapshots/history, не заявлять финансовую готовность по pure engine.
