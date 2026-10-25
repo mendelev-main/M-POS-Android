@@ -1,6 +1,7 @@
 package com.mendelev.mpos.feature.workspace
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.rememberScrollState
@@ -48,7 +49,7 @@ import com.mendelev.mpos.domain.workspace.*
                     val tile=tiles[index]
                     val highlight=if(drag.target==index) Modifier.border(2.dp,MaterialTheme.colorScheme.primary,MaterialTheme.shapes.large) else Modifier
                     if(tile==null) {
-                        if(editing) Surface(Modifier.fillMaxWidth().height(144.dp).then(highlight).testTag("homeSlot:$index"),shape=MaterialTheme.shapes.large,color=MaterialTheme.colorScheme.surfaceVariant) {
+                        if(editing) Surface(Modifier.fillMaxWidth().height(144.dp).then(highlight).testTag("homeSlot:$index"),shape=MaterialTheme.shapes.large,color=MaterialTheme.colorScheme.background,border=BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
                             Box(Modifier.padding(12.dp)) {Text("Свободное место ${index+1}",style=MaterialTheme.typography.bodySmall)}
                         } else Spacer(Modifier.height(144.dp))
                     } else {

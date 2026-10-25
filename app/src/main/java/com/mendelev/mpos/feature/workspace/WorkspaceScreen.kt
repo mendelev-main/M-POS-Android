@@ -86,11 +86,11 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
         else {
             Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=8.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                 if(category!=null) MposButton("Все категории",{category=null;folder=null;search=""},style=ActionStyle.Secondary)
-                Text(if(category==null) "Категории" else s.categories.find { it.id==category }?.name ?: "Без категории",Modifier.weight(1f),style=MaterialTheme.typography.titleLarge)
+                Text(if(category==null) "Рабочая зона" else s.categories.find { it.id==category }?.name ?: "Без категории",Modifier.weight(1f),style=MaterialTheme.typography.titleLarge)
                 MposButton(if(editing) "Завершить раскладку" else "Изменить раскладку",{editing=!editing},enabled=!busy,style=ActionStyle.Secondary,modifier=Modifier.testTag("workspaceEdit"))
             }
             MposField(search,{search=it},"Поиск товара",Modifier.padding(horizontal=20.dp).testTag("workspaceSearch"),!busy)
-            if(editing) Text("Режим раскладки: нажатие на товар открывает настройку размещения",Modifier.padding(horizontal=20.dp,vertical=8.dp),style=MaterialTheme.typography.bodySmall)
+            if(editing && category!=null) Text("Удерживайте плитку для перетаскивания. Нажатие — настройка размещения",Modifier.padding(horizontal=20.dp,vertical=8.dp),style=MaterialTheme.typography.bodySmall)
             if(ui.message!=null && !modal && folder==null) MposNotice(ui.message!!,true)
             BoxWithConstraints(Modifier.weight(1f).padding(20.dp)) {
                 val grid: @Composable (Modifier)->Unit = { modifier ->
