@@ -87,5 +87,6 @@ Domain разворачивает recipes/modifiers и учитывает все
 | 02c | [пересчёт с подтверждением](WORKSPACE-02C.md) | W03/W06: preview/rollback/replay; физический walkthrough по решению владельца позже |
 | 02d | [размеры папок и сумма конфигурации](WORKSPACE-02D.md) | W01/W02: folder/recreate/partial preview/strict Add |
 | 02e | [home slots и drag](WORKSPACE-02E.md) | W01/W06: CAS/fault/replay/legacy/recreate/actual updater |
+| 02f | [большой каталог, фото и адаптация](WORKSPACE-02F.md) | W01/W03/W07/DS04: lazy расчёт/поиск, bounded cache, 2000 товаров, portrait/landscape150% |
 
 01a/02a — внутренние инкременты, не закрытие всего P/W диапазона. Test cases и команды: [IMPLEMENTATION-CONTRACTS.md](IMPLEMENTATION-CONTRACTS.md).

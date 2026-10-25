@@ -78,3 +78,14 @@ External updater подтвердил CATALOG/WORKSPACE/PARKED/HOME UPDATE PASSE
 ## 02f начало — 2026-10-25
 
 Продолжение авторизовано: perf/адаптивность/Coil; mpos-phase/mpos-domain. Контракт WORKSPACE-02F. On-demand WorkspaceAvailability с shared immutable snapshot/cache, Default tile evaluation/search, indexed layout/components/modifier owners; lazy home picker. Coil3.3.0 pinned, shared application loader16MiB/256px/private File/no network module; docs official API просмотрены, latest не переносится автоматически. Adaptive row/bottom/toggle поwidth/height/fontScale; actual2000Room-fixture и portrait/landscape150% tests +media cache test.38supplemental domain tests passed; CI pending. SQL5/payloads/signing/main unchanged. Физический планшет по-прежнему позже.
+
+
+## 02f итог — 2026-10-25
+
+[run40184227465](https://github.com/mendelev-main/M-POS-Android/actions/runs/40184227465), final runtime f1639b8: checks121141498494 и emulator36 job121141498649 success.47JVM/0failures,6Python,lint/assembleDebug;47instrumentation passed, затем2explicit scale UI cases и4explicit update seed cases. WorkspaceAvailability on-demand5000 IDs/stock+parked/stale flags; PhotoCache Success→MEMORY_CACHE/16MiB/missing Error;2000products search/Add; portrait+landscape150%/quantity2/total4 BYN проходят. Supplemental38domain tests прошли локально cached Kotlin2.1.20; actual project Kotlin2.2.21 проверен CI. Local Android остаётся blocked до wrapper на sandbox ~/.gradle lock/нет SDK.
+
+Artifact performance.json:2000products,load306ms/search1209ms/add595ms в explicit CI fixture. Это wall-clock action timings на эмуляторе, не FPS/гарантия физических планшетов. workspace-portrait150.png1125×1600 и workspace-landscape150.png1600×1125 просмотрены: общие кнопки/Manrope/navy, portrait переключатель Товары/Заказ, landscape grid+cart, сумма4 BYN и footer доступны без перекрытий в показанных состояниях.
+
+External updater: CATALOG/WORKSPACE/PARKED/HOME UPDATE PASSED и UPDATE E2E PASSED, actual package1→2;stock8/currentqty5total15/parked delivery label total5/home product slot8 сохранены. Signing/publish/production-upgrade skipped на develop. Предыдущие40178918977 и40182783528 выявили исправленные UI/fixture ошибки;40183539310 прошёл47instrumentation, но остановился на сборе артефактов после UTP uninstall. Final driver явно удерживает instrumentation lifetime для2scale cases/capture и делает clean install перед4seed, gates не ослаблялись.
+
+02f W01/W03/W07/DS04 в указанном scope ci-verified. RoomSQLschema5/payloads/signing/main/stable прежние, релиз не публикуется. Physical/OEM/memory pressure/font200%/paired Web walkthrough остаются позже по решению владельца; full02/device не объявлены закрытыми. Следующий шаг — аудит оставшихся acceptance01/02 и подготовка03a (минимальная смена и денежные примеры) перед финансовым кодом.03 автоматически не реализовывался.

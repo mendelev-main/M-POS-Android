@@ -98,4 +98,6 @@ W01/W06: настраиваемый home(max20)/пустые места/nearest 
 
 ## 02f — производительность и адаптивность
 
-W01/W03/W07/DS04: background/lazy availability/search/selection, shared bounded Coil thumbnail cache и row/bottom/toggle под fontScale/viewport — implemented/CI pending. [Контракт/метрики/ограничения](WORKSPACE-02F.md). Денежные и stock use cases не меняются, physical/full02 пока не закрыты.
+W01/W03/W07/DS04: background/lazy availability/search/selection, shared bounded Coil thumbnail cache и row/bottom/toggle под fontScale/viewport — ci-verified API36/run40184227465. [Контракт/метрики/ограничения](WORKSPACE-02F.md). Денежные и stock use cases не меняются, physical/full02 пока не закрыты.
+
+02f evidence: [run40184227465](https://github.com/mendelev-main/M-POS-Android/actions/runs/40184227465)/f1639b8,47JVM/47instrumentation+2scale+4UIseed,lint/build/6Python и actual updater success.2000product fixture:306/1209/595ms load/search/add;150%portrait/landscape reviewed без перекрытий. W01/W03/W07/DS04 только scope WORKSPACE-02F; physical/OEM/full02 отдельно.

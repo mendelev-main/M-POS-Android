@@ -113,3 +113,8 @@ Shared MposDialog maxWidth — ограничение ширины без отд
 ## Рабочая зона02e — пустое место и цель перетаскивания
 
 Пустое место: фон background, общая граница outlineVariant/1dp, shapes.large, высота144dp как минимальная плитка. Стандартный Material surfaceVariant не используется, чтобы не вносить фиолетовую заливку. Цель жеста выделяется primary/2dp по общей shape. Home product tile использует общий ProductPhoto и принятую подсказку «Ввести цену» для manual0. Все действия Add/Move/Remove/Reset используют существующие MposButton/Field/Dialog/Close. [Контракт](WORKSPACE-02E.md).
+
+
+## Адаптация рабочей зоны02f
+
+Текущие правила заменяют исходный порог840dp из02a: cart340×fontScale dp (scale1–2), рядом с grid при наличии ещё460×scale dp +20dp. При достаточной высоте cart снизу300×scale dp; иначе общие кнопки «Товары / Заказ» переключают полную панель. Footer и основные действия должны оставаться доступны при крупном шрифте; сохраняются общий Manrope, цвета, размеры touch targets и единые Close/buttons. Контракт и границы emulator/physical — [WORKSPACE-02F](WORKSPACE-02F.md).
