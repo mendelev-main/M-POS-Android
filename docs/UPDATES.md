@@ -8,13 +8,13 @@
 
 Файл передаётся через FileProvider с read grant только системному установщику. Cancel не считается успехом. Android заменяет приложение с тем же package/signature и может завершить его процесс. После следующего запуска версия читается из PackageManager; сохранённый installTarget позволяет подтвердить успешное обновление. Пользователь открывает приложение после установки; автоматический перезапуск не обещается.
 
-В этой итерации нет товаров/продаж и незавершённых финансовых операций. При реализации этапа 03 установка должна блокироваться на время commit/recovery и начинаться после сохранения рабочего состояния. Этот guard нельзя заменить наличием кнопки в настройках.
+В текущем develop03a каталог/черновики и минимальная смена сохраняются локально. InstallationGate сериализует shift writes с подготовкой installer и блокирует новые команды смены до возврата; lease принадлежит конкретному UpdateRepository и освобождается при отмене до launcher/ошибке запуска/Cancel. При завершении процесса Room откатывает незавершённую transaction, после запуска читается committed state. Этот gate ещё не является финансовым recovery: при реализации sale03b его необходимо расширить на всю commit/recovery boundary и сохранение рабочего состояния. Наличие кнопки в настройках не заменяет доменный guard.
 
 ## Первое подключение существующего планшета
 
 Bootstrap 0.1.3.1 не содержит updater. Новую подписанную версию с ним нужно один раз установить вручную поверх старой, без удаления приложения. Далее — настройки и системное подтверждение. Это полный APK: пропущенные промежуточные версии устанавливать по очереди не требуется; совместимость будущих данных обеспечивают migration paths.
 
-Текущий выпуск — [0.1.16.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.16.1), первый каталог01a. Для проверки механизма вручную установите [0.1.8.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.8.1), затем в настройках скачайте и установите текущий stable release. Всегда использовать native release package и постоянный сертификат; APK Web к этому каналу не относится.
+Текущий выпуск — [0.1.41.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.41.1), каталог01b/01c и рабочая зона02a–02f для Android16+. Версия0.1.16.1 — предыдущий stable каталог01a. Для проверки механизма вручную установите [0.1.8.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.8.1), затем в настройках скачайте и установите текущий stable release. Всегда использовать native release package и постоянный сертификат; APK Web к этому каналу не относится.
 
 ## Доверие и хранение
 
@@ -31,7 +31,7 @@ Bootstrap 0.1.3.1 не содержит updater. Новую подписанну
 
 ## Выпуск версии
 
-Actions → Android → Run workflow → ветка main → `publish_release=true` + описание `release_notes`. Подписанные сборки обычных push/manual с false остаются artifacts, пользовательского обновления не создают.
+Actions → Android → Run workflow → ветка main → `publish_release=true` + описание `release_notes`. Push main после успешных gates автоматически публикует stable. Ручной запуск с publish_release=false остаётся artifact; с true выпускает новую версию.
 
 Порядок: harness/JVM/lint + emulator API36 с self-update → signed APK → verify identity/signature/version → assets → отдельная publish job с contents:write. Все прочие jobs остаются contents:read. Publish скачивает проверенный artifact этого run, сверяет checksum/commit, запрещает движение stable назад, создаёт draft с полным набором assets, только затем публикует latest. Уже выпущенные assets не перезаписываются; новый run/retry даёт новую версию. Прерванный publish может оставить draft — он не предлагается планшетам.
 
@@ -57,3 +57,5 @@ Physical pending: разрешение неизвестного источник
 
 
 Действующая платформа с24.10.2026 — [Android16+](ANDROID-SUPPORT.md), minSdk36 в новых APK/manifest. Прежняя ветка GET_SIGNATURES для API28/29 удалена; archive signer читается современным PackageInfoFlags. Исторические отчёты выше остаются evidence прежних выпусков, не текущей матрицей.
+
+Актуальный stable0.1.41.1/API36: [main release40198464669](https://github.com/mendelev-main/M-POS-Android/actions/runs/40198464669) — checks/emulator/signing/publish success; [public channel40199534929](https://github.com/mendelev-main/M-POS-Android/actions/runs/40199534929) — настоящий production upgrade0.1.16.1/code2601→0.1.41.1/code5101, публичные HTTPS assets, permission/Cancel/retry/restart и persisted install receipt/lastChecked passed. Фото настроек после обновления просмотрено. Данные каталога/current/parked/home дополнительно проверены debug replacement в main CI; physical приёмка позже.

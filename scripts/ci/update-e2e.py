@@ -138,6 +138,7 @@ def main():
         PACKAGE = "com.mendelev.mpos"
     expected_product = None
     expected_home = None
+    expected_shift = None
     with tempfile.TemporaryDirectory() as tmp:
         folder = Path(tmp)
         base = folder / "base.apk"
@@ -193,11 +194,17 @@ def main():
                 adb("uninstall", PACKAGE)
                 adb("install", str(base))
                 adb("install", "-r", str(test_apk))
-                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest",
+                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
                              PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
-                assert "OK (4 tests)" in result and "FAILURES" not in result, result[-4000:]
+                assert "OK (5 tests)" in result and "FAILURES" not in result, result[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
+                expected_shift = adb("shell", "run-as", PACKAGE, "cat", "files/qa/shiftId.txt").strip()
+                assert expected_shift, "UI setup must preserve the active shift"
+                for name in ("shift-open.png", "shift-closed.png"):
+                    captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}"], capture_output=True, timeout=20, check=True)
+                    assert captured.stdout.startswith(b"\x89PNG")
+                    (reports / name).write_bytes(captured.stdout)
                 expected_home = adb("shell", "run-as", PACKAGE, "cat", "files/qa/homeTileName.txt").strip()
                 assert expected_home, "UI setup must preserve a custom home tile"
                 expected_product = adb("shell", "run-as", PACKAGE, "cat", "files/qa/productName.txt").strip()
@@ -280,6 +287,12 @@ def main():
                 wait_text(r"(?:^|\n)Место 8(?:$|\n)")
                 (reports / "updated-home.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("HOME UPDATE PASSED: custom product tile and slot8 survived package replacement", flush=True)
+                wait_text("^Смена$", click=True)
+                wait_text("^Смена открыта$")
+                wait_text(re.escape(expected_shift))
+                wait_text("^Наличные при открытии: 140,00 BYN$")
+                (reports / "updated-shift.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
+                print("SHIFT UPDATE PASSED: active shift identity and opening140 BYN survived package replacement", flush=True)
             print(f"UPDATE E2E PASSED: package={PACKAGE}, check/download/restore/cancel/system install {base_code}→{target_code}; app-private data preserved")
             server.shutdown()
 

@@ -16,6 +16,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
 class UpdateRepository(private val context: Context, fixtureUrl: String? = null) {
+    private val installationOwner=java.util.UUID.randomUUID().toString()
     private val fixture = BuildConfig.DEBUG && fixtureUrl != null && UpdatePolicy.isLocalUrl(fixtureUrl)
     private val manifestUrl = if (fixture) requireNotNull(fixtureUrl) else UPDATE_MANIFEST_URL
     private val installed = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -79,13 +80,17 @@ class UpdateRepository(private val context: Context, fixtureUrl: String? = null)
 
     /** Recheck bytes and signer immediately before granting the installer access. */
     suspend fun installationIntent(update: UpdateDescriptor): Intent = withContext(Dispatchers.IO) {
+        com.mendelev.mpos.core.operations.InstallationGate.prepare(installationOwner) {
         verify(update, apk)
         check(prefs.edit().putLong("installTarget", update.versionCode).commit()) { "Не удалось сохранить состояние установки" }
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.updates", apk)
         Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/vnd.android.package-archive")
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             .putExtra(Intent.EXTRA_RETURN_RESULT, true)
+        }
     }
+
+    suspend fun releaseInstallation()=com.mendelev.mpos.core.operations.InstallationGate.release(installationOwner)
 
     fun completedUpdate(): Boolean {
         val target = prefs.getLong("installTarget", 0)

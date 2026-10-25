@@ -4,12 +4,12 @@
 
 Сквозные системные case IDs SYS/RES/ACC уточняют существующие acceptance: [SYSTEM-ACCEPTANCE.md](SYSTEM-ACCEPTANCE.md). Их описание не повышает статус этапов.
 
-Инкремент01a реализован и проверяется отдельно; полный этап01 и остальные области ещё **planned**. Bootstrap не закрывает продуктовый acceptance. Для каждого ID менять статус только с evidence. Детали P/W — в `docs/PRODUCTS-WORKSPACE.md`; остальные acceptance IDs — в соответствующих планах.
+Инкременты01a–01c/02a–02f имеют отдельные CI evidence ниже; полный physical acceptance01/02 не закрыт, последующие runtime этапы planned. Bootstrap не закрывает продуктовый acceptance. Для каждого ID менять статус только с evidence. Детали P/W — в `docs/PRODUCTS-WORKSPACE.md`; остальные acceptance IDs — в соответствующих планах.
 
 | Acceptance IDs | Web features / adapters | Этап | Статус |
 |---|---|---|---|
 | P01–P10 | product-catalog/configuration/persistence/categories, product-photo | 01 | Core01a/01b/01c, P03 order/appearance/schema4 ci-verified API36 (run40101394875); device/full01 pending; evidence ниже |
-| W01–W07 | pos.html, cart-composition/presentation, receipts, android-pos-stock | 02 | 02a ci-verified API36/run40106275939; 02b ci-verified API36/run40140796798; 02c revalidation ci-verified API36/run40172190371; 02d UI ci-verified API36/run40172821096; 02e slots/drag ci-verified API36/run40177332732; full W06/W07 не закрыты, device отложен владельцем |
+| W01–W07 | pos.html, cart-composition/presentation, receipts, android-pos-stock | 02 | 02a ci-verified API36/run40106275939; 02b ci-verified API36/run40140796798; 02c revalidation ci-verified API36/run40172190371; 02d UI ci-verified API36/run40172821096; 02e slots/drag ci-verified API36/run40177332732; 02f perf/adaptive ci-verified API36/run40184227465; full W06/W07 не закрыты, device отложен владельцем |
 | S01–S05 | payment, receipts, android-safety, stockConsumption | 03 | planned |
 | I01–I04 | inventory, receiving-ui/drafts, purchase-orders, suppliers, warehouse-reporting, android-inventory | 04 | planned |
 | H01–H04 | shifts, employees, analytics, administration guards | 05 | planned |
@@ -101,3 +101,11 @@ W01/W06: настраиваемый home(max20)/пустые места/nearest 
 W01/W03/W07/DS04: background/lazy availability/search/selection, shared bounded Coil thumbnail cache и row/bottom/toggle под fontScale/viewport — ci-verified API36/run40184227465. [Контракт/метрики/ограничения](WORKSPACE-02F.md). Денежные и stock use cases не меняются, physical/full02 пока не закрыты.
 
 02f evidence: [run40184227465](https://github.com/mendelev-main/M-POS-Android/actions/runs/40184227465)/f1639b8,47JVM/47instrumentation+2scale+4UIseed,lint/build/6Python и actual updater success.2000product fixture:306/1209/595ms load/search/add;150%portrait/landscape reviewed без перекрытий. W01/W03/W07/DS04 только scope WORKSPACE-02F; physical/OEM/full02 отдельно.
+
+Перед03a выполнена [сверка01/02](PHASE-02-REVIEW.md); device критерии остаются pending. Подготовлены SHIFT-03A/MONEY-03, подтверждённая часть D02 не означает реализацию S01–S05.
+
+Выпуск01b–02f: PR1/merge87f57ae, main run40198464669 checks/emulator/signing/publish success, stable0.1.41.1/code5101/minSdk36. U01–U06 public channel [run40199534929](https://github.com/mendelev-main/M-POS-Android/actions/runs/40199534929) ci-verified API36: production2601→5101,Cancel/retry/restored download/receipt/settings. Physical остаётся pending.
+
+03a H01/H02 minimal:open/close/carry/revision/atomic result/audit/installation boundary,Room6/shared UI — ci-verified API36/run40206673038. [Scope](SHIFT-03A.md). S01–S05/employee roles/полные отчёты05 не реализованы.
+
+03a evidence [run40206673038](https://github.com/mendelev-main/M-POS-Android/actions/runs/40206673038)/fc7cde5:50JVM/52instrumentation+2scale+5UIseed,6Python/lint/build, migrations1–5→6, actual updater сохраняет active shiftId/opening140BYN и прежний catalog/current/parked/home. Closed/carry screenshot reviewed. H01/H02 только минимальный scope;MG02(sale+close)/MG03(refund) и S01–S05 planned, physical later.
