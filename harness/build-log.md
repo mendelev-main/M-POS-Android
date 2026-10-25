@@ -299,3 +299,9 @@ Artifact performance.json:2000products,load306ms/search1209ms/add595ms в explic
 External updater: CATALOG/WORKSPACE/PARKED/HOME UPDATE PASSED и UPDATE E2E PASSED, actual package1→2;stock8/currentqty5total15/parked delivery label total5/home product slot8 сохранены. Signing/publish/production-upgrade skipped на develop. Предыдущие40178918977 и40182783528 выявили исправленные UI/fixture ошибки;40183539310 прошёл47instrumentation, но остановился на сборе артефактов после UTP uninstall. Final driver явно удерживает instrumentation lifetime для2scale cases/capture и делает clean install перед4seed, gates не ослаблялись.
 
 02f W01/W03/W07/DS04 в указанном scope ci-verified. RoomSQLschema5/payloads/signing/main/stable прежние, релиз не публикуется. Physical/OEM/memory pressure/font200%/paired Web walkthrough остаются позже по решению владельца; full02/device не объявлены закрытыми. Следующий шаг — аудит оставшихся acceptance01/02 и подготовка03a (минимальная смена и денежные примеры) перед финансовым кодом.03 автоматически не реализовывался.
+
+## 2026-10-25 — выпуск01/02 и подготовка03a
+
+Владелец явно авторизовал merge/main/release перед новым этапом. mpos-release: RELEASE/config identity прочитаны,4signing Secrets присутствуют (значения не читались). PR1 develop→main,37commits/119files; PR checks40198146760 success, merge87f57ae308768b6793b318a12c229b19cea7ff85. Develop fast-forward и push к main merge. Main Android run40198464669 pending: не утверждать выпуск до signing/publish.
+
+В develop подготовлены PHASE-02-REVIEW/SHIFT-03A/MONEY-03, ADR007 и cross-links: audit CI vsdevice, open/close перенос counted из pinned Web, single-owner boundary, будущие fault/replay/migration/admission gates. Пользователь подтвердил line HALF_UP2/0.135→0.14 и полный cross-shift cash refund. Остальные discount/split allocations pending. preflight/diff passed. Только docs: финансового runtime/новых тестов нет.

@@ -43,3 +43,5 @@ ReportRequest: period[startInclusive,endExclusive), business zone, register/shif
 D02: утвердить пример 145BYN/сдачу, refund cross-shift, payment/discount/rounding и минимальный close. D04: роли, credential storage/provider, reporting time axis, period defaults, COGS source, export columns. Backend loyalty metrics требуют D05 contracts.
 
 MG01:open повтор/два конкурентных open →одна смена; MG02:sale+close →однозначная граница; MG03:сдача/возврат не удвоены; MG04:logout во время формы →write denied; RP01:пустой период →нулевые суммы/определённый average; RP02:категория/cost изменены →исторический отчёт неизменен; RP03:export equals snapshot totals; RP04:refund другой смены показан по утверждённой оси. Mapping H01–H04/S04/S05/D05, tests planned.
+
+Текущий контракт подготовки03a: [SHIFT-03A](SHIFT-03A.md), перенос openingCash из последнего counted согласно pinned Web; single-owner граница явная. Подтверждённая часть D02 и оставшиеся allocations — [MONEY-03](MONEY-03.md). Старые candidate/open questions выше читать с этими уточнениями, не как реализованный runtime.
