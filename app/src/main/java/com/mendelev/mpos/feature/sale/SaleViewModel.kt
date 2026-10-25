@@ -32,7 +32,7 @@ class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
     }
     init {refresh()}
     fun refresh() {
-        if(state.value.pending) return
+        if(state.value.pending || state.value.unresolved!=null) return
         mutable.update {it.copy(pending=true,message=null,preview=null)}
         viewModelScope.launch {
             try {

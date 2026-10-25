@@ -18,6 +18,7 @@ import com.mendelev.mpos.data.local.*
 import com.mendelev.mpos.domain.sale.*
 import com.mendelev.mpos.domain.shift.ShiftRules
 import com.mendelev.mpos.domain.workspace.OrderRules
+import com.mendelev.mpos.domain.workspace.CartEngine
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -65,6 +66,7 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
                     Text("Карта учитывается вручную. Банковский терминал не подключён.",style=MaterialTheme.typography.bodySmall)
                     if(work.cart.lines.isEmpty()) Text("Заказ пуст. Добавьте товары в рабочей зоне",Modifier.testTag("checkoutEmpty"))
                     if(ui.shift?.active==null) {MposNotice("Откройте смену перед оплатой",true);MposButton("Перейти к смене",onShift,enabled=enabled,style=ActionStyle.Secondary)}
+                    if(work.cart.lines.any {CartEngine.stale(it,work.products)}) MposNotice("Каталог изменился. Вернитесь в рабочую зону и пересчитайте заказ",true)
                     if(ui.draft!=null) Text("Подготовленная оплата сохранена. Перед проведением проверьте итог заново.",Modifier.testTag("checkoutRestored"),style=MaterialTheme.typography.bodySmall)
                 }
                 items(work.cart.lines,key={it.id}) {line->
@@ -136,6 +138,11 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
         Text(date(r.createdAt));Text("Смена: ${r.shiftId}",style=MaterialTheme.typography.bodySmall)
         Text(OrderRules.typeLabel(s.cart.details.type))
         if(s.cart.details.label.isNotBlank()) Text(s.cart.details.label)
+        if(s.cart.details.comment.isNotBlank()) Text(s.cart.details.comment)
+        if(s.cart.details.type=="delivery") {
+            if(s.cart.details.address.isNotBlank()) Text(s.cart.details.address)
+            if(s.cart.details.phone.isNotBlank()) Text(s.cart.details.phone)
+        }
         s.cart.lines.forEach {line->
             Text(line.name,Modifier.testTag("receiptLine:${line.id}"),style=MaterialTheme.typography.titleMedium)
             Text("${line.unitPrice} BYN × ${line.quantity}")
