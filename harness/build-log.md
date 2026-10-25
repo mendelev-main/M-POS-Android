@@ -237,3 +237,7 @@ W03/W06 revalidation domain/Room/UI automated tests passed на финально
 ## 2026-10-25 — диагностика emulator gate02c
 
 Уменьшено physical render resolution AVD с сохранением1280×900dp, RAM3072M/cores2. pinned action inputs проверены через GitHub contents API, test доказывает dp/invariant и сохранение API36 image/CPU config.6Python tests/preflight/diff passed. Runtime приложения не меняется. Добавлены fail diagnostics lastanr/CPU/memory/events/display; автоматическое закрытие SystemUI ANR не добавлено. CI ещё не запускался на этой записи.
+
+## 2026-10-25 — 02d UI implementation
+
+Папки используют count-based widths и Fixed grid с fitting columns; common Dialog maxWidth variant. Live total использует partial selectionPrice, а CartEngine/commit strict min/max без изменений.32 supplemental domain tests cached Kotlin2.1.20/JDK17 passed (новый partial/strict/unknown option). WorkspaceUiTest дополняет assertions2.5→3 BYN, сохраняет прежний invalid-required/Add/recreate/update сценарий. Первый fixture сравнил decimal scale3.50 vs3.5; canonical fixture исправлена, не production math. preflight/diff passed; Android/Compose актуального инкремента CI pending.

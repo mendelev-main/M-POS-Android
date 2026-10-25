@@ -32,12 +32,12 @@ object ModifierRules {
     }
 
     /** For the workspace in stage02. Each option can be selected once; priceDelta is per base item. */
-    fun selectionPrice(basePrice: BigDecimal, groups: List<ModifierGroupInput>, selected: Set<String>): BigDecimal {
+    fun selectionPrice(basePrice: BigDecimal, groups: List<ModifierGroupInput>, selected: Set<String>, requireComplete: Boolean = true): BigDecimal {
         val options=groups.flatMap { it.options }
         if(basePrice.signum()<0 || selected.any { id -> options.none { it.id==id } }) throw CatalogFailure("modifier", "Неизвестный вариант или некорректная цена")
         groups.forEach { g ->
             val count=g.options.count { it.id in selected }
-            if(count !in g.minimum.toInt()..g.maximum.toInt()) throw CatalogFailure("modifier", "Проверьте выбор группы: ${g.name}")
+            if(count > g.maximum.toInt() || requireComplete && count < g.minimum.toInt()) throw CatalogFailure("modifier", "Проверьте выбор группы: ${g.name}")
         }
         val result=options.filter { it.id in selected }.fold(basePrice) { sum,o -> sum+o.priceDelta.toBigDecimal() }
         if(result.signum()<0) throw CatalogFailure("modifier", "Итоговая цена не может быть отрицательной")

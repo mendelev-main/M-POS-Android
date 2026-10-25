@@ -58,11 +58,13 @@ class WorkspaceUiTest {
         compose.onNodeWithTag("workspaceFolder:$folder").performClick()
         compose.onNodeWithTag("workspaceProduct:$coffee").performClick()
         compose.onNodeWithTag("workspaceManualPrice").performTextInput("2,50")
+        compose.onNodeWithTag("workspaceConfigurationTotal").assertTextEquals("Итого: 2,5 BYN")
         compose.onNodeWithText("Добавить в заказ").performClick()
         waitText("Проверьте выбор группы: Молоко")
         compose.onNodeWithContentDescription("Молоко (0,5 BYN)").performClick()
         compose.runOnIdle {(compose.activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager)
             .hideSoftInputFromWindow(compose.activity.window.decorView.windowToken,0)}
+        compose.onNodeWithTag("workspaceConfigurationTotal").assertTextEquals("Итого: 3 BYN")
         screenshot("workspace-configuration")
         compose.onNodeWithText("Добавить в заказ").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.cart.lines.size==1}

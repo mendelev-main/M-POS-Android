@@ -41,3 +41,7 @@ W03/W06 revalidation domain/Room/UI automated tests passed на финально
 ## Продолжение — стабилизация CI
 
 Владелец авторизовал продолжение по плану. mpos-phase. Проверен action.yml pinned emulator-runner a421e438: pre-emulator-launch-script/ram-size/avd-name поддерживаются. Гипотеза нагрузки software renderer: PixelC2560×1800/320dpi заменён на1600×1125/200dpi с прежним viewport1280×900dp (61% меньше пикселей), named disposable AVD mpos-ci-api36, RAM3072M/cores2. Это гипотеза, причина ANR пока не установлена. Gate/утверждения/Android36/геометрия в dp не снижаются; SystemUI ANR не закрывается автоматически. На failure собираем lastanr/cpu/mem/events/display.6Python/preflight/diff passed; CI далее. Для workflow push используется уже авторизованный SSH key (проверен GitHub identity), дополнительных прав gh token не требуется.
+
+## 02d UI начало
+
+Независимо от инфраструктурного gate реализуются два документированных UI gaps02: count-based folder width/columns и live modifier/manual total. Источник pos-navigation.js renderPosFolderModal, pos.html611, cart-composition.js updateModifierSelectionTotal. Контракт WORKSPACE-02D; mpos-domain для partial-price preview, commit validation остаётся strict. Fixed slots/drag не объявляются выполненными. Первый local test ошибочно сравнил BigDecimal scale3.50 vs3.5, fixture приведена к canonical, расчёт верен. Итог локальных/CI далее.

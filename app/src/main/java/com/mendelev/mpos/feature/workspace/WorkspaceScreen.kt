@@ -119,10 +119,18 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
             {revalidationOpen=false;model.dismiss()},{token -> model.revalidate(revalidationRevision,revalidationOwner,token) {revalidationOpen=false}})
         WorkspaceOrdersDialogs(ordersDialog,{ordersDialog=it},s,ui,model)
         val folderItem=s.layout.find { it.type=="folder" && it.id==folder }
-        if(folderItem!=null && !modal) MposDialog(folderItem.name,{folder=null},!busy,wide=true) {
-            if(ui.message!=null) MposNotice(ui.message!!,true)
-            WorkspaceGrid(s,folderItem.categoryId,folderItem.id,"",editing,photos,Modifier.heightIn(max=420.dp),ui.pending<100,
-                {},{},::configure,::manage)
+        if(folderItem!=null && !modal) {
+            val count=s.layout.count {it.type=="product" && it.folderId==folderItem.id}
+            val columns=count.coerceIn(1,4)
+            val width=listOf(280,448,660,872)[columns-1].dp
+            MposDialog(folderItem.name,{folder=null},!busy,maxWidth=width) {
+                if(ui.message!=null) MposNotice(ui.message!!,true)
+                BoxWithConstraints(Modifier.fillMaxWidth().heightIn(max=420.dp)) {
+                    val fittingColumns=((maxWidth+12.dp)/162.dp).toInt().coerceAtLeast(1).coerceAtMost(columns)
+                    WorkspaceGrid(s,folderItem.categoryId,folderItem.id,"",editing,photos,Modifier.heightIn(max=420.dp),ui.pending<100,
+                        {},{},::configure,::manage,folderColumns=fittingColumns)
+                }
+            }
         }
         val product=s.products.find { it.id==configId }
         if(configId!=null) MposDialog(product?.name ?: "Товар недоступен",{configId=null;model.dismiss()},!busy) {
@@ -139,7 +147,14 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                             },!busy) }
                     }
                     if(product.price.toBigDecimal().signum()==0) MposField(manual,{manual=it;model.dismiss()},"Цена продажи, BYN",Modifier.testTag("workspaceManualPrice"),!busy,numeric=true)
-                    Text(if(product.price=="0") "Укажите цену больше 0" else "Цена товара: ${money(product.price)}",style=MaterialTheme.typography.bodySmall)
+                    val pricePreview=runCatching {
+                        val base=if(product.price.toBigDecimal().signum()==0) CatalogRules.decimal(manual,2,"Цена").toBigDecimal().also {
+                            if(it.signum()<=0) throw CatalogFailure("price","Укажите цену больше 0")
+                        } else product.price.toBigDecimal()
+                        ModifierRules.selectionPrice(base,product.groups,selected.toSet(),requireComplete=false)
+                    }
+                    Text(pricePreview.getOrNull()?.let {"Итого: ${money(CatalogRules.canonical(it))}"} ?: "Укажите корректную цену для расчёта суммы",
+                        style=MaterialTheme.typography.titleMedium,modifier=Modifier.testTag("workspaceConfigurationTotal"))
                 }
                 Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
                     MposButton("Отмена",{configId=null;model.dismiss()},enabled=!busy,style=ActionStyle.Secondary)
@@ -201,7 +216,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
 
 @Composable private fun WorkspaceGrid(s: WorkspaceSnapshot,category: String?,folder: String?,search: String,editing: Boolean,
     photos: ProductPhotoStore,modifier: Modifier,enabled: Boolean,onCategory: (String)->Unit,onFolder: (LayoutItem)->Unit,
-    onProduct: (WorkspaceProduct)->Unit,onManage: (LayoutItem)->Unit) {
+    onProduct: (WorkspaceProduct)->Unit,onManage: (LayoutItem)->Unit,folderColumns: Int? = null) {
     val query=CatalogRules.key(search)
     val products=s.products.associateBy { it.id }
     val availability=remember(s.products,s.cart,s.graph,s.balances,s.parked) {
@@ -213,7 +228,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
     }
     val tiles=if(query.isNotEmpty()) s.products.filter { (category==null || it.categoryId==category) && CatalogRules.key(it.name).contains(query) }.map { LayoutItem("product",it.id,it.categoryId) }
         else s.layout.filter { it.categoryId==category && it.folderId==(folder ?: "") }
-    LazyVerticalGrid(GridCells.Adaptive(150.dp),modifier.testTag(if(folder==null) "workspaceGrid" else "workspaceFolderGrid"),
+    LazyVerticalGrid(if(folderColumns==null) GridCells.Adaptive(150.dp) else GridCells.Fixed(folderColumns),modifier.testTag(if(folder==null) "workspaceGrid" else "workspaceFolderGrid"),
         horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         if(category==null && query.isEmpty()) {
             items(s.categories,key={"category:${it.id}"}) { c -> MposWorkspaceTile({onCategory(c.id)},Modifier.testTag("workspaceCategory:${c.id}")) {
@@ -223,6 +238,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
             if(s.products.any { it.categoryId.isEmpty() }) item { MposWorkspaceTile({onCategory("")},Modifier.testTag("workspaceCategory:")) { Text("Без категории",style=MaterialTheme.typography.titleMedium) } }
             if(s.categories.isEmpty() && s.products.isEmpty()) item(span={GridItemSpan(maxLineSpan)}) { Text("Добавьте товары в каталоге") }
         } else {
+            if(folder!=null && tiles.isEmpty()) item(span={GridItemSpan(maxLineSpan)}) {Text("В папке пока нет товаров")}
             items(tiles,key={"${it.type}:${it.id}"}) { tile ->
                 if(tile.type=="folder") MposWorkspaceTile({if(editing) onManage(tile) else onFolder(tile)},Modifier.testTag("workspaceFolder:${tile.id}"),enabled) {
                     Text("Папка",style=MaterialTheme.typography.labelMedium);Text(tile.name,style=MaterialTheme.typography.titleMedium)

@@ -44,4 +44,12 @@ class ModifierRulesTest {
         assertNotEquals(i.fingerprint(),i.copy(photoId="00000000-0000-0000-0000-000000000001.jpg").fingerprint())
         assertNotEquals(i.copy(modifierGroups=listOf(group)).fingerprint(),i.copy(modifierGroups=listOf(group.copy(options=listOf(option.copy(priceDelta="2"))))).fingerprint())
     }
+    @Test fun incompleteSelectionCanShowExactPreviewWhileCommitStillRequiresGroupMinimum() {
+        val valid=ModifierRules.validate("coffee",listOf(group),setOf("milk"))
+        assertEquals(BigDecimal("2"),ModifierRules.selectionPrice(BigDecimal("2"),valid,emptySet(),requireComplete=false))
+        assertThrows(CatalogFailure::class.java) {ModifierRules.selectionPrice(BigDecimal("2"),valid,emptySet())}
+        assertEquals(BigDecimal("3.5"),ModifierRules.selectionPrice(BigDecimal("2"),valid,setOf("option"),requireComplete=false))
+        assertThrows(CatalogFailure::class.java) {ModifierRules.selectionPrice(BigDecimal("2"),valid,setOf("unknown"),requireComplete=false)}
+    }
+
 }

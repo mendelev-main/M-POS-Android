@@ -105,3 +105,7 @@ Design system — часть M01: `core/ui/theme` (colors/type/shape/spacing), `
 ## Рабочая зона02a — shared variants
 
 MposAppBar переносит существующий navy/Manrope header каталога в общий компонент; рабочая зона использует те же navigation actions. MposWorkspaceTile: radius18dp/min-height144dp/gap12dp из pos.html pcard/product-grid; фото — общий sampled private ProductPhoto. MposDialog wide=true — только ширина до900dp для папки, те же header/Close, radius22dp, padding28dp и кнопки; обычные диалоги не меняют ширину. Раскладка/корзина: grid слева + cart340dp при ширине≥840dp, при меньшей ширине cart снизу; физическая orientation/font-scale приёмка позже. Full fixed-slot/drag parity не заявляется, контракт WORKSPACE-02A.md.
+
+## Рабочая зона02d — ширина папки
+
+Shared MposDialog maxWidth — ограничение ширины без отдельного оформления Close/header/buttons/radius/padding. Для папок280/448/660/872dp по1–4колонкам из pinned pos.html611; narrow viewport уменьшает колонки по доступной ширине. wide900dp остаётся общим вариантом для других сценариев. [Контракт](WORKSPACE-02D.md).
