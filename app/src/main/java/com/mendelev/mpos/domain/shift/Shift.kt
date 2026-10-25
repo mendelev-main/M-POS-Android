@@ -10,8 +10,9 @@ data class Shift(val id: String,val registerId: String,val actorId: String,val a
     val closedAt: Long? = null,val countedCash: Long? = null,val expectedCash: Long? = null,val difference: Long? = null) {
     val isOpen: Boolean get()=closedAt==null
 }
-data class ShiftSnapshot(val registerId: String,val ownerId: String,val revision: Long,val last: Shift?) {
+data class ShiftSnapshot(val registerId: String,val ownerId: String,val revision: Long,val last: Shift?,val saleCashDelta: Long = 0L) {
     val active: Shift? get()=last?.takeIf {it.isOpen}
+    val currentCash: Long get()=Math.addExact(last?.openingCash ?: 0L,saleCashDelta)
     val carry: Long get()=last?.countedCash ?: 0L
 }
 object ShiftRules {
@@ -24,7 +25,7 @@ object ShiftRules {
     fun money(minor: Long): String=BigDecimal.valueOf(minor,2).toPlainString().replace('.',',')+" BYN"
     fun token(state: ShiftSnapshot): String {
         val shift=state.active ?: throw CatalogFailure("shift","Смена не открыта")
-        return CatalogRules.fingerprint("shift.close.preview.v1",state.registerId,state.revision,shift.id,shift.openingCash)
+        return CatalogRules.fingerprint("shift.close.preview.v2",state.registerId,state.revision,shift.id,state.currentCash)
     }
     fun open(state: ShiftSnapshot,expectedRevision: Long,previousId: String?,actor: String,id: String,now: Long,zone: String): Shift {
         requireOwner(state,actor)
@@ -37,7 +38,7 @@ object ShiftRules {
         val shift=state.active ?: conflict()
         if(shift.id!=id || state.revision!=revision || token!=ShiftRules.token(state)) conflict()
         if(counted<0 || now<shift.openedAt) throw CatalogFailure("cash","Некорректная сумма или время закрытия смены")
-        return shift.copy(closedAt=now,countedCash=counted,expectedCash=shift.openingCash,difference=counted-shift.openingCash)
+        return shift.copy(closedAt=now,countedCash=counted,expectedCash=state.currentCash,difference=counted-state.currentCash)
     }
     private fun requireOwner(state: ShiftSnapshot,actor: String) {
         if(actor.isBlank() || actor!=state.ownerId) throw CatalogFailure("owner","Недопустимый оператор смены")

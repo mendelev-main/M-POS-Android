@@ -160,6 +160,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
         }
         if (dao.modifierUses(id) > 0) throw CatalogFailure("used", "Товар используется в модификаторах: сначала измените варианты")
         if (dao.recipeUses(id) > 0) throw CatalogFailure("used", "Товар используется в рецептуре: сначала измените состав")
+        if (db.sales().productUses(id)>0) throw CatalogFailure("used", "Товар есть в истории чеков: удалить нельзя")
         if (dao.movementCount(id) > 0) throw CatalogFailure("used", "Есть складская история: удалить товар нельзя")
         dao.clearModifierOptions(id);dao.clearModifierGroups(id);dao.clearRecipe(id); dao.deleteBalance(id); dao.deleteProduct(id); if(draft?.optString("id")==id) dao.clearDraft(); record(commandId, fp, id, "product.delete")
     }

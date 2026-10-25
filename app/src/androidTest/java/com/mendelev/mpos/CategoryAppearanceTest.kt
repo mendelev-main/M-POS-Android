@@ -76,7 +76,7 @@ class CategoryAppearanceTest {
             legacy.execSQL("INSERT INTO operation_results VALUES (?,?,?)",arrayOf("old-command",CatalogRules.fingerprint("category","c",null,"Кофе"),"c"))
             legacy.version=3
         } finally { legacy.close() }
-        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_3_4,CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6).build()
+        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_3_4,CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7).build()
         try {
             val repo=CatalogRepository(db)
             assertEquals("c",repo.saveCategory("c",null,"Кофе","old-command"))

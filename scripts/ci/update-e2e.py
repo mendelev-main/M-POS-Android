@@ -194,6 +194,9 @@ def main():
                 adb("uninstall", PACKAGE)
                 adb("install", str(base))
                 adb("install", "-r", str(test_apk))
+                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest",
+                                PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
+                assert "OK (1 test)" in financial and "FAILURES" not in financial, financial[-4000:]
                 result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
                              PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
                 assert "OK (5 tests)" in result and "FAILURES" not in result, result[-4000:]
@@ -293,6 +296,13 @@ def main():
                 wait_text("^Наличные при открытии: 140,00 BYN$")
                 (reports / "updated-shift.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("SHIFT UPDATE PASSED: active shift identity and opening140 BYN survived package replacement", flush=True)
+                adb("install", "-r", str(test_apk))
+                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest",
+                                "-e", "saleUpgradeMode", "verify", PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
+                assert "OK (1 test)" in financial and "FAILURES" not in financial, financial[-4000:]
+                adb("uninstall", PACKAGE + ".test")
+                print("SALE UPDATE PASSED: dedicated Room receipt snapshot, ledger, result, shift cash and cleared draft survived APK replacement; replay did not duplicate sale", flush=True)
+
             print(f"UPDATE E2E PASSED: package={PACKAGE}, check/download/restore/cancel/system install {base_code}→{target_code}; app-private data preserved")
             server.shutdown()
 

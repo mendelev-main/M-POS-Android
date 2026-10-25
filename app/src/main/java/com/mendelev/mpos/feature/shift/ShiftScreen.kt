@@ -45,6 +45,7 @@ import java.time.format.DateTimeFormatter
                             Text("Смена: ${last.id}",Modifier.testTag("shiftId"),style=MaterialTheme.typography.bodySmall)
                             Text("Открыта: ${date(last.openedAt,last.zoneId)}")
                             Text("Наличные при открытии: ${ShiftRules.money(last.openingCash)}")
+                            if(active!=null) Text("Сейчас в кассе: ${ShiftRules.money(s.currentCash)}")
                             if(!last.isOpen) {
                                 Text("Закрыта: ${date(last.closedAt!!,last.zoneId)}")
                                 Text("Ожидалось: ${ShiftRules.money(last.expectedCash!!)}")
@@ -56,7 +57,7 @@ import java.time.format.DateTimeFormatter
                             Text("Наличные следующей смены: ${ShiftRules.money(s.carry)}",Modifier.testTag("shiftCarry"))
                             Text(if(last==null) "Первая смена начинается с 0 BYN" else "Сумма перенесена с прошлой смены. Проверьте наличные в кассе.",style=MaterialTheme.typography.bodySmall)
                             MposButton("Открыть смену",{revision=s.revision;previous=last?.id;actor=s.ownerId;expected=s.carry;dialog="open";model.dismiss()},Modifier.testTag("shiftOpen"),busy=ui.pending)
-                        } else MposButton("Закрыть смену",{revision=s.revision;previous=active.id;actor=s.ownerId;token=ShiftRules.token(s);expected=active.openingCash;counted=java.math.BigDecimal.valueOf(expected,2).toPlainString();dialog="close";model.dismiss()},Modifier.testTag("shiftClose"),busy=ui.pending,style=ActionStyle.Secondary)
+                        } else MposButton("Закрыть смену",{revision=s.revision;previous=active.id;actor=s.ownerId;token=ShiftRules.token(s);expected=s.currentCash;counted=java.math.BigDecimal.valueOf(expected,2).toPlainString();dialog="close";model.dismiss()},Modifier.testTag("shiftClose"),busy=ui.pending,style=ActionStyle.Secondary)
                     }
                 }
                 Text("Смена сохраняет состояние кассы. Оплаты будут доступны на следующем этапе.",style=MaterialTheme.typography.bodySmall)
