@@ -1,6 +1,6 @@
 # 03a — минимальная смена: контракт перед реализацией
 
-Статус: implemented/CI pending. Задача — явный допуск будущей продажи в открытую смену, а не полное управление кассой05. Предпосылки — [сверка01/02](PHASE-02-REVIEW.md), текущие Room schema5/постоянный native package, [данные](DATA.md), [состояния](STATE-MACHINES.md). mpos-phase/mpos-domain; UI из общего DESIGN-SYSTEM.
+Статус: ci-verified Android16/API36, physical pending. Задача — явный допуск будущей продажи в открытую смену, а не полное управление кассой05. Предпосылки — [сверка01/02](PHASE-02-REVIEW.md), текущие Room schema5/постоянный native package, [данные](DATA.md), [состояния](STATE-MACHINES.md). mpos-phase/mpos-domain; UI из общего DESIGN-SYSTEM.
 
 ## Источник и принятые границы
 
@@ -47,4 +47,6 @@ RoomSQLschema6:shifts(unique nullable activeSlot=1)/shift_register(singleton rev
 
 InstallationGate сериализует shift writes и подготовку installer; lease принадлежит конкретному UpdateRepository (другое окно не может снять чужой lease); отмена до launcher освобождает его в NonCancellable. После подготовки новые shift commands отвергаются до installerClosed (Cancel/ошибка запуска/возврат). При убийстве процесса незавершённая Room transaction откатывается, новый процесс заново читает committed state. Это gate текущих shift writes, не выдуманная реализация будущего финансового recovery. UI state публикуется Main, I/O — IO. Одновременные open в repository и уникальность active slot проверяются отдельно.
 
-Проверки implemented:3pure (exact input/overflow/carry/difference/stale/owner/clock),4Room (open/close/replay/concurrency/reopen/DB unique/workspace unchanged;4write fault boundaries+SQLite trigger refusal;installation race;5→6 preservation),1UI (invalid counted/recreate/close140/carry140/open). Прежние migration1/2/3/4 тесты доведены до6. Driver5explicit UIseed проверяет active shiftId/opening140 после actual APK1→2 и сохраняет снимки open/closed/update. Schema6 export и actual Android результаты получать из CI.
+Проверки ci-verified:3pure (exact input/overflow/carry/difference/stale/owner/clock),4Room (open/close/replay/concurrency/reopen/DB unique/workspace unchanged;4write fault boundaries+SQLite trigger refusal;installation race;5→6 preservation),1UI (invalid counted/recreate/close140/carry140/open). Прежние migration1/2/3/4 тесты доведены до6. Driver5explicit UIseed проверяет active shiftId/opening140 после actual APK1→2 и сохраняет снимки open/closed/update. Schema6 export сохранён в Git и совпал с финальным CI.
+
+Evidence: [run40206673038](https://github.com/mendelev-main/M-POS-Android/actions/runs/40206673038)/fc7cde5 (runtime d8185dc),50JVM/52instrumentation+2scale+5update seed,6Python/lint/build; migration1–5→6 и actual APK1→2 сохранили workspace/catalog/active shiftId/opening140 BYN. Снимок закрытой смены с expected0/counted140/carry140 просмотрен. Physical/полные S/H acceptance не заявляются.

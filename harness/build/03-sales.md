@@ -1,6 +1,6 @@
 # Этап 03 — Продажи
 
-Статус: planned
+Статус: 03a ci-verified; sale/refund planned
 
 ## Объём
 
@@ -44,4 +44,6 @@ S01: commit атомарен; S02: повтор idempotent; S03: historical refu
 
 [Сверка01/02](../../docs/PHASE-02-REVIEW.md), [минимальная смена](../../docs/SHIFT-03A.md), [утверждённая часть D02](../../docs/MONEY-03.md). Разрешены line HALF_UP2 и полный cross-shift cash refund; скидочные/split allocations отдельно. Runtime03 отсутствует; эта подготовка не закрывает S/H acceptance. Сначала релиз готового01/02 в main, затем реализация03a в develop.
 
-03a implementation: [SHIFT-03A](../../docs/SHIFT-03A.md), H01/H02 minimal implemented/CI pending; schema6/общий экран смены/installation gate. S01–S05 и full05 по-прежнему planned.
+03a implementation: [SHIFT-03A](../../docs/SHIFT-03A.md), H01/H02 minimal ci-verified API36/run40206673038; schema6/общий экран смены/installation gate. S01–S05 и full05 по-прежнему planned.
+
+Итог03a: [run40206673038](https://github.com/mendelev-main/M-POS-Android/actions/runs/40206673038)/fc7cde5,50JVM/52instrumentation+2scale+5UIseed,6Python/lint/build, Room6 migrations/fault/replay/concurrency/installation gate и actual updater сactive140BYN passed. Physical later. Следующий03b только после выпуска03a и применимых D02 fixtures.

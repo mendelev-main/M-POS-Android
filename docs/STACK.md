@@ -151,3 +151,7 @@ WorkManager используется для конечных persistent зада
 ## Реализация фото02f
 
 Coil3.3.0/coil-compose подключён; shared application loader16MiB, private file thumbnails256px и AsyncImage. [Контракт/проверки](WORKSPACE-02F.md). Предыдущие описания adapter01c — история до этого инкремента. PickVisualMedia остаётся отдельной задачей, permissions/photo staging не меняются.
+
+## Минимальная смена03a
+
+Room schema6 добавляет shifts/shift_register с unique active slot, singleton revision и last FK. java.time Clock/ZoneId, BigDecimal↔Long minor units без новых библиотек. ViewModel/Flow/main UI, общие Compose components; InstallationGate на coroutines Mutex в core/operations координирует только текущие shift writes/installer. Будущий sale/recovery расширит границу. Контракт [SHIFT-03A](SHIFT-03A.md). Hilt/сотрудники/эквайринг этим инкрементом не подключаются.
