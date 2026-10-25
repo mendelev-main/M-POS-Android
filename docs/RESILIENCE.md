@@ -70,3 +70,5 @@ Retry/backoff имеет пределы нагрузки и видимый ст�
 
 
 Реализованный subset RES-02/P08 в01c: private staging/immutable file/Room activation и faults copied/decoded/beforePublish/published, отказ DB commit и reopen, защита active/draft photo при cleanup. [Контракт и ограничения](CATALOG-01C.md); точное CI evidence — build-log. Это не закрывает restore07, реальный low-storage и физическую приёмку providers.
+
+03b.2c baseline UI recovery ci-verified/run40231561635: sale transaction добавляет receiptId вcheckout tombstone, fresh read восстанавливает результат до acknowledgement. WorkspaceSnapshot включает этот ID: даже с пустой корзиной доступен «Чек сохранён». «Готово» снимает pointer с повышением revision, не удаляя receipt/result. Lost response использует прежний command; двойной отказ commit/outcome блокирует новые вводы до повторной проверки (реализовано, отдельный dual-read-fault сценарий ещё pending). CI проверяет recreation/fresh repository read/empty-workspace entry и actual APK replacement отдельной financial DB; не заявляется force-kill всех timing windows.

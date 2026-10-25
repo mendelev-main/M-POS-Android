@@ -1,6 +1,6 @@
 # Денежный контракт03 — решения и открытые примеры
 
-Статус: базовая policy03b утверждена владельцем25.10.2026, pure SaleMoney и atomic sale repository ci-verified; checkout/history UI проверяется в03b.2c (SALE-03B). BYN подтверждена ранее. Общие скидки/loyalty, partial refund и внешнее acquiring остаются отдельными контрактами.
+Статус: базовая policy03b утверждена владельцем25.10.2026, pure SaleMoney и atomic sale repository ci-verified; manual checkout/history UI03b.2c ci-verified/run40231561635 (SALE-03B). BYN подтверждена ранее. Общие скидки/loyalty, partial refund и внешнее acquiring остаются отдельными контрактами.
 
 ## Утверждено
 

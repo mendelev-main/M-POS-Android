@@ -1,6 +1,6 @@
 # Этап 03 — Продажи
 
-Статус: 03a/03b.1/03b.2a/03b.2b repository ci-verified; checkout/history UI и refund planned
+Статус: 03a/03b.1/03b.2a/03b.2b repository ci-verified; 03b.2c manual checkout/history UI ci-verified; split paid-part progress/refund planned
 
 ## Объём
 
@@ -55,3 +55,5 @@ S01: commit атомарен; S02: повтор idempotent; S03: historical refu
 03b.2a checkout persistence ci-verified [40224718420](https://github.com/mendelev-main/M-POS-Android/actions/runs/40224718420)/c753666:55JVM/53instrumentation/6Python/lint/build и прежний actual updater passed. Новый draft Room reopen/rollback/conflicts/gate covered; atomic sale/history/UI далее, S01/S02/S05 остаются planned. Подчасть не выпускается отдельно.
 
 03b.2b S01/S02/S05 repository ci-verified [40226577890](https://github.com/mendelev-main/M-POS-Android/actions/runs/40226577890)/bb40ae2:56JVM/60instrumentation/6Python/lint/build +2scale/5UIseed/financial seed+verify actualAPK1→2 passed. Scope SALE-03B; next03b.2c shared checkout/history UI. Не переходить к refund03c до завершения этой вертикали.
+
+03b.2c manual checkout/history UI ci-verified [40231561635](https://github.com/mendelev-main/M-POS-Android/actions/runs/40231561635)/e23f3c5:56JVM/62instrumentation/6Python/lint/build +2scale/6UIseed/financial seed+verify/actualdebugAPK1→2. Включён вход ксохранённомуresult изemptyworkspace. Screenshot modals/result reviewed, sharedUI. Следующий03b.3 —sequential paid parts/freeze/recovery guards; весь03b/refund03c/physical pending. Не выпускать каждыйинкремент отдельно.

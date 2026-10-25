@@ -1,6 +1,6 @@
 # 03b — оплата и история: контракт инкрементов
 
-Статус:03b.1/03b.2a/03b.2b repository ci-verified; checkout/history UI planned. Это не готовая кнопка оплаты. Предпосылки:03a выпущен stable0.1.46.1, [MONEY-03](MONEY-03.md) и ответы владельца25.10.2026. BYN, API36+, единый дизайн pinned Web. Физические тесты по-прежнему позже.
+Статус:03b.1/03b.2a/03b.2b repository ci-verified; checkout/history manual UI ci-verified/run40231561635; отдельное подтверждение split частей planned. Это не готовая кнопка оплаты. Предпосылки:03a выпущен stable0.1.46.1, [MONEY-03](MONEY-03.md) и ответы владельца25.10.2026. BYN, API36+, единый дизайн pinned Web. Физические тесты по-прежнему позже.
 
 ## Источники и D02
 
@@ -30,7 +30,7 @@ InstallationGate расширяется на sale/сохранение checkout/
 
 ## Границы приёмки
 
-S04 pure money ci-verified; S01/S02/S05 ci-verified в repository scope03b.2b. Checkout/history UI и end-to-end кассира planned; S03 в03c. Не присваивать financial ci-verified всему03b по денежным unit tests. Дальнейшие инкременты03b не выпускаются отдельно автоматически; готовый функциональный блок —PRdevelop→main по workflow владельца.
+S04 pure money ci-verified; S01/S02/S05 ci-verified в repository scope03b.2b. Manual checkout/history UI и end-to-end cash cashier ci-verified/run40231561635; отдельное подтверждение split частей planned, S03 в03c. Не присваивать financial ci-verified всему03b по денежным unit tests. Дальнейшие инкременты03b не выпускаются отдельно автоматически; готовый функциональный блок —PRdevelop→main по workflow владельца.
 
 Evidence03b.1: [Android PR manual40223239353](https://github.com/mendelev-main/M-POS-Android/actions/runs/40223239353)/91acd06,55JVM/0failures,6Python/lint/assembleDebug passed.5new SaleMoney tests,46supplemental local cached Kotlin2.1.20 tests passed; actual pinned compiler вCI.45selected pinned Web payment/split/discount/delivery tests passed, SHA256 source совпали сconfig/reference.json. SQLschema6/cart payload2/UI не менялись, новый emulator suite не требовался для unused pure engine. S01/S02/S05 и actual checkout остаются planned.
 
@@ -52,7 +52,7 @@ ShiftSnapshot.currentCash=opening + committed cash − delivery cash-out; checke
 
 Evidence03b.2b: [full API36 CI40226577890](https://github.com/mendelev-main/M-POS-Android/actions/runs/40226577890)/bb40ae2(runtime7a66de2):56JVM/60instrumentation/0failures/6Python/lint/build success. Новые6SaleRepository cases +SaleUpgradeTest passed. Все прежние migration1–5 теперь проверены до7, новый6→7 test сохраняет0.0004 stock/shift140/draftrevision.9post-write faults/SQLite abort/concurrent replay/close race/installer admission/refusal/cash delivery/recipeflags/parked reserve/reopen/history verified repository scope. Actual debugAPK1→2 сохраняет отдельную financial fixture DB сreceipt/ledger/result/shiftcash/clearedcurrent/tombstone, повтор не дублирует sale. СтарыеUI catalog/current/parked/home/shift fixtures также passed. Generated7.json сохранён byte-identical CI export. Updated-shift1600×1125 просмотрен: currentCash140 и opening140, общий дизайн без перекрытий. Следующий03b.2c —shared checkout/history UI, restore/reconfirm/error/receipt и Compose acceptance. Полный03b.2/physical/refund ещё не закрыты; stable/main не менялись.
 
-### 03b.2c — checkout/history UI (implementation, CI pending)
+### 03b.2c — checkout/history UI (manual all-parts scope ci-verified)
 
 Из рабочей зоны доступны «К оплате» и «Чеки». Shared Mpos screens/fields/select/dialog/buttons: cash/card/manual split2–10 (equal remainder-first или редактирование частей), одна скидка строки, explicit ручной тариф доставки (название+сумма, включая0). До будущего справочника тарифов snapshot получает id=manual/revision1, без backend API. Все части подтверждаются вместе; sequential paid-part progress Web в этот инкремент не входит. Карта явно обозначена ручным учётом, SDK не подключён.
 
@@ -61,3 +61,11 @@ Evidence03b.2b: [full API36 CI40226577890](https://github.com/mendelev-main/M-PO
 Checkout tombstone расширен необязательным receiptId без смены формата/schema7: sale commit записывает указатель атомарно вместо прежнего tombstone. Cold model читает unacknowledged result и показывает существующий чек; «Готово» снимает указатель с повышением revision. Неверный ID не подтверждает чужой результат. Lost response→outcome lookup; если lookup тоже недоступен, форма блокируется и предлагает повтор результата с тем же snapshot/command. Нет нового commandId для обхода неизвестного исхода. History/details показывают historical line amounts/name/options/payment/delivery; цены текущего каталога не используются.
 
 Compose сценарий: insufficient given→нет stock write, prepare/change preview, recreation→draft restore/same command, commit/receipt/recreation/result acknowledgement/history после переименования товара. Repository test расширен fresh read/ack/wrong ID/replay; прежний SaleUpgradeTest сохраняет новый tombstone после actual APK replacement. Скриншоты checkout/receipt/history передаются в updater artifacts, visual review после CI. Physical/paired Web/full sequential split/refund остаются pending.
+
+## Следующий инкремент03b.3 — отдельное подтверждение частей
+
+Manual all-parts scope03b.2c не закрывает paid-part progress Web: отдельные подтверждения частей должны переживать закрытие/перезапуск, замораживать сумму и защищать от очистки/изменения уже частично оплаченного заказа. Перед кодом сверить pinned payment.js hasPaidSplitPayment/splitPaymentDraftSnapshot/guards и правила закрытия смены/установки APK. Проверить money allocations/stock reservation/recovery и запрещённый discard на числовых примерах; не объявлять paid-part банковским acquiring. Refund03c и следующий release checkpoint идут после согласованного завершения применимого03b scope. Raw поля до подготовки/физические тесты/paired Web/SDK остаются отдельными ограничениями, а не пройденными acceptance.
+
+Evidence03b.2c final: [full CI40231561635](https://github.com/mendelev-main/M-POS-Android/actions/runs/40231561635)/e23f3c5 SUCCESS:56JVM/62instrumentation/0failures/6Python/lint/build, затем2scale+6UIseed+financial seed/verify иactualdebugAPK1→2. Cash UI: insufficient given→нет списания; prepare/recreation/same command/confirm/result/recreation/empty-workspace «Чек сохранён»/reopen/ack/history послеrename passed. VM: card delivery needs drawer cash/SQL abort/retry same command/mixed+discount passed. Actual financial fixture сохраняет receipt/ledger/result/shift cash/tombstone, workspace.completedReceiptId совпадает с чеком послеreplacement. Это отдельная app-private fixture DB; не утверждается signed production upgrade/force-kill/OEM proof.
+
+Checkout/history/receipt screenshots1600×1125 просмотрены: общие Close/Primary/Surface/Manrope, суммы2BYN/change3, без перекрытий. Dialog screenshots получены через full UiAutomation послеidle, activity result —Compose capture; прошлые failed/cropped artifacts не считаются visual evidence. Landscape workspace150% из40230629400 просмотрен: footer «К оплате»/«Чеки» помещается. Полный paired Web/dark/font-scale checkout/physical не закрыт. Room7 export прежний. Следующий03b.3 —paid-part progress; full03b и refund03c остаются pending, develop-only без новогоrelease.
