@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
 import com.mendelev.mpos.data.local.*
+import com.mendelev.mpos.core.operations.InstallationGate
 import com.mendelev.mpos.domain.catalog.*
 import com.mendelev.mpos.domain.sale.*
 import com.mendelev.mpos.domain.shift.*
@@ -112,6 +113,26 @@ class SaleRepositoryTest {
             // Even the composite and untracked ingredients have historical FK references.
             assertEquals(1,db.sales().productUses("dish"));assertEquals(1,db.sales().productUses("untracked"))
             reject {catalog.deleteProduct("dish",1,"delete-dish")}
+        } finally {db.close()}
+    }
+    @Test fun saleCloseRaceHasOneWinnerAndInstallationBlocksSale(): Unit=runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
+        try {
+            val draft=seed(db);val state=ShiftRepository(db).snapshot()
+            InstallationGate.prepare("sale-test") {Unit}
+            try {SaleRepository(db).commit(draft);fail()} catch(_:IllegalStateException) {} finally {InstallationGate.release("sale-test")}
+            assertTrue(db.sales().history().isEmpty());assertEquals(draft,CheckoutRepository(db).load())
+            val results=coroutineScope {listOf(
+                async(Dispatchers.IO) {runCatching {SaleRepository(db).commit(draft)}},
+                async(Dispatchers.IO) {runCatching {ShiftRepository(db).close("close",state.active!!.id,state.revision,ShiftRules.token(state),0,state.ownerId)}}
+            ).awaitAll()}
+            assertEquals(1,results.count {it.isSuccess})
+            val after=ShiftRepository(db).snapshot();assertEquals(state.revision+1,after.revision)
+            if(results[0].isSuccess) {
+                assertNotNull(after.active);assertEquals(200L,after.currentCash);assertEquals("9",db.catalog().balance("p")!!.quantity)
+            } else {
+                assertNull(after.active);assertTrue(db.sales().history().isEmpty());assertEquals("10",db.catalog().balance("p")!!.quantity)
+            }
         } finally {db.close()}
     }
     @Test fun migrationSixToSevenPreservesShiftDraftAndExactStock(): Unit=runBlocking {
