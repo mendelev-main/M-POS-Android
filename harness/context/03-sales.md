@@ -1,6 +1,6 @@
 # Контекст подготовки03a —2026-10-25
 
-Владелец поручил перед новым этапом сливать готовый блок в main и выпускать релиз. PR1 merge87f57ae после checks40198146760; main release40198464669 выполняется, результат не объявлять до signing/publish. Develop fast-forward к87f57ae. Подготовка03a только docs, финансового кода нет.
+Владелец поручил перед новым этапом сливать готовый блок в main и выпускать релиз. PR1 merge87f57ae после checks40198146760; main release40198464669 success, stable0.1.41.1/code5101 опубликован; отдельный public channel upgrade40199534929 success:production API36,2601→5101,settings/receipt preserved. Develop fast-forward к87f57ae. Подготовка03a только docs, финансового кода нет.
 
 mpos-phase/mpos-domain: pinned shifts.js currentShift/shiftTotals/cashDrawerBalance/open/close просмотрены предметно. Web openingCash наследует countedCash последней закрытой, первая0; close допускает разницу и сохраняет фактический counted. Single-owner boundary03a явно отделена от05employees/auth. Нет переноса Web credentials/внешних действий.
 
