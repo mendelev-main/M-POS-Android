@@ -336,3 +336,9 @@ shift-closed.png1600×1125 после Compose captureToImage просмотре�
 Local41supplemental domain tests cached Kotlin2.1.20/JDK17 и442pinned source regressions passed;6Python/preflight/diff passed. Local android blocked до wrapper sandbox ~/.gradle lock/SDK отсутствует, actual pinned Kotlin2.2.21/Android проверены CI. История ошибок40204979930(JUnit return type),40205417469(optional schema indices),40205795493(success, compositor screenshot stale) сохранена выше; gates не ослаблялись.
 
 03a H01/H02 minimal ci-verified в scopeSHIFT-03A. Нет sale/refund/deposit/withdrawal/employee auth/эквайринга;S01–S05 и full05 остаются planned. Следующий шаг перед03b — релиз готового03a через PRdevelop→main, затем утверждение оставшихся discount/split/delivery/mixed-refund examples и реализация sale transaction/admission/stock snapshot/installation recovery. User tablet tests later сохранено.
+
+## 2026-10-25 — выпуск03a и post-publish проверка
+
+PR2 checks40212763319 success, merge9ab4d4f20263506ddf457ee909a82aafa03aaadc. Main40214423719:checks121232367520/emulator36121232368186/signed121234719552/publish121235596586 success, stable0.1.46.1/code5601/minSdk36 опубликован. Публичные APK/update.json/checksum проверены по bytes/SHA256/commit/package/pinned certificate metadata; signing verifier в CI passed.
+
+Public channel run40216662749/base0.1.41.1 failed before update download: launch old package could not find Settings because System UI ANR overlays it. screen.png действительно показывает System UI isn't responding, old catalog за ним; это не ошибка нового APK/миграции. Verify workflow использовал исходныйPixelC2560×1800/320, тогда как main suite уже использует1600×1125/200. Production-upgrade и Verify переведены на тот же named AVD/3072M/2cores/pre-launch config. Gate/dialog suppression не меняются. Infrastructure-only PR после checks с merge[skip ci] избегает ненужного нового APK; затем manual public-channel verification.

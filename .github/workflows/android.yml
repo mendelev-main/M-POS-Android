@@ -228,6 +228,10 @@ jobs:
           api-level: 36
           arch: x86_64
           profile: pixel_c
+          avd-name: mpos-ci-api36
+          ram-size: 3072M
+          cores: 2
+          pre-emulator-launch-script: python3 scripts/ci/configure-emulator.py --avd mpos-ci-api36
           disable-animations: true
           script: python3 scripts/ci/update-e2e.py --base-apk build/upgrade-base/mpos-native.apk --manifest build/release-channel/update.json
       - name: Real release upgrade evidence
