@@ -248,12 +248,12 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                 } else products[tile.id]?.let { p ->
                     MposWorkspaceTile({onProduct(p)},Modifier.testTag("workspaceProduct:${p.id}"),enabled) {
                         if(p.photoId!=null && folder==null) ProductPhoto(p.photoId,photos,Modifier.fillMaxWidth().height(72.dp))
-                        Text(p.name,style=MaterialTheme.typography.titleSmall)
+                        Text(p.name,style=MaterialTheme.typography.titleSmall,maxLines=if(folder!=null) 2 else Int.MAX_VALUE,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         Text(if(p.price.toBigDecimal().signum()==0) "Ввести цену" else money(p.price),style=MaterialTheme.typography.bodyMedium)
                         if(editing) Text("Настроить размещение",style=MaterialTheme.typography.bodySmall)
                         else {
                             Text(availability[p.id] ?: "",style=MaterialTheme.typography.bodySmall)
-                            if(p.groups.isNotEmpty()) Text("Выбор модификаторов",style=MaterialTheme.typography.bodySmall)
+                            if(p.groups.isNotEmpty() && folder==null) Text("Выбор модификаторов",style=MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
