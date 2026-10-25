@@ -168,8 +168,18 @@ def main():
         with socketserver.TCPServer(("127.0.0.1", PORT), handler) as server:
             threading.Thread(target=server.serve_forever, daemon=True).start()
             print(f"E2E: install base package {PACKAGE}", flush=True)
+            adb("uninstall", PACKAGE, check=False)
+            adb("install", str(base))
             if not production:
-                # Preserve connected-test measurements before the fixture performs its fresh install.
+                # Gradle UTP uninstalls target/test apps after its suite. Seed via the real UI
+                # under an explicit instrumentation lifetime, then keep the target for replacement.
+                test_apk = ROOT / "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
+                adb("install", "-r", str(test_apk))
+                # UTP removes apps after connected tests. Capture scale evidence in an explicit
+                # instrumentation lifetime, just like the existing persistent update seed.
+                scale = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.WorkspaceScaleUiTest",
+                            PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
+                assert "OK (2 tests)" in scale and "FAILURES" not in scale, scale[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
                 for name in ("performance.json", "workspace-portrait150.png", "workspace-landscape150.png"):
@@ -179,12 +189,9 @@ def main():
                     else:
                         assert captured.stdout.startswith(b"\x89PNG"), "Invalid adaptive screenshot"
                     (reports / name).write_bytes(captured.stdout)
-            adb("uninstall", PACKAGE, check=False)
-            adb("install", str(base))
-            if not production:
-                # Gradle UTP uninstalls target/test apps after its suite. Seed via the real UI
-                # under an explicit instrumentation lifetime, then keep the target for replacement.
-                test_apk = ROOT / "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
+                # Keep updater fixtures independent of the performance/rotation fixture data.
+                adb("uninstall", PACKAGE)
+                adb("install", str(base))
                 adb("install", "-r", str(test_apk))
                 result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest",
                              PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
