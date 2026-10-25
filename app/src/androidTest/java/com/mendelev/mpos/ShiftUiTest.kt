@@ -2,6 +2,7 @@ package com.mendelev.mpos
 
 import android.content.Context
 import androidx.compose.ui.test.*
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.platform.app.InstrumentationRegistry
@@ -52,7 +53,7 @@ class ShiftUiTest {
     }
     private fun hideKeyboard() {compose.runOnIdle {(compose.activity.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).hideSoftInputFromWindow(compose.activity.window.decorView.windowToken,0)}}
     private fun screenshot(name: String) {
-        compose.waitForIdle();val bitmap=InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot() ?: error("No screenshot")
+        compose.waitForIdle();val bitmap=compose.onRoot().captureToImage().asAndroidBitmap()
         val file=File(compose.activity.filesDir,"qa/$name.png");file.parentFile!!.mkdirs();file.outputStream().use {bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};bitmap.recycle()
     }
 }
