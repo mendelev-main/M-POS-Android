@@ -1,6 +1,6 @@
 # Этап 02 — Рабочая зона
 
-Статус: 02a/02b ci-verified API36; 02c implemented/CI36 pending; device отложен владельцем2026-10-24
+Статус: 02a/02b ci-verified API36; 02c ci-verified API36/run40172190371; device отложен владельцем2026-10-24
 
 ## Объём
 
@@ -41,6 +41,8 @@ W IDs с tests, rotation/process death и планшетным walkthrough.
 
 02b: [parked/ownership/metadata](../../docs/WORKSPACE-02B.md) ci-verified API36/run40140796798; Room schema5 не меняется, payload current1→2 мигрирует atomically. W03/W04/W05 проверяются отдельно, full02/revalidation02c не закрыты.
 
-02c: [пересчёт с подтверждением](../../docs/WORKSPACE-02C.md) implemented/CI pending. W03/W06 частично; physical и прочие UI критерии отдельно.
+02c: [пересчёт с подтверждением](../../docs/WORKSPACE-02C.md) ci-verified API36/run40172190371. W03/W06 частично; physical и прочие UI критерии отдельно.
 
-02d: [размеры папок и live total](../../docs/WORKSPACE-02D.md) implemented/CI pending. Fixed-slot drag остаётся отдельной частью W01; полный02 не закрыт.
+02d: [размеры папок и live total](../../docs/WORKSPACE-02D.md) ci-verified API36/run40172821096. Fixed-slot drag остаётся отдельной частью W01; полный02 не закрыт.
+
+Итог02d: run40172821096/da8db71 —41JVM/6Python/lint/build,41instrumentation+4UIseed, actual updater success. Fixed-slot drag и физическая приёмка не закрыты.

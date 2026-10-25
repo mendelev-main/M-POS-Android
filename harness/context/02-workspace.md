@@ -45,3 +45,19 @@ W03/W06 revalidation domain/Room/UI automated tests passed на финально
 ## 02d UI начало
 
 Независимо от инфраструктурного gate реализуются два документированных UI gaps02: count-based folder width/columns и live modifier/manual total. Источник pos-navigation.js renderPosFolderModal, pos.html611, cart-composition.js updateModifierSelectionTotal. Контракт WORKSPACE-02D; mpos-domain для partial-price preview, commit validation остаётся strict. Fixed slots/drag не объявляются выполненными. Первый local test ошибочно сравнил BigDecimal scale3.50 vs3.5, fixture приведена к canonical, расчёт верен. Итог локальных/CI далее.
+
+
+## CI gate02c восстановлен
+
+[run40172190371](https://github.com/mendelev-main/M-POS-Android/actions/runs/40172190371), commit3a9a4d0 (runtime приложения прежний2ce31c2): checks121105200829 и emulator36 job121105200646 success.40JVM/0failures,6Python/lint/assemble;41instrumentation+4explicit UI seed. Logs: CATALOG/WORKSPACE/PARKED UPDATE PASSED и UPDATE E2E PASSED, actual package1→2, stock8/current qty5 total15/parked delivery label total5 сохранены. AVD1600×1125/200dpi; screenshot updated-workspace.png имеет1600×1125, просмотрен без системного overlay/перекрытий. Quickstep recovery в логах не вызывался. Это закрывает ранее заблокированный CI gate02c; причина прошлых ANR не доказана, но новая конфигурация успешно прошла сценарий без подавления системных диалогов. Signing/publish skipped на develop, physical deferred.
+
+После этого реализован отдельный02d UI. Финальный runtime da8db71, [run40172821096](https://github.com/mendelev-main/M-POS-Android/actions/runs/40172821096) pending. Не приписывать его новым UI assertions успех run3a9a4d0. Local Android попытка этого продолжения остановилась до wrapper на sandbox ~/.gradle lock (SDK отсутствует); actual Android идёт CI. Fixed-slot/drag/performance/physical остаются открытыми.
+
+
+## 02d итог, следующий шаг
+
+[run40172821096](https://github.com/mendelev-main/M-POS-Android/actions/runs/40172821096), final runtime da8db71: checks121107096327 и emulator36 job121107097017 success.41JVM/0failures,6Python,lint/assembleDebug;41instrumentation и4explicit UI seed tests passed. Обновлённый WorkspaceUiTest подтверждает live total2.5→3 BYN, strict required-group refusal, folder return/recreate; прежние Room/revalidation/parked regression suites проходят. External updater: actual package1→2, CATALOG stock8, current quantity5/total15 BYN, parked delivery label/total5 BYN сохранены. Signing/publish/production-upgrade skipped на develop.
+
+Screenshots workspace-folder/workspace-configuration просмотрены: компактная папка с1товаром, единые Close/buttons, сумма3 BYN при manual2.50+milk0.50; перекрытий в показанных состояниях нет. Снимки на1600×1125/200dpi, viewport1280×900dp. Это второй последовательный успешный полный run с новой AVD конфигурацией (после40172190371); Quickstep recovery в обоих логах не вызывалась. Причина прошлых ANR окончательно не доказана, системные ошибки не подавлялись. Физическая font-scale/orientation/планшетная приёмка отложена пользователем;4колонки/прочие размеры не объявляются device-verified по одному screenshot.
+
+02c gate закрыт,02d UI в указанном scope ci-verified. SQLschema5/payload2, main/stable/key не менялись. Следующая часть W01: persistent fixed slots и drag с atomic CAS/replay/rollback, пустые места и доступная альтернатива перемещению. Большой каталог/performance/Coil и physical acceptance остаются открытыми. Полный02 не закрыт,03 не начинать автоматически.

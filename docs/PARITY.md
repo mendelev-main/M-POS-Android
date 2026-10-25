@@ -9,7 +9,7 @@
 | Acceptance IDs | Web features / adapters | Этап | Статус |
 |---|---|---|---|
 | P01–P10 | product-catalog/configuration/persistence/categories, product-photo | 01 | Core01a/01b/01c, P03 order/appearance/schema4 ci-verified API36 (run40101394875); device/full01 pending; evidence ниже |
-| W01–W07 | pos.html, cart-composition/presentation, receipts, android-pos-stock | 02 | 02a ci-verified API36/run40106275939; 02b ci-verified API36/run40140796798; 02c revalidation implemented/CI36 pending; full W06/W07 не закрыты, device отложен владельцем |
+| W01–W07 | pos.html, cart-composition/presentation, receipts, android-pos-stock | 02 | 02a ci-verified API36/run40106275939; 02b ci-verified API36/run40140796798; 02c revalidation ci-verified API36/run40172190371; 02d UI ci-verified API36/run40172821096; full W06/W07 не закрыты, device отложен владельцем |
 | S01–S05 | payment, receipts, android-safety, stockConsumption | 03 | planned |
 | I01–I04 | inventory, receiving-ui/drafts, purchase-orders, suppliers, warehouse-reporting, android-inventory | 04 | planned |
 | H01–H04 | shifts, employees, analytics, administration guards | 05 | planned |
@@ -84,4 +84,8 @@ W03/W06: pure preview нового snapshot/суммы/состава и explici
 
 ## 02d — папки и сумма конфигурации
 
-W01/W02 UI: ширины папок по числу колонок, адаптация к фактическому месту, пустая папка и предварительная сумма ручной цены+модификаторов — implemented/CI pending. Строгая commit validation сохраняется. [Контракт](WORKSPACE-02D.md). Fixed-slot/drag, performance/physical/full02 остаются открытыми.
+W01/W02 UI: ширины папок по числу колонок, адаптация к фактическому месту, пустая папка и предварительная сумма ручной цены+модификаторов — ci-verified API36/run40172821096. Строгая commit validation сохраняется. [Контракт](WORKSPACE-02D.md). Fixed-slot/drag, performance/physical/full02 остаются открытыми.
+
+02c gate закрыт: [run40172190371](https://github.com/mendelev-main/M-POS-Android/actions/runs/40172190371)/3a9a4d0,40JVM/6Python/41instrumentation+4UIseed, external updater success с current/parked/catalog data preserved. Android36, AVD viewport1280×900dp сохранён при снижении physical resolution. Полный02/device и отдельный02d UI этим run не закрыты.
+
+02d итог: [run40172821096](https://github.com/mendelev-main/M-POS-Android/actions/runs/40172821096)/da8db71,41JVM/6Python/lint/build,41instrumentation+4UIseed и actual updater success; папка/config screenshots reviewed без перекрытий. Точный scope WORKSPACE-02D; fixed slots/drag и full02/device остаются открытыми.
