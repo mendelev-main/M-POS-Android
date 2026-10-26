@@ -18,6 +18,14 @@ require_sdk() {
     exit 1
   fi
 }
+discover_device() {
+  local candidate actual
+  while IFS= read -r candidate; do
+    [[ -n "$candidate" ]] || continue
+    actual="$("$adb" -s "$candidate" emu avd name 2>/dev/null | head -1 | tr -d '\r')" || continue
+    if [[ "$actual" == "$avd" ]]; then export ANDROID_SERIAL="$candidate"; return; fi
+  done < <("$adb" devices | /usr/bin/awk '$1 ~ /^emulator-[0-9]+$/ && $2 == "device" {print $1}')
+}
 check_device() {
   local actual
   actual="$($adb -s "$ANDROID_SERIAL" emu avd name 2>/dev/null | head -1 | tr -d '\r')" || return 1
@@ -26,6 +34,7 @@ check_device() {
 start() {
   require_sdk
   "$adb" start-server >/dev/null
+  discover_device
   if [[ "$($adb -s "$ANDROID_SERIAL" get-state 2>/dev/null || true)" == device ]]; then
     check_device
   else
@@ -74,7 +83,7 @@ case "$command" in
   launch) start; install_app ;;
   test) start; gradle connectedDebugAndroidTest "$@" ;;
   stop)
-    require_sdk; check_device; "$adb" -s "$ANDROID_SERIAL" emu kill
+    require_sdk; discover_device; check_device; "$adb" -s "$ANDROID_SERIAL" emu kill
     for ((attempt=0; attempt<15; attempt++)); do
       if [[ "$("$adb" -s "$ANDROID_SERIAL" get-state 2>/dev/null || true)" != device ]]; then break; fi
       sleep 1

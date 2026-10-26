@@ -1,50 +1,47 @@
 # Локальный Android 16 на Mac
 
-Среда подготовлена отдельно от Git checkout: соседняя папка `../android-local`. Production signing/данные физического планшета не используются. Нативное приложение устанавливается как `com.mendelev.mpos.debug`.
+## Текущий статус —2026-10-27
 
-Официальные источники: [Android SDK tools](https://developer.android.com/studio), [ARM64 image manifest](https://dl.google.com/android/repository/sys-img/google_apis/sys-img2-3.xml).
+Android Studio Rabbit1/2026.2.1 находится в `/Applications/Android Studio.app`; signature `codesign --verify --deep --strict` прошла. Первичная настройка Studio завершена с существующим SDK, без повторной загрузки компонентов и без отправки usage statistics.
 
-## Что установлено
+Планшет **M-POS Android 16 Tablet** зарегистрирован в графическом Device Manager. Запущен именно из Android Studio кнопкой ▶: adb подтвердил `sys.boot_completed=1`, release16/API36, AVD `M_POS_API36`, serial `emulator-5554`. Debug M-POS установлен и открыт, Activity start Status:ok; screenshot1600×1125 просмотрен: каталог/навигация полностью отображаются, системного overlay нет.
 
-- Apple Silicon ARM64, JDK17; официальный Android Emulator37.2.12/build16428233.
-- SDK platform API36, platform-tools/adb, build-tools35.0.0.
-- Google APIs ARM64 Android36 revision7. Архив с официального dl.google.com проверен по checksum из sys-img2-3.xml: SHA1 `5a99183b6d924da606260e45fd41a3eb8eca6eb7`.
-- Официальные command-line tools15859902 ARM64: SHA256 `835b62a26162b229b441d1f6d4680383815a270809eb33522c0d480fa5002c4e`.
-- Gradle8.13: SHA256 совпадает с gradle-wrapper.properties; отдельный local GRADLE_USER_HOME. Кэш зависимостей скопирован из существующего read-only host cache, файлы SDK/AVD/Gradle не коммитятся.
-- AVD `M_POS_API36`, Pixel C,1600×1125px/200dpi (1280×900dp как CI),4096MiB RAM/4cores, порт5560.
+Локальная instrumentation проверка `RefundViewModelTest` —**OK(3tests)** на этом ARM64 Android16. Это отдельный local smoke, не весь CI-suite и не physical tablet acceptance. Test APK после проверки удалён, основное debug приложение оставлено открытым; товары/чеки пользователя тестом не создавались.
 
-Первичная загрузка SDK лицензирована через sdkmanager; скачанные пакеты/архивы в `../android-local`. Большие архивы загружены с официальных адресов частями с проверкой итоговой checksum. System image извлечён в стандартный SDK path; avdmanager успешно создал профиль.
+## Запуск без Terminal
 
-## Запуск из Terminal в папке репозитория
+1. Открыть **Android Studio** из «Программы».
+2. На стартовом экране: **More Actions → Virtual Device Manager**.
+3. Нажать ▶ у **M-POS Android 16 Tablet**.
+4. Открыть M-POS на планшете. Новую debug-сборку можно установить, перетащив APK на окно Android.
+
+[Официальная инструкция Device Manager](https://developer.android.com/studio/run/managing-avds). SDK/профиль уже установлены; новый проект или повторное скачивание Android для этого не требуется.
+
+## Пути и идентичность
+
+- SDK: `/Users/Aleksandr/Library/Android/sdk`.
+- AVD: `/Users/Aleksandr/.android/avd/M_POS_API36.avd`, pointer `M_POS_API36.ini` в той же папке.
+- SDK и AVD перемещены из `../android-local` в стандартные папки с выданным владельцем разрешением. Старые пути сохранены символическими ссылками для совместимости команд.
+- Gradle8.13/tools/cache остаются в `../android-local`. JDK17 —Homebrew `/opt/homebrew/opt/openjdk@17`.
+- Android16/API36 Google APIs ARM64 image revision7, Emulator37.2.12/build16428233, Pixel C1600×1125px/200dpi (1280×900dp),4096MiB RAM/4cores.
+- Package `com.mendelev.mpos.debug`; production signing/package и физические устройства не изменены.
+- Official Android Studio ARM64 DMG SHA256 `16d4a0f8a52413b51869fc18d5bdcdf9cecd38615cd7bb7cf14d51b99d2fef54` проверен по [странице Google](https://developer.android.com/studio).
+- Official command-line tools15859902 SHA256 `835b62a26162b229b441d1f6d4680383815a270809eb33522c0d480fa5002c4e`; ARM64 image SHA1 из official sys-img manifest `5a99183b6d924da606260e45fd41a3eb8eca6eb7`. Gradle SHA256 совпадает с wrapper properties.
+
+## Команды для разработки
 
 ```sh
-/bin/bash ./scripts/local-android.sh status
-/bin/bash ./scripts/local-android.sh run
+/bin/bash scripts/local-android.sh status
+/bin/bash scripts/local-android.sh build
+/bin/bash scripts/local-android.sh launch
+/bin/bash scripts/local-android.sh test
+/bin/bash scripts/local-android.sh stop
 ```
 
-`run` запускает планшет, собирает debug APK, устанавливает его с сохранением данных и открывает M-POS. Повторные сборки инкрементальные. Данные AVD сохраняются между запусками.
+Скрипт обнаруживает уже запущенный **именно M_POS_API36** на emulator serial, включая5554 из Studio; повторный AVD на5560 не создаётся. Если профиль не запущен, fallback стартует на5560, сохраняя проверку имени/API36. Другие emulator/physical devices не используются. Передача `MPOS_ANDROID_LOCAL_ROOT`/`MPOS_JAVA_HOME` поддерживается.
 
-```sh
-/bin/bash ./scripts/local-android.sh launch  # установить/открыть уже собранный APK
-/bin/bash ./scripts/local-android.sh build   # JVM, lint, debug APK
-/bin/bash ./scripts/local-android.sh test    # Android instrumentation на этом AVD
-/bin/bash ./scripts/local-android.sh stop   # остановить только M_POS_API36
-```
+`launch` с открытым Studio-планшетом проверен: reuse5554→APK install Success→Activity Status:ok. Local build:77JVM/0failures/0errors/0skipped, lintDebug/assembleDebug/assembleDebugAndroidTest SUCCESS. Android CI API36 обязателен независимо от local smoke.
 
-Скрипт проверяет имя AVD и API36, использует только emulator-5560; другой эмулятор на этом порту не затрагивает. `MPOS_ANDROID_LOCAL_ROOT` позволяет указать другую папку SDK, `MPOS_JAVA_HOME` — другой JDK17. `MPOS_ANDROID_HEADLESS=1` — стандартный режим без окна, когда среда допускает запуск виртуальной машины. В обычном Mac запускать без него.
+## История первых попыток
 
-Для Finder подготовлены локальные `.command` launchers в outputs чата: «Запустить M-POS Android 16» (сборка+запуск), «Открыть M-POS без сборки» и «Остановить Android 16». Первые два перезапускают только этот AVD, чтобы после headless проверки получить обычное окно. Архивы и готовый APK локальны и не являются новым production release.
-
-## Наблюдённые проверки и ограничения
-
-2026-10-26: первая локальная сборка закреплёнными Gradle8.13/Kotlin2.2.21/JDK17 выполнила `testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest`: BUILD SUCCESSFUL,87tasks. Это первый local Android build evidence, прежний blocker ~/.gradle устранён отдельным writable Gradle cache. `emulator -accel-check` сообщает Hypervisor.Framework доступен; `-list-avds` видит M_POS_API36.
-
-Окно эмулятора **ещё не подтверждено**: процесс агента не может читать CPU sysctl (`hw.optional.neon`: Operation not permitted), Qt GUI прекращается с сообщением NEON, headless запуск получил Illegal instruction. Не изменять бинарники/не отключать CPU checks. Требуется запуск `.command` из обычного Finder/Terminal, вне ограниченного процесса агента; после успешного boot подтвердить `adb ... getprop ro.build.version.sdk`=36 и открыть APK. Локальные instrumentation/GUI acceptance до этого pending. Установка Android Studio для работы этих команд не обязательна; в будущем IDE может использовать этот же SDK/AVD.
-
-Журналы: `../android-local/build.log`, `logs/emulator.log`, `start.log`, `start-headless.log`. Вызов SDK tools из ограниченного агента не является доказательством успешной загрузки Android. CI API36 остаётся обязательным независимо от local environment.
-
-Повторный запуск через готовый скрипт `/bin/bash ./scripts/local-android.sh build assembleDebugAndroidTest`: BUILD SUCCESSFUL5s/87tasks (1executed,86up-to-date),77JVM/0failures. Скрипт закрепляет JDK17, отключает неподдержанное отслеживание FSEvents для Gradle и удаляет конфликтующие deprecated prefs variables только из собственного процесса. Bash3.2 syntax/status/build проверены.
-
-Если двойное нажатие `.command` открывает редактор: контекстное меню →«Открыть в программе»→Terminal, либо `/bin/bash "/полный/путь/к/файлу.command"` в Terminal. В outputs также создан `.app` launcher с корректным Info.plist: явно открывает `.command` через системный Terminal независимо от ассоциации. Launcher ещё требует пользовательского первого запуска; он не отключает macOS protections и не меняет ассоциации файлов.
-
-На этом Mac пользователь подтвердил: `.command` ассоциирован с редактором; запуск через Terminal читает launcher, но прямой exec вложенного `.sh` вернул Operation not permitted. Права файла755; quarantine отсутствует, присутствует macOS provenance. Launcher изменён на явный `/bin/bash ./scripts/local-android.sh` без удаления security attributes или изменения TCC. `/bin/bash ... status` локально проходит. Нужен повторный запуск владельцем для подтверждения загрузки окна.
+2026-10-26 restricted agent process не получил CPU sysctl, Qt abort/NEON и headless SIGILL зафиксированы crash reports. Пользовательский `.command` открывался редактором, затем direct `.sh` exec получил Operation not permitted. Эти попытки не считались успешным Android boot. Графический запуск через настроенную Android Studio2026-10-27 решил задачу; security protections/TCC/quarantine не отключались. Существующие shell launchers используют явный Bash, но основной пользовательский маршрут теперь Device Manager.

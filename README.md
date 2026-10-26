@@ -24,7 +24,7 @@ Harness — наш рабочий контур для агента: план →
 
 ## Локально на Mac
 
-Подготовленная среда Android16/ARM64, команды сборки/запуска планшета и ограничения первого запуска: [LOCAL-ANDROID.md](docs/LOCAL-ANDROID.md). Из обычного Terminal в папке репозитория:
+Android Studio настроена, планшет Android16/ARM64 и локальный запуск M-POS проверены. Графический запуск: **Android Studio → More Actions → Virtual Device Manager → ▶ M-POS Android 16 Tablet**. SDK/профиль, команды для разработки и evidence: [LOCAL-ANDROID.md](docs/LOCAL-ANDROID.md). Дополнительные команды из Terminal в папке репозитория:
 
 ```sh
 /bin/bash ./scripts/local-android.sh run
