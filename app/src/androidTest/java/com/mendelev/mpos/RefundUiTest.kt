@@ -47,7 +47,7 @@ class RefundUiTest {
             SaleRepository(db).acknowledge(receipt.id)
             state.currentCash
         }
-        compose.waitUntil(20_000) {compose.onAllNodesWithText("Рабочая зона").fetchSemanticsNodes().isNotEmpty()}
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("topNav-workspace").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("topNav-workspace").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithText("Чеки").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("topNav-history").performClick()

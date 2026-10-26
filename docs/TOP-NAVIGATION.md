@@ -20,7 +20,7 @@
 
 ## NAV02: размеры и оформление
 
-CSS px → dp/sp на одинаковой доступной ширине и font scale1. Manrope; navy #22273A (dark #10131A), white; неактивный текст white62%, активный фон white14%; shift фон white8%. Панель: padding12×16dp, gap10dp; tabs gap4dp, capsule radius100dp, padding8×14dp, label14sp/600; бренд14sp/700. События: SVG18dp, gap7dp; настройки44×44dp, SVG18dp/stroke1.8. Shift: gap8dp, padding8×14dp, label13.5sp/600; точка8dp с ореолом3dp. Активный оператор сокращается как в Web (фамилия + две инициалы), загрузка/ошибка не изображаются как закрытая смена.
+CSS px → dp/sp на одинаковой доступной ширине и font scale1. Manrope; navy #22273A (dark #10131A), white; неактивный текст white62%, активный фон white14%; shift фон white8%. Панель: padding12×16dp, gap10dp; tabs gap4dp, capsule radius100dp, padding8×14dp, label14sp/600; бренд14sp/700. События: SVG18dp, gap7dp; события и pill смены не получают tab.active, как в source renderTopbar; настройки44×44dp, SVG18dp/stroke1.8. Shift: gap8dp, padding8×14dp, label13.5sp/600; точка8dp с ореолом3dp. Активный оператор сокращается как в Web (фамилия + две инициалы), загрузка/ошибка не изображаются как закрытая смена.
 
 Нормальная высота68dp, компактная62dp; системные safe insets отдельно. При ширине≤700dp: padding9×10dp/gap6dp, tab font12sp/padding8×11dp, shift11sp/padding7×10dp, бренд14sp. Settings44dp задаёт высоту строки. Native variant: текстовая capsule в44dp области нажатия; одна строка с горизонтальной прокруткой на узкой ширине/увеличенном системном шрифте вместо обрезки вкладок. Высота растёт с font scale. Это отдельный shared header variant, обычные кнопки48dp не меняются.
 

@@ -43,7 +43,7 @@ class SaleUiTest {
             SaleRepository(db).unacknowledged()?.let {SaleRepository(db).acknowledge(it)}
             ShiftRepository(db).snapshot().currentCash
         }
-        compose.waitUntil(20_000) {compose.onAllNodesWithText("Рабочая зона").fetchSemanticsNodes().isNotEmpty()}
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("topNav-workspace").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("topNav-workspace").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceCheckout").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("workspaceCheckout").performClick()

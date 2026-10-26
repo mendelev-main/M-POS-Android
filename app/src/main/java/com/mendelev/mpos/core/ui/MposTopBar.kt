@@ -63,14 +63,14 @@ fun MposTopBar(navigation: MposTopNavigation, enabled: Boolean = true) {
                 }
             }
             Spacer(Modifier.weight(1f))
-            TopItem("События", "events", navigation, allowed, compact=compact, icon="bell")
+            TopItem("События", "events", navigation, allowed, compact=compact, icon="bell", selected=false)
             val shiftLabel = when {
                 navigation.shiftLoading -> "Загрузка смены"
                 navigation.shiftUnavailable -> "Смена недоступна"
                 navigation.shiftOpen -> shortEmployeeName(navigation.shiftName)
                 else -> "Открыть смену"
             }
-            TopItem(shiftLabel, "shift", navigation, allowed, compact=compact, shift=true)
+            TopItem(shiftLabel, "shift", navigation, allowed, compact=compact, shift=true, selected=false)
             Box(Modifier.size(44.dp).clip(CircleShape)
                 .background(if(navigation.route=="settings") Color.White.copy(alpha=.14f) else Color.Transparent)
                 .clickable(enabled=allowed, role=Role.Button) { navigation.navigate("settings") }
