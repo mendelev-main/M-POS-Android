@@ -62,3 +62,29 @@ class AccessibleNavigationTests(unittest.TestCase):
         with patch.object(module,"ui_nodes",return_value=[gear]), patch.object(module,"adb") as adb:
             self.assertEqual("Настройки",module.wait_text("^Настройки$",click=True))
         self.assertEqual(("shell","input","tap","1547","67"),adb.call_args.args)
+
+    def test_shift_uses_resource_id_despite_dynamic_employee_label(self):
+        from unittest.mock import patch
+        import xml.etree.ElementTree as ET
+        node=ET.Element("node", {"text":"Иванов И.И.", "resource-id":"topNav-shift", "enabled":"true", "bounds":"[1200,40][1400,95]"})
+        with patch.object(module,"ui_nodes",return_value=[node]), patch.object(module,"adb") as adb:
+            self.assertEqual("Иванов И.И.",module.wait_navigation("shift"))
+        self.assertEqual(("shell","input","tap","1300","67"),adb.call_args.args)
+
+    def test_old_release_without_ids_still_navigates_by_legacy_label(self):
+        from unittest.mock import patch
+        import xml.etree.ElementTree as ET
+        node=ET.Element("node", {"text":"Смена", "enabled":"true", "bounds":"[1200,40][1400,95]"})
+        with patch.object(module,"ui_nodes",return_value=[node]), patch.object(module,"adb") as adb:
+            self.assertEqual("Смена",module.wait_navigation("shift"))
+        self.assertEqual(1,adb.call_count)
+
+    def test_disabled_modern_navigation_cannot_fall_back_to_a_similarly_named_text(self):
+        from unittest.mock import patch
+        import xml.etree.ElementTree as ET
+        locked=ET.Element("node", {"text":"Иванов И.И.", "resource-id":"topNav-shift", "enabled":"false", "bounds":"[1200,40][1400,95]"})
+        heading=ET.Element("node", {"text":"Смена", "enabled":"true", "bounds":"[20,140][200,195]"})
+        with patch.object(module,"ui_nodes",return_value=[locked,heading]), patch.object(module,"adb") as adb, patch.object(module.time,"monotonic",side_effect=[0,0,2]), patch.object(module.time,"sleep"):
+            with self.assertRaisesRegex(AssertionError,"topNav-shift"):
+                module.wait_navigation("shift",timeout=1)
+        adb.assert_not_called()

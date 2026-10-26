@@ -47,7 +47,7 @@ private val destinations = listOf(
 fun MposTopBar(navigation: MposTopNavigation, enabled: Boolean = true) {
     val allowed = enabled && !navigation.shiftPending
     val navy = if (isSystemInDarkTheme()) Color(0xFF10131A) else Color(0xFF22273A)
-    BoxWithConstraints(Modifier.fillMaxWidth().background(navy).testTag("mposTopBar")) {
+    BoxWithConstraints(Modifier.fillMaxWidth().background(navy).testTag("mposTopBar").semantics { testTagsAsResourceId=true }) {
         val compact = maxWidth <= 700.dp
         Row(
             Modifier.horizontalScroll(rememberScrollState()).widthIn(min=maxWidth)

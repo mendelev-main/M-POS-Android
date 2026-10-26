@@ -33,3 +33,5 @@ Shared `MposTopBar` вызывается из `MposAppBar` через общий
 ## Приёмка
 
 NAV01: переходы по всем постоянным вкладкам, реальные/будущие страницы и восстановление выбранной вкладки после Activity recreation. NAV02: широкая/узкая геометрия, прокрутка до настроек, активное состояние, screenshot на API36; парная Web/native сверка отдельно. NAV03: disabled callback и блокировка переходов из редактора; существующие sale/refund recovery tests должны остаться зелёными. Physical tablet acceptance отложен владельцем. Ссылки на выполненные проверки и ограничения — `harness/build-log.md`; наличие этого файла не означает verified.
+
+Автоматизация APK-upgrade использует accessibility resource IDs `topNav-{route}`, экспортированные из shared header; подпись активного сотрудника не является селектором. Для старых опубликованных APK сохраняется fallback по прежним точным текстам. При наличии disabled modern ID fallback не применяется. NAV instrumentation проверяет реальное присутствие ID через AccessibilityNodeInfo.

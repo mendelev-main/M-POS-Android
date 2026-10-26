@@ -46,9 +46,9 @@ def launcher_anr_close(nodes):
                  and n.get("text") == "Close app" and n.get("enabled") == "true"), None)
 
 
-def wait_text(pattern, timeout=75, click=False):
+def wait_text(pattern, timeout=75, click=False, preferred_resource_id=None):
     global _launcher_recovery_used
-    print(f"E2E UI: {pattern}; click={click}", flush=True)
+    print(f"E2E UI: {preferred_resource_id or pattern}; click={click}", flush=True)
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
@@ -66,8 +66,11 @@ def wait_text(pattern, timeout=75, click=False):
                 print("E2E INFRA: closing Quickstep launcher ANR once; M-POS assertions remain mandatory", flush=True)
                 adb("shell", "input", "tap", str((x1+x2)//2), str((y1+y2)//2))
                 continue
-            for node in nodes:
-                if re.search(pattern, (node.get("text", "") or node.get("content-desc", "")), re.I) and node.get("enabled", "true") == "true":
+            preferred = [n for n in nodes if preferred_resource_id and n.get("resource-id") == preferred_resource_id]
+            # If the modern control exists but is disabled, never click a legacy text elsewhere.
+            for node in preferred or nodes:
+                matches = bool(preferred) or re.search(pattern, (node.get("text", "") or node.get("content-desc", "")), re.I)
+                if matches and node.get("enabled", "true") == "true":
                     if click:
                         x1, y1, x2, y2 = map(int, re.findall(r"\d+", node.get("bounds", "")))
                         adb("shell", "input", "tap", str((x1+x2)//2), str((y1+y2)//2))
@@ -75,7 +78,13 @@ def wait_text(pattern, timeout=75, click=False):
         except (ET.ParseError, ValueError):
             pass
         time.sleep(1)
-    raise AssertionError(f"UI text not found: {pattern}")
+    raise AssertionError(f"UI control not found: {preferred_resource_id or pattern}")
+
+
+def wait_navigation(route, timeout=75, click=True):
+    # Stable IDs for the new header, exact legacy labels for APKs published before NAV01.
+    legacy = {"workspace": r"^(Рабочая зона|M POS)$", "shift": r"^Смена$", "settings": r"^Настройки$"}
+    return wait_text(legacy[route], timeout=timeout, click=click, preferred_resource_id="topNav-"+route)
 
 
 def scroll_catalog_to_product(name):
@@ -108,7 +117,7 @@ def launch(fixture=True):
         try:
             # Do not use am -W: API 28 can retain a waiter for an Activity killed by package replacement.
             adb(*args, timeout=15)
-            wait_text("^Настройки$", timeout=12, click=True)
+            wait_navigation("settings", timeout=12)
             wait_text("^Обновления приложения$", timeout=12)
             return
         except (AssertionError, subprocess.TimeoutExpired):
@@ -220,7 +229,7 @@ def main():
                 # Recover only the already-supported, exact Quickstep infrastructure ANR before UI captures.
                 # Unknown/system/M-POS dialogs are not dismissed by wait_text.
                 adb("shell", "am", "start", "-W", "-n", PACKAGE + "/com.mendelev.mpos.MainActivity")
-                wait_text("^M POS$")
+                wait_navigation("workspace", click=False)
                 result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
                              PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
                 assert "OK (8 tests)" in result and "FAILURES" not in result, result[-4000:]
@@ -296,7 +305,7 @@ def main():
                 wait_text("^8 шт$")
                 (reports / "updated-catalog.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("CATALOG UPDATE PASSED: Room product and stock=8 survived actual package replacement", flush=True)
-                wait_text("^M POS$", click=True)
+                wait_navigation("workspace")
                 wait_text("^" + re.escape(expected_workspace_line) + "$")
                 wait_text("^Предварительно: 15 BYN$")
                 wait_text("^3 BYN × 5 шт$")
@@ -314,7 +323,7 @@ def main():
                 wait_text(r"(?:^|\n)Место 8(?:$|\n)")
                 (reports / "updated-home.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("HOME UPDATE PASSED: custom product tile and slot8 survived package replacement", flush=True)
-                wait_text("^Смена$", click=True)
+                wait_navigation("shift")
                 wait_text("^Смена открыта$")
                 wait_text(re.escape(expected_shift))
                 wait_text("^Наличные при открытии: 140,00 BYN$")

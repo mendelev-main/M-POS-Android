@@ -10,6 +10,15 @@ class TopNavigationUiTest {
     @get:Rule val compose=createAndroidComposeRule<MainActivity>()
     @Test fun allSourceTabsReachTheirRouteAndSurviveRecreation() {
         compose.waitUntil(20_000) {compose.onAllNodesWithText("Добавить товар").fetchSemanticsNodes().isNotEmpty()}
+        // The external APK-upgrade driver must target this control independently of employee names.
+        compose.waitUntil(10_000) {
+            fun exposed(node: android.view.accessibility.AccessibilityNodeInfo?): Boolean {
+                if(node==null) return false
+                if(node.viewIdResourceName=="topNav-shift") return true
+                return (0 until node.childCount).any {exposed(node.getChild(it))}
+            }
+            exposed(androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation.rootInActiveWindow)
+        }
         for(route in listOf("purchaseOrders","receiving","analytics","bookings","events")) {
             compose.onNodeWithTag("topNav-$route").performScrollTo().performClick()
             if(route=="events") compose.onNodeWithTag("topNav-$route").assertIsNotSelected()
