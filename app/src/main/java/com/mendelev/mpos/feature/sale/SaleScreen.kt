@@ -28,8 +28,8 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
 @Composable fun SaleScreen(model: SaleViewModel,history: Boolean,onBack: ()->Unit,onHistory: ()->Unit,onShift: ()->Unit) {
     val ui by model.state.collectAsStateWithLifecycle()
     LaunchedEffect(history) {model.refresh()}
-    val locked=ui.pending || ui.unresolved!=null
-    BackHandler {if(!ui.pending && ui.unresolved==null) {if(ui.preview!=null) model.dismissPreview() else onBack()}}
+    val locked=ui.pending || ui.unresolved!=null || ui.splitUncertain || (ui.split?.paid?.isNotEmpty()==true && ui.completed==null)
+    BackHandler {if(!ui.pending) {if(ui.partPreview!=null) model.dismissPart() else if(ui.preview!=null) model.dismissPreview() else if(!locked) onBack()}}
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
         MposAppBar(if(history) "M-POS · История чеков" else "M-POS · Оплата") {
             MposNavigationAction("Назад",{if(!locked) onBack()})
@@ -56,6 +56,8 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {ReceiptBody(ui.completed!!)}
                 MposButton("Готово",{model.finish(onBack)},Modifier.fillMaxWidth().testTag("saleDone"),busy=ui.pending)
             }
+        } else if(ui.split!=null) {
+            SplitCheckout(ui,model)
         } else {
             val work=ui.work!!;val f=ui.form;val enabled=!locked
             if(ui.message!=null) MposNotice(ui.message!!,true)
@@ -87,13 +89,13 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
                 }
                 item {
                     Text("Способ оплаты",style=MaterialTheme.typography.titleMedium)
-                    MposSelect("Оплата",f.mode,listOf("cash" to "Наличные","card" to "Карта","split" to "Разделить / смешанная"),{v->model.edit {it.copy(mode=v)}},enabled)
+                    MposSelect("Оплата",f.mode,listOf("cash" to "Наличные","card" to "Карта","split" to "Разделить / смешанная"),{v->model.edit {it.copy(mode=v)}},enabled,Modifier.testTag("saleMode"))
                     if(f.mode=="cash") MposField(f.given,{v->model.edit {it.copy(given=v)}},"Получено наличными, BYN",Modifier.testTag("cashGiven"),enabled,numeric=true)
                     if(f.mode=="split") {
-                        Text("Части — подготовленные суммы. Все части подтверждаются вместе.",style=MaterialTheme.typography.bodySmall)
+                        Text("Сначала сохраните части. Затем подтвердите каждую отдельно; наличные вводятся при оплате части.",style=MaterialTheme.typography.bodySmall)
                         var count by remember {mutableStateOf("2")}
                         MposField(count,{count=it},"Количество равных частей (2–10)",Modifier.testTag("splitCount"),enabled,numeric=true)
-                        MposButton("Разделить поровну",{model.equal(count.toIntOrNull() ?: 0)},enabled=enabled,style=ActionStyle.Secondary)
+                        MposButton("Разделить поровну",{model.equal(count.toIntOrNull() ?: 0)},Modifier.testTag("splitEqual"),enabled=enabled,style=ActionStyle.Secondary)
                     }
                 }
                 if(f.mode=="split") items(f.parts.indices.toList(),key={"part$it"}) {i->
@@ -110,6 +112,7 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
             }
             model.estimate()?.let {Text("Итого: ${money(it.total)}",Modifier.padding(horizontal=20.dp),style=MaterialTheme.typography.titleMedium)}
             if(ui.unresolved!=null) MposButton("Проверить результат оплаты",model::commit,Modifier.fillMaxWidth().padding(16.dp).testTag("saleResolve"),busy=ui.pending)
+            else if(f.mode=="split") MposButton("Начать оплату по частям",model::startSplit,Modifier.fillMaxWidth().padding(16.dp).testTag("splitStart"),enabled=work.cart.lines.isNotEmpty() && ui.shift?.active!=null,busy=ui.pending)
             else MposButton("Проверить оплату",model::prepare,Modifier.fillMaxWidth().padding(16.dp).testTag("salePrepare"),enabled=work.cart.lines.isNotEmpty() && ui.shift?.active!=null,busy=ui.pending)
         }
     }
@@ -127,8 +130,62 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
         if(ui.message!=null) MposNotice(ui.message!!,true)
         MposButton("Подтвердить оплату",model::commit,Modifier.fillMaxWidth().testTag("saleConfirm"),busy=ui.pending)
     }
+    ui.partPreview?.let {part->MposDialog("Подтверждение части",model::dismissPart,!ui.pending,wide=true) {
+        Text("${if(part.payment.method=="cash") "Наличные" else "Карта"}: ${money(part.payment.amount)}",Modifier.testTag("splitPreviewAmount"),style=MaterialTheme.typography.titleLarge)
+        if(part.payment.method=="cash") {
+            val given=part.payment.given!!
+            Text("Получено: ${money(given)}")
+            Text("Сдача: ${money(given-part.payment.amount)}",Modifier.testTag("splitPreviewChange"))
+        } else Text("Подтвердите только после оплаты на терминале. Приложение учитывает карту вручную.")
+        Text("Подтверждённую часть нельзя изменить или отменить. Чек будет завершён после подтверждения всех частей.")
+        MposButton("Подтвердить часть",model::confirmPart,Modifier.fillMaxWidth().testTag("splitConfirm"),busy=ui.pending)
+    }}
     ui.selected?.let {selected->MposDialog("Чек №${selected.first.number}",model::closeDetails,wide=true) {
         Column(Modifier.heightIn(max=500.dp).verticalScroll(rememberScrollState()).testTag("receiptDetails")) {ReceiptBody(selected)}
+    }}
+}
+@Composable private fun SplitCheckout(ui: SaleUi,model: SaleViewModel) {
+    val progress=ui.split!!;val state=progress.editable();val enabled=!ui.pending && !ui.splitUncertain && ui.unresolved==null
+    var editor by remember {mutableStateOf<Pair<String,Long>?>(null)}
+    var input by remember {mutableStateOf("")}
+    fun open(kind: String,id: Long,value: String) {input=value;editor=kind to id}
+    Column(Modifier.fillMaxSize()) {
+        if(ui.message!=null) MposNotice(ui.message!!,true)
+        LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal=20.dp).testTag("splitParts"),verticalArrangement=Arrangement.spacedBy(12.dp),contentPadding=PaddingValues(vertical=16.dp)) {
+            item {
+                Text("Оплата по частям",style=MaterialTheme.typography.headlineSmall)
+                Text("Итого: ${money(state.total)}",Modifier.testTag("splitTotal"))
+                Text("Подтверждено: ${money(progress.paidAmount)} · Осталось: ${money(state.total-progress.paidAmount)}",Modifier.testTag("splitRemaining"))
+                Text("Наличные по незавершённой оплате: ${money(progress.pendingCash)}",Modifier.testTag("splitPendingCash"))
+                Text("В кассе по завершённым чекам: ${money(ui.shift!!.currentCash)}")
+                Text(if(progress.complete) "Все части подтверждены. Сохраните чек, чтобы завершить продажу и списать товары." else "Подтверждённые части сохранены и недоступны для изменений. Склад и итог кассы обновятся при завершении чека.")
+                if(!progress.complete) MposButton("Количество частей: ${state.parts.size}",{open("count",0,state.parts.size.toString())},Modifier.testTag("splitResize"),enabled,style=ActionStyle.Secondary)
+            }
+            items(state.parts,key={it.id}) {part->
+                val p=part.payment;val editable=enabled && !part.paid && !progress.complete
+                Surface(shape=MaterialTheme.shapes.large) {Column(Modifier.fillMaxWidth().padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                    Text("Часть ${state.parts.indexOf(part)+1} · ${if(part.paid) "Оплачено" else "Не оплачено"}",Modifier.testTag("splitStatus:${part.id}"),style=MaterialTheme.typography.titleMedium)
+                    Text(money(p.amount),Modifier.testTag("splitAmount:${part.id}"),style=MaterialTheme.typography.titleLarge)
+                    MposSelect("Способ части",p.method,listOf("cash" to "Наличные","card" to "Карта"),{model.changeSplit(SplitEdit.Method(part.id,it))},editable,Modifier.testTag("splitMethod:${part.id}"))
+                    MposButton("Изменить сумму",{open("amount",part.id,java.math.BigDecimal.valueOf(p.amount,2).toPlainString())},Modifier.testTag("splitEditAmount:${part.id}"),editable,style=ActionStyle.Secondary)
+                    if(p.method=="cash") {
+                        Text("Получено: ${p.given?.let(::money) ?: "не введено"}",Modifier.testTag("splitGiven:${part.id}"))
+                        if(p.given!=null && p.given>=p.amount) Text("Сдача: ${money(p.given-p.amount)}")
+                        MposButton("Ввести наличные",{open("given",part.id,p.given?.let {java.math.BigDecimal.valueOf(it,2).toPlainString()} ?: "")},Modifier.testTag("splitEditGiven:${part.id}"),editable,style=ActionStyle.Secondary)
+                    }
+                    MposButton(if(part.paid) "Часть подтверждена" else "Оплатить часть",{model.reviewPart(part.id)},Modifier.fillMaxWidth().testTag("splitPay:${part.id}"),editable)
+                }}
+            }
+            if(progress.paid.isEmpty()) item {MposButton("Вернуться к подготовке заказа",model::leaveSplit,Modifier.testTag("splitCancel"),enabled,style=ActionStyle.Secondary)}
+        }
+        if(ui.splitUncertain) MposButton("Прочитать сохранённую оплату",model::refresh,Modifier.fillMaxWidth().padding(16.dp).testTag("splitReload"),busy=ui.pending)
+        else if(ui.unresolved!=null) MposButton("Проверить результат оплаты",model::commit,Modifier.fillMaxWidth().padding(16.dp).testTag("saleResolve"),busy=ui.pending)
+        else if(progress.complete) MposButton("Завершить продажу",model::completeSplit,Modifier.fillMaxWidth().padding(16.dp).testTag("splitFinish"),busy=ui.pending)
+    }
+    editor?.let {(kind,id)->MposDialog(when(kind) {"count"->"Количество частей";"amount"->"Сумма части";else->"Получено наличными"},{if(!ui.pending) editor=null},!ui.pending) {
+        MposField(input,{input=it},if(kind=="count") "Части (2–10)" else "Сумма, BYN",Modifier.testTag("splitEditValue"),!ui.pending,numeric=true)
+        Text(if(kind=="count") "Подтверждённые части сохранятся. Неоплаченный остаток распределится поровну." else if(kind=="amount") "Остаток перераспределится между неоплаченными частями." else "Введите принятую сумму. Пустое поле очищает неподтверждённый ввод.")
+        MposButton("Сохранить",{model.splitValue(kind,id,input);editor=null},Modifier.fillMaxWidth().testTag("splitEditSave"),enabled,busy=ui.pending)
     }}
 }
 @Composable private fun ReceiptBody(value: Pair<ReceiptEntity,ReceiptSnapshot>) {

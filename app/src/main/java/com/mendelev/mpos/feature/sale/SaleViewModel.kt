@@ -1,5 +1,6 @@
 package com.mendelev.mpos.feature.sale
 
+import androidx.room.withTransaction
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mendelev.mpos.data.local.*
@@ -19,9 +20,9 @@ data class SaleUi(val loading: Boolean=true,val pending: Boolean=false,val fatal
     val work: WorkspaceSnapshot?=null,val shift: ShiftSnapshot?=null,val draft: SavedCheckout?=null,val draftRevision: Long=0,
     val form: SaleForm=SaleForm(),val preview: SavedCheckout?=null,val quote: SaleQuote?=null,val payment: SalePayment?=null,
     val completed: Pair<ReceiptEntity,ReceiptSnapshot>?=null,val history: List<ReceiptEntity> = emptyList(),val selected: Pair<ReceiptEntity,ReceiptSnapshot>?=null,
-    val unresolved: SavedCheckout?=null)
+    val unresolved: SavedCheckout?=null,val split: SplitProgress?=null,val partPreview: SplitPart?=null,val splitUncertain: Boolean=false)
 class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
-    private val repo=SaleRepository(db);private val checkout=CheckoutRepository(db)
+    private val repo=SaleRepository(db);private val checkout=CheckoutRepository(db);private val splits=SplitPaymentRepository(db)
     private val mutable=MutableStateFlow(SaleUi());val state=mutable.asStateFlow()
     private fun decimal(value: Long)=BigDecimal.valueOf(value,2).toPlainString()
     private fun form(d: CheckoutDraft?,w: WorkspaceSnapshot): SaleForm {
@@ -36,24 +37,102 @@ class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
         mutable.update {it.copy(pending=true,message=null,preview=null)}
         viewModelScope.launch {
             try {
-                val next=withContext(Dispatchers.IO) {
-                    WorkspaceRepository(db).initialize();ShiftRepository(db).initialize()
-                    val w=WorkspaceRepository(db).snapshot();val s=ShiftRepository(db).snapshot();val d=checkout.load()
-                    SaleUi(loading=false,work=w,shift=s,draft=d,draftRevision=checkout.revision(),form=form(d?.draft,w),history=repo.history(),
-                        completed=repo.unacknowledged()?.let {repo.receipt(it)})
-                }
+                val next=withContext(Dispatchers.IO) {readState()}
                 mutable.value=next
             } catch(e:CancellationException) {throw e}
             catch(_:Exception) {mutable.update {it.copy(loading=false,fatal=true,message="Не удалось прочитать оплату. Данные сохранены; повторите открытие")}}
             finally {mutable.update {it.copy(pending=false)}}
         }
     }
-    fun edit(change: (SaleForm)->SaleForm) {if(!state.value.pending && state.value.unresolved==null) mutable.update {it.copy(form=change(it.form),preview=null,message=null)}}
+    private suspend fun readState(): SaleUi=db.withTransaction {
+        WorkspaceRepository(db).initialize();ShiftRepository(db).initialize()
+        val w=WorkspaceRepository(db).snapshot();val s=ShiftRepository(db).snapshot();val d=checkout.load();val progress=splits.load()
+        if(progress!=null && progress.checkout!=d) error("Сохранённые части не совпадают с оплатой")
+        val split=progress ?: d?.takeIf {it.draft.parts.size>1}?.let {SplitProgress(splits.revision(),it,emptySet(),format=2)}
+        SaleUi(loading=false,work=w,shift=s,draft=d,draftRevision=checkout.revision(),form=form(d?.draft,w),history=repo.history(),
+            completed=repo.unacknowledged()?.let {repo.receipt(it)},split=split)
+    }
+    private fun splitOperation(block: suspend ()->Unit) {
+        if(state.value.pending || state.value.splitUncertain || state.value.unresolved!=null) return
+        val previousForm=state.value.form
+        mutable.update {it.copy(pending=true,message=null,partPreview=null)}
+        viewModelScope.launch {
+            try {
+                val next=withContext(Dispatchers.IO) {block();readState()}
+                mutable.value=next
+            } catch(e:CancellationException) {throw e}
+            catch(e:Exception) {
+                try {
+                    val next=withContext(Dispatchers.IO) {readState()}
+                    mutable.value=next.copy(form=if(next.split==null) previousForm else next.form,message=if(e is IllegalArgumentException) e.message else "Не удалось сохранить изменение. Показано сохранённое состояние; повторите действие")
+                } catch(e2:CancellationException) {throw e2}
+                catch(_:Exception) {mutable.update {it.copy(splitUncertain=true,message="Не удалось прочитать результат. Повторите открытие сохранённой оплаты; новые действия временно запрещены")}}
+            } finally {mutable.update {it.copy(pending=false)}}
+        }
+    }
+    fun startSplit() {
+        val ui=state.value
+        if(ui.loading || ui.fatal || ui.completed!=null || ui.split!=null) return
+        splitOperation {
+            val w=ui.work!!;val s=ui.shift!!;val active=s.active ?: throw CatalogFailure("shift","Откройте смену перед оплатой")
+            val q=quote(ui);val f=ui.form
+            val parts=f.parts.map {PaymentInput(it.method,ShiftRules.cash(it.amount),if(it.method=="cash" && it.given.isNotBlank()) ShiftRules.cash(it.given) else null)}
+            val old=ui.draft?.draft
+            val command=old?.takeIf {it.sessionId==w.cart.sessionId && it.cartRevision==w.cartRevision && it.shiftId==active.id && it.shiftRevision==s.revision}?.commandId ?: UUID.randomUUID().toString()
+            checkout.saveSplit(ui.draftRevision,CheckoutDraft(command,w.cart.sessionId,w.cartRevision,active.id,s.revision,s.ownerId,
+                f.discounts.filterValues {it.type!="none"}.mapValues {SaleDiscount(it.value.type,it.value.value)},q.delivery,parts))
+        }
+    }
+    fun changeSplit(action: SplitEdit) {
+        val p=state.value.split ?: return
+        splitOperation {
+            if(p.paid.isEmpty()) {
+                val edited=action.apply(p.editable())
+                // Before any confirmation IDs have no financial result; checkout1 stores the inputs.
+                checkout.saveSplit(p.checkout.revision,p.checkout.draft.copy(parts=edited.parts.map {it.payment}))
+            } else splits.edit(UUID.randomUUID().toString(),p.checkout,p.revision,action)
+        }
+    }
+    fun splitValue(kind: String,id: Long,value: String) {
+        try {changeSplit(when(kind) {
+            "count"->SplitEdit.Count(value.toIntOrNull() ?: 0)
+            "amount"->SplitEdit.Amount(id,ShiftRules.cash(value))
+            else->SplitEdit.Given(id,if(value.isBlank()) null else ShiftRules.cash(value))
+        })} catch(e:Exception) {error(e,"Проверьте сумму")}
+    }
+    fun reviewPart(id: Long) {
+        val ui=state.value;if(ui.pending || ui.splitUncertain || ui.unresolved!=null) return
+        try {
+            val p=ui.split ?: return;val target=p.editable().parts.single {it.id==id}
+            if(target.paid) return
+            SplitEditor.validate(p.editable().copy(parts=p.editable().parts.map {if(it.id==id) it.copy(paid=true) else it}))
+            mutable.update {it.copy(partPreview=target,message=null)}
+        } catch(e:Exception) {error(e,"Проверьте часть оплаты")}
+    }
+    fun dismissPart() {if(!state.value.pending) mutable.update {it.copy(partPreview=null)}}
+    fun confirmPart() {
+        val ui=state.value;val p=ui.split ?: return;val target=ui.partPreview ?: return
+        splitOperation {splits.confirmPart(p.checkout,target.id,target.payment,p.revision)}
+    }
+    fun completeSplit() {
+        val ui=state.value;val p=ui.split ?: return
+        if(ui.pending || ui.splitUncertain || !p.complete) return
+        try {
+            val q=quote(ui);val payment=SaleMoney.payments(q,p.checkout.draft.parts,ui.shift!!.currentCash)
+            mutable.update {it.copy(preview=p.checkout,quote=q,payment=payment,message=null)}
+        } catch(e:Exception) {error(e,"Не удалось подготовить завершение продажи")}
+    }
+    fun leaveSplit() {
+        val p=state.value.split ?: return
+        if(p.paid.isNotEmpty()) return
+        splitOperation {checkout.discard(p.checkout.revision)}
+    }
+    fun edit(change: (SaleForm)->SaleForm) {if(!state.value.pending && state.value.unresolved==null && state.value.split==null && !state.value.splitUncertain) mutable.update {it.copy(form=change(it.form),preview=null,message=null)}}
     fun dismissPreview() {if(!state.value.pending) mutable.update {it.copy(preview=null)}}
     fun equal(count: Int) {
         try {
             val values=SaleMoney.equalParts(quote(state.value).total,count)
-            edit {it.copy(mode="split",parts=values.map {v->PartField("cash",decimal(v),decimal(v))})}
+            edit {it.copy(mode="split",parts=values.map {v->PartField("cash",decimal(v),"")})}
         } catch(e:Exception) {mutable.update {it.copy(message=e.message ?: "Проверьте сумму заказа")}}
     }
     private fun quote(ui: SaleUi): SaleQuote {
@@ -64,7 +143,7 @@ class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
     }
     fun estimate(): SaleQuote?=runCatching {quote(state.value)}.getOrNull()
     fun prepare() {
-        val ui=state.value;if(ui.loading || ui.pending || ui.fatal || ui.unresolved!=null || ui.completed!=null) return
+        val ui=state.value;if(ui.loading || ui.pending || ui.fatal || ui.unresolved!=null || ui.completed!=null || ui.split!=null) return
         mutable.update {it.copy(pending=true,message=null)}
         viewModelScope.launch {
             try {

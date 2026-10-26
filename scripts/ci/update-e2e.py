@@ -194,12 +194,12 @@ def main():
                 adb("uninstall", PACKAGE)
                 adb("install", str(base))
                 adb("install", "-r", str(test_apk))
-                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest",
+                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest",
                                 PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
-                assert "OK (1 test)" in financial and "FAILURES" not in financial, financial[-4000:]
-                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
+                assert "OK (2 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
+                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
                              PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
-                assert "OK (6 tests)" in result and "FAILURES" not in result, result[-4000:]
+                assert "OK (7 tests)" in result and "FAILURES" not in result, result[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
                 expected_shift = adb("shell", "run-as", PACKAGE, "cat", "files/qa/shiftId.txt").strip()
@@ -216,7 +216,7 @@ def main():
                 assert expected_workspace_line, "UI setup must create a real persistent current cart"
                 expected_parked_label = adb("shell", "run-as", PACKAGE, "cat", "files/qa/parkedLabel.txt").strip()
                 assert expected_parked_label, "UI setup must create a real parked order"
-                for name in ("sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders"):
+                for name in ("split-confirm", "split-progress", "sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders"):
                     captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
                     assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
                     (reports / f"{name}.png").write_bytes(captured.stdout)
@@ -297,10 +297,11 @@ def main():
                 (reports / "updated-shift.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("SHIFT UPDATE PASSED: active shift identity and opening140 BYN survived package replacement", flush=True)
                 adb("install", "-r", str(test_apk))
-                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest",
+                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest",
                                 "-e", "saleUpgradeMode", "verify", PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
-                assert "OK (1 test)" in financial and "FAILURES" not in financial, financial[-4000:]
+                assert "OK (2 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
                 adb("uninstall", PACKAGE + ".test")
+                print("SPLIT UPDATE PASSED: dedicated partial progress2, stable IDs, unpaid tender and replay survived APK replacement")
                 print("SALE UPDATE PASSED: dedicated Room receipt snapshot, ledger, result, shift cash and cleared draft survived APK replacement; replay did not duplicate sale", flush=True)
 
             print(f"UPDATE E2E PASSED: package={PACKAGE}, check/download/restore/cancel/system install {base_code}→{target_code}; app-private data preserved")

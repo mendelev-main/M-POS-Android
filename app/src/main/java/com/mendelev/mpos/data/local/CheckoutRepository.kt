@@ -51,7 +51,10 @@ class CheckoutRepository(private val db: CatalogDatabase,private val afterWrite:
         }
     }
     suspend fun revision(): Long=db.withTransaction {db.workspace().document(key)?.revision ?: 0}
-    suspend fun save(expectedRevision: Long,draft: CheckoutDraft): SavedCheckout=InstallationGate.write {db.withTransaction {
+    suspend fun save(expectedRevision: Long,draft: CheckoutDraft): SavedCheckout=saveInputs(expectedRevision,draft,false)
+    /** Unpaid split inputs may lack tender. No paid flags or financial postings are created here. */
+    suspend fun saveSplit(expectedRevision: Long,draft: CheckoutDraft): SavedCheckout=saveInputs(expectedRevision,draft,true)
+    private suspend fun saveInputs(expectedRevision: Long,draft: CheckoutDraft,split: Boolean): SavedCheckout=InstallationGate.write {db.withTransaction {
         SplitPaymentRepository(db).requireNone()
         val old=db.workspace().document(key)
         if((old?.revision ?: 0)!=expectedRevision) conflict()
@@ -67,10 +70,14 @@ class CheckoutRepository(private val db: CatalogDatabase,private val afterWrite:
         if(cart.lines.any {line->line.references.any {(id,rev)->products[id]?.revision!=rev}}) conflict()
         if(draft.discounts.keys.any {id->cart.lines.none {it.id==id}}) conflict()
         // A delivery tariff must be explicitly selected, including a free tariff.
-        SaleMoney.quote(cart.lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity,draft.discounts[it.id])},cart.details.type,draft.delivery)
+        val quote=SaleMoney.quote(cart.lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity,draft.discounts[it.id])},cart.details.type,draft.delivery)
+        if(split) {
+            require(draft.parts.size in 2..10)
+            SaleMoney.payments(quote,draft.parts.map {if(it.method=="cash" && it.given==null) it.copy(given=it.amount) else it},state.currentCash)
+        }
         require(draft.parts.size<=10)
         draft.parts.forEach {p->require(p.amount>=0 && when(p.method) {
-            "cash"->p.given!=null && p.given>=p.amount
+            "cash"->if(split && p.given==null) true else p.given!=null && p.given>=p.amount
             "card"->p.given==null
             else->false
         })}
