@@ -125,7 +125,7 @@ class ProductExtrasTest {
             legacy.execSQL("INSERT INTO operation_results VALUES (?,?,?)",arrayOf("milk","product:"+old.fingerprint(),"milk"))
             legacy.version=2
         } finally { legacy.close() }
-        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_2_3,CatalogDatabase.MIGRATION_3_4,CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6).build()
+        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_2_3,CatalogDatabase.MIGRATION_3_4,CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7).build()
         try {
             val repo=CatalogRepository(db);repo.initialize()
             assertEquals("owner23",repo.dao.config()!!.ownerId)

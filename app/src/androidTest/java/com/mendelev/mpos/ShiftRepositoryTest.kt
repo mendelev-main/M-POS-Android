@@ -113,7 +113,7 @@ class ShiftRepositoryTest {
             old.execSQL("INSERT INTO stock_balances VALUES('p','0.0004',8)")
             old.execSQL("INSERT INTO workspace_documents VALUES('custom',11,'unchanged-payload')");old.version=5
         } finally {old.close()}
-        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_5_6).build()
+        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7).build()
         try {
             val repo=ShiftRepository(db,clock);repo.initialize();assertNull(repo.snapshot().last);assertEquals("legacy-register",repo.snapshot().registerId)
             assertEquals("0.0004",db.catalog().balance("p")!!.quantity);assertEquals(11L,db.workspace().document("custom")!!.revision);assertEquals("unchanged-payload",db.workspace().document("custom")!!.payload)

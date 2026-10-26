@@ -11,7 +11,7 @@ import java.util.UUID
 data class WorkspaceSnapshot(val products: List<WorkspaceProduct>, val categories: List<CategoryEntity>,
     val graph: List<RecipeProduct>, val balances: Map<String,BigDecimal>, val cart: CurrentCart,
     val cartRevision: Long, val layout: List<LayoutItem>, val layoutRevision: Long,
-    val parked: List<ParkedOrder> = emptyList(), val ordersRevision: Long = 0,val home: HomeLayout = HomeLayout(),val homeRevision: Long = 0)
+    val parked: List<ParkedOrder> = emptyList(), val ordersRevision: Long = 0,val home: HomeLayout = HomeLayout(),val homeRevision: Long = 0,val completedReceiptId: String? = null)
 
 class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrite: (() -> Unit)? = null) {
     private val dao=db.catalog();private val work=db.workspace()
@@ -56,7 +56,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         val home=work.document("home") ?: error("Главный экран не открыт")
         WorkspaceSnapshot(products,categories,recipeSnapshot(entities,dao.allComponents()),dao.allBalances().associate { it.productId to it.quantity.toBigDecimal() },
             current,cart.revision,
-            LayoutEngine.project(WorkspaceCodec.layout(layout.payload),products,categories.map { it.id }.toSet()+""),layout.revision,parked,book.revision,HomeEngine.project(WorkspaceCodec.home(home.payload),products,categories.map {it.id}),home.revision)
+            LayoutEngine.project(WorkspaceCodec.layout(layout.payload),products,categories.map { it.id }.toSet()+""),layout.revision,parked,book.revision,HomeEngine.project(WorkspaceCodec.home(home.payload),products,categories.map {it.id}),home.revision,SaleRepository(db).unacknowledged())
     }
     private suspend fun repeat(commandId: String, fp: String, legacyFp: String? = null): Boolean {
         val old=dao.result(commandId) ?: return false
@@ -89,6 +89,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         val legacy=CatalogRules.fingerprint("workspace.current",*intent.toTypedArray())
         val fp=CatalogRules.fingerprint("workspace.current.session",expectedSessionId,*intent.toTypedArray())
         if(repeat(commandId,fp,legacy)) return@withTransaction
+        SplitPaymentRepository(db).requireNone()
         val state=snapshot()
         val expected=when(action) { is CartAction.SetQuantity -> action.expectedRevision;is CartAction.Clear -> action.expectedRevision;is CartAction.SetDetails -> action.expectedRevision;else -> null }
         requireCurrent(state,expected,expectedSessionId)
@@ -100,6 +101,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
     suspend fun revalidate(expectedRevision: Long, expectedSessionId: String, previewToken: String, commandId: String) = db.withTransaction {
         val fp=CatalogRules.fingerprint("workspace.revalidate",expectedRevision,expectedSessionId,previewToken)
         if(repeat(commandId,fp)) return@withTransaction
+        SplitPaymentRepository(db).requireNone()
         val state=snapshot();requireCurrent(state,expectedRevision,expectedSessionId)
         val preview=CartRevalidator.preview(state.cart,state.products,state.graph,state.balances,OrderReservations.total(state.parked.map {it.cart}))
         if(preview.token!=previewToken) throw CatalogFailure("conflict","Данные изменились. Откройте пересчёт и проверьте изменения заново")
@@ -108,6 +110,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
     suspend fun park(expectedRevision: Long, expectedSessionId: String, label: String, commandId: String) = db.withTransaction {
         val fp=CatalogRules.fingerprint("workspace.park",expectedRevision,expectedSessionId,label)
         if(repeat(commandId,fp)) return@withTransaction
+        SplitPaymentRepository(db).requireNone()
         val state=snapshot();requireCurrent(state,expectedRevision,expectedSessionId)
         if(state.cart.lines.isEmpty()) throw CatalogFailure("empty","Нельзя отложить пустой заказ")
         if(state.parked.size>=100) throw CatalogFailure("parked","Достигнут предел 100 отложенных заказов")
@@ -121,6 +124,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         commandId: String, parkCurrentLabel: String? = null, replaceEmptyDetails: Boolean = false) = db.withTransaction {
         val fp=CatalogRules.fingerprint("workspace.resume",id,parkedRevision,currentRevision,expectedSessionId,parkCurrentLabel,replaceEmptyDetails)
         if(repeat(commandId,fp)) return@withTransaction
+        SplitPaymentRepository(db).requireNone()
         val state=snapshot();requireCurrent(state,currentRevision,expectedSessionId)
         val target=state.parked.find {it.id==id && it.revision==parkedRevision} ?: throw CatalogFailure("conflict","Отложенный заказ изменился")
         if(state.cart.lines.isNotEmpty()) {

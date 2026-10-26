@@ -25,6 +25,15 @@ class ShiftRulesTest {
         val counted=ShiftRules.close(state,"s2",3,ShiftRules.token(state),13500,"owner",40)
         assertEquals(-500L,counted.difference);assertEquals(14000L,counted.expectedCash)
     }
+    @Test fun saleDeltaChangesExpectedCashAndInvalidatesCloseToken() {
+        val shift=ShiftRules.open(initial,0,null,"owner","s",10,"UTC")
+        val before=initial.copy(last=shift,revision=1)
+        val after=before.copy(revision=2,saleCashDelta=4000)
+        assertEquals(4000L,after.currentCash)
+        assertNotEquals(ShiftRules.token(before),ShiftRules.token(after))
+        val closed=ShiftRules.close(after,"s",2,ShiftRules.token(after),3900,"owner",20)
+        assertEquals(4000L,closed.expectedCash);assertEquals(-100L,closed.difference)
+    }
     @Test fun stalePreviewOwnerAndDuplicateOpenCannotCommit() {
         val active=initial.copy(revision=1,last=ShiftRules.open(initial,0,null,"owner","s",10,"UTC"))
         reject {ShiftRules.open(active,1,"s","owner","other",20,"UTC")}

@@ -78,6 +78,26 @@ def wait_text(pattern, timeout=75, click=False):
     raise AssertionError(f"UI text not found: {pattern}")
 
 
+def scroll_catalog_to_product(name):
+    """A new seed can push the preserved row below the fold; absence must still fail."""
+    pattern = "^" + re.escape(name) + "$"
+    wait_text("^Товары$")
+    for _ in range(12):
+        nodes = ui_nodes()
+        for node in nodes:
+            if re.search(pattern, node.get("text", "")):
+                return node.get("text")
+        lists = [n for n in nodes if n.get("package") == PACKAGE and n.get("scrollable") == "true"]
+        assert len(lists) == 1, "Expected one catalog list before scrolling to preserved product"
+        x1, y1, x2, y2 = map(int, re.findall(r"\d+", lists[0].get("bounds", "")))
+        assert x2 > x1 and y2 > y1, "Invalid catalog list bounds"
+        x = (x1 + x2) // 2
+        inset = (y2 - y1) // 6
+        adb("shell", "input", "swipe", str(x), str(y2-inset), str(x), str(y1+inset), "400")
+        time.sleep(0.5)
+    raise AssertionError(f"Preserved product not found after catalog scroll: {name}")
+
+
 def launch(fixture=True):
     args = ["shell", "am", "start", "-n", PACKAGE + "/com.mendelev.mpos.MainActivity"]
     if fixture:
@@ -194,9 +214,12 @@ def main():
                 adb("uninstall", PACKAGE)
                 adb("install", str(base))
                 adb("install", "-r", str(test_apk))
-                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
+                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest",
+                                PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
+                assert "OK (2 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
+                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
                              PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
-                assert "OK (5 tests)" in result and "FAILURES" not in result, result[-4000:]
+                assert "OK (7 tests)" in result and "FAILURES" not in result, result[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
                 expected_shift = adb("shell", "run-as", PACKAGE, "cat", "files/qa/shiftId.txt").strip()
@@ -213,7 +236,7 @@ def main():
                 assert expected_workspace_line, "UI setup must create a real persistent current cart"
                 expected_parked_label = adb("shell", "run-as", PACKAGE, "cat", "files/qa/parkedLabel.txt").strip()
                 assert expected_parked_label, "UI setup must create a real parked order"
-                for name in ("catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders"):
+                for name in ("split-confirm", "split-progress", "sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders"):
                     captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
                     assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
                     (reports / f"{name}.png").write_bytes(captured.stdout)
@@ -265,7 +288,7 @@ def main():
             (reports / "updated-settings.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20).stdout)
             if not production:
                 wait_text("^Назад$", click=True)
-                wait_text("^" + re.escape(expected_product) + "$")
+                scroll_catalog_to_product(expected_product)
                 wait_text("^8 шт$")
                 (reports / "updated-catalog.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("CATALOG UPDATE PASSED: Room product and stock=8 survived actual package replacement", flush=True)
@@ -293,6 +316,14 @@ def main():
                 wait_text("^Наличные при открытии: 140,00 BYN$")
                 (reports / "updated-shift.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("SHIFT UPDATE PASSED: active shift identity and opening140 BYN survived package replacement", flush=True)
+                adb("install", "-r", str(test_apk))
+                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest",
+                                "-e", "saleUpgradeMode", "verify", PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
+                assert "OK (2 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
+                adb("uninstall", PACKAGE + ".test")
+                print("SPLIT UPDATE PASSED: dedicated partial progress2, stable IDs, unpaid tender and replay survived APK replacement")
+                print("SALE UPDATE PASSED: dedicated Room receipt snapshot, ledger, result, shift cash and cleared draft survived APK replacement; replay did not duplicate sale", flush=True)
+
             print(f"UPDATE E2E PASSED: package={PACKAGE}, check/download/restore/cancel/system install {base_code}→{target_code}; app-private data preserved")
             server.shutdown()
 

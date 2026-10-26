@@ -46,6 +46,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
         val input = raw.validated(); val fp = "product:" + input.fingerprint()
         return db.withTransaction {
             repeat(input.commandId, fp)?.let { return@withTransaction it }
+            SplitPaymentRepository(db).requireProductUnlocked(input.id)
             requirePhoto(input.photoId)
             val groups=ModifierRules.validate(input.id,input.modifierGroups,dao.allProducts().map { it.id }.toSet())
             val old = dao.product(input.id)
@@ -108,6 +109,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
             else CatalogRules.fingerprint("categoryAppearance",legacyFp,cleanColor,cleanSymbol)
         return db.withTransaction {
             repeat(commandId, fp)?.let { return@withTransaction it }
+            SplitPaymentRepository(db).requireCategoryUnlocked(id)
             val old = dao.category(id)
             if (old?.revision != expectedRevision) throw CatalogFailure("conflict", "Категория изменилась. Откройте её заново")
             if (dao.categoryByKey(key)?.id?.let { it != id } == true) throw CatalogFailure("name", "Такая категория уже существует")
@@ -137,6 +139,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
     suspend fun deleteCategory(id: String, revision: Long, commandId: String) = db.withTransaction {
         val fp = CatalogRules.fingerprint("deleteCategory", id, revision)
         if (repeat(commandId, fp) != null) return@withTransaction
+        SplitPaymentRepository(db).requireCategoryUnlocked(id)
         if (dao.category(id)?.revision != revision) throw CatalogFailure("conflict", "Категория изменилась")
         if (dao.categoryUses(id) > 0) throw CatalogFailure("used", "В категории есть товары. Сначала переместите их")
         db.requireNoWorkspaceCategory(id)
@@ -145,6 +148,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
     suspend fun deleteProduct(id: String, revision: Long, commandId: String) = db.withTransaction {
         val fp = CatalogRules.fingerprint("deleteProduct", id, revision)
         if (repeat(commandId, fp) != null) return@withTransaction
+        SplitPaymentRepository(db).requireProductUnlocked(id)
         if (dao.product(id)?.revision != revision) throw CatalogFailure("conflict", "Товар изменился")
         db.requireNoWorkspaceProduct(id)
         val draft=dao.draft()?.let { JSONObject(it.payload) }
@@ -160,6 +164,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
         }
         if (dao.modifierUses(id) > 0) throw CatalogFailure("used", "Товар используется в модификаторах: сначала измените варианты")
         if (dao.recipeUses(id) > 0) throw CatalogFailure("used", "Товар используется в рецептуре: сначала измените состав")
+        if (db.sales().productUses(id)>0) throw CatalogFailure("used", "Товар есть в истории чеков: удалить нельзя")
         if (dao.movementCount(id) > 0) throw CatalogFailure("used", "Есть складская история: удалить товар нельзя")
         dao.clearModifierOptions(id);dao.clearModifierGroups(id);dao.clearRecipe(id); dao.deleteBalance(id); dao.deleteProduct(id); if(draft?.optString("id")==id) dao.clearDraft(); record(commandId, fp, id, "product.delete")
     }

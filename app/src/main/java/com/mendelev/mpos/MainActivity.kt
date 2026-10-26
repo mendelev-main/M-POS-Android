@@ -72,6 +72,14 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                     })
                     com.mendelev.mpos.feature.shift.ShiftScreen(model,{route="catalog"},{route="workspace"},{route="settings"})
                 }
+                "checkout", "history" -> {
+                    val model: com.mendelev.mpos.feature.sale.SaleViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.sale.SaleViewModel(
+                            com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext)) as T
+                    })
+                    com.mendelev.mpos.feature.sale.SaleScreen(model,route=="history",{route="workspace"},{route="history"},{route="shift"})
+                }
                 "workspace" -> {
                     val model: com.mendelev.mpos.feature.workspace.WorkspaceViewModel = viewModel(factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
@@ -80,7 +88,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                                 com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
                     })
                     val photos=androidx.compose.runtime.remember(context) { com.mendelev.mpos.data.media.ProductPhotoStore(context.applicationContext.filesDir) }
-                    com.mendelev.mpos.feature.workspace.WorkspaceScreen(model,photos,{route="catalog"},{route="settings"},{route="shift"})
+                    com.mendelev.mpos.feature.workspace.WorkspaceScreen(model,photos,{route="catalog"},{route="settings"},{route="shift"},{route="checkout"},{route="history"})
                 }
                 "gallery" -> com.mendelev.mpos.feature.products.ComponentGallery { route = "catalog" }
                 else -> {
