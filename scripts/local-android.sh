@@ -6,8 +6,8 @@ local_root="${MPOS_ANDROID_LOCAL_ROOT:-$(cd "$repo/.." && pwd)/android-local}"
 export ANDROID_HOME="$local_root/sdk" ANDROID_SDK_ROOT="$local_root/sdk"
 export ANDROID_USER_HOME="$local_root/android-user" ANDROID_AVD_HOME="$local_root/avd"
 export GRADLE_USER_HOME="$local_root/gradle"
-export ANDROID_PREFS_ROOT="$local_root" ANDROID_SDK_HOME="$local_root"
-export JAVA_HOME="${MPOS_JAVA_HOME:-${JAVA_HOME:-/opt/homebrew/opt/openjdk@17}}"
+unset ANDROID_PREFS_ROOT ANDROID_SDK_HOME
+export JAVA_HOME="${MPOS_JAVA_HOME:-/opt/homebrew/opt/openjdk@17}"
 export ANDROID_SERIAL=emulator-5560
 adb="$ANDROID_HOME/platform-tools/adb"
 avd=M_POS_API36
@@ -30,9 +30,9 @@ start() {
     check_device
   else
     mkdir -p "$local_root/logs"
-    local window_flags=()
-    if [[ "${MPOS_ANDROID_HEADLESS:-0}" == 1 ]]; then window_flags=(-no-window); fi
-    nohup "$ANDROID_HOME/emulator/emulator" "${window_flags[@]}" -avd "$avd" -port 5560 -no-snapshot-load -no-boot-anim -gpu auto \
+    local emulator_flags=(-avd "$avd" -port 5560 -no-snapshot-load -no-boot-anim -gpu auto)
+    if [[ "${MPOS_ANDROID_HEADLESS:-0}" == 1 ]]; then emulator_flags+=(-no-window); fi
+    nohup "$ANDROID_HOME/emulator/emulator" "${emulator_flags[@]}" \
       > "$local_root/logs/emulator.log" 2>&1 < /dev/null &
     echo "$!" > "$local_root/emulator.pid"
   fi
@@ -73,6 +73,12 @@ case "$command" in
   run) start; gradle assembleDebug; install_app ;;
   launch) start; install_app ;;
   test) start; gradle connectedDebugAndroidTest "$@" ;;
-  stop) require_sdk; check_device; "$adb" -s "$ANDROID_SERIAL" emu kill ;;
+  stop)
+    require_sdk; check_device; "$adb" -s "$ANDROID_SERIAL" emu kill
+    for ((attempt=0; attempt<15; attempt++)); do
+      if [[ "$("$adb" -s "$ANDROID_SERIAL" get-state 2>/dev/null || true)" != device ]]; then break; fi
+      sleep 1
+    done
+    ;;
   *) echo "Usage: $0 {status|start|build|run|launch|test|stop}" >&2; exit 2 ;;
 esac

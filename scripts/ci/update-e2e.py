@@ -217,6 +217,10 @@ def main():
                 financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest",
                                 PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
                 assert "OK (3 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
+                # Recover only the already-supported, exact Quickstep infrastructure ANR before UI captures.
+                # Unknown/system/M-POS dialogs are not dismissed by wait_text.
+                adb("shell", "am", "start", "-W", "-n", PACKAGE + "/com.mendelev.mpos.MainActivity")
+                wait_text("^Рабочая зона$")
                 result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
                              PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
                 assert "OK (8 tests)" in result and "FAILURES" not in result, result[-4000:]

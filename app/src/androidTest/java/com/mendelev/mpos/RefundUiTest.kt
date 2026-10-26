@@ -21,6 +21,9 @@ class RefundUiTest {
         compose.waitForIdle()
         val automation=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation
         automation.waitForIdle(200,5_000)
+        check(automation.rootInActiveWindow?.packageName?.toString()==BuildConfig.APPLICATION_ID) {
+            "Refund screenshot is blocked by another app/system window"
+        }
         val image=checkNotNull(automation.takeScreenshot())
         val file=File(compose.activity.filesDir,"qa/$name.png");file.parentFile!!.mkdirs()
         file.outputStream().use {image.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};image.recycle()
