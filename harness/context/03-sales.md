@@ -86,3 +86,9 @@ Next03b.3b: stable part IDs иредактирование/распределе�
 
 
 03b.3b.1 S04 pure allocation/ID lifecycle ci-verified: [checks40284878361](https://github.com/mendelev-main/M-POS-Android/actions/runs/40284878361)/cb9b4d3, job121446079712 —65JVM/0failures/0errors/0skipped (9 новых SplitEditor),6Python,lintDebug/assembleDebug passed. Эмулятор не перезапускался: редактор пока не подключён к Room/UI; это не evidence сохранённого редактирования частичной оплаты. Следующий03b.3b.2 —transactional integration/legacy replay, затем UI.
+
+## 2026-10-26 —03b.3b.2 implementation
+
+Выбран lazy transactional upgrade progress1→2: ordered IDs/nextId без изменения CheckoutCodec/Room. Для legacy paid result проверяется старый fp и создаётся stable alias на прежний resultId в той же transaction. Старые команды replay неизменны; новые index confirmations после2 отклоняются. Stable confirm fp исключает mutable unpaid matrix/checkout revision, но включает immutable order context и exact target payment. API явный target snapshot сохраняет replay после перестановки/final; UI ещё не подключён.
+
+Edit команды типизированы и не принимают paid flags, checkout/progress/result/audit atomic. Проверка null given остальных unpaid использует prospective exact tender только в admission calculator; в БД given не подставляется и target cash нельзя подтвердить без ввода. Receipt/stock postings только final. Added5Room cases, ожидаемая Android проверка pending. Перенос activepartial APK replacement отдельно после UI; прежняя committed fixture не выдаётся за его доказательство.

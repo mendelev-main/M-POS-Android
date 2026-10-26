@@ -100,3 +100,17 @@ object SplitEditor {
         }).also(::validate)
     }
 }
+
+
+sealed interface SplitEdit {
+    data class Count(val count: Int): SplitEdit
+    data class Amount(val id: Long,val amount: Long): SplitEdit
+    data class Method(val id: Long,val method: String): SplitEdit
+    data class Given(val id: Long,val given: Long?): SplitEdit
+    fun apply(state: EditableSplit): EditableSplit=when(this) {
+        is Count->SplitEditor.resize(state,count)
+        is Amount->SplitEditor.amount(state,id,amount)
+        is Method->SplitEditor.method(state,id,method)
+        is Given->SplitEditor.given(state,id,given)
+    }
+}
