@@ -1,6 +1,6 @@
 # Этап 03 — Продажи
 
-Статус: 03a/03b.1/03b.2a/03b.2b repository ci-verified; 03b.2c manual checkout/history UI ci-verified; 03b.3a split progress repository ci-verified; split editing/UI иrefund planned
+Статус: 03a/03b.1/03b.2a/03b.2b repository ci-verified; 03b.2c manual checkout/history UI ci-verified; 03b.3a split progress repository ci-verified; 03b.3b.2 persisted editing ci-verified/run40285964291; split UI иrefund planned
 
 ## Объём
 
@@ -65,3 +65,6 @@ S01: commit атомарен; S02: повтор idempotent; S03: historical refu
 
 
 03b.3b.1 S04 pure allocation/ID lifecycle ci-verified: [checks40284878361](https://github.com/mendelev-main/M-POS-Android/actions/runs/40284878361)/cb9b4d3, job121446079712 —65JVM/0failures/0errors/0skipped (9 новых SplitEditor),6Python,lintDebug/assembleDebug passed. Эмулятор не перезапускался: редактор пока не подключён к Room/UI; это не evidence сохранённого редактирования частичной оплаты. Следующий03b.3b.2 —transactional integration/legacy replay, затем UI.
+
+
+03b.3b.2 S01/S02/S04/S05 persisted split editor scope ci-verified: [full CI40285964291](https://github.com/mendelev-main/M-POS-Android/actions/runs/40285964291)/cdf1f11. Checks121449577327:65JVM/0failures,6Python/preflight/lint/assembleDebug. Emulator121449577457/API36:70instrumentation/0failures/0skipped, SplitPaymentRepositoryTest8cases (5 новых); затем прежние2scale/6UIseed/financialseed+verify и actualdebugAPK1→2 passed. Legacy→2 aliases/reopen/replay-after-edit/final, paid snapshot freeze, cash tender/null refusal, retiredIDs, rollback/SQLite abort/races/zero/corruptformat проверены. Сохранённый редактор ещё не подключён к UI; activepartial APK replacement и physical pending. Actualupdater проверял committedfinancialfixture, не активную раздельную оплату. Следующий03b.3c —shared UI отдельных подтверждений/initial incomplete draft/pendingCash/recovery. Не полный03b и не переход к03c refund; main/stable0.1.46.1 прежние.
