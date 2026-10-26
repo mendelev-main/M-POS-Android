@@ -76,3 +76,10 @@ Pinned payment.js163–173/437–452 reviewed: paid part durable current session
 03b.3a итог: runtime8a012ba +whitespace747f833. Emulatorjob121292369386/run40234272200 SUCCESS65instrumentation/0failures/0skipped,3SplitPaymentRepositoryTest cases;2scale/6UIseed/financialseed+verify иactualdebugAPK1→2 прежнихcommitted fixturespassed. Newpartialprogress толькоRoomreopen/rollback/race/coreguards, неUI и неAPKreplacement активногоpartial. Checksfirstfailed lintindentation,corrected whitespace; finalchecks121410873179/run40273381968 SUCCESS56JVM/6Python/lint/assembleDebug. No gate weakening/no second emulator run радиотступа.47supplemental localdomain/45pinned source tests SHA verified passed; localAndroid~/.gradle blocker прежний.
 
 Next03b.3b: stable part IDs иредактирование/распределение неоплаченныхчастей какWeb без измененияpaid; затемsharedUI отдельногоподтверждения/показpendingcash/restore/guards. FirstAPI matrix полностьюfrozen, UI неexposed, поэтому не объявлятьfullWebsplit. Zero parts explicitlyconfirmable intentionalnative improvement. main/stable не выпускались этойработой, physical later сохраняется.
+
+
+## 2026-10-26 —03b.3b.1: правила редактирования до persistence
+
+При сверке payment.js177–270 выявлено: adjustSplitCount переносит paid в начало, поэтому индекс строки не может быть долгоживущим ключом. Добавлен чистый SplitEditor с ID/nextId, сохранением подтверждённых snapshots и распределением неоплаченного остатка. Persistence интеграция выделена следующим отдельным шагом: существующие fingerprints включают весь SavedCheckout, поэтому поверхностная замена индексов нарушила бы replay уже принятых подтверждений. Runtime Room/API/UI этой итерацией не меняются.
+
+Одиночный unpaid всегда exact remainder; Web позволяет создать несовпадение суммы при вводе меньшего значения без других unpaid. Native сохраняет денежный инвариант. Затронутые пересчётом cash inputs очищаются, чтобы не переносить старую сдачу. Числовые примеры/границы и следующий 03b.3b.2 описаны в SALE-03B. Физическая проверка по-прежнему позже; релиз каждого инкремента не делается.
