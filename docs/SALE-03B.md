@@ -1,5 +1,7 @@
 # 03b — оплата и история: контракт инкрементов
 
+Блок03b в указанном manual scope выпущен **0.1.61.1/code7101**, source eafff3d: [релиз](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.61.1), [main CI40348323683](https://github.com/mendelev-main/M-POS-Android/actions/runs/40348323683), [public signed upgrade5601→7101](https://github.com/mendelev-main/M-POS-Android/actions/runs/40354353799). [Итоговая сверка и ограничения](PHASE-03B-REVIEW.md). Следующий функциональный этап —03c full refund, физическая приёмка позже.
+
 Статус:03b.1/03b.2a/03b.2b repository ci-verified; checkout/history manual UI ci-verified/run40231561635; 03b.3a progress repository ci-verified; 03b.3b.2 persisted editor ci-verified/run40285964291; 03b.3c UI отдельных подтверждений ci-verified/run40291228647. Базовая и раздельная оплата доступны; CI проверка03b.3c завершена. Предпосылки:03a выпущен stable0.1.46.1, [MONEY-03](MONEY-03.md) и ответы владельца25.10.2026. BYN, API36+, единый дизайн pinned Web. Физические тесты по-прежнему позже.
 
 ## Источники и D02
