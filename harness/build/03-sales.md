@@ -1,6 +1,6 @@
 # Этап 03 — Продажи
 
-Статус: 03a/03b.1/03b.2a/03b.2b repository ci-verified; 03b.2c manual checkout/history UI ci-verified; 03b.3a split progress repository ci-verified; 03b.3b.2 persisted editing ci-verified/run40285964291; split UI иrefund planned
+Статус: 03a/03b.1/03b.2a/03b.2b repository ci-verified; 03b.2c manual checkout/history UI ci-verified; 03b.3a split progress repository ci-verified; 03b.3b.2 persisted editing ci-verified/run40285964291; 03b.3c sequential UI implemented (CI pending); refund planned
 
 ## Объём
 

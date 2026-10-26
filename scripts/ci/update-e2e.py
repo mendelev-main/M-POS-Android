@@ -78,6 +78,26 @@ def wait_text(pattern, timeout=75, click=False):
     raise AssertionError(f"UI text not found: {pattern}")
 
 
+def scroll_catalog_to_product(name):
+    """A new seed can push the preserved row below the fold; absence must still fail."""
+    pattern = "^" + re.escape(name) + "$"
+    wait_text("^Товары$")
+    for _ in range(12):
+        nodes = ui_nodes()
+        for node in nodes:
+            if re.search(pattern, node.get("text", "")):
+                return node.get("text")
+        lists = [n for n in nodes if n.get("package") == PACKAGE and n.get("scrollable") == "true"]
+        assert len(lists) == 1, "Expected one catalog list before scrolling to preserved product"
+        x1, y1, x2, y2 = map(int, re.findall(r"\d+", lists[0]["bounds"]))
+        assert x2 > x1 and y2 > y1, "Invalid catalog list bounds"
+        x = (x1 + x2) // 2
+        inset = (y2 - y1) // 6
+        adb("shell", "input", "swipe", str(x), str(y2-inset), str(x), str(y1+inset), "400")
+        time.sleep(0.5)
+    raise AssertionError(f"Preserved product not found after catalog scroll: {name}")
+
+
 def launch(fixture=True):
     args = ["shell", "am", "start", "-n", PACKAGE + "/com.mendelev.mpos.MainActivity"]
     if fixture:
@@ -268,7 +288,7 @@ def main():
             (reports / "updated-settings.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20).stdout)
             if not production:
                 wait_text("^Назад$", click=True)
-                wait_text("^" + re.escape(expected_product) + "$")
+                scroll_catalog_to_product(expected_product)
                 wait_text("^8 шт$")
                 (reports / "updated-catalog.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("CATALOG UPDATE PASSED: Room product and stock=8 survived actual package replacement", flush=True)

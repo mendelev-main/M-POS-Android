@@ -424,3 +424,11 @@ Reports из android-check-reports скачаны в рабочий ../ci-split-
 UI sequential split +nullable initial saveSplit/VM recovery, common controls/dialogs. Added VM1/Compose1/partial-upgrade1; actual E2E расширен до7UIseed/2financial seed+verify. Schema7/checkout1/receipt1/progress2 неизменны. Local preflight/6Python/45selected pinned source tests+SHA256 passed; actual Android pending. Нет acquiring/реальной печати/внешних оплат. First paid freezes navigation/order inputs; final explicit confirmation отличается от Web auto-finalize и documented SALE-03B.
 
 Local supplemental56domain tests cachedKotlin2.1.20/JDK17 passed. Local harness android blocked доGradle: could not create ~/.gradle/wrapper/dists/gradle-8.13-bin/...zip.lck parent; actual Kotlin2.2.21/Room/Compose/API36 только через full CI.
+
+
+03b.3c runtime31df7fe/fullrun40287907540: checks121455832172 SUCCESS65JVM/0failures/0errors/0skipped (XML downloaded),6Python/preflight/lint/assembleDebug. Emulator121455832568 pending; UI/partial upgrade пока не объявляются ci-verified. Артефакты checks в ../ci-split-03b3c-checks.
+
+
+Run40287907540/31df7fe: checks SUCCESS65JVM/6Python/lint/build; API36 native suite73tests/0failures/0skipped (HTML), новые VM/Compose/partial-upgrade tests passed. 2scale/7UIseeds/2financial seeds прошли; APK1→2/ready restore/tamper/cancel/retry/system install прошли до catalog assertion. Whole run FAILED: updater после возврата в каталог искал preserved «Чай 7ce5f4» только в первом viewport. Новый UI seed добавил «Раздельная оплата» и сдвинул Чай ниже экрана. Captured window.xml показывает catalog list bounds[30,325][1570,1030], no ANR. Это моя зависимость driver от числа seed товаров, не доказательство потери записи.
+
+Driver исправлен: bounded scroll только единственного catalog list, затем обязательные прежние exact name и stock8 assertions, отсутствие товара по-прежнему failure. Ничего не удаляется из fixtures, gates не ослаблялись. Runtime/тесты unchanged. Новая полная CI проверит corrected updater; partial verify после APK в первом run ещё не запускался, не считается пройденным. Screenshots split-confirm/progress1600×1125 reviewed: common Close/greenPrimary, received6/change1, paid5/remaining5/pendingCash5/settled0, paid controls disabled, no clipping. Полная pairedWeb/font/dark/physical приёмка не заявляется.

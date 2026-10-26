@@ -1,6 +1,6 @@
 # 03b — оплата и история: контракт инкрементов
 
-Статус:03b.1/03b.2a/03b.2b repository ci-verified; checkout/history manual UI ci-verified/run40231561635; 03b.3a progress repository ci-verified; 03b.3b.2 persisted editor ci-verified/run40285964291; UI отдельных подтверждений ещё planned. Базовая оплата доступна, прогресс частей пока не подключён к интерфейсу. Предпосылки:03a выпущен stable0.1.46.1, [MONEY-03](MONEY-03.md) и ответы владельца25.10.2026. BYN, API36+, единый дизайн pinned Web. Физические тесты по-прежнему позже.
+Статус:03b.1/03b.2a/03b.2b repository ci-verified; checkout/history manual UI ci-verified/run40231561635; 03b.3a progress repository ci-verified; 03b.3b.2 persisted editor ci-verified/run40285964291; 03b.3c UI отдельных подтверждений implemented (CI pending). Базовая оплата доступна; отдельные части подключены к интерфейсу03b.3c, проверка CI пока не завершена. Предпосылки:03a выпущен stable0.1.46.1, [MONEY-03](MONEY-03.md) и ответы владельца25.10.2026. BYN, API36+, единый дизайн pinned Web. Физические тесты по-прежнему позже.
 
 ## Источники и D02
 
