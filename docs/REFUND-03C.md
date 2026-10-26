@@ -1,0 +1,32 @@
+# 03c — полный возврат чека
+
+Предпосылка выполнена:03b выпущен0.1.61.1/code7101, public production upgrade5601→7101 прошёл40354353799. Рабочая ветка develop, Android16+/API36, BYN. S03 — первый full refund; частичный возврат/loyalty/acquiring не включаются автоматически. Применяются mpos-phase/mpos-domain и pinned Web1682c883.
+
+## Источник и денежные границы
+
+`receipts.js`17–48/68–114: stockConsumption snapshot, предварительная проверка всех складских целей, original cash payment amounts, активная смена/проверка наличности, snapshot products/orders/shifts →commitCriticalStorage →UI/внешние эффекты. Android journal сохраняет операцию; текущий live stock adapter учитывает резервы и не заменяет исторический возврат текущей рецептурой. Source regressions: return uses sold recipe/changed tracking, cash-card-split returns, invalid snapshot/missing target, return journal, precise negative consumption.
+
+Подтверждено владельцем:
+
+- Полный возврат первым, исходная продажа/закрытая смена сохраняются в истории. Вчерашняя продажа10 BYN, возврат сегодня →из сегодняшней кассы10 один раз, прошлую смену не переписывать.
+- 2026-10-26: чек100 BYN, cash40/card60 →cash refund40 из текущей кассы, card refund60 вручную через терминал. Нельзя выдавать cashGiven50 вместо исходных cash40 или повторно выдавать сдачу10.
+
+**Ожидается ответ на отдельный пример доставки:** товары20+delivery5, card25, курьеру уже выданы cash5. Web возвращает total25 через терминал и оставляет прежний расход доставки. Альтернатива —refund только товаров20; её распределение потребует отдельной policy. Пока вопрос не решён, денежная реализация доставки не вводится. Складской исторический план от этого решения не зависит.
+
+Обнаруженное отличие Web: `shifts.js` cashDrawerBalance добавляет refundCashMovements обратно к netMovements, компенсируя withdrawal. При cross-shift order из yesterday, opening today20/refund withdrawal10 даёт20, а не утверждённые10. Это воспроизведено вызовом реальной pinned функции в Node VM. Native должен хранить original sale без фильтра returned и вычитать refund.cash в refundShift один раз: same-shift opening+saleCash−refundCash; cross-shift today opening−refundCash. Не копировать компенсацию Web и не вычитать возврат одновременно через фильтрацию sale и отдельную cash operation.
+
+## 03c.1a — исторический складской план
+
+`HistoricalRestock.plan` — чистый Kotlin без Room/UI и без записи возврата. Принимает сохранённые consumption quantities и граф продажи, текущие товары и balances/revisions. Для каждого сохранённого tracked simple ingredient готовит положительный delta, before/after и expected/next revision; выход отсортирован по productId. Изменённый рецепт, стоимость, noStockTracking/allowNegativeStock и display unit не пересчитывают расход. Базовые единица и тип товара в native каталоге неизменяемы; несоответствие исторической/текущей base unit, отсутствие simple target/balance, неверный расход/дубликат graph ID/переполнение revision дают отказ всего плана.
+
+Количество — exact BigDecimal, scale до12 из stock consumption policy, без округления до0.001 и без money scale2. Положительный historical delta ограничен18 integer digits как RecipeCalculator; разбор quantity ограничен128символами, exponent/NaN/запятая/пробелы в storage отклоняются. Текущий отрицательный остаток можно увеличить, не обнуляя его и не применяя сегодняшние запреты отрицательной продажи. Пустой consumption означает отсутствие восстановления stock; из current recipe новый расход не изобретается. Native receipts всегда имеют snapshot; Web legacy fallback будет отдельным предметом импорта07.
+
+Примеры: old consumption0.0004kg, balance9.9996 →10kg, даже если новый рецепт требует10kg и текущий tracking выключен. Historical all-untracked →empty plan, даже если tracking позже включён. Balance−2 +historical0.0004 →−1.9996.1000отдельных корректировок0.000000000001 →0.000000001 без потери точности.6JVM tests покрывают эти сценарии и refusals; CI evidence в build-log. Это кандидат восстановления, а не выполненный refund: replay/SQLite/история/касса/UI остаются следующими шагами.
+
+## Следующая транзакционная часть03c.2
+
+После закрытия денежных примеров: immutable refund record с UNIQUE receiptId и commandId, связями с original receipt и активной refundShift, original snapshot/hash, cash/card amounts, historical restored quantities и timestamp. Room migration и fixtures всех поддержанных старых schema обязательны. Оригинальный receipt, его shiftId/number/payment и closed snapshots не менять.
+
+Команда: InstallationGate →Room transaction →operation_result replay →активная смена/owner/revision/preview, no active split →исторический snapshot/stock plan/cash availability →refund+positive stock ledger+balances revisions+register revision+result+audit. Полный план проверяется до первой записи. Нет отдельного duplicate withdrawal: один refund record определяет cash-out в сегодняшней смене. Unknown response восстанавливается по commandId; два разных commands на один receipt имеют одного победителя. Возврат инвалидирует stale close/checkout preview и будущий inventory baseline даже если balance вернулся к прежнему числу.
+
+Проверки до UI: same/cross-shift, changed recipe/flags, точные0.0004kg, all-untracked/negative, недостаток cash, полный rollback каждой записи/SQLite abort, concurrent retry/different command/close/sale/installer, reopen/history/receipt immutability, actual APK preservation. Затем shared confirmation/history/refund result UI с ручной карточной частью и явной выдачей наличных. Ни настоящего acquiring, ни печати/Telegram/online вызовов ради теста; configured adapters пока отсутствуют. Физическая приёмка по решению владельца позже.

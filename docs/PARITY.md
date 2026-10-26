@@ -136,3 +136,6 @@ W01/W03/W07/DS04: background/lazy availability/search/selection, shared bounded 
 
 
 03b release checkpoint завершён: PR4/checks40347045936→merge eafff3d, [main40348323683](https://github.com/mendelev-main/M-POS-Android/actions/runs/40348323683) SUCCESS65JVM/73instrumentation/8Python/lint/build +2scale/7UIseed/2financialseed+verify/debug APK1→2, подписывание/publish. Stable [0.1.61.1/code7101](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.61.1), native package/cert/minSdk36 прежние. [Public signed upgrade40354353799](https://github.com/mendelev-main/M-POS-Android/actions/runs/40354353799)/job121682674847 SUCCESS API36 production5601→7101/HTTPS/check/download/restore/permission/Cancel/retry/system install/settings receipt. Develop fast-forward к main, runtime после проверок не менялся. Scope/ограничения PHASE-03B-REVIEW; S03/refund03c следующий, physical позже.
+
+
+03c.1a: S03 pure historical restock candidate implemented,6JVM tests; [контракт и следующие шаги](REFUND-03C.md). Это не refund transaction/UI. Mixed refund cash40/card60 подтверждён; delivery policy pending answer. Room7/receipt1/progress2/stable0.1.61.1 прежние. CI evidence —build-log.
