@@ -1,6 +1,6 @@
 # 03b — оплата и история: контракт инкрементов
 
-Статус:03b.1/03b.2a/03b.2b repository ci-verified; checkout/history manual UI ci-verified/run40231561635; отдельное подтверждение split частей planned. Это не готовая кнопка оплаты. Предпосылки:03a выпущен stable0.1.46.1, [MONEY-03](MONEY-03.md) и ответы владельца25.10.2026. BYN, API36+, единый дизайн pinned Web. Физические тесты по-прежнему позже.
+Статус:03b.1/03b.2a/03b.2b repository ci-verified; checkout/history manual UI ci-verified/run40231561635; 03b.3a progress repository ci-verified; UI отдельных подтверждений ещё planned. Базовая оплата доступна, прогресс частей пока не подключён к интерфейсу. Предпосылки:03a выпущен stable0.1.46.1, [MONEY-03](MONEY-03.md) и ответы владельца25.10.2026. BYN, API36+, единый дизайн pinned Web. Физические тесты по-прежнему позже.
 
 ## Источники и D02
 
@@ -70,7 +70,7 @@ Evidence03b.2c final: [full CI40231561635](https://github.com/mendelev-main/M-PO
 
 Checkout/history/receipt screenshots1600×1125 просмотрены: общие Close/Primary/Surface/Manrope, суммы2BYN/change3, без перекрытий. Dialog screenshots получены через full UiAutomation послеidle, activity result —Compose capture; прошлые failed/cropped artifacts не считаются visual evidence. Landscape workspace150% из40230629400 просмотрен: footer «К оплате»/«Чеки» помещается. Полный paired Web/dark/font-scale checkout/physical не закрыт. Room7 export прежний. Следующий03b.3 —paid-part progress; full03b и refund03c остаются pending, develop-only без новогоrelease.
 
-### 03b.3a — repository прогресса частей (реализация, CI pending)
+### 03b.3a — repository прогресса частей (ci-verified, без UI)
 
 SplitPaymentRepository хранит отдельный workspace document split-progress/payload1: исходный SavedCheckout и множество подтверждённых индексов. SQLschema7/cart2/checkout1 не меняются. Подтверждение использует детерминированный operation key отsale command+индекса; fingerprint включает замороженный snapshot. Room transaction сохраняет progress/result/audit до успеха, concurrent replay/повтор после финального receipt не создаёт новую часть. Expected progress revision защищает разные одновременные подтверждения. Tombstone хранит монотоннуюrevision послеfinishing.
 
@@ -79,3 +79,7 @@ SplitPaymentRepository хранит отдельный workspace document split-
 В этой подчасти вся матрица parts/method/amount/given фиксируется после первой части. Менять/перераспределять неоплаченные части какWeb, подтверждать черезUI и показывать interim cash наэкране смены — следующие подчасти03b.3; API сейчас не подключён ккнопкам. Не объявлять полный split parity. Zero-value части явно подтверждаются без движения денег: native не повторяет Web disabled-zero dead end, пример0.01/3 остаётся завершаемым.
 
 Guards внутриwriter transactions: current cart/details/revalidate/park/resume, checkout save/discard, связанныеproducts/category (цены/рецепт/stock), closeShift, installer Gate.prepare. Unrelated catalog/layout/home/удаление отложенных заказов разрешены; они не уменьшают stock текущего frozen заказа. Future warehouse/import/other financial writers должны учитывать active progress. Direct DAO пишет толькоfixture/migration; production команды не обходят guards. Финальный Sale требует все paid и тот же SavedCheckout, аreceipt+stock+shift+clear+progress tombstone+result/audit атомарны. Сбой final записи оставляет paidprogress дляповтора. Нельзя стирать progress ради разблокировки.
+
+Evidence03b.3a: emulator job [40234272200/121292369386](https://github.com/mendelev-main/M-POS-Android/actions/runs/40234272200/job/121292369386) SUCCESS,65instrumentation/0failures/0skipped, включая3SplitPaymentRepositoryTest;2scale+6UIseed+financial seed/verify иactualdebugAPK1→2 прежнихfixtures прошли. Общийrun failed толькоиз-заlint indentation; исправлен одинleadingwhitespace. [Checks40273381968](https://github.com/mendelev-main/M-POS-Android/actions/runs/40273381968)/747f833 SUCCESS:56JVM/6Python/lint/assembleDebug. Семантикаruntime8a012ba и747f833 одинакова; emulator не повторялся радиотступа. Это совместное evidence двухruns, анеполныйgreen40234272200.
+
+Сценарииverified:cash40/card60/given50,restore/duplicate part/old-revision rejection/guards/final once/replay послеfinal;3progress fault boundaries+realSQLite abort,10finalsale rollback boundaries,concurrent samepart иfirstpart/cartclear race,zero amount parts. Fixedmatrix frozen, unpaidediting/UI/interimcash display/partial-progress APK replacement ещё pending. Actualupdater проверяет существующую committedfinancialfixture, не activepartial. Следующийшаг03b.3b —правила редактирования неоплаченных частей/стабильные part IDs, затемUI confirmation/recovery. Full03b/S03/physical не закрыты; main/release не менялись.
