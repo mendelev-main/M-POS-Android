@@ -69,7 +69,7 @@ class CatalogConfigurationTest {
 
     @Test fun recipeAndExpandedDraftSurviveDiskReopen() = runBlocking {
         val name="recipe-${UUID.randomUUID()}.db"
-        fun open()=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_1_2,CatalogDatabase.MIGRATION_2_3,CatalogDatabase.MIGRATION_3_4,CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7).build()
+        fun open()=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_1_2,CatalogDatabase.MIGRATION_2_3,CatalogDatabase.MIGRATION_3_4,CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7,CatalogDatabase.MIGRATION_7_8).build()
         var db=open()
         try {
             var repo=CatalogRepository(db);repo.initialize();repo.saveProduct(input("a"))
@@ -110,7 +110,7 @@ class CatalogConfigurationTest {
             legacy.execSQL("INSERT INTO editor_drafts VALUES ('product',?)",arrayOf(oldDraft))
             legacy.version=1
         } finally { legacy.close() }
-        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_1_2,CatalogDatabase.MIGRATION_2_3,CatalogDatabase.MIGRATION_3_4,CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7).build()
+        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_1_2,CatalogDatabase.MIGRATION_2_3,CatalogDatabase.MIGRATION_3_4,CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7,CatalogDatabase.MIGRATION_7_8).build()
         try {
             val repo=CatalogRepository(db);repo.initialize()
             assertEquals("owner-original",repo.dao.config()!!.ownerId)

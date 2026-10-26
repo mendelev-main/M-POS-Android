@@ -154,7 +154,7 @@ class SaleRepositoryTest {
             old.execSQL("INSERT INTO shift_register VALUES(1,9,'s')")
             old.execSQL("INSERT INTO workspace_documents VALUES('checkout',3,'{\"version\":1,\"discarded\":true}')");old.version=6
         } finally {old.close()}
-        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_6_7).build()
+        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_6_7,CatalogDatabase.MIGRATION_7_8).build()
         try {
             assertEquals("0.0004",db.catalog().balance("p")!!.quantity);assertEquals(14000L,ShiftRepository(db).snapshot().currentCash)
             assertEquals(3L,CheckoutRepository(db).revision());assertNull(CheckoutRepository(db).load());assertTrue(db.sales().history().isEmpty())

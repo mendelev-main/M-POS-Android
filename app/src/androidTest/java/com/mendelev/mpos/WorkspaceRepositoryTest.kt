@@ -109,7 +109,7 @@ class WorkspaceRepositoryTest {
             legacy.execSQL("INSERT INTO stock_balances VALUES ('p','0.0004',7)")
             legacy.version=4
         } finally {legacy.close()}
-        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7).build()
+        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7,CatalogDatabase.MIGRATION_7_8).build()
         try {
             val repo=WorkspaceRepository(db);repo.initialize();val snap=repo.snapshot()
             assertTrue(snap.cart.lines.isEmpty());assertEquals(0L,snap.cartRevision)
