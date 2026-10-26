@@ -89,7 +89,7 @@ def scroll_catalog_to_product(name):
                 return node.get("text")
         lists = [n for n in nodes if n.get("package") == PACKAGE and n.get("scrollable") == "true"]
         assert len(lists) == 1, "Expected one catalog list before scrolling to preserved product"
-        x1, y1, x2, y2 = map(int, re.findall(r"\d+", lists[0]["bounds"]))
+        x1, y1, x2, y2 = map(int, re.findall(r"\d+", lists[0].get("bounds", "")))
         assert x2 > x1 and y2 > y1, "Invalid catalog list bounds"
         x = (x1 + x2) // 2
         inset = (y2 - y1) // 6
