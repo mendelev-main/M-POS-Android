@@ -53,3 +53,12 @@ class CatalogScrollTests(unittest.TestCase):
             with self.assertRaisesRegex(AssertionError,"Preserved product not found"):
                 module.scroll_catalog_to_product("Чай 42")
         self.assertEqual(12,adb.call_count)
+
+class AccessibleNavigationTests(unittest.TestCase):
+    def test_settings_gear_is_found_by_accessible_name_and_clicked_inside_bounds(self):
+        from unittest.mock import patch
+        import xml.etree.ElementTree as ET
+        gear=ET.Element("node", {"text":"", "content-desc":"Настройки", "enabled":"true", "bounds":"[1520,40][1575,95]"})
+        with patch.object(module,"ui_nodes",return_value=[gear]), patch.object(module,"adb") as adb:
+            self.assertEqual("Настройки",module.wait_text("^Настройки$",click=True))
+        self.assertEqual(("shell","input","tap","1547","67"),adb.call_args.args)

@@ -45,3 +45,9 @@ Android Studio Rabbit1/2026.2.1 находится в `/Applications/Android Stu
 ## История первых попыток
 
 2026-10-26 restricted agent process не получил CPU sysctl, Qt abort/NEON и headless SIGILL зафиксированы crash reports. Пользовательский `.command` открывался редактором, затем direct `.sh` exec получил Operation not permitted. Эти попытки не считались успешным Android boot. Графический запуск через настроенную Android Studio2026-10-27 решил задачу; security protections/TCC/quarantine не отключались. Существующие shell launchers используют явный Bash, но основной пользовательский маршрут теперь Device Manager.
+
+### Дубликаты генерируемых файлов в Documents
+
+2026-10-27 локальный D8 обнаружил `MainActivityKt 2.dex` рядом с `MainActivityKt.dex`; также появились дубликаты XML/HTML с суффиксом `2`. Это конфликт производных файлов в каталоге сборки, не две реализации класса в Kotlin. Только локальный `app/build` перенесён в `/private/tmp/mpos-native-build-*/app` и заменён symlink; исходники/SDK/AVD/данные приложения не переносились. Удалены15 дубликатов только внутри генерируемого build. Последующая сборка прошла. Gitignore исключает и обычный каталог, и symlink `app/build`.
+
+`/private/tmp` — временный cache: если macOS его очистит и ссылка `app/build` станет нерабочей, удалить только нерабочую ссылку и повторить сборку (Gradle создаст производный каталог заново). Не удалять исходники, SDK/AVD или базу приложения ради ошибки D8. Эта локальная настройка не переносится на CI; CI использует чистый workspace.

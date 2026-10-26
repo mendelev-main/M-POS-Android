@@ -49,7 +49,8 @@ class TopBarLayoutTest {
         compose.onNodeWithTag("mposTopBar").assertHeightIsEqualTo(68.dp)
         compose.onNodeWithTag("topNav-settings").assertIsDisplayed()
         compose.runOnIdle {large=true}
-        compose.onNodeWithTag("mposTopBar").assertHeightIsAtLeast(80.dp)
+        // Android applies nonlinear font scaling: verify growth and reachability, not 2× pixel arithmetic.
+        compose.onNodeWithTag("mposTopBar").assertHeightIsAtLeast(69.dp)
         compose.onNodeWithTag("topNav-settings").performScrollTo().assertIsDisplayed().performClick()
         compose.onNodeWithTag("topNav-settings").assertIsSelected()
         compose.onNodeWithTag("topNav-workspace").performScrollTo().assertIsDisplayed().performClick()

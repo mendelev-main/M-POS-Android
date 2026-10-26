@@ -20,3 +20,6 @@ __pycache__/
 credentials.json
 *keystore*.base64
 signing-private/
+
+# Also ignore app/build when the local generated directory is a symlink.
+/app/build
