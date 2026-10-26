@@ -18,17 +18,17 @@
 ## Запуск из Terminal в папке репозитория
 
 ```sh
-./scripts/local-android.sh status
-./scripts/local-android.sh run
+/bin/bash ./scripts/local-android.sh status
+/bin/bash ./scripts/local-android.sh run
 ```
 
 `run` запускает планшет, собирает debug APK, устанавливает его с сохранением данных и открывает M-POS. Повторные сборки инкрементальные. Данные AVD сохраняются между запусками.
 
 ```sh
-./scripts/local-android.sh launch  # установить/открыть уже собранный APK
-./scripts/local-android.sh build   # JVM, lint, debug APK
-./scripts/local-android.sh test    # Android instrumentation на этом AVD
-./scripts/local-android.sh stop   # остановить только M_POS_API36
+/bin/bash ./scripts/local-android.sh launch  # установить/открыть уже собранный APK
+/bin/bash ./scripts/local-android.sh build   # JVM, lint, debug APK
+/bin/bash ./scripts/local-android.sh test    # Android instrumentation на этом AVD
+/bin/bash ./scripts/local-android.sh stop   # остановить только M_POS_API36
 ```
 
 Скрипт проверяет имя AVD и API36, использует только emulator-5560; другой эмулятор на этом порту не затрагивает. `MPOS_ANDROID_LOCAL_ROOT` позволяет указать другую папку SDK, `MPOS_JAVA_HOME` — другой JDK17. `MPOS_ANDROID_HEADLESS=1` — стандартный режим без окна, когда среда допускает запуск виртуальной машины. В обычном Mac запускать без него.
@@ -43,6 +43,8 @@
 
 Журналы: `../android-local/build.log`, `logs/emulator.log`, `start.log`, `start-headless.log`. Вызов SDK tools из ограниченного агента не является доказательством успешной загрузки Android. CI API36 остаётся обязательным независимо от local environment.
 
-Повторный запуск через готовый скрипт `./scripts/local-android.sh build assembleDebugAndroidTest`: BUILD SUCCESSFUL5s/87tasks (1executed,86up-to-date),77JVM/0failures. Скрипт закрепляет JDK17, отключает неподдержанное отслеживание FSEvents для Gradle и удаляет конфликтующие deprecated prefs variables только из собственного процесса. Bash3.2 syntax/status/build проверены.
+Повторный запуск через готовый скрипт `/bin/bash ./scripts/local-android.sh build assembleDebugAndroidTest`: BUILD SUCCESSFUL5s/87tasks (1executed,86up-to-date),77JVM/0failures. Скрипт закрепляет JDK17, отключает неподдержанное отслеживание FSEvents для Gradle и удаляет конфликтующие deprecated prefs variables только из собственного процесса. Bash3.2 syntax/status/build проверены.
 
 Если двойное нажатие `.command` открывает редактор: контекстное меню →«Открыть в программе»→Terminal, либо `/bin/bash "/полный/путь/к/файлу.command"` в Terminal. В outputs также создан `.app` launcher с корректным Info.plist: явно открывает `.command` через системный Terminal независимо от ассоциации. Launcher ещё требует пользовательского первого запуска; он не отключает macOS protections и не меняет ассоциации файлов.
+
+На этом Mac пользователь подтвердил: `.command` ассоциирован с редактором; запуск через Terminal читает launcher, но прямой exec вложенного `.sh` вернул Operation not permitted. Права файла755; quarantine отсутствует, присутствует macOS provenance. Launcher изменён на явный `/bin/bash ./scripts/local-android.sh` без удаления security attributes или изменения TCC. `/bin/bash ... status` локально проходит. Нужен повторный запуск владельцем для подтверждения загрузки окна.

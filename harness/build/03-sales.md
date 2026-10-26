@@ -1,6 +1,6 @@
 # Этап 03 — Продажи
 
-Статус: 03a/03b.1/03b.2a/03b.2b repository ci-verified; 03b.2c manual checkout/history UI ci-verified; 03b.3a split progress repository ci-verified; 03b.3b.2 persisted editing ci-verified/run40285964291; 03b.3c sequential UI ci-verified/run40291228647; refund03c.2a repository ci-verified/run40380296921,03c.2b upgrade fixture ci-verified/run40382070117, UI planned
+Статус: 03a/03b.1/03b.2a/03b.2b repository ci-verified; 03b.2c manual checkout/history UI ci-verified; 03b.3a split progress repository ci-verified; 03b.3b.2 persisted editing ci-verified/run40285964291; 03b.3c sequential UI ci-verified/run40291228647; refund03c.2a repository ci-verified/run40380296921,03c.2b upgrade fixture ci-verified/run40382070117, UI/recovery ci-verified/run40387854147
 
 ## Объём
 
@@ -102,3 +102,8 @@ S01: commit атомарен; S02: повтор idempotent; S03: historical refu
 
 
 03c.3 implemented/CI pending: history/receipt show separate refund status; shared MposDialog/Close/Danger previews full customer cash/card/manual terminal, courier cash recovery and expected drawer. Dedicated RefundViewModel retains command+preview during unknown outcome, queries original command before retry, blocks new commands/dismiss/navigation while unresolved, and preserves known result even if history reload fails. History restores returned status without mutating receipt. Added3fault/recovery/pending ViewModel tests and1Compose mixed delivery/refusal/retry/recreate/screenshots; existing financial APK fixture remains3. No acquiring/printing/Telegram calls. Local SDK/API36 setup underway; not yet local Android evidence.
+
+
+03c.3 S03 shared UI/recovery scope ci-verified: [full CI40387854147](https://github.com/mendelev-main/M-POS-Android/actions/runs/40387854147)/d7ffd83 SUCCESS. Checks121800778033:77JVM/8Python/preflight/lint/build. API36 job121800777637:86instrumentation/0failures/0skipped; затем2scale/8UIseed/3financialseed+verify, actual debugAPK1→2 passed including REFUND UPDATE. Downloaded clean1600×1125 refund-confirm/result/returned-receipt screenshots reviewed: uniform shared Close/Dialog/Danger/Primary, full mixed25/cash10/card15/courier5/expecteddrawer0, no system overlay; receipt detail is scrollable. New screenshot guard requires active M-POS package; only pre-existing exact Quickstep recovery moved before UI seed, generic/M-POS ANR not suppressed. Runtime code10b0d21 unchanged by subsequent test/driver/host-script fixes.
+
+Local Mac77JVM/lint/debug APK/testAPK build verified; final Bash-based launcher build17s SUCCESS57tasks. SDK/API36/ARM64 AVD installed, but owner reported .command opens editor then direct .sh exec Operation not permitted; launchers changed to explicit Bash at both own-script/Gradle levels, permissions755 and no quarantine, no security settings changed. Ordinary Terminal emulator boot still pending owner confirmation; no local instrumentation/device-verified claim. Prepared release review PHASE-03C-REVIEW; next checkpoint audit→PR/main/release/public signed upgrade before04. Stable0.1.61.1 unchanged.

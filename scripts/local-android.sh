@@ -55,9 +55,9 @@ start() {
 }
 gradle() {
   if [[ -x "$local_root/tools/gradle-8.13/bin/gradle" ]]; then
-    "$local_root/tools/gradle-8.13/bin/gradle" --no-daemon -Dorg.gradle.vfs.watch=false "$@"
+    /bin/bash "$local_root/tools/gradle-8.13/bin/gradle" --no-daemon -Dorg.gradle.vfs.watch=false "$@"
   else
-    ./gradlew --no-daemon -Dorg.gradle.vfs.watch=false "$@"
+    /bin/bash ./gradlew --no-daemon -Dorg.gradle.vfs.watch=false "$@"
   fi
 }
 install_app() {
