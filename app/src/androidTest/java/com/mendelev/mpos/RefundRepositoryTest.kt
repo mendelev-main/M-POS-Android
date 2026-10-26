@@ -218,7 +218,7 @@ class RefundRepositoryTest {
                     old.execSQL("INSERT INTO shift_register VALUES(1,9,?)",arrayOf(receipt.shiftId))
                 }
                 if(version==7) {
-                    old.execSQL("INSERT INTO receipts VALUES(?,?,?,?,?,?,?,?,?,?,?)",arrayOf(receipt.id,receipt.commandId,receipt.sessionId,receipt.shiftId,receipt.number,receipt.createdAt,receipt.total,receipt.cash,receipt.card,receipt.deliveryCashOut,receipt.payload))
+                    old.execSQL("INSERT INTO receipts VALUES(?,?,?,?,?,?,?,?,?,?,?)",arrayOf<Any>(receipt.id,receipt.commandId,receipt.sessionId,receipt.shiftId,receipt.number,receipt.createdAt,receipt.total,receipt.cash,receipt.card,receipt.deliveryCashOut,receipt.payload))
                     old.execSQL("INSERT INTO receipt_products VALUES(?,'p')",arrayOf(receipt.id))
                 }
                 old.version=version
