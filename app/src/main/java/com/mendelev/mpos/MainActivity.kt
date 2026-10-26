@@ -78,7 +78,12 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                         override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.sale.SaleViewModel(
                             com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext)) as T
                     })
-                    com.mendelev.mpos.feature.sale.SaleScreen(model,route=="history",{route="workspace"},{route="history"},{route="shift"})
+                    val refunds: com.mendelev.mpos.feature.sale.RefundViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.sale.RefundViewModel(
+                            com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext)) as T
+                    })
+                    com.mendelev.mpos.feature.sale.SaleScreen(model,route=="history",{route="workspace"},{route="history"},{route="shift"},refunds)
                 }
                 "workspace" -> {
                     val model: com.mendelev.mpos.feature.workspace.WorkspaceViewModel = viewModel(factory = object : ViewModelProvider.Factory {

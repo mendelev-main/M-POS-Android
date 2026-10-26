@@ -25,11 +25,13 @@ import java.time.format.DateTimeFormatter
 
 private fun money(value: Long)=ShiftRules.money(value)
 private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(value))
-@Composable fun SaleScreen(model: SaleViewModel,history: Boolean,onBack: ()->Unit,onHistory: ()->Unit,onShift: ()->Unit) {
+@Composable fun SaleScreen(model: SaleViewModel,history: Boolean,onBack: ()->Unit,onHistory: ()->Unit,onShift: ()->Unit,refundModel: RefundViewModel) {
     val ui by model.state.collectAsStateWithLifecycle()
-    LaunchedEffect(history) {model.refresh()}
-    val locked=ui.pending || ui.unresolved!=null || ui.splitUncertain || (ui.split?.paid?.isNotEmpty()==true && ui.completed==null)
-    BackHandler {if(!ui.pending) {if(ui.partPreview!=null) model.dismissPart() else if(ui.preview!=null) model.dismissPreview() else if(!locked) onBack()}}
+    val refund by refundModel.state.collectAsStateWithLifecycle()
+    LaunchedEffect(history) {model.refresh();refundModel.refresh()}
+    LaunchedEffect(refund.result?.id) {if(refund.result!=null) model.refresh()}
+    val locked=ui.pending || refund.pending || refund.unresolved!=null || ui.unresolved!=null || ui.splitUncertain || (ui.split?.paid?.isNotEmpty()==true && ui.completed==null)
+    BackHandler {if(!ui.pending) {if(refund.review!=null || refund.result!=null) refundModel.dismiss() else if(ui.selected!=null && refund.unresolved==null && !refund.pending) model.closeDetails() else if(ui.partPreview!=null) model.dismissPart() else if(ui.preview!=null) model.dismissPreview() else if(!locked) onBack()}}
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
         MposAppBar(if(history) "M-POS · История чеков" else "M-POS · Оплата") {
             MposNavigationAction("Назад",{if(!locked) onBack()})
@@ -39,13 +41,16 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
         else if(ui.fatal) Column(Modifier.padding(20.dp)) {MposNotice(ui.message ?: "Не удалось открыть оплату",true);MposButton("Повторить открытие",model::refresh)}
         else if(history) {
             if(ui.message!=null) MposNotice(ui.message!!,true)
+            if(refund.message!=null && ui.selected==null) MposNotice(refund.message!!,true)
+            if(refund.blocked && refund.unresolved==null) MposButton("Прочитать возвраты",refundModel::refresh,busy=refund.pending,style=ActionStyle.Secondary)
             LazyColumn(Modifier.fillMaxSize().padding(20.dp).testTag("receiptHistory"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 if(ui.history.isEmpty()) item {Text("Проведённых чеков пока нет")}
                 items(ui.history,key={it.id}) {r->Surface(shape=MaterialTheme.shapes.large) {
                     Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                         Text("Чек №${r.number} · ${money(r.total)}",style=MaterialTheme.typography.titleMedium)
+                        refund.history.firstOrNull {it.receiptId==r.id}?.let {Text("Возвращён · ${date(it.createdAt)}",Modifier.testTag("returned:${r.id}"))}
                         Text(date(r.createdAt));Text("Наличные: ${money(r.cash)} · Карта: ${money(r.card)}")
-                        MposButton("Открыть чек",{model.select(r.id)},Modifier.testTag("receipt:${r.commandId}"),style=ActionStyle.Secondary)
+                        MposButton("Открыть чек",{model.select(r.id)},Modifier.testTag("receipt:${r.commandId}"),enabled=!locked,style=ActionStyle.Secondary)
                     }
                 }}
             }
@@ -140,8 +145,40 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
         Text("Подтверждённую часть нельзя изменить или отменить. Чек будет завершён после подтверждения всех частей.")
         MposButton("Подтвердить часть",model::confirmPart,Modifier.fillMaxWidth().testTag("splitConfirm"),busy=ui.pending)
     }}
-    ui.selected?.let {selected->MposDialog("Чек №${selected.first.number}",model::closeDetails,wide=true) {
-        Column(Modifier.heightIn(max=500.dp).verticalScroll(rememberScrollState()).testTag("receiptDetails")) {ReceiptBody(selected)}
+    if(refund.review==null && refund.unresolved==null && refund.result==null) ui.selected?.let {selected->
+        MposDialog("Чек №${selected.first.number}",{if(!refund.pending) {refundModel.dismiss();model.closeDetails()}},!refund.pending,wide=true) {
+            Column(Modifier.heightIn(max=400.dp).verticalScroll(rememberScrollState()).testTag("receiptDetails")) {
+                ReceiptBody(selected)
+                refund.history.firstOrNull {it.receiptId==selected.first.id}?.let {RefundResultBody(it)}
+            }
+            if(refund.message!=null) MposNotice(refund.message!!,true)
+            if(refund.history.none {it.receiptId==selected.first.id}) {
+                if(ui.shift?.active==null) Text("Для возврата откройте смену")
+                MposButton("Вернуть чек",{refundModel.prepare(selected.first.id,ui.shift!!.ownerId)},Modifier.fillMaxWidth().testTag("refundPrepare"),
+                    enabled=!ui.pending && !refund.blocked && ui.shift?.active!=null && ui.split?.paid.isNullOrEmpty(),style=ActionStyle.Danger,busy=refund.pending)
+            }
+        }
+    }
+    refund.review?.let {submission->MposDialog("Полный возврат чека",refundModel::dismiss,!refund.pending,wide=true) {
+        val p=submission.preview.amounts
+        Column(Modifier.heightIn(max=400.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+            Text("К возврату: ${money(p.total)}",Modifier.testTag("refundPreviewTotal"),style=MaterialTheme.typography.titleLarge)
+            Text("Выдать покупателю наличными: ${money(p.cash)}",Modifier.testTag("refundPreviewCash"))
+            Text("Вернуть на карту вручную через терминал: ${money(p.card)}",Modifier.testTag("refundPreviewCard"))
+            if(p.deliveryCashCredit>0) MposNotice("Отменяется оплата курьеру: ${money(p.deliveryCashCredit)}. Верните эти наличные в кассу.")
+            Text("После возврата в кассе: ${money(p.expectedCashAfter)}",Modifier.testTag("refundPreviewDrawer"))
+            Text("Будет возвращён весь чек. Товары восстановятся по сохранённому расходу продажи. Приложение не выполняет банковский возврат автоматически.")
+        }
+        MposButton("Подтвердить возврат",refundModel::confirm,Modifier.fillMaxWidth().testTag("refundConfirm"),style=ActionStyle.Danger,busy=refund.pending)
+    }}
+    if(refund.unresolved!=null) MposDialog("Проверка результата возврата",{},closable=false,wide=true) {
+        Text(refund.message ?: "Сохранение возврата…")
+        MposButton("Проверить результат возврата",refundModel::confirm,Modifier.fillMaxWidth().testTag("refundResolve"),busy=refund.pending)
+    }
+    refund.result?.let {result->MposDialog("Возврат сохранён",refundModel::dismiss,!refund.pending,wide=true) {
+        Column(Modifier.heightIn(max=400.dp).verticalScroll(rememberScrollState()).testTag("refundSuccess")) {RefundResultBody(result)}
+        if(refund.message!=null) MposNotice(refund.message!!,true)
+        MposButton("Готово",refundModel::dismiss,Modifier.fillMaxWidth().testTag("refundDone"),busy=refund.pending)
     }}
 }
 @Composable private fun SplitCheckout(ui: SaleUi,model: SaleViewModel) {
@@ -213,4 +250,13 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
             if(p.given!=null) Text("Получено: ${money(p.given)} · Сдача: ${money(p.change!!)}")
         }
     }
+}
+
+@Composable private fun RefundResultBody(refund: RefundEntity) {
+    Text("Полный возврат · ${date(refund.createdAt)}",style=MaterialTheme.typography.titleMedium)
+    Text("Возвращено: ${money(refund.total)}",Modifier.testTag("refundSavedTotal"))
+    Text("Наличные покупателю: ${money(refund.cash)}")
+    Text("Карта — вручную через терминал: ${money(refund.card)}")
+    if(refund.deliveryCashCredit>0) Text("Отменён расход курьеру: ${money(refund.deliveryCashCredit)}. Наличные должны быть возвращены в кассу.")
+    Text("Товары восстановлены по историческому расходу. Повторный возврат этого чека недоступен.")
 }
