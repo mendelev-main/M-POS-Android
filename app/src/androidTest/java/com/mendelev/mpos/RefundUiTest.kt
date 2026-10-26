@@ -48,9 +48,9 @@ class RefundUiTest {
             state.currentCash
         }
         compose.waitUntil(20_000) {compose.onAllNodesWithText("Рабочая зона").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithText("Рабочая зона").performClick()
+        compose.onNodeWithTag("topNav-workspace").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithText("Чеки").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithText("Чеки").performClick()
+        compose.onNodeWithTag("topNav-history").performClick()
         lateinit var model: RefundViewModel
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("receiptHistory").fetchSemanticsNodes().isNotEmpty()}
         compose.runOnIdle {model=ViewModelProvider(compose.activity)[RefundViewModel::class.java]}

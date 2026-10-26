@@ -45,7 +45,7 @@ import java.util.Date
 import kotlinx.coroutines.launch
 
 @Composable
-fun UpdatesScreen(model: UpdateViewModel, onBack: () -> Unit) {
+fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGallery: (() -> Unit)? = null, onBack: () -> Unit) {
     val state by model.state.collectAsStateWithLifecycle()
     BackHandler(enabled = state.stage == UpdateStage.VERIFYING) { }
     val context = LocalContext.current
@@ -59,12 +59,20 @@ fun UpdatesScreen(model: UpdateViewModel, onBack: () -> Unit) {
         model.installerClosed()
     }
     LaunchedEffect(model) { model.openSettings() }
+    Column(Modifier.safeDrawingPadding()) {
+    if (com.mendelev.mpos.core.ui.LocalMposTopNavigation.current != null) {
+        com.mendelev.mpos.core.ui.MposAppBar(navigationEnabled=state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER)) {}
+    }
     Column(
-        modifier = Modifier.safeDrawingPadding().verticalScroll(rememberScrollState()).widthIn(max = 760.dp).padding(24.dp),
+        modifier = Modifier.verticalScroll(rememberScrollState()).widthIn(max = 760.dp).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         MposButton(stringResource(R.string.settings_back), onBack, enabled = state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER), style = ActionStyle.Secondary)
         Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineLarge)
+        if (onCatalog != null) MposButton("Товары", onCatalog, style=ActionStyle.Secondary,
+            enabled=state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER))
+        if (com.mendelev.mpos.BuildConfig.DEBUG && onGallery != null) MposButton("Компоненты", onGallery, style=ActionStyle.Secondary,
+            enabled=state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER))
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.update_title), style = MaterialTheme.typography.titleLarge)
@@ -127,5 +135,6 @@ fun UpdatesScreen(model: UpdateViewModel, onBack: () -> Unit) {
         }
         Text(stringResource(R.string.update_explanation), style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(12.dp))
+    }
     }
 }

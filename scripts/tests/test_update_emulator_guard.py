@@ -32,7 +32,7 @@ class CatalogScrollTests(unittest.TestCase):
     def test_preserved_product_below_fold_is_found_in_xml_after_scrolling_inside_list(self):
         from unittest.mock import patch
         import xml.etree.ElementTree as ET
-        viewport=ET.Element("node", {"package":module.PACKAGE,"scrollable":"true","bounds":"[30,325][1570,1030]"})
+        viewport=ET.Element("node", {"package":module.PACKAGE,"scrollable":"true","resource-id":"catalogProducts","bounds":"[30,325][1570,1030]"})
         unrelated=ET.Element("node", {"text":"Чай extra"})
         target=ET.Element("node", {"text":"Чай [42]"})
         with patch.object(module,"wait_text"), patch.object(module,"ui_nodes",side_effect=[[viewport,unrelated],[viewport,target]]), patch.object(module,"adb") as adb, patch.object(module.time,"sleep"):
@@ -47,7 +47,7 @@ class CatalogScrollTests(unittest.TestCase):
     def test_missing_product_fails_after_bounded_scroll_instead_of_accepting_similar_text(self):
         from unittest.mock import patch
         import xml.etree.ElementTree as ET
-        viewport=ET.Element("node", {"package":module.PACKAGE,"scrollable":"true","bounds":"[30,325][1570,1030]"})
+        viewport=ET.Element("node", {"package":module.PACKAGE,"scrollable":"true","resource-id":"catalogProducts","bounds":"[30,325][1570,1030]"})
         wrong=ET.Element("node", {"text":"Чай 42 extra"})
         with patch.object(module,"wait_text"), patch.object(module,"ui_nodes",return_value=[viewport,wrong]), patch.object(module,"adb") as adb, patch.object(module.time,"sleep"):
             with self.assertRaisesRegex(AssertionError,"Preserved product not found"):

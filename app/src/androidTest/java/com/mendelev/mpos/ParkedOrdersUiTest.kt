@@ -40,7 +40,7 @@ class ParkedOrdersUiTest {
             repo.cart(CartAction.Add(productId,1,emptySet(),null,"park-line-$suffix"),"park-add-$suffix",s.cart.sessionId);s=repo.snapshot()
             repo.cart(CartAction.Step(s.cart.lines.single().id,1),"park-step-$suffix",s.cart.sessionId)
         }
-        compose.onNodeWithText("Рабочая зона").performClick();waitText("Текущий заказ")
+        compose.onNodeWithTag("topNav-workspace").performClick();waitText("Текущий заказ")
         lateinit var model: WorkspaceViewModel
         compose.runOnIdle {model=ViewModelProvider(compose.activity)[WorkspaceViewModel::class.java]}
         compose.waitUntil(20_000) {model.state.value.snapshot?.cart?.lines?.singleOrNull()?.productId==productId}
@@ -95,6 +95,6 @@ class ParkedOrdersUiTest {
         assertEquals(labelA,model.state.value.snapshot!!.parked.single().cart.details.label)
         File(compose.activity.filesDir,"qa/parkedLabel.txt").writeText(labelA)
         compose.onNodeWithContentDescription("Закрыть").performClick()
-        compose.onNodeWithText("Товары").performClick();waitText("Добавить товар")
+        compose.onNodeWithTag("topNav-settings").performClick();compose.onNodeWithText("Товары").performClick();waitText("Добавить товар")
     }
 }

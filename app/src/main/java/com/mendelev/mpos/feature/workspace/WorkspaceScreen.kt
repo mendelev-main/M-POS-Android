@@ -84,7 +84,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
         when { folder!=null -> folder=null; editing -> editing=false;else -> {category=null;search=""} }
     }
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        MposAppBar("M-POS · Рабочая зона") {
+        MposAppBar("M-POS · Рабочая зона", navigationEnabled=!busy && !modal) {
             MposNavigationAction("Товары",onCatalog)
             MposNavigationAction("Смена",onShift)
             MposNavigationAction("Настройки",onSettings)

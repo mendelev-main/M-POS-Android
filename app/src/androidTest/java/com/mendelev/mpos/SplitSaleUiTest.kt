@@ -49,7 +49,7 @@ class SplitSaleUiTest {
             ShiftRepository(db).snapshot().currentCash
         }
         compose.waitUntil(20_000) {compose.onAllNodesWithText("Рабочая зона").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithText("Рабочая зона").performClick()
+        compose.onNodeWithTag("topNav-workspace").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceCheckout").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("workspaceCheckout").performClick()
         compose.runOnIdle {model=ViewModelProvider(compose.activity)[SaleViewModel::class.java]};ready()
@@ -64,6 +64,8 @@ class SplitSaleUiTest {
         scroll("splitPay:1");compose.onNodeWithTag("splitPay:1").performClick()
         compose.onNodeWithTag("splitPreviewChange").assertTextEquals("Сдача: 1,00 BYN");shot("split-confirm")
         compose.onNodeWithTag("splitConfirm").performClick();ready()
+        compose.onNodeWithTag("topNav-settings").assertIsNotEnabled()
+        compose.onNodeWithTag("topNav-history").assertIsNotEnabled()
         assertEquals(500L,model.state.value.split!!.pendingCash)
         assertEquals("10",runBlocking {db.catalog().balance(id)!!.quantity});assertEquals(opening,runBlocking {ShiftRepository(db).snapshot().currentCash})
         scroll("splitPay:1");compose.onNodeWithTag("splitPay:1").assertIsNotEnabled()

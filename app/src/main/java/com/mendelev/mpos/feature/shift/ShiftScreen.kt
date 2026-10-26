@@ -26,7 +26,7 @@ import java.time.format.DateTimeFormatter
     var actor by rememberSaveable {mutableStateOf("")};var token by rememberSaveable {mutableStateOf("")}
     var expected by rememberSaveable {mutableStateOf(0L)};var counted by rememberSaveable {mutableStateOf("")}
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        MposAppBar("M-POS · Смена") {
+        MposAppBar("M-POS · Смена", navigationEnabled=!ui.pending && dialog==null) {
             MposNavigationAction("Товары",onCatalog);MposNavigationAction("Рабочая зона",onWorkspace);MposNavigationAction("Настройки",onSettings)
         }
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {

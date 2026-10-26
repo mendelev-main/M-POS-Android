@@ -26,7 +26,7 @@ class ShiftUiTest {
             CatalogDatabase.get(compose.activity.applicationContext).workspace().documents()
         }
         compose.waitUntil(20_000) {compose.onAllNodesWithText("Смена").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithText("Смена").performClick()
+        compose.onNodeWithTag("topNav-shift").performClick()
         lateinit var model: ShiftViewModel
         compose.runOnIdle {model=ViewModelProvider(compose.activity)[ShiftViewModel::class.java]}
         compose.waitUntil(20_000) {!model.state.value.loading}

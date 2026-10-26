@@ -44,7 +44,7 @@ class SaleUiTest {
             ShiftRepository(db).snapshot().currentCash
         }
         compose.waitUntil(20_000) {compose.onAllNodesWithText("Рабочая зона").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithText("Рабочая зона").performClick()
+        compose.onNodeWithTag("topNav-workspace").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceCheckout").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("workspaceCheckout").performClick()
         lateinit var model: SaleViewModel
@@ -86,7 +86,7 @@ class SaleUiTest {
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceCheckout").fetchSemanticsNodes().isNotEmpty()}
         assertNull(runBlocking {SaleRepository(db).unacknowledged()})
         runBlocking {val p=db.catalog().product(id)!!;db.catalog().updateProduct(p.copy(name="Переименован",price="99",revision=2))}
-        compose.onNodeWithText("Чеки").performClick()
+        compose.onNodeWithTag("topNav-history").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.history.any {it.commandId==command}}
         compose.onNodeWithTag("receiptHistory").performScrollToNode(hasTestTag("receipt:$command"))
         compose.onNodeWithTag("receipt:$command").performClick()

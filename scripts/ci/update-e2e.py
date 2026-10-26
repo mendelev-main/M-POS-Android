@@ -67,11 +67,11 @@ def wait_text(pattern, timeout=75, click=False):
                 adb("shell", "input", "tap", str((x1+x2)//2), str((y1+y2)//2))
                 continue
             for node in nodes:
-                if re.search(pattern, node.get("text", ""), re.I) and node.get("enabled", "true") == "true":
+                if re.search(pattern, (node.get("text", "") or node.get("content-desc", "")), re.I) and node.get("enabled", "true") == "true":
                     if click:
                         x1, y1, x2, y2 = map(int, re.findall(r"\d+", node.get("bounds", "")))
                         adb("shell", "input", "tap", str((x1+x2)//2), str((y1+y2)//2))
-                    return node.get("text")
+                    return node.get("text") or node.get("content-desc")
         except (ET.ParseError, ValueError):
             pass
         time.sleep(1)
@@ -86,8 +86,8 @@ def scroll_catalog_to_product(name):
         nodes = ui_nodes()
         for node in nodes:
             if re.search(pattern, node.get("text", "")):
-                return node.get("text")
-        lists = [n for n in nodes if n.get("package") == PACKAGE and n.get("scrollable") == "true"]
+                return node.get("text") or node.get("content-desc")
+        lists = [n for n in nodes if n.get("package") == PACKAGE and n.get("scrollable") == "true" and n.get("resource-id") == "catalogProducts"]
         assert len(lists) == 1, "Expected one catalog list before scrolling to preserved product"
         x1, y1, x2, y2 = map(int, re.findall(r"\d+", lists[0].get("bounds", "")))
         assert x2 > x1 and y2 > y1, "Invalid catalog list bounds"
@@ -220,7 +220,7 @@ def main():
                 # Recover only the already-supported, exact Quickstep infrastructure ANR before UI captures.
                 # Unknown/system/M-POS dialogs are not dismissed by wait_text.
                 adb("shell", "am", "start", "-W", "-n", PACKAGE + "/com.mendelev.mpos.MainActivity")
-                wait_text("^Рабочая зона$")
+                wait_text("^M POS$")
                 result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
                              PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
                 assert "OK (8 tests)" in result and "FAILURES" not in result, result[-4000:]
@@ -296,7 +296,7 @@ def main():
                 wait_text("^8 шт$")
                 (reports / "updated-catalog.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("CATALOG UPDATE PASSED: Room product and stock=8 survived actual package replacement", flush=True)
-                wait_text("^Рабочая зона$", click=True)
+                wait_text("^M POS$", click=True)
                 wait_text("^" + re.escape(expected_workspace_line) + "$")
                 wait_text("^Предварительно: 15 BYN$")
                 wait_text("^3 BYN × 5 шт$")

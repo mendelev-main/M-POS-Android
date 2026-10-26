@@ -37,7 +37,7 @@ class WorkspaceUiTest {
                 modifierGroups=listOf(ModifierGroupInput("milk-group","Молоко","1","1",listOf(ModifierOptionInput("milk-option",milk,"Молоко","0.1","0.5"))))))
             val work=WorkspaceRepository(db);work.initialize();work.cart(CartAction.Clear(work.snapshot().cartRevision),"ui-clear-$suffix",work.snapshot().cart.sessionId)
         }
-        compose.onNodeWithText("Рабочая зона").performClick();waitText("Текущий заказ")
+        compose.onNodeWithTag("topNav-workspace").performClick();waitText("Текущий заказ")
         lateinit var model: WorkspaceViewModel
         compose.runOnIdle {model=ViewModelProvider(compose.activity)[WorkspaceViewModel::class.java]}
         compose.waitUntil(20_000) {model.state.value.snapshot?.categories?.any {it.id==category}==true}
@@ -99,6 +99,6 @@ class WorkspaceUiTest {
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceHomeProduct:home-upgrade-$suffix").fetchSemanticsNodes().isNotEmpty()}
         screenshot("workspace-home")
 
-        compose.onNodeWithText("Товары").performClick();waitText("Добавить товар")
+        compose.onNodeWithTag("topNav-settings").performClick();compose.onNodeWithText("Товары").performClick();waitText("Добавить товар")
     }
 }

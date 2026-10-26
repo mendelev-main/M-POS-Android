@@ -11,3 +11,9 @@
 ## Целевой стек, 2026-10-24
 
 Создан `docs/STACK.md` (ADR-002) по запросу описать технологии для полного native parity. Это техническое решение, а не реализация 01. Отделены фактически установленные versions/dependencies от выбранных будущих компонентов. Все стадии сохраняют Kotlin domain, локальную Room transaction и независимую identity. Дополнительно определены Hilt/KSP, Coil, typed navigation/JSON, OkHttp/SSE, WorkManager, нативные PDF/XLSX/ESC-POS и Keystore. Версии будущих библиотек проверять при начале соответствующего этапа.
+
+## 2026-10-27 — единая верхняя панель до следующих модулей
+
+По запросу владельца переносим pinned renderTopbar, не начинаем склад04. NAV01–NAV03 в docs/TOP-NAVIGATION.md: M POS/Заказы/Приёмка/Чеки/Аналитика/Бронирования/События/смена/settings. Source Заказы=purchaseOrders (заказы поставщикам), не parked/web orders. Товары/debug доступны через настройки. Общая панель через navigation context с локальными command/editor locks; route saveable, смена из существующего ShiftViewModel/Room. Будущие разделы явно не реализованы, событий/инвентаризации без источника данных нет. Room8/снимки/финансовая логика/подпись/stable/main без изменений.
+
+Локально API36 emulator-5554: TopNavigationUiTest и TopBarLayoutTest OK2; narrow520dp прокрутка/settings62dp, отключённые callbacks, все маршруты/recreation/editor lock. testDebugUnitTest/lintDebug/assembleDebug/assembleDebugAndroidTest passed. Сравнение исходного extracted Web header в Chrome1470px и native1600px/200dpi1280dp выполнено визуально с учётом density; это не автоматический pixel diff одинаковых viewport. Полная CI/regression/font-scale/dark/physical пока pending.

@@ -33,9 +33,14 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
     val locked=ui.pending || refund.pending || refund.unresolved!=null || ui.unresolved!=null || ui.splitUncertain || (ui.split?.paid?.isNotEmpty()==true && ui.completed==null)
     BackHandler {if(!ui.pending) {if(refund.review!=null || refund.result!=null) refundModel.dismiss() else if(ui.selected!=null && refund.unresolved==null && !refund.pending) model.closeDetails() else if(ui.partPreview!=null) model.dismissPart() else if(ui.preview!=null) model.dismissPreview() else if(!locked) onBack()}}
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        MposAppBar(if(history) "M-POS · История чеков" else "M-POS · Оплата") {
+        MposAppBar(if(history) "M-POS · История чеков" else "M-POS · Оплата", navigationEnabled=!locked) {
             MposNavigationAction("Назад",{if(!locked) onBack()})
             if(!history) MposNavigationAction("История чеков",{if(!locked) onHistory()})
+        }
+        if(LocalMposTopNavigation.current != null) {
+            Row(Modifier.padding(horizontal=20.dp, vertical=8.dp)) {
+                MposButton("Назад", onBack, enabled=!locked, style=ActionStyle.Secondary)
+            }
         }
         if(ui.loading) Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {CircularProgressIndicator()}
         else if(ui.fatal) Column(Modifier.padding(20.dp)) {MposNotice(ui.message ?: "Не удалось открыть оплату",true);MposButton("Повторить открытие",model::refresh)}

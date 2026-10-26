@@ -51,7 +51,7 @@ class WorkspaceScaleUiTest {
             }
         }
         try {
-            val start=SystemClock.elapsedRealtime();compose.onNodeWithText("Рабочая зона").performClick()
+            val start=SystemClock.elapsedRealtime();compose.onNodeWithTag("topNav-workspace").performClick()
             lateinit var model: WorkspaceViewModel
             compose.runOnIdle {model=ViewModelProvider(compose.activity)[WorkspaceViewModel::class.java]}
             compose.waitUntil(20_000) {model.state.value.snapshot?.products?.count {it.categoryId==category}==2000}
@@ -96,7 +96,7 @@ class WorkspaceScaleUiTest {
             repo.cart(CartAction.Add(id,1,emptySet(),null,"scale-line-$suffix"),"scale-add-$suffix",s.cart.sessionId)
         }
         try {
-            compose.onNodeWithText("Рабочая зона").performClick()
+            compose.onNodeWithTag("topNav-workspace").performClick()
             check(automation.setRotation(UiAutomation.ROTATION_FREEZE_90))
             shell("settings put system font_scale 1.5")
             compose.waitUntil(20_000) {compose.activity.resources.configuration.orientation==Configuration.ORIENTATION_PORTRAIT && compose.activity.resources.configuration.fontScale>1.4f}
