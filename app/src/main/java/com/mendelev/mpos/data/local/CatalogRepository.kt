@@ -110,7 +110,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
         return db.withTransaction {
             repeat(commandId, fp)?.let { return@withTransaction it }
             SplitPaymentRepository(db).requireCategoryUnlocked(id)
-        val old = dao.category(id)
+            val old = dao.category(id)
             if (old?.revision != expectedRevision) throw CatalogFailure("conflict", "Категория изменилась. Откройте её заново")
             if (dao.categoryByKey(key)?.id?.let { it != id } == true) throw CatalogFailure("name", "Такая категория уже существует")
             val category = CategoryEntity(id, name, key, old?.sortOrder ?: dao.nextCategoryOrder(), (old?.revision ?: 0) + 1, cleanColor, cleanSymbol)

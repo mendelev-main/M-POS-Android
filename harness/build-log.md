@@ -388,3 +388,5 @@ Run40230629400/a643b3f SUCCESS:62instrumentation/0failures,6Python/lint/build/JV
 ## 2026-10-26 —03b.3a implementation доCI
 
 Split progress repository/command guards/final sale consumption; schema7 прежний. Added3Room cases: restore/freeze/replay/finalize,3progress fault boundaries+SQLabort/10finalsale faults/concurrent replay,zero parts+firstconfirm/cartclear race. UI поканеподключён. preflight/6Python/diff passed. Local android blocked доGradle: ~/.gradle/wrapper/...zip.lck directory cannot create; SDK отсутствует. AndroidAPI36 verification pending full develop workflow. Прежний all-parts UI остаётся рабочим, новый progress черезproduction UI покане создаётся.
+
+Run40234272200/8a012ba: emulatorAPI36 SUCCESS, checks failed lint SuspiciousIndentation CatalogRepository.kt114 из-за вставленного val old с отступом8 вместо12. Это мояошибкаформатирования; baseline/gates не менялись. Исправлен толькоleadingwhitespace. Runtime/instrumentation не изменились, поэтому повторнаяпроверка —android-pr.yml checks безещёодногоemulatorrun; API36evidence берётсяизуспешногоemulatorjob исходногоrun. Итогcounts/URLsниже послеартефактов.
