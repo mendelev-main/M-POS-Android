@@ -39,3 +39,6 @@
 
 
 03c.1a S03 historical stock planning scope ci-verified: [checks40377899857](https://github.com/mendelev-main/M-POS-Android/actions/runs/40377899857)/672951b, job121765882966 SUCCESS71JVM/0failures/0errors/0skipped (6HistoricalRestock tests),8Python/preflight/lint/assembleDebug. Local62supplemental cached-domain/29pinnedsource regressions passed SHA matched. Stock plan не подключён к Room/UI; refund money/atomic record/cash/ledger/replay/restart ещё planned. Delivery example остаётся pending answer; mixed cash40/card60 подтверждён. Stable/main0.1.61.1 без изменений, emulator/подпись/publish не запускались для unused pure planner.
+
+
+2026-10-26 —03c.1b S03: владелец подтвердил отмену расхода курьеру при полном возврате. Прежние записи «delivery pending» выше —история, вопрос закрыт. RefundMoney implemented: customer cash/card по исходной оплате, deliveryCashCredit отдельно, net cash delta=credit−cash. Card25/delivery5 →card25 и cash+5; cash25/delivery5 →cash−20. Проверяется конечная наличность атомарного изменения, без повторной выдачи сдачи; см. docs/REFUND-03C.md. Room/UI/replay ещё planned, schema7/stable0.1.61.1 прежние.
