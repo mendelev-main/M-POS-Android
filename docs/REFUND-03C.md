@@ -1,5 +1,7 @@
 # 03c — полный возврат чека
 
+Текущий статус:03c.1a/1b и03c.2a repository ci-verified;03c.2b persisted-refund APK fixture ci-verified/run40382070117;03c.3 shared UI specification-only. Полный S03 ещё не закрыт.
+
 Предпосылка выполнена:03b выпущен0.1.61.1/code7101, public production upgrade5601→7101 прошёл40354353799. Рабочая ветка develop, Android16+/API36, BYN. S03 — первый full refund; частичный возврат/loyalty/acquiring не включаются автоматически. Применяются mpos-phase/mpos-domain и pinned Web1682c883.
 
 ## Источник и денежные границы
@@ -53,3 +55,15 @@
 03c.2a S03 repository scope ci-verified: [full CI40380296921](https://github.com/mendelev-main/M-POS-Android/actions/runs/40380296921)/fd5f325 SUCCESS. Checks121774409597:77JVM/0failures/0errors/0skipped,8Python/preflight/lint/build. Emulator121774409647/API36:81instrumentation finished/BUILD SUCCESSFUL, затем прежние2scale/7UIseed/2financialseed+verify и actual debugAPK1→2 passed (catalog/workspace/parked/home/shift/split/sale). Это ещё не сохранённый refund при APK replacement. Generated Room8 schema identity3f09e65bf3e929ae5ff30725ce792a05 copied unchanged from CI reports.
 
 03c.2b implemented, CI pending: RefundUpgradeTest creates isolated app-private delivery receipt25/cash/courier5, restores historical0.0004kg, closes shift at0, changes live recipe/tracking/name and retains command context. After actual debugAPK1→2 asserts original receipt/refund/hash/result/stock ledger/revisions/closed cash and replay without duplicate. Driver financial fixture count2→3, normal instrumentation81→82; test-only heterogeneous SQL array typed Any explicitly for future Kotlin compatibility. Main updater DB/gates unchanged. No refund UI/physical acceptance/release yet.
+
+
+## Следующий03c.3 — shared UI и восстановление результата
+
+Вход: история →исходный чек →«Вернуть чек». Список/карточка получают отдельный refund status по receiptId, а не меняют original receipt. Подтверждение через общий MposDialog/Danger/Close: полная сумма, наличные покупателю, карта вручную через терминал, возврат наличности от курьера, итог наличной кассы. Для courier credit явно указать необходимость фактически вернуть деньги в кассу. Уже возвращённый чек показывает сохранённые суммы/дату, повторная операция недоступна. Активная смена/owner/partial split/revision/stock остаются обязательными проверками repository.
+
+ViewModel удерживает command+RefundPreview при неизвестном ответе; сначала outcome lookup/replay той же команды. Нельзя сообщать успех до сохранённого результата или разрешать новый command при неразрешённом исходе. После перезапуска состояние возвращённого чека восстанавливается из refunds/receiptId, поэтому уникальность сохраняется даже без прежнего UI. Ошибка повторного чтения блокирует новые действия до восстановления. Закрытие диалога не отменяет уже записанный возврат. Никаких новых acquiring/печати/Telegram эффектов.
+
+Проверки03c.3: ViewModel lost-response/read-failure/reload, Compose full delivery/mixed/manual card/already-returned/disabled-pending/error, общий дизайн, история после reopen. Это specification-only до реализации и CI evidence.
+
+
+03c.2b S03 persisted-refund update scope ci-verified: [full CI40382070117](https://github.com/mendelev-main/M-POS-Android/actions/runs/40382070117)/55a700e SUCCESS checks/emulator. API36 job121780644112:82instrumentation/0failures/0skipped (downloaded connected HTML), включая RefundUpgradeTest; затем2scale/7UIseed/3financialseed+verify, actual debugAPK1→2 passed. REFUND UPDATE PASSED подтверждает сохранение delivery25/cash refund25/courier credit5, exact historical0.0004kg/ledger/revisions, immutable receipt, closed cash0 и replay без дубликата после APK replacement. Checks77JVM/8Python/preflight/lint/build passed. Runtime repository fd5f325 не менялся; follow-up adds generated Room8 schema/test fixture/driver and explicit test-only SQL Any type. Native unit amount BYN, Android16+, stable/main0.1.61.1 прежний; подпись/publish skipped on develop. Следующий03c.3 shared UI/recovery tests; physical/OEM/cold-kill/manual card external actions остаются отдельной приёмкой.
