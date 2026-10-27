@@ -1,6 +1,6 @@
 # 04a.7 — приёмка без заказа и ввод накладной
 
-Статус: implemented / CI pending, SA01–SA08. Pinned1682c883 receiving-drafts.js openReceivingDocument/saveReceivingDraft; receiving-ui.js updateInvoiceLine/add/remove; receiving.js invoiceReceivingItems/applyReceivingDocument. Android inventory adapter не меняет receiving. Reference не обновлялся.
+Статус: ci-verified / API36 / run40576618684, SA01–SA08. Pinned1682c883 receiving-drafts.js openReceivingDocument/saveReceivingDraft; receiving-ui.js updateInvoiceLine/add/remove; receiving.js invoiceReceivingItems/applyReceivingDocument. Android inventory adapter не меняет receiving. Reference не обновлялся.
 
 ## Независимый документ
 
@@ -38,4 +38,19 @@ Receiving draft payload3 reads1/2/3; старые строки читаются 
 - SA07: price draft restart, rollback at each posting boundary, same-command replay/conflict, payload1/2 compatibility.
 - SA08: price entry/recreate/calculated sum in UI, actual APK replacement preserves raw price draft and posted invoice.
 
-Local/CI evidence добавляется после результата. Physical tablet/dark/150%/forced cold-process UI отдельно. Допрасходы/сторно/inventory не входят.
+CI evidence ниже. Physical tablet/dark/150%/forced cold-process UI отдельно. Допрасходы/сторно/inventory не входят.
+
+## Покрытие проверками
+
+| Acceptance | Проверка |
+|---|---|
+| SA01, SA04 | StandaloneReceivingRulesTest, StandaloneReceivingViewModelTest, StandaloneReceivingRepositoryTest: optional supplier/simple rows, explicit refresh, reference guards, frozen legacy fingerprint |
+| SA02, SA03 | StandaloneReceivingRepositoryTest: persisted stock/cost, all7 posting write failures, SQL abort, concurrent commands, lost reply, owner/gate and replay |
+| SA05 | StandaloneReceivingUiTest, StandaloneReceivingUpgradeTest: no synthetic order, independent purchase draft, history, recreation and actual APK replacement |
+| SA06 | ReceivingPriceRulesTest: 1.5×2.35→3.53; two lines7.06;3boxes×10→30; physical conversion/precision refusal; same unit retains price; explicit mode switch |
+| SA07 | StandaloneReceivingRepositoryTest: raw price reopen, all7 price posting failures, same-command replay/changed-price refusal, literal payload2 default without rewrite; ReceivingLegacyFixture retains literal payload1 |
+| SA08 | StandaloneReceivingUiTest and StandaloneReceivingUpgradeTest: price2.35/qty1.5 retained, total353minor, stock11.5/cost2.05; next price draft survives update; legacy policy1 history/replay unchanged |
+
+Локально:113JVM/0failures/0skipped, lintDebug, debug APK и testAPK прошли. Instrumentation/actual upgrade evidence: завершённый CI ниже. Локальную базу пользователя fixtures не заполняют.
+
+04a.7 SA01–SA08 ci-verified: [FullCI40576618684](https://github.com/mendelev-main/M-POS-Android/actions/runs/40576618684)/a879923 SUCCESS:113JVM/160API36 instrumentation/0failures/0skipped,12Python/lint/debugAPK/testAPK;2scale/15UIseed/10upgrade fixtures and actual debugAPK1→2. Standalone invoice without synthetic purchase, raw price2.35×1.5→3.53, stock10→11.5/cost2→2.05, next saved price draft, old policy1/history and original save/post replay preserved without duplicate movements. Existing sales/split/refund/catalog/workspace/parked/home/shift/supplier/purchase assertions retained and passed. Screenshots standalone-draft/posted reviewed: price/quantity/calculated sum and shared controls readable, no overlap. No local user DB seed; physical tablet/dark/150%/forced cold-process receiving UI pending. Whole04 remains in progress. Main/stable/signing/SQLschema unchanged. Charges/storno and inventory remain separate future contracts.
