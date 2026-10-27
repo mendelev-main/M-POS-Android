@@ -1,6 +1,6 @@
 # Этап 04 — Склад
 
-Статус: in progress —04a.1–04a.4 suppliers/drafts/requests/edit-cancel ci-verified/API36/run40487143428; весь04 не закрыт
+Статус: in progress —04a.1–04a.6 suppliers/drafts/requests/receiving ci-verified/API36/run40512178440; весь04 не закрыт
 
 ## Объём
 
@@ -52,4 +52,6 @@ SUP01–SUP05: [fullCI40472850012](https://github.com/mendelev-main/M-POS-Androi
 
 04a.5 итог: [FullCI40502219375](https://github.com/mendelev-main/M-POS-Android/actions/runs/40502219375)/a8d8c61 SUCCESS first attempt:100JVM/134API36 instrumentation/0failures/0skipped,12Python/lint/build;2scale/13UIseed/8upgrade fixtures and actual debugAPK1→2. RECEIVING DRAFT UPDATE PASSED: invoice facts, baseline, exact preview and old save replay preserved without stock/order posting. Existing sale/split/refund/catalog/workspace/parked/home/shift/supplier/purchase assertions retained and passed. Physical tablet/dark/150%/forced cold-process receiving UI pending; whole04 remains in progress. Next04a.6 receiving commit. Main/release/signing/SQLschema unchanged.
 
-04a.6 RP01–RP05 implemented/CI pending: [проведение и история приёмки](../../docs/RECEIVING-POST-04A.md). Saved-only atomic stock/cost/ledger/order received/draft tombstone/result/audit; immutable posted changes and source facts, explicit overage, stale baseline refusal, same-command recovery. Whole04 remains in progress.
+04a.6 RP01–RP05 ci-verified/API36/run40512178440: [проведение и история приёмки](../../docs/RECEIVING-POST-04A.md). Saved-only atomic stock/cost/ledger/order received/draft tombstone/result/audit; immutable posted changes and source facts, explicit overage, stale baseline refusal, same-command recovery. Whole04 remains in progress.
+
+04a.6 итог: [FullCI40512178440](https://github.com/mendelev-main/M-POS-Android/actions/runs/40512178440)/2d8a183 SUCCESS first attempt:103JVM/145API36 instrumentation/0failures/0skipped,12Python/lint/build;2scale/14UIseed/9upgrade fixtures и actual debugAPK1→2. RECEIVING POST UPDATE PASSED: immutable invoice/posted changes, exact stock13/cost2.461538461538, received order/actor/link, draft tombstone and original post replay retained without another stock movement. All existing financial/catalog/workspace/parked/home/shift/supplier/purchase assertions retained and passed. Physical tablet/dark/150%/forced cold-process receiving UI pending. Whole04 remains in progress; main/stable/signing/SQLschema unchanged.
