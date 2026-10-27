@@ -49,7 +49,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGallery: (() -> Unit)? = null, onSuppliers: (() -> Unit)? = null, onBack: () -> Unit) {
+fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGallery: (() -> Unit)? = null, onSuppliers: (() -> Unit)? = null, onInventory: (() -> Unit)? = null, onBack: () -> Unit) {
     val state by model.state.collectAsStateWithLifecycle()
     BackHandler(enabled = state.stage == UpdateStage.VERIFYING) { }
     val context = LocalContext.current
@@ -76,6 +76,8 @@ fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGal
         FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
         if (onCatalog != null) MposButton("Товары", onCatalog, style=ActionStyle.Secondary,
             enabled=state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER))
+        if (onInventory != null) MposButton("Инвентаризация",onInventory,style=ActionStyle.Secondary,
+            enabled=state.stage !in setOf(UpdateStage.VERIFYING,UpdateStage.INSTALLER),modifier=Modifier.testTag("settingsInventory"))
         if (onSuppliers != null) MposButton("Поставщики",onSuppliers,style=ActionStyle.Secondary,
             enabled=state.stage !in setOf(UpdateStage.VERIFYING,UpdateStage.INSTALLER),modifier=Modifier.testTag("settingsSuppliers"))
         if (com.mendelev.mpos.BuildConfig.DEBUG && onGallery != null) MposButton("Компоненты", onGallery, style=ActionStyle.Secondary,
