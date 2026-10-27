@@ -11,9 +11,10 @@ import java.util.UUID
 
 object ReceivingCodec {
     const val KEY="receiving-drafts"
-    fun encode(rows: List<ReceivingRecord>): String=JSONObject().put("version",1).put("items",JSONArray(rows.map {r->
+    fun encode(rows: List<ReceivingRecord>): String=JSONObject().put("version",2).put("items",JSONArray(rows.map {r->
         JSONObject().put("orderId",r.orderId).put("revision",r.revision).put("draft",r.draft?.let {d->
-            JSONObject().put("id",d.id).put("order",JSONObject(PurchaseOrderCodec.encode(listOf(d.order))))
+            JSONObject().put("id",d.id).put("order",d.order?.let {JSONObject(PurchaseOrderCodec.encode(listOf(it)))} ?: JSONObject.NULL)
+                .put("supplier",d.supplier?.let {JSONObject().put("id",it.id).put("name",it.name).put("revision",it.revision)} ?: JSONObject.NULL)
                 .put("invoiceNumber",d.invoiceNumber).put("invoiceDate",d.invoiceDate).put("lines",JSONArray(d.lines.map {l->val p=l.product
                     JSONObject().put("product",JSONObject().put("id",p.id).put("name",p.name).put("unit",p.unit).put("revision",p.revision).put("stockRevision",p.stockRevision).put("stock",p.stock).put("cost",p.cost).put("noStockTracking",p.noStockTracking))
                         .put("quantity",l.quantity).put("unit",l.unit).put("packSize",l.packSize).put("contentUnit",l.contentUnit).put("total",l.total)
@@ -22,22 +23,22 @@ object ReceivingCodec {
     })).toString()
     fun decode(raw: String): List<ReceivingRecord> {
         try {
-            val j=JSONObject(raw);require(j.get("version") is Number && j.get("version").toString()=="1");val rows=j.getJSONArray("items")
+            val j=JSONObject(raw);require(j.get("version") is Number && j.get("version").toString() in setOf("1","2"));val version=j.get("version").toString();val rows=j.getJSONArray("items")
             fun long(o: JSONObject,k: String): Long {require(o.get(k) is Number);return o.get(k).toString().toLong()}
             return (0 until rows.length()).map {i->
                 val r=rows.getJSONObject(i);val orderId=r.getString("orderId");PurchaseDraftRules.id(orderId);require(r.has("draft"))
-                val d=if(r.isNull("draft")) null else r.getJSONObject("draft").let {d->val a=d.getJSONArray("lines")
-                    ReceivingDraft(d.getString("id"),PurchaseOrderCodec.decode(d.getJSONObject("order").toString()).single(),d.getString("invoiceNumber"),d.getString("invoiceDate"),
+                val d=if(r.isNull("draft")) null else r.getJSONObject("draft").let {d->require(d.has("order"));val a=d.getJSONArray("lines")
+                    ReceivingDraft(d.getString("id"),if(d.isNull("order")) {require(version=="2");null} else PurchaseOrderCodec.decode(d.getJSONObject("order").toString()).single(),d.getString("invoiceNumber"),d.getString("invoiceDate"),
                         (0 until a.length()).map {n->val l=a.getJSONObject(n);val p=l.getJSONObject("product");require(p.get("noStockTracking") is Boolean)
                             ReceivingLine(ReceivingProduct(p.getString("id"),p.getString("name"),p.getString("unit"),long(p,"revision"),long(p,"stockRevision"),p.getString("stock"),p.getString("cost"),p.getBoolean("noStockTracking")),l.getString("quantity"),l.getString("unit"),l.getString("packSize"),l.getString("contentUnit"),l.getString("total"))
-                        }).also {ReceivingRules.validate(it);require(it.order.id==orderId)}
+                        },if(version=="2") {require(d.has("supplier"));if(d.isNull("supplier")) null else d.getJSONObject("supplier").let {ReceivingSupplier(it.getString("id"),it.getString("name"),long(it,"revision"))}} else null).also {ReceivingRules.validate(it);require(it.key==orderId)}
                 }
                 ReceivingRecord(orderId,long(r,"revision"),d).also {require(it.revision>=1)}
             }.also {require(it.map {it.orderId}.distinct().size==it.size && it.mapNotNull {it.draft?.id}.distinct().size==it.count {it.draft!=null})}
         } catch(_:Exception) {throw CatalogFailure("receivingFormat","Не удалось прочитать черновики приёмки. Данные не сброшены")}
     }
 }
-data class ReceivingSnapshot(val ownerId: String,val orders: List<PurchaseOrder>,val records: List<ReceivingRecord>,val products: List<ReceivingProduct>)
+data class ReceivingSnapshot(val ownerId: String,val orders: List<PurchaseOrder>,val records: List<ReceivingRecord>,val products: List<ReceivingProduct>,val suppliers: List<ReceivingSupplier> = emptyList())
 interface ReceivingAccess {
     suspend fun snapshot(): ReceivingSnapshot
     suspend fun outcome(c: ReceivingCommand): String?
@@ -51,7 +52,7 @@ class ReceivingRepository(private val db: CatalogDatabase,private val clock: Clo
             val products=db.catalog().allProducts().filter {it.type=="simple"}.map {p->val b=db.catalog().balance(p.id) ?: error("Нет складского baseline")
                 ReceivingProduct(p.id,p.name,p.unit,p.revision,b.revision,b.quantity,p.cost,p.noStockTracking)
             }
-            ReceivingSnapshot(db.catalog().config()!!.ownerId,PurchaseOrderStore(db).all().sortedByDescending {it.createdAt},records,products)
+            ReceivingSnapshot(db.catalog().config()!!.ownerId,PurchaseOrderStore(db).all().sortedByDescending {it.createdAt},records,products,db.workspace().document(SupplierCodec.KEY)?.let {SupplierCodec.decode(it.payload)}.orEmpty().filterNot {it.deleted}.map {ReceivingSupplier(it.id,it.name,it.revision)})
         }
     }
     override suspend fun outcome(c: ReceivingCommand): String? {
@@ -60,6 +61,10 @@ class ReceivingRepository(private val db: CatalogDatabase,private val clock: Clo
             if(it.fingerprint!=c.fingerprint()) throw CatalogFailure("conflict","Команда уже использована для другого изменения")
             it.resultId
         }
+    }
+    internal suspend fun requireSupplierCurrent(d: ReceivingDraft) {
+        d.supplier?.let {s->val live=db.workspace().document(SupplierCodec.KEY)?.let {SupplierCodec.decode(it.payload)}.orEmpty().find {it.id==s.id && !it.deleted}
+            if(live==null || live.name!=s.name || live.revision!=s.revision) throw CatalogFailure("conflict","Поставщик изменился. Обновите основание или выберите поставщика заново")}
     }
     override suspend fun commit(c: ReceivingCommand): String {
         val c=c.copy(draft=c.draft?.copy(lines=c.draft.lines.toList()));c.validate()
@@ -72,10 +77,11 @@ class ReceivingRepository(private val db: CatalogDatabase,private val clock: Clo
             val d=c.draft
             if(d!=null) {
                 if(rows.any {it.orderId!=c.orderId && it.draft?.id==d.id}) throw CatalogFailure("conflict","Идентификатор черновика уже используется другим заказом")
-                val order=PurchaseOrderStore(db).all().find {it.id==c.orderId} ?: throw CatalogFailure("receiving","Заказ недоступен")
-                if(order.status!="pending" || order!=d.order) throw CatalogFailure("conflict","Заказ изменился. Обновите основание черновика")
+                val order=d.order?.let {PurchaseOrderStore(db).all().find {it.id==c.orderId} ?: throw CatalogFailure("receiving","Заказ недоступен")}
+                if((order!=null && order.status!="pending") || order!=d.order) throw CatalogFailure("conflict","Заказ изменился. Обновите основание черновика")
                 if(old?.draft!=null && old.draft.id!=d.id) throw CatalogFailure("conflict","У заказа уже есть другой черновик")
-                if(old?.draft!=null && !d.lines.map {it.product.id}.containsAll(old.draft.lines.map {it.product.id})) throw CatalogFailure("receiving","Нельзя незаметно удалить введённые факты приёмки")
+                if(d.order!=null && old?.draft!=null && !d.lines.map {it.product.id}.containsAll(old.draft.lines.map {it.product.id})) throw CatalogFailure("receiving","Нельзя незаметно удалить введённые факты приёмки")
+                requireSupplierCurrent(d)
                 d.lines.forEach {l->val p=db.catalog().product(l.product.id)
                     if(p==null || p.type!="simple" || p.unit!=l.product.unit) throw CatalogFailure("receiving","Товар «${l.product.name}» недоступен")
                 }

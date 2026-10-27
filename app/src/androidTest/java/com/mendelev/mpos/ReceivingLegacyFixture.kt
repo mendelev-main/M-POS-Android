@@ -10,7 +10,8 @@ suspend fun seedLegacyPostedReceiving(db: CatalogDatabase): PostedReceiving {
     val d=ReceivingRules.open("legacy-invoice",seed.order,s.products).let {it.copy(lines=it.lines.map {l->l.copy(quantity="3",total="12")})}
     val r=PostedReceiving("legacy-post","legacy-command",seed.owner,1,1,d,false,costPolicy=1)
     val json=JSONObject(PostedReceivingCodec.encode(listOf(r))).put("version",1)
-    json.getJSONArray("items").getJSONObject(0).remove("costPolicy")
+    val oldItem=json.getJSONArray("items").getJSONObject(0);oldItem.remove("costPolicy")
+    val oldInvoice=oldItem.getJSONObject("invoice");oldInvoice.put("version",1);oldInvoice.getJSONArray("items").getJSONObject(0).getJSONObject("draft").remove("supplier")
     db.workspace().put(WorkspaceDocument(PostedReceivingCodec.KEY,1,json.toString()))
     val p=db.catalog().product(seed.productId)!!;val b=db.catalog().balance(p.id)!!
     db.catalog().updateProduct(p.copy(cost=r.result.lines.single().newCost,revision=p.revision+1))

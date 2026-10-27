@@ -11,7 +11,7 @@ data class ReceivingPostCommand(val commandId: String,val actorId: String,val re
     }
     fun fingerprint(): String {
         validate()
-        return CatalogRules.fingerprint("receiving.post.v$costPolicy",ReceivingCommand("payload",actorId,draft.order.id,revision,draft).fingerprint(),overageConfirmed)
+        return CatalogRules.fingerprint("receiving.post.v$costPolicy",ReceivingCommand("payload",actorId,draft.key,revision,draft).fingerprint(),overageConfirmed)
     }
 }
 /** Immutable posting snapshot. Current product metadata is never used to reconstruct history. */
@@ -22,7 +22,7 @@ data class PostedReceiving(val id: String,val commandId: String,val actorId: Str
 
 /** Current policy2: final cost2 HALF_UP. Policy1 is retained for immutable history/replay. */
 object ReceivingPostingRules {
-    fun preview(d: ReceivingDraft,o: PurchaseOrder,products: List<ReceivingProduct>,costPolicy: Int=2): ReceivingPreview {
+    fun preview(d: ReceivingDraft,o: PurchaseOrder?,products: List<ReceivingProduct>,costPolicy: Int=2): ReceivingPreview {
         require(costPolicy in 1..2)
         val result=if(costPolicy==1) ReceivingRules.preview(d,o,products) else ReceivingRules.preview(d,o,products,2,java.math.RoundingMode.HALF_UP)
         result.lines.forEach {l->

@@ -64,9 +64,9 @@ class ReceivingPostingRepositoryTest {
             val old=db.catalog().balance(p)!!;db.catalog().updateBalance(old.copy(revision=2)) // same numeric quantity, new revision
             reject {repo.commit(c)};db.catalog().updateBalance(old)
             val product=db.catalog().product(p)!!;db.catalog().updateProduct(product.copy(revision=3));reject {repo.commit(c)};db.catalog().updateProduct(product)
-            val saved=c.draft.copy(invoiceNumber="new");ReceivingRepository(db).commit(ReceivingCommand("change",c.actorId,c.draft.order.id,1,saved))
+            val saved=c.draft.copy(invoiceNumber="new");ReceivingRepository(db).commit(ReceivingCommand("change",c.actorId,c.draft.order!!.id,1,saved))
             reject {repo.commit(c)};c=c.copy(revision=2,draft=saved)
-            PurchaseOrderRepository(db).commit(PurchaseOrderCommand("cancel",c.actorId,c.draft.order.id,1,PurchaseOrderAction.Cancel));reject {repo.commit(c)}
+            PurchaseOrderRepository(db).commit(PurchaseOrderCommand("cancel",c.actorId,c.draft.order!!.id,1,PurchaseOrderAction.Cancel));reject {repo.commit(c)}
             assertEquals(0,repo.history().size);assertEquals("10",db.catalog().balance(p)!!.quantity);assertNotNull(ReceivingRepository(db).snapshot().records.single().draft)
         } finally {db.close()}
     }
@@ -89,7 +89,7 @@ class ReceivingPostingRepositoryTest {
             val c=prepare(db);val p=c.draft.lines.single().product.id
             val product=db.catalog().product(p)!!;db.catalog().updateProduct(product.copy(noStockTracking=true))
             val s=ReceivingRepository(db).snapshot();val d=ReceivingRules.rebase(c.draft,s.orders.single(),s.products)
-            ReceivingRepository(db).commit(ReceivingCommand("rebase",c.actorId,d.order.id,1,d))
+            ReceivingRepository(db).commit(ReceivingCommand("rebase",c.actorId,d.order!!.id,1,d))
             ReceivingPostingRepository(db).commit(c.copy(revision=2,draft=d))
             assertEquals("4",db.catalog().product(p)!!.cost);assertEquals("10",db.catalog().balance(p)!!.quantity);assertEquals(1L,db.catalog().balance(p)!!.revision);assertEquals(1,db.catalog().movementCount(p))
             val tiny=prepare(db,"tiny",qty="0.0004",total="0.01")
@@ -114,13 +114,13 @@ class ReceivingPostingRepositoryTest {
         try {
             val c=prepare(db)
             CatalogRepository(db).saveProduct(ProductInput("zero",null,"Не поставлено",null,"5","2","10",null,true,"create-zero",unit="l"))
-            SupplierRepository(db).commit(SupplierCommand("link-zero",c.actorId,SupplierAction.Save(c.draft.order.source.supplierId,1,c.draft.order.source.supplierName,setOf(c.draft.lines.single().product.id,"zero"))))
+            SupplierRepository(db).commit(SupplierCommand("link-zero",c.actorId,SupplierAction.Save(c.draft.order!!.source.supplierId,1,c.draft.order!!.source.supplierName,setOf(c.draft.lines.single().product.id,"zero"))))
             val purchase=PurchaseDraftRepository(db).snapshot()
             val edit=PurchaseOrderMutationRules.open(c.draft.order,purchase.suppliers,purchase.products).let {it.copy(lines=it.lines+purchase.products.single {p->p.id=="zero"}.blankLine().copy(quantity="10"))}
-            PurchaseOrderRepository(db).commit(PurchaseOrderCommand("edit-zero",c.actorId,c.draft.order.id,1,PurchaseOrderAction.Edit(edit)))
+            PurchaseOrderRepository(db).commit(PurchaseOrderCommand("edit-zero",c.actorId,c.draft.order!!.id,1,PurchaseOrderAction.Edit(edit)))
             val snap=ReceivingRepository(db).snapshot()
             val d=ReceivingRules.rebase(c.draft,snap.orders.single(),snap.products).let {it.copy(lines=it.lines.map {l->if(l.product.id=="zero") l.copy(quantity="0",total="0") else l})}
-            ReceivingRepository(db).commit(ReceivingCommand("save-zero",c.actorId,d.order.id,1,d))
+            ReceivingRepository(db).commit(ReceivingCommand("save-zero",c.actorId,d.order!!.id,1,d))
             val p=db.catalog().product("zero");val b=db.catalog().balance("zero")
             ReceivingPostingRepository(db).commit(c.copy(revision=2,draft=d))
             assertEquals(p,db.catalog().product("zero"));assertEquals(b,db.catalog().balance("zero"));assertEquals(1,db.catalog().movementCount("zero"))

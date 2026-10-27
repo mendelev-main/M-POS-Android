@@ -13,7 +13,7 @@ object PostedReceivingCodec {
             .put("changes",JSONArray(r.result.lines.map {l->JSONObject().put("productId",l.productId).put("name",l.name).put("actual",l.actual)
                 .put("expected",l.expected ?: JSONObject.NULL).put("shortage",l.shortage ?: JSONObject.NULL).put("overage",l.overage ?: JSONObject.NULL)
                 .put("oldStock",l.oldStock).put("newStock",l.newStock).put("oldCost",l.oldCost).put("newCost",l.newCost).put("noStockTracking",l.noStockTracking).put("totalMinor",l.totalMinor)}))
-            .put("invoice",JSONObject(ReceivingCodec.encode(listOf(ReceivingRecord(r.draft.order.id,r.draftRevision,r.draft)))))
+            .put("invoice",JSONObject(ReceivingCodec.encode(listOf(ReceivingRecord(r.draft.key,r.draftRevision,r.draft)))))
     })).toString()
     fun decode(raw: String): List<PostedReceiving> {
         try {
@@ -32,7 +32,7 @@ object PostedReceivingCodec {
                     ReceivingPostingRules.validate(it)
                 }
             }.also {rows->
-                require(rows.map {it.id}.distinct().size==rows.size && rows.map {it.commandId}.distinct().size==rows.size && rows.map {it.draft.order.id}.distinct().size==rows.size)
+                require(rows.map {it.id}.distinct().size==rows.size && rows.map {it.commandId}.distinct().size==rows.size && rows.map {it.draft.id}.distinct().size==rows.size && rows.mapNotNull {it.draft.order?.id}.distinct().size==rows.count {it.draft.order!=null})
             }
         } catch(_:Exception) {throw CatalogFailure("receivingsFormat","Не удалось прочитать историю приходов. Данные не сброшены")}
     }

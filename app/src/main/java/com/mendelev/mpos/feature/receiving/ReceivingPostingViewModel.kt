@@ -34,18 +34,18 @@ class ReceivingPostingViewModel(private val access: ReceivingPostingAccess): Vie
     private fun submit(c: ReceivingPostCommand) {
         mutable.update {it.copy(pending=true,unresolved=c,message=null)}
         viewModelScope.launch {
-            try {val id=withContext(Dispatchers.IO) {access.outcome(c) ?: access.commit(c)};known(id)}
+            try {val id=withContext(Dispatchers.IO) {access.outcome(c) ?: access.commit(c)};known(id,c)}
             catch(e:CancellationException) {throw e}
             catch(e:Exception) {
                 try {val id=withContext(Dispatchers.IO) {access.outcome(c)}
-                    if(id!=null) known(id) else mutable.update {it.copy(unresolved=null,message=if(e is CatalogFailure) e.message else "Приход не проведён. Введённые данные сохранены")}}
+                    if(id!=null) known(id,c) else mutable.update {it.copy(unresolved=null,message=if(e is CatalogFailure) e.message else "Приход не проведён. Введённые данные сохранены")}}
                 catch(e2:CancellationException) {throw e2}
                 catch(_:Exception) {mutable.update {it.copy(unresolved=c,message="Результат проведения неизвестен. Проверьте ту же команду")}}
             } finally {mutable.update {it.copy(pending=false)}}
         }
     }
-    private suspend fun known(id: String) {
-        mutable.update {it.copy(unresolved=null,committed=id,message="Приход проведён. Заказ закрыт")}
+    private suspend fun known(id: String,c: ReceivingPostCommand) {
+        mutable.update {it.copy(unresolved=null,committed=id,message=if(c.draft.order==null) "Приход проведён без заказа" else "Приход проведён. Заказ закрыт")}
         try {val rows=withContext(Dispatchers.IO) {access.history()};mutable.update {it.copy(history=rows)}}
         catch(e:CancellationException) {throw e}
         catch(_:Exception) {mutable.update {it.copy(message="Приход проведён. Не удалось перечитать историю; повторите чтение")}}

@@ -103,11 +103,13 @@ class PurchaseDraftRepository(private val db: CatalogDatabase,private val clock:
     }
     suspend fun requireSupplierUnused(id: String) {
         PurchaseOrderStore(db).requireSupplierUnused(id)
+        ReceivingReferenceGuard(db).supplier(id)
         val d=db.workspace().document(PurchaseDraftCodec.KEY)?.let {PurchaseDraftCodec.decode(it.payload)}
         if(d?.supplierId==id) throw CatalogFailure("used","Поставщик выбран в черновике закупки: сначала удалите черновик")
     }
     suspend fun requireProductUnused(id: String) {
         PurchaseOrderStore(db).requireProductUnused(id)
+        ReceivingReferenceGuard(db).product(id)
         val d=db.workspace().document(PurchaseDraftCodec.KEY)?.let {PurchaseDraftCodec.decode(it.payload)}
         if(d?.lines?.any {it.productId==id}==true) throw CatalogFailure("used","Товар выбран в черновике закупки: сначала уберите строку")
     }

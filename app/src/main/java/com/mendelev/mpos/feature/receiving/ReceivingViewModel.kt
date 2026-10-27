@@ -11,7 +11,7 @@ import java.util.UUID
 
 data class ReceivingUi(val snapshot: ReceivingSnapshot?=null,val form: ReceivingDraft?=null,val pending: Boolean=false,val blocked: Boolean=true,
     val unresolved: ReceivingCommand?=null,val message: String?=null,val preview: ReceivingPreview?=null) {
-    val saved get()=form?.let {d->snapshot?.records?.find {it.orderId==d.order.id}?.draft}
+    val saved get()=form?.let {d->snapshot?.records?.find {it.orderId==d.key}?.draft}
     val dirty get()=form!=saved
 }
 class ReceivingViewModel(private val access: ReceivingAccess): ViewModel() {
@@ -22,7 +22,7 @@ class ReceivingViewModel(private val access: ReceivingAccess): ViewModel() {
         if(state.value.pending || state.value.unresolved!=null || state.value.dirty) return
         mutable.update {it.copy(pending=true,preview=null,message=null)}
         viewModelScope.launch {
-            try {val s=withContext(Dispatchers.IO) {access.snapshot()};mutable.update {it.copy(snapshot=s,form=it.form?.let {d->s.records.find {r->r.orderId==d.order.id}?.draft},blocked=false)}}
+            try {val s=withContext(Dispatchers.IO) {access.snapshot()};mutable.update {it.copy(snapshot=s,form=it.form?.let {d->s.records.find {r->r.orderId==d.key}?.draft},blocked=false)}}
             catch(e:CancellationException) {throw e}
             catch(_:Exception) {mutable.update {it.copy(blocked=true,message="Не удалось прочитать приёмки. Данные не сброшены")}}
             finally {mutable.update {it.copy(pending=false)}}
@@ -38,6 +38,27 @@ class ReceivingViewModel(private val access: ReceivingAccess): ViewModel() {
             val d=ReceivingRules.open(UUID.randomUUID().toString(),o,s.products)
             mutable.update {it.copy(form=d,preview=null,message=null)};save()
         } catch(e:CatalogFailure) {mutable.update {it.copy(message=e.message)}}
+    }
+    fun standalone() {
+        if(!available() || state.value.dirty) return
+        val s=state.value.snapshot ?: return
+        val saved=s.records.find {it.orderId==ReceivingRules.STANDALONE}?.draft
+        mutable.update {it.copy(form=saved ?: ReceivingDraft(UUID.randomUUID().toString(),null,lines=emptyList()),preview=null,message=null)}
+        if(saved==null) save()
+    }
+    fun supplier(id: String) {
+        val s=state.value.snapshot ?: return
+        if(state.value.form?.order!=null) return
+        change {it.copy(supplier=s.suppliers.find {p->p.id==id})}
+    }
+    fun add(id: String) {
+        if(state.value.form?.order!=null) return
+        val p=state.value.snapshot?.products?.find {it.id==id} ?: return
+        change {d->if(d.lines.any {it.product.id==id}) d else d.copy(lines=d.lines+ReceivingLine(p,"",p.unit,"",p.unit))}
+    }
+    fun remove(id: String) {
+        if(state.value.form?.order!=null) return
+        change {it.copy(lines=it.lines.filterNot {l->l.product.id==id})}
     }
     fun change(edit: (ReceivingDraft)->ReceivingDraft) {if(available()) mutable.update {it.copy(form=it.form?.let(edit),preview=null,message=null)}}
     fun line(id: String,edit: (ReceivingLine)->ReceivingLine) {
@@ -55,14 +76,14 @@ class ReceivingViewModel(private val access: ReceivingAccess): ViewModel() {
         if(!available()) return
         val ui=state.value;val s=ui.snapshot ?: return;val d=ui.form ?: return
         try {ReceivingRules.validate(d)} catch(e:CatalogFailure) {mutable.update {it.copy(message=e.message)};return}
-        submit(ReceivingCommand(UUID.randomUUID().toString(),s.ownerId,d.order.id,s.records.find {it.orderId==d.order.id}?.revision ?: 0,d))
+        submit(ReceivingCommand(UUID.randomUUID().toString(),s.ownerId,d.key,s.records.find {it.orderId==d.key}?.revision ?: 0,d))
     }
     fun clear() {
         if(!available()) return
         val s=state.value.snapshot ?: return;val d=state.value.form ?: return
-        val record=s.records.find {it.orderId==d.order.id}
+        val record=s.records.find {it.orderId==d.key}
         if(record?.draft==null) {mutable.update {it.copy(form=null,preview=null,message=null)};return}
-        submit(ReceivingCommand(UUID.randomUUID().toString(),s.ownerId,d.order.id,record.revision,null))
+        submit(ReceivingCommand(UUID.randomUUID().toString(),s.ownerId,d.key,record.revision,null))
     }
     fun retry() {if(!state.value.pending) state.value.unresolved?.let(::submit)}
     private fun submit(c: ReceivingCommand) {
@@ -95,13 +116,14 @@ class ReceivingViewModel(private val access: ReceivingAccess): ViewModel() {
         viewModelScope.launch {
             try {
                 val s=withContext(Dispatchers.IO) {access.snapshot()}
-                val expected=ui.snapshot!!.records.find {it.orderId==d.order.id}?.revision ?: 0
-                if((s.records.find {it.orderId==d.order.id}?.revision ?: 0)!=expected) throw CatalogFailure("conflict","Черновик изменился в другом окне. Ввод сохранён; перечитайте его явно")
-                val o=s.orders.find {it.id==d.order.id} ?: throw CatalogFailure("receiving","Заказ недоступен")
+                val expected=ui.snapshot!!.records.find {it.orderId==d.key}?.revision ?: 0
+                if((s.records.find {it.orderId==d.key}?.revision ?: 0)!=expected) throw CatalogFailure("conflict","Черновик изменился в другом окне. Ввод сохранён; перечитайте его явно")
+                val o=if(d.order!=null) s.orders.find {it.id==d.key} ?: throw CatalogFailure("receiving","Заказ недоступен") else null
                 if(rebase) {
-                    val next=ReceivingRules.rebase(d,o,s.products)
+                    val next=ReceivingRules.rebase(d,o,s.products).let {rebased->if(d.order!=null || d.supplier==null) rebased else rebased.copy(supplier=s.suppliers.find {it.id==d.supplier.id} ?: throw CatalogFailure("supplier","Поставщик недоступен. Выберите другого или Без поставщика"))}
                     mutable.update {it.copy(snapshot=s,form=next,message="Основание обновлено. Введённые факты сохранены; сохраните черновик")}
                 } else {
+                    if(d.supplier!=null && s.suppliers.find {it.id==d.supplier.id}!=d.supplier) throw CatalogFailure("conflict","Поставщик изменился. Обновите основание перед расчётом")
                     val result=ReceivingPostingRules.preview(d,o,s.products)
                     mutable.update {it.copy(preview=result)}
                 }

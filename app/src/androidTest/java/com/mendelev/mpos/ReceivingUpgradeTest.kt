@@ -32,5 +32,5 @@ class ReceivingUpgradeTest {
             assertEquals(1,db.openHelper.readableDatabase.query("SELECT * FROM audit_events WHERE action='receiving.draft.save'").use {it.count})
         } finally {db.close()}
     }
-    private fun command(owner: String,d: ReceivingDraft)=ReceivingCommand("save",owner,d.order.id,0,d.copy(invoiceNumber="TTN-1",invoiceDate="2026-10-27",lines=d.lines.map {it.copy(total="40")}))
+    private fun command(owner: String,d: ReceivingDraft)=ReceivingCommand("save",owner,d.order!!.id,0,d.copy(invoiceNumber="TTN-1",invoiceDate="2026-10-27",lines=d.lines.map {it.copy(total="40")}))
 }

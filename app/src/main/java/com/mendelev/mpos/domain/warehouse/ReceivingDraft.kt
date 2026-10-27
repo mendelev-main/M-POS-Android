@@ -10,24 +10,29 @@ data class ReceivingProduct(val id: String,val name: String,val unit: String,val
 data class ReceivingLine(val product: ReceivingProduct,val quantity: String,val unit: String,val packSize: String,val contentUnit: String,val total: String="") {
     fun purchaseLine()=PurchaseLine(product.id,product.revision,product.name,product.unit,quantity,unit,packSize,contentUnit)
 }
-data class ReceivingDraft(val id: String,val order: PurchaseOrder,val invoiceNumber: String="",val invoiceDate: String="",val lines: List<ReceivingLine>)
+data class ReceivingSupplier(val id: String,val name: String,val revision: Long)
+data class ReceivingDraft(val id: String,val order: PurchaseOrder?,val invoiceNumber: String="",val invoiceDate: String="",val lines: List<ReceivingLine>,val supplier: ReceivingSupplier?=null) {
+    val key get()=order?.id ?: ReceivingRules.STANDALONE
+    val supplierName get()=order?.source?.supplierName ?: supplier?.name ?: "Без поставщика"
+}
 data class ReceivingRecord(val orderId: String,val revision: Long,val draft: ReceivingDraft?)
 data class ReceivingCommand(val commandId: String,val actorId: String,val orderId: String,val revision: Long,val draft: ReceivingDraft?) {
     fun validate() {
         listOf(commandId,actorId,orderId).forEach(PurchaseDraftRules::id)
         if(revision<0) throw CatalogFailure("receiving","Некорректная версия черновика")
-        draft?.let {ReceivingRules.validate(it);if(it.order.id!=orderId) throw CatalogFailure("receiving","Неверная ссылка заказа")}
+        draft?.let {ReceivingRules.validate(it);if(it.key!=orderId) throw CatalogFailure("receiving","Неверная ссылка заказа")}
     }
     fun fingerprint(): String {
         validate();val d=draft
         val parts=mutableListOf<Any?>("receiving.draft.v1",actorId,orderId,revision,d!=null)
         if(d!=null) {
-            parts.addAll(listOf(d.id,d.order.revision,d.order.requestVersion,d.invoiceNumber,d.invoiceDate))
-            // Snapshot comparison includes all request history and cancellation fields in persistence;
-            // this domain fingerprint covers every semantic request and economic baseline field.
-            fun source(s: PurchaseDraft) {parts.add(PurchaseCommand("payload","payload",0,PurchaseAction.Save(s)).fingerprint())}
-            source(d.order.source);parts.addAll(listOf(d.order.createdAt,d.order.status,d.order.updatedAt,d.order.cancelledAt,d.order.cancelledBy))
-            d.order.history.forEach {source(it.source);parts.addAll(listOf(it.requestVersion,it.at))}
+            val order=d.order
+            if(order!=null) {
+                parts.addAll(listOf(d.id,order.revision,order.requestVersion,d.invoiceNumber,d.invoiceDate))
+                fun source(s: PurchaseDraft) {parts.add(PurchaseCommand("payload","payload",0,PurchaseAction.Save(s)).fingerprint())}
+                source(order.source);parts.addAll(listOf(order.createdAt,order.status,order.updatedAt,order.cancelledAt,order.cancelledBy))
+                order.history.forEach {source(it.source);parts.addAll(listOf(it.requestVersion,it.at))}
+            } else parts.addAll(listOf("standalone.v1",d.id,d.invoiceNumber,d.invoiceDate,d.supplier?.id,d.supplier?.name,d.supplier?.revision))
             d.lines.forEach {l->val p=l.product;parts.addAll(listOf(p.id,p.name,p.unit,p.revision,p.stockRevision,p.stock,p.cost,p.noStockTracking,l.quantity,l.unit,l.packSize,l.contentUnit,l.total))}
         }
         return CatalogRules.fingerprint(*parts.toTypedArray())
@@ -38,6 +43,7 @@ data class ReceivingPreview(val lines: List<ReceivingPreviewLine>,val totalMinor
     val hasOverage get()=lines.any {it.overage?.toBigDecimal()?.signum()==1}
 }
 object ReceivingRules {
+    const val STANDALONE="receiving:standalone"
     fun quantity(raw: String): BigDecimal {
         val n=raw.toBigDecimalOrNull() ?: throw CatalogFailure("receiving","Повреждён складской baseline")
         val canonical=CatalogRules.canonical(n.abs());PurchaseDraftRules.number(canonical)
@@ -49,13 +55,15 @@ object ReceivingRules {
         return try {n.movePointRight(2).longValueExact()} catch(_:ArithmeticException) {throw CatalogFailure("receiving","Сумма строки слишком велика")}
     }
     fun validate(d: ReceivingDraft) {
-        PurchaseDraftRules.id(d.id);PurchaseOrderRules.validate(d.order)
-        if(d.order.status!="pending") throw CatalogFailure("receiving","Основание черновика должно быть ожидающим заказом")
+        PurchaseDraftRules.id(d.id);val order=d.order
+        if(order!=null) {PurchaseOrderRules.validate(order);require(order.id!=STANDALONE && d.supplier==null)}
+        d.supplier?.let {PurchaseDraftRules.id(it.id);require(it.revision>=1 && CatalogRules.name(it.name)==it.name)}
+        if(order!=null && order.status!="pending") throw CatalogFailure("receiving","Основание черновика должно быть ожидающим заказом")
         if(d.invoiceNumber.length>120 || d.invoiceNumber.any {it.isISOControl()}) throw CatalogFailure("receiving","Номер накладной: до 120 символов")
         if(d.invoiceDate.isNotEmpty()) try {require(d.invoiceDate.matches(Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}")));require(LocalDate.parse(d.invoiceDate).year>=1)} catch(_:Exception) {throw CatalogFailure("receiving","Дата накладной: ГГГГ-ММ-ДД")}
-        if(d.lines.isEmpty() || d.lines.map {it.product.id}.distinct().size!=d.lines.size) throw CatalogFailure("receiving","Проверьте строки приёмки")
-        val ids=(d.order.source.lines+d.order.history.flatMap {it.source.lines}).map {it.productId}.toSet()
-        if(!ids.containsAll(d.lines.map {it.product.id}) || !d.lines.map {it.product.id}.containsAll(d.order.source.lines.map {it.productId})) throw CatalogFailure("receiving","Нельзя заменить или убрать строки заказа: для недопоставки укажите 0")
+        if((order!=null && d.lines.isEmpty()) || d.lines.map {it.product.id}.distinct().size!=d.lines.size) throw CatalogFailure("receiving","Проверьте строки приёмки")
+        val ids=order?.let {(it.source.lines+it.history.flatMap {h->h.source.lines}).map {it.productId}.toSet()}
+        if(order!=null && (!ids!!.containsAll(d.lines.map {it.product.id}) || !d.lines.map {it.product.id}.containsAll(order.source.lines.map {it.productId}))) throw CatalogFailure("receiving","Нельзя заменить или убрать строки заказа: для недопоставки укажите 0")
         d.lines.forEach {l->
             val p=l.product;PurchaseDraftRules.id(p.id)
             if(p.revision<1 || p.stockRevision<1 || CatalogRules.name(p.name)!=p.name) throw CatalogFailure("receiving","Повреждён снимок товара")
@@ -68,19 +76,19 @@ object ReceivingRules {
         }
     }
     fun open(id: String,o: PurchaseOrder,products: List<ReceivingProduct>): ReceivingDraft {
-        if(o.status!="pending") throw CatalogFailure("receiving","Заказ недоступен для приёмки")
+        if(o.status!="pending" || o.id==STANDALONE) throw CatalogFailure("receiving","Заказ недоступен для приёмки")
         return ReceivingDraft(id,o,lines=o.source.lines.mapIndexed {i,l->
             val p=products.find {it.id==l.productId && it.unit==l.stockUnit} ?: throw CatalogFailure("receiving","Товар «${l.productName}» недоступен")
             ReceivingLine(p,if(o.expectedQuantities[i]==null) "" else l.quantity,l.unit,l.packSize,l.contentUnit)
         }).also(::validate)
     }
-    fun rebase(d: ReceivingDraft,o: PurchaseOrder,products: List<ReceivingProduct>): ReceivingDraft {
-        if(o.id!=d.order.id || o.status!="pending") throw CatalogFailure("receiving","Заказ уже не ожидает приёмку")
+    fun rebase(d: ReceivingDraft,o: PurchaseOrder?,products: List<ReceivingProduct>): ReceivingDraft {
+        if(o?.id!=d.order?.id || (o!=null && o.status!="pending")) throw CatalogFailure("receiving","Заказ уже не ожидает приёмку")
         val existing=d.lines.map {l->
             val p=products.find {it.id==l.product.id && it.unit==l.product.unit} ?: throw CatalogFailure("receiving","Товар «${l.product.name}» недоступен или изменилась базовая единица")
             l.copy(product=p)
         }
-        val additions=open(d.id,o,products).lines.filter {l->existing.none {it.product.id==l.product.id}}.map {it.copy(quantity="",total="")}
+        val additions=(o?.let {open(d.id,it,products).lines} ?: emptyList()).filter {l->existing.none {it.product.id==l.product.id}}.map {it.copy(quantity="",total="")}
         return d.copy(order=o,lines=existing+additions).also(::validate)
     }
     fun switchUnit(l: ReceivingLine,next: String): ReceivingLine {
@@ -92,14 +100,14 @@ object ReceivingRules {
         PurchaseDraftRules.number(raw)
         return l.copy(quantity=raw,unit=next)
     }
-    fun current(d: ReceivingDraft,o: PurchaseOrder,products: List<ReceivingProduct>) {
-        if(o.status!="pending" || o!=d.order) throw CatalogFailure("conflict","Заказ изменился. Обновите основание черновика; введённые факты сохранятся")
+    fun current(d: ReceivingDraft,o: PurchaseOrder?,products: List<ReceivingProduct>) {
+        if((o!=null && o.status!="pending") || o!=d.order) throw CatalogFailure("conflict","Заказ изменился. Обновите основание черновика; введённые факты сохранятся")
         d.lines.forEach {l->if(products.find {it.id==l.product.id}!=l.product) throw CatalogFailure("conflict","Остаток или карточка «${l.product.name}» изменились. Обновите основание перед расчётом")}
     }
-    fun preview(d: ReceivingDraft,o: PurchaseOrder,products: List<ReceivingProduct>,costScale: Int=12,costRounding: RoundingMode=RoundingMode.HALF_EVEN): ReceivingPreview {
+    fun preview(d: ReceivingDraft,o: PurchaseOrder?,products: List<ReceivingProduct>,costScale: Int=12,costRounding: RoundingMode=RoundingMode.HALF_EVEN): ReceivingPreview {
         validate(d);current(d,o,products)
         var sum=0L
-        val expected=o.source.lines.mapIndexed {i,l->l.productId to o.expectedQuantities[i]}.toMap()
+        val expected=o?.source?.lines?.mapIndexed {i,l->l.productId to o.expectedQuantities[i]}?.toMap().orEmpty()
         val lines=d.lines.map {l->
             val qty=PurchaseDraftRules.number(l.quantity) ?: throw CatalogFailure("receiving","Заполните количество каждой строки")
             val base=if(qty.signum()==0) BigDecimal.ZERO else PurchaseDraftRules.expected(l.purchaseLine()) ?: throw CatalogFailure("receiving","Укажите количество внутри упаковки «${l.product.name}»")
@@ -111,7 +119,7 @@ object ReceivingRules {
             val oldQty=stock.max(BigDecimal.ZERO)
             val cost=if(base.signum()==0) oldCost else if(p.noStockTracking) value.divide(base,costScale,costRounding) else (oldQty*oldCost+value).divide(oldQty+base,costScale,costRounding)
             PurchaseDraftRules.number(CatalogRules.canonical(cost))
-            val exp=if(expected.containsKey(p.id)) expected[p.id] else "0"
+            val exp=if(o==null) null else if(expected.containsKey(p.id)) expected[p.id] else "0"
             val shortage=exp?.toBigDecimal()?.minus(base)?.max(BigDecimal.ZERO)?.let(CatalogRules::canonical)
             val overage=exp?.toBigDecimal()?.let {base-it}?.max(BigDecimal.ZERO)?.let(CatalogRules::canonical)
             ReceivingPreviewLine(p.id,p.name,CatalogRules.canonical(base),exp,shortage,overage,p.stock,CatalogRules.canonical(nextStock),p.cost,CatalogRules.canonical(cost),p.noStockTracking,total)
