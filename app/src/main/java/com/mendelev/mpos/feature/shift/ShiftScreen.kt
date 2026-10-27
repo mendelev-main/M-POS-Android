@@ -60,7 +60,7 @@ import java.time.format.DateTimeFormatter
                         } else MposButton("Закрыть смену",{revision=s.revision;previous=active.id;actor=s.ownerId;token=ShiftRules.token(s);expected=s.currentCash;counted=java.math.BigDecimal.valueOf(expected,2).toPlainString();dialog="close";model.dismiss()},Modifier.testTag("shiftClose"),busy=ui.pending,style=ActionStyle.Secondary)
                     }
                 }
-                Text("Смена сохраняет состояние кассы. Оплаты будут доступны на следующем этапе.",style=MaterialTheme.typography.bodySmall)
+                Text("Оплаты и возвраты учитываются в текущей кассовой смене.",style=MaterialTheme.typography.bodySmall)
             }
         }
     }

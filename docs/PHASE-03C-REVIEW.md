@@ -29,3 +29,7 @@ Physical tablet/OEM, paired Web screenshots, font scale/dark/portrait для н�
 SDK/ARM64 AVD для Mac установлен и local build77JVM/lint/APKs прошёл. GUI first launch пока требует подтверждения владельцем: ограниченный процесс агента не получает CPU sysctl и не загрузил Android. Подробности/launchers: [LOCAL-ANDROID.md](LOCAL-ANDROID.md). Локальная сборка и настроенный AVD не равны работающему окну Android.
 
 После release checkpoint следующий этап04 —склад, приёмка/поставщики/закупки/инвентаризация, с отдельными acceptance и transaction tests; он не начинается автоматически этим review.
+
+## Актуальная сверка перед PR5
+
+В блок также входят общий navbar и рабочая зона по pinned Web. FullCI40461096340/3e11c33 SUCCESS80JVM/90instrumentation/12Python/lint/build/actual debugAPK1→2; screenshots обычного планшета и150% просмотрены. Удалена устаревшая подсказка экрана смены о будущей доступности оплат: оплаты и возвраты уже подключены. Это текстовое исправление; финансовые команды/Room8/signing прежние. PR5 develop→main; выпуск и public-channel upgrade должны быть подтверждены отдельно main pipeline. Физическая/тёмная/paired pixel приёмка по-прежнему отложена.
