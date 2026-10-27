@@ -41,17 +41,17 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
                     PosIconButton("more","Действия с чеком",{more=true},enabled=pending==0,modifier=Modifier.testTag("workspaceMore"))
                     DropdownMenu(more,{more=false},modifier=Modifier.width(240.dp)) {
                         DropdownMenuItem(text={Text("Очистить чек")},leadingIcon={PosIcon("trash",MaterialTheme.colorScheme.onSurface)},
-                            onClick={more=false;onClear()},enabled=s.cart.lines.isNotEmpty() || s.cart.details!=OrderDetails(),modifier=Modifier.testTag("workspaceClear"))
+                            onClick={more=false;onClear()},enabled=pending==0 && (s.cart.lines.isNotEmpty() || s.cart.details!=OrderDetails()),modifier=Modifier.testTag("workspaceClear"))
                         DropdownMenuItem(text={Text("Печатать счёт")},leadingIcon={PosIcon("bill",MaterialTheme.colorScheme.onSurface)},
-                            onClick={more=false;onSoon("Печать счёта")},enabled=s.cart.lines.isNotEmpty(),modifier=Modifier.testTag("workspacePrintBill"))
+                            onClick={more=false;onSoon("Печать счёта")},enabled=pending==0 && s.cart.lines.isNotEmpty(),modifier=Modifier.testTag("workspacePrintBill"))
                         DropdownMenuItem(text={Text("Печатать заказ")},leadingIcon={PosIcon("printer",MaterialTheme.colorScheme.onSurface)},
-                            onClick={more=false;onSoon("Печать заказа")},enabled=s.cart.lines.isNotEmpty(),modifier=Modifier.testTag("workspacePrintKitchen"))
+                            onClick={more=false;onSoon("Печать заказа")},enabled=pending==0 && s.cart.lines.isNotEmpty(),modifier=Modifier.testTag("workspacePrintKitchen"))
                     }
                 }
             }
             Box(Modifier.padding(start=12.dp,end=12.dp,bottom=2.dp)) {
                 PosAction(listOf(s.cart.details.label,OrderRules.typeLabel(s.cart.details.type)).filter {it.isNotBlank()}.joinToString(" · "),
-                    onDetails,Modifier.fillMaxWidth().testTag("workspaceDetails"),enabled=pending==0)
+                    onDetails,Modifier.fillMaxWidth().testTag("workspaceDetails"),enabled=pending==0,meta=true)
             }
             if(s.cart.details.comment.isNotBlank()) Text(s.cart.details.comment,Modifier.padding(horizontal=18.dp,vertical=6.dp),style=MaterialTheme.typography.bodySmall)
             LazyColumn(Modifier.weight(1f).padding(horizontal=14.dp).testTag("workspaceCart")) {

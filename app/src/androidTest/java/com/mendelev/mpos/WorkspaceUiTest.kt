@@ -37,7 +37,7 @@ class WorkspaceUiTest {
                 modifierGroups=listOf(ModifierGroupInput("milk-group","Молоко","1","1",listOf(ModifierOptionInput("milk-option",milk,"Молоко","0.1","0.5"))))))
             val work=WorkspaceRepository(db);work.initialize();work.cart(CartAction.Clear(work.snapshot().cartRevision),"ui-clear-$suffix",work.snapshot().cart.sessionId)
         }
-        compose.onNodeWithTag("topNav-workspace").performClick();waitText("Текущий заказ")
+        compose.onNodeWithTag("topNav-workspace").performClick();compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceCartPanel").fetchSemanticsNodes().isNotEmpty()}
         lateinit var model: WorkspaceViewModel
         compose.runOnIdle {model=ViewModelProvider(compose.activity)[WorkspaceViewModel::class.java]}
         compose.waitUntil(20_000) {model.state.value.snapshot?.categories?.any {it.id==category}==true}
@@ -72,7 +72,7 @@ class WorkspaceUiTest {
         compose.onNodeWithContentDescription("Закрыть").performClick()
         val line=model.state.value.snapshot!!.cart.lines.single().id
         compose.onNodeWithTag("workspaceLine:$line").performClick()
-        repeat(4) {compose.onNodeWithTag("workspacePlus:$line").performScrollTo().performClick()}
+        repeat(4) {compose.onNodeWithTag("workspacePlus:$line").performClick()}
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.cart.lines.single().quantity=="5"}
         compose.onNodeWithTag("workspaceEditQuantity:$line").performClick()
         compose.onNodeWithTag("workspaceQuantity").performTextReplacement("0")

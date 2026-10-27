@@ -22,7 +22,7 @@ internal val LocalWorkspaceGeometry = staticCompositionLocalOf { WorkspaceGeomet
 internal enum class PosTone { Neutral, Info, Zone, Primary, Warning, Demand }
 
 @Composable internal fun PosAction(label: String, onClick: () -> Unit, modifier: Modifier=Modifier,
-    enabled: Boolean=true, tone: PosTone=PosTone.Neutral, footer: Boolean=false) {
+    enabled: Boolean=true, tone: PosTone=PosTone.Neutral, footer: Boolean=false, meta: Boolean=false) {
     val dark=isSystemInDarkTheme()
     val colors=when(tone) {
         PosTone.Info -> Triple(if(dark) Color(0xFF26334A) else Color(0xFFE8F0FF),if(dark) Color(0xFFBFD5FF) else Color(0xFF31558F),if(dark) Color(0xFF3C506F) else Color(0xFFC7D7F2))
@@ -30,15 +30,16 @@ internal enum class PosTone { Neutral, Info, Zone, Primary, Warning, Demand }
         PosTone.Zone -> Triple(if(dark) Color(0xFF332B45) else Color(0xFFF0E9FF),if(dark) Color(0xFFDCCBFF) else Color(0xFF5E4691),if(dark) Color(0xFF51436C) else Color(0xFFD7C8F5))
         PosTone.Primary -> Triple(MaterialTheme.colorScheme.primary,MaterialTheme.colorScheme.onPrimary,Color.Transparent)
         PosTone.Warning -> Triple(if(dark) Color(0xFFE9C989) else Color(0xFF8A5A17),MaterialTheme.colorScheme.surface,Color.Transparent)
-        else -> Triple(MaterialTheme.colorScheme.background,MaterialTheme.colorScheme.onSurface,Color.Transparent)
+        else -> if(meta) Triple(if(dark) Color(0xFF2A2F3A) else Color(0xFFFAFAF8),if(dark) Color(0xFFF4F6FA) else MaterialTheme.colorScheme.onSurface,if(dark) Color(0xFF454C5A) else MaterialTheme.colorScheme.outline)
+            else Triple(MaterialTheme.colorScheme.background,MaterialTheme.colorScheme.onSurface,Color.Transparent)
     }
-    val shape=RoundedCornerShape(if(footer && tone!=PosTone.Primary) 12.dp else 16.dp)
-    Box(modifier.heightIn(min=if(footer) 48.dp else 44.dp).clip(shape)
+    val shape=RoundedCornerShape(if(meta || (footer && tone!=PosTone.Primary)) 12.dp else 16.dp)
+    Box(modifier.heightIn(min=if(footer) 48.dp else if(meta) 40.dp else 44.dp).clip(shape)
         .background(colors.first.copy(alpha=if(enabled) 1f else .4f)).border(1.dp,colors.third,shape)
         .clickable(enabled=enabled,role=Role.Button,onClick=onClick)
-        .padding(horizontal=if(footer) 12.dp else 15.dp,vertical=if(footer) 14.dp else 11.dp),contentAlignment=Alignment.Center) {
+        .padding(horizontal=if(footer || meta) 12.dp else 15.dp,vertical=if(footer) 14.dp else if(meta) 10.dp else 11.dp),contentAlignment=if(meta) Alignment.CenterStart else Alignment.Center) {
         Text(label,color=colors.second.copy(alpha=if(enabled) 1f else .45f),
-            style=MaterialTheme.typography.bodyMedium.copy(fontSize=if(footer || tone==PosTone.Zone) 14.5.sp else 14.sp,
+            style=MaterialTheme.typography.bodyMedium.copy(fontSize=if(meta) 13.sp else if(footer || tone==PosTone.Zone) 14.5.sp else 14.sp,
                 lineHeight=20.sp,fontWeight=if(tone==PosTone.Zone) FontWeight.ExtraBold else FontWeight.Bold),
             maxLines=1,softWrap=false,overflow=TextOverflow.Ellipsis)
     }
