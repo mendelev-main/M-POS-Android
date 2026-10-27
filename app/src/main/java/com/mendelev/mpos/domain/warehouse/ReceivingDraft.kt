@@ -111,6 +111,7 @@ object ReceivingRules {
         return d.copy(order=o,lines=existing+additions).also(::validate)
     }
     fun switchUnit(l: ReceivingLine,next: String): ReceivingLine {
+        if(next==l.unit) return l
         if(l.unit in PurchaseDraftRules.packs || next in PurchaseDraftRules.packs) return l.copy(unit=next,unitPrice=if(l.priceMode=="price") "" else l.unitPrice)
         val from=quantityUnit(l.unit);val to=quantityUnit(next)
         from.convert(BigDecimal.ONE,to)

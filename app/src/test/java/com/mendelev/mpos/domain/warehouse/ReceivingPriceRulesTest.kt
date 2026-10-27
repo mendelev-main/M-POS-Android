@@ -18,6 +18,7 @@ class ReceivingPriceRulesTest {
     }
     @Test fun boxPriceAppliesToInvoiceQuantityAndNeedsExplicitPackContent() {
         val l=line("3","10").copy(unit="box",packSize="500",contentUnit="ml")
+        assertEquals(l,ReceivingRules.switchUnit(l,"box"))
         val result=ReceivingPostingRules.preview(draft(l),null,listOf(p))
         assertEquals(3000L,result.totalMinor);assertEquals("1.5",result.lines.single().actual)
         refuse {ReceivingPostingRules.preview(draft(l.copy(packSize="")),null,listOf(p))}
