@@ -62,7 +62,7 @@ class PurchaseUiTest {
         check(automation.rootInActiveWindow?.packageName?.toString()==BuildConfig.APPLICATION_ID)
         val bitmap=checkNotNull(automation.takeScreenshot());val file=File(compose.activity.filesDir,"qa/purchase-draft.png");file.parentFile!!.mkdirs()
         file.outputStream().use {bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};bitmap.recycle()
-        compose.onNodeWithText("Сформировать заказ").performClick();compose.onNodeWithText("Скоро будет подключено").assertIsDisplayed()
+        compose.onNodeWithText("Сформировать заказ").performClick();compose.onNodeWithText("Сформировать заказ?").assertIsDisplayed()
         compose.onNodeWithContentDescription("Закрыть").performClick()
         assertEquals(before,runBlocking {db.catalog().product(id)!! to db.catalog().balance(id)!!})
     }

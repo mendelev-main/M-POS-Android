@@ -28,7 +28,7 @@ object PurchaseDraftCodec {
         } catch(_:Exception) {throw CatalogFailure("purchaseFormat","Не удалось прочитать черновик закупки. Данные не сброшены")}
     }
 }
-data class PurchaseSnapshot(val revision: Long,val ownerId: String,val draft: PurchaseDraft?,val suppliers: List<Supplier>,val products: List<PurchaseProduct>)
+data class PurchaseSnapshot(val revision: Long,val ownerId: String,val draft: PurchaseDraft?,val suppliers: List<Supplier>,val products: List<PurchaseProduct>,val orders: List<PurchaseOrder> = emptyList())
 interface PurchaseAccess {
     suspend fun snapshot(): PurchaseSnapshot
     suspend fun outcome(command: PurchaseCommand): String?
@@ -50,7 +50,7 @@ class PurchaseDraftRepository(private val db: CatalogDatabase,private val clock:
         }}
         return db.withTransaction {
             val doc=db.workspace().document(PurchaseDraftCodec.KEY)!!
-            PurchaseSnapshot(doc.revision,db.catalog().config()!!.ownerId,PurchaseDraftCodec.decode(doc.payload),suppliers().filterNot {it.deleted},products())
+            PurchaseSnapshot(doc.revision,db.catalog().config()!!.ownerId,PurchaseDraftCodec.decode(doc.payload),suppliers().filterNot {it.deleted},products(),PurchaseOrderStore(db).all().sortedWith(compareByDescending<PurchaseOrder> {it.createdAt}.thenByDescending {it.id}))
         }
     }
     override suspend fun outcome(command: PurchaseCommand): String? {
@@ -61,7 +61,7 @@ class PurchaseDraftRepository(private val db: CatalogDatabase,private val clock:
         }
     }
     override suspend fun commit(command: PurchaseCommand): String {
-        val command=command.copy(action=when(val a=command.action) {is PurchaseAction.Save -> PurchaseAction.Save(a.draft.copy(lines=a.draft.lines.toList()));PurchaseAction.Clear -> PurchaseAction.Clear})
+        val command=command.copy(action=when(val a=command.action) {is PurchaseAction.Save -> PurchaseAction.Save(a.draft.copy(lines=a.draft.lines.toList()));is PurchaseAction.Place -> a.copy(draft=a.draft.copy(lines=a.draft.lines.toList()));PurchaseAction.Clear -> PurchaseAction.Clear})
         command.validate()
         val id=InstallationGate.write {db.withTransaction {
             val owner=db.catalog().config()?.ownerId ?: error("Хранилище не открыто")
@@ -70,25 +70,40 @@ class PurchaseDraftRepository(private val db: CatalogDatabase,private val clock:
             val doc=db.workspace().document(PurchaseDraftCodec.KEY) ?: WorkspaceDocument(PurchaseDraftCodec.KEY,0,PurchaseDraftCodec.encode(null))
             val old=PurchaseDraftCodec.decode(doc.payload)
             if(doc.revision!=command.revision) throw CatalogFailure("conflict","Черновик изменился. Перечитайте его перед сохранением")
-            val draft=(command.action as? PurchaseAction.Save)?.draft
+            val place=command.action as? PurchaseAction.Place
+            val draft=when(val a=command.action) {is PurchaseAction.Save->a.draft;is PurchaseAction.Place->a.draft;PurchaseAction.Clear->null}
             if(draft!=null) {
                 if(old!=null && old.id!=draft.id) throw CatalogFailure("conflict","В кассе уже открыт другой черновик")
                 if(old!=null && old.supplierId!=draft.supplierId && draft.lines.isNotEmpty()) throw CatalogFailure("supplier","Сменить поставщика можно только в пустом черновике")
                 PurchaseDraftRules.validateReferences(draft,suppliers(),products())
             }
-            val target=draft?.id ?: PurchaseDraftCodec.KEY;val now=clock.millis();require(now>=0)
-            db.workspace().put(doc.copy(revision=Math.addExact(doc.revision,1),payload=PurchaseDraftCodec.encode(draft)));afterWrite?.invoke()
+            val now=clock.millis();require(now>=0)
+            if(place!=null) {
+                if(old==null || old!=draft) throw CatalogFailure("conflict","Сначала сохраните текущий черновик перед формированием заказа")
+                val order=PurchaseOrderRules.create(place.orderId,place.draft,now)
+                PurchaseOrderStore(db).append(order);afterWrite?.invoke()
+                order.source.lines.forEach {l->
+                    SplitPaymentRepository(db).requireProductUnlocked(l.productId)
+                    val product=db.catalog().product(l.productId) ?: throw CatalogFailure("product","Товар недоступен")
+                    db.catalog().updateProduct(product.copy(revision=Math.addExact(product.revision,1),purchaseLabel=l.unit,packSize=PurchaseOrderRules.defaultPackSize(l)))
+                    afterWrite?.invoke()
+                }
+            }
+            val target=place?.orderId ?: draft?.id ?: PurchaseDraftCodec.KEY
+            db.workspace().put(doc.copy(revision=Math.addExact(doc.revision,1),payload=PurchaseDraftCodec.encode(if(place==null) draft else null)));afterWrite?.invoke()
             db.catalog().result(ResultEntity(command.commandId,command.fingerprint(),target));afterWrite?.invoke()
-            db.catalog().audit(AuditEntity(UUID.randomUUID().toString(),command.commandId,command.actorId,if(draft==null) "purchase.draft.clear" else "purchase.draft.save",target,now));afterWrite?.invoke()
+            db.catalog().audit(AuditEntity(UUID.randomUUID().toString(),command.commandId,command.actorId,if(place!=null) "purchase.order.place" else if(draft==null) "purchase.draft.clear" else "purchase.draft.save",target,now));afterWrite?.invoke()
             target
         }}
         afterCommit?.invoke();return id
     }
     suspend fun requireSupplierUnused(id: String) {
+        PurchaseOrderStore(db).requireSupplierUnused(id)
         val d=db.workspace().document(PurchaseDraftCodec.KEY)?.let {PurchaseDraftCodec.decode(it.payload)}
         if(d?.supplierId==id) throw CatalogFailure("used","Поставщик выбран в черновике закупки: сначала удалите черновик")
     }
     suspend fun requireProductUnused(id: String) {
+        PurchaseOrderStore(db).requireProductUnused(id)
         val d=db.workspace().document(PurchaseDraftCodec.KEY)?.let {PurchaseDraftCodec.decode(it.payload)}
         if(d?.lines?.any {it.productId==id}==true) throw CatalogFailure("used","Товар выбран в черновике закупки: сначала уберите строку")
     }

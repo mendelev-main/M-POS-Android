@@ -185,3 +185,7 @@ SUP01–SUP05/M11 (часть I04): [SUPPLIERS-04A](SUPPLIERS-04A.md) implemente
 ## 04a.2 черновик закупки
 
 PO01–PO05 implemented: [контракт](PURCHASE-DRAFT-04A.md). Явное durable save/clear/replay, exact packs, snapshots/CAS/owner/gate/atomic audit, shared UI. PO01–PO05 ci-verified: [FullCI40477779141 attempt2](https://github.com/mendelev-main/M-POS-Android/actions/runs/40477779141/attempts/2)/f4c80e2 SUCCESS:88JVM/108API36 instrumentation/0failures/0skipped,12Python/lint/build;2scale/10UIseed/3financial+1supplier+1purchase fixture и actual debugAPK1→2. PurchaseUpgradeTest проверяет raw24×500ml→12l, historical supplier/product snapshots, replay без повторной записи и неизменные stock/cost/movements. Исходные sale/split/refund/catalog/workspace/parked/home/shift assertions также прошли. I01/I04 частично, receiving и все I01–I04 целиком не закрыты. Physical/dark/150% отдельно.
+
+## 04a.3 формирование и история закупок
+
+PO06–PO10 implemented, CI pending: [контракт](PURCHASE-ORDERS-04A.md). Saved-only atomic pending snapshot/defaults/clear, historical text/history, deletion guards/replay. I01/I04 только request scope; receiving/edit/cancel pending.

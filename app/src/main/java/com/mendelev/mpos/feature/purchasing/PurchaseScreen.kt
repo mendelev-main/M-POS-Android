@@ -2,6 +2,14 @@ package com.mendelev.mpos.feature.purchasing
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
@@ -23,8 +31,11 @@ import com.mendelev.mpos.domain.warehouse.*
     val locked=ui.pending || ui.unresolved!=null
     val editable=!locked && !ui.blocked
     var expanded by rememberSaveable {mutableStateOf(false)}
+    var history by rememberSaveable {mutableStateOf(false)}
+    val clipboard=LocalClipboardManager.current
     var dialog by rememberSaveable {mutableStateOf<String?>(null)}
     LaunchedEffect(model) {model.refresh()}
+    LaunchedEffect(ui.lastPlacedId) {ui.lastPlacedId?.let {dialog="order:$it";history=true}}
     LaunchedEffect(snapshot?.draft?.id) {if(snapshot?.draft!=null) expanded=true}
     fun back() {if(!locked) {if(ui.dirty) dialog="back" else onBack()}}
     BackHandler {back()}
@@ -33,15 +44,25 @@ import com.mendelev.mpos.domain.warehouse.*
         Column(Modifier.weight(1f).padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 MposButton("Назад",::back,enabled=!locked,style=ActionStyle.Secondary)
-                MposButton("История",{dialog="soon"},enabled=!locked,style=ActionStyle.Secondary)
-                MposButton("Новый заказ",{expanded=!expanded},enabled=!locked && !ui.blocked,modifier=Modifier.testTag("purchaseNew"))
+                MposButton(if(history) "Вернуться к черновику" else "История",{history=!history},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseHistory"))
+                MposButton("Новый заказ",{history=false;expanded=!expanded},enabled=!locked && !ui.blocked,modifier=Modifier.testTag("purchaseNew"))
                 MposButton("Перечитать",{if(ui.dirty) dialog="reload" else model.refresh()},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseReload"))
             }
             Text("Заказы поставщикам",style=MaterialTheme.typography.titleLarge)
             if(ui.message!=null) MposNotice(ui.message!!,ui.blocked || ui.unresolved!=null)
             if(ui.pending) LinearProgressIndicator(Modifier.fillMaxWidth())
             if(ui.unresolved!=null) MposButton("Проверить результат",model::retry,enabled=!ui.pending,modifier=Modifier.testTag("purchaseRetry"))
-            if(expanded && snapshot!=null) {
+            if(history && snapshot!=null) {
+                Text("История закупок",style=MaterialTheme.typography.titleMedium)
+                LazyColumn(Modifier.weight(1f).testTag("purchaseHistoryList"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                    if(snapshot.orders.isEmpty()) item {Text("Заказов пока нет")}
+                    items(snapshot.orders,key={it.id}) {o->
+                        MposButton("${o.source.supplierName} · ${purchaseDate(o.createdAt)} · ${o.source.lines.size} позиций · Ожидается приёмка",
+                            {dialog="order:${o.id}"},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.fillMaxWidth().testTag("purchaseOrder:${o.id}"))
+                    }
+                }
+            }
+            if(!history && expanded && snapshot!=null) {
                 MposSelect("Поставщик",form?.supplierId ?: "",(if(form==null) listOf("" to "Выберите поставщика") else emptyList())+snapshot.suppliers.map {it.id to it.name},model::supplier,
                     enabled=!locked && !ui.blocked && form?.lines.orEmpty().isEmpty(),modifier=Modifier.testTag("purchaseSupplier"))
                 if(form!=null) {
@@ -85,16 +106,35 @@ import com.mendelev.mpos.domain.warehouse.*
                         MposButton("Сохранить черновик",model::save,enabled=!locked && !ui.blocked,modifier=Modifier.testTag("purchaseSave"))
                         MposButton("Обновить ссылки",model::revalidate,enabled=!locked && !ui.blocked,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseRevalidate"))
                         MposButton("Удалить черновик",{dialog="clear"},enabled=!locked && !ui.blocked,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseClear"))
-                        MposButton("Сформировать заказ",{dialog="soon"},enabled=!locked,style=ActionStyle.Secondary)
+                        MposButton("Сформировать заказ",{dialog="place"},enabled=editable && !ui.dirty && snapshot.draft!=null,modifier=Modifier.testTag("purchasePlace"))
                     }
                 } else Text("Выберите поставщика. Остатки при сохранении черновика не меняются.")
             }
         }
     }
-    if(dialog!=null) MposDialog(if(dialog=="soon") "Скоро будет подключено" else if(dialog=="clear") "Удалить черновик?" else "Закрыть без сохранения?",{if(!locked) dialog=null},!locked) {
-        when(dialog) {
-            "soon" -> Text("Формирование заказа и его история будут подключены в следующей части. Приёмка пока недоступна.")
-            "clear" -> {
+    val order=dialog?.takeIf {it.startsWith("order:")}?.substringAfter("order:")?.let {id->snapshot?.orders?.find {it.id==id}}
+    val orderDialog=dialog?.startsWith("order:")==true
+    if(dialog!=null) MposDialog(when {orderDialog->"Заказ поставщику";dialog=="place"->"Сформировать заказ?";dialog=="soon"->"Скоро будет подключено";dialog=="clear"->"Удалить черновик?";else->"Закрыть без сохранения?"},
+        {if(!locked) {dialog=null;model.dismissPlaced()}},!locked,wide=orderDialog) {
+        when {
+            orderDialog -> if(order==null) Text("Заказ сохранён. Перечитайте историю, чтобы открыть его карточку.") else {
+                Text("${purchaseDate(order.createdAt)} · Ожидается приёмка",modifier=Modifier.testTag("purchaseOrderStatus"))
+                Column(Modifier.weight(1f,fill=false).heightIn(max=450.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                    SelectionContainer {Text(PurchaseOrderRules.text(order),modifier=Modifier.testTag("purchaseOrderText"))}
+                    order.source.lines.forEachIndexed {i,l->Text("${l.productName}: ожидается ${order.expectedQuantities[i]?.replace('.',',')?.let {"$it ${unitLabel(l.stockUnit)}"} ?: "уточнить при приёмке"}")}
+                }
+                FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                    MposButton("Копировать текст",{clipboard.setText(AnnotatedString(PurchaseOrderRules.text(order)))},modifier=Modifier.testTag("purchaseCopy"))
+                    MposButton("Приёмка",{dialog="soon"},style=ActionStyle.Secondary)
+                    MposButton("Изменить заказ",{dialog="soon"},style=ActionStyle.Secondary)
+                }
+            }
+            dialog=="soon" -> Text("Приёмка, изменение и отмена сформированного заказа будут подключены в следующих частях. Отправка поставщику пока не выполняется.")
+            dialog=="place" -> {
+                Text("Будет создан заказ со статусом «Ожидается приёмка». Сохранённый черновик очистится, единицы закупки запомнятся в карточках товаров. Остатки и себестоимость не изменятся.")
+                MposButton("Сформировать",{dialog=null;model.place()},enabled=editable,modifier=Modifier.testTag("purchasePlaceConfirm"))
+            }
+            dialog=="clear" -> {
                 Text("Сохранённый черновик и текущие изменения будут удалены. Остатки и себестоимость не изменятся.")
                 MposButton("Удалить",{dialog=null;model.clear()},enabled=!locked,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseClearConfirm"))
             }
@@ -106,6 +146,8 @@ import com.mendelev.mpos.domain.warehouse.*
         }
     }
 }
+private fun purchaseDate(timestamp: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").format(Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()))
+
 private fun units(base: String)=QuantityUnit.entries.filter {it.dimension==quantityUnit(base).dimension}.map {
     val code=when(it) {QuantityUnit.PIECE->"piece";QuantityUnit.KG->"kg";QuantityUnit.G->"g";QuantityUnit.L->"l";QuantityUnit.ML->"ml"};code to unitLabel(code)
 }

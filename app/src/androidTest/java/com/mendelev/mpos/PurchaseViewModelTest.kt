@@ -12,13 +12,14 @@ import org.junit.Test
 class PurchaseViewModelTest {
     private class Fake: PurchaseAccess {
         var s=PurchaseSnapshot(0,"owner",null,listOf(Supplier("s","Поставка",1,setOf("p"))),listOf(PurchaseProduct("p","Молоко",1,"l","", "0","bottle","0.5")))
-        var failRead=false;var failOutcome=false;var lose=false;var calls=0
+        var failRead=false;var failOutcome=false;var lose=false;var calls=0;var barrier: CompletableDeferred<Unit>?=null
         val results=mutableMapOf<String,String>()
         override suspend fun snapshot(): PurchaseSnapshot {if(failRead) error("read");return s}
         override suspend fun outcome(command: PurchaseCommand): String? {if(failOutcome) error("outcome");return results[command.commandId]}
         override suspend fun commit(command: PurchaseCommand): String {
-            calls++;val d=(command.action as? PurchaseAction.Save)?.draft
-            s=s.copy(revision=s.revision+1,draft=d);val id=d?.id ?: "purchase-draft";results[command.commandId]=id
+            calls++;barrier?.await();val place=command.action as? PurchaseAction.Place
+            val d=(command.action as? PurchaseAction.Save)?.draft
+            s=s.copy(revision=s.revision+1,draft=d,orders=if(place==null) s.orders else s.orders+PurchaseOrderRules.create(place.orderId,place.draft,1));val id=place?.orderId ?: d?.id ?: "purchase-draft";results[command.commandId]=id
             if(lose) {failOutcome=true;error("lost")};return id
         }
     }
@@ -62,4 +63,30 @@ class PurchaseViewModelTest {
             withContext(Dispatchers.Main) {vm.revalidate()};assertEquals(0L,ready(vm).snapshot!!.revision);assertEquals(0,f.calls)
         } finally {withContext(Dispatchers.Main) {store.clear()}}
     }
+    @Test fun placeRequiresSavedDraftAndLostReplyNeverDuplicatesOrder(): Unit=runBlocking {
+        val store=ViewModelStore();val f=Fake()
+        try {
+            val vm=withContext(Dispatchers.Main) {model(store,f)};ready(vm)
+            withContext(Dispatchers.Main) {edit(vm);vm.place()};assertEquals(0,f.calls)
+            withContext(Dispatchers.Main) {vm.save()};ready(vm)
+            f.lose=true;f.barrier=CompletableDeferred()
+            withContext(Dispatchers.Main) {vm.place();vm.place()};assertTrue(vm.state.value.pending)
+            f.barrier!!.complete(Unit);val first=ready(vm);assertNotNull(first.unresolved);assertEquals(2,f.calls)
+            withContext(Dispatchers.Main) {vm.clear();vm.supplier("s")};assertEquals(first.form,vm.state.value.form)
+            f.failOutcome=false;withContext(Dispatchers.Main) {vm.retry()};val saved=ready(vm)
+            assertNull(saved.form);assertFalse(saved.dirty);assertFalse(saved.blocked);assertNotNull(saved.lastPlacedId)
+            assertEquals(1,saved.snapshot!!.orders.size);assertEquals(2,f.calls)
+        } finally {withContext(Dispatchers.Main) {store.clear()}}
+    }
+    @Test fun knownPlacedOrderRemainsKnownWhenHistoryReadFails(): Unit=runBlocking {
+        val store=ViewModelStore();val f=Fake()
+        try {
+            val vm=withContext(Dispatchers.Main) {model(store,f)};ready(vm)
+            withContext(Dispatchers.Main) {edit(vm);vm.save()};ready(vm);f.failRead=true
+            withContext(Dispatchers.Main) {vm.place()};val saved=ready(vm)
+            assertNotNull(saved.lastPlacedId);assertNull(saved.unresolved);assertNull(saved.form);assertFalse(saved.dirty);assertTrue(saved.blocked)
+            f.failRead=false;withContext(Dispatchers.Main) {vm.refresh()};assertEquals(1,ready(vm).snapshot!!.orders.size);assertEquals(2,f.calls)
+        } finally {withContext(Dispatchers.Main) {store.clear()}}
+    }
+
 }

@@ -43,3 +43,5 @@ Native решения для первоначального каталога и 
 04a.1: Supplier registry payload1 в Room workspace_documents namespace `suppliers`, SQLschema8 без изменений; supplier revisions/tombstones/simple refs + operation_result/audit в одной transaction. Формат и guard каталога — [SUPPLIERS-04A](SUPPLIERS-04A.md). Registry включать в будущий backup scope, не считать его временным workspace cache.
 
 04a.2: persistent `purchase-draft` payload1 в workspace_documents/Room8: raw decimal fields + supplier/product snapshots + CAS document revision. Save/Clear+result+audit атомарны, stock/cost/defaults не меняются; [контракт](PURCHASE-DRAFT-04A.md). Включать в будущий backup scope; не cache.
+
+04a.3: persistent `purchase-orders` payload1/Room8: immutable request snapshots, raw packaging +expected base/null, order/requestVersion1/pending; append+catalog purchase defaults revisions+draft clear+result/audit atomарны. Stock/cost не меняются. Historical product/supplier deletion guards и [контракт](PURCHASE-ORDERS-04A.md); включать в будущий backup.

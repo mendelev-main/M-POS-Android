@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.*
 import java.util.UUID
 
 data class PurchaseUi(val snapshot: PurchaseSnapshot?=null,val form: PurchaseDraft?=null,val pending: Boolean=false,val blocked: Boolean=true,
-    val unresolved: PurchaseCommand?=null,val message: String?=null) {
+    val unresolved: PurchaseCommand?=null,val message: String?=null,val lastPlacedId: String?=null) {
     val dirty: Boolean get()=form!=snapshot?.draft
 }
 class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
@@ -69,6 +69,16 @@ class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
         catch(e:CatalogFailure) {mutable.update {it.copy(message=e.message)};return}
         submit(PurchaseCommand(UUID.randomUUID().toString(),s.ownerId,s.revision,PurchaseAction.Save(d)))
     }
+    fun dismissPlaced() {if(!state.value.pending) mutable.update {it.copy(lastPlacedId=null)}}
+    fun place() {
+        if(!editable()) return
+        val ui=state.value;val s=ui.snapshot ?: return;val d=ui.form ?: return
+        if(ui.dirty || s.draft==null) {mutable.update {it.copy(message="Сначала сохраните текущий черновик")};return}
+        val c=PurchaseCommand(UUID.randomUUID().toString(),s.ownerId,s.revision,PurchaseAction.Place(UUID.randomUUID().toString(),d))
+        try {c.validate();PurchaseDraftRules.validateReferences(d,s.suppliers,s.products)}
+        catch(e:CatalogFailure) {mutable.update {it.copy(message=e.message)};return}
+        submit(c)
+    }
     fun clear() {
         if(!editable()) return
         val s=state.value.snapshot ?: return
@@ -92,8 +102,9 @@ class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
     }
     private suspend fun saved(c: PurchaseCommand) {
         val d=(c.action as? PurchaseAction.Save)?.draft
-        mutable.update {it.copy(form=d,snapshot=it.snapshot?.copy(revision=Math.addExact(c.revision,1),draft=d),unresolved=null,blocked=true,message="Черновик сохранён")}
-        try {val s=withContext(Dispatchers.IO) {access.snapshot()};mutable.update {it.copy(snapshot=s,form=s.draft,blocked=false,message=if(d==null) "Черновик удалён. Остатки не менялись" else "Черновик сохранён. Остатки не менялись")}}
+        val placed=(c.action as? PurchaseAction.Place)?.orderId
+        mutable.update {it.copy(form=d,snapshot=it.snapshot?.copy(revision=Math.addExact(c.revision,1),draft=d),unresolved=null,blocked=true,lastPlacedId=placed ?: it.lastPlacedId,message=if(placed!=null) "Заказ сформирован" else "Черновик сохранён")}
+        try {val s=withContext(Dispatchers.IO) {access.snapshot()};mutable.update {it.copy(snapshot=s,form=s.draft,blocked=false,message=if(placed!=null) "Заказ сформирован. Ожидается приёмка; остатки не менялись" else if(d==null) "Черновик удалён. Остатки не менялись" else "Черновик сохранён. Остатки не менялись")}}
         catch(e:CancellationException) {throw e}
         catch(_:Exception) {mutable.update {it.copy(message="Изменение сохранено. Не удалось перечитать черновик; повторите чтение")}}
     }

@@ -12,6 +12,7 @@ data class PurchaseLine(val productId: String,val productRevision: Long,val prod
 data class PurchaseDraft(val id: String,val supplierId: String,val supplierRevision: Long,val supplierName: String,val lines: List<PurchaseLine>)
 sealed interface PurchaseAction {
     data class Save(val draft: PurchaseDraft): PurchaseAction
+    data class Place(val orderId: String,val draft: PurchaseDraft): PurchaseAction
     data object Clear: PurchaseAction
 }
 data class PurchaseCommand(val commandId: String,val actorId: String,val revision: Long,val action: PurchaseAction) {
@@ -19,11 +20,13 @@ data class PurchaseCommand(val commandId: String,val actorId: String,val revisio
         PurchaseDraftRules.id(commandId);PurchaseDraftRules.id(actorId)
         if(revision<0) throw CatalogFailure("purchase","Некорректная версия черновика")
         if(action is PurchaseAction.Save) PurchaseDraftRules.validate(action.draft)
+        if(action is PurchaseAction.Place) {PurchaseDraftRules.id(action.orderId);PurchaseOrderRules.create(action.orderId,action.draft,0)}
     }
     fun fingerprint(): String {
         validate()
-        val d=(action as? PurchaseAction.Save)?.draft
-        val parts=mutableListOf<Any?>("purchase.draft.v1",actorId,revision,if(d==null) "clear" else "save")
+        val d=when(action) {is PurchaseAction.Save->action.draft;is PurchaseAction.Place->action.draft;PurchaseAction.Clear->null}
+        val parts=mutableListOf<Any?>("purchase.draft.v1",actorId,revision,if(action is PurchaseAction.Place) "place" else if(d==null) "clear" else "save")
+        if(action is PurchaseAction.Place) parts.add(action.orderId)
         if(d!=null) {
             parts.addAll(listOf(d.id,d.supplierId,d.supplierRevision,d.supplierName))
             d.lines.forEach {parts.addAll(listOf(it.productId,it.productRevision,it.productName,it.stockUnit,it.quantity,it.unit,it.packSize,it.contentUnit))}
