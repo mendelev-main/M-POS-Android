@@ -177,3 +177,7 @@ Local Mac77JVM/lint/debug APK/testAPK build verified; final Bash-based launcher 
 NAV01–NAV03 ci-verified: [fullCI40417634988](https://github.com/mendelev-main/M-POS-Android/actions/runs/40417634988)/2b05d53:77JVM/12Python/lint/build,89instrumentation/API36 incl route/recreation/editor-lock/narrow/tablet/fontScale2/accessibility ID exposure; actual debugAPK1→2 with catalog/workspace/parked/home/shift/split/sale/refund preservation/replay passed. updated-workspace/shift screenshots reviewed. Physical/dark/exact paired pixel-diff pending. I/H/C/N features behind future tab pages remain planned.
 
 W01/W02/W06/DS04 visual checkpoint: [WORKSPACE-VISUAL](WORKSPACE-VISUAL.md) implemented —380dp cart/source grid/toolbar, компактные строки и честные Soon actions. CI-verified в указанном объёме: [run40461096340](https://github.com/mendelev-main/M-POS-Android/actions/runs/40461096340)/3e11c33,80JVM/90instrumentation/12Python/lint/build и actual APK1→2. Физический планшет/dark/paired pixel diff pending.
+
+## 04a.1 поставщики
+
+SUP01–SUP05/M11 (часть I04): [SUPPLIERS-04A](SUPPLIERS-04A.md) implemented; name/simple bindings/persistence/revisions/replay/atomic audit/owner/delete guard/shared UI. CI pending; I01–I04 целиком не закрыты. Закупки/приёмка не подключены, source3/10 closes confirmed владельцем.

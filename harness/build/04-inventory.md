@@ -1,6 +1,6 @@
 # Этап 04 — Склад
 
-Статус: planned
+Статус: in progress —04a.1 suppliers implemented, CI pending; весь04 не закрыт
 
 ## Объём
 
@@ -31,3 +31,5 @@ I01: units/pack conversion; I02: stale baseline; I03: отмена сохран�
 ## Контекст и результат
 
 Значимые решения в `harness/context/04-inventory.md` при начале работ; наблюдаемые результаты в `harness/build-log.md`.
+
+04a.1: [поставщики](../../docs/SUPPLIERS-04A.md), SUP01–SUP05; source refs/границы/тесты и следующий04a.2 отдельно. D03 decisions2026-10-27 заменяют прежний open partial remainder:3/10 closes shortage7, weighted cost3,12/10 explicit confirm.

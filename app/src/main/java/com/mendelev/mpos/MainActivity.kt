@@ -74,7 +74,15 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                             override fun <T : ViewModel> create(modelClass: Class<T>): T =
                                 UpdateViewModel(UpdateRepository(context.applicationContext, fixture)) as T
                         })
-                        UpdatesScreen(model, onCatalog={route="catalog"}, onGallery={route="gallery"}) { route = "catalog" }
+                        UpdatesScreen(model, onCatalog={route="catalog"}, onGallery={route="gallery"},onSuppliers={route="suppliers"}) { route = "catalog" }
+                    }
+                    "suppliers" -> {
+                        val model: com.mendelev.mpos.feature.suppliers.SupplierViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
+                            override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.suppliers.SupplierViewModel(
+                                com.mendelev.mpos.data.local.SupplierRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                        })
+                        com.mendelev.mpos.feature.suppliers.SupplierScreen(model) {route="settings"}
                     }
                     "shift" -> {
                         com.mendelev.mpos.feature.shift.ShiftScreen(shiftModel,{route="catalog"},{route="workspace"},{route="settings"})

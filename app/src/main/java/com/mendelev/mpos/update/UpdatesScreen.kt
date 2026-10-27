@@ -9,6 +9,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,6 +33,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -44,8 +47,9 @@ import java.text.DateFormat
 import java.util.Date
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGallery: (() -> Unit)? = null, onBack: () -> Unit) {
+fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGallery: (() -> Unit)? = null, onSuppliers: (() -> Unit)? = null, onBack: () -> Unit) {
     val state by model.state.collectAsStateWithLifecycle()
     BackHandler(enabled = state.stage == UpdateStage.VERIFYING) { }
     val context = LocalContext.current
@@ -69,10 +73,14 @@ fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGal
     ) {
         MposButton(stringResource(R.string.settings_back), onBack, enabled = state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER), style = ActionStyle.Secondary)
         Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineLarge)
+        FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
         if (onCatalog != null) MposButton("Товары", onCatalog, style=ActionStyle.Secondary,
             enabled=state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER))
+        if (onSuppliers != null) MposButton("Поставщики",onSuppliers,style=ActionStyle.Secondary,
+            enabled=state.stage !in setOf(UpdateStage.VERIFYING,UpdateStage.INSTALLER),modifier=Modifier.testTag("settingsSuppliers"))
         if (com.mendelev.mpos.BuildConfig.DEBUG && onGallery != null) MposButton("Компоненты", onGallery, style=ActionStyle.Secondary,
             enabled=state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER))
+        }
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.update_title), style = MaterialTheme.typography.titleLarge)

@@ -33,3 +33,9 @@ SDK/ARM64 AVD для Mac установлен и local build77JVM/lint/APKs пр
 ## Актуальная сверка перед PR5
 
 В блок также входят общий navbar и рабочая зона по pinned Web. FullCI40461096340/3e11c33 SUCCESS80JVM/90instrumentation/12Python/lint/build/actual debugAPK1→2; screenshots обычного планшета и150% просмотрены. Удалена устаревшая подсказка экрана смены о будущей доступности оплат: оплаты и возвраты уже подключены. Это текстовое исправление; финансовые команды/Room8/signing прежние. PR5 develop→main; выпуск и public-channel upgrade должны быть подтверждены отдельно main pipeline. Физическая/тёмная/paired pixel приёмка по-прежнему отложена.
+
+## Выпуск03c/UI подтверждён
+
+[PR5](https://github.com/mendelev-main/M-POS-Android/pull/5) merged4d522575 после PR checks40466022990. [Main40466390578](https://github.com/mendelev-main/M-POS-Android/actions/runs/40466390578): checks/emulator/signed-apk/publish SUCCESS. [Stable0.1.74.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.74.1), code8401, Android16+, Room8, тот же applicationId/certificate. Публичный APK локально прошёл release.py verify-apk; SHA256/bytes/manifest/commit сверены. Public-channel7101→8401 проверяется отдельным run40468056889; его результат ниже/в build-log, не считать пока автоматически успешным.
+
+[Public channel40468056889](https://github.com/mendelev-main/M-POS-Android/actions/runs/40468056889)/API36 SUCCESS: production7101→8401, check/download/restore/permission/cancel/retry/system install и app-private settings сохранены. Это не physical/production financial fixture; глубокая сохранность оплат/возвратов проверена отдельными debug fixtures. Release checkpoint закрыт,04a.1 разрешён и начат на develop.

@@ -47,7 +47,7 @@ flowchart TD
 | 03a | минимальные active shift/open/close/cash boundary | одна активная смена, повтор open/close, sale admission contract |
 | 03b | payment policy и atomic sale/history | S01/S02/S04/S05, no false success/duplicate |
 | 03c | refund historical allocations, integration update guard | S03, restore stock, installer/commit coordination |
-| 04a | suppliers/purchase/partial receiving | документ закупки не меняет stock, один receipt движения |
+| 04a | suppliers/purchase/receiving with shortage | документ закупки не меняет stock, один receipt движения |
 | 04b | inventory/baseline/history | I01–I04, stale reject/cancel remainder |
 | 05 | сотрудники/auth/permissions, полная смена/cash UI, отчёты | H01–H04, sums/role checks/snapshot queries |
 | 06a/06b | customer/consent/loyalty и hall/booking | C01–C05, server parts по fake+staging contract |
