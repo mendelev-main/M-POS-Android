@@ -7,20 +7,33 @@ import org.json.JSONObject
 
 object PurchaseOrderCodec {
     const val KEY="purchase-orders"
-    fun encode(rows: List<PurchaseOrder>): String=JSONObject().put("version",1).put("items",JSONArray(rows.map {o->
+    fun encode(rows: List<PurchaseOrder>): String=JSONObject().put("version",2).put("items",JSONArray(rows.map {o->
         JSONObject().put("id",o.id).put("source",JSONObject(PurchaseDraftCodec.encode(o.source)))
             .put("createdAt",o.createdAt).put("requestVersion",o.requestVersion).put("status",o.status)
             .put("expected",JSONArray(o.expectedQuantities.map {it ?: JSONObject.NULL}))
+            .put("revision",o.revision).put("updatedAt",o.updatedAt ?: JSONObject.NULL).put("cancelledAt",o.cancelledAt ?: JSONObject.NULL).put("cancelledBy",o.cancelledBy ?: JSONObject.NULL)
+            .put("history",JSONArray(o.history.map {h->JSONObject().put("source",JSONObject(PurchaseDraftCodec.encode(h.source))).put("expected",JSONArray(h.expectedQuantities.map {it ?: JSONObject.NULL})).put("requestVersion",h.requestVersion).put("at",h.at)}))
     })).toString()
     fun decode(raw: String): List<PurchaseOrder> {
         try {
-            val j=JSONObject(raw);require(j.get("version") is Number && j.get("version").toString()=="1")
+            val j=JSONObject(raw);require(j.get("version") is Number && j.get("version").toString() in setOf("1","2"));val version=j.get("version").toString()
             val a=j.getJSONArray("items")
             fun long(j: JSONObject,key: String): Long {require(j.get(key) is Number);return j.get(key).toString().toLong()}
             return (0 until a.length()).map {i->
                 val o=a.getJSONObject(i);val expected=o.getJSONArray("expected")
-                PurchaseOrder(o.getString("id"),PurchaseDraftCodec.decode(o.getJSONObject("source").toString())!!,long(o,"createdAt"),
-                    (0 until expected.length()).map {if(expected.isNull(it)) null else expected.getString(it)},long(o,"requestVersion"),o.getString("status")).also(PurchaseOrderRules::validate)
+                val order=PurchaseOrder(o.getString("id"),PurchaseDraftCodec.decode(o.getJSONObject("source").toString())!!,long(o,"createdAt"),
+                    (0 until expected.length()).map {if(expected.isNull(it)) null else expected.getString(it)},long(o,"requestVersion"),o.getString("status"))
+                if(version=="1") {
+                    require(order.status=="pending" && order.requestVersion==1L)
+                    order.also(PurchaseOrderRules::validate)
+                } else {
+                    listOf("updatedAt","cancelledAt","cancelledBy","history").forEach {require(o.has(it))}
+                    val history=o.getJSONArray("history")
+                    order.copy(revision=long(o,"revision"),updatedAt=if(o.isNull("updatedAt")) null else long(o,"updatedAt"),cancelledAt=if(o.isNull("cancelledAt")) null else long(o,"cancelledAt"),cancelledBy=if(o.isNull("cancelledBy")) null else o.getString("cancelledBy"),
+                        history=(0 until history.length()).map {k->val h=history.getJSONObject(k);val e=h.getJSONArray("expected")
+                            PurchaseRequestRevision(PurchaseDraftCodec.decode(h.getJSONObject("source").toString())!!,(0 until e.length()).map {if(e.isNull(it)) null else e.getString(it)},long(h,"requestVersion"),long(h,"at"))
+                        }).also(PurchaseOrderRules::validate)
+                }
             }.also {require(it.map {o->o.id}.distinct().size==it.size && it.map {o->o.source.id}.distinct().size==it.size)}
         } catch(_:Exception) {throw CatalogFailure("purchaseOrdersFormat","Не удалось прочитать историю закупок. Данные не сброшены")}
     }
@@ -38,6 +51,6 @@ class PurchaseOrderStore(private val db: CatalogDatabase) {
         if(all().any {it.source.supplierId==id}) throw CatalogFailure("used","Поставщик используется в истории закупок")
     }
     suspend fun requireProductUnused(id: String) {
-        if(all().any {o->o.source.lines.any {it.productId==id}}) throw CatalogFailure("used","Товар используется в истории закупок")
+        if(all().any {o->(o.source.lines+o.history.flatMap {it.source.lines}).any {it.productId==id}}) throw CatalogFailure("used","Товар используется в истории закупок")
     }
 }

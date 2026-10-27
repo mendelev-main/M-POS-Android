@@ -9,15 +9,18 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.util.UUID
 
+data class PurchaseEdit(val baseline: PurchaseOrder,val initial: PurchaseDraft,val form: PurchaseDraft) {
+    val dirty: Boolean get()=form!=initial
+}
 data class PurchaseUi(val snapshot: PurchaseSnapshot?=null,val form: PurchaseDraft?=null,val pending: Boolean=false,val blocked: Boolean=true,
-    val unresolved: PurchaseCommand?=null,val message: String?=null,val lastPlacedId: String?=null) {
+    val unresolved: PurchaseCommand?=null,val message: String?=null,val lastPlacedId: String?=null,val editing: PurchaseEdit?=null,val orderUnresolved: PurchaseOrderCommand?=null,val orderReloadNeeded: Boolean=false,val orderCommitted: Boolean=false) {
     val dirty: Boolean get()=form!=snapshot?.draft
 }
 class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
     private val mutable=MutableStateFlow(PurchaseUi());val state=mutable.asStateFlow()
     init {refresh()}
     fun refresh() {
-        if(state.value.pending || state.value.unresolved!=null || state.value.dirty) return
+        if(state.value.pending || state.value.unresolved!=null || state.value.orderUnresolved!=null || state.value.editing!=null || state.value.dirty) return
         mutable.update {it.copy(pending=true,message=null)}
         viewModelScope.launch {
             try {val s=withContext(Dispatchers.IO) {access.snapshot()};mutable.update {it.copy(snapshot=s,form=s.draft,blocked=false)}}
@@ -26,7 +29,8 @@ class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
             finally {mutable.update {it.copy(pending=false)}}
         }
     }
-    private fun editable()=!state.value.pending && !state.value.blocked && state.value.unresolved==null
+    private fun available()=!state.value.pending && !state.value.blocked && state.value.unresolved==null && state.value.orderUnresolved==null
+    private fun editable()=available() && state.value.editing==null
     fun supplier(id: String) {
         if(!editable()) return
         val ui=state.value;val old=ui.form
@@ -46,7 +50,7 @@ class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
         mutable.update {it.copy(form=d.copy(lines=if(d.lines.any {it.productId==id}) d.lines.map {if(it.productId==id) next else it} else d.lines+next),message=null)}
     }
     fun remove(id: String) {if(editable()) mutable.update {it.copy(form=it.form?.let {d->d.copy(lines=d.lines.filterNot {l->l.productId==id})},message=null)}}
-    fun discard() {if(!state.value.pending && state.value.unresolved==null) mutable.update {it.copy(form=it.snapshot?.draft,message=null)}}
+    fun discard() {if(!state.value.pending && state.value.unresolved==null && state.value.orderUnresolved==null && state.value.editing==null) mutable.update {it.copy(form=it.snapshot?.draft,message=null)}}
     fun revalidate() {
         if(!editable()) return
         val before=state.value;val d=before.form ?: return
@@ -68,6 +72,84 @@ class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
         try {PurchaseDraftRules.validateReferences(d,s.suppliers,s.products)}
         catch(e:CatalogFailure) {mutable.update {it.copy(message=e.message)};return}
         submit(PurchaseCommand(UUID.randomUUID().toString(),s.ownerId,s.revision,PurchaseAction.Save(d)))
+    }
+    fun openEdit(order: PurchaseOrder) {
+        if(!editable()) return
+        val s=state.value.snapshot ?: return
+        try {
+            val d=PurchaseOrderMutationRules.open(order,s.suppliers,s.products)
+            mutable.update {it.copy(editing=PurchaseEdit(order,d,d),message=null,lastPlacedId=null)}
+        } catch(e:CatalogFailure) {mutable.update {it.copy(message=e.message)}}
+    }
+    fun editLine(id: String,change: (PurchaseLine)->PurchaseLine) {
+        if(!available()) return
+        val ui=state.value;val e=ui.editing ?: return;val s=ui.snapshot ?: return
+        val p=s.products.find {it.id==id} ?: return
+        if(id !in s.suppliers.find {it.id==e.form.supplierId}?.productIds.orEmpty() && e.form.lines.none {it.productId==id}) return
+        val line=e.form.lines.find {it.productId==id} ?: p.blankLine()
+        val changed=change(line)
+        mutable.update {it.copy(editing=e.copy(form=e.form.copy(lines=if(e.form.lines.any {it.productId==id}) e.form.lines.map {if(it.productId==id) changed else it} else e.form.lines+changed)),message=null)}
+    }
+    fun removeEditLine(id: String) {if(available()) mutable.update {it.copy(editing=it.editing?.let {e->e.copy(form=e.form.copy(lines=e.form.lines.filterNot {l->l.productId==id}))},message=null)}}
+    fun discardEdit() {if(!state.value.pending && state.value.orderUnresolved==null) mutable.update {it.copy(editing=null,message=null)}}
+    fun revalidateEdit() {
+        if(!available()) return
+        val e=state.value.editing ?: return
+        mutable.update {it.copy(pending=true,message=null)}
+        viewModelScope.launch {
+            try {
+                val s=withContext(Dispatchers.IO) {access.snapshot()}
+                if(s.orders.find {it.id==e.baseline.id}?.revision!=e.baseline.revision) throw CatalogFailure("conflict","Заказ изменился. Закройте редактор и перечитайте историю; ввод сохранён")
+                val d=PurchaseDraftRules.revalidate(e.form,s.suppliers,s.products)
+                mutable.update {it.copy(snapshot=it.snapshot?.copy(products=s.products,suppliers=s.suppliers,orders=s.orders),editing=e.copy(form=d),message="Ссылки обновлены. Количества сохранены")}
+            } catch(ex:CancellationException) {throw ex}
+            catch(ex:Exception) {mutable.update {it.copy(message=if(ex is CatalogFailure) ex.message else "Не удалось обновить ссылки. Ввод сохранён")}}
+            finally {mutable.update {it.copy(pending=false)}}
+        }
+    }
+    fun saveEdit() {
+        if(!available()) return
+        val ui=state.value;val e=ui.editing ?: return;val s=ui.snapshot ?: return
+        val c=PurchaseOrderCommand(UUID.randomUUID().toString(),s.ownerId,e.baseline.id,e.baseline.revision,PurchaseOrderAction.Edit(e.form))
+        try {c.validate();PurchaseDraftRules.validateReferences(e.form,s.suppliers,s.products)}
+        catch(ex:CatalogFailure) {mutable.update {it.copy(message=ex.message)};return}
+        mutate(c)
+    }
+    fun cancelOrder(o: PurchaseOrder) {
+        if(!editable()) return
+        val s=state.value.snapshot ?: return
+        mutate(PurchaseOrderCommand(UUID.randomUUID().toString(),s.ownerId,o.id,o.revision,PurchaseOrderAction.Cancel))
+    }
+    fun retryOrder() {if(!state.value.pending) state.value.orderUnresolved?.let(::mutate)}
+    private fun mutate(c: PurchaseOrderCommand) {
+        mutable.update {it.copy(pending=true,orderUnresolved=c,message=null)}
+        viewModelScope.launch {
+            try {withContext(Dispatchers.IO) {access.mutationOutcome(c) ?: access.mutate(c)};orderSaved(c)}
+            catch(ex:CancellationException) {throw ex}
+            catch(ex:Exception) {
+                try {
+                    if(withContext(Dispatchers.IO) {access.mutationOutcome(c)}!=null) orderSaved(c)
+                    else mutable.update {it.copy(orderUnresolved=null,message=if(ex is CatalogFailure) ex.message else "Изменение заказа не сохранено. Ввод сохранён")}
+                } catch(ex2:CancellationException) {throw ex2}
+                catch(_:Exception) {mutable.update {it.copy(blocked=true,orderUnresolved=c,message="Результат неизвестен. Проверьте ту же команду перед новым действием")}}
+            } finally {mutable.update {it.copy(pending=false)}}
+        }
+    }
+    private suspend fun orderSaved(c: PurchaseOrderCommand) {
+        mutable.update {it.copy(orderUnresolved=null,editing=null,blocked=true,orderReloadNeeded=true,orderCommitted=true,lastPlacedId=c.orderId,message="Изменение заказа сохранено")}
+        readOrders()
+    }
+    private suspend fun readOrders() {
+        try {
+            val s=withContext(Dispatchers.IO) {access.snapshot()}
+            mutable.update {it.copy(snapshot=it.snapshot?.copy(orders=s.orders,products=s.products,suppliers=s.suppliers),blocked=false,orderReloadNeeded=false,orderCommitted=false,message=if(it.orderCommitted) "Изменение заказа сохранено. Остатки не менялись" else "История закупок обновлена")}
+        } catch(ex:CancellationException) {throw ex}
+        catch(_:Exception) {mutable.update {it.copy(blocked=true,orderReloadNeeded=true,message=if(it.orderCommitted) "Изменение заказа сохранено. Не удалось перечитать историю; повторите чтение" else "Не удалось прочитать историю. Ввод сохранён; повторите чтение")}}
+    }
+    fun refreshOrders() {
+        if(state.value.pending || state.value.orderUnresolved!=null || state.value.unresolved!=null || state.value.editing!=null) return
+        mutable.update {it.copy(pending=true)}
+        viewModelScope.launch {try {readOrders()} finally {mutable.update {it.copy(pending=false)}}}
     }
     fun dismissPlaced() {if(!state.value.pending) mutable.update {it.copy(lastPlacedId=null)}}
     fun place() {

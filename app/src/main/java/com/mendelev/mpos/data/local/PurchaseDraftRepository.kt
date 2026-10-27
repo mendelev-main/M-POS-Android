@@ -33,9 +33,13 @@ interface PurchaseAccess {
     suspend fun snapshot(): PurchaseSnapshot
     suspend fun outcome(command: PurchaseCommand): String?
     suspend fun commit(command: PurchaseCommand): String
+    suspend fun mutate(command: PurchaseOrderCommand): String = error("Order mutation unavailable")
+    suspend fun mutationOutcome(command: PurchaseOrderCommand): String? = error("Order mutation unavailable")
 }
 class PurchaseDraftRepository(private val db: CatalogDatabase,private val clock: Clock=Clock.systemUTC(),
     private val afterWrite: (() -> Unit)?=null,private val afterCommit: (() -> Unit)?=null): PurchaseAccess {
+    override suspend fun mutate(command: PurchaseOrderCommand)=PurchaseOrderRepository(db).commit(command)
+    override suspend fun mutationOutcome(command: PurchaseOrderCommand)=PurchaseOrderRepository(db).outcome(command)
     private suspend fun suppliers()=db.workspace().document(SupplierCodec.KEY)?.let {SupplierCodec.decode(it.payload)}.orEmpty()
     private suspend fun products(): List<PurchaseProduct> {
         val cats=db.catalog().categorySnapshot().associate {it.id to it.name};val stocks=db.catalog().allBalances().associate {it.productId to it.quantity}

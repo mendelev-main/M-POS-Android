@@ -43,3 +43,5 @@ SUP01–SUP05: [fullCI40472850012](https://github.com/mendelev-main/M-POS-Androi
 04a.3: [формирование и история](../../docs/PURCHASE-ORDERS-04A.md), PO06–PO10 ci-verified/API36/run40483522354. Pending request +defaults +clear draft; no receiving.
 
 04a.3 итог: [FullCI40483522354](https://github.com/mendelev-main/M-POS-Android/actions/runs/40483522354)/dbd5fb2 SUCCESS:91JVM/116API36 instrumentation/0failures/0skipped,12Python/lint/build;2scale/11UIseed/6upgrade fixtures (3financial+supplier+purchase draft+purchase order), actual debugAPK1→2. PURCHASE ORDER UPDATE PASSED: pending snapshot/raw quantities/requestVersion1, cleared draft, current product metadata/defaults and replay without duplicate preserved. Existing sale/split/refund/catalog/workspace/parked/home/shift assertions также прошли. Следующий04a.4 edit/cancel pending; receiving позже.
+
+04a.4: [изменение и отмена](../../docs/PURCHASE-ORDER-CHANGES-04A.md), PO11–PO15 implemented/CI pending. No receiving.

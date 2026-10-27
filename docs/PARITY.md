@@ -191,3 +191,7 @@ PO01–PO05 implemented: [контракт](PURCHASE-DRAFT-04A.md). Явное d
 PO06–PO10 ci-verified/API36: [контракт](PURCHASE-ORDERS-04A.md). Saved-only atomic pending snapshot/defaults/clear, historical text/history, deletion guards/replay. I01/I04 только request scope; receiving/edit/cancel pending.
 
 04a.3 evidence: [FullCI40483522354](https://github.com/mendelev-main/M-POS-Android/actions/runs/40483522354)/dbd5fb2 SUCCESS:91JVM/116API36 instrumentation/0failures/0skipped,12Python/lint/build;2scale/11UIseed/6upgrade fixtures (3financial+supplier+purchase draft+purchase order), actual debugAPK1→2. PURCHASE ORDER UPDATE PASSED: pending snapshot/raw quantities/requestVersion1, cleared draft, current product metadata/defaults and replay without duplicate preserved. Existing sale/split/refund/catalog/workspace/parked/home/shift assertions также прошли. Screenshots purchase-order/history reviewed; physical/dark/150%/cold-process UI pending. Весь04/I01–I04 не закрыт.
+
+## 04a.4 edit/cancel pending
+
+PO11–PO15 implemented, CI pending: [контракт](PURCHASE-ORDER-CHANGES-04A.md). Versioned history, cancelled marker, independent draft preservation, payload1→2. Receiving pending; весь04 не завершён.
