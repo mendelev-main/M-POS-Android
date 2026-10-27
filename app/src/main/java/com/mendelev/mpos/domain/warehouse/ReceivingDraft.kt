@@ -7,7 +7,7 @@ import java.time.LocalDate
 
 /** Economic baseline used only for a draft preview. A future posting must read it again. */
 data class ReceivingProduct(val id: String,val name: String,val unit: String,val revision: Long,val stockRevision: Long,val stock: String,val cost: String,val noStockTracking: Boolean)
-data class ReceivingLine(val product: ReceivingProduct,val quantity: String,val unit: String,val packSize: String,val contentUnit: String,val total: String="") {
+data class ReceivingLine(val product: ReceivingProduct,val quantity: String,val unit: String,val packSize: String,val contentUnit: String,val total: String="",val priceMode: String="total",val unitPrice: String="") {
     fun purchaseLine()=PurchaseLine(product.id,product.revision,product.name,product.unit,quantity,unit,packSize,contentUnit)
 }
 data class ReceivingSupplier(val id: String,val name: String,val revision: Long)
@@ -24,7 +24,8 @@ data class ReceivingCommand(val commandId: String,val actorId: String,val orderI
     }
     fun fingerprint(): String {
         validate();val d=draft
-        val parts=mutableListOf<Any?>("receiving.draft.v1",actorId,orderId,revision,d!=null)
+        val extended=d?.lines?.any {it.priceMode!="total" || it.unitPrice.isNotEmpty()}==true
+        val parts=mutableListOf<Any?>(if(extended) "receiving.draft.v2" else "receiving.draft.v1",actorId,orderId,revision,d!=null)
         if(d!=null) {
             val order=d.order
             if(order!=null) {
@@ -33,7 +34,7 @@ data class ReceivingCommand(val commandId: String,val actorId: String,val orderI
                 source(order.source);parts.addAll(listOf(order.createdAt,order.status,order.updatedAt,order.cancelledAt,order.cancelledBy))
                 order.history.forEach {source(it.source);parts.addAll(listOf(it.requestVersion,it.at))}
             } else parts.addAll(listOf("standalone.v1",d.id,d.invoiceNumber,d.invoiceDate,d.supplier?.id,d.supplier?.name,d.supplier?.revision))
-            d.lines.forEach {l->val p=l.product;parts.addAll(listOf(p.id,p.name,p.unit,p.revision,p.stockRevision,p.stock,p.cost,p.noStockTracking,l.quantity,l.unit,l.packSize,l.contentUnit,l.total))}
+            d.lines.forEach {l->val p=l.product;parts.addAll(listOf(p.id,p.name,p.unit,p.revision,p.stockRevision,p.stock,p.cost,p.noStockTracking,l.quantity,l.unit,l.packSize,l.contentUnit,l.total));if(extended) parts.addAll(listOf(l.priceMode,l.unitPrice))}
         }
         return CatalogRules.fingerprint(*parts.toTypedArray())
     }
@@ -54,6 +55,21 @@ object ReceivingRules {
         if(n.scale()>2) throw CatalogFailure("receiving","Сумма строки должна быть указана до копейки")
         return try {n.movePointRight(2).longValueExact()} catch(_:ArithmeticException) {throw CatalogFailure("receiving","Сумма строки слишком велика")}
     }
+    fun lineTotal(l: ReceivingLine): Long? {
+        if(l.priceMode=="total") return money(l.total)
+        if(l.priceMode!="price") throw CatalogFailure("receiving","Неизвестный режим суммы")
+        val q=PurchaseDraftRules.number(l.quantity);val price=PurchaseDraftRules.number(l.unitPrice)
+        if(q?.signum()==0) return 0L
+        if(q==null || price==null) return null
+        return money((q*price).setScale(2,RoundingMode.HALF_UP).toPlainString())
+    }
+    fun priceMode(l: ReceivingLine,next: String): ReceivingLine {
+        if(next !in setOf("total","price")) throw CatalogFailure("receiving","Неизвестный режим суммы")
+        if(next==l.priceMode) return l
+        if(next=="price") return l.copy(priceMode=next,unitPrice="",total="")
+        val amount=lineTotal(l)?.let {BigDecimal.valueOf(it,2).toPlainString()} ?: ""
+        return l.copy(priceMode=next,total=amount,unitPrice="")
+    }
     fun validate(d: ReceivingDraft) {
         PurchaseDraftRules.id(d.id);val order=d.order
         if(order!=null) {PurchaseOrderRules.validate(order);require(order.id!=STANDALONE && d.supplier==null)}
@@ -69,9 +85,12 @@ object ReceivingRules {
             if(p.revision<1 || p.stockRevision<1 || CatalogRules.name(p.name)!=p.name) throw CatalogFailure("receiving","Повреждён снимок товара")
             quantity(p.stock);val cost=PurchaseDraftRules.number(p.cost) ?: throw CatalogFailure("receiving","Не указана себестоимость baseline")
             if(cost.signum()<0) throw CatalogFailure("receiving","Некорректная себестоимость")
-            if(l.quantity.length>64 || l.packSize.length>64 || l.total.length>64) throw CatalogFailure("receiving","Слишком длинное число")
+            if(l.quantity.length>64 || l.packSize.length>64 || l.total.length>64 || l.unitPrice.length>64) throw CatalogFailure("receiving","Слишком длинное число")
             PurchaseDraftRules.expected(l.purchaseLine())
-            val qty=PurchaseDraftRules.number(l.quantity);val total=money(l.total)
+            if(l.priceMode !in setOf("total","price")) throw CatalogFailure("receiving","Неизвестный режим суммы")
+            if(l.priceMode=="price" && l.total.isNotEmpty()) throw CatalogFailure("receiving","В режиме цены сумма вычисляется автоматически")
+            if(l.priceMode=="total" && l.unitPrice.isNotEmpty()) throw CatalogFailure("receiving","Неверная цена в режиме суммы")
+            val qty=PurchaseDraftRules.number(l.quantity);val total=lineTotal(l)
             if(qty?.signum()==0 && total!=null && total!=0L) throw CatalogFailure("receiving","При нулевом количестве сумма должна быть 0")
         }
     }
@@ -92,13 +111,15 @@ object ReceivingRules {
         return d.copy(order=o,lines=existing+additions).also(::validate)
     }
     fun switchUnit(l: ReceivingLine,next: String): ReceivingLine {
-        if(l.unit in PurchaseDraftRules.packs || next in PurchaseDraftRules.packs) return l.copy(unit=next)
+        if(l.unit in PurchaseDraftRules.packs || next in PurchaseDraftRules.packs) return l.copy(unit=next,unitPrice=if(l.priceMode=="price") "" else l.unitPrice)
         val from=quantityUnit(l.unit);val to=quantityUnit(next)
         from.convert(BigDecimal.ONE,to)
         val q=PurchaseDraftRules.number(l.quantity)
         val raw=q?.let {CatalogRules.canonical(from.convert(it,to))} ?: ""
         PurchaseDraftRules.number(raw)
-        return l.copy(quantity=raw,unit=next)
+        val price=PurchaseDraftRules.number(l.unitPrice)?.let {CatalogRules.canonical(it.divide(from.convert(BigDecimal.ONE,to)))} ?: ""
+        PurchaseDraftRules.number(price)
+        return l.copy(quantity=raw,unit=next,unitPrice=price)
     }
     fun current(d: ReceivingDraft,o: PurchaseOrder?,products: List<ReceivingProduct>) {
         if((o!=null && o.status!="pending") || o!=d.order) throw CatalogFailure("conflict","Заказ изменился. Обновите основание черновика; введённые факты сохранятся")
@@ -111,7 +132,7 @@ object ReceivingRules {
         val lines=d.lines.map {l->
             val qty=PurchaseDraftRules.number(l.quantity) ?: throw CatalogFailure("receiving","Заполните количество каждой строки")
             val base=if(qty.signum()==0) BigDecimal.ZERO else PurchaseDraftRules.expected(l.purchaseLine()) ?: throw CatalogFailure("receiving","Укажите количество внутри упаковки «${l.product.name}»")
-            val total=money(l.total) ?: if(base.signum()==0) 0L else throw CatalogFailure("receiving","Заполните сумму каждой полученной строки")
+            val total=lineTotal(l) ?: if(base.signum()==0) 0L else throw CatalogFailure("receiving","Заполните сумму каждой полученной строки")
             if(base.signum()==0 && total!=0L) throw CatalogFailure("receiving","При нулевом количестве сумма должна быть 0")
             sum=try {Math.addExact(sum,total)} catch(_:ArithmeticException) {throw CatalogFailure("receiving","Итог слишком велик")}
             val p=l.product;val stock=quantity(p.stock);val oldCost=p.cost.toBigDecimal();val value=BigDecimal.valueOf(total,2)

@@ -113,4 +113,38 @@ class StandaloneReceivingRepositoryTest {
             assertEquals("3.33",db.catalog().product(p)!!.cost);assertEquals("-2",db.catalog().balance(p)!!.quantity);assertEquals(1L,db.catalog().balance(p)!!.revision);assertEquals(1,db.catalog().movementCount(p))
         } finally {db.close()}
     }
+    @Test fun priceDraftReopensAndPostingRollbackReplayPreserveRawPrice(): Unit=runBlocking {
+        val name="price-${UUID.randomUUID()}.db"
+        fun open()=Room.databaseBuilder(context,CatalogDatabase::class.java,name).build()
+        var db=open()
+        try {
+            val d=standaloneInvoice(db).let {it.copy(lines=it.lines.map {l->l.copy(quantity="1.5",total="",priceMode="price",unitPrice="2.35")})}
+            val c=save(db,d);db.close();db=open()
+            assertEquals(d,ReceivingRepository(db).snapshot().records.single().draft)
+            reject {ReceivingRepository(db).commit(c.copy(draft=d.copy(lines=d.lines.map {it.copy(unitPrice="2.36")})))}
+            val post=ReceivingPostCommand("price-post",c.actorId,1,d);val p=d.lines.single().product.id
+            val docs=db.workspace().documents()
+            for(n in 1..7) {
+                var writes=0
+                try {ReceivingPostingRepository(db,afterWrite={if(++writes==n) throw java.io.IOException("price")}).commit(post);fail()} catch(_:java.io.IOException) {}
+                assertEquals(docs,db.workspace().documents());assertEquals("10",db.catalog().balance(p)!!.quantity);assertEquals("2",db.catalog().product(p)!!.cost)
+            }
+            val repo=ReceivingPostingRepository(db);val id=repo.commit(post);assertEquals(id,repo.commit(post))
+            assertEquals("11.5",db.catalog().balance(p)!!.quantity);assertEquals("2.05",db.catalog().product(p)!!.cost);assertEquals(2,db.catalog().movementCount(p))
+            assertEquals(d,repo.history().single().draft);assertEquals(353L,repo.history().single().result.totalMinor)
+        } finally {db.close();context.deleteDatabase(name)}
+    }
+    @Test fun payloadTwoDefaultsToTotalModeWithoutChangingLegacyFingerprint(): Unit=runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
+        try {
+            val d=standaloneInvoice(db);val c=save(db,d)
+            val raw=org.json.JSONObject(ReceivingCodec.encode(listOf(ReceivingRecord(d.key,1,d)))).put("version",2)
+            raw.getJSONArray("items").getJSONObject(0).getJSONObject("draft").getJSONArray("lines").getJSONObject(0).apply {remove("priceMode");remove("unitPrice")}
+            val doc=db.workspace().document(ReceivingCodec.KEY)!!;db.workspace().put(doc.copy(payload=raw.toString()))
+            val read=ReceivingRepository(db).snapshot().records.single().draft!!
+            assertEquals(d,read);assertEquals(c.fingerprint(),c.copy(draft=read).fingerprint())
+            assertEquals(d.id,ReceivingRepository(db).commit(c));assertEquals(raw.toString(),db.workspace().document(ReceivingCodec.KEY)!!.payload)
+        } finally {db.close()}
+    }
+
 }

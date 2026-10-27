@@ -69,4 +69,24 @@ class StandaloneReceivingViewModelTest {
             withContext(Dispatchers.Main) {vm.rebase()};assertEquals(1L,ready(vm).snapshot!!.records.single().revision);assertEquals(rebased.form,vm.state.value.form)
         } finally {withContext(Dispatchers.Main) {store.clear()}}
     }
+    @Test fun priceQuantityModeAndUnitChangesKeepOneSourceOfMoney(): Unit=runBlocking {
+        val store=ViewModelStore();val f=Fake()
+        try {
+            val vm=withContext(Dispatchers.Main) {model(store,f)};ready(vm)
+            withContext(Dispatchers.Main) {vm.standalone()};ready(vm)
+            withContext(Dispatchers.Main) {vm.add("p");vm.priceMode("p","price");vm.line("p") {it.copy(quantity="1.5",unitPrice="2.35")};vm.preview()}
+            assertEquals(353L,ready(vm).preview!!.totalMinor)
+            withContext(Dispatchers.Main) {vm.line("p") {it.copy(quantity="0")}}
+            assertEquals("",vm.state.value.form!!.lines.single().total)
+            withContext(Dispatchers.Main) {vm.line("p") {it.copy(quantity="1.5")};vm.unit("p","ml")}
+            assertEquals("1500",vm.state.value.form!!.lines.single().quantity);assertEquals("0.00235",vm.state.value.form!!.lines.single().unitPrice)
+            withContext(Dispatchers.Main) {vm.priceMode("p","total")};assertEquals("3.53",vm.state.value.form!!.lines.single().total)
+            withContext(Dispatchers.Main) {vm.priceMode("p","price");vm.unit("p","l");vm.line("p") {it.copy(unitPrice="0.000000000001")}}
+            val before=vm.state.value.form
+            withContext(Dispatchers.Main) {vm.unit("p","ml")}
+            assertEquals(before,vm.state.value.form)
+            withContext(Dispatchers.Main) {vm.unit("p","box")};assertEquals("",vm.state.value.form!!.lines.single().unitPrice)
+        } finally {withContext(Dispatchers.Main) {store.clear()}}
+    }
+
 }

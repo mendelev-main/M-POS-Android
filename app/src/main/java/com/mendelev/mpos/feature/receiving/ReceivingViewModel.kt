@@ -63,8 +63,12 @@ class ReceivingViewModel(private val access: ReceivingAccess): ViewModel() {
     fun change(edit: (ReceivingDraft)->ReceivingDraft) {if(available()) mutable.update {it.copy(form=it.form?.let(edit),preview=null,message=null)}}
     fun line(id: String,edit: (ReceivingLine)->ReceivingLine) {
         change {d->d.copy(lines=d.lines.map {l->if(l.product.id!=id) l else edit(l).let {next->
-            if(next.quantity.trim().replace(',','.').toBigDecimalOrNull()?.signum()==0) next.copy(total="0") else next
+            if(next.priceMode=="total" && next.quantity.trim().replace(',','.').toBigDecimalOrNull()?.signum()==0) next.copy(total="0") else next
         }})}
+    }
+    fun priceMode(id: String,next: String) {
+        try {line(id) {ReceivingRules.priceMode(it,next)}}
+        catch(e:CatalogFailure) {mutable.update {it.copy(message=e.message)}}
     }
     fun unit(id: String,next: String) {
         try {line(id) {ReceivingRules.switchUnit(it,next)}}

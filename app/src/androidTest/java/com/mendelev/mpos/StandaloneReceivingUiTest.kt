@@ -38,15 +38,18 @@ class StandaloneReceivingUiTest {
         compose.onNodeWithTag("receivingSearch").performTextInput(key)
         compose.onNodeWithTag("receivingPick:$p").performScrollTo().performClick()
         compose.onNodeWithTag("receivingInvoice").performScrollTo().performTextInput("TTN-$key")
-        compose.onNodeWithTag("receivingQty:$p").performScrollTo().performTextInput("10")
-        compose.onNodeWithTag("receivingTotal:$p").performScrollTo().performTextInput("40");hideKeyboard()
+        compose.onNodeWithTag("receivingQty:$p").performScrollTo().performTextInput("1.5")
+        compose.onNode(hasAnyAncestor(hasTestTag("receivingMode:$p")) and hasClickAction()).performScrollTo().performClick()
+        compose.onNode(hasAnyAncestor(isPopup()) and hasText("Цена за единицу")).performClick()
+        compose.onNodeWithTag("receivingPrice:$p").performScrollTo().performTextInput("2.35");hideKeyboard()
+        compose.onNodeWithTag("receivingCalculated:$p").assertTextContains("3.53",substring=true)
         compose.onNodeWithTag("receivingSave").performClick();compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty}
         compose.onNodeWithTag("receivingRemove:$p").performScrollTo().performClick()
         compose.onNodeWithTag("receivingReload").performClick();compose.onNodeWithTag("receivingDiscard").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.form?.lines?.size==1}
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("receivingQty:$p").fetchSemanticsNodes().isNotEmpty() && !model.state.value.pending}
-        compose.onNodeWithTag("receivingQty:$p").assertTextContains("10");compose.onNodeWithTag("receivingTotal:$p").assertTextContains("40")
+        compose.onNodeWithTag("receivingQty:$p").assertTextContains("1.5");compose.onNodeWithTag("receivingPrice:$p").assertTextContains("2.35")
         shot("standalone-draft")
         compose.onNodeWithTag("receivingPreview").performClick();compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview!=null}
         assertFalse(model.state.value.preview!!.hasOverage);assertNull(model.state.value.preview!!.lines.single().expected)
@@ -56,9 +59,9 @@ class StandaloneReceivingUiTest {
         compose.onNodeWithTag("receivingPostedTitle").assertTextContains("TTN-$key",substring=true)
         compose.onNodeWithText("Приход проведён без заказа").assertIsDisplayed();shot("standalone-posted")
         val after=runBlocking {db.workspace().document(PurchaseOrderCodec.KEY) to db.workspace().document(PurchaseDraftCodec.KEY)}
-        assertEquals(before,after);assertEquals("20",runBlocking {db.catalog().balance(p)!!.quantity});assertEquals("3",runBlocking {db.catalog().product(p)!!.cost});assertEquals(2,runBlocking {db.catalog().movementCount(p)})
+        assertEquals(before,after);assertEquals("11.5",runBlocking {db.catalog().balance(p)!!.quantity});assertEquals("2.05",runBlocking {db.catalog().product(p)!!.cost});assertEquals(2,runBlocking {db.catalog().movementCount(p)})
         val record=runBlocking {ReceivingPostingRepository(db).history().single {it.draft.invoiceNumber=="TTN-$key"}}
-        assertNull(record.draft.order);assertEquals(d.supplier,record.draft.supplier)
+        assertEquals(353L,record.result.totalMinor);assertEquals("2.35",record.draft.lines.single().unitPrice);assertNull(record.draft.order);assertEquals(d.supplier,record.draft.supplier)
     }
     private fun shot(name: String) {
         hideKeyboard();compose.waitForIdle();val a=InstrumentationRegistry.getInstrumentation().uiAutomation;a.waitForIdle(200,5_000)

@@ -119,8 +119,14 @@ import java.math.BigDecimal
                                         MposField(l.packSize,{v->model.line(p.id) {it.copy(packSize=v)}},"В единице",Modifier.width(160.dp).testTag("receivingPack:${p.id}"),editable,numeric=true)
                                         MposSelect("Единица внутри",l.contentUnit,units(p.unit),{v->model.line(p.id) {it.copy(contentUnit=v)}},editable,Modifier.width(190.dp).testTag("receivingContent:${p.id}"))
                                     }
+                                    MposSelect("Ввод стоимости",l.priceMode,listOf("total" to "Сумма строки","price" to "Цена за единицу"),{v->model.priceMode(p.id,v)},editable,Modifier.width(190.dp).testTag("receivingMode:${p.id}"))
+                                    if(l.priceMode=="price") {
+                                        MposField(l.unitPrice,{v->model.line(p.id) {it.copy(unitPrice=v)}},"Цена BYN/${purchaseUnitLabel(l.unit)}",Modifier.width(190.dp).testTag("receivingPrice:${p.id}"),editable,numeric=true)
+                                        val amount=try {ReceivingRules.lineTotal(l)?.let {BigDecimal.valueOf(it,2).toPlainString()}} catch(_:Exception) {null}
+                                        Text("Сумма строки: ${amount ?: "уточните ввод"} BYN",modifier=Modifier.testTag("receivingCalculated:${p.id}"))
+                                    }
                                     val zero=l.quantity.trim().replace(',','.').toBigDecimalOrNull()?.signum()==0
-                                    MposField(l.total,{v->model.line(p.id) {it.copy(total=v)}},"Сумма строки BYN",Modifier.width(190.dp).testTag("receivingTotal:${p.id}"),editable && !zero,numeric=true)
+                                    if(l.priceMode=="total") MposField(l.total,{v->model.line(p.id) {it.copy(total=v)}},"Сумма строки BYN",Modifier.width(190.dp).testTag("receivingTotal:${p.id}"),editable && !zero,numeric=true)
                                 }
                             }
                         }
