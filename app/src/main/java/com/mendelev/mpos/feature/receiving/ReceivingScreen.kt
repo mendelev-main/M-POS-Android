@@ -37,7 +37,7 @@ import java.math.BigDecimal
     var dialog by rememberSaveable {mutableStateOf<String?>(null)}
     var switchOrder by rememberSaveable {mutableStateOf<String?>(null)}
     LaunchedEffect(model) {model.refresh();posting.refresh()}
-    LaunchedEffect(requestedOrder,ui.pending,ui.snapshot) {
+    LaunchedEffect(requestedOrder,ui.pending,ui.snapshot,locked,ui.blocked) {
         if(requestedOrder!=null && snapshot!=null && !locked && !ui.blocked) {
             if(ui.dirty) {switchOrder=requestedOrder;dialog="switch"} else {posting.acknowledge();showHistory=false;model.open(requestedOrder)}
             consumeRequest()

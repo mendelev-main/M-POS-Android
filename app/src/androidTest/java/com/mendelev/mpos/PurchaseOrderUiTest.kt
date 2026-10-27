@@ -64,7 +64,26 @@ class PurchaseOrderUiTest {
         compose.onNodeWithTag("purchaseOrder:$orderId").performScrollTo().performClick()
         compose.onNodeWithTag("purchaseOrderText").assertTextContains(name,substring=true)
         compose.onNodeWithTag("purchaseCopy").performClick()
+        // Force invoice snapshot to finish before independent history: the pending route must resume.
+        val historyReady=kotlinx.coroutines.CompletableDeferred<Unit>()
+        compose.runOnIdle {
+            val real=ReceivingPostingRepository(db)
+            val delayed=object: ReceivingPostingAccess {
+                override suspend fun history(): List<PostedReceiving> {historyReady.await();return real.history()}
+                override suspend fun outcome(c: ReceivingPostCommand)=real.outcome(c)
+                override suspend fun commit(c: ReceivingPostCommand)=real.commit(c)
+            }
+            ViewModelProvider(compose.activity,object: ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST") override fun <T: androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.receiving.ReceivingPostingViewModel(delayed) as T
+            })[com.mendelev.mpos.feature.receiving.ReceivingPostingViewModel::class.java]
+        }
         compose.onNode(hasAnyAncestor(isDialog()) and hasText("Приёмка")).performClick()
+        lateinit var receiving: com.mendelev.mpos.feature.receiving.ReceivingViewModel
+        compose.runOnIdle {receiving=ViewModelProvider(compose.activity)[com.mendelev.mpos.feature.receiving.ReceivingViewModel::class.java]}
+        compose.waitUntil(20_000) {receiving.state.value.snapshot!=null && !receiving.state.value.pending}
+        compose.waitForIdle()
+        compose.runOnIdle {assertNull(receiving.state.value.form)}
+        historyReady.complete(Unit)
         compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("receivingSave") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("receivingBack").performClick()
         compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("purchaseNew") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}

@@ -629,3 +629,5 @@ Hosted103JVM XML/145instrumentation HTML verified, zero failures/skips. All gate
 ## 2026-10-27 — receiving cost policy2 local
 
 Владелец подтвердил2decimal HALF_UP, заменяя12 HALF_EVEN для новых приходов. Preview/commit policy2, receipt total/stock unchanged; payload2 reads1/per-record policy, old fingerprints/replay/result preserved. Local build assembleDebugAndroidTest -Pkotlin.incremental=false SUCCESS28s/103JVM/0failures/lint/APKs;12Python/preflight/diff-check passed.146API36 expected, hosted CI pending. Literal legacy payload1 mixed with newpolicy2 and APK fixture compiled. No release/schema/signing changes, physical DB not seeded.
+
+Rounding follow-up CI40516106436/58c46c4:103JVM/146instrumentation passed; UIseed13/14 passed, PurchaseOrderUiTest timed out waiting receivingSave at line68. Actual APK replacement not reached. Found concrete route race: requestedOrder LaunchedEffect depended on invoice loading but not independent posting/history lock; if history finished last, transition never retried. Add locked/blocked effect keys and deterministic delayed-history regression to existing UI scenario. No assertion/timeouts weakened. New full CI required.
