@@ -230,7 +230,7 @@ def main():
                 # Unknown/system/M-POS dialogs are not dismissed by wait_text.
                 adb("shell", "am", "start", "-W", "-n", PACKAGE + "/com.mendelev.mpos.MainActivity")
                 wait_navigation("workspace", click=False)
-                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.SupplierUiTest,com.mendelev.mpos.PurchaseUiTest,com.mendelev.mpos.PurchaseOrderUiTest,com.mendelev.mpos.PurchaseOrderMutationUiTest,com.mendelev.mpos.ReceivingUiTest,com.mendelev.mpos.ReceivingPostingUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
+                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.SupplierUiTest,com.mendelev.mpos.PurchaseUiTest,com.mendelev.mpos.PurchaseOrderUiTest,com.mendelev.mpos.PurchaseOrderMutationUiTest,com.mendelev.mpos.ReceivingUiTest,com.mendelev.mpos.ReceivingPostingUiTest,com.mendelev.mpos.StandaloneReceivingUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
                              PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
                 assert "OK (15 tests)" in result and "FAILURES" not in result, result[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
