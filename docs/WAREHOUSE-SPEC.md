@@ -44,7 +44,7 @@ StockList/MovementHistory/LowStock/PurchaseStatus/ReceivingHistory/InventoryHist
 
 Средневзвешенная valuation/закрытие при недопоставке/явный over-receiving подтверждены ниже. Отдельно утвердить дополнительные расходы и отмену/коррекцию проведённой receiving. Собрать synthetic fixtures, не реальные накладные.
 
-WH01:2×12×0.5 л=12 л; WH02:получить 3 из 10, повтор command →received3/remaining7; WH03:отменить remainder →stock полученных 3 сохранён; WH04:unknown pack →block commit; WH05:concurrent sale после count →StaleBaseline; WH06:cancel после applied →история и ledger остаются; WH07:write failure →receiving и stock не разошлись. Mapping I01–I04/S01; tests planned.
+WH01:2×12×0.5 л=12 л; WH02:получить3из10 →заказ закрыт/shortage7, повтор command не добавляет3 снова; WH03:отменить pending заказ →другие проведённые приходы сохранены; WH04:unknown pack →block commit; WH05:concurrent sale после count →StaleBaseline; WH06:cancel после applied →история и ledger остаются; WH07:write failure →receiving и stock не разошлись. Mapping I01–I04/S01; tests planned.
 
 ## Уточнение владельца2026-10-27: приёмка как Web
 

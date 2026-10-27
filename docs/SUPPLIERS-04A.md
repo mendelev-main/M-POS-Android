@@ -25,3 +25,7 @@ SUP01: name/simple bindings/empty selection, invalid reference refusal. SUP02: s
 ## Следующая часть
 
 04a.2 — durable черновик закупки, выбор supplier/simple lines, единицы/упаковки/unknown expected quantity, без изменения stock. Затем receiving по подтверждённым D03: weighted cost, одно подтверждение закрывает заказ даже при недопоставке, over-receiving требует явного подтверждения. Дополнительные расходы/сторно не включать без отдельного контракта. Релиз каждого инкремента не производится.
+
+## Итоговая приёмка
+
+[FullCI40472850012](https://github.com/mendelev-main/M-POS-Android/actions/runs/40472850012)/6f387ee SUCCESS:83JVM/99instrumentation/0failures/0skipped,12Python/lint/build; затем2scale/9UIseed/3financial+1supplier fixture и actualAPK1→2. SUPPLIER UPDATE PASSED: registry/links/tombstones/audit/replay сохранены. Existing sale/split/refund/catalog/workspace/parked/home/shift assertions также прошли. Supplier-card/list1600×1125 просмотрены: единый Close/Primary/Secondary, имя/поиск/checkbox/actions без перекрытий и без клавиатуры/системного окна. Scope SUP01–SUP05 ci-verified; physical/dark/150% supplier matrix/forced cold-kill windows остаются отдельной приёмкой. Stable0.1.74.1 не содержит этот инкремент; код пока только develop.

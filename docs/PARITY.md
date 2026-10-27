@@ -180,4 +180,4 @@ W01/W02/W06/DS04 visual checkpoint: [WORKSPACE-VISUAL](WORKSPACE-VISUAL.md) impl
 
 ## 04a.1 поставщики
 
-SUP01–SUP05/M11 (часть I04): [SUPPLIERS-04A](SUPPLIERS-04A.md) implemented; name/simple bindings/persistence/revisions/replay/atomic audit/owner/delete guard/shared UI. CI pending; I01–I04 целиком не закрыты. Закупки/приёмка не подключены, source3/10 closes confirmed владельцем.
+SUP01–SUP05/M11 (часть I04): [SUPPLIERS-04A](SUPPLIERS-04A.md) implemented; name/simple bindings/persistence/revisions/replay/atomic audit/owner/delete guard/shared UI. CI-verified в указанном scope: [run40472850012](https://github.com/mendelev-main/M-POS-Android/actions/runs/40472850012)/6f387ee,83JVM/99instrumentation/12Python/lint/build/actualAPK1→2. I01–I04 целиком не закрыты, physical/dark/150% supplier UI отдельно. Закупки/приёмка не подключены, source3/10 closes confirmed владельцем.
