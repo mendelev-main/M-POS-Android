@@ -1,6 +1,6 @@
 # 04a.5 — черновик приёмки и предварительный расчёт
 
-Статус: implemented, CI pending. Часть M11/I01/I04, продолжает [закупки](PURCHASE-ORDER-CHANGES-04A.md). Приход ещё не проводится.
+Статус: ci-verified (RI01–RI05, только draft/preview). Часть M11/I01/I04, продолжает [закупки](PURCHASE-ORDER-CHANGES-04A.md). Приход ещё не проводится.
 
 ## Источник и границы
 
@@ -53,3 +53,9 @@ InstallationGate→Room transaction→current local owner→fingerprinted outcom
 | RI05 | UI save/dirty discard/recreate/preview, reopen and actual APK replacement retain data/results |
 
 Tests: ReceivingRulesTest5 JVM; ReceivingRepositoryTest4, ReceivingViewModelTest3, ReceivingUiTest1, ReceivingUpgradeTest1 API36. Existing financial/supplier/purchase suites retained. No destructive test seed on user's local database; hosted ephemeral emulator only. CI evidence appended after execution. Physical tablet/dark/150%/forced process-death windows pending.
+
+## CI-приёмка
+
+[FullCI40502219375](https://github.com/mendelev-main/M-POS-Android/actions/runs/40502219375)/a8d8c61 SUCCESS first attempt:100JVM/134API36 instrumentation/0failures/0skipped,12Python/lint/build;2scale/13UIseed/8upgrade fixtures and actual debugAPK1→2. RECEIVING DRAFT UPDATE PASSED: invoice facts, baseline, exact preview and old save replay preserved without stock/order posting. Existing sale/split/refund/catalog/workspace/parked/home/shift/supplier/purchase assertions retained and passed. Physical tablet/dark/150%/forced cold-process receiving UI pending; whole04 remains in progress. Next04a.6 receiving commit. Main/release/signing/SQLschema unchanged.
+
+Hosted HTML134/0/0 and downloaded JVM XML100/0/0/0 inspected. Screenshots1600×1125 reviewed: invoice fields, quantity/pack/total/footer and preview20л/3BYN readable without overlap/keyboard/foreign overlay. Saved to outputs/M-POS-receiving-draft.png and M-POS-receiving-preview.png. No tests/assertions removed, no retry required.

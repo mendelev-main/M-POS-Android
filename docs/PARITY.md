@@ -201,3 +201,5 @@ PO11–PO15 ci-verified/API36: [контракт](PURCHASE-ORDER-CHANGES-04A.md)
 ## 04a.5 receiving draft/preview
 
 RI01–RI05 implemented, CI pending: [контракт](RECEIVING-DRAFT-04A.md). Pending-order invoices/save/clear/rebase/indicative preview, no stock/order posting. I01/I04 только draft scope, entire04 pending.
+
+04a.5 RI01–RI05 ci-verified: [FullCI40502219375](https://github.com/mendelev-main/M-POS-Android/actions/runs/40502219375)/a8d8c61 SUCCESS first attempt:100JVM/134API36 instrumentation/0failures/0skipped,12Python/lint/build;2scale/13UIseed/8upgrade fixtures and actual debugAPK1→2. RECEIVING DRAFT UPDATE PASSED: invoice facts, baseline, exact preview and old save replay preserved without stock/order posting. Existing sale/split/refund/catalog/workspace/parked/home/shift/supplier/purchase assertions retained and passed. Physical tablet/dark/150%/forced cold-process receiving UI pending; whole04 remains in progress. Next04a.6 receiving commit. Main/release/signing/SQLschema unchanged.
