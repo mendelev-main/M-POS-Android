@@ -1,6 +1,6 @@
 # 04a.6 — проведение приёмки
 
-Статус: RP01–RP05 ранее ci-verified; уточнение policy2 implemented/CI pending. Source pinned1682c883 receiving.js applyReceivingDocument, source snapshot unchanged.
+Статус: RP01–RP05 и уточнение policy2 ci-verified/API36/run40519616659. Source pinned1682c883 receiving.js applyReceivingDocument, source snapshot unchanged.
 
 В scope только order-bound saved receiving: подтвердить расчёт → атомарный приход → read-only история и статус received. Standalone, per-unit-price mode, charges/storno, inventory вне этой части. Средневзвешенная себестоимость,3/10 закрывает заказ с недопоставкой7,12/10 требует отдельного подтверждения (ответы владельца). Актуальная policy2 подтверждена владельцем: итоговая себестоимость2decimal HALF_UP, сумма накладной exact minor. Подробности и совместимость прежней policy1 — ниже.
 
@@ -45,3 +45,9 @@ Downloaded103JVM XML and145instrumentation HTML inspected: zero failures/errors/
 `receivings` payload2 читает payload1 (policy1), хранит costPolicy у каждой записи; historical result/stock/product не пересчитываются и не мигрируются при чтении. Новые команды policy2 используют отдельный fingerprint namespace. Старые команды policy1 могут только вернуть прежний успешный результат; новый приход по policy1 запрещён. В смешанном registry сохраняются оба варианта. Room8 и форматы заказов/черновиков неизменны.
 
 Регрессии: pure3шт/10BYN/tie/zero, repository literal payload1→2 +old replay +new cost2.46, actual APK fixture сохраняет одновременно policy1 cost2.461538461538 и policy2 cost2.46, не повторяя ledger. Дальнейший04a.7 не начинался.
+
+## Итог уточнения округления
+
+[CI40519616659](https://github.com/mendelev-main/M-POS-Android/actions/runs/40519616659)/5f8276d SUCCESS:103JVM/146API36 instrumentation/0failures/0skipped,12Python/lint/APKs,2scale/14UIseed/9upgrade fixtures and actual debugAPK1→2. Owner-confirmed policy2 cost2 HALF_UP verified (3шт/10BYN→3.33;1.005→1.01; invoice totals exact). Mixed legacy1/new2 registry and original command replay preserved without another movement; all previous sale/split/refund/catalog/workspace/parked/home/shift/supplier/purchase assertions passed. Deterministic delayed-history route and post-dialog success/recreate passed. No local user DB seed, no physical device check, no main/release/signing/SQLschema changes.
+
+Downloaded103JVM XML and146instrumentation HTML inspected, zero errors/failures/skips. Screenshot1600×1125 history shows saved cost3.09 (previous3.090909090909), readable controls/no overlap/IME/foreign overlay; outputs/M-POS-receiving-posted.png updated. Earlier failed runs and concrete UI race fixes are recorded in build-log, not treated as successful acceptance.
