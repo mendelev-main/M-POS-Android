@@ -42,7 +42,7 @@ class PurchaseOrderMutationRepositoryTest {
             assertEquals(old,PurchaseDraftRepository(db).snapshot().orders.single())
             val product=db.catalog().product("p");val stock=db.catalog().balance("p");val draftDoc=db.workspace().document(PurchaseDraftCodec.KEY)
             val c=edit(db,owner,old);val repo=PurchaseOrderRepository(db);repo.commit(c);val editedDoc=db.workspace().document(PurchaseOrderCodec.KEY)
-            assertEquals("2",JSONObject(editedDoc!!.payload).get("version").toString());assertEquals("o",repo.commit(c));assertEquals(editedDoc,db.workspace().document(PurchaseOrderCodec.KEY))
+            assertEquals("3",JSONObject(editedDoc!!.payload).get("version").toString());assertEquals("o",repo.commit(c));assertEquals(editedDoc,db.workspace().document(PurchaseOrderCodec.KEY))
             SupplierRepository(db).commit(SupplierCommand("unlink",owner,SupplierAction.Save("s",1,"Новое имя",setOf("p"))))
             reject {CatalogRepository(db).deleteProduct("removed",2,"delete-historical")}
             db.close();db=open();val current=PurchaseDraftRepository(db).snapshot().orders.single()

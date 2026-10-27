@@ -55,8 +55,8 @@ class ReceivingUiTest {
         compose.onNodeWithTag("receivingPreviewLine:$id").assertTextContains("10 → 20",substring=true)
         compose.onNodeWithTag("receivingPreviewLine:$id").assertTextContains("2 → 3",substring=true)
         shot("receiving-preview")
-        compose.onNodeWithTag("receivingPostSoon").performClick();compose.onNodeWithText("Скоро будет подключено").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Закрыть").performClick();compose.onNodeWithContentDescription("Закрыть").performClick()
+        compose.onNodeWithTag("receivingPost").assertIsEnabled()
+        compose.onNodeWithContentDescription("Закрыть").performClick()
         val after=runBlocking {Triple(db.catalog().product(id)!!,db.catalog().balance(id)!!,db.workspace().document(PurchaseOrderCodec.KEY)!!)}
         assertEquals(before,after);assertEquals(1,runBlocking {db.catalog().movementCount(id)})
         assertEquals("40",model.state.value.saved!!.lines.single().total)

@@ -44,4 +44,4 @@ object PurchaseOrderMutationRules {
         })
     }
 }
-fun purchaseOrderStatus(o: PurchaseOrder)=if(o.status=="cancelled") "Отменён" else "Ожидается приёмка"
+fun purchaseOrderStatus(o: PurchaseOrder)=when(o.status) {"cancelled"->"Отменён";"received"->"Принят";else->"Ожидается приёмка"}

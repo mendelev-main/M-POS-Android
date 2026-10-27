@@ -7,16 +7,17 @@ import org.json.JSONObject
 
 object PurchaseOrderCodec {
     const val KEY="purchase-orders"
-    fun encode(rows: List<PurchaseOrder>): String=JSONObject().put("version",2).put("items",JSONArray(rows.map {o->
+    fun encode(rows: List<PurchaseOrder>): String=JSONObject().put("version",3).put("items",JSONArray(rows.map {o->
         JSONObject().put("id",o.id).put("source",JSONObject(PurchaseDraftCodec.encode(o.source)))
             .put("createdAt",o.createdAt).put("requestVersion",o.requestVersion).put("status",o.status)
             .put("expected",JSONArray(o.expectedQuantities.map {it ?: JSONObject.NULL}))
             .put("revision",o.revision).put("updatedAt",o.updatedAt ?: JSONObject.NULL).put("cancelledAt",o.cancelledAt ?: JSONObject.NULL).put("cancelledBy",o.cancelledBy ?: JSONObject.NULL)
+            .put("receivingId",o.receivingId ?: JSONObject.NULL).put("receivedAt",o.receivedAt ?: JSONObject.NULL).put("receivedBy",o.receivedBy ?: JSONObject.NULL)
             .put("history",JSONArray(o.history.map {h->JSONObject().put("source",JSONObject(PurchaseDraftCodec.encode(h.source))).put("expected",JSONArray(h.expectedQuantities.map {it ?: JSONObject.NULL})).put("requestVersion",h.requestVersion).put("at",h.at)}))
     })).toString()
     fun decode(raw: String): List<PurchaseOrder> {
         try {
-            val j=JSONObject(raw);require(j.get("version") is Number && j.get("version").toString() in setOf("1","2"));val version=j.get("version").toString()
+            val j=JSONObject(raw);require(j.get("version") is Number && j.get("version").toString() in setOf("1","2","3"));val version=j.get("version").toString()
             val a=j.getJSONArray("items")
             fun long(j: JSONObject,key: String): Long {require(j.get(key) is Number);return j.get(key).toString().toLong()}
             return (0 until a.length()).map {i->
@@ -28,8 +29,9 @@ object PurchaseOrderCodec {
                     order.also(PurchaseOrderRules::validate)
                 } else {
                     listOf("updatedAt","cancelledAt","cancelledBy","history").forEach {require(o.has(it))}
+                    if(version=="3") listOf("receivingId","receivedAt","receivedBy").forEach {require(o.has(it))}
                     val history=o.getJSONArray("history")
-                    order.copy(revision=long(o,"revision"),updatedAt=if(o.isNull("updatedAt")) null else long(o,"updatedAt"),cancelledAt=if(o.isNull("cancelledAt")) null else long(o,"cancelledAt"),cancelledBy=if(o.isNull("cancelledBy")) null else o.getString("cancelledBy"),
+                    order.copy(receivingId=if(version=="3" && !o.isNull("receivingId")) o.getString("receivingId") else null,receivedAt=if(version=="3" && !o.isNull("receivedAt")) long(o,"receivedAt") else null,receivedBy=if(version=="3" && !o.isNull("receivedBy")) o.getString("receivedBy") else null,revision=long(o,"revision"),updatedAt=if(o.isNull("updatedAt")) null else long(o,"updatedAt"),cancelledAt=if(o.isNull("cancelledAt")) null else long(o,"cancelledAt"),cancelledBy=if(o.isNull("cancelledBy")) null else o.getString("cancelledBy"),
                         history=(0 until history.length()).map {k->val h=history.getJSONObject(k);val e=h.getJSONArray("expected")
                             PurchaseRequestRevision(PurchaseDraftCodec.decode(h.getJSONObject("source").toString())!!,(0 until e.length()).map {if(e.isNull(it)) null else e.getString(it)},long(h,"requestVersion"),long(h,"at"))
                         }).also(PurchaseOrderRules::validate)

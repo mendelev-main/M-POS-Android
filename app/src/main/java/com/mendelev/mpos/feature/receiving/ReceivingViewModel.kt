@@ -102,7 +102,7 @@ class ReceivingViewModel(private val access: ReceivingAccess): ViewModel() {
                     val next=ReceivingRules.rebase(d,o,s.products)
                     mutable.update {it.copy(snapshot=s,form=next,message="Основание обновлено. Введённые факты сохранены; сохраните черновик")}
                 } else {
-                    val result=ReceivingRules.preview(d,o,s.products)
+                    val result=ReceivingPostingRules.preview(d,o,s.products)
                     mutable.update {it.copy(preview=result)}
                 }
             } catch(e:CancellationException) {throw e}

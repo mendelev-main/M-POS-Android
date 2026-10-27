@@ -125,7 +125,11 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                             @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.receiving.ReceivingViewModel(
                                 com.mendelev.mpos.data.local.ReceivingRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
                         })
-                        com.mendelev.mpos.feature.receiving.ReceivingScreen(model,receivingOrder,{receivingOrder=null}) {route="purchaseOrders"}
+                        val posting: com.mendelev.mpos.feature.receiving.ReceivingPostingViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.receiving.ReceivingPostingViewModel(
+                                com.mendelev.mpos.data.local.ReceivingPostingRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                        })
+                        com.mendelev.mpos.feature.receiving.ReceivingScreen(model,posting,receivingOrder,{receivingOrder=null}) {route="purchaseOrders"}
                     }
                     "analytics", "bookings", "events" -> PlannedModuleScreen(route)
                     else -> {

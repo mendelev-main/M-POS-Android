@@ -223,16 +223,16 @@ def main():
                 adb("uninstall", PACKAGE)
                 adb("install", str(base))
                 adb("install", "-r", str(test_apk))
-                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest,com.mendelev.mpos.SupplierUpgradeTest,com.mendelev.mpos.PurchaseUpgradeTest,com.mendelev.mpos.PurchaseOrderUpgradeTest,com.mendelev.mpos.PurchaseOrderMutationUpgradeTest,com.mendelev.mpos.ReceivingUpgradeTest",
+                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest,com.mendelev.mpos.SupplierUpgradeTest,com.mendelev.mpos.PurchaseUpgradeTest,com.mendelev.mpos.PurchaseOrderUpgradeTest,com.mendelev.mpos.PurchaseOrderMutationUpgradeTest,com.mendelev.mpos.ReceivingUpgradeTest,com.mendelev.mpos.ReceivingPostingUpgradeTest",
                                 PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
-                assert "OK (8 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
+                assert "OK (9 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
                 # Recover only the already-supported, exact Quickstep infrastructure ANR before UI captures.
                 # Unknown/system/M-POS dialogs are not dismissed by wait_text.
                 adb("shell", "am", "start", "-W", "-n", PACKAGE + "/com.mendelev.mpos.MainActivity")
                 wait_navigation("workspace", click=False)
-                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.SupplierUiTest,com.mendelev.mpos.PurchaseUiTest,com.mendelev.mpos.PurchaseOrderUiTest,com.mendelev.mpos.PurchaseOrderMutationUiTest,com.mendelev.mpos.ReceivingUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
+                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.SupplierUiTest,com.mendelev.mpos.PurchaseUiTest,com.mendelev.mpos.PurchaseOrderUiTest,com.mendelev.mpos.PurchaseOrderMutationUiTest,com.mendelev.mpos.ReceivingUiTest,com.mendelev.mpos.ReceivingPostingUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
                              PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
-                assert "OK (13 tests)" in result and "FAILURES" not in result, result[-4000:]
+                assert "OK (14 tests)" in result and "FAILURES" not in result, result[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
                 expected_shift = adb("shell", "run-as", PACKAGE, "cat", "files/qa/shiftId.txt").strip()
@@ -249,7 +249,7 @@ def main():
                 assert expected_workspace_line, "UI setup must create a real persistent current cart"
                 expected_parked_label = adb("shell", "run-as", PACKAGE, "cat", "files/qa/parkedLabel.txt").strip()
                 assert expected_parked_label, "UI setup must create a real parked order"
-                for name in ("refund-confirm", "refund-result", "refund-returned-receipt", "split-confirm", "split-progress", "sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders", "supplier-card", "supplier-list", "purchase-draft", "purchase-order", "purchase-history", "purchase-order-edit", "purchase-order-edited", "purchase-order-cancelled", "receiving-draft", "receiving-preview"):
+                for name in ("refund-confirm", "refund-result", "refund-returned-receipt", "split-confirm", "split-progress", "sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders", "supplier-card", "supplier-list", "purchase-draft", "purchase-order", "purchase-history", "purchase-order-edit", "purchase-order-edited", "purchase-order-cancelled", "receiving-draft", "receiving-preview", "receiving-post-confirm", "receiving-posted"):
                     captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
                     assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
                     (reports / f"{name}.png").write_bytes(captured.stdout)
@@ -330,10 +330,11 @@ def main():
                 (reports / "updated-shift.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("SHIFT UPDATE PASSED: active shift identity and opening140 BYN survived package replacement", flush=True)
                 adb("install", "-r", str(test_apk))
-                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest,com.mendelev.mpos.SupplierUpgradeTest,com.mendelev.mpos.PurchaseUpgradeTest,com.mendelev.mpos.PurchaseOrderUpgradeTest,com.mendelev.mpos.PurchaseOrderMutationUpgradeTest,com.mendelev.mpos.ReceivingUpgradeTest",
+                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest,com.mendelev.mpos.SupplierUpgradeTest,com.mendelev.mpos.PurchaseUpgradeTest,com.mendelev.mpos.PurchaseOrderUpgradeTest,com.mendelev.mpos.PurchaseOrderMutationUpgradeTest,com.mendelev.mpos.ReceivingUpgradeTest,com.mendelev.mpos.ReceivingPostingUpgradeTest",
                                 "-e", "saleUpgradeMode", "verify", PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
-                assert "OK (8 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
+                assert "OK (9 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
                 adb("uninstall", PACKAGE + ".test")
+                print("RECEIVING POST UPDATE PASSED: immutable invoice, stock/cost, terminal order, tombstone and command replay survived APK replacement", flush=True)
                 print("RECEIVING DRAFT UPDATE PASSED: invoice facts, baselines, preview and replay preserved without stock or order posting", flush=True)
                 print("PURCHASE ORDER MUTATION UPDATE PASSED: previous request history, cancellation actor/status, no stock writes and old edit replay preserved", flush=True)
                 print("PURCHASE ORDER UPDATE PASSED: pending snapshots, raw quantities, cleared draft and replay survived APK replacement", flush=True)
