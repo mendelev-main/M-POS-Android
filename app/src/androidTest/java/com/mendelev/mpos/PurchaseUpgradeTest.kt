@@ -23,7 +23,7 @@ class PurchaseUpgradeTest {
                 suppliers.commit(SupplierCommand("supplier",suppliers.snapshot().ownerId,SupplierAction.Save("s",null,"Поставщик",setOf("p"))))
                 val s=repo.snapshot()
                 repo.commit(command(s.ownerId))
-                catalog.saveProduct(ProductInput("p",1,"Новое молоко",null,"3","1","0",null,true,"product-edit",unit="l",displayUnit="l",noStockTracking=true,purchaseLabel="box",packSize="99"))
+                catalog.saveProduct(ProductInput("p",1,"Новое молоко",null,"3","1","0",null,false,"product-edit",unit="l",displayUnit="l",noStockTracking=true,purchaseLabel="box",packSize="99"))
                 suppliers.commit(SupplierCommand("rename",s.ownerId,SupplierAction.Save("s",1,"Новое имя",setOf("p"))))
             }
             val s=repo.snapshot();val d=s.draft!!;val l=d.lines.single();val doc=db.workspace().document(PurchaseDraftCodec.KEY)

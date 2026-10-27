@@ -575,3 +575,5 @@ SUP01–SUP05/M11 scope ci-verified, not whole04. Room8 unchanged; registry payl
 ## 2026-10-27 — 04a.2 purchase drafts, local checks
 
 PO01–PO05 implemented on develop; contract docs/PURCHASE-DRAFT-04A.md. Local `/bin/bash scripts/local-android.sh build assembleDebugAndroidTest -Pkotlin.incremental=false` SUCCESS51s:88JVM/lint/debug APK/test APK. `python3 scripts/harness.py preflight`,12Python tests, `git diff --check` passed. New repository/VM/UI/APK fixture compiled; execution API36 pending hosted fullCI. No local user database seed, physical device not checked. Schema/signing/release unchanged; submit/history/receiving still Soon.
+
+FirstCI40476579307/526b2c9: checks SUCCESS88JVM/12Python/lint/build; API36 107/108 passed,1 failure PurchaseUpgradeTest setup incorrectly sent stockEdited=true without expectedStockRevision on metadata edit. Catalog stale-stock guard correctly refused it; fix fixture to stockEdited=false, keep production guard. Actual replacement was not reached, no ci-verified claim.
