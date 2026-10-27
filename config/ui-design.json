@@ -97,5 +97,55 @@
   "notes": [
     "CSS values are source evidence; dp/sp mapping is a native standard, not measured pixel parity.",
     "Semantic component roles must use shared tokens; app does not read this file yet."
-  ]
+  ],
+  "topNavigation": {
+    "source": "pos.html:renderTopbar/.topbar",
+    "order": [
+      "pos",
+      "purchaseOrders",
+      "receiving",
+      "receipts",
+      "analytics",
+      "bookings",
+      "events",
+      "shift",
+      "settings"
+    ],
+    "heightDp": 68,
+    "compactMaxWidthDp": 700,
+    "compactHeightDp": 62,
+    "paddingDp": [
+      12,
+      16
+    ],
+    "compactPaddingDp": [
+      9,
+      10
+    ],
+    "gapDp": 10,
+    "tabGapDp": 4,
+    "tabPaddingDp": [
+      8,
+      14
+    ],
+    "tabFontSp": 14,
+    "settingsSizeDp": 44,
+    "iconSizeDp": 18,
+    "contract": "docs/TOP-NAVIGATION.md"
+  },
+  "workspace": {
+    "contract": "docs/WORKSPACE-VISUAL.md",
+    "bodyPaddingDp": 16,
+    "columnGapDp": 16,
+    "cartWidthDp": 380,
+    "cartRadiusDp": 22,
+    "tileRadiusDp": 16,
+    "gridGapDp": 12,
+    "gridPaddingDp": 4,
+    "categoryTileHeightDp": 144,
+    "toolbarMinHeightDp": 44,
+    "iconSizeDp": 44,
+    "iconRadiusDp": 12,
+    "futureActions": "shared-soon-dialog"
+  }
 }

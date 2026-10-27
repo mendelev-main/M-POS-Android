@@ -1,6 +1,9 @@
 package com.mendelev.mpos
 
 import android.os.Bundle
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mendelev.mpos.core.ui.*
 import android.content.Context.MODE_PRIVATE
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -53,53 +56,64 @@ fun FoundationScreen(fixtureUrl: String? = null) {
     val fixture = if (BuildConfig.DEBUG) fixtureUrl ?: preferences.getString("url", null) else null
     if (BuildConfig.DEBUG && fixtureUrl != null) preferences.edit().putString("url", fixtureUrl).apply()
     BackHandler(enabled = route != "catalog") { route = "catalog" }
+    val shiftModel: com.mendelev.mpos.feature.shift.ShiftViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.shift.ShiftViewModel(
+            com.mendelev.mpos.data.local.ShiftRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+    })
+    val shiftUi by shiftModel.state.collectAsStateWithLifecycle()
+    val navigation = MposTopNavigation(route, shiftUi.snapshot?.active != null,
+        shiftUi.loading, shiftUi.fatal, shiftUi.pending, shiftUi.snapshot?.active?.actorName ?: "Локальный владелец") { route = it }
     com.mendelev.mpos.core.ui.MposTheme {
-        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            when (route) {
-                "settings" -> {
-                    val model: UpdateViewModel = viewModel(factory = object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            UpdateViewModel(UpdateRepository(context.applicationContext, fixture)) as T
-                    })
-                    UpdatesScreen(model) { route = "catalog" }
-                }
-                "shift" -> {
-                    val model: com.mendelev.mpos.feature.shift.ShiftViewModel = viewModel(factory=object: ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.shift.ShiftViewModel(
-                            com.mendelev.mpos.data.local.ShiftRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
-                    })
-                    com.mendelev.mpos.feature.shift.ShiftScreen(model,{route="catalog"},{route="workspace"},{route="settings"})
-                }
-                "checkout", "history" -> {
-                    val model: com.mendelev.mpos.feature.sale.SaleViewModel = viewModel(factory=object: ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.sale.SaleViewModel(
-                            com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext)) as T
-                    })
-                    com.mendelev.mpos.feature.sale.SaleScreen(model,route=="history",{route="workspace"},{route="history"},{route="shift"})
-                }
-                "workspace" -> {
-                    val model: com.mendelev.mpos.feature.workspace.WorkspaceViewModel = viewModel(factory = object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            com.mendelev.mpos.feature.workspace.WorkspaceViewModel(com.mendelev.mpos.data.local.WorkspaceRepository(
-                                com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
-                    })
-                    val photos=androidx.compose.runtime.remember(context) { com.mendelev.mpos.data.media.ProductPhotoStore(context.applicationContext.filesDir) }
-                    com.mendelev.mpos.feature.workspace.WorkspaceScreen(model,photos,{route="catalog"},{route="settings"},{route="shift"},{route="checkout"},{route="history"})
-                }
-                "gallery" -> com.mendelev.mpos.feature.products.ComponentGallery { route = "catalog" }
-                else -> {
-                    val model: com.mendelev.mpos.feature.products.CatalogViewModel = viewModel(factory = object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            com.mendelev.mpos.feature.products.CatalogViewModel(com.mendelev.mpos.data.local.CatalogRepository(
-                                com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext),
-                                photos=com.mendelev.mpos.data.media.ProductPhotoStore(context.applicationContext.filesDir))) as T
-                    })
-                    com.mendelev.mpos.feature.products.CatalogScreen(model, { route = "settings" }, { route = "gallery" }, { route = "workspace" }, {route="shift"})
+        CompositionLocalProvider(LocalMposTopNavigation provides navigation) {
+            Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                when (route) {
+                    "settings" -> {
+                        val model: UpdateViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                                UpdateViewModel(UpdateRepository(context.applicationContext, fixture)) as T
+                        })
+                        UpdatesScreen(model, onCatalog={route="catalog"}, onGallery={route="gallery"}) { route = "catalog" }
+                    }
+                    "shift" -> {
+                        com.mendelev.mpos.feature.shift.ShiftScreen(shiftModel,{route="catalog"},{route="workspace"},{route="settings"})
+                    }
+                    "checkout", "history" -> {
+                        val model: com.mendelev.mpos.feature.sale.SaleViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
+                            override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.sale.SaleViewModel(
+                                com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext)) as T
+                        })
+                        val refunds: com.mendelev.mpos.feature.sale.RefundViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
+                            override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.sale.RefundViewModel(
+                                com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext)) as T
+                        })
+                        com.mendelev.mpos.feature.sale.SaleScreen(model,route=="history",{route="workspace"},{route="history"},{route="shift"},refunds)
+                    }
+                    "workspace" -> {
+                        val model: com.mendelev.mpos.feature.workspace.WorkspaceViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                                com.mendelev.mpos.feature.workspace.WorkspaceViewModel(com.mendelev.mpos.data.local.WorkspaceRepository(
+                                    com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                        })
+                        val photos=androidx.compose.runtime.remember(context) { com.mendelev.mpos.data.media.ProductPhotoStore(context.applicationContext.filesDir) }
+                        com.mendelev.mpos.feature.workspace.WorkspaceScreen(model,photos,{route="catalog"},{route="settings"},{route="shift"},{route="checkout"},{route="history"})
+                    }
+                    "gallery" -> com.mendelev.mpos.feature.products.ComponentGallery { route = "catalog" }
+                    "purchaseOrders", "receiving", "analytics", "bookings", "events" -> PlannedModuleScreen(route)
+                    else -> {
+                        val model: com.mendelev.mpos.feature.products.CatalogViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                                com.mendelev.mpos.feature.products.CatalogViewModel(com.mendelev.mpos.data.local.CatalogRepository(
+                                    com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext),
+                                    photos=com.mendelev.mpos.data.media.ProductPhotoStore(context.applicationContext.filesDir))) as T
+                        })
+                        com.mendelev.mpos.feature.products.CatalogScreen(model, { route = "settings" }, { route = "gallery" }, { route = "workspace" }, {route="shift"})
+                    }
                 }
             }
         }

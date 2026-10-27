@@ -23,3 +23,7 @@ Harness, docs, Compose bootstrap, CI, постоянный ключ и пров�
 ## Контекст и результат
 
 Значимые решения в `harness/context/00-foundation.md` при начале работ; наблюдаемые результаты в `harness/build-log.md`.
+
+## Дополнение NAV, 2026-10-27
+
+По запросу владельца до следующего предметного этапа — shared верхняя панель pinned Web: NAV01–NAV03, docs/TOP-NAVIGATION.md. Это отдельный UI checkpoint; новые склад/аналитика/клиенты/события не входят в объём. Контекст — harness/context/00-foundation.md, evidence — build-log.

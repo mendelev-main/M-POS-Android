@@ -19,11 +19,17 @@ class ShiftRepository(private val db: CatalogDatabase,private val clock: Clock=C
         val active=dao.active()
         check(active.size<=1 && active.all {it.id==last?.id && it.activeSlot==1 && it.closedAt==null}) {"Нарушен журнал смен"}
         check(last==null || last.registerId==config.registerId && (last.closedAt==null)==(last.activeSlot==1)) {"Нарушен статус смены"}
-        val cash=if(last==null) 0L else if(last.closedAt!=null) last.expectedCash ?: error("Не сохранён итог смены") else
-            db.sales().inShift(last.id).fold(last.openingCash) {sum,r->
+        val cash=if(last==null) 0L else if(last.closedAt!=null) last.expectedCash ?: error("Не сохранён итог смены") else {
+            // Exact aggregate: historical event ordering must not create a temporary negative/overflow.
+            val sales=db.sales().inShift(last.id).fold(last.openingCash.toBigInteger()) {sum,r->
                 check(r.cash>=0 && r.deliveryCashOut>=0)
-                Math.subtractExact(Math.addExact(sum,r.cash),r.deliveryCashOut).also {check(it>=0)}
+                sum+r.cash.toBigInteger()-r.deliveryCashOut.toBigInteger()
             }
+            db.refunds().inShift(last.id).fold(sales) {sum,r->
+                check(r.cash>=0 && r.deliveryCashCredit>=0)
+                sum+r.deliveryCashCredit.toBigInteger()-r.cash.toBigInteger()
+            }.longValueExact().also {check(it>=0) {"Некорректный остаток кассы"}}
+        }
         ShiftSnapshot(config.registerId,config.ownerId,register.revision,last?.domain(),Math.subtractExact(cash,last?.openingCash ?: 0L))
     }
     private suspend fun replay(command: String,fp: String): String? {

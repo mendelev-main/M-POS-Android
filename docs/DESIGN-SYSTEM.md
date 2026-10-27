@@ -118,3 +118,11 @@ Shared MposDialog maxWidth — ограничение ширины без отд
 ## Адаптация рабочей зоны02f
 
 Текущие правила заменяют исходный порог840dp из02a: cart340×fontScale dp (scale1–2), рядом с grid при наличии ещё460×scale dp +20dp. При достаточной высоте cart снизу300×scale dp; иначе общие кнопки «Товары / Заказ» переключают полную панель. Footer и основные действия должны оставаться доступны при крупном шрифте; сохраняются общий Manrope, цвета, размеры touch targets и единые Close/buttons. Контракт и границы emulator/physical — [WORKSPACE-02F](WORKSPACE-02F.md).
+
+## Верхняя панель
+
+Обязательный shared variant и NAV01–NAV03 — [TOP-NAVIGATION.md](TOP-NAVIGATION.md): точный порядок renderTopbar pinned Web,68/62dp, capsule tab14/12sp, настройки44dp, события/смена. Не заменять её разными наборами TextButton на экранах. Реальные маршруты подключаются по готовности модулей; состояния команд задают блокировку общей навигации.
+
+## Рабочая зона: актуальная геометрия
+
+[WORKSPACE-VISUAL](WORKSPACE-VISUAL.md) заменяет исторические340dp корзины/18dp плитки:380dp/16dp, cart22dp, icon44dp/radius12dp, source toolbar и компактные строки. PosAction/PosIconButton — документированные варианты shared POS controls; диалоги используют общий MposDialog.

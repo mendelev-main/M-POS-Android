@@ -26,7 +26,7 @@ import java.time.format.DateTimeFormatter
     var actor by rememberSaveable {mutableStateOf("")};var token by rememberSaveable {mutableStateOf("")}
     var expected by rememberSaveable {mutableStateOf(0L)};var counted by rememberSaveable {mutableStateOf("")}
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        MposAppBar("M-POS · Смена") {
+        MposAppBar("M-POS · Смена", navigationEnabled=!ui.pending && dialog==null) {
             MposNavigationAction("Товары",onCatalog);MposNavigationAction("Рабочая зона",onWorkspace);MposNavigationAction("Настройки",onSettings)
         }
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
@@ -60,7 +60,7 @@ import java.time.format.DateTimeFormatter
                         } else MposButton("Закрыть смену",{revision=s.revision;previous=active.id;actor=s.ownerId;token=ShiftRules.token(s);expected=s.currentCash;counted=java.math.BigDecimal.valueOf(expected,2).toPlainString();dialog="close";model.dismiss()},Modifier.testTag("shiftClose"),busy=ui.pending,style=ActionStyle.Secondary)
                     }
                 }
-                Text("Смена сохраняет состояние кассы. Оплаты будут доступны на следующем этапе.",style=MaterialTheme.typography.bodySmall)
+                Text("Оплаты и возвраты учитываются в текущей кассовой смене.",style=MaterialTheme.typography.bodySmall)
             }
         }
     }

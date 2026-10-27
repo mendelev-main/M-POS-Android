@@ -28,3 +28,10 @@ Schema7/checkout1/receipt1/progress2; applicationId `com.mendelev.mpos`, minSdk3
 ## Release checkpoint
 
 Текущая сверка подтверждает готовность03b в указанном manual scope к PRdevelop→main. Порядок: PR checks →merge →main checks/emulator →permanent signing/identity verification →stable publish →production public-channel upgrade →запись версии/evidence и синхронизация develop. Новые refund writes до этого checkpoint не начинаются. Предыдущий stable0.1.46.1 не переименовывать и не перезаписывать его APK.
+
+
+## Выпуск подтверждён
+
+[PR4](https://github.com/mendelev-main/M-POS-Android/pull/4) merged eafff3d после checks40347045936. [Main40348323683](https://github.com/mendelev-main/M-POS-Android/actions/runs/40348323683) SUCCESS:65JVM/73instrumentation/8Python/2scale/7UIseed/2financial seed+verify, lint/build, actualdebug update, permanent signing и publish. [Stable0.1.61.1/code7101](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.61.1), minSdk36/packagecom.mendelev.mpos. Public bytes/SHA256/manifest/certificate/commit сверены; прежние assets0.1.46.1 не менялись.
+
+[Public channel40354353799](https://github.com/mendelev-main/M-POS-Android/actions/runs/40354353799)/API36 SUCCESS: production5601→7101, HTTPS check/download/ready restore/permission/Cancel/retry/system install, settings receipt сохранился. Это не production sale fixture и не физическая проверка: financial deep preservation доказана отдельными debug fixtures/Room tests выше. Develop содержит main merge, следующий03c разрешён после этого release checkpoint; новый refund runtime пока отсутствует.

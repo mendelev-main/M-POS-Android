@@ -21,3 +21,9 @@ Pinned Web commit `1682c88334e6fb13586ce4b530157c59ca062e43`. Значения �
 Синтетический каталог/корзина с одинаковыми именами/количествами, одна тема и доступная ширина; зафиксировать density/font scale/insets/состояние клавиатуры. Сравнить Web и native: список/редактор товара, basic/dirty/confirmation dialog, модификаторы, current/parked, checkout позже03, settings/updater. Следом dark и узкая ширина/большой системный текст.
 
 Не подменять «одинаковый дизайн» обещанием равенства CSS px и hardware pixels. Отличия system dialogs Android ожидаемы. Остальные расхождения отмечаются: ошибка переноса / необходимая platform accessibility адаптация / согласованный variant. Источник правки и evidence сохраняются в build-log.
+
+Верхняя панель: `pos.html:76–108,815–819,1918–1938` и `Web/js/features/employees.js:employeeShortName`; контракт [TOP-NAVIGATION.md](TOP-NAVIGATION.md). Дополнительная строка inventory-reminder условная, не постоянная вкладка.
+
+## Рабочая зона
+
+Текущий native перенос pinned `screen-pos`, `pos-toolbar`, `pcard`, `cart-*` описан в [WORKSPACE-VISUAL](WORKSPACE-VISUAL.md):380dp корзина,16dp outer gap,12dp grid gap, source toolbar и компактные строки заказа. Это контракт геометрии, а не подтверждение полного pixel diff; одинаковый viewport/dark/физический планшет проверяются отдельно. Новые варианты кнопок ограничены POS toolbar/cart, общий MposDialog/Close сохраняется.

@@ -18,9 +18,19 @@ Harness — наш рабочий контур для агента: план →
 
 [GitHub Actions](https://github.com/mendelev-main/M-POS-Android/actions) прогоняет проверки, Android tests/lint/debug и emulator smoke; после успешных проверок main — signed release APK. PR из fork не получают signing secrets. Настройка ключа: [docs/RELEASE.md](docs/RELEASE.md). Работа в `develop`, готовый PR → `main`, полный CI и автоматическая публикация после merge; [основной workflow](docs/DEVELOPMENT-WORKFLOW.md). Ручной повторный выпуск требует `publish_release=true`, [инструкция](docs/UPDATES.md).
 
-Фундамент первоначально проверен [Actions run](https://github.com/mendelev-main/M-POS-Android/actions/runs/40023385742); механизм обновлений и первый stable APK `0.1.8.1` — [полным run](https://github.com/mendelev-main/M-POS-Android/actions/runs/40071871635). Текущий выпуск — [0.1.16.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.16.1); обновление 0.1.8.1→0.1.9.1 через публичный канал проверено на Android 9/15 в [run 40075276435](https://github.com/mendelev-main/M-POS-Android/actions/runs/40075276435). [Готовые выпуски](https://github.com/mendelev-main/M-POS-Android/releases). Физическая установка и функциональные этапы ещё впереди.
+Фундамент первоначально проверен [Actions run](https://github.com/mendelev-main/M-POS-Android/actions/runs/40023385742); механизм обновлений и первый stable APK `0.1.8.1` — [полным run](https://github.com/mendelev-main/M-POS-Android/actions/runs/40071871635). Последний проверенный stable выпуск — [0.1.61.1](https://github.com/mendelev-main/M-POS-Android/releases/tag/v0.1.61.1); обновление 0.1.8.1→0.1.9.1 через публичный канал исторически проверялось на Android 9/15 в [run 40075276435](https://github.com/mendelev-main/M-POS-Android/actions/runs/40075276435). [Готовые выпуски](https://github.com/mendelev-main/M-POS-Android/releases). Актуальная платформа — Android16+/API36; физическая приёмка отложена владельцем. Реализованный и проверенный объём см. в PLANS/PARITY, история старых runs не является текущей матрицей.
 
 Приложения устанавливаются рядом: native `com.mendelev.mpos`, Web `com.mendelev.mpos.web`. Debug имеет дополнительный `.debug`. Данные из Web сами не появляются; перенос через проверенный импорт будет отдельным этапом.
+
+## Локально на Mac
+
+Android Studio настроена, планшет Android16/ARM64 и локальный запуск M-POS проверены. Графический запуск: **Android Studio → More Actions → Virtual Device Manager → ▶ M-POS Android 16 Tablet**. SDK/профиль, команды для разработки и evidence: [LOCAL-ANDROID.md](docs/LOCAL-ANDROID.md). Дополнительные команды из Terminal в папке репозитория:
+
+```sh
+/bin/bash ./scripts/local-android.sh run
+```
+
+Скрипт использует отдельные SDK/AVD/Gradle cache и debug package. Функциональность полного возврата и её проверенный объём — [REFUND-03C.md](docs/REFUND-03C.md).
 
 ## Навигация
 

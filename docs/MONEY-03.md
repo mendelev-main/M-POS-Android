@@ -26,3 +26,8 @@ Fixtures для дальнейших тестов: утверждённые0.135
 Эти решения заменяют pending формулировки выше для перечисленных случаев. Общая order-level скидка и loyalty allocation не вводятся этим scope; будущие partial/external acquiring/reversal contracts по-прежнему отдельны. Нулевая часть при делении допускается как в Web (0.01/3→0.01+0+0), не вызывает внешнее списание.
 
 Реализация утверждённой арифметики —SaleMoney, [CI55JVM](https://github.com/mendelev-main/M-POS-Android/actions/runs/40223239353); контракт инкрементов [SALE-03B](SALE-03B.md). Она ещё не связана с financial write/UI. Параметр available/opening cash в расчёте означает текущий ожидаемый наличный остаток перед новой продажей (включая предыдущие продажи/движения), не только float начала смены.
+
+2026-10-26: для full refund подтверждено original method allocation: cheque100 cash40/card60 →cash refund40 сегодня/card60 вручную через терминал. Доставка25(card) с прежним courier cash-out5 —отдельный вопрос ожидает ответа, его policy не реализована. Складская подготовка03c.1a независима от этого решения; текущий план/источники/отличие Web cross-shift formula —REFUND-03C.
+
+
+2026-10-26 —03c.1b S03: владелец подтвердил отмену расхода курьеру при полном возврате. Прежние записи «delivery pending» выше —история, вопрос закрыт. RefundMoney implemented: customer cash/card по исходной оплате, deliveryCashCredit отдельно, net cash delta=credit−cash. Card25/delivery5 →card25 и cash+5; cash25/delivery5 →cash−20. Проверяется конечная наличность атомарного изменения, без повторной выдачи сдачи; см. docs/REFUND-03C.md. Room/UI/replay ещё planned, schema7/stable0.1.61.1 прежние.

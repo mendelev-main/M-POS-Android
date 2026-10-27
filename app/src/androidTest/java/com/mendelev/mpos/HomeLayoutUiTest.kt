@@ -30,7 +30,7 @@ class HomeLayoutUiTest {
             repo.home(HomeAction.Add("product",p),state().homeRevision,"add-p-$suffix")
         }
         try {
-            compose.onNodeWithText("Рабочая зона").performClick()
+            compose.onNodeWithTag("topNav-workspace").performClick()
             compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceCategory:$a").fetchSemanticsNodes().isNotEmpty()}
             compose.onNodeWithTag("workspaceEdit").performClick()
             val grid=compose.onNodeWithTag("workspaceGrid").fetchSemanticsNode().boundsInRoot

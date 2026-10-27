@@ -25,11 +25,11 @@ class ShiftUiTest {
             val s=repo.snapshot();s.active?.let {repo.close("ui-clean-$suffix",it.id,s.revision,ShiftRules.token(s),0,s.ownerId)}
             CatalogDatabase.get(compose.activity.applicationContext).workspace().documents()
         }
-        compose.waitUntil(20_000) {compose.onAllNodesWithText("Смена").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithText("Смена").performClick()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("topNav-shift").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("topNav-shift").performClick()
         lateinit var model: ShiftViewModel
         compose.runOnIdle {model=ViewModelProvider(compose.activity)[ShiftViewModel::class.java]}
-        compose.waitUntil(20_000) {!model.state.value.loading}
+        compose.waitUntil(20_000) {!model.state.value.loading && model.state.value.snapshot?.active==null}
         compose.onNodeWithTag("shiftOpen").performClick();compose.onNodeWithTag("shiftConfirm").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.snapshot?.active!=null}
         compose.onNodeWithTag("shiftClose").performClick()

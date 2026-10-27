@@ -51,12 +51,13 @@ class WorkspaceScaleUiTest {
             }
         }
         try {
-            val start=SystemClock.elapsedRealtime();compose.onNodeWithText("Рабочая зона").performClick()
+            val start=SystemClock.elapsedRealtime();compose.onNodeWithTag("topNav-workspace").performClick()
             lateinit var model: WorkspaceViewModel
             compose.runOnIdle {model=ViewModelProvider(compose.activity)[WorkspaceViewModel::class.java]}
             compose.waitUntil(20_000) {model.state.value.snapshot?.products?.count {it.categoryId==category}==2000}
             val load=SystemClock.elapsedRealtime()-start
             val searchStart=SystemClock.elapsedRealtime()
+            compose.onNodeWithTag("workspaceSearchToggle").performClick()
             compose.onNodeWithTag("workspaceSearch").performTextInput(name);hideKeyboard()
             compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceProduct:$target").fetchSemanticsNodes().isNotEmpty()}
             val search=SystemClock.elapsedRealtime()-searchStart
@@ -66,7 +67,7 @@ class WorkspaceScaleUiTest {
             compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot?.cart?.lines?.singleOrNull()?.productId==target}
             val add=SystemClock.elapsedRealtime()-addStart
             if(compose.onAllNodesWithTag("workspaceShowOrder").fetchSemanticsNodes().isNotEmpty()) compose.onNodeWithTag("workspaceShowOrder").performClick()
-            compose.onNodeWithTag("workspaceTotal").assertTextEquals("Предварительно: 2 BYN")
+            compose.onNodeWithTag("workspaceTotal").assertTextEquals("2,00 BYN")
             assertTrue("Load exceeded CI responsiveness budget: $load",load<15_000)
             assertTrue("Search exceeded CI responsiveness budget: $search",search<15_000)
             assertTrue("Add exceeded CI responsiveness budget: $add",add<15_000)
@@ -96,23 +97,27 @@ class WorkspaceScaleUiTest {
             repo.cart(CartAction.Add(id,1,emptySet(),null,"scale-line-$suffix"),"scale-add-$suffix",s.cart.sessionId)
         }
         try {
-            compose.onNodeWithText("Рабочая зона").performClick()
+            compose.onNodeWithTag("topNav-workspace").performClick()
             check(automation.setRotation(UiAutomation.ROTATION_FREEZE_90))
             shell("settings put system font_scale 1.5")
             compose.waitUntil(20_000) {compose.activity.resources.configuration.orientation==Configuration.ORIENTATION_PORTRAIT && compose.activity.resources.configuration.fontScale>1.4f}
             compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceTotal").fetchSemanticsNodes().isNotEmpty() || compose.onAllNodesWithTag("workspaceShowOrder").fetchSemanticsNodes().isNotEmpty()}
             if(compose.onAllNodesWithTag("workspaceShowOrder").fetchSemanticsNodes().isNotEmpty()) compose.onNodeWithTag("workspaceShowOrder").performClick()
-            compose.onNodeWithTag("workspaceTotal").assertTextEquals("Предварительно: 2 BYN").assertIsDisplayed()
-            compose.onNodeWithTag("workspacePlus:scale-line-$suffix").performScrollTo().performClick()
-            compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("workspaceTotal") and hasText("Предварительно: 4 BYN")).fetchSemanticsNodes().isNotEmpty()}
-            compose.onNodeWithTag("workspaceTotal").assertTextEquals("Предварительно: 4 BYN").assertIsDisplayed()
-            compose.onNodeWithTag("workspaceParked").assertIsDisplayed()
+            compose.onNodeWithTag("workspaceTotal").assertTextEquals("2,00 BYN").assertIsDisplayed()
+            compose.onNodeWithTag("workspaceLine:scale-line-$suffix").performClick()
+            compose.onNodeWithTag("workspacePlus:scale-line-$suffix").performClick()
+            compose.waitUntil(20_000) {compose.onAllNodes(hasContentDescription("Закрыть") and isEnabled()).fetchSemanticsNodes().isNotEmpty() &&
+                runBlocking {repo.snapshot().cart.lines.singleOrNull()?.quantity=="2"}}
+            compose.onNodeWithContentDescription("Закрыть").performClick()
+            compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("workspaceTotal") and hasText("4,00 BYN")).fetchSemanticsNodes().isNotEmpty()}
+            compose.onNodeWithTag("workspaceTotal").assertTextEquals("4,00 BYN").assertIsDisplayed()
+            compose.onNodeWithTag("workspaceParked").performScrollTo().assertIsDisplayed()
             screenshot("workspace-portrait150")
             check(automation.setRotation(UiAutomation.ROTATION_FREEZE_0))
             compose.waitUntil(20_000) {compose.activity.resources.configuration.orientation==Configuration.ORIENTATION_LANDSCAPE}
             compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceTotal").fetchSemanticsNodes().isNotEmpty()}
-            compose.onNodeWithTag("workspaceTotal").assertTextEquals("Предварительно: 4 BYN").assertIsDisplayed()
-            compose.onNodeWithTag("workspaceParked").assertIsDisplayed()
+            compose.onNodeWithTag("workspaceTotal").assertTextEquals("4,00 BYN").assertIsDisplayed()
+            compose.onNodeWithTag("workspaceParked").performScrollTo().assertIsDisplayed()
             screenshot("workspace-landscape150")
         } finally {
             shell("settings put system font_scale $original")

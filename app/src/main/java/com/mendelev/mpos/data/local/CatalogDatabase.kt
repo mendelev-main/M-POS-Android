@@ -119,12 +119,13 @@ interface CatalogDao {
 }
 
 @Database(entities = [CategoryEntity::class, ProductEntity::class, BalanceEntity::class, MovementEntity::class,
-    ResultEntity::class, AuditEntity::class, DraftEntity::class, ConfigEntity::class, RecipeComponentEntity::class, ModifierGroupEntity::class, ModifierOptionEntity::class, WorkspaceDocument::class, ShiftEntity::class, ShiftRegisterEntity::class, ReceiptEntity::class, ReceiptProductEntity::class], version = 7, exportSchema = true)
+    ResultEntity::class, AuditEntity::class, DraftEntity::class, ConfigEntity::class, RecipeComponentEntity::class, ModifierGroupEntity::class, ModifierOptionEntity::class, WorkspaceDocument::class, ShiftEntity::class, ShiftRegisterEntity::class, ReceiptEntity::class, ReceiptProductEntity::class, RefundEntity::class], version = 8, exportSchema = true)
 abstract class CatalogDatabase : RoomDatabase() {
     abstract fun catalog(): CatalogDao
     abstract fun workspace(): WorkspaceDao
     abstract fun shifts(): ShiftDao
     abstract fun sales(): SaleDao
+    abstract fun refunds(): RefundDao
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -178,10 +179,18 @@ abstract class CatalogDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_receipt_products_productId ON receipt_products(productId)")
             }
         }
+        val MIGRATION_7_8 = object : Migration(7,8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS refunds (id TEXT NOT NULL PRIMARY KEY, receiptId TEXT NOT NULL, commandId TEXT NOT NULL, shiftId TEXT NOT NULL, actorId TEXT NOT NULL, createdAt INTEGER NOT NULL, total INTEGER NOT NULL, cash INTEGER NOT NULL, card INTEGER NOT NULL, deliveryCashCredit INTEGER NOT NULL, receiptHash TEXT NOT NULL, payload TEXT NOT NULL, FOREIGN KEY(receiptId) REFERENCES receipts(id) ON UPDATE NO ACTION ON DELETE RESTRICT, FOREIGN KEY(shiftId) REFERENCES shifts(id) ON UPDATE NO ACTION ON DELETE RESTRICT)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_refunds_receiptId ON refunds(receiptId)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_refunds_commandId ON refunds(commandId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_refunds_shiftId ON refunds(shiftId)")
+            }
+        }
         @Volatile private var instance: CatalogDatabase? = null
         fun get(context: Context): CatalogDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(context.applicationContext, CatalogDatabase::class.java, "mpos.db")
-                .addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4,MIGRATION_4_5,MIGRATION_5_6,MIGRATION_6_7).build().also { instance = it }
+                .addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4,MIGRATION_4_5,MIGRATION_5_6,MIGRATION_6_7,MIGRATION_7_8).build().also { instance = it }
         }
     }
 }

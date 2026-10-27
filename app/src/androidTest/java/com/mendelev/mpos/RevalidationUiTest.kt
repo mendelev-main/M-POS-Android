@@ -28,7 +28,7 @@ class RevalidationUiTest {
             repo.cart(CartAction.Add(id,1,emptySet(),null,line),"add-$id",s.cart.sessionId)
             c.saveProduct(input.copy(expectedRevision=1,stockEdited=false,price="3",commandId="price-$id"))
         }
-        compose.onNodeWithText("Рабочая зона").performClick()
+        compose.onNodeWithTag("topNav-workspace").performClick()
         lateinit var model: WorkspaceViewModel
         compose.runOnIdle {model=ViewModelProvider(compose.activity)[WorkspaceViewModel::class.java]}
         compose.waitUntil(20_000) {model.state.value.snapshot?.cart?.lines?.singleOrNull()?.id==line}

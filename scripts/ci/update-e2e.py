@@ -46,9 +46,9 @@ def launcher_anr_close(nodes):
                  and n.get("text") == "Close app" and n.get("enabled") == "true"), None)
 
 
-def wait_text(pattern, timeout=75, click=False):
+def wait_text(pattern, timeout=75, click=False, preferred_resource_id=None):
     global _launcher_recovery_used
-    print(f"E2E UI: {pattern}; click={click}", flush=True)
+    print(f"E2E UI: {preferred_resource_id or pattern}; click={click}", flush=True)
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
@@ -66,16 +66,25 @@ def wait_text(pattern, timeout=75, click=False):
                 print("E2E INFRA: closing Quickstep launcher ANR once; M-POS assertions remain mandatory", flush=True)
                 adb("shell", "input", "tap", str((x1+x2)//2), str((y1+y2)//2))
                 continue
-            for node in nodes:
-                if re.search(pattern, node.get("text", ""), re.I) and node.get("enabled", "true") == "true":
+            preferred = [n for n in nodes if preferred_resource_id and n.get("resource-id") == preferred_resource_id]
+            # If the modern control exists but is disabled, never click a legacy text elsewhere.
+            for node in preferred or nodes:
+                matches = bool(preferred) or re.search(pattern, (node.get("text", "") or node.get("content-desc", "")), re.I)
+                if matches and node.get("enabled", "true") == "true":
                     if click:
                         x1, y1, x2, y2 = map(int, re.findall(r"\d+", node.get("bounds", "")))
                         adb("shell", "input", "tap", str((x1+x2)//2), str((y1+y2)//2))
-                    return node.get("text")
+                    return node.get("text") or node.get("content-desc")
         except (ET.ParseError, ValueError):
             pass
         time.sleep(1)
-    raise AssertionError(f"UI text not found: {pattern}")
+    raise AssertionError(f"UI control not found: {preferred_resource_id or pattern}")
+
+
+def wait_navigation(route, timeout=75, click=True):
+    # Stable IDs for the new header, exact legacy labels for APKs published before NAV01.
+    legacy = {"workspace": r"^(Рабочая зона|M POS)$", "shift": r"^Смена$", "settings": r"^Настройки$"}
+    return wait_text(legacy[route], timeout=timeout, click=click, preferred_resource_id="topNav-"+route)
 
 
 def scroll_catalog_to_product(name):
@@ -86,8 +95,8 @@ def scroll_catalog_to_product(name):
         nodes = ui_nodes()
         for node in nodes:
             if re.search(pattern, node.get("text", "")):
-                return node.get("text")
-        lists = [n for n in nodes if n.get("package") == PACKAGE and n.get("scrollable") == "true"]
+                return node.get("text") or node.get("content-desc")
+        lists = [n for n in nodes if n.get("package") == PACKAGE and n.get("scrollable") == "true" and n.get("resource-id") == "catalogProducts"]
         assert len(lists) == 1, "Expected one catalog list before scrolling to preserved product"
         x1, y1, x2, y2 = map(int, re.findall(r"\d+", lists[0].get("bounds", "")))
         assert x2 > x1 and y2 > y1, "Invalid catalog list bounds"
@@ -108,7 +117,7 @@ def launch(fixture=True):
         try:
             # Do not use am -W: API 28 can retain a waiter for an Activity killed by package replacement.
             adb(*args, timeout=15)
-            wait_text("^Настройки$", timeout=12, click=True)
+            wait_navigation("settings", timeout=12)
             wait_text("^Обновления приложения$", timeout=12)
             return
         except (AssertionError, subprocess.TimeoutExpired):
@@ -214,12 +223,16 @@ def main():
                 adb("uninstall", PACKAGE)
                 adb("install", str(base))
                 adb("install", "-r", str(test_apk))
-                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest",
+                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest",
                                 PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
-                assert "OK (2 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
-                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
+                assert "OK (3 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
+                # Recover only the already-supported, exact Quickstep infrastructure ANR before UI captures.
+                # Unknown/system/M-POS dialogs are not dismissed by wait_text.
+                adb("shell", "am", "start", "-W", "-n", PACKAGE + "/com.mendelev.mpos.MainActivity")
+                wait_navigation("workspace", click=False)
+                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
                              PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
-                assert "OK (7 tests)" in result and "FAILURES" not in result, result[-4000:]
+                assert "OK (8 tests)" in result and "FAILURES" not in result, result[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
                 expected_shift = adb("shell", "run-as", PACKAGE, "cat", "files/qa/shiftId.txt").strip()
@@ -236,7 +249,7 @@ def main():
                 assert expected_workspace_line, "UI setup must create a real persistent current cart"
                 expected_parked_label = adb("shell", "run-as", PACKAGE, "cat", "files/qa/parkedLabel.txt").strip()
                 assert expected_parked_label, "UI setup must create a real parked order"
-                for name in ("split-confirm", "split-progress", "sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders"):
+                for name in ("refund-confirm", "refund-result", "refund-returned-receipt", "split-confirm", "split-progress", "sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders"):
                     captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
                     assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
                     (reports / f"{name}.png").write_bytes(captured.stdout)
@@ -292,13 +305,13 @@ def main():
                 wait_text("^8 шт$")
                 (reports / "updated-catalog.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("CATALOG UPDATE PASSED: Room product and stock=8 survived actual package replacement", flush=True)
-                wait_text("^Рабочая зона$", click=True)
-                wait_text("^" + re.escape(expected_workspace_line) + "$")
-                wait_text("^Предварительно: 15 BYN$")
-                wait_text("^3 BYN × 5 шт$")
+                wait_navigation("workspace")
+                wait_text(r"(?:^|\n)" + re.escape(expected_workspace_line) + r"(?:$|\n)")
+                wait_text("^15,00 BYN$")
+                wait_text(r"(?:^|\n)3,00 BYN / шт · ×5(?:$|\n)")
                 (reports / "updated-workspace.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("WORKSPACE UPDATE PASSED: current cart configuration, quantity=5 and total=15 survived package replacement", flush=True)
-                wait_text(r"^Отложенные \(1\)$", click=True)
+                wait_text("^Отложенные$", click=True, preferred_resource_id="workspaceParked")
                 wait_text("^" + re.escape(expected_parked_label) + "$")
                 wait_text("^Доставка$")
                 wait_text("^5 BYN$")
@@ -306,22 +319,23 @@ def main():
                 print("PARKED UPDATE PASSED: delivery order label, type and total5 survived package replacement", flush=True)
                 adb("shell", "input", "keyevent", "KEYCODE_BACK")
                 wait_text(re.escape(expected_home))
-                wait_text("^Изменить раскладку$", click=True)
+                wait_text("^Раскладка$", click=True, preferred_resource_id="workspaceEdit")
                 wait_text(r"(?:^|\n)Место 8(?:$|\n)")
                 (reports / "updated-home.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("HOME UPDATE PASSED: custom product tile and slot8 survived package replacement", flush=True)
-                wait_text("^Смена$", click=True)
+                wait_navigation("shift")
                 wait_text("^Смена открыта$")
                 wait_text(re.escape(expected_shift))
                 wait_text("^Наличные при открытии: 140,00 BYN$")
                 (reports / "updated-shift.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("SHIFT UPDATE PASSED: active shift identity and opening140 BYN survived package replacement", flush=True)
                 adb("install", "-r", str(test_apk))
-                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest",
+                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest",
                                 "-e", "saleUpgradeMode", "verify", PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
-                assert "OK (2 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
+                assert "OK (3 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
                 adb("uninstall", PACKAGE + ".test")
                 print("SPLIT UPDATE PASSED: dedicated partial progress2, stable IDs, unpaid tender and replay survived APK replacement")
+                print("REFUND UPDATE PASSED: dedicated full delivery refund, exact historical restock, closed shift and replay survived APK replacement")
                 print("SALE UPDATE PASSED: dedicated Room receipt snapshot, ledger, result, shift cash and cleared draft survived APK replacement; replay did not duplicate sale", flush=True)
 
             print(f"UPDATE E2E PASSED: package={PACKAGE}, check/download/restore/cancel/system install {base_code}→{target_code}; app-private data preserved")
