@@ -96,7 +96,7 @@ object ReceivingRules {
         if(o.status!="pending" || o!=d.order) throw CatalogFailure("conflict","Заказ изменился. Обновите основание черновика; введённые факты сохранятся")
         d.lines.forEach {l->if(products.find {it.id==l.product.id}!=l.product) throw CatalogFailure("conflict","Остаток или карточка «${l.product.name}» изменились. Обновите основание перед расчётом")}
     }
-    fun preview(d: ReceivingDraft,o: PurchaseOrder,products: List<ReceivingProduct>): ReceivingPreview {
+    fun preview(d: ReceivingDraft,o: PurchaseOrder,products: List<ReceivingProduct>,costScale: Int=12,costRounding: RoundingMode=RoundingMode.HALF_EVEN): ReceivingPreview {
         validate(d);current(d,o,products)
         var sum=0L
         val expected=o.source.lines.mapIndexed {i,l->l.productId to o.expectedQuantities[i]}.toMap()
@@ -109,7 +109,7 @@ object ReceivingRules {
             val p=l.product;val stock=quantity(p.stock);val oldCost=p.cost.toBigDecimal();val value=BigDecimal.valueOf(total,2)
             val nextStock=if(p.noStockTracking) stock else stock+base;quantity(CatalogRules.canonical(nextStock))
             val oldQty=stock.max(BigDecimal.ZERO)
-            val cost=if(base.signum()==0) oldCost else if(p.noStockTracking) value.divide(base,12,RoundingMode.HALF_EVEN) else (oldQty*oldCost+value).divide(oldQty+base,12,RoundingMode.HALF_EVEN)
+            val cost=if(base.signum()==0) oldCost else if(p.noStockTracking) value.divide(base,costScale,costRounding) else (oldQty*oldCost+value).divide(oldQty+base,costScale,costRounding)
             PurchaseDraftRules.number(CatalogRules.canonical(cost))
             val exp=if(expected.containsKey(p.id)) expected[p.id] else "0"
             val shortage=exp?.toBigDecimal()?.minus(base)?.max(BigDecimal.ZERO)?.let(CatalogRules::canonical)

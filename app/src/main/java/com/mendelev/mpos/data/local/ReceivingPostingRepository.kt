@@ -21,6 +21,7 @@ class ReceivingPostingRepository(private val db: CatalogDatabase,private val clo
         val id=InstallationGate.write {db.withTransaction {
             if(db.catalog().config()?.ownerId!=c.actorId) throw CatalogFailure("owner","Проводить приход может только локальный владелец")
             outcome(c)?.let {return@withTransaction it}
+            if(c.costPolicy!=2) throw CatalogFailure("policy","Для нового прихода требуется актуальное правило себестоимости")
             val d=c.draft;val draftDoc=db.workspace().document(ReceivingCodec.KEY) ?: throw CatalogFailure("conflict","Сначала сохраните черновик")
             val drafts=ReceivingCodec.decode(draftDoc.payload);val saved=drafts.find {it.orderId==d.order.id}
             if(saved?.revision!=c.revision || saved.draft!=d) throw CatalogFailure("conflict","Черновик изменился. Сохраните и проверьте его заново")
@@ -32,13 +33,13 @@ class ReceivingPostingRepository(private val db: CatalogDatabase,private val clo
                 if(p.type!="simple") throw CatalogFailure("receiving","Составной товар нельзя принимать на склад")
                 ReceivingProduct(p.id,p.name,p.unit,p.revision,b.revision,b.quantity,p.cost,p.noStockTracking)
             }
-            val result=ReceivingPostingRules.preview(d,order,products)
+            val result=ReceivingPostingRules.preview(d,order,products,c.costPolicy)
             if(result.hasOverage && !c.overageConfirmed) throw CatalogFailure("overage","Подтвердите превышение заказа")
             val recordsDoc=db.workspace().document(PostedReceivingCodec.KEY) ?: WorkspaceDocument(PostedReceivingCodec.KEY,0,PostedReceivingCodec.encode(emptyList()))
             val rows=PostedReceivingCodec.decode(recordsDoc.payload)
             if(rows.any {it.draft.order.id==order.id}) throw CatalogFailure("conflict","Этот заказ уже принят")
             val now=clock.millis();require(now>=0)
-            val id=UUID.randomUUID().toString();val record=PostedReceiving(id,c.commandId,c.actorId,now,c.revision,d,c.overageConfirmed,result)
+            val id=UUID.randomUUID().toString();val record=PostedReceiving(id,c.commandId,c.actorId,now,c.revision,d,c.overageConfirmed,c.costPolicy,result)
             ReceivingPostingRules.validate(record)
             result.lines.filter {it.actual.toBigDecimal().signum()>0}.forEach {l->
                 val p=db.catalog().product(l.productId)!!

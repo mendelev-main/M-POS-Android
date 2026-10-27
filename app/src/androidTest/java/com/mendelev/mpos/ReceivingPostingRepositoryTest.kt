@@ -29,7 +29,7 @@ class ReceivingPostingRepositoryTest {
             val purchase=db.workspace().document(PurchaseDraftCodec.KEY);val before=db.catalog().product(p)!!
             val repo=ReceivingPostingRepository(db);val id=repo.commit(c)
             assertEquals(id,repo.commit(c));assertEquals("13",db.catalog().balance(p)!!.quantity);assertEquals(2L,db.catalog().balance(p)!!.revision)
-            assertEquals("2.461538461538",db.catalog().product(p)!!.cost);assertEquals(before.copy(cost="2.461538461538",revision=3),db.catalog().product(p));assertEquals(2,db.catalog().movementCount(p))
+            assertEquals("2.46",db.catalog().product(p)!!.cost);assertEquals(before.copy(cost="2.46",revision=3),db.catalog().product(p));assertEquals(2,db.catalog().movementCount(p))
             val order=PurchaseOrderStore(db).all().single();assertEquals("received",order.status);assertEquals(id,order.receivingId);assertEquals(2L,order.revision);assertEquals(1L,order.requestVersion)
             assertNull(ReceivingRepository(db).snapshot().records.single().draft);assertEquals(2L,ReceivingRepository(db).snapshot().records.single().revision)
             assertEquals(purchase,db.workspace().document(PurchaseDraftCodec.KEY))
@@ -127,6 +127,21 @@ class ReceivingPostingRepositoryTest {
             val r=ReceivingPostingRepository(db).history().single();assertEquals("10",ReceivingPostingRules.preview(r.draft,r.draft.order,r.draft.lines.map {it.product}).lines.single {it.productId=="zero"}.shortage)
             val none=prepare(db,"none",qty="0",total="0")
             reject {ReceivingPostingRepository(db).commit(none)};assertEquals(1,ReceivingPostingRepository(db).history().size)
+        } finally {db.close()}
+    }
+
+    @Test fun legacyCostAndCommandReplaySurviveMixedPolicyRegistry(): Unit=runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
+        try {
+            val legacy=seedLegacyPostedReceiving(db);val repo=ReceivingPostingRepository(db)
+            val docs=db.workspace().documents()
+            assertEquals("2.461538461538",repo.history().single().result.lines.single().newCost)
+            assertEquals(legacy.id,repo.commit(legacy.command()));assertEquals(docs,db.workspace().documents())
+            reject {repo.commit(legacy.command().copy(commandId="new-legacy-command"))}
+            val c=prepare(db,"current",qty="3",total="12");repo.commit(c)
+            assertEquals("2.46",db.catalog().product(c.draft.lines.single().product.id)!!.cost)
+            assertEquals(legacy,repo.history().single {it.id==legacy.id});assertEquals(legacy.id,repo.commit(legacy.command()))
+            assertEquals(2,org.json.JSONObject(db.workspace().document(PostedReceivingCodec.KEY)!!.payload).getInt("version"))
         } finally {db.close()}
     }
 

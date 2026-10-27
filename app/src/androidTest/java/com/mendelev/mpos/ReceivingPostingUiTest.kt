@@ -46,7 +46,7 @@ class ReceivingPostingUiTest {
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("receivingPostedTitle").assertTextContains("TTN-$key",substring=true)
         val row=runBlocking {ReceivingPostingRepository(db).history().single {it.draft.order.id==seed.order.id}}
-        assertTrue(row.overageConfirmed);assertEquals("22",runBlocking {db.catalog().balance(id)!!.quantity});assertEquals("3.090909090909",runBlocking {db.catalog().product(id)!!.cost})
+        assertTrue(row.overageConfirmed);assertEquals("22",runBlocking {db.catalog().balance(id)!!.quantity});assertEquals("3.09",runBlocking {db.catalog().product(id)!!.cost})
         assertEquals(2,runBlocking {db.catalog().movementCount(id)});assertEquals("received",runBlocking {PurchaseOrderStore(db).all().single {it.id==seed.order.id}.status})
         assertEquals(row.id,runBlocking {ReceivingPostingRepository(db).commit(row.command())});assertEquals(2,runBlocking {db.catalog().movementCount(id)})
     }

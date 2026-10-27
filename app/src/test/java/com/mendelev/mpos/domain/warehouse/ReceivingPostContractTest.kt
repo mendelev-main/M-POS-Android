@@ -25,14 +25,18 @@ class ReceivingPostContractTest {
         assertNotEquals(c.fingerprint(),c.copy(draft=d.copy(lines=d.lines.map {it.copy(product=p.copy(stockRevision=2))})).fingerprint())
         try {c.copy(revision=0).validate();fail()} catch(_:com.mendelev.mpos.domain.catalog.CatalogFailure) {}
     }
-    @Test fun costPolicyRoundsOnlyFinalCostAndRejectsPositiveUnderflow() {
+    @Test fun costPolicyRoundsFinalCostHalfUpAndPreservesLegacyPolicy() {
         val o=order();val p=ReceivingProduct("p","Молоко","l",2,1,"0","0",false)
         fun draft(q: String,total: String)=ReceivingRules.open("r",o,listOf(p)).let {it.copy(lines=it.lines.map {l->l.copy(quantity=q,total=total)})}
         val d=draft("3","10")
-        assertEquals("3.333333333333",ReceivingPostingRules.preview(d,o,listOf(p)).lines.single().newCost)
+        assertEquals("3.33",ReceivingPostingRules.preview(d,o,listOf(p)).lines.single().newCost)
+        assertEquals("3.333333333333",ReceivingPostingRules.preview(d,o,listOf(p),1).lines.single().newCost)
+        val tie=draft("2","2.01")
+        assertEquals("1.01",ReceivingPostingRules.preview(tie,o,listOf(p)).lines.single().newCost)
         assertEquals(1000L,ReceivingPostingRules.preview(d,o,listOf(p)).totalMinor)
         val tiny=draft("999999999999999999","0.01")
-        try {ReceivingPostingRules.preview(tiny,o,listOf(p));fail()} catch(_:com.mendelev.mpos.domain.catalog.CatalogFailure) {}
+        assertEquals("0",ReceivingPostingRules.preview(tiny,o,listOf(p)).lines.single().newCost)
+        try {ReceivingPostingRules.preview(tiny,o,listOf(p),1);fail()} catch(_:com.mendelev.mpos.domain.catalog.CatalogFailure) {}
         val hugeCost=draft("0.000000000001","92233720368547758.07")
         try {ReceivingPostingRules.preview(hugeCost,o,listOf(p));fail()} catch(_:com.mendelev.mpos.domain.catalog.CatalogFailure) {}
         val free=draft("3","0");assertEquals("0",ReceivingPostingRules.preview(free,o,listOf(p)).lines.single().newCost)

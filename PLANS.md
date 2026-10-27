@@ -78,3 +78,5 @@ UI checkpoint перед продолжением: рабочая зона по 
 04a.5 draft/preview CI acceptance: run40502219375/a8d8c61 SUCCESS100JVM/134API36; actual receiving stock commit remains04a.6. Details: docs/RECEIVING-DRAFT-04A.md.
 
 04a.6 RP01–RP05: [FullCI40512178440](https://github.com/mendelev-main/M-POS-Android/actions/runs/40512178440)/2d8a183 SUCCESS first attempt:103JVM/145API36 instrumentation/0failures/0skipped,12Python/lint/build;2scale/14UIseed/9upgrade fixtures и actual debugAPK1→2. RECEIVING POST UPDATE PASSED: immutable invoice/posted changes, exact stock13/cost2.461538461538, received order/actor/link, draft tombstone and original post replay retained without another stock movement. All existing financial/catalog/workspace/parked/home/shift/supplier/purchase assertions retained and passed. Physical tablet/dark/150%/forced cold-process receiving UI pending. Whole04 remains in progress; main/stable/signing/SQLschema unchanged.
+
+Receiving RP01/RP05 follow-up: owner-confirmed2decimal HALF_UP policy2 implemented; legacy policy1 history/replay retained; CI pending.
