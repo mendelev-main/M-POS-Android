@@ -571,3 +571,7 @@ Final local `/bin/bash scripts/local-android.sh build assembleDebugAndroidTest -
 Downloaded supplier-card/list1600×1125 reviewed: active M-POS window, keyboard hidden, unified Close/Dialog/Primary/Secondary, label/search/selection/footer visible without overlap. Screenshots copied to outputs; latest local debug APK copied separately from published stableAPK0.1.74.1. Existing2000product metrics248ms load/1391ms search/576ms add within budgets. Final local83JVM/lint/APKs build1m33s;12Python/preflight/diff-check passed. No local seeded instrumentation on user's business DB.
 
 SUP01–SUP05/M11 scope ci-verified, not whole04. Room8 unchanged; registry payload1 new namespace; no stock/cost writes/signing/key changes. Full admin auth05/physical/dark/150% new supplier UI/cold-kill windows pending. Next04a.2 durable purchase draft/units/pack preview, no receiving writes yet. New supplier increment stays develop; stablemain0.1.74.1 already published earlier per user instruction, no second release.
+
+## 2026-10-27 — 04a.2 purchase drafts, local checks
+
+PO01–PO05 implemented on develop; contract docs/PURCHASE-DRAFT-04A.md. Local `/bin/bash scripts/local-android.sh build assembleDebugAndroidTest -Pkotlin.incremental=false` SUCCESS51s:88JVM/lint/debug APK/test APK. `python3 scripts/harness.py preflight`,12Python tests, `git diff --check` passed. New repository/VM/UI/APK fixture compiled; execution API36 pending hosted fullCI. No local user database seed, physical device not checked. Schema/signing/release unchanged; submit/history/receiving still Soon.

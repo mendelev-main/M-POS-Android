@@ -163,6 +163,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
             if(recipeUse || modifierUse) throw CatalogFailure("used","Товар используется в несохранённой карточке")
         }
         SupplierRepository(db).requireProductUnlinked(id)
+        PurchaseDraftRepository(db).requireProductUnused(id)
         if (dao.modifierUses(id) > 0) throw CatalogFailure("used", "Товар используется в модификаторах: сначала измените варианты")
         if (dao.recipeUses(id) > 0) throw CatalogFailure("used", "Товар используется в рецептуре: сначала измените состав")
         if (db.sales().productUses(id)>0) throw CatalogFailure("used", "Товар есть в истории чеков: удалить нельзя")

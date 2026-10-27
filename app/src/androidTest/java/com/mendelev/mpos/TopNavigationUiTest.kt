@@ -23,7 +23,8 @@ class TopNavigationUiTest {
             compose.onNodeWithTag("topNav-$route").performScrollTo().performClick()
             if(route=="events") compose.onNodeWithTag("topNav-$route").assertIsNotSelected()
             else compose.onNodeWithTag("topNav-$route").assertIsSelected()
-            compose.onNodeWithText("Раздел будет подключён на соответствующем этапе плана. Сейчас доступна навигация; данные и операции этого модуля ещё не реализованы.").assertIsDisplayed()
+            if(route=="purchaseOrders") compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("purchaseNew") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
+            else compose.onNodeWithText("Раздел будет подключён на соответствующем этапе плана. Сейчас доступна навигация; данные и операции этого модуля ещё не реализованы.").assertIsDisplayed()
         }
         compose.onNodeWithTag("topNav-workspace").performScrollTo().performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceCheckout").fetchSemanticsNodes().isNotEmpty()}

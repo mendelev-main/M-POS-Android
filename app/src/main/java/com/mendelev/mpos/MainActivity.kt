@@ -111,7 +111,15 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                         com.mendelev.mpos.feature.workspace.WorkspaceScreen(model,photos,{route="catalog"},{route="settings"},{route="shift"},{route="checkout"},{route="history"})
                     }
                     "gallery" -> com.mendelev.mpos.feature.products.ComponentGallery { route = "catalog" }
-                    "purchaseOrders", "receiving", "analytics", "bookings", "events" -> PlannedModuleScreen(route)
+                    "purchaseOrders" -> {
+                        val model: com.mendelev.mpos.feature.purchasing.PurchaseViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
+                            override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.purchasing.PurchaseViewModel(
+                                com.mendelev.mpos.data.local.PurchaseDraftRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                        })
+                        com.mendelev.mpos.feature.purchasing.PurchaseScreen(model) {route="workspace"}
+                    }
+                    "receiving", "analytics", "bookings", "events" -> PlannedModuleScreen(route)
                     else -> {
                         val model: com.mendelev.mpos.feature.products.CatalogViewModel = viewModel(factory = object : ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST")

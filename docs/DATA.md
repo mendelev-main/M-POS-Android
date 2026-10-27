@@ -41,3 +41,5 @@ Native решения для первоначального каталога и 
 03c.2a Room8 adds immutable refunds, unique original receipt/command and foreign keys to receipt/refund shift. Refund snapshot1 retains original receipt, exact restored quantities/balance revisions and cash outcome. Active cash includes deliveryCashCredit−refund.cash in refund shift only; original sale postings remain. Full refund transaction advances register revision and each restored balance revision; no generic duplicate withdrawal. Evidence/scope: REFUND-03C/build-log.
 
 04a.1: Supplier registry payload1 в Room workspace_documents namespace `suppliers`, SQLschema8 без изменений; supplier revisions/tombstones/simple refs + operation_result/audit в одной transaction. Формат и guard каталога — [SUPPLIERS-04A](SUPPLIERS-04A.md). Registry включать в будущий backup scope, не считать его временным workspace cache.
+
+04a.2: persistent `purchase-draft` payload1 в workspace_documents/Room8: raw decimal fields + supplier/product snapshots + CAS document revision. Save/Clear+result+audit атомарны, stock/cost/defaults не меняются; [контракт](PURCHASE-DRAFT-04A.md). Включать в будущий backup scope; не cache.
