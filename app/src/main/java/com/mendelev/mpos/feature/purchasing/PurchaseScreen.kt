@@ -45,7 +45,7 @@ import com.mendelev.mpos.domain.warehouse.*
             FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 MposButton("Назад",::back,enabled=!locked,style=ActionStyle.Secondary)
                 MposButton(if(history) "Вернуться к черновику" else "История",{history=!history},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseHistory"))
-                MposButton("Новый заказ",{history=false;expanded=!expanded},enabled=!locked && !ui.blocked,modifier=Modifier.testTag("purchaseNew"))
+                MposButton("Новый заказ",{expanded=if(history) true else !expanded;history=false},enabled=!locked && !ui.blocked,modifier=Modifier.testTag("purchaseNew"))
                 MposButton("Перечитать",{if(ui.dirty) dialog="reload" else model.refresh()},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseReload"))
             }
             Text("Заказы поставщикам",style=MaterialTheme.typography.titleLarge)

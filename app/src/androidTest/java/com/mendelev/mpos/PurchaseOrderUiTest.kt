@@ -71,10 +71,23 @@ class PurchaseOrderUiTest {
         assertEquals(before.first.copy(revision=2,packSize="0.5"),after.first);assertEquals(before.second,after.second)
         assertNull(model.state.value.snapshot!!.draft)
         assertEquals(1,model.state.value.snapshot!!.orders.count {it.id==orderId})
+        compose.onNodeWithTag("purchaseNew").performClick()
+        compose.onNodeWithTag("purchaseSupplier").assertIsDisplayed()
+        assertNull(model.state.value.form)
     }
     private fun shot(name: String) {
         hideKeyboard();compose.waitForIdle();val automation=InstrumentationRegistry.getInstrumentation().uiAutomation;automation.waitForIdle(200,5_000)
-        compose.waitUntil(10_000) {automation.rootInActiveWindow?.packageName?.toString()==BuildConfig.APPLICATION_ID}
+        try {compose.waitUntil(10_000) {automation.rootInActiveWindow?.packageName?.toString()==BuildConfig.APPLICATION_ID}}
+        catch(e: androidx.compose.ui.test.ComposeTimeoutException) {
+            val description=StringBuilder();var count=0
+            fun visit(n: android.view.accessibility.AccessibilityNodeInfo?) {
+                if(n==null || count++>80) return
+                description.append("[package=${n.packageName};class=${n.className};text=${n.text}]")
+                for(i in 0 until n.childCount) visit(n.getChild(i))
+            }
+            visit(automation.rootInActiveWindow)
+            throw AssertionError("Purchase screenshot foreground: $description",e)
+        }
         check(automation.rootInActiveWindow?.packageName?.toString()==BuildConfig.APPLICATION_ID) {"Purchase order screenshot is blocked by another app/system window"}
         val bitmap=checkNotNull(automation.takeScreenshot());val file=File(compose.activity.filesDir,"qa/$name.png");file.parentFile!!.mkdirs()
         file.outputStream().use {bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};bitmap.recycle()

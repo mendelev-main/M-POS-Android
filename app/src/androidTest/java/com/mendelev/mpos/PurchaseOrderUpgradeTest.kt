@@ -29,6 +29,8 @@ class PurchaseOrderUpgradeTest {
                 SupplierRepository(db).commit(SupplierCommand("rename-s",s.ownerId,SupplierAction.Save("s",1,"Новое имя",setOf("p"))))
             }
             val s=repo.snapshot();val o=s.orders.single();val doc=db.workspace().document(PurchaseOrderCodec.KEY);val product=db.catalog().product("p")
+            assertNotNull(product);assertEquals("Новое молоко",product!!.name);assertEquals(3L,product.revision)
+            assertEquals("box",product.purchaseLabel);assertEquals("99",product.packSize);assertEquals("3",product.price)
             assertNull(s.draft);assertEquals(2L,s.revision);assertEquals("pending",o.status);assertEquals(1L,o.requestVersion)
             assertEquals(draft(),o.source);assertEquals(listOf("12"),o.expectedQuantities)
             assertEquals("order",repo.commit(command(s.ownerId)));assertEquals(doc,db.workspace().document(PurchaseOrderCodec.KEY));assertEquals(product,db.catalog().product("p"))
