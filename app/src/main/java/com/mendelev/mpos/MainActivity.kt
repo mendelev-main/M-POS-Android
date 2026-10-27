@@ -61,6 +61,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
         override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.shift.ShiftViewModel(
             com.mendelev.mpos.data.local.ShiftRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
     })
+    var receivingOrder by rememberSaveable { mutableStateOf<String?>(null) }
     val shiftUi by shiftModel.state.collectAsStateWithLifecycle()
     val navigation = MposTopNavigation(route, shiftUi.snapshot?.active != null,
         shiftUi.loading, shiftUi.fatal, shiftUi.pending, shiftUi.snapshot?.active?.actorName ?: "Локальный владелец") { route = it }
@@ -117,9 +118,16 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                             override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.purchasing.PurchaseViewModel(
                                 com.mendelev.mpos.data.local.PurchaseDraftRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
                         })
-                        com.mendelev.mpos.feature.purchasing.PurchaseScreen(model) {route="workspace"}
+                        com.mendelev.mpos.feature.purchasing.PurchaseScreen(model,{id->receivingOrder=id;route="receiving"}) {route="workspace"}
                     }
-                    "receiving", "analytics", "bookings", "events" -> PlannedModuleScreen(route)
+                    "receiving" -> {
+                        val model: com.mendelev.mpos.feature.receiving.ReceivingViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.receiving.ReceivingViewModel(
+                                com.mendelev.mpos.data.local.ReceivingRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                        })
+                        com.mendelev.mpos.feature.receiving.ReceivingScreen(model,receivingOrder,{receivingOrder=null}) {route="purchaseOrders"}
+                    }
+                    "analytics", "bookings", "events" -> PlannedModuleScreen(route)
                     else -> {
                         val model: com.mendelev.mpos.feature.products.CatalogViewModel = viewModel(factory = object : ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST")

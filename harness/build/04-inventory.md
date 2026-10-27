@@ -47,3 +47,5 @@ SUP01–SUP05: [fullCI40472850012](https://github.com/mendelev-main/M-POS-Androi
 04a.4: [изменение и отмена](../../docs/PURCHASE-ORDER-CHANGES-04A.md), PO11–PO15 ci-verified/API36/run40487143428. No receiving.
 
 04a.4 итог: [FullCI40487143428](https://github.com/mendelev-main/M-POS-Android/actions/runs/40487143428)/a751e8b SUCCESS first attempt:95JVM/125API36 instrumentation/0failures/0skipped,12Python/lint/build;2scale/12UIseed/7upgrade fixtures (3financial+supplier+purchase draft+purchase order+order mutation), actual debugAPK1→2. PURCHASE ORDER MUTATION UPDATE PASSED: request history, cancellation actor/status, unchanged stock/defaults and old edit replay preserved; existing financial/catalog/workspace/parked/home/shift assertions также passed. Next04a.5 receiving draft/preview без stock commit; весь04 in progress.
+
+04a.5: [receiving draft/preview](../../docs/RECEIVING-DRAFT-04A.md), RI01–RI05 implemented/CI pending. Actual commit separate04a.6.

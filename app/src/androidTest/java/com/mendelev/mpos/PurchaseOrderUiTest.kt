@@ -65,8 +65,9 @@ class PurchaseOrderUiTest {
         compose.onNodeWithTag("purchaseOrderText").assertTextContains(name,substring=true)
         compose.onNodeWithTag("purchaseCopy").performClick()
         compose.onNode(hasAnyAncestor(isDialog()) and hasText("Приёмка")).performClick()
-        compose.onNodeWithText("Скоро будет подключено").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Закрыть").performClick()
+        compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("receivingSave") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("receivingBack").performClick()
+        compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("purchaseNew") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
         val after=runBlocking {db.catalog().product(id)!! to db.catalog().balance(id)!!}
         assertEquals(before.first.copy(revision=2,packSize="0.5"),after.first);assertEquals(before.second,after.second)
         assertNull(model.state.value.snapshot!!.draft)

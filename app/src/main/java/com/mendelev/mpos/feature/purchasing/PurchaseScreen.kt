@@ -26,7 +26,7 @@ import com.mendelev.mpos.domain.catalog.*
 import com.mendelev.mpos.domain.warehouse.*
 
 @OptIn(ExperimentalLayoutApi::class)
-@Composable fun PurchaseScreen(model: PurchaseViewModel,onBack: ()->Unit) {
+@Composable fun PurchaseScreen(model: PurchaseViewModel,onReceive: (String)->Unit,onBack: ()->Unit) {
     val ui by model.state.collectAsStateWithLifecycle();val form=ui.form;val snapshot=ui.snapshot
     val locked=ui.pending || ui.unresolved!=null || ui.orderUnresolved!=null
     val editable=!locked && !ui.blocked
@@ -134,7 +134,7 @@ import com.mendelev.mpos.domain.warehouse.*
                 }
                 FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                     MposButton("Копировать текст",{clipboard.setText(AnnotatedString(PurchaseOrderRules.text(order)))},modifier=Modifier.testTag("purchaseCopy"))
-                    MposButton("Приёмка",{dialog="soon"},enabled=editable && order.status=="pending",style=ActionStyle.Secondary)
+                    MposButton("Приёмка",{dialog=null;model.dismissPlaced();onReceive(order.id)},enabled=editable && !ui.dirty && order.status=="pending",style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseReceiving"))
                     if(order.status=="pending") {
                         MposButton("Изменить заказ",{dialog=null;model.openEdit(order)},enabled=editable,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseEditOpen"))
                         MposButton("Отменить заказ",{model.dismissPlaced();dialog="cancel:${order.id}"},enabled=editable,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseCancelOpen"))

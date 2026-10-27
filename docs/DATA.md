@@ -47,3 +47,5 @@ Native решения для первоначального каталога и 
 04a.3: persistent `purchase-orders` payload1/Room8: immutable request snapshots, raw packaging +expected base/null, order/requestVersion1/pending; append+catalog purchase defaults revisions+draft clear+result/audit atomарны. Stock/cost не меняются. Historical product/supplier deletion guards и [контракт](PURCHASE-ORDERS-04A.md); включать в будущий backup.
 
 04a.4: `purchase-orders` payload2 reads payload1/SQLschema8 unchanged. Separate order revision/requestVersion, previous request snapshots and cancelled actor/time; mutation+result+audit atomic, independent purchase-draft CAS untouched. Guards include historical removed lines. [Contract](PURCHASE-ORDER-CHANGES-04A.md).
+
+04a.5: persistent `receiving-drafts` payload1/Room8: per-order draft revision/tombstone, order snapshot +raw invoice facts +product/stock/cost baseline. Registry/result/audit atomic; Save allows stale economic baseline, preview refuses it until explicit rebase. No stock/cost/order writes. [Contract](RECEIVING-DRAFT-04A.md); include in future backup.
