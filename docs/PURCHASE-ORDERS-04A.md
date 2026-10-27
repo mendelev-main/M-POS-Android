@@ -1,6 +1,6 @@
 # 04a.3 — формирование заказа и история закупок
 
-Статус: implemented, CI pending. Продолжает [черновики](PURCHASE-DRAFT-04A.md), часть M11/I01/I04; не завершает весь склад04.
+Статус: PO06–PO10 ci-verified/API36. Продолжает [черновики](PURCHASE-DRAFT-04A.md), часть M11/I01/I04; не завершает весь склад04.
 
 ## Источник и выбранные границы
 
@@ -49,3 +49,9 @@ Supplier/product delete guards учитывают всю историю заку
 Tests: PurchaseOrderRulesTest3 JVM, PurchaseOrderRepositoryTest4, PurchaseViewModelTest+2, PurchaseOrderUiTest1, PurchaseOrderUpgradeTest1 API36. Старые draft tests остаются. CI execution/evidence отдельно после результата. Physical tablet, dark/150%/forced process-death UI pending.
 
 Следующая часть: bounded edit/cancel pending с revision и историей, затем receiving draft/commit по D03. Согласованные rules receiving: weighted cost;3из10 закрывает заказ с shortage7;12из10 требует явного подтверждения. Не выполнять receiving напрямую при Submit.
+
+## Итоговая проверка
+
+[FullCI40483522354](https://github.com/mendelev-main/M-POS-Android/actions/runs/40483522354)/dbd5fb2 SUCCESS:91JVM/116API36 instrumentation/0failures/0skipped,12Python/lint/build;2scale/11UIseed/6upgrade fixtures (3financial+supplier+purchase draft+purchase order), actual debugAPK1→2. PURCHASE ORDER UPDATE PASSED: pending snapshot/raw quantities/requestVersion1, cleared draft, current product metadata/defaults and replay without duplicate preserved. Existing sale/split/refund/catalog/workspace/parked/home/shift assertions также прошли.
+
+HTML116/0/0 и91JVM/0 проверены. Purchase-order/history1600×1125 просмотрены: общий modal Close/кнопки, snapshot24×500ml→12l, pending status и строка истории доступны без перекрытий, клавиатуры или постороннего окна. UI test также проверяет первый клик New order из истории и recreation без повторного Submit. Physical/dark/150%/forced cold-process UI отдельно. Schema8, stable0.1.74.1 и подпись не изменены; код только develop.
