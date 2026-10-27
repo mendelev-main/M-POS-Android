@@ -93,3 +93,5 @@ External updater: CATALOG/WORKSPACE/PARKED/HOME UPDATE PASSED и UPDATE E2E PASS
 ## 2026-10-27 — визуальная рабочая зона
 
 По запросу пользователя переносим pinned layout/размеры рабочей зоны до следующего этапа. Контракт docs/WORKSPACE-VISUAL.md: cart380/source grid/toolbars; будущие клиент/печать/загрузка/строчный комментарий открывают Soon. Qty/remove через строку; поиск раскрывается иконкой. Physical stock отдельно от reservations/sale availability, точная дробь для порций. Room/identity/финансовые команды неизменны. Pixel-perfect/device/dark pending.
+
+Visual checkpoint завершён на develop:3e11c33/run40461096340 success.80JVM/90API36 instrumentation, actual updater сохранил current quantity5/total15/home slot8/parked/shift/split/refund/sale; runtime Room8 и signing unchanged. Screenshots reviewed: cart top alignment, source typography/padding/type-chip,150% portrait bottom/landscape side by side. Physical/dark/paired pixel diff pending. Не начинать inventory04 в этой задаче;03c audit/release checkpoint остаётся следующим плановым.
