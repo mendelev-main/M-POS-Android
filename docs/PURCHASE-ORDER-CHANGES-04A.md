@@ -1,6 +1,6 @@
 # 04a.4 — изменение и отмена ожидающего заказа
 
-Статус: implemented, CI pending. Продолжает [04a.3](PURCHASE-ORDERS-04A.md), часть M11/I04. Весь склад04 не завершён.
+Статус: PO11–PO15 ci-verified/API36. Продолжает [04a.3](PURCHASE-ORDERS-04A.md), часть M11/I04. Весь склад04 не завершён.
 
 ## Источник и границы
 
@@ -49,3 +49,9 @@ Delete guards товаров учитывают current и previous request line
 Tests: PurchaseOrderMutationRulesTest4 JVM, PurchaseOrderMutationRepositoryTest4 API36, PurchaseViewModelTest+3, PurchaseOrderMutationUiTest1, PurchaseOrderMutationUpgradeTest1. Existing suppliers/draft/place and financial suites retained. CI evidence follows execution; physical/dark/150%/forced cold-process UI remain pending.
 
 Следующий bounded04a.5 — receiving draft из pending request: ввод фактических quantities/costs, явный preview без движения; commit receiving отдельной частью после его invariants. Согласованы weighted cost;3/10 closes shortage7;12/10 explicit confirmation. Отменённый заказ нельзя превращать в receiving.
+
+## Результат
+
+[FullCI40487143428](https://github.com/mendelev-main/M-POS-Android/actions/runs/40487143428)/a751e8b SUCCESS first attempt:95JVM/125API36 instrumentation/0failures/0skipped,12Python/lint/build;2scale/12UIseed/7upgrade fixtures (3financial+supplier+purchase draft+purchase order+order mutation), actual debugAPK1→2. PURCHASE ORDER MUTATION UPDATE PASSED: request history, cancellation actor/status, unchanged stock/defaults and old edit replay preserved; existing financial/catalog/workspace/parked/home/shift assertions также passed.
+
+Hosted XML95/0 и HTML125/0/0 проверены. Screenshots edit/edited/cancelled1600×1125 просмотрены: единый Close/actions, fields12×500ml→6l, версия2 и прежняя24×500ml→12l видны; cancelled marker/disabled receiving, без перекрытий/IME/постороннего окна. UI test сохранил независимый dirty draft5 через edit/cancel/recreate и успешно записал его с исходной CAS. Отдельный Room fixture проверил payload1→2 и reopen. Physical/dark/150%/forced cold-process UI pending. Main/stable0.1.74.1 и SQLschema8/signing не менялись.

@@ -194,4 +194,6 @@ PO06–PO10 ci-verified/API36: [контракт](PURCHASE-ORDERS-04A.md). Saved
 
 ## 04a.4 edit/cancel pending
 
-PO11–PO15 implemented, CI pending: [контракт](PURCHASE-ORDER-CHANGES-04A.md). Versioned history, cancelled marker, independent draft preservation, payload1→2. Receiving pending; весь04 не завершён.
+PO11–PO15 ci-verified/API36: [контракт](PURCHASE-ORDER-CHANGES-04A.md). Versioned history, cancelled marker, independent draft preservation, payload1→2. Receiving pending; весь04 не завершён.
+
+04a.4 evidence: [FullCI40487143428](https://github.com/mendelev-main/M-POS-Android/actions/runs/40487143428)/a751e8b SUCCESS first attempt:95JVM/125API36 instrumentation/0failures/0skipped,12Python/lint/build;2scale/12UIseed/7upgrade fixtures (3financial+supplier+purchase draft+purchase order+order mutation), actual debugAPK1→2. PURCHASE ORDER MUTATION UPDATE PASSED: request history, cancellation actor/status, unchanged stock/defaults and old edit replay preserved; existing financial/catalog/workspace/parked/home/shift assertions также passed. Screenshots reviewed; physical/dark/150%/cold-process UI pending. I01–I04/04 целиком не закрыты; следующий receiving draft.
