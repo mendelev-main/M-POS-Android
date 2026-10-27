@@ -175,3 +175,5 @@ Local Mac77JVM/lint/debug APK/testAPK build verified; final Bash-based launcher 
 2026-10-27: [контракт](TOP-NAVIGATION.md) и shared native панель implemented; проверки текущего инкремента — build-log. Заказы/приёмка/аналитика/бронирования/события пока страницы будущих модулей: их I/H/C/N acceptance остаётся planned. Это перенос меню, не завершение функций этих разделов.
 
 NAV01–NAV03 ci-verified: [fullCI40417634988](https://github.com/mendelev-main/M-POS-Android/actions/runs/40417634988)/2b05d53:77JVM/12Python/lint/build,89instrumentation/API36 incl route/recreation/editor-lock/narrow/tablet/fontScale2/accessibility ID exposure; actual debugAPK1→2 with catalog/workspace/parked/home/shift/split/sale/refund preservation/replay passed. updated-workspace/shift screenshots reviewed. Physical/dark/exact paired pixel-diff pending. I/H/C/N features behind future tab pages remain planned.
+
+W01/W02/W06/DS04 visual checkpoint: [WORKSPACE-VISUAL](WORKSPACE-VISUAL.md) implemented —380dp cart/source grid/toolbar, компактные строки и честные Soon actions. Текущая CI-приёмка pending; прежние CI runs не доказывают новую геометрию.

@@ -58,6 +58,7 @@ class ParkedOrdersUiTest {
         compose.onNodeWithTag("workspacePark").performClick();compose.onNodeWithTag("orderSubmit").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.parked.any {it.id==ownerA}}
         assertTrue(model.state.value.snapshot!!.cart.lines.isEmpty())
+        compose.onNodeWithTag("workspaceSearchToggle").performClick()
         compose.onNodeWithTag("workspaceSearch").performTextInput(productName)
         compose.onNodeWithTag("workspaceProduct:$productId").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.cart.lines.size==1}

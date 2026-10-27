@@ -71,6 +71,7 @@ class WorkspaceUiTest {
         compose.onNodeWithTag("workspaceFolderGrid").assertExists()
         compose.onNodeWithContentDescription("Закрыть").performClick()
         val line=model.state.value.snapshot!!.cart.lines.single().id
+        compose.onNodeWithTag("workspaceLine:$line").performClick()
         repeat(4) {compose.onNodeWithTag("workspacePlus:$line").performScrollTo().performClick()}
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.cart.lines.single().quantity=="5"}
         compose.onNodeWithTag("workspaceEditQuantity:$line").performClick()
@@ -82,7 +83,7 @@ class WorkspaceUiTest {
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("workspaceFolderGrid").assertExists();screenshot("workspace-folder")
         compose.onNodeWithContentDescription("Закрыть").performClick()
-        compose.onNodeWithTag("workspaceTotal").assertTextEquals("Предварительно: 15 BYN")
+        compose.onNodeWithTag("workspaceTotal").assertTextEquals("15,00 BYN")
         screenshot("workspace")
         File(compose.activity.filesDir,"qa/workspaceLineName.txt").writeText(name)
         val homeName="Быстрая плитка $suffix"
@@ -95,7 +96,7 @@ class WorkspaceUiTest {
             work.home(HomeAction.Move("product","home-upgrade-$suffix",7),work.snapshot().homeRevision,"home-move-$suffix")
         }
         File(compose.activity.filesDir,"qa/homeTileName.txt").writeText(homeName)
-        compose.onNodeWithText("Все категории").performClick()
+        compose.onNodeWithTag("workspaceBack").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceHomeProduct:home-upgrade-$suffix").fetchSemanticsNodes().isNotEmpty()}
         screenshot("workspace-home")
 

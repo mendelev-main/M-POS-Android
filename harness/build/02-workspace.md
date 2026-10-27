@@ -54,3 +54,5 @@ W IDs с tests, rotation/process death и планшетным walkthrough.
 02f: [большой каталог/Coil/адаптация](../../docs/WORKSPACE-02F.md) ci-verified API36/run40184227465; W01/W03/W07/DS04, physical acceptance отдельно.
 
 Итог02f: [run40184227465](https://github.com/mendelev-main/M-POS-Android/actions/runs/40184227465)/f1639b8,47JVM/6Python/lint/build,47instrumentation+2scale+4UIseed; actual updater success.2000товаров:load306/search1209/add595ms;150%portrait/landscape screenshots reviewed. Physical/full02 отдельно.
+
+Визуальный checkpoint: [WORKSPACE-VISUAL](../../docs/WORKSPACE-VISUAL.md), W01/W02/W06/DS04, source380dp cart/toolbar/tiles. Проверки текущей реализации и ограничения — build-log; не считать полный02 закрытым.

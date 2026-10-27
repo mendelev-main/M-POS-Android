@@ -70,3 +70,5 @@ Local Mac77JVM/lint/debug APK/testAPK build verified; final Bash-based launcher 
 ## 2026-10-27 — общий верхний navbar перед следующими модулями
 
 По запросу владельца выполнен NAV01–NAV03: [контракт](docs/TOP-NAVIGATION.md), [fullCI40417634988](https://github.com/mendelev-main/M-POS-Android/actions/runs/40417634988)/2b05d53 SUCCESS. Все постоянные вкладки pinned Web/размеры/shared styling, ready routes, command locks, narrow/font-scale/recreation и actualAPK1→2 verified on API36. Future warehouse/analytics/bookings/events business logic is not implemented by their placeholder pages. Этот UI checkpoint не начинает04: следующий основной шаг остаётся03c product audit/release checkpoint, затем склад04 по зависимостям. Physical tablet acceptance позже по решению владельца.
+
+UI checkpoint перед продолжением: рабочая зона по pinned Web, [контракт](docs/WORKSPACE-VISUAL.md). Не начинает следующий предметный этап и не выпускает отдельный релиз; последующий03c audit/release checkpoint сохраняется.

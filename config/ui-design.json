@@ -132,5 +132,20 @@
     "settingsSizeDp": 44,
     "iconSizeDp": 18,
     "contract": "docs/TOP-NAVIGATION.md"
+  },
+  "workspace": {
+    "contract": "docs/WORKSPACE-VISUAL.md",
+    "bodyPaddingDp": 16,
+    "columnGapDp": 16,
+    "cartWidthDp": 380,
+    "cartRadiusDp": 22,
+    "tileRadiusDp": 16,
+    "gridGapDp": 12,
+    "gridPaddingDp": 4,
+    "categoryTileHeightDp": 144,
+    "toolbarMinHeightDp": 44,
+    "iconSizeDp": 44,
+    "iconRadiusDp": 12,
+    "futureActions": "shared-soon-dialog"
   }
 }

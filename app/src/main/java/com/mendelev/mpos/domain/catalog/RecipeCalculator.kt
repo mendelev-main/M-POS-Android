@@ -55,6 +55,12 @@ class RecipeCalculator(products: Collection<RecipeProduct>) {
         expand(requests).filterKeys { !(products.getValue(it) as RecipeProduct.Simple).noStockTracking }
             .mapValues { (_, value) -> value.stockDecimal() }
 
+    /** Physical portions only: no reservations/negative-sale permission, no decimal intermediate rounding. */
+    fun physicalPortions(request: RecipeRequest, balances: Map<String, BigDecimal>): BigDecimal? =
+        expand(listOf(request)).filterKeys { !(products.getValue(it) as RecipeProduct.Simple).noStockTracking }
+            .map { (id, required) -> (Fraction.of(balances[id] ?: BigDecimal.ZERO) / required).floor() }
+            .minOrNull()
+
     /** Includes the cost of ingredients whose stock tracking is disabled. No monetary rounding here. */
     fun cost(requests: List<RecipeRequest>): BigDecimal = expand(requests).entries.fold(Fraction.ZERO) { sum, (id, qty) ->
         val cost = (products.getValue(id) as RecipeProduct.Simple).cost
@@ -110,6 +116,7 @@ private class Fraction private constructor(val numerator: BigInteger, val denomi
         numerator * other.denominator + other.numerator * denominator, denominator * other.denominator)
     operator fun times(other: Fraction) = normalized(numerator * other.numerator, denominator * other.denominator)
     operator fun div(other: Fraction) = normalized(numerator * other.denominator, denominator * other.numerator)
+    fun floor(): BigDecimal = BigDecimal(numerator).divide(BigDecimal(denominator), 0, RoundingMode.FLOOR)
     fun decimal(): BigDecimal = BigDecimal(numerator).divide(BigDecimal(denominator), 12, RoundingMode.HALF_EVEN)
         .stripTrailingZeros()
     fun stockDecimal(): BigDecimal = decimal().also {

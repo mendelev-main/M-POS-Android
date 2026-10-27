@@ -15,6 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.data.local.*
@@ -31,6 +38,10 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
 @Composable fun WorkspaceScreen(model: WorkspaceViewModel, photos: ProductPhotoStore, onCatalog: () -> Unit, onSettings: () -> Unit, onShift: () -> Unit = {}, onCheckout: () -> Unit = {}, onHistory: () -> Unit = {}) {
     val ui by model.state.collectAsStateWithLifecycle()
     val s=ui.snapshot
+    var comingSoon by rememberSaveable {mutableStateOf<String?>(null)}
+    var searchOpen by rememberSaveable {mutableStateOf(false)}
+    val navigation=LocalMposTopNavigation.current
+    val shiftOpen=navigation?.shiftOpen ?: true
     var compactOrder by rememberSaveable { mutableStateOf(false) }
     var category by rememberSaveable { mutableStateOf<String?>(null) }
     var folder by rememberSaveable { mutableStateOf<String?>(null) }
@@ -59,7 +70,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
     var ordersDialog by rememberSaveable { mutableStateOf<String?>(null) }
     var clearRevision by rememberSaveable { mutableStateOf<Long?>(null) }
     val busy=ui.pending>0
-    val modal=revalidationOpen || configId!=null || manageId!=null || quantityId!=null || clearRevision!=null || ordersDialog!=null
+    val modal=comingSoon!=null || revalidationOpen || configId!=null || manageId!=null || quantityId!=null || clearRevision!=null || ordersDialog!=null
     // Lazy item callbacks can outlive a composition; always target the current persisted owner.
     val currentSnapshot by rememberUpdatedState(s)
     fun configure(p: WorkspaceProduct) {
@@ -80,10 +91,10 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
         if(category!=null && category!="" && s!=null && s.categories.none { it.id==category }) { category=null;folder=null }
         if(folder!=null && s!=null && s.layout.none { it.type=="folder" && it.id==folder }) folder=null
     }
-    BackHandler(enabled=!modal && (folder!=null || category!=null || editing)) {
-        when { folder!=null -> folder=null; editing -> editing=false;else -> {category=null;search=""} }
+    BackHandler(enabled=!modal && (folder!=null || category!=null || editing || searchOpen)) {
+        when { folder!=null -> folder=null; searchOpen -> {searchOpen=false;search=""}; editing -> editing=false;else -> {category=null;search=""} }
     }
-    Column(Modifier.fillMaxSize().safeDrawingPadding()) {
+    Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
         MposAppBar("M-POS · Рабочая зона", navigationEnabled=!busy && !modal) {
             MposNavigationAction("Товары",onCatalog)
             MposNavigationAction("Смена",onShift)
@@ -92,36 +103,49 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
         if(ui.loading) Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) { CircularProgressIndicator() }
         else if(ui.fatal || s==null) MposNotice(ui.message ?: "Рабочая зона недоступна",true)
         else {
-            Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=8.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                if(category!=null) MposButton("Все категории",{category=null;folder=null;search=""},style=ActionStyle.Secondary)
-                Text(if(category==null) "Рабочая зона" else s.categories.find { it.id==category }?.name ?: "Без категории",Modifier.weight(1f),style=MaterialTheme.typography.titleLarge)
-                MposButton(if(editing) "Завершить раскладку" else "Изменить раскладку",{editing=!editing},enabled=!busy,style=ActionStyle.Secondary,modifier=Modifier.testTag("workspaceEdit"))
-            }
-            MposField(search,{search=it},"Поиск товара",Modifier.padding(horizontal=20.dp).testTag("workspaceSearch"),!busy)
-            if(editing && category!=null) Text("Удерживайте плитку для перетаскивания. Нажатие — настройка размещения",Modifier.padding(horizontal=20.dp,vertical=8.dp),style=MaterialTheme.typography.bodySmall)
-            if(ui.message!=null && !modal && folder==null) MposNotice(ui.message!!,true)
-            BoxWithConstraints(Modifier.weight(1f).padding(20.dp)) {
+            BoxWithConstraints(Modifier.weight(1f).padding(16.dp).testTag("workspaceBody")) {
+                val config=LocalConfiguration.current
+                val viewportWidth=config.screenWidthDp
+                val portrait=config.screenHeightDp>viewportWidth
+                val cols=when {viewportWidth<=600->2;viewportWidth<=700->3;portrait->4;viewportWidth>=900->5;else->4}
+                val geometry=WorkspaceGeometry(cols,if(portrait && viewportWidth>=700) 5 else 4)
                 val grid: @Composable (Modifier)->Unit = { modifier ->
+                    CompositionLocalProvider(LocalWorkspaceGeometry provides geometry) {
                     Column(modifier,verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                        if(editing && category!=null && search.isBlank()) MposButton("Создать папку",{
-                            manageId=UUID.randomUUID().toString();manageType="folder";manageName="";manageRevision=s.layoutRevision;confirmFolderDelete=false
-                        },enabled=!busy,style=ActionStyle.Secondary)
+                        if(navigation!=null && !navigation.shiftLoading && !navigation.shiftUnavailable && !shiftOpen) {
+                            Surface(shape=RoundedCornerShape(16.dp),color=if(androidx.compose.foundation.isSystemInDarkTheme()) Color(0xFF3A3022) else Color(0xFFFFF4E9)) {
+                                Row(Modifier.fillMaxWidth().padding(horizontal=16.dp,vertical=12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                                    Text("Чтобы принимать оплату, откройте кассовую смену.",Modifier.weight(1f),style=MaterialTheme.typography.bodySmall)
+                                    PosAction("Открыть смену",onShift,tone=PosTone.Warning,enabled=!busy)
+                                }
+                            }
+                        }
+                        WorkspaceToolbar(if(category==null) "Рабочая зона" else s.categories.find {it.id==category}?.name ?: "Без категории",
+                            category!=null,editing,busy,s.parked.size,{category=null;folder=null;search=""},
+                            {editing=!editing},{ordersDialog="list"},{searchOpen=!searchOpen;if(!searchOpen) search=""},{comingSoon=it})
+                        if(searchOpen) MposField(search,{search=it},"Поиск товара",Modifier.testTag("workspaceSearch"),!busy)
+                        if(ui.message!=null && !modal && folder==null) MposNotice(ui.message!!,true)
+                        if(editing && category!=null && search.isBlank()) PosAction("Создать папку",{
+                            manageId=UUID.randomUUID().toString();manageType="folder";manageName="";manageRevision=s.layoutRevision
+                        },enabled=!busy,tone=PosTone.Primary)
                         if(category==null && search.isBlank()) WorkspaceHome(s,ui,editing,model,photos,Modifier.weight(1f),{category=it;search=""},{configure(it)})
                         else WorkspaceGrid(s,category,null,search,editing,photos,Modifier.weight(1f),ui.pending<100,
                             {category=it;search=""},{folder=it.id},{configure(it)},{manage(it)},availabilityIndex=ui.availability,onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
                     }
+                    }
                 }
                 val cart: @Composable (Modifier)->Unit = { modifier ->
-                    CartPanel(s,ui.pending,modifier,{id -> quantityId=id;quantity=s.cart.lines.first { it.id==id }.quantity;quantityRevision=s.cartRevision;quantityOwner=s.cart.sessionId;model.dismiss()},
-                        {id,delta -> model.step(id,delta,s.cart.sessionId)},{id -> model.remove(id,s.cart.sessionId)},{clearRevision=s.cartRevision;clearOwner=s.cart.sessionId},{ordersDialog="details"},{ordersDialog="park"},{ordersDialog="list"},{
+                    WorkspaceCartPanel(s,ui.pending,modifier,{id -> quantityId=id;quantity=s.cart.lines.first {it.id==id}.quantity;quantityRevision=s.cartRevision;quantityOwner=s.cart.sessionId;model.dismiss()},
+                        {id,delta -> model.step(id,delta,s.cart.sessionId)},{id -> model.remove(id,s.cart.sessionId)},
+                        {clearRevision=s.cartRevision;clearOwner=s.cart.sessionId},{ordersDialog="details"},{ordersDialog="park"},{
                             revalidationOwner=s.cart.sessionId;revalidationRevision=s.cartRevision
-                            revalidationToken=runCatching { CartRevalidator.preview(s.cart,s.products,s.graph,s.balances,OrderReservations.total(s.parked.map {it.cart})).token }.getOrNull()
+                            revalidationToken=runCatching {CartRevalidator.preview(s.cart,s.products,s.graph,s.balances,OrderReservations.total(s.parked.map {it.cart})).token}.getOrNull()
                             revalidationOpen=true;model.dismiss()
-                        },onCheckout,onHistory)
+                        },onCheckout,{comingSoon=it},shiftOpen)
                 }
                 val scale=LocalDensity.current.fontScale.coerceIn(1f,2f)
-                val cartWidth=(340*scale).dp
-                if(maxWidth>=cartWidth+(460*scale).dp+20.dp) Row(horizontalArrangement=Arrangement.spacedBy(20.dp)) {
+                val cartWidth=(380*scale).dp
+                if(maxWidth>=cartWidth+(420*scale).dp+16.dp) Row(horizontalArrangement=Arrangement.spacedBy(16.dp)) {
                     grid(Modifier.weight(1f));cart(Modifier.width(cartWidth).fillMaxHeight())
                 } else if(maxHeight>=(650*scale).dp) Column(verticalArrangement=Arrangement.spacedBy(16.dp)) {
                     grid(Modifier.weight(1f));cart(Modifier.fillMaxWidth().height((300*scale).dp))
@@ -134,6 +158,10 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                 }
             }
         }
+    }
+    if(comingSoon!=null) MposDialog("Скоро будет подключено",{comingSoon=null},!busy) {
+        Text("${comingSoon}. Скоро будет подключено.")
+        MposButton("Понятно",{comingSoon=null},style=ActionStyle.Secondary)
     }
     if(s!=null) {
         if(revalidationOpen) WorkspaceRevalidationDialog(s,ui,revalidationOwner,revalidationRevision,revalidationToken,
@@ -255,12 +283,12 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
     val drag=workspaceDrag(gridState,editing && enabled && query.isEmpty() && category!=null && onReorder!=null,s.layoutRevision,"$category/$folder/${tiles.map {it.type to it.id}}") {from,to->
         tiles.getOrNull(from)?.let {onReorder?.invoke(it,to.coerceIn(0,tiles.lastIndex))}
     }
-    LazyVerticalGrid(if(folderColumns==null) GridCells.Adaptive(150.dp) else GridCells.Fixed(folderColumns),modifier.then(drag.modifier).testTag(if(folder==null) "workspaceGrid" else "workspaceFolderGrid"),state=gridState,
-        horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+    LazyVerticalGrid(if(folderColumns==null) GridCells.Fixed(LocalWorkspaceGeometry.current.columns) else GridCells.Fixed(folderColumns),modifier.then(drag.modifier).testTag(if(folder==null) "workspaceGrid" else "workspaceFolderGrid"),state=gridState,
+        contentPadding=PaddingValues(4.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         if(category==null && query.isEmpty()) {
-            items(s.categories,key={"category:${it.id}"}) { c -> MposWorkspaceTile({onCategory(c.id)},Modifier.testTag("workspaceCategory:${c.id}")) {
-                MposCategoryBadge(c.color,c.symbol);Text(c.name,style=MaterialTheme.typography.titleMedium)
-                Text("Товаров: ${s.products.count { it.categoryId==c.id }}",style=MaterialTheme.typography.bodySmall)
+            items(s.categories,key={"category:${it.id}"}) { c -> MposWorkspaceTile({onCategory(c.id)},Modifier.height(144.dp).testTag("workspaceCategory:${c.id}"),categoryColor=c.color,symbol=c.symbol) {
+                Text(c.name+"  ›",style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp),maxLines=2)
+                Spacer(Modifier.weight(1f));Text("Категория",style=MaterialTheme.typography.bodySmall.copy(fontSize=11.5.sp))
             } }
             if(s.products.any { it.categoryId.isEmpty() }) item { MposWorkspaceTile({onCategory("")},Modifier.testTag("workspaceCategory:")) { Text("Без категории",style=MaterialTheme.typography.titleMedium) } }
             if(s.categories.isEmpty() && s.products.isEmpty()) item(span={GridItemSpan(maxLineSpan)}) { Text("Добавьте товары в каталоге") }
@@ -268,76 +296,21 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
             if(folder!=null && tiles.isEmpty()) item(span={GridItemSpan(maxLineSpan)}) {Text("В папке пока нет товаров")}
             items(tiles,key={"${it.type}:${it.id}"}) { tile ->
                 val highlight=if(drag.target==tiles.indexOf(tile)) Modifier.border(2.dp,MaterialTheme.colorScheme.primary,MaterialTheme.shapes.large) else Modifier
-                if(tile.type=="folder") MposWorkspaceTile({if(editing) onManage(tile) else onFolder(tile)},Modifier.testTag("workspaceFolder:${tile.id}").then(highlight),enabled) {
-                    Text("Папка",style=MaterialTheme.typography.labelMedium);Text(tile.name,style=MaterialTheme.typography.titleMedium)
-                    Text("Товаров: ${s.layout.count { it.type=="product" && it.folderId==tile.id }}",style=MaterialTheme.typography.bodySmall)
+                if(tile.type=="folder") MposWorkspaceTile({if(editing) onManage(tile) else onFolder(tile)},Modifier.height(144.dp).testTag("workspaceFolder:${tile.id}").then(highlight),enabled) {
+                    Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {Text(tile.name,style=MaterialTheme.typography.titleMedium.copy(fontSize=19.sp,fontWeight=FontWeight.ExtraBold),textAlign=androidx.compose.ui.text.style.TextAlign.Center,maxLines=2)}
                 } else products[tile.id]?.let { p ->
-                    MposWorkspaceTile({onProduct(p)},Modifier.testTag("workspaceProduct:${p.id}").then(highlight),enabled) {
-                        if(p.photoId!=null && folder==null) ProductPhoto(p.photoId,photos,Modifier.fillMaxWidth().height(72.dp))
-                        Text(p.name,style=MaterialTheme.typography.titleSmall,maxLines=if(folder!=null) 2 else Int.MAX_VALUE,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                        Text(if(p.price.toBigDecimal().signum()==0) "Ввести цену" else money(p.price),style=MaterialTheme.typography.bodyMedium)
-                        if(editing) Text("Настроить размещение",style=MaterialTheme.typography.bodySmall)
-                        else {
-                            WorkspaceAvailabilityLabel(availabilityIndex,p)
-                            if(p.groups.isNotEmpty() && folder==null) Text("Выбор модификаторов",style=MaterialTheme.typography.bodySmall)
+                    MposWorkspaceTile({onProduct(p)},Modifier.height(144.dp).testTag("workspaceProduct:${p.id}").then(highlight),enabled,compact=folder!=null) {
+                        Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                            Text(p.name,Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=if(folder!=null) 13.5.sp else 14.5.sp,lineHeight=18.sp),maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                            if(p.photoId!=null && folder==null) ProductPhoto(p.photoId,photos,Modifier.size(32.dp))
                         }
+                        if(editing) Text("Настроить размещение",style=MaterialTheme.typography.bodySmall)
+                        Spacer(Modifier.weight(1f))
+                        WorkspaceTileFooter(availabilityIndex,p)
                     }
                 }
             }
             if(tiles.isEmpty()) item(span={GridItemSpan(maxLineSpan)}) { Text(if(projection==null) "Ищем товары…" else if(query.isEmpty()) "Здесь пока нет товаров" else "Ничего не найдено") }
         }
     }
-}
-
-@Composable private fun CartPanel(s: WorkspaceSnapshot,pending: Int,modifier: Modifier,onQuantity: (String)->Unit,
-    onStep: (String,Int)->Unit,onRemove: (String)->Unit,onClear: ()->Unit, onDetails: ()->Unit,onPark: ()->Unit,onParked: ()->Unit,onRevalidate: ()->Unit,onCheckout: ()->Unit,onHistory: ()->Unit) {
-    Surface(modifier,shape=MaterialTheme.shapes.large,color=MaterialTheme.colorScheme.surface) {
-        Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            Text("Текущий заказ",style=MaterialTheme.typography.titleLarge)
-            LazyColumn(Modifier.weight(1f).testTag("workspaceCart"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                item(key="details") {
-                    Text(listOf(s.cart.details.label,OrderRules.typeLabel(s.cart.details.type)).filter {it.isNotBlank()}.joinToString(" · "),style=MaterialTheme.typography.bodySmall)
-                    if(s.cart.details.comment.isNotBlank()) Text(s.cart.details.comment,style=MaterialTheme.typography.bodySmall,maxLines=2)
-                }
-                items(s.cart.lines,key={it.id}) { line ->
-                    Column(Modifier.testTag("workspaceLine:${line.id}"),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                        Text(line.name,style=MaterialTheme.typography.titleSmall)
-                        if(line.options.isNotEmpty()) Text(line.options.joinToString { it.name },style=MaterialTheme.typography.bodySmall)
-                        Text("${money(line.unitPrice)} × ${line.quantity} ${unitLabel(line.unit)}")
-                        if(CartEngine.stale(line,s.products)) Text("Требуется проверка: каталог изменился",color=MaterialTheme.colorScheme.error)
-                        Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                            MposButton("−",{onStep(line.id,-1)},enabled=pending<100,style=ActionStyle.Secondary,modifier=Modifier.testTag("workspaceMinus:${line.id}"))
-                            MposButton(line.quantity,{onQuantity(line.id)},enabled=pending==0,style=ActionStyle.Secondary,modifier=Modifier.testTag("workspaceEditQuantity:${line.id}"))
-                            MposButton("+",{onStep(line.id,1)},enabled=pending<100,style=ActionStyle.Secondary,modifier=Modifier.testTag("workspacePlus:${line.id}"))
-                        }
-                        MposButton("Удалить позицию",{onRemove(line.id)},enabled=pending==0,style=ActionStyle.Danger,modifier=Modifier.testTag("workspaceRemove:${line.id}"))
-                        HorizontalDivider()
-                    }
-                }
-                if(s.cart.lines.isEmpty()) item { Text("Заказ пуст. Выберите товар на плитке") }
-            }
-            Text("Предварительно: ${money(CatalogRules.canonical(CartEngine.total(s.cart)))}",style=MaterialTheme.typography.titleMedium,modifier=Modifier.testTag("workspaceTotal"))
-            if(pending>0) Text("Сохраняем…",style=MaterialTheme.typography.bodySmall)
-            if(s.cart.lines.any {CartEngine.stale(it,s.products)}) MposButton("Пересчитать заказ",onRevalidate,enabled=pending==0,modifier=Modifier.testTag("workspaceRevalidate"))
-            OrderButtons(pending,s,onDetails,onPark,onParked,onClear)
-            Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                MposButton(if(s.completedReceiptId!=null) "Чек сохранён" else "К оплате",onCheckout,Modifier.weight(1f).testTag("workspaceCheckout"),enabled=pending==0 && (s.cart.lines.isNotEmpty() || s.completedReceiptId!=null))
-                MposButton("Чеки",onHistory,enabled=pending==0,style=ActionStyle.Secondary)
-            }
-        }
-    }
-}
-
-@Composable private fun WorkspaceAvailabilityLabel(index: WorkspaceAvailability?,product: WorkspaceProduct) {
-    val status by produceState<ProductAvailability?>(null,index,product.id) {
-        value=null
-        value=withContext(Dispatchers.Default) {index?.status(product.id) ?: ProductAvailability.INVALID}
-    }
-    Text(when(status) {
-        ProductAvailability.AVAILABLE->"Доступен"
-        ProductAvailability.SHORTAGE->"Недостаточно для 1 ${unitLabel(product.unit)}"
-        ProductAvailability.STALE->"Проверьте текущий заказ"
-        ProductAvailability.INVALID->"Требуется проверка состава"
-        null->"Проверяем доступность…"
-    },style=MaterialTheme.typography.bodySmall)
 }

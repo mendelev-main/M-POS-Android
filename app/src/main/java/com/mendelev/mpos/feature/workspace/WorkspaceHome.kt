@@ -14,6 +14,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
 import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.data.local.WorkspaceSnapshot
 import com.mendelev.mpos.data.media.ProductPhotoStore
@@ -35,42 +42,53 @@ import com.mendelev.mpos.domain.workspace.*
         else s.products.find {it.id==tile.id}?.name ?: "Недоступен"
     fun manage(tile: HomeTile) {type=tile.type;id=tile.id;slot=(tile.slot+1).toString();revision=s.homeRevision;dialog="manage";model.dismiss()}
     Column(modifier,verticalArrangement=Arrangement.spacedBy(10.dp)) {
-        FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            MposButton("Все категории",{dialog="categories"},enabled=!busy,style=ActionStyle.Secondary)
-            if(editing) MposButton("Добавить плитку",{revision=s.homeRevision;dialog="add";model.dismiss()},enabled=!busy,style=ActionStyle.Secondary,modifier=Modifier.testTag("homeAdd"))
-            if(editing) MposButton("Сбросить",{revision=s.homeRevision;dialog="reset";model.dismiss()},enabled=!busy,style=ActionStyle.Secondary)
-        }
-        if(editing) Text("До 20 плиток. Удерживайте и перетащите плитку. Нажатие — перемещение по номеру места или удаление.",style=MaterialTheme.typography.bodySmall)
         BoxWithConstraints(Modifier.weight(1f)) {
-            val columns=(((maxWidth+12.dp)/162.dp).toInt()).coerceIn(1,5)
+            val geometry=LocalWorkspaceGeometry.current
+            val scale=LocalDensity.current.fontScale
+            val columns=if(scale<=1.1f) geometry.columns else ((maxWidth/(144*scale).dp).toInt()).coerceIn(1,geometry.columns)
+            val rowHeight=((maxHeight-8.dp-12.dp*(geometry.homeRows-1))/geometry.homeRows).coerceAtLeast(128.dp)
             val last=tiles.keys.maxOrNull() ?: -1
             val count=if(editing) (((last/columns+2)*columns).coerceAtLeast(20)).coerceAtMost(HomeEngine.MAX_SLOTS) else last+1
-            LazyVerticalGrid(GridCells.Fixed(columns),Modifier.fillMaxSize().testTag("workspaceGrid").then(drag.modifier),state=state,
+            val dots=if(editing) Modifier.drawBehind {
+                val step=18.dp.toPx();var y=0f
+                while(y<size.height) {var x=0f;while(x<size.width) {drawCircle(Color(0xFF767C8C).copy(alpha=.2f),1.dp.toPx(),Offset(x,y));x+=step};y+=step}
+            } else Modifier
+            LazyVerticalGrid(GridCells.Fixed(columns),Modifier.fillMaxSize().then(dots).testTag("workspaceGrid").then(drag.modifier),state=state,contentPadding=PaddingValues(4.dp),
                 horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 items(count,key={it}) {index->
                     val tile=tiles[index]
                     val highlight=if(drag.target==index) Modifier.border(2.dp,MaterialTheme.colorScheme.primary,MaterialTheme.shapes.large) else Modifier
                     if(tile==null) {
-                        if(editing) Surface(Modifier.fillMaxWidth().height(144.dp).then(highlight).testTag("homeSlot:$index"),shape=MaterialTheme.shapes.large,color=MaterialTheme.colorScheme.background,border=BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
-                            Box(Modifier.padding(12.dp)) {Text("Свободное место ${index+1}",style=MaterialTheme.typography.bodySmall)}
-                        } else Spacer(Modifier.height(144.dp))
+                        if(editing) Surface(Modifier.fillMaxWidth().height(rowHeight).then(highlight).testTag("homeSlot:$index"),shape=MaterialTheme.shapes.large,color=Color.Transparent) {
+                            Box(Modifier.fillMaxSize()) {}
+                        } else Spacer(Modifier.height(rowHeight))
                     } else {
                         val tag=if(tile.type=="category") "workspaceCategory:${tile.id}" else "workspaceHomeProduct:${tile.id}"
                         MposWorkspaceTile({if(editing) manage(tile) else if(tile.type=="category") onCategory(tile.id) else s.products.find {it.id==tile.id}?.let(onProduct)},
-                            Modifier.testTag(tag).then(highlight),!busy) {
-                            if(tile.type=="category") s.categories.find {it.id==tile.id}?.let {MposCategoryBadge(it.color,it.symbol)}
-                            if(tile.type=="product") s.products.find {it.id==tile.id}?.photoId?.let {ProductPhoto(it,photos,Modifier.fillMaxWidth().height(72.dp))}
-                            Text(title(tile),style=MaterialTheme.typography.titleSmall,maxLines=3)
+                            Modifier.height(rowHeight).testTag(tag).then(highlight),!busy,
+                            categoryColor=if(tile.type=="category") s.categories.find {it.id==tile.id}?.color else null,
+                            symbol=if(tile.type=="category") s.categories.find {it.id==tile.id}?.symbol else null) {
+                            Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                                Text(title(tile)+(if(tile.type=="category") "  ›" else ""),Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp,lineHeight=18.sp),maxLines=2,overflow=TextOverflow.Ellipsis)
+                                if(tile.type=="product") s.products.find {it.id==tile.id}?.photoId?.let {ProductPhoto(it,photos,Modifier.size(32.dp))}
+                            }
+                            Spacer(Modifier.weight(1f))
                             if(editing) Text("Место ${index+1}",style=MaterialTheme.typography.bodySmall)
-                            else if(tile.type=="category") Text("Товаров: ${s.products.count {it.categoryId==tile.id}}",style=MaterialTheme.typography.bodySmall)
-                            else s.products.find {it.id==tile.id}?.let {p->Text(if(p.price.toBigDecimal().signum()==0) "Ввести цену" else p.price.replace('.',',')+" BYN")}
+                            else if(tile.type=="category") Text("Категория",style=MaterialTheme.typography.bodySmall.copy(fontSize=11.5.sp),color=MaterialTheme.colorScheme.onSurfaceVariant)
+                            else s.products.find {it.id==tile.id}?.let {p->WorkspaceTileFooter(ui.availability,p)}
                         }
                     }
                 }
             }
             if(!editing && tiles.isEmpty()) Text("Нет плиток. Добавьте их в режиме раскладки или откройте все категории")
         }
+        if(editing) FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+            PosAction("＋ Изменить содержимое",{revision=s.homeRevision;dialog="add";model.dismiss()},enabled=!busy,tone=PosTone.Primary,modifier=Modifier.testTag("homeAdd"))
+            PosAction("Все категории",{dialog="categories"},enabled=!busy,tone=PosTone.Info)
+            PosAction("Сбросить",{revision=s.homeRevision;dialog="reset";model.dismiss()},enabled=!busy)
+        }
     }
+
     if(dialog!=null) MposDialog(when(dialog) {"add"->"Добавить плитку";"categories"->"Все категории";"reset"->"Сбросить раскладку?";"remove"->"Убрать плитку?";else->"Плитка главного экрана"},
         {dialog=null;model.dismiss()},!busy) {
         if(ui.message!=null) MposNotice(ui.message!!,true)
