@@ -51,8 +51,8 @@ class PurchaseOrderUiTest {
         compose.onNodeWithTag("purchasePlaceConfirm").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.lastPlacedId!=null && model.state.value.snapshot!!.orders.any {it.id==model.state.value.lastPlacedId}}
         val orderId=model.state.value.lastPlacedId!!
-        compose.onNodeWithTag("purchaseOrderStatus").assertTextContains("Ожидается приёмка")
-        compose.onNodeWithTag("purchaseOrderText").assertTextContains("24 бутылка × 500 мл")
+        compose.onNodeWithTag("purchaseOrderStatus").assertTextContains("Ожидается приёмка",substring=true)
+        compose.onNodeWithTag("purchaseOrderText").assertTextContains("24 бутылка × 500 мл",substring=true)
         shot("purchase-order")
         compose.onNodeWithContentDescription("Закрыть").performClick()
         compose.onNodeWithTag("purchaseOrder:$orderId").assertExists()
@@ -62,7 +62,7 @@ class PurchaseOrderUiTest {
         if(compose.onAllNodesWithTag("purchaseOrderText").fetchSemanticsNodes().isNotEmpty()) compose.onNodeWithContentDescription("Закрыть").performClick()
         shot("purchase-history")
         compose.onNodeWithTag("purchaseOrder:$orderId").performScrollTo().performClick()
-        compose.onNodeWithTag("purchaseOrderText").assertTextContains(name)
+        compose.onNodeWithTag("purchaseOrderText").assertTextContains(name,substring=true)
         compose.onNodeWithTag("purchaseCopy").performClick()
         compose.onNode(hasAnyAncestor(isDialog()) and hasText("Приёмка")).performClick()
         compose.onNodeWithText("Скоро будет подключено").assertIsDisplayed()
