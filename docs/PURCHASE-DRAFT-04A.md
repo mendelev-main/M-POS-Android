@@ -1,6 +1,6 @@
 # 04a.2 — черновик закупки
 
-Статус: implemented, проверки API36 pending. Это часть M11/I01/I04, весь склад не завершён.
+Статус: PO01–PO05 ci-verified/API36. Это часть M11/I01/I04, весь склад не завершён.
 
 ## Источник и границы
 
@@ -43,3 +43,9 @@ Save проверяет текущие supplier/product revisions, имя, ба�
 Проверки: PurchaseDraftRulesTest (JVM), PurchaseDraftRepositoryTest, PurchaseViewModelTest, PurchaseUiTest, PurchaseUpgradeTest (API36); последний также участвует в реальной замене debug APK1→2. CI evidence фиксируется в PARITY/build-log после результата. Physical tablet, dark/150% и отдельный cold-process UI matrix pending.
 
 Следующий bounded04a.3: durable pending order, явное формирование из положительных строк и история; до receiving/valuation writes закрепить его контракт. Подтверждённые будущие правила: weighted cost;3/10 закрывает заказ с недопоставкой7;12/10 требует явного подтверждения.
+
+## Результат
+
+[FullCI40477779141 attempt2](https://github.com/mendelev-main/M-POS-Android/actions/runs/40477779141/attempts/2)/f4c80e2 SUCCESS:88JVM/108API36 instrumentation/0failures/0skipped,12Python/lint/build;2scale/10UIseed/3financial+1supplier+1purchase fixture и actual debugAPK1→2. PurchaseUpgradeTest проверяет raw24×500ml→12l, historical supplier/product snapshots, replay без повторной записи и неизменные stock/cost/movements. Исходные sale/split/refund/catalog/workspace/parked/home/shift assertions также прошли.
+
+Purchase-draft1600×1125 просмотрен: quantity24, bottle500ml, expected12l, shared controls и нижние действия без перекрытий/клавиатуры/постороннего окна. Физический планшет/dark/150%/cold-process UI matrix остаются pending. Stable0.1.74.1 не изменён; реализация только develop.

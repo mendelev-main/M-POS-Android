@@ -1,6 +1,6 @@
 # Этап 04 — Склад
 
-Статус: in progress —04a.1 suppliers ci-verified/API36/run40472850012; весь04 не закрыт
+Статус: in progress —04a.1 suppliers +04a.2 purchase drafts ci-verified/API36/run40477779141; весь04 не закрыт
 
 ## Объём
 
@@ -37,3 +37,5 @@ I01: units/pack conversion; I02: stale baseline; I03: отмена сохран�
 SUP01–SUP05: [fullCI40472850012](https://github.com/mendelev-main/M-POS-Android/actions/runs/40472850012)/6f387ee SUCCESS83JVM/99instrumentation/12Python/lint/build,9UIseed/3financial+1supplier fixture and actualAPK1→2. Остальные I01–I04/physical pending.
 
 04a.2: [черновик закупки](../../docs/PURCHASE-DRAFT-04A.md), PO01–PO05 implemented; I01/I04 только в scope drafts, полная приёмка pending. Текущие проверки записываются в журнал после результата.
+
+04a.2 PO01–PO05 ci-verified в scope draft: [FullCI40477779141 attempt2](https://github.com/mendelev-main/M-POS-Android/actions/runs/40477779141/attempts/2)/f4c80e2 SUCCESS:88JVM/108API36 instrumentation/0failures/0skipped,12Python/lint/build;2scale/10UIseed/3financial+1supplier+1purchase fixture и actual debugAPK1→2. PurchaseUpgradeTest проверяет raw24×500ml→12l, historical supplier/product snapshots, replay без повторной записи и неизменные stock/cost/movements. Исходные sale/split/refund/catalog/workspace/parked/home/shift assertions также прошли. Physical/dark/150%/cold-process UI отдельно; receiving pending.
