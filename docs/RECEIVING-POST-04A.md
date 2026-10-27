@@ -2,7 +2,7 @@
 
 Статус: RP01–RP05 ранее ci-verified; уточнение policy2 implemented/CI pending. Source pinned1682c883 receiving.js applyReceivingDocument, source snapshot unchanged.
 
-В scope только order-bound saved receiving: подтвердить расчёт → атомарный приход → read-only история и статус received. Standalone, per-unit-price mode, charges/storno, inventory вне этой части. Средневзвешенная себестоимость,3/10 закрывает заказ с недопоставкой7,12/10 требует отдельного подтверждения (ответы владельца). Policy v1: final cost scale12 HALF_EVEN, positive-value underflow refused; exact line total minor units retained. Applied existing warehouse precision as implementation choice; optional owner preference question remains open.
+В scope только order-bound saved receiving: подтвердить расчёт → атомарный приход → read-only история и статус received. Standalone, per-unit-price mode, charges/storno, inventory вне этой части. Средневзвешенная себестоимость,3/10 закрывает заказ с недопоставкой7,12/10 требует отдельного подтверждения (ответы владельца). Актуальная policy2 подтверждена владельцем: итоговая себестоимость2decimal HALF_UP, сумма накладной exact minor. Подробности и совместимость прежней policy1 — ниже.
 
 ## Транзакция и конкуренция
 
@@ -22,7 +22,7 @@ Atomic writes: positive tracked lines → product cost+revision, exact positive 
 
 Checks and unresolved physical device cases recorded after execution.
 
-## Policy v1 и формат
+## Историческая policy1 и формат (заменена policy2 для новых приходов)
 
 Себестоимость вычисляется BigDecimal с точными промежуточными произведениями, округляется только итог до scale12 HALF_EVEN (существующая warehouse precision).3шт за10BYN при нулевом остатке →3.333333333333BYN/шт; invoice total1000minor остаётся точным. Positive economic value, округлившийся в0, отказывается; явно бесплатная строка при отсутствии старой положительной стоимости допустима. Итог cost18integer/12fraction, stock exact18integer/12fraction; overflow и underflow — отказ до записи. Отрицательный oldStock увеличивается на actual, valuation использует max(oldStock,0). NoStockTracking cost только по поступлению, balance/revision/ledger неизменны. Zero actual ничего не меняет по товару; all-zero нельзя провести.
 

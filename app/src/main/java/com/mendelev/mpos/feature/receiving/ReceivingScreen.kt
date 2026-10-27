@@ -24,6 +24,8 @@ import java.math.BigDecimal
 @OptIn(ExperimentalLayoutApi::class)
 @Composable fun ReceivingScreen(model: ReceivingViewModel,posting: ReceivingPostingViewModel,requestedOrder: String?,consumeRequest: ()->Unit,onBack: ()->Unit) {
     val ui by model.state.collectAsStateWithLifecycle();val d=ui.form;val snapshot=ui.snapshot
+    // Capture nullable content before Dialog creates a separate composition.
+    val preview=ui.preview
     val post by posting.state.collectAsStateWithLifecycle()
     val locked=ui.pending || ui.unresolved!=null || post.pending || post.unresolved!=null
     var showHistory by rememberSaveable {mutableStateOf(false)}
@@ -127,10 +129,9 @@ import java.math.BigDecimal
             }
         }
     }
-    if(ui.preview!=null && dialog==null && !showHistory) {
+    if(preview!=null && dialog==null && !showHistory) {
         // Posting revalidates the saved invoice and the entire economic baseline.
         MposDialog("Предварительный расчёт",{model.dismissPreview()},!locked,wide=true) {
-            val preview=ui.preview!!
             Text("Итого: ${BigDecimal.valueOf(preview.totalMinor,2).toPlainString()} BYN. Это расчёт, приход ещё не проведён.",modifier=Modifier.testTag("receivingPreviewTotal"))
             Column(Modifier.weight(1f,fill=false).heightIn(max=420.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 preview.lines.forEach {l->
@@ -150,14 +151,14 @@ import java.math.BigDecimal
         when(dialog) {
             "post" -> {
                 Text("Фактические количества поступят на склад. Себестоимость пересчитается; заказ будет закрыт, даже если поставка неполная.")
-                if(ui.preview?.hasOverage==true) {
+                if(preview?.hasOverage==true) {
                     MposNotice("Получено больше, чем заказано. Подтвердите превышение отдельно",true)
                     MposButton(if(overage) "Превышение подтверждено" else "Подтверждаю превышение заказа",{overage=!overage},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("receivingOverage"))
                 }
                 MposButton("Подтвердить приход",{
                     dialog=null
                     posting.post(snapshot!!.ownerId,snapshot.records.find {it.orderId==d!!.order.id}!!.revision,d!!,overage)
-                },enabled=!locked && !ui.dirty && (ui.preview?.hasOverage!=true || overage),modifier=Modifier.testTag("receivingPostConfirm"))
+                },enabled=!locked && !ui.dirty && (preview?.hasOverage!=true || overage),modifier=Modifier.testTag("receivingPostConfirm"))
             }
             "soon" -> Text("Приёмка без заказа будет подключена следующей частью.")
             "clear" -> {
