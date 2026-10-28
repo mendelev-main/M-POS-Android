@@ -87,7 +87,7 @@ def wait_navigation(route, timeout=75, click=True):
     return wait_text(legacy[route], timeout=timeout, click=click, preferred_resource_id="topNav-"+route)
 
 
-def scroll_catalog_to_product(name):
+def scroll_catalog_to_product(name, expected_stock=None):
     """A new seed can push the preserved row below the fold; absence must still fail."""
     pattern = "^" + re.escape(name) + "$"
     wait_text("^Товары$")
@@ -95,7 +95,11 @@ def scroll_catalog_to_product(name):
         nodes = ui_nodes()
         for node in nodes:
             if re.search(pattern, node.get("text", "")):
-                return node.get("text") or node.get("content-desc")
+                # A clipped title can be visible while the stock in its row is still below the fold.
+                # Require the expected stock in this product's own clickable row, not another SKU.
+                rows = [row for row in nodes if row.get("clickable") == "true" and row.get("resource-id") != "catalogProducts" and node in list(row.iter("node"))]
+                if expected_stock is None or any(any(child.get("text") == expected_stock for child in row.iter("node")) for row in rows):
+                    return node.get("text") or node.get("content-desc")
         lists = [n for n in nodes if n.get("package") == PACKAGE and n.get("scrollable") == "true" and n.get("resource-id") == "catalogProducts"]
         assert len(lists) == 1, "Expected one catalog list before scrolling to preserved product"
         x1, y1, x2, y2 = map(int, re.findall(r"\d+", lists[0].get("bounds", "")))
@@ -301,7 +305,7 @@ def main():
             (reports / "updated-settings.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20).stdout)
             if not production:
                 wait_text("^Назад$", click=True)
-                scroll_catalog_to_product(expected_product)
+                scroll_catalog_to_product(expected_product, expected_stock="8 шт")
                 wait_text("^8 шт$")
                 (reports / "updated-catalog.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("CATALOG UPDATE PASSED: Room product and stock=8 survived actual package replacement", flush=True)
@@ -334,6 +338,7 @@ def main():
                                 "-e", "saleUpgradeMode", "verify", PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
                 assert "OK (13 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
                 adb("uninstall", PACKAGE + ".test")
+                print("INVENTORY CLOSING UPDATE PASSED: completed/cancelled history, loss/date/actor/raw/fixed and original close replay retained without stock writes")
                 print("INVENTORY COUNT UPDATE PASSED: fixed exact movement/history/replay retained; unfixed raw count preserved with expired process authority")
                 print("INVENTORY START UPDATE PASSED: configuration, active scope and original replay retained without stock writes")
                 print("STANDALONE RECEIVING UPDATE PASSED: independent invoice/slot, posted stock/cost, legacy history and original replays survived APK replacement", flush=True)

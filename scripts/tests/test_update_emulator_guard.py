@@ -44,6 +44,21 @@ class CatalogScrollTests(unittest.TestCase):
         self.assertTrue(30<x1<1570 and 30<x2<1570)
         self.assertTrue(325<y2<y1<1030)
 
+    def test_clipped_title_or_stock_from_another_sku_does_not_finish_scroll(self):
+        from unittest.mock import patch
+        import xml.etree.ElementTree as ET
+        def screen(visible):
+            root=ET.Element("node", {"package":module.PACKAGE,"scrollable":"true","resource-id":"catalogProducts","bounds":"[30,325][1570,1030]"})
+            other=ET.SubElement(root,"node", {"clickable":"true"})
+            ET.SubElement(other,"node", {"text":"Другой товар"});ET.SubElement(other,"node", {"text":"8 шт"})
+            row=ET.SubElement(root,"node", {"clickable":"true"})
+            ET.SubElement(row,"node", {"text":"Чай 42"})
+            if visible: ET.SubElement(row,"node", {"text":"8 шт"})
+            return list(root.iter("node"))
+        with patch.object(module,"wait_text"), patch.object(module,"ui_nodes",side_effect=[screen(False),screen(True)]), patch.object(module,"adb") as adb, patch.object(module.time,"sleep"):
+            self.assertEqual("Чай 42",module.scroll_catalog_to_product("Чай 42",expected_stock="8 шт"))
+        self.assertEqual(1,adb.call_count)
+
     def test_missing_product_fails_after_bounded_scroll_instead_of_accepting_similar_text(self):
         from unittest.mock import patch
         import xml.etree.ElementTree as ET

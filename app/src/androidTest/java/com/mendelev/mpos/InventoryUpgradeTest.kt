@@ -21,7 +21,7 @@ class InventoryUpgradeTest {
                 val s=repo.snapshot();repo.commit(InventoryCommand("inventory-save",s.ownerId,0,InventoryAction.Configure(InventoryConfig(true,"weekly",setOf("p-inventory-upgrade")))))
                 repo.commit(InventoryCommand("inventory-start",s.ownerId,1,InventoryAction.Start("inventory-draft","adhoc")))
                 repo.commit(InventoryCommand("inventory-edit",s.ownerId,2,InventoryAction.Configure(InventoryConfig(true,"quarterly",setOf("p-inventory-upgrade")))))
-                val doc=db.workspace().document(InventoryCodec.KEY)!!;val legacy=org.json.JSONObject(doc.payload).put("version",1);legacy.getJSONObject("draft").remove("counts");db.workspace().put(doc.copy(payload=legacy.toString()))
+                val doc=db.workspace().document(InventoryCodec.KEY)!!;val legacy=org.json.JSONObject(doc.payload).put("version",1);legacy.remove("history");legacy.getJSONObject("draft").remove("counts");db.workspace().put(doc.copy(payload=legacy.toString()))
             }
             val s=repo.snapshot();val d=s.document.draft!!;val p=d.products.single()
             assertEquals(3L,s.revision);assertEquals("quarterly",s.document.config.frequency);assertTrue(s.document.config.enabled)
