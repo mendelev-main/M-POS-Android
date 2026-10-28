@@ -63,7 +63,7 @@ Physical tablet/dark/150%/forced cold-process UI остаются pending; injec
 
 ## 04b.3 — завершение, отмена остатка и история
 
-Статус: implemented; IT01–IT05, Android CI pending.
+Статус: ci-verified; IT01–IT05, Android16/API36/run40698882065.
 
 Подтверждено владельцем 2026-10-28: недостача 1,5 кг × 2,35 BYN = 3,525 → **3,53 BYN HALF_UP по строке**; две такие строки дают7,06 BYN. Излишки считаются отдельно и не уменьшают оценку недостачи. Используется сохранённая себестоимость **на момент Fix**, последующие изменения карточки её не пересчитывают. Это оценочный отчёт, не кассовый расход. При переполнении диапазона Long cents оценка явно недоступна (null), а не0; закрытие уже выполненного физического пересчёта остаётся возможным.
 
@@ -84,3 +84,5 @@ UI: общие Mpos dialogs/buttons, сводка перед подтвержд�
 - IT05: v1/v2 compatibility и реальные APK1→2: completed/cancelled/raw/fixed/actor/date/loss и исходные replay без второго движения.
 
 Физический планшет, dark/150%/forced cold-process UI — отдельная приёмка. Весь этап04 остаётся in progress; дополнительные расходы и сторно приёмки отложены владельцем.
+
+04b.3 IT01–IT05 ci-verified: [FullCI40698882065](https://github.com/mendelev-main/M-POS-Android/actions/runs/40698882065)/35bbacc SUCCESS:129JVM/193API36 instrumentation/0failures/0skipped,13Python/harness/lint/debugAPK/testAPK;2workspace-scale/16UIseed/13upgrade fixtures и actual debugAPK1→2. INVENTORY CLOSING UPDATE PASSED: completed/cancelled immutable history, loss/date/actor/raw/fixed snapshots and original Complete/Cancel/Fix replay retained without new stock movements. HALF_UP per-line353+353=706, surplus separate, completion-date marker across month, adhoc/cancel unchanged, each3close failure/SQL abort/lost reply/owner/gate/CAS/concurrent close and legacy1/2/corrupt3 cases passed. Shared summary/completed/cancelled screenshots inspected: readable, no overlap, owner label instead of internal ID. Existing financial/catalog/workspace/parked/home/shift/supplier/purchase/receiving assertions retained and passed. Initial40696281624 failed only later catalog scroll assertion: clipped expected title; bounded same-row stock scroll and regression fixed, cancelled40698716586 not evidence. Local user DB not seeded; physical tablet/dark/150%/forced cold-process UI pending. Main/stable/signing/SQLschema unchanged; entire04 remains in progress. Next: audit StockList/MovementHistory/LowStock/filters against WAREHOUSE-SPEC; receiving charges/storno deferred by owner.
