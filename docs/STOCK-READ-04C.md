@@ -1,6 +1,6 @@
 # 04c.1 — остатки и история движений
 
-Статус implemented, SR01–SR04; Android CI pending.
+Статус ci-verified, SR01–SR04; Android16/API36/run40750124798 attempt2.
 
 Вход через настройки «Остатки и движения». Список simple товаров: поиск по нормализованному имени, категория, минимум, фильтр низких остатков. Как pinned warehouse-reporting.js: low означает tracked quantity <= minimum, отсутствие minimum не равно0. Без учёта отображается отдельно и не входит в low. Composite не имеет самостоятельного физического остатка и в этот список не включается. Разные размерности не складываются.
 
@@ -16,3 +16,5 @@
 - SR04: поиск/категория/low/detail/back/shared controls, навигация из настроек; удаление bookings из всех активных routes.
 
 M17 исключён владельцем2026-10-28; это намеренное отступление от полного parity с Web. Клиенты/лояльность06 сохраняются. Физический планшет/dark/150% отдельно; следующий04c.2 — период и связанные документы после сверки source contract.
+
+04c.1 SR01–SR04 ci-verified/API36: [FullCI40750124798 attempt2](https://github.com/mendelev-main/M-POS-Android/actions/runs/40750124798/attempts/2)/4ff0dcb SUCCESS. Checks129JVM/13Python/harness/lint/APKs; emulator197instrumentation/0failures/0skipped,2workspace-scale/17UIseed/13upgrade fixtures and actual debugAPK1→2. New Room exact0.0004/threshold equality/noTracking/history/no writes/missing balance, ViewModel read error/retry, UI low/search/detail/back and settings route/recreation passed. Stock-list/history synthetic-fixture screenshots inspected: shared controls/readable/no overlap; root navbar absence of bookings separately checked. All existing sale/refund/split/catalog/workspace/parked/home/shift/supplier/purchase/receiving/inventory upgrade assertions retained and passed. Attempt1 failed with Compose performMeasureAndLayout reentrancy in existing WorkspaceScaleUiTest and process crash; unchanged emulator-only retry passed. First failure retained in journal, no gates weakened. M17 excluded by owner,20 active modules, clients/loyalty retained. Read-only query, SQLschema8/signing/stable/main unchanged. Physical tablet/dark/150% pending; whole04 remains in progress; next04c.2 period and document navigation.
