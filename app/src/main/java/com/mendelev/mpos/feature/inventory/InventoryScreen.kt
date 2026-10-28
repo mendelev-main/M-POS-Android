@@ -181,7 +181,7 @@ private fun inventoryMoney(minor: Long?)=minor?.let {java.math.BigDecimal.valueO
             item {
                 MposButton("К списку",{selected=null},style=ActionStyle.Secondary)
                 Text("${if(record.cancelled) "Отменена" else "Завершена"} · ${record.date}",Modifier.testTag("inventoryRecordStatus"))
-                Text("${if(record.draft.type=="scheduled") "Плановая" else "Внеплановая"} · Ответственный: ${record.actorId}")
+                Text("${if(record.draft.type=="scheduled") "Плановая" else "Внеплановая"} · Ответственный: локальный владелец")
                 InventoryTotals(InventoryClosingRules.summary(record.draft))
             }
             items(record.draft.products,key={it.id}) {p->
