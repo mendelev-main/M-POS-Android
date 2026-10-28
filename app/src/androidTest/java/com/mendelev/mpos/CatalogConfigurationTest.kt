@@ -32,10 +32,13 @@ class CatalogConfigurationTest {
                 noStockTracking=true,allowNegativeStock=true)
             repo.saveProduct(metadata);repo.saveProduct(metadata)
             assertEquals(1,repo.dao.movementCount("flour"));assertEquals("1",repo.dao.balance("flour")!!.quantity)
-            val negative=metadata.copy(commandId="negative",expectedRevision=2,stock="-1",stockEdited=true)
+            assertEquals(2L,repo.dao.balance("flour")!!.revision) // tracking toggle invalidates earlier physical counts
+            failure("conflict") {repo.saveProduct(metadata.copy(commandId="pre-toggle-baseline",expectedRevision=2,stock="-1",stockEdited=true))}
+            val negative=metadata.copy(commandId="negative",expectedRevision=2,expectedStockRevision=2,stock="-1",stockEdited=true)
             repo.saveProduct(negative)
             assertEquals("-1",repo.dao.balance("flour")!!.quantity)
-            repo.saveProduct(negative.copy(commandId="disable",expectedRevision=3,expectedStockRevision=2,stockEdited=false,allowNegativeStock=false))
+            assertEquals(3L,repo.dao.balance("flour")!!.revision)
+            repo.saveProduct(negative.copy(commandId="disable",expectedRevision=3,expectedStockRevision=3,stockEdited=false,allowNegativeStock=false))
             assertEquals("-1",repo.dao.balance("flour")!!.quantity)
             failure("conflict") { repo.saveProduct(negative.copy(commandId="stale",expectedRevision=4,expectedStockRevision=1)) }
             failure("type") { repo.saveProduct(metadata.copy(commandId="unit-change",expectedRevision=4,unit="g",displayUnit="g")) }
