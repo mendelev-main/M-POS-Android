@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.*
 import java.util.UUID
 
 data class InventoryCountForm(val draftId: String,val product: InventoryProduct,val generation: String,val raw: String="",val discarding: Boolean=false)
-data class InventoryUi(val snapshot: InventorySnapshot?=null,val form: InventoryConfig?=null,val pending: Boolean=false,val blocked: Boolean=true,val unresolved: InventoryCommand?=null,val message: String?=null,val countForm: InventoryCountForm?=null) {
+data class InventoryUi(val snapshot: InventorySnapshot?=null,val form: InventoryConfig?=null,val pending: Boolean=false,val blocked: Boolean=true,val unresolved: InventoryCommand?=null,val message: String?=null,val countForm: InventoryCountForm?=null,val closedId: String?=null) {
     val dirty get()=(form!=null && form!=snapshot?.document?.config) || countForm!=null
 }
 class InventoryViewModel(private val access: InventoryAccess): ViewModel() {
@@ -68,6 +68,13 @@ class InventoryViewModel(private val access: InventoryAccess): ViewModel() {
         val s=state.value.snapshot ?: return;val d=s.document.draft ?: return
         submitAction(InventoryAction.Fix(d.id,id,s.generation))
     }
+    fun finish(cancelled: Boolean) {
+        if(!available() || state.value.dirty) return
+        val d=state.value.snapshot?.document?.draft ?: return
+        if(!cancelled && InventoryClosingRules.summary(d).remaining!=0) {mutable.update {it.copy(message="Сначала зафиксируйте остаток каждого товара")};return}
+        submitAction(InventoryAction.Finish(d.id,cancelled))
+    }
+    fun consumeClosed() {mutable.update {it.copy(closedId=null)}}
     private fun submitAction(a: InventoryAction) {
         if(!available()) return
         val s=state.value.snapshot ?: return
@@ -78,19 +85,19 @@ class InventoryViewModel(private val access: InventoryAccess): ViewModel() {
     private fun submit(c: InventoryCommand) {
         mutable.update {it.copy(pending=true,unresolved=c,message=null)}
         viewModelScope.launch {
-            try {withContext(Dispatchers.IO) {access.outcome(c) ?: access.commit(c)};saved()}
+            try {withContext(Dispatchers.IO) {access.outcome(c) ?: access.commit(c)};saved(c)}
             catch(e:CancellationException) {throw e}
             catch(e:Exception) {
                 try {
-                    if(withContext(Dispatchers.IO) {access.outcome(c)}!=null) saved()
+                    if(withContext(Dispatchers.IO) {access.outcome(c)}!=null) saved(c)
                     else {val s=withContext(Dispatchers.IO) {access.snapshot()};mutable.update {it.copy(snapshot=s,unresolved=null,blocked=false,message=if(e is CatalogFailure) e.message else "Изменение не сохранено. Повторите действие")}}
                 } catch(e2:CancellationException) {throw e2}
                 catch(_:Exception) {mutable.update {it.copy(blocked=true,unresolved=c,message="Результат неизвестен. Проверьте результат той же команды")}}
             } finally {mutable.update {it.copy(pending=false)}}
         }
     }
-    private suspend fun saved() {
-        mutable.update {it.copy(unresolved=null,blocked=true,form=null,countForm=null,message="Изменение инвентаризации сохранено")}
+    private suspend fun saved(c: InventoryCommand) {
+        mutable.update {it.copy(unresolved=null,blocked=true,form=null,countForm=null,closedId=(c.action as? InventoryAction.Finish)?.draftId,message="Изменение инвентаризации сохранено")}
         try {val s=withContext(Dispatchers.IO) {access.snapshot()};mutable.update {it.copy(snapshot=s,form=s.document.config,blocked=false)}}
         catch(e:CancellationException) {throw e}
         catch(_:Exception) {mutable.update {it.copy(message="Изменение сохранено. Повторите чтение")}}

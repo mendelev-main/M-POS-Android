@@ -62,7 +62,7 @@ fun MposTopBar(navigation: MposTopNavigation, enabled: Boolean = true) {
                 destinations.forEach { (route, label) ->
                     TopItem(label, route, navigation, allowed, compact=compact)
                 }
-                if(navigation.inventoryReminder) TopItem("Инвентаризация","inventory",navigation,allowed,selected=navigation.route in setOf("inventory","inventoryWork"),compact=compact)
+                if(navigation.inventoryReminder) TopItem("Инвентаризация","inventory",navigation,allowed,selected=navigation.route in setOf("inventory","inventoryWork","inventoryHistory"),compact=compact)
             }
             Spacer(Modifier.weight(1f))
             TopItem("События", "events", navigation, allowed, compact=compact, icon="bell", selected=false)

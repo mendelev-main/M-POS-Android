@@ -18,25 +18,28 @@ import com.mendelev.mpos.domain.catalog.*
 import com.mendelev.mpos.domain.warehouse.*
 import java.time.LocalDate
 
-@Composable fun InventoryScreen(model: InventoryViewModel,onBack: ()->Unit,onWork: ()->Unit={},work: Boolean=false,onPause: ()->Unit=onBack) {
+@Composable fun InventoryScreen(model: InventoryViewModel,onBack: ()->Unit,onWork: ()->Unit={},work: Boolean=false,onPause: ()->Unit=onBack,history: Boolean=false,onHistory: ()->Unit={}) {
     val ui by model.state.collectAsStateWithLifecycle()
     val locked=ui.pending || ui.unresolved!=null
     var discard by rememberSaveable {mutableStateOf(false)}
     var start by rememberSaveable {mutableStateOf<String?>(null)}
+    var finishing by rememberSaveable {mutableStateOf<Boolean?>(null)}
     var fixing by rememberSaveable {mutableStateOf<String?>(null)}
     var openAfterStart by rememberSaveable {mutableStateOf(false)}
     var query by rememberSaveable {mutableStateOf("")}
     var category by rememberSaveable {mutableStateOf("")}
     val close={if(ui.countForm!=null) model.closeCount() else if(!locked) {if(ui.dirty) discard=true else onBack()}}
     BackHandler {close()}
-    LaunchedEffect(model,work) {model.refresh()}
+    LaunchedEffect(ui.closedId,ui.pending) {if(ui.closedId!=null && !ui.pending) {model.consumeClosed();onHistory()}}
+    LaunchedEffect(model,work,history) {model.refresh()}
     LaunchedEffect(ui.snapshot?.document?.draft?.id,openAfterStart,ui.pending) {if(openAfterStart && !ui.pending && ui.snapshot?.document?.draft!=null) {openAfterStart=false;onWork()}}
     Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
-        MposAppBar("Инвентаризация",navigationEnabled=!locked && !ui.dirty && start==null && fixing==null) {}
+        MposAppBar("Инвентаризация",navigationEnabled=!locked && !ui.dirty && start==null && fixing==null && finishing==null) {}
         Column(Modifier.padding(20.dp).weight(1f),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                 MposButton("Настройки",close,enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("inventoryBack"))
                 Text("Инвентаризация",style=MaterialTheme.typography.titleLarge,modifier=Modifier.weight(1f))
+                if(!history) MposButton("История",onHistory,enabled=!locked && !ui.dirty,style=ActionStyle.Secondary,modifier=Modifier.testTag("inventoryHistory"))
                 MposButton("Перечитать",model::refresh,enabled=!locked && !ui.dirty,style=ActionStyle.Secondary)
             }
             if(ui.message!=null) MposNotice(ui.message!!,ui.blocked)
@@ -45,10 +48,13 @@ import java.time.LocalDate
             val s=ui.snapshot;val form=ui.form
             if(s!=null && form!=null) {
                 val draft=s.document.draft
-                if(work && draft!=null) {
+                if(history) {InventoryHistory(s.document.history,Modifier.weight(1f))} else if(work && draft!=null) {
                     InventoryWorkRows(ui,model,{fixing=it},Modifier.weight(1f))
                     MposButton("Продолжить позже",onPause,enabled=!locked && !ui.dirty,style=ActionStyle.Secondary,modifier=Modifier.testTag("inventoryPause"))
-                    Text("Завершение и отмена оставшихся строк будут подключены следующим блоком.")
+                    FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                        MposButton("Завершить",{finishing=false},enabled=!locked && !ui.blocked && !ui.dirty && InventoryClosingRules.summary(draft).remaining==0,modifier=Modifier.testTag("inventoryComplete"))
+                        MposButton("Отменить оставшееся",{finishing=true},enabled=!locked && !ui.blocked && !ui.dirty,style=ActionStyle.Danger,modifier=Modifier.testTag("inventoryCancel"))
+                    }
                 } else {
                 LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                     if(draft!=null) item {
@@ -82,6 +88,13 @@ import java.time.LocalDate
                 }
             }
         }
+    }
+    val finishDraft=ui.snapshot?.document?.draft
+    val cancelling=finishing
+    if(cancelling!=null && finishDraft!=null) MposDialog(if(cancelling) "Отменить оставшийся пересчёт?" else "Завершить инвентаризацию?",{finishing=null},!locked) {
+        InventoryTotals(InventoryClosingRules.summary(finishDraft))
+        Text(if(cancelling) "Зафиксированные остатки сохранятся. Незавершённые строки не изменят склад. Документ останется в истории." else "Результаты сохранятся в истории. Остатки уже зафиксированы; повторных изменений склада не будет.")
+        MposButton(if(cancelling) "Подтвердить отмену" else "Завершить пересчёт",{finishing=null;model.finish(cancelling)},enabled=!locked && !ui.blocked,style=if(cancelling) ActionStyle.Danger else ActionStyle.Primary,modifier=Modifier.testTag("inventoryFinishConfirm"))
     }
     val countForm=ui.countForm
     if(countForm!=null) MposDialog(if(countForm.discarding) "Закрыть без сохранения?" else "Фактический остаток",{model.closeCount()},!locked) {
@@ -143,6 +156,43 @@ import java.time.LocalDate
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+private fun inventoryMoney(minor: Long?)=minor?.let {java.math.BigDecimal.valueOf(it,2).toPlainString()+" BYN"} ?: "Оценка вне диапазона"
+@Composable private fun InventoryTotals(s: InventorySummary) {
+    Text("Зафиксировано: ${s.fixed} · осталось: ${s.remaining}")
+    Text("Недостачи: ${s.shortages} · излишки: ${s.surpluses}")
+    Text("Оценка недостачи: ${inventoryMoney(s.lossMinor)}",Modifier.testTag("inventoryLoss"))
+}
+@Composable private fun InventoryHistory(records: List<InventoryRecord>,modifier: Modifier) {
+    var selected by rememberSaveable {mutableStateOf<String?>(null)}
+    val record=records.find {it.id==selected}
+    LazyColumn(modifier,verticalArrangement=Arrangement.spacedBy(12.dp)) {
+        if(record==null) {
+            if(records.isEmpty()) item {Text("История инвентаризаций пуста")}
+            items(records.asReversed(),key={it.id}) {r->
+                MposButton("${r.date} · ${if(r.cancelled) "Отменена" else "Завершена"} · ${r.draft.products.size} товаров",{selected=r.id},style=ActionStyle.Secondary,modifier=Modifier.testTag("inventoryRecord:${r.id}"))
+            }
+        } else {
+            item {
+                MposButton("К списку",{selected=null},style=ActionStyle.Secondary)
+                Text("${if(record.cancelled) "Отменена" else "Завершена"} · ${record.date}",Modifier.testTag("inventoryRecordStatus"))
+                Text("${if(record.draft.type=="scheduled") "Плановая" else "Внеплановая"} · Ответственный: ${record.actorId}")
+                InventoryTotals(InventoryClosingRules.summary(record.draft))
+            }
+            items(record.draft.products,key={it.id}) {p->
+                val count=record.draft.counts.find {it.product.id==p.id};val fixed=count?.fixed
+                Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                    Text(fixed?.product?.name ?: p.name,style=MaterialTheme.typography.titleMedium)
+                    if(fixed!=null) {
+                        Text("Учёт: ${fixed.product.stock} · факт: ${fixed.actual} ${unitLabel(fixed.product.unit)} · разница: ${fixed.delta}")
+                        Text("Себестоимость при фиксации: ${fixed.product.cost} BYN · недостача: ${inventoryMoney(InventoryClosingRules.lineLoss(count))}")
+                    } else Text("Не зафиксировано; склад не изменён.${count?.let {" Сохранённый ввод: ${it.raw}"} ?: ""}")
+                    HorizontalDivider()
                 }
             }
         }

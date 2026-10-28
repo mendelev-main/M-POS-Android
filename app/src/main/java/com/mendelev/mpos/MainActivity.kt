@@ -87,9 +87,9 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                         })
                         UpdatesScreen(model, onCatalog={route="catalog"}, onGallery={route="gallery"},onSuppliers={route="suppliers"},onInventory={route="inventory"}) { route = "catalog" }
                     }
-                    "inventory", "inventoryWork" -> {
+                    "inventory", "inventoryWork", "inventoryHistory" -> {
                         com.mendelev.mpos.feature.inventory.InventoryScreen(inventoryModel,
-                            onBack={route=if(route=="inventoryWork") "inventory" else "settings"},onWork={route="inventoryWork"},work=route=="inventoryWork",onPause={route="workspace"})
+                            onBack={route=if(route=="inventoryWork" || route=="inventoryHistory") "inventory" else "settings"},onWork={route="inventoryWork"},work=route=="inventoryWork",onPause={route="workspace"},history=route=="inventoryHistory",onHistory={route="inventoryHistory"})
                     }
                     "suppliers" -> {
                         val model: com.mendelev.mpos.feature.suppliers.SupplierViewModel = viewModel(factory=object: ViewModelProvider.Factory {

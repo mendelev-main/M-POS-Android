@@ -18,7 +18,7 @@ class InventoryViewModelTest {
         override suspend fun outcome(c: InventoryCommand): String? {if(unknown) error("outcome");return results[c.commandId]}
         override suspend fun commit(c: InventoryCommand): String {
             calls++
-            s=s.copy(revision=s.revision+1,document=when(val a=c.action) {is InventoryAction.Configure->s.document.copy(config=a.config);is InventoryAction.Start->s.document.copy(draft=InventoryDraft(a.id,a.type,1,s.today,listOf(p)));is InventoryAction.Count->s.document.copy(draft=s.document.draft!!.copy(counts=s.document.draft!!.counts.filterNot {it.product.id==a.product.id}+InventoryCount(a.product,a.raw,a.generation)));is InventoryAction.Fix->error("not used")})
+            s=s.copy(revision=s.revision+1,document=when(val a=c.action) {is InventoryAction.Configure->s.document.copy(config=a.config);is InventoryAction.Start->s.document.copy(draft=InventoryDraft(a.id,a.type,1,s.today,listOf(p)));is InventoryAction.Count->s.document.copy(draft=s.document.draft!!.copy(counts=s.document.draft!!.counts.filterNot {it.product.id==a.product.id}+InventoryCount(a.product,a.raw,a.generation)));is InventoryAction.Fix->error("not used");is InventoryAction.Finish->{val d=s.document.draft!!;s.document.copy(draft=null,history=s.document.history+InventoryRecord(d,a.cancelled,1,s.today,c.actorId,c.commandId,InventoryClosingRules.summary(d).lossMinor))}})
             val id=s.document.draft?.id ?: InventoryCodec.KEY;results[c.commandId]=id
             if(lose) {unknown=true;error("reply")};return id
         }
@@ -96,6 +96,30 @@ class InventoryViewModelTest {
             withContext(Dispatchers.Main) {vm.saveCount()};assertEquals(2,f.calls);assertNotNull(vm.state.value.message)
             withContext(Dispatchers.Main) {vm.countRaw("0");vm.closeCount()};assertTrue(vm.state.value.countForm!!.discarding)
             withContext(Dispatchers.Main) {vm.continueCount();vm.closeCount(true)};assertNull(vm.state.value.countForm);assertEquals(2,f.calls)
+        } finally {withContext(Dispatchers.Main) {store.clear()}}
+    }
+
+    @Test fun unknownCancelLocksStartAndRetryResolvesOneHistoricalRecord(): Unit=runBlocking {
+        val store=ViewModelStore();val f=Fake()
+        f.s=f.s.copy(document=InventoryDocument(draft=InventoryDraft("d","adhoc",1,f.s.today,listOf(f.p))))
+        try {
+            val vm=withContext(Dispatchers.Main) {model(store,f)};ready(vm)
+            withContext(Dispatchers.Main) {vm.finish(false)};assertEquals(0,f.calls)
+            f.lose=true;withContext(Dispatchers.Main) {vm.finish(true)};val unknown=ready(vm);assertNotNull(unknown.unresolved);assertNull(unknown.closedId)
+            withContext(Dispatchers.Main) {vm.start("adhoc");vm.finish(true);vm.refresh()};assertEquals(1,f.calls)
+            f.unknown=false;withContext(Dispatchers.Main) {vm.retry()};val done=ready(vm)
+            assertEquals("d",done.closedId);assertNull(done.unresolved);assertEquals(1,done.snapshot!!.document.history.size);assertEquals(1,f.calls)
+            withContext(Dispatchers.Main) {vm.consumeClosed()};assertNull(vm.state.value.closedId)
+        } finally {withContext(Dispatchers.Main) {store.clear()}}
+    }
+    @Test fun knownCancelWithReadFailureKeepsKnownResultAndDoesNotResubmit(): Unit=runBlocking {
+        val store=ViewModelStore();val f=Fake()
+        f.s=f.s.copy(document=InventoryDocument(draft=InventoryDraft("d","adhoc",1,f.s.today,listOf(f.p))))
+        try {
+            val vm=withContext(Dispatchers.Main) {model(store,f)};ready(vm);f.readFail=true
+            withContext(Dispatchers.Main) {vm.finish(true)};val done=ready(vm)
+            assertEquals("d",done.closedId);assertNull(done.unresolved);assertTrue(done.blocked);assertEquals(1,f.calls)
+            f.readFail=false;withContext(Dispatchers.Main) {vm.refresh()};assertNull(ready(vm).snapshot!!.document.draft);assertEquals(1,f.calls)
         } finally {withContext(Dispatchers.Main) {store.clear()}}
     }
 

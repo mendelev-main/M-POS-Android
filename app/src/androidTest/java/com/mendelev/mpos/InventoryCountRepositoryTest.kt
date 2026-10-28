@@ -129,7 +129,7 @@ class InventoryCountRepositoryTest {
     @Test fun literalV1DraftReadsUncountedAndOldCommandFingerprintStillReplays(): Unit=runBlocking {
         val db=memory()
         try {
-            val (repo,_)=prepare(db,saveCount=false);val doc=db.workspace().document(InventoryCodec.KEY)!!;val j=JSONObject(doc.payload).put("version",1);j.getJSONObject("draft").remove("counts");db.workspace().put(doc.copy(payload=j.toString(),revision=2))
+            val (repo,_)=prepare(db,saveCount=false);val doc=db.workspace().document(InventoryCodec.KEY)!!;val j=JSONObject(doc.payload).put("version",1);j.remove("history");j.getJSONObject("draft").remove("counts");db.workspace().put(doc.copy(payload=j.toString(),revision=2))
             assertTrue(repo.snapshot().document.draft!!.counts.isEmpty());assertEquals(j.toString(),db.workspace().document(InventoryCodec.KEY)!!.payload)
             val s=repo.snapshot();assertEquals("inventory-draft",repo.commit(InventoryCommand("start",s.ownerId,1,InventoryAction.Start("inventory-draft","adhoc"))));assertTrue(repo.snapshot().document.draft!!.counts.isEmpty())
         } finally {db.close()}

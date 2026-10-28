@@ -60,3 +60,27 @@ Physical tablet/dark/150%/forced cold-process UI остаются pending; injec
 ## Приёмка count/fix
 
 04b.2 IF01–IF05 ci-verified: [FullCI40640734638](https://github.com/mendelev-main/M-POS-Android/actions/runs/40640734638)/d827373 (runtime14108f6) SUCCESS:124JVM/184API36 instrumentation/0failures/0skipped,12Python/lint/debugAPK/testAPK;2workspace-scale/16UIseed/12upgrade fixtures and actual debugAPK1→2. Exact raw0,0004/fixed0.0004/delta/revision/immutable history and original Fix replay retained without a second movement; unfixed raw preserved while old process authority expires. Literal payload1 and frozen legacy Configure fingerprint retained. Real sale→refund same-stock/receiving stale cases, cost-only allowed, tracking off/on revision invalidation, each3Count/5Fix failure/SQL abort/lost reply/owner/gate/concurrent Fix passed. UI showed stale refusal→fresh blank recount→exact Fix→recreation→pause/workspace/resume; screenshots inventory-start/stale/fix-confirm/fixed inspected readable, shared controls and conditional navbar, no overlap. All previous financial/catalog/workspace/parked/home/shift/supplier/purchase/receiving assertions retained and passed. Physical tablet/dark/150%/forced cold-process inventory UI pending. Main/stable/signing/SQLschema unchanged; no local user DB seed. Next04b.3 complete/cancel remainder/history and loss contract, not implemented; whole04 remains in progress.
+
+## 04b.3 — завершение, отмена остатка и история
+
+Статус: implemented; IT01–IT05, Android CI pending.
+
+Подтверждено владельцем 2026-10-28: недостача 1,5 кг × 2,35 BYN = 3,525 → **3,53 BYN HALF_UP по строке**; две такие строки дают7,06 BYN. Излишки считаются отдельно и не уменьшают оценку недостачи. Используется сохранённая себестоимость **на момент Fix**, последующие изменения карточки её не пересчитывают. Это оценочный отчёт, не кассовый расход. При переполнении диапазона Long cents оценка явно недоступна (null), а не0; закрытие уже выполненного физического пересчёта остаётся возможным.
+
+Complete разрешён только после Fix всех товаров scope. CancelRemainder разрешён также без единой фиксации и после перезапуска; сохраняет fixed и незавершённые строки, включая raw ввод отдельно от применённого факта. Обе команды атомарно пишут history snapshot/status/date/actor/command/loss policy1, очищают active draft, сохраняют result и audit. Три границы записи, owner/InstallationGate/document CAS/idempotency. Склад, себестоимость товара, касса и движения при закрытии **не переписываются**. Новая команда для закрытого документа отказывается; replay исходных Start/Count/Fix/Finish не восстанавливает черновик и не дублирует изменения. Новый пересчёт получает новый ID.
+
+Подтверждено владельцем: плановый пересчёт, начатый в октябре и завершённый1ноября, сохраняет lastCompleted=1ноября по локальной дате Clock завершения. Ноябрьское напоминание закрывается. Отмена и завершение внепланового пересчёта marker не меняют. Частота применяется к сохранённой дате при вычислении текущего периода, как в Web.
+
+Payload3 reads1/2: старые активные документы открываются с пустой историей; фиксированные строки v2 сохраняются. История v3 обязательна, проверяются уникальность документов/команд, scope, fixed actual/delta/revision, статус, дата, policy и оценка. Ошибка не сбрасывает документ. SQLschema прежняя. Ссылки товаров в истории запрещают физическое удаление товара; изменения имени/цены/cost не меняют снимок. Legacy fingerprints сохранены.
+
+Источники: pinned Web `inventory.js` Complete/summary, `android-inventory.js` Cancel и `source-product-stock.test.cjs` cancellation/failure cases. Native уточнение: Web при Complete повторно записывает product snapshots; native не переписывает текущий склад. Native отчёт использует cost-at-Fix вместо текущего catalog cost, чтобы история оставалась воспроизводимой.
+
+UI: общие Mpos dialogs/buttons, сводка перед подтверждением, Complete disabled до всех Fix, Cancel с предупреждением о сохранении применённого, история списка/деталей с fixed/unfixed и себестоимостью снимка. Pending/unknown блокирует навигацию; retry использует ту же команду. Известный commit с ошибкой чтения предлагает перечитать, не повторяет операцию.
+
+- IT01: HALF_UP по каждой отрицательной delta × cost-at-Fix, сумма строк, излишки отдельно, unfixed исключены, overflow явно unavailable.
+- IT02: all-fixed Complete / partial Cancel, actual completion date marker, adhoc/cancel не закрывают окно, новый scope после закрытия.
+- IT03: owner/gate/CAS/concurrent Complete-vs-Cancel, each3write/SQL abort/lost reply, immutable stock/cost/cash и replay, malformed history refusal.
+- IT04: сводка/подтверждение/история/recreation/отмена незавершённого пересчёта с общими controls.
+- IT05: v1/v2 compatibility и реальные APK1→2: completed/cancelled/raw/fixed/actor/date/loss и исходные replay без второго движения.
+
+Физический планшет, dark/150%/forced cold-process UI — отдельная приёмка. Весь этап04 остаётся in progress; дополнительные расходы и сторно приёмки отложены владельцем.

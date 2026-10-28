@@ -87,6 +87,27 @@ class InventoryUiTest {
         compose.onNodeWithTag("topNav-inventory").performScrollTo().performClick()
         compose.waitUntil(20_000) {!vm.state.value.pending && !vm.state.value.blocked && compose.onAllNodesWithTag("inventoryFixed:$p").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("inventoryFixed:$p").performScrollTo().assertTextContains("0.0004",substring=true)
+        compose.onNodeWithTag("inventoryComplete").performClick()
+        compose.onNodeWithTag("inventoryLoss").assertTextContains("18.00 BYN",substring=true);shot("inventory-summary")
+        compose.onNodeWithTag("inventoryFinishConfirm").performClick()
+        compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.document?.draft==null && compose.onAllNodesWithTag("inventoryRecord:$id").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("inventoryRecord:$id").performScrollTo().performClick()
+        compose.onNodeWithTag("inventoryRecordStatus").performScrollTo().assertTextContains("Завершена",substring=true)
+        compose.onNodeWithTag("inventoryLoss").assertTextContains("18.00 BYN",substring=true);shot("inventory-completed")
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithTag("inventoryRecordStatus").assertTextContains("Завершена",substring=true)
+        compose.onNodeWithTag("inventoryBack").performClick()
+        compose.onNodeWithTag("inventoryStart").performClick();compose.onNodeWithTag("inventoryStartConfirm").performClick()
+        compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.document?.draft!=null && compose.onAllNodesWithTag("inventoryCancel").fetchSemanticsNodes().isNotEmpty()}
+        val cancelledId=vm.state.value.snapshot!!.document.draft!!.id
+        compose.onNodeWithTag("inventoryComplete").assertIsNotEnabled()
+        val balanceBeforeCancel=runBlocking {db.catalog().balance(p)}
+        compose.onNodeWithTag("inventoryCancel").performClick();shot("inventory-cancel-confirm")
+        compose.onNodeWithTag("inventoryFinishConfirm").performClick()
+        compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.document?.history?.size==2 && compose.onAllNodesWithTag("inventoryRecord:$cancelledId").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("inventoryRecord:$cancelledId").performScrollTo().performClick()
+        compose.onNodeWithTag("inventoryRecordStatus").performScrollTo().assertTextContains("Отменена",substring=true);shot("inventory-cancelled")
+        assertEquals(balanceBeforeCancel,runBlocking {db.catalog().balance(p)});assertEquals(3,runBlocking {db.catalog().movementCount(p)})
     }
     private fun hideKeyboard() {compose.runOnIdle {(compose.activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).hideSoftInputFromWindow(compose.activity.window.decorView.windowToken,0)}}
     private fun shot(name: String) {

@@ -10,12 +10,13 @@ data class InventoryProduct(val id: String,val name: String,val category: String
 data class InventoryDraft(val id: String,val type: String,val startedAt: Long,val scheduledDate: String,val products: List<InventoryProduct>,val counts: List<InventoryCount> = emptyList())
 data class InventoryFix(val product: InventoryProduct,val actual: String,val delta: String,val at: Long,val actorId: String,val commandId: String,val movementId: String,val stockRevisionAfter: Long)
 data class InventoryCount(val product: InventoryProduct,val raw: String,val generation: String,val fixed: InventoryFix?=null)
-data class InventoryDocument(val config: InventoryConfig=InventoryConfig(),val draft: InventoryDraft?=null)
+data class InventoryDocument(val config: InventoryConfig=InventoryConfig(),val draft: InventoryDraft?=null,val history: List<InventoryRecord> = emptyList())
 sealed interface InventoryAction {
     data class Configure(val config: InventoryConfig): InventoryAction
     data class Start(val id: String,val type: String): InventoryAction
     data class Count(val draftId: String,val product: InventoryProduct,val raw: String,val generation: String): InventoryAction
     data class Fix(val draftId: String,val productId: String,val generation: String): InventoryAction
+    data class Finish(val draftId: String,val cancelled: Boolean): InventoryAction
 }
 data class InventoryCommand(val commandId: String,val actorId: String,val revision: Long,val action: InventoryAction) {
     fun validate() {
@@ -25,6 +26,7 @@ data class InventoryCommand(val commandId: String,val actorId: String,val revisi
             is InventoryAction.Start->{PurchaseDraftRules.id(a.id);require(a.type in setOf("scheduled","adhoc"))}
             is InventoryAction.Count->{PurchaseDraftRules.id(a.draftId);InventoryRules.validate(InventoryCount(a.product,a.raw,a.generation))}
             is InventoryAction.Fix->{listOf(a.draftId,a.productId,a.generation).forEach(PurchaseDraftRules::id)}
+            is InventoryAction.Finish->PurchaseDraftRules.id(a.draftId)
         }
     }
     fun fingerprint(): String {
@@ -34,6 +36,7 @@ data class InventoryCommand(val commandId: String,val actorId: String,val revisi
             is InventoryAction.Start->p.addAll(listOf("start",a.id,a.type))
             is InventoryAction.Count->{val b=a.product;p.addAll(listOf("count",a.draftId,b.id,b.name,b.category,b.unit,b.revision,b.stockRevision,b.stock,b.cost,a.raw,a.generation))}
             is InventoryAction.Fix->p.addAll(listOf("fix",a.draftId,a.productId,a.generation))
+            is InventoryAction.Finish->p.addAll(listOf("finish",a.draftId,a.cancelled))
         }
         return CatalogRules.fingerprint(*p.toTypedArray())
     }
@@ -62,6 +65,9 @@ object InventoryRules {
     }
     fun validate(d: InventoryDocument) {
         validate(d.config)
+        require(d.history.map {it.id}.distinct().size==d.history.size && d.history.map {it.commandId}.distinct().size==d.history.size)
+        d.history.forEach(InventoryClosingRules::validate)
+        require(d.draft==null || d.history.none {it.id==d.draft.id})
         d.draft?.let {s->
             PurchaseDraftRules.id(s.id);require(s.startedAt>=0 && s.type in setOf("scheduled","adhoc"));require(LocalDate.parse(s.scheduledDate).toString()==s.scheduledDate)
             require(s.products.isNotEmpty() && s.products.map {it.id}.distinct().size==s.products.size)

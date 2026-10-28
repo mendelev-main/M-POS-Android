@@ -223,9 +223,9 @@ def main():
                 adb("uninstall", PACKAGE)
                 adb("install", str(base))
                 adb("install", "-r", str(test_apk))
-                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest,com.mendelev.mpos.SupplierUpgradeTest,com.mendelev.mpos.PurchaseUpgradeTest,com.mendelev.mpos.PurchaseOrderUpgradeTest,com.mendelev.mpos.PurchaseOrderMutationUpgradeTest,com.mendelev.mpos.ReceivingUpgradeTest,com.mendelev.mpos.ReceivingPostingUpgradeTest,com.mendelev.mpos.StandaloneReceivingUpgradeTest,com.mendelev.mpos.InventoryUpgradeTest,com.mendelev.mpos.InventoryCountUpgradeTest",
+                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest,com.mendelev.mpos.SupplierUpgradeTest,com.mendelev.mpos.PurchaseUpgradeTest,com.mendelev.mpos.PurchaseOrderUpgradeTest,com.mendelev.mpos.PurchaseOrderMutationUpgradeTest,com.mendelev.mpos.ReceivingUpgradeTest,com.mendelev.mpos.ReceivingPostingUpgradeTest,com.mendelev.mpos.StandaloneReceivingUpgradeTest,com.mendelev.mpos.InventoryUpgradeTest,com.mendelev.mpos.InventoryCountUpgradeTest,com.mendelev.mpos.InventoryClosingUpgradeTest",
                                 PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
-                assert "OK (12 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
+                assert "OK (13 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
                 # Recover only the already-supported, exact Quickstep infrastructure ANR before UI captures.
                 # Unknown/system/M-POS dialogs are not dismissed by wait_text.
                 adb("shell", "am", "start", "-W", "-n", PACKAGE + "/com.mendelev.mpos.MainActivity")
@@ -249,7 +249,7 @@ def main():
                 assert expected_workspace_line, "UI setup must create a real persistent current cart"
                 expected_parked_label = adb("shell", "run-as", PACKAGE, "cat", "files/qa/parkedLabel.txt").strip()
                 assert expected_parked_label, "UI setup must create a real parked order"
-                for name in ("refund-confirm", "refund-result", "refund-returned-receipt", "split-confirm", "split-progress", "sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders", "supplier-card", "supplier-list", "purchase-draft", "purchase-order", "purchase-history", "purchase-order-edit", "purchase-order-edited", "purchase-order-cancelled", "receiving-draft", "receiving-preview", "receiving-post-confirm", "receiving-posted", "standalone-draft", "standalone-posted", "inventory-start", "inventory-stale", "inventory-fix-confirm", "inventory-fixed"):
+                for name in ("refund-confirm", "refund-result", "refund-returned-receipt", "split-confirm", "split-progress", "sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders", "supplier-card", "supplier-list", "purchase-draft", "purchase-order", "purchase-history", "purchase-order-edit", "purchase-order-edited", "purchase-order-cancelled", "receiving-draft", "receiving-preview", "receiving-post-confirm", "receiving-posted", "standalone-draft", "standalone-posted", "inventory-start", "inventory-stale", "inventory-fix-confirm", "inventory-fixed", "inventory-summary", "inventory-completed", "inventory-cancel-confirm", "inventory-cancelled"):
                     captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
                     assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
                     (reports / f"{name}.png").write_bytes(captured.stdout)
@@ -330,9 +330,9 @@ def main():
                 (reports / "updated-shift.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("SHIFT UPDATE PASSED: active shift identity and opening140 BYN survived package replacement", flush=True)
                 adb("install", "-r", str(test_apk))
-                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest,com.mendelev.mpos.SupplierUpgradeTest,com.mendelev.mpos.PurchaseUpgradeTest,com.mendelev.mpos.PurchaseOrderUpgradeTest,com.mendelev.mpos.PurchaseOrderMutationUpgradeTest,com.mendelev.mpos.ReceivingUpgradeTest,com.mendelev.mpos.ReceivingPostingUpgradeTest,com.mendelev.mpos.StandaloneReceivingUpgradeTest,com.mendelev.mpos.InventoryUpgradeTest,com.mendelev.mpos.InventoryCountUpgradeTest",
+                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest,com.mendelev.mpos.SupplierUpgradeTest,com.mendelev.mpos.PurchaseUpgradeTest,com.mendelev.mpos.PurchaseOrderUpgradeTest,com.mendelev.mpos.PurchaseOrderMutationUpgradeTest,com.mendelev.mpos.ReceivingUpgradeTest,com.mendelev.mpos.ReceivingPostingUpgradeTest,com.mendelev.mpos.StandaloneReceivingUpgradeTest,com.mendelev.mpos.InventoryUpgradeTest,com.mendelev.mpos.InventoryCountUpgradeTest,com.mendelev.mpos.InventoryClosingUpgradeTest",
                                 "-e", "saleUpgradeMode", "verify", PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
-                assert "OK (12 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
+                assert "OK (13 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
                 adb("uninstall", PACKAGE + ".test")
                 print("INVENTORY COUNT UPDATE PASSED: fixed exact movement/history/replay retained; unfixed raw count preserved with expired process authority")
                 print("INVENTORY START UPDATE PASSED: configuration, active scope and original replay retained without stock writes")
