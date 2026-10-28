@@ -2,7 +2,7 @@
 
 Первый блок04b.1: настройки и durable запуск пересчёта; ci-verified / API36 / run40581633690, IC01–IC04. Фиксация остатков, actual inputs, завершение/отмена и история — следующие блоки; текущий блок не меняет склад.
 
-Текущий шаг04b.2: exact count/fix implemented, CI pending; завершение/отмена и история документа04b.3 ещё не подключены.
+Текущий шаг04b.2: exact count/fix ci-verified/API36/run40640734638; завершение/отмена и история документа04b.3 ещё не подключены.
 
 Владелец выбрал продолжить инвентаризацию, отложив дополнительные расходы/сторно приёмки. Их наличие не подтверждено в pinned1682c883, не считать обязательной parity функцией. Основной порядок DELIVERY-ROADMAP:04a→04b.
 
@@ -35,7 +35,7 @@ Room8 namespace `inventory` payload1: config+active draft, CAS document revision
 
 ## 04b.2 — actual и фиксация строки
 
-Статус: implemented / CI pending, IF01–IF05. Завершение/отмена оставшихся строк/история документа остаются04b.3; стоимость недостач пока не рассчитывается.
+Статус: ci-verified / API36 / run40640734638, IF01–IF05. Завершение/отмена оставшихся строк/история документа остаются04b.3; стоимость недостач пока не рассчитывается.
 
 Рабочий экран открывается из условной вкладки «Инвентаризация» (активный документ или плановое окно), группирует товары по сохранённым категориям, показывает учётный остаток, сохранённый факт и неизменные фиксации. «Продолжить позже» сохраняет уже записанное. Настройки доступны отдельно. Shared Mpos controls/dialogs/close и прежний верхний navbar; незавершённый count input/pending/unknown блокируют навигацию.
 
@@ -56,3 +56,7 @@ Inventory payload2 reads1: v1 active scope открывается без counts 
 - IF05: payload1→2/frozen legacy Configure fingerprint, actual APK replacement preserves fixed +unfixed raw and old command replay; unfixed process authority expires.
 
 Physical tablet/dark/150%/forced cold-process UI остаются pending; injected process-generation tests и actual APK replacement не подменяют эту ручную приёмку.
+
+## Приёмка count/fix
+
+04b.2 IF01–IF05 ci-verified: [FullCI40640734638](https://github.com/mendelev-main/M-POS-Android/actions/runs/40640734638)/d827373 (runtime14108f6) SUCCESS:124JVM/184API36 instrumentation/0failures/0skipped,12Python/lint/debugAPK/testAPK;2workspace-scale/16UIseed/12upgrade fixtures and actual debugAPK1→2. Exact raw0,0004/fixed0.0004/delta/revision/immutable history and original Fix replay retained without a second movement; unfixed raw preserved while old process authority expires. Literal payload1 and frozen legacy Configure fingerprint retained. Real sale→refund same-stock/receiving stale cases, cost-only allowed, tracking off/on revision invalidation, each3Count/5Fix failure/SQL abort/lost reply/owner/gate/concurrent Fix passed. UI showed stale refusal→fresh blank recount→exact Fix→recreation→pause/workspace/resume; screenshots inventory-start/stale/fix-confirm/fixed inspected readable, shared controls and conditional navbar, no overlap. All previous financial/catalog/workspace/parked/home/shift/supplier/purchase/receiving assertions retained and passed. Physical tablet/dark/150%/forced cold-process inventory UI pending. Main/stable/signing/SQLschema unchanged; no local user DB seed. Next04b.3 complete/cancel remainder/history and loss contract, not implemented; whole04 remains in progress.
