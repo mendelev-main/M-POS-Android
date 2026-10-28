@@ -85,11 +85,18 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                             override fun <T : ViewModel> create(modelClass: Class<T>): T =
                                 UpdateViewModel(UpdateRepository(context.applicationContext, fixture)) as T
                         })
-                        UpdatesScreen(model, onCatalog={route="catalog"}, onGallery={route="gallery"},onSuppliers={route="suppliers"},onInventory={route="inventory"}) { route = "catalog" }
+                        UpdatesScreen(model, onCatalog={route="catalog"}, onGallery={route="gallery"},onSuppliers={route="suppliers"},onInventory={route="inventory"},onStock={route="stock"}) { route = "catalog" }
                     }
                     "inventory", "inventoryWork", "inventoryHistory" -> {
                         com.mendelev.mpos.feature.inventory.InventoryScreen(inventoryModel,
                             onBack={route=if(route=="inventoryWork" || route=="inventoryHistory") "inventory" else "settings"},onWork={route="inventoryWork"},work=route=="inventoryWork",onPause={route="workspace"},history=route=="inventoryHistory",onHistory={route="inventoryHistory"})
+                    }
+                    "stock" -> {
+                        val model: com.mendelev.mpos.feature.stock.StockViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.stock.StockViewModel(
+                                com.mendelev.mpos.data.local.StockReadRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                        })
+                        com.mendelev.mpos.feature.stock.StockScreen(model) {route="settings"}
                     }
                     "suppliers" -> {
                         val model: com.mendelev.mpos.feature.suppliers.SupplierViewModel = viewModel(factory=object: ViewModelProvider.Factory {
@@ -145,7 +152,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                         })
                         com.mendelev.mpos.feature.receiving.ReceivingScreen(model,posting,receivingOrder,{receivingOrder=null}) {route="purchaseOrders"}
                     }
-                    "analytics", "bookings", "events" -> PlannedModuleScreen(route)
+                    "analytics", "events" -> PlannedModuleScreen(route)
                     else -> {
                         val model: com.mendelev.mpos.feature.products.CatalogViewModel = viewModel(factory = object : ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST")

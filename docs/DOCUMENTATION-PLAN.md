@@ -4,7 +4,7 @@
 
 ## Уже есть общий слой
 
-Описаны цель/стек/архитектура, P/W/S/I/H/C/B/D/N, логическая модель/состояния/восстановление/доступ, acceptance и harness. [MODULES.md](MODULES.md) содержит 21 область с владельцем/предпосылками. В этой итерации добавлены паспорта недостающих областей и расширения склада, управления/отчётов, клиентов/зала.
+Описаны цель/стек/архитектура, P/W/S/I/H/C/B/D/N, логическая модель/состояния/восстановление/доступ, acceptance и harness. [MODULES.md](MODULES.md) содержит 20 активных областей (M17 исключён) с владельцем/предпосылками. В этой итерации добавлены паспорта недостающих областей и расширения склада, управления/отчётов, клиентов.
 
 ## Восемь пакетов углубления
 
@@ -16,7 +16,7 @@
 | D02 Перед 03a–03c | state machines/atomic sale/refund/минимальная смена | точные money/discount/split/refund allocation examples, cash/shift reconciliation, поддержка partial refund | [OPERATIONS-SPEC.md](OPERATIONS-SPEC.md), [MANAGEMENT-REPORTS-SPEC.md](MANAGEMENT-REPORTS-SPEC.md) |
 | D03 Перед 04 | suppliers, procurement/receiving, baseline/cancel protocols | weighted cost/закрытие с shortage/explicit over-receiving подтверждены2026-10-27; дополнительные расходы/сторно и receiving fixtures уточняются | [WAREHOUSE-SPEC.md](WAREHOUSE-SPEC.md) |
 | D04 Перед 05 | staff/admin границы, capability proposal, report snapshots/formulas | окончательная role/auth matrix, период/timezone/возвратный cut-off, exports data schema | [MANAGEMENT-REPORTS-SPEC.md](MANAGEMENT-REPORTS-SPEC.md), [ACCESS-AND-AUDIT.md](ACCESS-AND-AUDIT.md) |
-| D05 Перед 06 | customer lookup/gift/consent boundary, table/booking workflow | loyalty payload/idempotency/offline/staging, consent text, booking time/overcapacity policy | [CUSTOMERS-HALL-SPEC.md](CUSTOMERS-HALL-SPEC.md) |
+| D05 Перед 06 | customer lookup/gift/consent boundary | loyalty payload/idempotency/offline/staging, consent text | [CUSTOMERS-HALL-SPEC.md](CUSTOMERS-HALL-SPEC.md) |
 | D06 Перед 07 | parse/preview/staging/activation/recovery | backup schemas/fixtures/Web mappings, limits, restore checkpoints и судьба external effects, replace/merge решение | [RESILIENCE.md](RESILIENCE.md), [OPERATIONS-SPEC.md](OPERATIONS-SPEC.md) |
 | D07 Перед 08 | transport boundaries/print ambiguity/report snapshot/Telegram fake | модель принтера/бумага/кириллица, sample PDF/XLSX, delivery/retry cases и тестовый Telegram | [OPERATIONS-SPEC.md](OPERATIONS-SPEC.md) |
 | D08 Перед 09 | binding/SSE/menu/availability/tariffs boundaries | реальные schemas/error fixtures, server auth/replay/idempotency/ownership и staging | [SETTINGS-SITE-SPEC.md](SETTINGS-SITE-SPEC.md) |

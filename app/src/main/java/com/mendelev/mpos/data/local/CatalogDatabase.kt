@@ -100,6 +100,7 @@ interface CatalogDao {
     @Query("SELECT COALESCE(MAX(sortOrder), -1) + 1 FROM categories") suspend fun nextCategoryOrder(): Int
     @Query("SELECT COUNT(*) FROM categories") suspend fun categoryCount(): Int
     @Query("SELECT COUNT(*) FROM products WHERE categoryId=:id") suspend fun categoryUses(id: String): Int
+    @Query("SELECT * FROM stock_movements WHERE productId=:id ORDER BY createdAt DESC, id DESC") suspend fun stockHistory(id: String): List<MovementEntity>
     @Query("SELECT COUNT(*) FROM stock_movements WHERE productId=:id") suspend fun movementCount(id: String): Int
     @Insert suspend fun insertProduct(value: ProductEntity)
     @Update suspend fun updateProduct(value: ProductEntity)

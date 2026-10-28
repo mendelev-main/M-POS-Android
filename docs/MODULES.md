@@ -1,6 +1,6 @@
 # Карта модулей приложения
 
-Проектный план от 2026-10-24: **21 логический модуль**. Это области ответственности внутри первоначального `:app`, а не 21 Gradle project и не 21 готовая функция. M01/M21 реализованы частично; в01a добавлены базовые M02/M03/M06/M07/M10, В develop01b/01c добавлены units/recipes/modifiers и ограниченный M04 photo adapter; весь M04 (включая backup/media integration) ещё не завершён. Это не готовность полных модулей; scope в [CATALOG-01A.md](CATALOG-01A.md). Статусы реализации — [PARITY.md](PARITY.md).
+Проектный план от 2026-10-24: **20 активных логических модулей** (M17 исключён владельцем2026-10-28; нумерация сохранена). Это области ответственности внутри первоначального `:app`, а не 21 Gradle project и не 21 готовая функция. M01/M21 реализованы частично; в01a добавлены базовые M02/M03/M06/M07/M10, В develop01b/01c добавлены units/recipes/modifiers и ограниченный M04 photo adapter; весь M04 (включая backup/media integration) ещё не завершён. Это не готовность полных модулей; scope в [CATALOG-01A.md](CATALOG-01A.md). Статусы реализации — [PARITY.md](PARITY.md).
 
 Зависимости ниже означают предметные/инфраструктурные предпосылки. Они не задают прямые Kotlin imports экранов. Domain использует интерфейсы портов; Room/platform adapters подключаются в composition root. Данные разных областей объединяет одна transaction, когда этого требует команда продажи/переноса.
 
@@ -24,7 +24,7 @@
 | M14 Сотрудники и admin | employee directory, credentials provider, runtime admin session, role assignment | M06/M03; права не следуют из shift | 05; [управление](MANAGEMENT-REPORTS-SPEC.md) |
 | M15 Отчёты и аналитика | report query/snapshot, показатели/периоды/группировки, сверка | M09/M10/M13, складские read models M11/M12 | 05, exports08; [отчёты](MANAGEMENT-REPORTS-SPEC.md) |
 | M16 Клиенты и лояльность | customer reference/search/consent, gift allocation, loyalty effects | M09/M06/M05; server contract/staging для remote части | 06; [клиенты](CUSTOMERS-HALL-SPEC.md) |
-| M17 Зал и бронирования | tables/layout, time ranges/booking conflicts, связь с order session | M08/M03/M06; customerRef опционален | 06; [зал](CUSTOMERS-HALL-SPEC.md) |
+| M17 | Исключён: зал, столы и бронирования | — | решение владельца2026-10-28 |
 | M18 Backup и перенос | native export/restore, Web v13 adapter, preview/activation | модели 01–06, M03/M04/M06, coordination M05 | 07; [recovery](RESILIENCE.md), [операции](OPERATIONS-SPEC.md) |
 | M19 Оборудование и выдача | print/drawer adapters, PDF/XLSX/Telegram transport, result jobs | M09/M13/M15/M04/M05/M06 | 08; [операции](OPERATIONS-SPEC.md) |
 | M20 Сайт и конфигурация обмена | device binding, remote orders/SSE, menu/photos/availability/tariffs | M07/M08/M09/M10/M16/M05/M06; restore binding policy M18 | 09; [сайт](SETTINGS-SITE-SPEC.md) |
@@ -34,7 +34,7 @@
 
 M01 собирает routes/providers, но не считает сумму/остатки. M02 не превращается в общую свалку всех domain entities: правила конкретной области живут с областью. M03 обеспечивает сохранение; бизнес-решение «можно ли вернуть» принимает M09. M10 разворачивает catalog snapshot через port — не вызывает экран M07; M07 пишет opening через тот же stock contract.
 
-M13 не зависит от экрана/команды M09: ledger оплат и read port достаточны для закрытия/сверки. M09 проверяет active shift через порт M13. M15 только читает подтверждённые данные, не изменяет receipts ради красивого графика. M16 предлагает validated allocations через checkout contract; добавление loyalty не создаёт вторую реализацию оплаты. M17 может существовать без server клиента.
+M13 не зависит от экрана/команды M09: ledger оплат и read port достаточны для закрытия/сверки. M09 проверяет active shift через порт M13. M15 только читает подтверждённые данные, не изменяет receipts ради красивого графика. M16 предлагает validated allocations через checkout contract; добавление loyalty не создаёт вторую реализацию оплаты. M17 исключён из продукта.
 
 M05 знает delivery policy/статус эффекта, а transport конкретного сервиса — его adapter. Один общий outbox не означает одинаковый auto retry для принтера и HTTP. M18 не отправляет восстановленные external jobs автоматически. M20 не владеет локальной кассой: сеть отсутствует — допустимые локальные операции продолжаются.
 

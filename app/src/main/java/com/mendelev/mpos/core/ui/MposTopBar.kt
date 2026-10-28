@@ -41,7 +41,7 @@ data class MposTopNavigation(
 val LocalMposTopNavigation = staticCompositionLocalOf<MposTopNavigation?> { null }
 private val destinations = listOf(
     "purchaseOrders" to "Заказы", "receiving" to "Приёмка", "history" to "Чеки",
-    "analytics" to "Аналитика", "bookings" to "Бронирования",
+    "analytics" to "Аналитика",
 )
 
 @Composable

@@ -46,6 +46,8 @@ class TopBarLayoutTest {
                 }
             }
         } }
+        compose.onNodeWithTag("topNav-bookings").assertDoesNotExist()
+        compose.onNodeWithText("Бронирования").assertDoesNotExist()
         compose.onNodeWithTag("mposTopBar").assertHeightIsEqualTo(68.dp)
         compose.onNodeWithTag("topNav-settings").assertIsDisplayed()
         compose.runOnIdle {large=true}
