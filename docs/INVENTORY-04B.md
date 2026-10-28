@@ -2,6 +2,8 @@
 
 Первый блок04b.1: настройки и durable запуск пересчёта; ci-verified / API36 / run40581633690, IC01–IC04. Фиксация остатков, actual inputs, завершение/отмена и история — следующие блоки; текущий блок не меняет склад.
 
+Текущий шаг04b.2: exact count/fix implemented, CI pending; завершение/отмена и история документа04b.3 ещё не подключены.
+
 Владелец выбрал продолжить инвентаризацию, отложив дополнительные расходы/сторно приёмки. Их наличие не подтверждено в pinned1682c883, не считать обязательной parity функцией. Основной порядок DELIVERY-ROADMAP:04a→04b.
 
 ## Источники и границы
@@ -30,3 +32,27 @@ Room8 namespace `inventory` payload1: config+active draft, CAS document revision
 ## Проверки первого блока
 
 04b.1 IC01–IC04 ci-verified: [FullCI40581633690](https://github.com/mendelev-main/M-POS-Android/actions/runs/40581633690)/d72af5e SUCCESS:118JVM/170API36 instrumentation/0failures/0skipped,12Python/lint/debugAPK/testAPK;2workspace-scale/16UIseed/11upgrade fixtures and actual debugAPK1→2. Inventory config/active scope/type/id/product snapshots and original Save/Start replay retained without stock/cost/movement writes. All previous financial/catalog/workspace/parked/home/shift/supplier/purchase/receiving assertions retained and passed. inventory-start screenshot inspected: settings, active scope and shared controls readable, list scrolls without overlap. No local user DB seed/main/release/signing/SQLschema change. Physical tablet/dark/150%/forced cold-process inventory UI pending. Next04b.2 actual input/fresh baseline/Fix; complete/cancel/history04b.3. Whole04 not complete; receiving charges/storno deferred by owner.
+
+## 04b.2 — actual и фиксация строки
+
+Статус: implemented / CI pending, IF01–IF05. Завершение/отмена оставшихся строк/история документа остаются04b.3; стоимость недостач пока не рассчитывается.
+
+Рабочий экран открывается из условной вкладки «Инвентаризация» (активный документ или плановое окно), группирует товары по сохранённым категориям, показывает учётный остаток, сохранённый факт и неизменные фиксации. «Продолжить позже» сохраняет уже записанное. Настройки доступны отдельно. Shared Mpos controls/dialogs/close и прежний верхний navbar; незавершённый count input/pending/unknown блокируют навигацию.
+
+«Ввести факт/Пересчитать» сначала читает свежий baseline из Room, затем открывает **пустую** форму. Оператор пересчитывает товар и вводит значение; «Сохранить пересчёт» — явная durable граница, склад не меняется. Если склад изменился между открытием формы и сохранением, команда отказывается, raw input остаётся в форме. «Пересчитать заново» явно очищает ввод и читает новую версию. Старое сохранённое значение показывается отдельно и никогда не подставляется автоматически в новый пересчёт. Такой порядок консервативнее Web onchange: версия захватывается перед физическим пересчётом, не подменяется на более свежую после ввода.
+
+Baseline: ID, base unit, stock quantity/revision и UUID текущего процесса. После process restart/обновления APK raw остаётся, но незавершённый baseline не разрешает фиксацию. Activity recreation в том же процессе сохраняет authority. Изменение цены/имени/категории/cost без изменения склада не требует нового физического пересчёта, как pinned Android Web test `stock unit change invalidates count but cost-only edit does not`. Tracking off/on увеличивает balance revision даже без изменения quantity; это добавлено в общий product-card transaction. Продажа→возврат к прежнему числу тоже инвалидирует baseline. NoTracking/composite/missing/unit change нельзя фиксировать.
+
+Fix выполняется только для сохранённого count активного scope, при совпадении document CAS, process generation и stock baseline. Actual неотрицательный, пусто не равно0, до12fraction/18integer; `0,0004` сохраняется raw и становится точным0.0004 в balance. Delta=actual−baseline, без display rounding; переполнение delta/revision отказывается. Cost/price не меняются. В fixed snapshot записывается **актуальная** cost на момент фиксации для будущей истории, не для финансовой операции.
+
+Одна transaction: movement(reason=draftId/source=inventory)→balance quantity/revision→inventory fixed snapshot→result→audit.5write boundaries, всегда записывается движение (включая0) и stock revision+1: нулевое расхождение тоже фиксирует факт пересчёта. Это документированное native уточнение; Web не меняет свою revision при неизменной stock identity. Повтор исходной команды возвращает result без второго движения, в том числе после перезапуска. Новая Count/Fix для fixed строки отказывается; последующие продажи/приёмки не меняют исторический fixed snapshot.
+
+Inventory payload2 reads1: v1 active scope открывается без counts и не получает фиктивного физического baseline. Count сохраняет raw/baseline/generation, fixed сохраняет actual/delta/product-at-fix/actor/time/command/movement/stockRevisionAfter. Decoder проверяет согласованность actual/delta/revision и scope. Старые Configure/Start fingerprint namespace/поля неизменны; новые Count/Fix связывают baseline/generation/revision. SQLschema8 прежняя; include in future backup, import/process restart не оживляет authority.
+
+- IF01: exact actual0/0.0004, blank/negative/precision refusal, fresh capture/recount, cost-only allowed; stock/revision/unit/tracking/process changes stale.
+- IF02: atomic exact movement/balance/fixed/result/audit, zero delta, unchanged cost/price/cash, immutable fixed row, same-command replay.
+- IF03: real sale→refund/receiving stale cases, each3Count/5Fix failure, SQL abort/lost reply, owner/gate/CAS/concurrency, corrupted fixed refusal.
+- IF04: working UI/category groups, conditional topbar/locks, fresh blank entry, saved raw/recreation/stale refusal/recount/fix and historical display.
+- IF05: payload1→2/frozen legacy Configure fingerprint, actual APK replacement preserves fixed +unfixed raw and old command replay; unfixed process authority expires.
+
+Physical tablet/dark/150%/forced cold-process UI остаются pending; injected process-generation tests и actual APK replacement не подменяют эту ручную приёмку.

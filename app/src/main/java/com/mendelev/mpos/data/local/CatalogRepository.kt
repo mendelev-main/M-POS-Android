@@ -91,10 +91,14 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
             if (input.type == "simple" && (old == null || input.stockEdited)) {
                 val targetText = baseQuantity(input.stock)
                 val target = targetText.toBigDecimal(); val delta = target - (balance?.quantity?.toBigDecimal() ?: java.math.BigDecimal.ZERO)
-                val next = BalanceEntity(input.id, targetText, (balance?.revision ?: 0) + if (delta.signum() != 0 || old == null) 1 else 0)
+                val next = BalanceEntity(input.id, targetText, (balance?.revision ?: 0) + if (delta.signum() != 0 || old == null || old.noStockTracking != input.noStockTracking) 1 else 0)
                 if (balance == null) dao.insertBalance(next) else dao.updateBalance(next)
                 if (delta.signum() != 0) dao.movement(MovementEntity(UUID.randomUUID().toString(), input.id, CatalogRules.canonical(delta),
                     if (old == null) "opening" else "product_card", input.commandId, System.currentTimeMillis()))
+            }
+            if (input.type == "simple" && old != null && !input.stockEdited && old.noStockTracking != input.noStockTracking) {
+                val current=balance ?: error("Нет складского baseline")
+                dao.updateBalance(current.copy(revision=Math.addExact(current.revision,1)))
             }
             record(input.commandId, fp, input.id, if (old == null) "product.create" else "product.update")
             dao.clearDraft()

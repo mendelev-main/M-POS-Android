@@ -7,27 +7,54 @@ import java.time.temporal.TemporalAdjusters
 
 data class InventoryConfig(val enabled: Boolean=false,val frequency: String="monthly",val productIds: Set<String> = emptySet(),val lastCompleted: String?=null)
 data class InventoryProduct(val id: String,val name: String,val category: String,val unit: String,val revision: Long,val stockRevision: Long,val stock: String,val cost: String)
-data class InventoryDraft(val id: String,val type: String,val startedAt: Long,val scheduledDate: String,val products: List<InventoryProduct>)
+data class InventoryDraft(val id: String,val type: String,val startedAt: Long,val scheduledDate: String,val products: List<InventoryProduct>,val counts: List<InventoryCount> = emptyList())
+data class InventoryFix(val product: InventoryProduct,val actual: String,val delta: String,val at: Long,val actorId: String,val commandId: String,val movementId: String,val stockRevisionAfter: Long)
+data class InventoryCount(val product: InventoryProduct,val raw: String,val generation: String,val fixed: InventoryFix?=null)
 data class InventoryDocument(val config: InventoryConfig=InventoryConfig(),val draft: InventoryDraft?=null)
 sealed interface InventoryAction {
     data class Configure(val config: InventoryConfig): InventoryAction
     data class Start(val id: String,val type: String): InventoryAction
+    data class Count(val draftId: String,val product: InventoryProduct,val raw: String,val generation: String): InventoryAction
+    data class Fix(val draftId: String,val productId: String,val generation: String): InventoryAction
 }
 data class InventoryCommand(val commandId: String,val actorId: String,val revision: Long,val action: InventoryAction) {
     fun validate() {
         PurchaseDraftRules.id(commandId);PurchaseDraftRules.id(actorId);require(revision>=0)
-        when(val a=action) {is InventoryAction.Configure->InventoryRules.validate(a.config);is InventoryAction.Start->{PurchaseDraftRules.id(a.id);require(a.type in setOf("scheduled","adhoc"))}}
+        when(val a=action) {
+            is InventoryAction.Configure->InventoryRules.validate(a.config)
+            is InventoryAction.Start->{PurchaseDraftRules.id(a.id);require(a.type in setOf("scheduled","adhoc"))}
+            is InventoryAction.Count->{PurchaseDraftRules.id(a.draftId);InventoryRules.validate(InventoryCount(a.product,a.raw,a.generation))}
+            is InventoryAction.Fix->{listOf(a.draftId,a.productId,a.generation).forEach(PurchaseDraftRules::id)}
+        }
     }
     fun fingerprint(): String {
         validate();val p=mutableListOf<Any?>("inventory.v1",actorId,revision)
         when(val a=action) {
             is InventoryAction.Configure->{p.addAll(listOf("configure",a.config.enabled,a.config.frequency,a.config.lastCompleted));p.addAll(a.config.productIds.sorted())}
             is InventoryAction.Start->p.addAll(listOf("start",a.id,a.type))
+            is InventoryAction.Count->{val b=a.product;p.addAll(listOf("count",a.draftId,b.id,b.name,b.category,b.unit,b.revision,b.stockRevision,b.stock,b.cost,a.raw,a.generation))}
+            is InventoryAction.Fix->p.addAll(listOf("fix",a.draftId,a.productId,a.generation))
         }
         return CatalogRules.fingerprint(*p.toTypedArray())
     }
 }
 object InventoryRules {
+    fun actual(raw: String): String {
+        if(raw.length>64) throw CatalogFailure("inventory","Слишком длинное количество")
+        return PurchaseDraftRules.number(raw)?.let(CatalogRules::canonical) ?: throw CatalogFailure("inventory","Введите фактический остаток; пустое поле не равно нулю")
+    }
+    fun sameStock(a: InventoryProduct,b: InventoryProduct)=a.id==b.id && a.unit==b.unit && a.stockRevision==b.stockRevision && a.stock==b.stock
+    fun delta(c: InventoryCount)=CatalogRules.canonical(actual(c.raw).toBigDecimal()-c.product.stock.toBigDecimal()).also {ReceivingRules.quantity(it)}
+    fun validate(p: InventoryProduct) {
+        PurchaseDraftRules.id(p.id);require(p.revision>=1 && p.stockRevision>=1 && CatalogRules.name(p.name)==p.name);quantityUnit(p.unit);ReceivingRules.quantity(p.stock);require(PurchaseDraftRules.number(p.cost)!=null)
+    }
+    fun validate(c: InventoryCount) {
+        validate(c.product);actual(c.raw);delta(c);PurchaseDraftRules.id(c.generation)
+        c.fixed?.let {f->
+            validate(f.product);listOf(f.actorId,f.commandId,f.movementId).forEach(PurchaseDraftRules::id)
+            require(f.at>=0 && sameStock(c.product,f.product) && f.actual==actual(c.raw) && f.delta==delta(c) && f.stockRevisionAfter==Math.addExact(c.product.stockRevision,1))
+        }
+    }
     fun validate(c: InventoryConfig) {
         require(c.frequency in setOf("weekly","monthly","quarterly"));c.productIds.forEach(PurchaseDraftRules::id)
         if(c.enabled && c.productIds.isEmpty()) throw CatalogFailure("inventory","Выберите хотя бы один товар")
@@ -38,7 +65,9 @@ object InventoryRules {
         d.draft?.let {s->
             PurchaseDraftRules.id(s.id);require(s.startedAt>=0 && s.type in setOf("scheduled","adhoc"));require(LocalDate.parse(s.scheduledDate).toString()==s.scheduledDate)
             require(s.products.isNotEmpty() && s.products.map {it.id}.distinct().size==s.products.size)
-            s.products.forEach {p->PurchaseDraftRules.id(p.id);require(p.revision>=1 && p.stockRevision>=1 && CatalogRules.name(p.name)==p.name);quantityUnit(p.unit);ReceivingRules.quantity(p.stock);require(PurchaseDraftRules.number(p.cost)!=null)}
+            s.products.forEach(::validate)
+            require(s.counts.map {it.product.id}.distinct().size==s.counts.size)
+            s.counts.forEach {c->validate(c);require(s.products.any {it.id==c.product.id && it.unit==c.product.unit})}
         }
     }
     fun period(date: LocalDate,frequency: String): LocalDate=when(frequency) {

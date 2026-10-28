@@ -61,10 +61,20 @@ fun FoundationScreen(fixtureUrl: String? = null) {
         override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.shift.ShiftViewModel(
             com.mendelev.mpos.data.local.ShiftRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
     })
+    val inventoryModel: com.mendelev.mpos.feature.inventory.InventoryViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.inventory.InventoryViewModel(
+            com.mendelev.mpos.data.local.InventoryRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+    })
+    val inventoryUi by inventoryModel.state.collectAsStateWithLifecycle()
+    var calendarDay by androidx.compose.runtime.remember {mutableStateOf(java.time.LocalDate.now())}
+    androidx.compose.runtime.LaunchedEffect(Unit) {while(true) {kotlinx.coroutines.delay(60_000);calendarDay=java.time.LocalDate.now()}}
     var receivingOrder by rememberSaveable { mutableStateOf<String?>(null) }
     val shiftUi by shiftModel.state.collectAsStateWithLifecycle()
     val navigation = MposTopNavigation(route, shiftUi.snapshot?.active != null,
-        shiftUi.loading, shiftUi.fatal, shiftUi.pending, shiftUi.snapshot?.active?.actorName ?: "Локальный владелец") { route = it }
+        shiftUi.loading, shiftUi.fatal, shiftUi.pending, shiftUi.snapshot?.active?.actorName ?: "Локальный владелец",
+        inventoryReminder=!inventoryUi.blocked && inventoryUi.snapshot?.document?.let {it.draft!=null || com.mendelev.mpos.domain.warehouse.InventoryRules.due(it.config,calendarDay)}==true) {
+            route=if(it=="inventory" && inventoryUi.snapshot?.document?.draft!=null) "inventoryWork" else it
+        }
     com.mendelev.mpos.core.ui.MposTheme {
         CompositionLocalProvider(LocalMposTopNavigation provides navigation) {
             Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -77,12 +87,9 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                         })
                         UpdatesScreen(model, onCatalog={route="catalog"}, onGallery={route="gallery"},onSuppliers={route="suppliers"},onInventory={route="inventory"}) { route = "catalog" }
                     }
-                    "inventory" -> {
-                        val model: com.mendelev.mpos.feature.inventory.InventoryViewModel = viewModel(factory=object: ViewModelProvider.Factory {
-                            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.inventory.InventoryViewModel(
-                                com.mendelev.mpos.data.local.InventoryRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
-                        })
-                        com.mendelev.mpos.feature.inventory.InventoryScreen(model) {route="settings"}
+                    "inventory", "inventoryWork" -> {
+                        com.mendelev.mpos.feature.inventory.InventoryScreen(inventoryModel,
+                            onBack={route=if(route=="inventoryWork") "inventory" else "settings"},onWork={route="inventoryWork"},work=route=="inventoryWork",onPause={route="workspace"})
                     }
                     "suppliers" -> {
                         val model: com.mendelev.mpos.feature.suppliers.SupplierViewModel = viewModel(factory=object: ViewModelProvider.Factory {

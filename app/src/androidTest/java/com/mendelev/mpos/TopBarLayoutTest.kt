@@ -57,4 +57,15 @@ class TopBarLayoutTest {
         assertEquals("workspace",selected)
     }
 
+    @Test fun inventoryReminderIsConditionalReachableAndRespectsCommandLock() {
+        var shown by mutableStateOf(false);var locked by mutableStateOf(false);var selected by mutableStateOf("workspace");var calls=0
+        compose.setContent {MposTheme {Box(Modifier.width(520.dp)) {MposTopBar(MposTopNavigation(selected,false,inventoryReminder=shown) {selected=it;calls++},enabled=!locked)}}}
+        compose.onNodeWithTag("topNav-inventory").assertDoesNotExist()
+        compose.runOnIdle {shown=true}
+        compose.onNodeWithTag("topNav-inventory").performScrollTo().assertIsDisplayed().performClick().assertIsSelected();assertEquals("inventory",selected)
+        compose.runOnIdle {locked=true}
+        compose.onNodeWithTag("topNav-inventory").assertIsNotEnabled().performClick();assertEquals(1,calls)
+        compose.runOnIdle {locked=false;shown=false};compose.onNodeWithTag("topNav-inventory").assertDoesNotExist()
+    }
+
 }

@@ -18,18 +18,21 @@ import com.mendelev.mpos.domain.catalog.*
 import com.mendelev.mpos.domain.warehouse.*
 import java.time.LocalDate
 
-@Composable fun InventoryScreen(model: InventoryViewModel,onBack: ()->Unit) {
+@Composable fun InventoryScreen(model: InventoryViewModel,onBack: ()->Unit,onWork: ()->Unit={},work: Boolean=false,onPause: ()->Unit=onBack) {
     val ui by model.state.collectAsStateWithLifecycle()
     val locked=ui.pending || ui.unresolved!=null
     var discard by rememberSaveable {mutableStateOf(false)}
     var start by rememberSaveable {mutableStateOf<String?>(null)}
+    var fixing by rememberSaveable {mutableStateOf<String?>(null)}
+    var openAfterStart by rememberSaveable {mutableStateOf(false)}
     var query by rememberSaveable {mutableStateOf("")}
     var category by rememberSaveable {mutableStateOf("")}
-    val close={if(!locked) {if(ui.dirty) discard=true else onBack()}}
+    val close={if(ui.countForm!=null) model.closeCount() else if(!locked) {if(ui.dirty) discard=true else onBack()}}
     BackHandler {close()}
-    LaunchedEffect(model) {model.refresh()}
+    LaunchedEffect(model,work) {model.refresh()}
+    LaunchedEffect(ui.snapshot?.document?.draft?.id,openAfterStart,ui.pending) {if(openAfterStart && !ui.pending && ui.snapshot?.document?.draft!=null) {openAfterStart=false;onWork()}}
     Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
-        MposAppBar("Инвентаризация",navigationEnabled=!locked && !ui.dirty && start==null) {}
+        MposAppBar("Инвентаризация",navigationEnabled=!locked && !ui.dirty && start==null && fixing==null) {}
         Column(Modifier.padding(20.dp).weight(1f),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                 MposButton("Настройки",close,enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("inventoryBack"))
@@ -42,13 +45,17 @@ import java.time.LocalDate
             val s=ui.snapshot;val form=ui.form
             if(s!=null && form!=null) {
                 val draft=s.document.draft
+                if(work && draft!=null) {
+                    InventoryWorkRows(ui,model,{fixing=it},Modifier.weight(1f))
+                    MposButton("Продолжить позже",onPause,enabled=!locked && !ui.dirty,style=ActionStyle.Secondary,modifier=Modifier.testTag("inventoryPause"))
+                    Text("Завершение и отмена оставшихся строк будут подключены следующим блоком.")
+                } else {
                 LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                     if(draft!=null) item {
                         MposNotice("Пересчёт сохранён · ${if(draft.type=="adhoc") "Внеплановый" else "Плановый"} · ${draft.scheduledDate}")
                         Text("Товаров: ${draft.products.size}",Modifier.testTag("inventoryActive"))
-                        Text("Ввод и фиксация фактических остатков будут подключены следующим блоком. Склад ещё не изменён.")
+                        MposButton("Продолжить пересчёт",onWork,enabled=!locked && !ui.dirty,modifier=Modifier.testTag("inventoryContinue"))
                     }
-                    items(draft?.products.orEmpty(),key={"active:${it.id}"}) {p->Text("${p.name} · снимок при запуске ${p.stock} ${unitLabel(p.unit)}")}
                     item {
                         Text("Товары и периодичность",style=MaterialTheme.typography.titleMedium)
                         MposSelect("Периодичность",form.frequency,listOf("weekly" to "Еженедельно","monthly" to "Ежемесячно","quarterly" to "Ежеквартально"),{v->model.change {it.copy(frequency=v)}},!locked && !ui.blocked,Modifier.testTag("inventoryFrequency"))
@@ -72,8 +79,31 @@ import java.time.LocalDate
                     MposButton("Начать внеплановую",{start="adhoc"},enabled=!locked && !ui.blocked && !ui.dirty && s.document.config.enabled && draft==null,style=ActionStyle.Secondary,modifier=Modifier.testTag("inventoryStart"))
                     if(InventoryRules.due(s.document.config,LocalDate.parse(s.today))) MposButton("Начать плановую",{start="scheduled"},enabled=!locked && !ui.blocked && !ui.dirty && draft==null,style=ActionStyle.Secondary)
                 }
+                }
             }
         }
+    }
+    val countForm=ui.countForm
+    if(countForm!=null) MposDialog(if(countForm.discarding) "Закрыть без сохранения?" else "Фактический остаток",{model.closeCount()},!locked) {
+        if(ui.message!=null) MposNotice(ui.message!!,true)
+        if(countForm.discarding) {
+            Text("Введённое значение ещё не сохранено.")
+            MposButton("Продолжить редактирование",model::continueCount,enabled=!locked,style=ActionStyle.Secondary)
+            MposButton("Закрыть без сохранения",{model.closeCount(true)},enabled=!locked,style=ActionStyle.Danger)
+        } else {
+            Text(countForm.product.name,style=MaterialTheme.typography.titleMedium)
+            Text("Учётный остаток: ${countForm.product.stock} ${unitLabel(countForm.product.unit)}. Пересчитайте товар и введите новое значение.")
+            MposField(countForm.raw,model::countRaw,"Факт, ${unitLabel(countForm.product.unit)}",Modifier.testTag("inventoryActual"),!locked,numeric=true)
+            MposButton("Сохранить пересчёт",model::saveCount,enabled=!locked && !ui.blocked,modifier=Modifier.testTag("inventoryCountSave"))
+            MposButton("Пересчитать заново",model::recount,enabled=!locked,style=ActionStyle.Secondary)
+            if(ui.unresolved!=null) MposButton("Проверить результат",model::retry,enabled=!ui.pending,modifier=Modifier.testTag("inventoryCountRetry"))
+        }
+    }
+    val fixCount=ui.snapshot?.document?.draft?.counts?.find {it.product.id==fixing && it.fixed==null}
+    if(fixing!=null && fixCount!=null) MposDialog("Зафиксировать остаток?",{fixing=null},!locked) {
+        Text("${fixCount.product.name}: ${fixCount.product.stock} → ${InventoryRules.actual(fixCount.raw)} ${unitLabel(fixCount.product.unit)}. Разница: ${InventoryRules.delta(fixCount)}.")
+        Text("Это изменение склада. Повторная команда не применит разницу второй раз.")
+        MposButton("Фиксировать",{val id=fixing!!;fixing=null;model.fix(id)},enabled=!locked && !ui.blocked,modifier=Modifier.testTag("inventoryFixConfirm"))
     }
     if(discard) MposDialog("Закрыть без сохранения?",{discard=false},!locked) {
         Text("Изменения настроек ещё не сохранены. Активный пересчёт останется.")
@@ -82,6 +112,39 @@ import java.time.LocalDate
     }
     if(start!=null) MposDialog("Начать пересчёт?",{start=null},!locked) {
         Text("Список товаров будет взят из сохранённых настроек. Изменение настроек позже не заменит этот список. Остатки пока не меняются.")
-        MposButton("Начать",{val type=start!!;start=null;model.start(type)},enabled=!locked,modifier=Modifier.testTag("inventoryStartConfirm"))
+        MposButton("Начать",{val type=start!!;start=null;openAfterStart=true;model.start(type)},enabled=!locked,modifier=Modifier.testTag("inventoryStartConfirm"))
+    }
+}
+
+@Composable private fun InventoryWorkRows(ui: InventoryUi,model: InventoryViewModel,onFix: (String)->Unit,modifier: Modifier) {
+    val snapshot=ui.snapshot ?: return;val draft=snapshot.document.draft ?: return
+    val locked=ui.pending || ui.blocked || ui.unresolved!=null || ui.dirty
+    LazyColumn(modifier,verticalArrangement=Arrangement.spacedBy(12.dp)) {
+        item {Text("Зафиксировано: ${draft.counts.count {it.fixed!=null}} из ${draft.products.size}",Modifier.testTag("inventoryActive"))}
+        draft.products.groupBy {it.category}.forEach {(category,products)->
+            item(key="category:$category") {Text(category,style=MaterialTheme.typography.titleMedium)}
+            items(products,key={it.id}) {p->
+                val count=draft.counts.find {it.product.id==p.id};val fixed=count?.fixed
+                val live=snapshot.products.find {it.id==p.id}
+                Surface(shape=MaterialTheme.shapes.large,modifier=Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                        Text(fixed?.product?.name ?: live?.name ?: p.name,style=MaterialTheme.typography.titleMedium)
+                        if(fixed!=null) {
+                            Text("Зафиксировано: ${fixed.actual} ${unitLabel(fixed.product.unit)} · разница ${fixed.delta}",Modifier.testTag("inventoryFixed:${p.id}"))
+                            Text("Учётный остаток при фиксации: ${fixed.product.stock}. Последующие движения не меняют этот снимок.")
+                        } else {
+                            Text("Учётный остаток: ${live?.stock ?: "недоступен"} ${unitLabel(p.unit)}")
+                            if(count!=null) Text("Сохранённый факт: ${count.raw}",Modifier.testTag("inventorySaved:${p.id}"))
+                            val fresh=count!=null && count.generation==snapshot.generation && live!=null && InventoryRules.sameStock(count.product,live)
+                            if(count!=null && !fresh) Text("Нужно пересчитать товар заново: остаток изменился или приложение перезапущено.")
+                            FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                                MposButton(if(count==null) "Ввести факт" else "Пересчитать",{model.openCount(p.id)},enabled=!locked && live!=null,style=ActionStyle.Secondary,modifier=Modifier.testTag("inventoryCount:${p.id}"))
+                                MposButton("Фиксировать",{onFix(p.id)},enabled=!locked && fresh,modifier=Modifier.testTag("inventoryFix:${p.id}"))
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
