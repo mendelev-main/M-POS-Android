@@ -121,7 +121,13 @@ def launch(fixture=True):
         try:
             # Do not use am -W: API 28 can retain a waiter for an Activity killed by package replacement.
             adb(*args, timeout=15)
+            if any(n.get("resource-id")=="updatesWindow" for n in ui_nodes()):
+                wait_text("^Обновления приложения$",timeout=12)
+                return
             wait_navigation("settings", timeout=12)
+            entry=wait_text("^(Обновления приложения|Проверить обновления приложения)$",timeout=12)
+            if entry=="Проверить обновления приложения":
+                wait_text("^Проверить обновления приложения$",timeout=12,click=True,preferred_resource_id="settingsUpdatesInfo")
             wait_text("^Обновления приложения$", timeout=12)
             return
         except (AssertionError, subprocess.TimeoutExpired):
@@ -234,9 +240,9 @@ def main():
                 # Unknown/system/M-POS dialogs are not dismissed by wait_text.
                 adb("shell", "am", "start", "-W", "-n", PACKAGE + "/com.mendelev.mpos.MainActivity")
                 wait_navigation("workspace", click=False)
-                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.AdminUiTest,com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.SupplierUiTest,com.mendelev.mpos.PurchaseUiTest,com.mendelev.mpos.PurchaseOrderUiTest,com.mendelev.mpos.PurchaseOrderMutationUiTest,com.mendelev.mpos.ReceivingUiTest,com.mendelev.mpos.ReceivingPostingUiTest,com.mendelev.mpos.StandaloneReceivingUiTest,com.mendelev.mpos.InventoryUiTest,com.mendelev.mpos.StockUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
+                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SettingsVisualUiTest,com.mendelev.mpos.AdminUiTest,com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.SupplierUiTest,com.mendelev.mpos.PurchaseUiTest,com.mendelev.mpos.PurchaseOrderUiTest,com.mendelev.mpos.PurchaseOrderMutationUiTest,com.mendelev.mpos.ReceivingUiTest,com.mendelev.mpos.ReceivingPostingUiTest,com.mendelev.mpos.StandaloneReceivingUiTest,com.mendelev.mpos.InventoryUiTest,com.mendelev.mpos.StockUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
                              PACKAGE + ".test/com.mendelev.mpos.MposTestRunner", timeout=180)
-                assert "OK (18 tests)" in result and "FAILURES" not in result, result[-4000:]
+                assert "OK (19 tests)" in result and "FAILURES" not in result, result[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
                 expected_shift = adb("shell", "run-as", PACKAGE, "cat", "files/qa/shiftId.txt").strip()
@@ -253,7 +259,7 @@ def main():
                 assert expected_workspace_line, "UI setup must create a real persistent current cart"
                 expected_parked_label = adb("shell", "run-as", PACKAGE, "cat", "files/qa/parkedLabel.txt").strip()
                 assert expected_parked_label, "UI setup must create a real parked order"
-                for name in ("admin-login", "admin-session", "refund-confirm", "refund-result", "refund-returned-receipt", "split-confirm", "split-progress", "sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders", "supplier-card", "supplier-list", "purchase-draft", "purchase-order", "purchase-history", "purchase-order-edit", "purchase-order-edited", "purchase-order-cancelled", "receiving-draft", "receiving-preview", "receiving-post-confirm", "receiving-posted", "standalone-draft", "standalone-posted", "inventory-start", "inventory-stale", "inventory-fix-confirm", "inventory-fixed", "inventory-summary", "inventory-completed", "inventory-cancel-confirm", "inventory-cancelled", "stock-list", "stock-history", "stock-document", "shift-cash-confirm", "shift-cash-history"):
+                for name in ("settings-home", "settings-updates", "settings-planned", "settings-admin", "admin-login", "admin-session", "refund-confirm", "refund-result", "refund-returned-receipt", "split-confirm", "split-progress", "sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders", "supplier-card", "supplier-list", "purchase-draft", "purchase-order", "purchase-history", "purchase-order-edit", "purchase-order-edited", "purchase-order-cancelled", "receiving-draft", "receiving-preview", "receiving-post-confirm", "receiving-posted", "standalone-draft", "standalone-posted", "inventory-start", "inventory-stale", "inventory-fix-confirm", "inventory-fixed", "inventory-summary", "inventory-completed", "inventory-cancel-confirm", "inventory-cancelled", "stock-list", "stock-history", "stock-document", "shift-cash-confirm", "shift-cash-history"):
                     captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
                     assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
                     (reports / f"{name}.png").write_bytes(captured.stdout)
@@ -307,6 +313,8 @@ def main():
             reports.mkdir(parents=True, exist_ok=True)
             (reports / "updated-settings.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20).stdout)
             if not production:
+                if any(n.get("resource-id")=="updatesBack" for n in ui_nodes()):
+                    wait_text("^К настройкам$",click=True,preferred_resource_id="updatesBack")
                 wait_text("^Назад$", click=True)
                 scroll_catalog_to_product(expected_product, expected_stock="8 шт")
                 wait_text("^8 шт$")

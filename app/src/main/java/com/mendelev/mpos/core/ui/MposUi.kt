@@ -52,17 +52,18 @@ private val manrope = FontFamily(manropeFont(FontWeight.Normal), manropeFont(Fon
     ), shapes=Shapes(small=RoundedCornerShape(10.dp), medium=RoundedCornerShape(16.dp), large=RoundedCornerShape(22.dp)), content=content)
 }
 
-enum class ActionStyle { Primary, Secondary, Danger }
+enum class ActionStyle { Primary, Secondary, Outline, Danger }
 @Composable fun MposButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true,
     style: ActionStyle = ActionStyle.Primary, busy: Boolean = false) {
     val c = MaterialTheme.colorScheme
     val colors = when(style) {
         ActionStyle.Primary -> ButtonDefaults.buttonColors()
+        ActionStyle.Outline -> ButtonDefaults.buttonColors(containerColor=c.surface, contentColor=c.onSurface)
         ActionStyle.Secondary -> ButtonDefaults.buttonColors(containerColor=c.background, contentColor=c.onSurface)
         ActionStyle.Danger -> ButtonDefaults.buttonColors(containerColor=c.error, contentColor=if(isSystemInDarkTheme()) Color(0xFF1B1F2A) else Color.White)
     }
     Button(onClick=onClick, enabled=enabled && !busy, modifier=modifier.heightIn(min=48.dp),
-        shape=RoundedCornerShape(16.dp), colors=colors, contentPadding=PaddingValues(horizontal=16.dp, vertical=12.dp)) {
+        shape=RoundedCornerShape(16.dp), colors=colors, border=if(style==ActionStyle.Outline) androidx.compose.foundation.BorderStroke(1.5.dp,c.outline) else null, contentPadding=PaddingValues(horizontal=16.dp, vertical=12.dp)) {
         if(busy) { CircularProgressIndicator(Modifier.size(18.dp), strokeWidth=2.dp); Spacer(Modifier.width(8.dp)) }
         Text(label)
     }
@@ -136,5 +137,17 @@ enum class ActionStyle { Primary, Secondary, Danger }
     Row(Modifier.fillMaxWidth().heightIn(min=48.dp), verticalAlignment=Alignment.CenterVertically) {
         Text(label, Modifier.weight(1f), style=MaterialTheme.typography.bodyMedium)
         Switch(checked=checked, onCheckedChange=onChange, enabled=enabled, modifier=Modifier.semantics { contentDescription=label })
+    }
+}
+
+/** Source settings-info-btn: 44dp circular visual inside the shared 48dp touch target. */
+@Composable fun MposInfoButton(description: String,onClick: ()->Unit,modifier: Modifier=Modifier,enabled: Boolean=true) {
+    IconButton(onClick=onClick,enabled=enabled,modifier=modifier.size(48.dp).semantics {contentDescription=description}) {
+        val ink=MaterialTheme.colorScheme.onSurfaceVariant
+        Canvas(Modifier.size(24.dp)) {
+            drawCircle(ink,style=androidx.compose.ui.graphics.drawscope.Stroke(1.8.dp.toPx()))
+            drawCircle(ink,1.2.dp.toPx(),Offset(center.x,7.dp.toPx()))
+            drawLine(ink,Offset(center.x,11.dp.toPx()),Offset(center.x,18.dp.toPx()),1.8.dp.toPx(),StrokeCap.Round)
+        }
     }
 }

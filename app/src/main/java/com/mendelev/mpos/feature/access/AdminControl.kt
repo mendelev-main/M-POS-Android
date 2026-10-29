@@ -39,7 +39,7 @@ class AdminViewModel : ViewModel() {
     }
 }
 
-@Composable fun AdminControl(model: AdminViewModel=viewModel()) {
+@Composable fun AdminControl(model: AdminViewModel=viewModel(),compact: Boolean=false) {
     val session by Administration.session.state.collectAsStateWithLifecycle()
     val ui by model.state.collectAsStateWithLifecycle()
     var opened by remember {mutableStateOf(false)}
@@ -47,7 +47,7 @@ class AdminViewModel : ViewModel() {
     var password by remember {mutableStateOf("")}
     LaunchedEffect(session.active) {if(session.active) {opened=false;password=""}}
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
-        Text(if(session.active) "Администрирование активно" else "Режим кассира",style=MaterialTheme.typography.titleMedium,
+        Text(if(session.active) "Администрирование активно" else "Режим кассира",style=if(compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.titleMedium,
             modifier=Modifier.testTag("adminStatus"))
         MposButton(if(session.active) "Закрыть сессию администрирования" else "Администрирование",
             {if(session.active) model.logout() else opened=true},enabled=!ui.busy,style=ActionStyle.Secondary,

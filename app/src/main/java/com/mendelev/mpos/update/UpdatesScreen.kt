@@ -7,6 +7,7 @@ import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -31,6 +32,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -62,33 +64,14 @@ fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGal
     val installer = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         model.installerClosed()
     }
+    var updatesOpen by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
+    val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
+    val locked=state.stage in setOf(UpdateStage.VERIFYING,UpdateStage.INSTALLER)
     LaunchedEffect(model) { model.openSettings() }
-    Column(Modifier.safeDrawingPadding()) {
-    if (com.mendelev.mpos.core.ui.LocalMposTopNavigation.current != null) {
-        com.mendelev.mpos.core.ui.MposAppBar(navigationEnabled=state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER)) {}
-    }
-    Column(
-        modifier = Modifier.verticalScroll(rememberScrollState()).widthIn(max = 760.dp).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
-    ) {
-        MposButton(stringResource(R.string.settings_back), onBack, enabled = state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER), style = ActionStyle.Secondary)
-        Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineLarge)
-        com.mendelev.mpos.feature.access.AdminControl()
-        FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-        if (onCatalog != null) MposButton("Товары", onCatalog, style=ActionStyle.Secondary,
-            enabled=state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER))
-        if (onStock != null) MposButton("Остатки и движения",onStock,style=ActionStyle.Secondary,
-            enabled=state.stage !in setOf(UpdateStage.VERIFYING,UpdateStage.INSTALLER),modifier=Modifier.testTag("settingsStock"))
-        if (onInventory != null) MposButton("Инвентаризация",onInventory,style=ActionStyle.Secondary,
-            enabled=state.stage !in setOf(UpdateStage.VERIFYING,UpdateStage.INSTALLER),modifier=Modifier.testTag("settingsInventory"))
-        if (onSuppliers != null) MposButton("Поставщики",onSuppliers,style=ActionStyle.Secondary,
-            enabled=state.stage !in setOf(UpdateStage.VERIFYING,UpdateStage.INSTALLER),modifier=Modifier.testTag("settingsSuppliers"))
-        if (com.mendelev.mpos.BuildConfig.DEBUG && onGallery != null) MposButton("Компоненты", onGallery, style=ActionStyle.Secondary,
-            enabled=state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER))
-        }
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(stringResource(R.string.update_title), style = MaterialTheme.typography.titleLarge)
+    com.mendelev.mpos.feature.settings.SettingsHome({updatesOpen=true},onCatalog,onSuppliers,onInventory,onStock,onGallery,onBack,state.candidate!=null)
+    if(updatesOpen) com.mendelev.mpos.core.ui.MposDialog(stringResource(R.string.update_title),{updatesOpen=false},closable=!locked,maxWidth=820.dp) {
+        Column(Modifier.heightIn(max=520.dp).verticalScroll(rememberScrollState()).testTag("updatesWindow"),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+            Text(if(administration.active) "Администрирование активно" else "Режим кассира",style=MaterialTheme.typography.bodySmall)
                 Text(stringResource(R.string.update_installed, model.repository.installedName, model.repository.installedCode))
                 Text(stringResource(R.string.update_channel))
                 if (state.lastChecked > 0) Text(stringResource(R.string.update_last_checked,
@@ -121,7 +104,7 @@ fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGal
                 state.message?.let { Text(it, color = if (state.stage == UpdateStage.ERROR)
                     MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant) }
                 if (!state.busy) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
                         if (state.stage == UpdateStage.READY) {
                             MposButton(stringResource(R.string.update_install), onClick = {
                                 if (!context.packageManager.canRequestPackageInstalls()) {
@@ -144,10 +127,9 @@ fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGal
                         MposButton(stringResource(R.string.update_check), model::check, style = ActionStyle.Secondary)
                     }
                 }
-            }
+
+            Text(stringResource(R.string.update_explanation),style=MaterialTheme.typography.bodySmall)
+            MposButton("К настройкам",{updatesOpen=false},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("updatesBack"))
         }
-        Text(stringResource(R.string.update_explanation), style = MaterialTheme.typography.bodyMedium)
-        Spacer(Modifier.height(12.dp))
-    }
     }
 }

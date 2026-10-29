@@ -126,3 +126,5 @@ Shared MposDialog maxWidth — ограничение ширины без отд
 ## Рабочая зона: актуальная геометрия
 
 [WORKSPACE-VISUAL](WORKSPACE-VISUAL.md) заменяет исторические340dp корзины/18dp плитки:380dp/16dp, cart22dp, icon44dp/radius12dp, source toolbar и компактные строки. PosAction/PosIconButton — документированные варианты shared POS controls; диалоги используют общий MposDialog.
+
+2026-10-29 settings variant: shared MposButton.Outline implemented (surface/ink, border1.5dp, radius16/min48) и MposInfoButton (touch48/vector circle-i24/contentDescription). Настройки используют grid1.2/.8>700dp, gap16/cards16/padding20 и общий Wide dialog до820dp; контракт SETTINGS-VISUAL.md. Legacy settings pill buttons адаптированы к общему native button стандарту, а не объявлены pixel-perfect.
