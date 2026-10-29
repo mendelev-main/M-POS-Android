@@ -14,13 +14,14 @@ data class ShiftUi(val loading: Boolean=true,val pending: Boolean=false,val fata
 class ShiftViewModel(private val repo: ShiftRepository,private val cash: ShiftCashAccess=repo.cashAccess()): ViewModel() {
     private val mutable=MutableStateFlow(ShiftUi());val state=mutable.asStateFlow()
     private var watcher: Job?=null
+    private var watchGeneration=0L
     init {watch()}
-    private fun watch() {watcher?.cancel();watcher=viewModelScope.launch {
+    private fun watch() {val generation=++watchGeneration;watcher?.cancel();watcher=viewModelScope.launch {
         try {
             withContext(Dispatchers.IO) {repo.initialize()}
-            repo.observe().flowOn(Dispatchers.IO).collect {s->val h=withContext(Dispatchers.IO) {s.last?.id?.let {cash.history(it)}.orEmpty()};publish(s,h)}
+            repo.observe().flowOn(Dispatchers.IO).collect {s->val h=withContext(Dispatchers.IO) {s.last?.id?.let {cash.history(it)}.orEmpty()};if(generation==watchGeneration) publish(s,h)}
         } catch(e:CancellationException) {throw e}
-        catch(_:Exception) {mutable.update {it.copy(loading=false,fatal=true,message="Не удалось прочитать смену. Перезапустите приложение")}}
+        catch(_:Exception) {currentCoroutineContext().ensureActive();if(generation==watchGeneration) mutable.update {it.copy(loading=false,fatal=true,message="Не удалось прочитать смену. Перезапустите приложение")}}
     }}
     private fun publish(s: ShiftSnapshot,history: List<ShiftCashMovement>?=null) {mutable.update {if((it.snapshot?.revision ?: -1)>s.revision) it else it.copy(loading=false,snapshot=s,cashHistory=history ?: it.cashHistory)}}
     fun dismiss() {mutable.update {it.copy(message=null)}}
