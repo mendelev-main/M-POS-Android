@@ -1,6 +1,6 @@
 # 05b.2 — справочник сотрудников и кассир смены
 
-Статус: in progress; модель/codec и runtime integration implemented, проверки Room/UI/API36 и actual APK upgrade pending. Не объявляет SA01–SA06 или полный05b завершёнными.
+Статус: in progress; EF01–EF05 и ED01–ED06 ci-verified/API36; общий05b остаётся in progress. Не объявляет SA01–SA06 или полный05b завершёнными.
 
 Источник: pinned Web1682c883 employees.js saveEmployee/employeeDeletionAllowed/employeeDisplayName, shifts.js openShiftModal/submitOpenShift, android-admin.js и regression source-product-stock.test.cjs (employee CRUD, administration session, cashier identity). Общие утверждённые решения — STAFF-ACCESS-05B.md.
 
@@ -33,7 +33,7 @@ EmployeeRepository: InstallationGate → authorization → Room. Save/Delete и�
 
 EF01 — ФИО/необязательный телефон/точные роли и selectable. EF02 — fingerprint связывает actor/id/revision/name/phone/role/action. EF03 — Unicode и display name не меняют identity. EF04 — roundtrip сохраняет tombstones/ревизии, duplicate IDs отказ. EF05 — повреждённые/неизвестные/приведённые типы не сбрасываются. Проверяются JVM без Android/Room и без реальных контактных данных.
 
-## Интеграционная приёмка ED01–ED06 (implemented, API36 pending)
+## Интеграционная приёмка ED01–ED06 (ci-verified/API36)
 
 - ED01: empty install/new shift requires created employee; admin/deleted/missing ID refuses, no fallback. Legacy active shift continues and closes; original result replays, new owner open refuses.
 - ED02: create/edit/delete + journal/audit/result rollback at3 write boundaries and real SQL refusal; restart/lost reply/replay/CAS/concurrent edit; corrupt document unchanged.
@@ -46,3 +46,9 @@ EF01 — ФИО/необязательный телефон/точные рол�
 
 Локальная проверка EF01–EF05:146 JVM tests,0failures/0errors/0skipped (5 новых);14Python, harness preflight и diff check passed. API36/upgrade для runtime-интеграции пока не запускались; ci-verified статус не присваивается.
 Debug APK сборка и lint прошли локально. Этап остаётся in progress.
+
+## Наблюдаемый результат
+
+2026-10-29: 05b.2 EF01–EF05/ED01–ED06 ci-verified/API36: [FullCI40887920523](https://github.com/mendelev-main/M-POS-Android/actions/runs/40887920523)/e63b87c SUCCESS.148JVM/228instrumentation/0failures/0skipped;14Python/harness/lint/debugAPK/testAPK.2workspace-scale/20UIseed/16upgrade fixtures и actual debugAPK1→2 passed. Empty directory refuses new owner shift; active employee any edit refused; role/admin/deleted/CAS/race/direct authorization/installation/corrupt payload guards passed.3write-boundary rollback/SQL abort/lost response/reopen/replay/tombstone tests passed. Non-owner cashier split/sale/refund/cash/close after admin logout passed; wrong operational actor refused. Legacy owner active shift continues/closes, old v1 command replay unchanged, next owner open refuses. Employee UI optional phone/create/active lock/select/logout and unknown-result/known-reload-failure scenarios passed. EMPLOYEE UPDATE PASSED: roles/contact/revisions/tombstones, immutable old/current cashier name/ID/cash and original create/rename/open replays retained without writes. Existing data/update/signature checks retained. Light component screenshots card/list/selection inspected: readable/shared controls/no overlap; actual main navigation covered by existing suite. Target APK excludes fixture credential. SQLschema8/main/signing unchanged; physical tablet/dark/large text/new process form recovery remain pending. Full05b/H03/SA01–SA06 and analytics not declared complete.
+
+Локальная сборка e63b87c:148JVM/14Python/preflight/lint/debugAPK/testAPK passed. После исходного сбоя incremental Kotlin пересобрано с -Pkotlin.incremental=false; ранний lint запуск захватил новые ещё не скомпилированные test files (findFirCompiledSymbol), финальная сборка без изменения sources во время проверки и hosted CI прошли без подавления lint.
