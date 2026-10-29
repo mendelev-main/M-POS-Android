@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGallery: (() -> Unit)? = null, onSuppliers: (() -> Unit)? = null, onInventory: (() -> Unit)? = null, onStock: (() -> Unit)? = null, onBack: () -> Unit) {
+fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGallery: (() -> Unit)? = null, onSuppliers: (() -> Unit)? = null, onInventory: (() -> Unit)? = null, onStock: (() -> Unit)? = null, onEmployees: (() -> Unit)? = null, onBack: () -> Unit) {
     val state by model.state.collectAsStateWithLifecycle()
     BackHandler(enabled = state.stage == UpdateStage.VERIFYING) { }
     val context = LocalContext.current
@@ -70,7 +70,7 @@ fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGal
     val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val locked=state.stage in setOf(UpdateStage.VERIFYING,UpdateStage.INSTALLER)
     LaunchedEffect(model) { model.openSettings() }
-    com.mendelev.mpos.feature.settings.SettingsHome({updatesOpen=true},onCatalog,onSuppliers,onInventory,onStock,onGallery,onBack,state.candidate!=null)
+    com.mendelev.mpos.feature.settings.SettingsHome({updatesOpen=true},onCatalog,onSuppliers,onInventory,onStock,onGallery,onBack,state.candidate!=null,onEmployees)
     if(updatesOpen) com.mendelev.mpos.core.ui.MposDialog(stringResource(R.string.update_title),{updatesOpen=false},closable=!locked,maxWidth=820.dp) {
         Column(Modifier.heightIn(max=520.dp).verticalScroll(rememberScrollState()).testTag("updatesWindow").semantics {testTagsAsResourceId=true},verticalArrangement=Arrangement.spacedBy(16.dp)) {
             Text(if(administration.active) "Администрирование активно" else "Режим кассира",style=MaterialTheme.typography.bodySmall)

@@ -16,7 +16,7 @@ class ShiftCashUpgradeTest {
         try {
             val shifts=ShiftRepository(db);val cash=ShiftCashRepository(db)
             if(!verify) {
-                shifts.initialize();var s=shifts.snapshot();shifts.open("open",s.revision,null,s.ownerId);s=shifts.snapshot()
+                shifts.initializeCashierFixture();var s=shifts.snapshot();shifts.open("open",s.revision,null,s.ownerId);s=shifts.snapshot()
                 cash.commit(ShiftCashCommand("deposit",s.active!!.id,s.revision,s.ownerId,"deposit",10000,"Размен"));s=shifts.snapshot()
                 cash.commit(ShiftCashCommand("withdraw",s.active!!.id,s.revision,s.ownerId,"withdrawal",500,"Инкассация"));s=shifts.snapshot()
                 shifts.close("close",s.active!!.id,s.revision,ShiftRules.token(s),9400,s.ownerId);s=shifts.snapshot()

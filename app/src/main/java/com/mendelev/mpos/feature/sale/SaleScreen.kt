@@ -159,7 +159,7 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
             if(refund.message!=null) MposNotice(refund.message!!,true)
             if(refund.history.none {it.receiptId==selected.first.id}) {
                 if(ui.shift?.active==null) Text("Для возврата откройте смену")
-                MposButton("Вернуть чек",{refundModel.prepare(selected.first.id,ui.shift!!.ownerId)},Modifier.fillMaxWidth().testTag("refundPrepare"),
+                MposButton("Вернуть чек",{refundModel.prepare(selected.first.id,ui.shift!!.active!!.actorId)},Modifier.fillMaxWidth().testTag("refundPrepare"),
                     enabled=!ui.pending && !refund.blocked && ui.shift?.active!=null && ui.split?.paid.isNullOrEmpty(),style=ActionStyle.Danger,busy=refund.pending)
             }
         }

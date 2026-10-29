@@ -65,7 +65,7 @@ class CheckoutRepository(private val db: CatalogDatabase,private val afterWrite:
         val cart=WorkspaceCodec.cart(current.payload)
         if(current.revision!=draft.cartRevision || cart.sessionId!=draft.sessionId || cart.lines.isEmpty()) conflict()
         val state=ShiftRepository(db).snapshot()
-        if(state.ownerId!=draft.actorId || state.active?.id!=draft.shiftId || state.revision!=draft.shiftRevision) conflict()
+        if(state.active?.actorId!=draft.actorId || state.active?.id!=draft.shiftId || state.revision!=draft.shiftRevision) conflict()
         val products=db.catalog().allProducts().associateBy {it.id}
         if(cart.lines.any {line->line.references.any {(id,rev)->products[id]?.revision!=rev}}) conflict()
         if(draft.discounts.keys.any {id->cart.lines.none {it.id==id}}) conflict()

@@ -14,7 +14,7 @@ import org.junit.Test
 class ShiftCashRepositoryTest {
     private val context=InstrumentationRegistry.getInstrumentation().targetContext
     private fun memory()=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
-    private suspend fun open(db: CatalogDatabase): ShiftRepository {val r=ShiftRepository(db);r.initialize();val s=r.snapshot();r.open("open",s.revision,null,s.ownerId);return r}
+    private suspend fun open(db: CatalogDatabase): ShiftRepository {val r=ShiftRepository(db);r.initializeCashierFixture();val s=r.snapshot();r.open("open",s.revision,null,s.ownerId);return r}
     private suspend fun command(r: ShiftRepository,id: String="deposit",type: String="deposit",amount: Long=10000): ShiftCashCommand {val s=r.snapshot();return ShiftCashCommand(id,s.active!!.id,s.revision,s.ownerId,type,amount,"Размен")}
     @Test fun manualCashCombinesWithRealSaleAndRefundWithoutDoubleCounting(): Unit=runBlocking {
         val db=memory()

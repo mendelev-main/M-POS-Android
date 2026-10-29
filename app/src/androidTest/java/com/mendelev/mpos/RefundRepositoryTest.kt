@@ -26,7 +26,7 @@ class RefundRepositoryTest {
         val catalog=CatalogRepository(db);catalog.initialize()
         catalog.saveProduct(ProductInput("p",null,"Товар",null,"20","1","10",null,true,"create",unit="kg",noStockTracking=untracked))
         val work=WorkspaceRepository(db);work.initialize()
-        val shifts=ShiftRepository(db);shifts.initialize();val initial=shifts.snapshot()
+        val shifts=ShiftRepository(db);shifts.initializeCashierFixture();val initial=shifts.snapshot()
         shifts.open("open",initial.revision,null,initial.ownerId)
         // Funding sale is unnecessary: cash delivery funds its own courier expense.
         work.cart(CartAction.Add("p",1,emptySet(),null,"line"),"add",work.snapshot().cart.sessionId)
@@ -143,7 +143,7 @@ class RefundRepositoryTest {
             catalog.saveProduct(ProductInput("ingredient",null,"Ингредиент",null,"1","1","10",null,true,"ingredient",unit="kg"))
             catalog.saveProduct(ProductInput("dish",null,"Блюдо",null,"20","0","0",null,false,"dish",type="composite",
                 components=listOf(IngredientInput("ingredient","0.0004","kg"))))
-            val work=WorkspaceRepository(db);work.initialize();val shifts=ShiftRepository(db);shifts.initialize()
+            val work=WorkspaceRepository(db);work.initialize();val shifts=ShiftRepository(db);shifts.initializeCashierFixture()
             val initial=shifts.snapshot();shifts.open("open",initial.revision,null,initial.ownerId)
             work.cart(CartAction.Add("dish",1,emptySet(),null,"line"),"add",work.snapshot().cart.sessionId)
             val w=work.snapshot();val state=shifts.snapshot()

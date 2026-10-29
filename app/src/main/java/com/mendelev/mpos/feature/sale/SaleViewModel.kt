@@ -79,7 +79,7 @@ class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
             val parts=f.parts.map {PaymentInput(it.method,ShiftRules.cash(it.amount),if(it.method=="cash" && it.given.isNotBlank()) ShiftRules.cash(it.given) else null)}
             val old=ui.draft?.draft
             val command=old?.takeIf {it.sessionId==w.cart.sessionId && it.cartRevision==w.cartRevision && it.shiftId==active.id && it.shiftRevision==s.revision}?.commandId ?: UUID.randomUUID().toString()
-            checkout.saveSplit(ui.draftRevision,CheckoutDraft(command,w.cart.sessionId,w.cartRevision,active.id,s.revision,s.ownerId,
+            checkout.saveSplit(ui.draftRevision,CheckoutDraft(command,w.cart.sessionId,w.cartRevision,active.id,s.revision,active.actorId,
                 f.discounts.filterValues {it.type!="none"}.mapValues {SaleDiscount(it.value.type,it.value.value)},q.delivery,parts))
         }
     }
@@ -158,7 +158,7 @@ class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
                     val p=SaleMoney.payments(q,parts,s.currentCash)
                     val old=ui.draft?.draft
                     val command=old?.takeIf {it.sessionId==w.cart.sessionId && it.cartRevision==w.cartRevision && it.shiftId==active.id && it.shiftRevision==s.revision}?.commandId ?: UUID.randomUUID().toString()
-                    val d=CheckoutDraft(command,w.cart.sessionId,w.cartRevision,active.id,s.revision,s.ownerId,
+                    val d=CheckoutDraft(command,w.cart.sessionId,w.cartRevision,active.id,s.revision,active.actorId,
                         f.discounts.filterKeys {id->w.cart.lines.any {it.id==id}}.filterValues {it.type!="none"}.mapValues {SaleDiscount(it.value.type,it.value.value)},q.delivery,parts)
                     Triple(checkout.save(ui.draftRevision,d),q,p)
                 }

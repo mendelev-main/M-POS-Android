@@ -39,7 +39,7 @@ class SaleUiTest {
             val c=CatalogRepository(db);c.initialize();c.saveProduct(ProductInput(id,null,name,null,"2","1","10",null,true,"create-$suffix"))
             val w=WorkspaceRepository(db);w.initialize();val old=w.snapshot();w.cart(CartAction.Clear(old.cartRevision),"clear-$suffix",old.cart.sessionId)
             w.cart(CartAction.Add(id,1,emptySet(),null,"sale-line-$suffix"),"add-$suffix",w.snapshot().cart.sessionId)
-            val r=ShiftRepository(db);r.initialize();val s=r.snapshot();if(s.active==null) r.open("open-$suffix",s.revision,s.last?.id,s.ownerId)
+            val r=ShiftRepository(db);r.initializeCashierFixture();val s=r.snapshot();if(s.active==null) r.open("open-$suffix",s.revision,s.last?.id,s.ownerId)
             SaleRepository(db).unacknowledged()?.let {SaleRepository(db).acknowledge(it)}
             ShiftRepository(db).snapshot().currentCash
         }

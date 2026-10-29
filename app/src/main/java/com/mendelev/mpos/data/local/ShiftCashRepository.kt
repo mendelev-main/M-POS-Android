@@ -33,10 +33,10 @@ class ShiftCashRepository(private val db: CatalogDatabase,private val clock: Clo
     override suspend fun commit(c: ShiftCashCommand): String {
         c.validate()
         val id=InstallationGate.write {db.withTransaction {
-            if(db.catalog().config()?.ownerId!=c.actorId) throw CatalogFailure("owner","Движения наличных доступны локальному владельцу")
             outcome(c)?.let {return@withTransaction it}
             val s=ShiftRepository(db,clock).snapshot();val active=s.active
             if(s.revision!=c.revision || active?.id!=c.shiftId) throw CatalogFailure("conflict","Смена изменилась. Откройте операцию заново")
+            if(active.actorId!=c.actorId) throw CatalogFailure("owner","Недопустимый оператор наличных")
             SplitPaymentRepository(db).requireNone()
             val at=clock.millis();require(at>=active.openedAt)
             val m=ShiftCashMovement(UUID.randomUUID().toString(),c,at,s.currentCash,ShiftCashRules.after(s.currentCash,c.type,c.amount));ShiftCashRules.validate(m)

@@ -38,7 +38,7 @@ class RefundUiTest {
             w.cart(CartAction.Clear(old.cartRevision),"clear-$key",old.cart.sessionId)
             w.cart(CartAction.Add(product,1,emptySet(),null,"line-$key"),"add-$key",w.snapshot().cart.sessionId)
             val current=w.snapshot();w.cart(CartAction.SetDetails(OrderDetails(type="delivery"),current.cartRevision),"details-$key",current.cart.sessionId)
-            val shifts=ShiftRepository(db);shifts.initialize();val before=shifts.snapshot()
+            val shifts=ShiftRepository(db);shifts.initializeCashierFixture();val before=shifts.snapshot()
             if(before.active==null) shifts.open("open-$key",before.revision,before.last?.id,before.ownerId)
             val state=shifts.snapshot();val cart=w.snapshot();val checkout=CheckoutRepository(db)
             val saved=checkout.save(checkout.revision(),CheckoutDraft("sale-$key",cart.cart.sessionId,cart.cartRevision,state.active!!.id,state.revision,state.ownerId,

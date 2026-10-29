@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.*
 import java.util.UUID
 
 data class CashForm(val type: String,val shiftId: String,val revision: Long,val actor: String,val available: Long,val amount: String="",val note: String="")
-data class ShiftUi(val loading: Boolean=true,val pending: Boolean=false,val fatal: Boolean=false,val snapshot: ShiftSnapshot?=null,val message: String?=null,val cashForm: CashForm?=null,val cashUnresolved: ShiftCashCommand?=null,val cashHistory: List<ShiftCashMovement> = emptyList())
+data class ShiftUi(val loading: Boolean=true,val pending: Boolean=false,val fatal: Boolean=false,val snapshot: ShiftSnapshot?=null,val message: String?=null,val cashForm: CashForm?=null,val cashUnresolved: ShiftCashCommand?=null,val cashHistory: List<ShiftCashMovement> = emptyList(),val cashiers: List<com.mendelev.mpos.domain.staff.Employee> = emptyList(),val staffLoading: Boolean=true,val staffMessage: String?=null)
 class ShiftViewModel(private val repo: ShiftRepository,private val cash: ShiftCashAccess=repo.cashAccess()): ViewModel() {
     private val mutable=MutableStateFlow(ShiftUi());val state=mutable.asStateFlow()
     private var watcher: Job?=null
@@ -24,6 +24,16 @@ class ShiftViewModel(private val repo: ShiftRepository,private val cash: ShiftCa
         catch(_:Exception) {currentCoroutineContext().ensureActive();if(generation==watchGeneration) mutable.update {it.copy(loading=false,fatal=true,message="Не удалось прочитать смену. Перезапустите приложение")}}
     }}
     private fun publish(s: ShiftSnapshot,history: List<ShiftCashMovement>?=null) {mutable.update {if((it.snapshot?.revision ?: -1)>s.revision) it else it.copy(loading=false,snapshot=s,cashHistory=history ?: it.cashHistory)}}
+    private var staffJob: Job?=null
+    fun loadCashiers() {
+        staffJob?.cancel()
+        mutable.update {it.copy(staffLoading=true,staffMessage=null)}
+        staffJob=viewModelScope.launch {
+            try {val rows=withContext(Dispatchers.IO) {repo.employeeAccess().snapshot().employees.filter {it.selectable}};mutable.update {it.copy(cashiers=rows,staffLoading=false)}}
+            catch(e:CancellationException) {throw e}
+            catch(_:Exception) {mutable.update {it.copy(staffLoading=false,cashiers=emptyList(),staffMessage="Не удалось прочитать сотрудников. Повторите чтение")}}
+        }
+    }
     fun dismiss() {mutable.update {it.copy(message=null)}}
     private fun command(block: suspend (String) -> Unit,done: () -> Unit) {
         if(state.value.loading || state.value.pending || state.value.fatal || state.value.cashForm!=null || state.value.cashUnresolved!=null) return
@@ -46,7 +56,7 @@ class ShiftViewModel(private val repo: ShiftRepository,private val cash: ShiftCa
     fun cashOpen(type: String) {
         val ui=state.value;val s=ui.snapshot ?: return;val active=s.active ?: return
         if(ui.pending || ui.loading || ui.fatal || ui.cashForm!=null || ui.cashUnresolved!=null) return
-        mutable.update {it.copy(cashForm=CashForm(type,active.id,s.revision,s.ownerId,s.currentCash),message=null)}
+        mutable.update {it.copy(cashForm=CashForm(type,active.id,s.revision,active.actorId,s.currentCash),message=null)}
     }
     fun cashEdit(amount: String?=null,note: String?=null) {
         if(state.value.pending || state.value.cashUnresolved!=null) return

@@ -10,6 +10,7 @@ import java.util.UUID
 
 class ShiftRepository(private val db: CatalogDatabase,private val clock: Clock=Clock.systemDefaultZone(),private val afterWrite: (() -> Unit)?=null) {
     private val dao=db.shifts()
+    fun employeeAccess(): EmployeeAccess=EmployeeRepository(db)
     fun cashAccess(): ShiftCashAccess=ShiftCashRepository(db,clock)
     suspend fun initialize() {CatalogRepository(db).initialize();db.withTransaction {dao.initialize(ShiftRegisterEntity())}}
     fun observe(): Flow<ShiftSnapshot> = dao.observe().filterNotNull().map {snapshot()}
@@ -51,7 +52,7 @@ class ShiftRepository(private val db: CatalogDatabase,private val clock: Clock=C
         val fp=CatalogRules.fingerprint("shift.open.v1",revision,previousId,actor)
         replay(command,fp)?.let {return@withTransaction it}
         val state=snapshot();check(state.revision<Long.MAX_VALUE)
-        val shift=ShiftRules.open(state,revision,previousId,actor,UUID.randomUUID().toString(),clock.millis(),clock.zone.id)
+        val shift=ShiftRules.open(state,revision,previousId,EmployeeRepository(db).cashier(actor),UUID.randomUUID().toString(),clock.millis(),clock.zone.id)
         dao.insert(shift.entity());afterWrite?.invoke();record(command,fp,shift,state.revision,"open");shift.id
     }}
     suspend fun close(command: String,id: String,revision: Long,token: String,counted: Long,actor: String): String=InstallationGate.write {db.withTransaction {

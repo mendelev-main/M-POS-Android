@@ -2,9 +2,11 @@ package com.mendelev.mpos.domain.shift
 
 import com.mendelev.mpos.domain.catalog.CatalogFailure
 import org.junit.Assert.*
+import com.mendelev.mpos.domain.staff.Employee
 import org.junit.Test
 
 class ShiftRulesTest {
+    private val employee=Employee("owner","Анна","","employee",1)
     private val initial=ShiftSnapshot("r","owner",0,null)
     private fun reject(block: () -> Unit) {try {block();fail("Expected refusal")} catch(_:CatalogFailure) {}}
     @Test fun cashInputIsExactAndBoundedWithoutRounding() {
@@ -14,19 +16,19 @@ class ShiftRulesTest {
         assertEquals("-5,00 BYN",ShiftRules.money(-500))
     }
     @Test fun closePreservesDifferenceAndNextOpenCarriesCounted() {
-        val first=ShiftRules.open(initial,0,null,"owner","s1",10,"Europe/Minsk")
+        val first=ShiftRules.open(initial,0,null,employee,"s1",10,"Europe/Minsk")
         assertEquals(0L,first.openingCash)
         val active=initial.copy(revision=1,last=first)
         val closed=ShiftRules.close(active,"s1",1,ShiftRules.token(active),14000,"owner",20)
         assertEquals(14000L,closed.countedCash);assertEquals(14000L,closed.difference);assertFalse(closed.isOpen)
-        val second=ShiftRules.open(initial.copy(revision=2,last=closed),2,"s1","owner","s2",30,"Europe/Minsk")
+        val second=ShiftRules.open(initial.copy(revision=2,last=closed),2,"s1",employee,"s2",30,"Europe/Minsk")
         assertEquals(14000L,second.openingCash);assertEquals("s1",second.sourceShiftId)
         val state=initial.copy(revision=3,last=second)
         val counted=ShiftRules.close(state,"s2",3,ShiftRules.token(state),13500,"owner",40)
         assertEquals(-500L,counted.difference);assertEquals(14000L,counted.expectedCash)
     }
     @Test fun saleDeltaChangesExpectedCashAndInvalidatesCloseToken() {
-        val shift=ShiftRules.open(initial,0,null,"owner","s",10,"UTC")
+        val shift=ShiftRules.open(initial,0,null,employee,"s",10,"UTC")
         val before=initial.copy(last=shift,revision=1)
         val after=before.copy(revision=2,saleCashDelta=4000)
         assertEquals(4000L,after.currentCash)
@@ -35,9 +37,9 @@ class ShiftRulesTest {
         assertEquals(4000L,closed.expectedCash);assertEquals(-100L,closed.difference)
     }
     @Test fun stalePreviewOwnerAndDuplicateOpenCannotCommit() {
-        val active=initial.copy(revision=1,last=ShiftRules.open(initial,0,null,"owner","s",10,"UTC"))
-        reject {ShiftRules.open(active,1,"s","owner","other",20,"UTC")}
-        reject {ShiftRules.open(initial,0,null,"intruder","s",10,"UTC")}
+        val active=initial.copy(revision=1,last=ShiftRules.open(initial,0,null,employee,"s",10,"UTC"))
+        reject {ShiftRules.open(active,1,"s",employee,"other",20,"UTC")}
+        reject {ShiftRules.open(initial,0,null,employee.copy(role="admin"),"s",10,"UTC")}
         reject {ShiftRules.close(active,"s",0,ShiftRules.token(active),0,"owner",20)}
         reject {ShiftRules.close(active,"s",1,"old",0,"owner",20)}
         reject {ShiftRules.close(active,"s",1,ShiftRules.token(active),0,"owner",9)}

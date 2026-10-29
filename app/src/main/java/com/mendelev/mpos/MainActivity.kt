@@ -72,7 +72,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
     val shiftUi by shiftModel.state.collectAsStateWithLifecycle()
     val admin by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val navigation = MposTopNavigation(route, shiftUi.snapshot?.active != null,
-        shiftUi.loading, shiftUi.fatal, shiftUi.pending || shiftUi.cashForm!=null || shiftUi.cashUnresolved!=null, shiftUi.snapshot?.active?.actorName ?: "Локальный владелец",
+        shiftUi.loading, shiftUi.fatal, shiftUi.pending || shiftUi.cashForm!=null || shiftUi.cashUnresolved!=null, shiftUi.snapshot?.active?.actorName ?: "Кассир не выбран",
         adminActive=admin.active,
         inventoryReminder=!inventoryUi.blocked && inventoryUi.snapshot?.document?.let {it.draft!=null || com.mendelev.mpos.domain.warehouse.InventoryRules.due(it.config,calendarDay)}==true) {
             route=if(it=="inventory" && inventoryUi.snapshot?.document?.draft!=null) "inventoryWork" else it
@@ -87,7 +87,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                             override fun <T : ViewModel> create(modelClass: Class<T>): T =
                                 UpdateViewModel(UpdateRepository(context.applicationContext, fixture)) as T
                         })
-                        UpdatesScreen(model, onCatalog={route="catalog"}, onGallery={route="gallery"},onSuppliers={route="suppliers"},onInventory={route="inventory"},onStock={route="stock"}) { route = "catalog" }
+                        UpdatesScreen(model, onCatalog={route="catalog"}, onGallery={route="gallery"},onSuppliers={route="suppliers"},onInventory={route="inventory"},onStock={route="stock"},onEmployees={route="employees"}) { route = "catalog" }
                     }
                     "inventory", "inventoryWork", "inventoryHistory" -> {
                         com.mendelev.mpos.feature.inventory.InventoryScreen(inventoryModel,
@@ -99,6 +99,13 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                                 com.mendelev.mpos.data.local.StockReadRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
                         })
                         com.mendelev.mpos.feature.stock.StockScreen(model) {route="settings"}
+                    }
+                    "employees" -> {
+                        val model: com.mendelev.mpos.feature.staff.EmployeeViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.staff.EmployeeViewModel(
+                                com.mendelev.mpos.data.local.EmployeeRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                        })
+                        com.mendelev.mpos.feature.staff.EmployeeScreen(model) {route="settings"}
                     }
                     "suppliers" -> {
                         val model: com.mendelev.mpos.feature.suppliers.SupplierViewModel = viewModel(factory=object: ViewModelProvider.Factory {

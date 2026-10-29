@@ -23,7 +23,7 @@ class SaleRepositoryTest {
         catalog.saveProduct(ProductInput("p",null,"Чай","c","2","1","10",null,true,"product"))
         val work=WorkspaceRepository(db);work.initialize()
         work.cart(CartAction.Add("p",1,emptySet(),null,"line"),"add",work.snapshot().cart.sessionId)
-        val shifts=ShiftRepository(db);shifts.initialize();val initial=shifts.snapshot();shifts.open("open",initial.revision,null,initial.ownerId)
+        val shifts=ShiftRepository(db);shifts.initializeCashierFixture();val initial=shifts.snapshot();shifts.open("open",initial.revision,null,initial.ownerId)
         val s=shifts.snapshot();val w=work.snapshot()
         return CheckoutRepository(db).save(0,CheckoutDraft("sale",w.cart.sessionId,w.cartRevision,s.active!!.id,s.revision,s.ownerId,parts=listOf(PaymentInput("cash",200,500))))
     }
@@ -92,7 +92,7 @@ class SaleRepositoryTest {
                 unit="kg",noStockTracking=id=="untracked",allowNegativeStock=id=="negative"))
             catalog.saveProduct(ProductInput("dish",null,"Блюдо",null,"20","0","0",null,false,"dish",type="composite",
                 components=listOf("tracked","negative","untracked").map {IngredientInput(it,"0.0004","kg")}))
-            val work=WorkspaceRepository(db);work.initialize();val shifts=ShiftRepository(db);shifts.initialize();val initial=shifts.snapshot();shifts.open("open",0,null,initial.ownerId)
+            val work=WorkspaceRepository(db);work.initialize();val shifts=ShiftRepository(db);shifts.initializeCashierFixture();val initial=shifts.snapshot();shifts.open("open",0,null,initial.ownerId)
             suspend fun add(key: String) {work.cart(CartAction.Add("dish",1,emptySet(),null,"line-$key"),key,work.snapshot().cart.sessionId)}
             add("parked");val parked=work.snapshot();work.park(parked.cartRevision,parked.cart.sessionId,"Резерв","park")
             add("current");var w=work.snapshot()

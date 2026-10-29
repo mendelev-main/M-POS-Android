@@ -22,7 +22,7 @@ import com.mendelev.mpos.feature.access.AdminControl
 /** Pinned renderSettingsScreen/renderAdminPanel, mapped to shared native controls. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable fun SettingsHome(onUpdates: ()->Unit,onCatalog: (() -> Unit)?,onSuppliers: (() -> Unit)?,
-    onInventory: (() -> Unit)?,onStock: (() -> Unit)?,onGallery: (() -> Unit)?,onBack: ()->Unit,updateAvailable: Boolean) {
+    onInventory: (() -> Unit)?,onStock: (() -> Unit)?,onGallery: (() -> Unit)?,onBack: ()->Unit,updateAvailable: Boolean,onEmployees: (() -> Unit)?=null) {
     val admin by Administration.session.state.collectAsStateWithLifecycle()
     var panel by rememberSaveable {mutableStateOf(false)}
     var planned by rememberSaveable {mutableStateOf<String?>(null)}
@@ -52,7 +52,9 @@ import com.mendelev.mpos.feature.access.AdminControl
             }
             BoxWithConstraints {
                 val left: @Composable ()->Unit={
-                    SettingsCard("Сотрудники","Кассиры и администраторы, выбор сотрудника при открытии смены.",planned=true,onInfo={planned="Сотрудники"}) {}
+                    SettingsCard("Сотрудники","Кассиры и администраторы, выбор сотрудника при открытии смены.") {
+                        onEmployees?.let {MposButton("Открыть сотрудников",it,Modifier.testTag("settingsEmployees"),style=ActionStyle.Outline)}
+                    }
                     SettingsCard("Стоимость доставки","Справочник тарифов доставки и синхронизация с сайтом.",planned=true,onInfo={planned="Стоимость доставки"}) {}
                     SettingsCard("Шаблоны названий чеков","Быстрые варианты названий для отложенных заказов.",planned=true,onInfo={planned="Шаблоны названий чеков"}) {}
                 }

@@ -44,7 +44,7 @@ class SplitSaleUiTest {
             val c=CatalogRepository(db);c.initialize();c.saveProduct(ProductInput(id,null,"Раздельная оплата",null,"10","1","10",null,true,"product-$suffix"))
             val w=WorkspaceRepository(db);w.initialize();val old=w.snapshot();w.cart(CartAction.Clear(old.cartRevision),"clear-$suffix",old.cart.sessionId)
             w.cart(CartAction.Add(id,1,emptySet(),null,"split-line-$suffix"),"add-$suffix",w.snapshot().cart.sessionId)
-            val shifts=ShiftRepository(db);shifts.initialize();val s=shifts.snapshot();if(s.active==null) shifts.open("open-$suffix",s.revision,s.last?.id,s.ownerId)
+            val shifts=ShiftRepository(db);shifts.initializeCashierFixture();val s=shifts.snapshot();if(s.active==null) shifts.open("open-$suffix",s.revision,s.last?.id,s.ownerId)
             SaleRepository(db).unacknowledged()?.let {SaleRepository(db).acknowledge(it)}
             ShiftRepository(db).snapshot().currentCash
         }

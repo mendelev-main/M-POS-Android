@@ -24,7 +24,7 @@ class ShiftCashViewModelTest {
     @Test fun unknownCashLocksInputAndRetryResolvesSameCommandOnce(): Unit=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext,CatalogDatabase::class.java).build();val store=ViewModelStore()
         try {
-            val repo=ShiftRepository(db);repo.initialize();val s=repo.snapshot();repo.open("open",s.revision,null,s.ownerId)
+            val repo=ShiftRepository(db);repo.initializeCashierFixture();val s=repo.snapshot();repo.open("open",s.revision,null,s.ownerId)
             val cash=Fake(repo.cashAccess());val vm=withContext(Dispatchers.Main) {model(store,repo,cash)};withTimeout(20_000) {vm.state.first {!it.loading}}
             cash.lose=true;withContext(Dispatchers.Main) {vm.cashOpen("deposit");vm.cashEdit(amount="25,50",note="Размен");vm.cashSave()};withTimeout(20_000) {vm.state.first {!it.pending}}
             val old=vm.state.value;assertNotNull(old.cashUnresolved);assertEquals(1,cash.calls)
@@ -37,7 +37,7 @@ class ShiftCashViewModelTest {
         repeat(10) {
         val db=Room.inMemoryDatabaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext,CatalogDatabase::class.java).build();val store=ViewModelStore()
         try {
-            val repo=ShiftRepository(db);repo.initialize();val s=repo.snapshot();repo.open("open",s.revision,null,s.ownerId)
+            val repo=ShiftRepository(db);repo.initializeCashierFixture();val s=repo.snapshot();repo.open("open",s.revision,null,s.ownerId)
             val cash=Fake(repo.cashAccess());val vm=withContext(Dispatchers.Main) {model(store,repo,cash)};await(vm,"initial") {!it.loading}
             cash.failReadAfterCommit=true;withContext(Dispatchers.Main) {vm.cashOpen("deposit");vm.cashEdit(amount="10");vm.cashSave()};await(vm,"commit") {!it.pending}
             assertNull(vm.state.value.cashUnresolved);assertNull(vm.state.value.cashForm);assertTrue(vm.state.value.fatal)

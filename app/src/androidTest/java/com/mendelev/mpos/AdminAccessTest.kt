@@ -32,7 +32,7 @@ class AdminAccessTest {
             val workspace=WorkspaceRepository(db);workspace.initialize()
             val suppliers=SupplierRepository(db);val owner=suppliers.snapshot().ownerId
             val inventory=InventoryRepository(db);val stock=inventory.snapshot()
-            val shifts=ShiftRepository(db);shifts.initialize()
+            val shifts=ShiftRepository(db);shifts.initializeCashierFixture()
             Administration.session.logout()
             suspend fun denied(action: suspend ()->Unit) {
                 try {action();fail("Administrative command accepted")}

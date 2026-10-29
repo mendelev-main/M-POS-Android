@@ -64,3 +64,31 @@ object EmployeeRules {
         }
     }
 }
+
+/** Caller supplies the active shift from the same transaction as the write. */
+object EmployeeMutations {
+    fun apply(rows: List<Employee>,command: EmployeeCommand,activeActorId: String?): List<Employee> {
+        val c=command.validated()
+        val id=when(val a=c.action) {is EmployeeAction.Save->a.id;is EmployeeAction.Delete->a.id}
+        val existing=rows.find {it.id==id}
+        if(id==activeActorId) throw CatalogFailure("activeEmployee","Сначала закройте смену: любые изменения её кассира запрещены")
+        val next=when(val a=c.action) {
+            is EmployeeAction.Save->{
+                if(a.revision==null) {
+                    if(existing!=null) conflict()
+                    Employee(id,a.name,a.phone,a.role,1)
+                } else {
+                    if(existing==null || existing.deleted || existing.revision!=a.revision) conflict()
+                    existing.copy(name=a.name,phone=a.phone,role=a.role,revision=Math.addExact(existing.revision,1))
+                }
+            }
+            is EmployeeAction.Delete->{
+                if(existing==null || existing.deleted || existing.revision!=a.revision) conflict()
+                if(existing.role=="admin") throw CatalogFailure("adminEmployee","Нельзя удалить администратора. Сначала измените его роль")
+                existing.copy(deleted=true,revision=Math.addExact(existing.revision,1))
+            }
+        }
+        return rows.filterNot {it.id==id}+next
+    }
+    private fun conflict(): Nothing=throw CatalogFailure("conflict","Сотрудник изменился. Повторите чтение и откройте карточку заново")
+}

@@ -11,7 +11,7 @@ suspend fun stockDocumentFixture(db: CatalogDatabase) {
     ReceivingPostingRepository(db).commit(ReceivingPostCommand("post-invoice",owner,1,d))
     val work=WorkspaceRepository(db);work.initialize()
     work.cart(CartAction.Add("p-stock-doc",2,emptySet(),null,"line"),"add",work.snapshot().cart.sessionId)
-    val shifts=ShiftRepository(db);shifts.initialize();val initial=shifts.snapshot();shifts.open("open",initial.revision,null,owner)
+    val shifts=ShiftRepository(db);shifts.initializeCashierFixture();val initial=shifts.snapshot();shifts.open("open",initial.revision,null,owner)
     val s=shifts.snapshot();val w=work.snapshot()
     val saved=CheckoutRepository(db).save(0,CheckoutDraft("sale",w.cart.sessionId,w.cartRevision,s.active!!.id,s.revision,owner,parts=listOf(PaymentInput("card",500))))
     val receipt=SaleRepository(db).commit(saved);val refunds=RefundRepository(db);refunds.commit("refund",refunds.preview(receipt,owner))

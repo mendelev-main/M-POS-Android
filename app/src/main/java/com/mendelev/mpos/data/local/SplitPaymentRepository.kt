@@ -80,7 +80,7 @@ class SplitPaymentRepository(private val db: CatalogDatabase,private val afterWr
     }}
     private suspend fun validateContext(d: CheckoutDraft,allowIncomplete: Boolean): Long {
         val shift=ShiftRepository(db).snapshot()
-        if(shift.active?.id!=d.shiftId || shift.revision!=d.shiftRevision || shift.ownerId!=d.actorId) conflict()
+        if(shift.active?.id!=d.shiftId || shift.revision!=d.shiftRevision || shift.active?.actorId!=d.actorId) conflict()
         val now=System.currentTimeMillis()
         if(now<shift.active!!.openedAt) throw CatalogFailure("clock","Время подтверждения раньше открытия смены")
         val work=WorkspaceRepository(db).snapshot();val cart=work.cart

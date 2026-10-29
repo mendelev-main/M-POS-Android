@@ -73,7 +73,7 @@ class InventoryCountRepositoryTest {
         val db=memory()
         try {
             val (repo,c)=prepare(db,"3");val work=WorkspaceRepository(db);work.initialize();work.cart(CartAction.Add("p-count",1,emptySet(),null,"line"),"add",work.snapshot().cart.sessionId)
-            val shifts=ShiftRepository(db);shifts.initialize();val initial=shifts.snapshot();shifts.open("open",initial.revision,null,initial.ownerId)
+            val shifts=ShiftRepository(db);shifts.initializeCashierFixture();val initial=shifts.snapshot();shifts.open("open",initial.revision,null,initial.ownerId)
             val s=shifts.snapshot();val w=work.snapshot();val saved=CheckoutRepository(db).save(0,CheckoutDraft("sale-count",w.cart.sessionId,w.cartRevision,s.active!!.id,s.revision,s.ownerId,parts=listOf(PaymentInput("card",500))))
             val receipt=SaleRepository(db).commit(saved);assertEquals("9",db.catalog().balance("p-count")!!.quantity);reject {repo.commit(c)}
             val refunds=RefundRepository(db);refunds.commit("refund-count",refunds.preview(receipt,s.ownerId));assertEquals("10",db.catalog().balance("p-count")!!.quantity);reject {repo.commit(c)}

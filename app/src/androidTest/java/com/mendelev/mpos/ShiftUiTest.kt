@@ -20,7 +20,7 @@ class ShiftUiTest {
     @Test fun closeDifferenceCarryAndRecreationPreserveCurrentAndParked() {
         val repo=ShiftRepository(CatalogDatabase.get(compose.activity.applicationContext));val suffix=UUID.randomUUID().toString()
         val documents=runBlocking {
-            WorkspaceRepository(CatalogDatabase.get(compose.activity.applicationContext)).initialize();repo.initialize()
+            WorkspaceRepository(CatalogDatabase.get(compose.activity.applicationContext)).initialize();repo.initializeCashierFixture()
             val s=repo.snapshot();s.active?.let {repo.close("ui-clean-$suffix",it.id,s.revision,ShiftRules.token(s),0,s.ownerId)}
             CatalogDatabase.get(compose.activity.applicationContext).workspace().documents()
         }
