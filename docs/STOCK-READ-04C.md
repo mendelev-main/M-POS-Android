@@ -21,7 +21,7 @@ M17 исключён владельцем2026-10-28; это намеренное
 
 ## 04c.2 — период и сохранённые документы
 
-Статус implemented, SD01–SD05, CI pending (2026-10-29).
+Статус ci-verified, SD01–SD05, Android16/API36/run40829976103 (2026-10-29).
 
 В истории выбранного товара доступны «За всё время», «Сегодня»,7 дней, текущий месяц/квартал и произвольные даты ГГГГ-ММ-ДД. Оба дня включены: [начало первого дня, начало следующего за последним). Границы определяются календарём зоны снимка, не умножением числа дней на24часа; время отображается в той же зоне. Невалидные, обратные и будущие даты отказываются. При ошибке остаётся прежний применённый период и явная ошибка; raw поля не считаются применёнными. Будущие относительно снимка движения не включаются. Текущий остаток не превращается в остаток на конец периода. Период применяется по времени каждого движения: возврат попадает по дате выдачи возврата, даже если исходная продажа раньше периода.
 
@@ -38,3 +38,5 @@ M17 исключён владельцем2026-10-28; это намеренное
 - SD05: реальные APK1→2 сохраняют все четыре вида links и документы, reader ничего не записывает после обновления.
 
 Физический планшет/dark/150% остаётся отдельной приёмкой. M17 исключён; этап04 целиком не закрыт. Следующий checkpoint — сверка оставшихся складских queries/отчётов с WAREHOUSE-SPEC до перехода к05.
+
+04c.2 SD01–SD05 ci-verified/API36: [FullCI40829976103](https://github.com/mendelev-main/M-POS-Android/actions/runs/40829976103)/55b042f SUCCESS first completed final-head attempt.133JVM/203instrumentation/0failures/0skipped,13Python/harness/lint/debugAPK/testAPK;2workspace-scale/17UIseed/14upgrade fixtures and actual debugAPK1→2. STOCK DOCUMENT UPDATE PASSED: real sale/refund/receiving/closed inventory links resolve historical snapshots after update without writes. Inclusive local periods/presets/DST23/25h/invalid/future ranges, unchanged current balance, reader source/product/delta/command/time checks, historical names after catalog rename, missing/corrupt/forged refusal, same-link retry, modal close/history context passed. Shared stock-history/document screenshots inspected: readable, no overlap (synthetic UI fixture; root route separately covered). Existing financial/catalog/workspace/shift/warehouse upgrade assertions retained and passed. Preliminary40829712930 intentionally cancelled before final unit labels, not evidence. No local user DB seed; Room schema8, stable/main/signing unchanged. M17 remains excluded. Physical tablet/dark/150% pending. Whole04 in progress; next checkpoint: audit remaining warehouse queries/reporting before05.
