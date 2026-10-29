@@ -16,7 +16,7 @@ android {
         targetSdk = 36
         versionCode = providers.environmentVariable("MPOS_VERSION_CODE").orElse("1").get().toInt()
         versionName = providers.environmentVariable("MPOS_VERSION_NAME").orElse("0.1.0-dev").get()
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.mendelev.mpos.MposTestRunner"
     }
     val keystorePath = providers.environmentVariable("MPOS_KEYSTORE_PATH").orNull
     signingConfigs {

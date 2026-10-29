@@ -67,10 +67,10 @@ class PurchaseDraftRepository(private val db: CatalogDatabase,private val clock:
     override suspend fun commit(command: PurchaseCommand): String {
         val command=command.copy(action=when(val a=command.action) {is PurchaseAction.Save -> PurchaseAction.Save(a.draft.copy(lines=a.draft.lines.toList()));is PurchaseAction.Place -> a.copy(draft=a.draft.copy(lines=a.draft.lines.toList()));PurchaseAction.Clear -> PurchaseAction.Clear})
         command.validate()
-        val id=InstallationGate.write {db.withTransaction {
+        val id=InstallationGate.write {db.adminTransaction {
             val owner=db.catalog().config()?.ownerId ?: error("Хранилище не открыто")
             if(command.actorId!=owner) throw CatalogFailure("owner","Изменять закупки может только локальный владелец")
-            outcome(command)?.let {return@withTransaction it}
+            outcome(command)?.let {return@adminTransaction it}
             val doc=db.workspace().document(PurchaseDraftCodec.KEY) ?: WorkspaceDocument(PurchaseDraftCodec.KEY,0,PurchaseDraftCodec.encode(null))
             val old=PurchaseDraftCodec.decode(doc.payload)
             if(doc.revision!=command.revision) throw CatalogFailure("conflict","Черновик изменился. Перечитайте его перед сохранением")

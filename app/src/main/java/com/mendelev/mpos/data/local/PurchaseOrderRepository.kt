@@ -18,9 +18,9 @@ class PurchaseOrderRepository(private val db: CatalogDatabase,private val clock:
     suspend fun commit(raw: PurchaseOrderCommand): String {
         val c=raw.copy(action=when(val a=raw.action) {is PurchaseOrderAction.Edit->a.copy(draft=a.draft.copy(lines=a.draft.lines.toList()));PurchaseOrderAction.Cancel->a})
         c.validate()
-        val id=InstallationGate.write {db.withTransaction {
+        val id=InstallationGate.write {db.adminTransaction {
             if(db.catalog().config()?.ownerId!=c.actorId) throw CatalogFailure("owner","Изменять и отменять закупки может только локальный владелец")
-            outcome(c)?.let {return@withTransaction it}
+            outcome(c)?.let {return@adminTransaction it}
             val doc=db.workspace().document(PurchaseOrderCodec.KEY) ?: throw CatalogFailure("purchase","Заказ недоступен")
             val rows=PurchaseOrderCodec.decode(doc.payload)
             val old=rows.find {it.id==c.orderId} ?: throw CatalogFailure("purchase","Заказ недоступен")

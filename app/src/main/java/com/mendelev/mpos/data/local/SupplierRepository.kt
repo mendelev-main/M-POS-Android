@@ -68,10 +68,10 @@ class SupplierRepository(private val db: CatalogDatabase,private val clock: Cloc
     }
     override suspend fun commit(command: SupplierCommand): String {
         val c=command.validated()
-        val id=InstallationGate.write {db.withTransaction {
+        val id=InstallationGate.write {db.adminTransaction {
             val config=db.catalog().config() ?: error("Хранилище не открыто")
             if(c.actorId!=config.ownerId) throw CatalogFailure("owner","Изменять поставщиков может только локальный владелец")
-            outcome(c)?.let {return@withTransaction it}
+            outcome(c)?.let {return@adminTransaction it}
             if(c.action is SupplierAction.Delete) PurchaseDraftRepository(db).requireSupplierUnused(c.action.id)
             val doc=db.workspace().document(SupplierCodec.KEY) ?: WorkspaceDocument(SupplierCodec.KEY,0,SupplierCodec.encode(emptyList()))
             val next=SupplierRules.apply(SupplierCodec.decode(doc.payload),c,db.catalog().allProducts().associate {it.id to it.type})

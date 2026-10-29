@@ -24,7 +24,7 @@ Close snapshot хранит expected/actual/difference и набор связе�
 
 EmployeeDirectory: стабильный employeeId, отображаемое имя, role/capabilities binding, active/revision. Выбор сотрудника в смену не является admin login. Сотрудник с историей отключается безопасно по принятой политике, история не теряет автора.
 
-Команды Create/UpdateEmployee, DeactivateEmployee, AssignCapabilities и LoginAdmin/LogoutAdmin различны. Назначение прав требует соответствующего actor и проверки revision; нельзя повысить свои права произвольным полем UI. Credential verifier/восстановление доступа/attempt throttling определяются D04. Встроенный общий пароль Web не переносится.
+Команды Create/UpdateEmployee, DeactivateEmployee, AssignCapabilities и LoginAdmin/LogoutAdmin различны. Назначение прав требует соответствующего actor и проверки revision; нельзя повысить свои права произвольным полем UI. Credential verifier/восстановление доступа/attempt throttling определяются D04. Решение владельца2026-10-29: заданный общий административный пароль проверяется по встроенному salted PBKDF2 verifier; plaintext не переносится. Смена/восстановление credential через UI в этом блоке не предусмотрены.
 
 Runtime admin session имеет явный indicator и exit, подтверждения после logout снова проверяют доступ. Ошибка входа не изменяет кассира, shiftId, receipts и права. Реализованный выбор ролей не считается готовым без use-case tests [ACCESS-AND-AUDIT.md](ACCESS-AND-AUDIT.md).
 

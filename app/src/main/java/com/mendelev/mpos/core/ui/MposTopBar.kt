@@ -36,6 +36,7 @@ data class MposTopNavigation(
     val shiftPending: Boolean = false,
     val shiftName: String = "Локальный владелец",
     val inventoryReminder: Boolean=false,
+    val adminActive: Boolean=false,
     val navigate: (String) -> Unit,
 )
 val LocalMposTopNavigation = staticCompositionLocalOf<MposTopNavigation?> { null }
@@ -65,6 +66,7 @@ fun MposTopBar(navigation: MposTopNavigation, enabled: Boolean = true) {
                 if(navigation.inventoryReminder) TopItem("Инвентаризация","inventory",navigation,allowed,selected=navigation.route in setOf("inventory","inventoryWork","inventoryHistory"),compact=compact)
             }
             Spacer(Modifier.weight(1f))
+            if(navigation.adminActive) TopItem("Администрирование активно","settings",navigation,allowed,compact=compact)
             TopItem("События", "events", navigation, allowed, compact=compact, icon="bell", selected=false)
             val shiftLabel = when {
                 navigation.shiftLoading -> "Загрузка смены"

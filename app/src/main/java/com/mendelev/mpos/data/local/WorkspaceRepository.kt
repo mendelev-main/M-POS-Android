@@ -146,7 +146,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         work.delete("parked:$id");afterWrite?.invoke()
         advanceOrders(state);record("deleteParked",id,commandId,fp)
     }
-    suspend fun home(action: HomeAction,expectedRevision: Long,commandId: String) = db.withTransaction {
+    suspend fun home(action: HomeAction,expectedRevision: Long,commandId: String) = db.adminTransaction {
         val intent=when(action) {
             is HomeAction.Add->listOf("add",action.type,action.id)
             is HomeAction.Move->listOf("move",action.type,action.id,action.slot.toString())
@@ -154,13 +154,13 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
             is HomeAction.Reset->listOf("reset")
         }
         val fp=CatalogRules.fingerprint("workspace.home",expectedRevision,*intent.toTypedArray())
-        if(repeat(commandId,fp)) return@withTransaction
+        if(repeat(commandId,fp)) return@adminTransaction
         val state=snapshot()
         if(state.homeRevision!=expectedRevision) throw CatalogFailure("conflict","Главный экран изменился. Повторите по обновлённой раскладке")
         val next=HomeEngine.apply(state.home,state.products,state.categories.map {it.id},action)
         write("home",WorkspaceCodec.home(next),state.homeRevision,commandId,fp)
     }
-    suspend fun layout(action: LayoutAction, expectedRevision: Long, commandId: String) = db.withTransaction {
+    suspend fun layout(action: LayoutAction, expectedRevision: Long, commandId: String) = db.adminTransaction {
         val intent=when(action) {
             is LayoutAction.SaveFolder -> listOf("folder",action.id,action.categoryId,action.name)
             is LayoutAction.DeleteFolder -> listOf("deleteFolder",action.id)
@@ -170,7 +170,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
             is LayoutAction.Step -> listOf("step",action.type,action.id,action.delta.toString())
         }
         val fp=CatalogRules.fingerprint("workspace.layout",expectedRevision,*intent.toTypedArray())
-        if(repeat(commandId,fp)) return@withTransaction
+        if(repeat(commandId,fp)) return@adminTransaction
         val state=snapshot()
         if(state.layoutRevision!=expectedRevision) throw CatalogFailure("conflict","Раскладка изменилась. Повторите по обновлённому экрану")
         val next=LayoutEngine.apply(state.layout,state.products,state.categories.map { it.id }.toSet()+"",action)

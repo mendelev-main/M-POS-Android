@@ -67,9 +67,9 @@ class InventoryRepository(private val db: CatalogDatabase,private val clock: Clo
     override suspend fun commit(c: InventoryCommand): String {
         val c=c.copy(action=when(val a=c.action) {is InventoryAction.Configure->a.copy(config=a.config.copy(productIds=a.config.productIds.toSet()));else->a})
         c.validate()
-        val id=InstallationGate.write {db.withTransaction {
+        val id=InstallationGate.write {db.adminTransaction {
             if(db.catalog().config()?.ownerId!=c.actorId) throw CatalogFailure("owner","Изменять инвентаризацию может только локальный владелец")
-            outcome(c)?.let {return@withTransaction it}
+            outcome(c)?.let {return@adminTransaction it}
             val doc=db.workspace().document(InventoryCodec.KEY) ?: WorkspaceDocument(InventoryCodec.KEY,0,InventoryCodec.encode(InventoryDocument()))
             if(doc.revision!=c.revision) throw CatalogFailure("conflict","Инвентаризация изменилась. Перечитайте данные")
             val old=InventoryCodec.decode(doc.payload);val eligible=if(c.action is InventoryAction.Finish) emptyMap() else products().associateBy {it.id}

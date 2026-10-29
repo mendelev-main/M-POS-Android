@@ -1,6 +1,6 @@
 # Доступ, секреты и аудит действий
 
-Статус: проектные требования; окончательная матрица ролей и способ входа остаются открыты до 05. Здесь не задаются юридические правила consent/сроков хранения. Источник поведения Web: pinned `docs/ADMINISTRATION_SESSION_RU.md`, feature guards и `android-safety.js`; native UI не обязан копировать визуальный контур Web.
+Статус: требования и частичная реализация05b.1. Владелец2026-10-29 подтвердил employee/admin, общий заданный password как salted slow verifier и Web runtime lifecycle; employee directory и полный UI revoke ещё planned. Здесь не задаются юридические правила consent/сроков хранения. Источник поведения Web: pinned `docs/ADMINISTRATION_SESSION_RU.md`, feature guards и `android-safety.js`; native UI не обязан копировать визуальный контур Web.
 
 ## Кто действует и от чьего имени
 

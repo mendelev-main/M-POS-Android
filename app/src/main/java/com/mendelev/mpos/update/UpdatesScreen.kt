@@ -73,6 +73,7 @@ fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGal
     ) {
         MposButton(stringResource(R.string.settings_back), onBack, enabled = state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER), style = ActionStyle.Secondary)
         Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineLarge)
+        com.mendelev.mpos.feature.access.AdminControl()
         FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
         if (onCatalog != null) MposButton("Товары", onCatalog, style=ActionStyle.Secondary,
             enabled=state.stage !in setOf(UpdateStage.VERIFYING, UpdateStage.INSTALLER))

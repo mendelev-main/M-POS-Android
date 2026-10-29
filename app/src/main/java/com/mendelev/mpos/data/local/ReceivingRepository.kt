@@ -68,9 +68,9 @@ class ReceivingRepository(private val db: CatalogDatabase,private val clock: Clo
     }
     override suspend fun commit(c: ReceivingCommand): String {
         val c=c.copy(draft=c.draft?.copy(lines=c.draft.lines.toList()));c.validate()
-        val id=InstallationGate.write {db.withTransaction {
+        val id=InstallationGate.write {db.adminTransaction {
             if(db.catalog().config()?.ownerId!=c.actorId) throw CatalogFailure("owner","Изменять приёмку может только локальный владелец")
-            outcome(c)?.let {return@withTransaction it}
+            outcome(c)?.let {return@adminTransaction it}
             val doc=db.workspace().document(ReceivingCodec.KEY) ?: WorkspaceDocument(ReceivingCodec.KEY,0,ReceivingCodec.encode(emptyList()))
             val rows=ReceivingCodec.decode(doc.payload);val old=rows.find {it.orderId==c.orderId}
             if((old?.revision ?: 0)!=c.revision) throw CatalogFailure("conflict","Черновик приёмки изменился. Перечитайте его; ввод сохранён")

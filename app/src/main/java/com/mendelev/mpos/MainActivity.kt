@@ -70,8 +70,10 @@ fun FoundationScreen(fixtureUrl: String? = null) {
     androidx.compose.runtime.LaunchedEffect(Unit) {while(true) {kotlinx.coroutines.delay(60_000);calendarDay=java.time.LocalDate.now()}}
     var receivingOrder by rememberSaveable { mutableStateOf<String?>(null) }
     val shiftUi by shiftModel.state.collectAsStateWithLifecycle()
+    val admin by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val navigation = MposTopNavigation(route, shiftUi.snapshot?.active != null,
         shiftUi.loading, shiftUi.fatal, shiftUi.pending || shiftUi.cashForm!=null || shiftUi.cashUnresolved!=null, shiftUi.snapshot?.active?.actorName ?: "Локальный владелец",
+        adminActive=admin.active,
         inventoryReminder=!inventoryUi.blocked && inventoryUi.snapshot?.document?.let {it.draft!=null || com.mendelev.mpos.domain.warehouse.InventoryRules.due(it.config,calendarDay)}==true) {
             route=if(it=="inventory" && inventoryUi.snapshot?.document?.draft!=null) "inventoryWork" else it
         }

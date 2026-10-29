@@ -212,7 +212,7 @@ def main():
                 # UTP removes apps after connected tests. Capture scale evidence in an explicit
                 # instrumentation lifetime, just like the existing persistent update seed.
                 scale = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.WorkspaceScaleUiTest",
-                            PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
+                            PACKAGE + ".test/com.mendelev.mpos.MposTestRunner", timeout=180)
                 assert "OK (2 tests)" in scale and "FAILURES" not in scale, scale[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
@@ -228,15 +228,15 @@ def main():
                 adb("install", str(base))
                 adb("install", "-r", str(test_apk))
                 financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest,com.mendelev.mpos.SupplierUpgradeTest,com.mendelev.mpos.PurchaseUpgradeTest,com.mendelev.mpos.PurchaseOrderUpgradeTest,com.mendelev.mpos.PurchaseOrderMutationUpgradeTest,com.mendelev.mpos.ReceivingUpgradeTest,com.mendelev.mpos.ReceivingPostingUpgradeTest,com.mendelev.mpos.StandaloneReceivingUpgradeTest,com.mendelev.mpos.InventoryUpgradeTest,com.mendelev.mpos.InventoryCountUpgradeTest,com.mendelev.mpos.InventoryClosingUpgradeTest,com.mendelev.mpos.StockDocumentUpgradeTest,com.mendelev.mpos.ShiftCashUpgradeTest",
-                                PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
+                                PACKAGE + ".test/com.mendelev.mpos.MposTestRunner", timeout=60)
                 assert "OK (15 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
                 # Recover only the already-supported, exact Quickstep infrastructure ANR before UI captures.
                 # Unknown/system/M-POS dialogs are not dismissed by wait_text.
                 adb("shell", "am", "start", "-W", "-n", PACKAGE + "/com.mendelev.mpos.MainActivity")
                 wait_navigation("workspace", click=False)
-                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.SupplierUiTest,com.mendelev.mpos.PurchaseUiTest,com.mendelev.mpos.PurchaseOrderUiTest,com.mendelev.mpos.PurchaseOrderMutationUiTest,com.mendelev.mpos.ReceivingUiTest,com.mendelev.mpos.ReceivingPostingUiTest,com.mendelev.mpos.StandaloneReceivingUiTest,com.mendelev.mpos.InventoryUiTest,com.mendelev.mpos.StockUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
-                             PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
-                assert "OK (17 tests)" in result and "FAILURES" not in result, result[-4000:]
+                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.AdminUiTest,com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.SupplierUiTest,com.mendelev.mpos.PurchaseUiTest,com.mendelev.mpos.PurchaseOrderUiTest,com.mendelev.mpos.PurchaseOrderMutationUiTest,com.mendelev.mpos.ReceivingUiTest,com.mendelev.mpos.ReceivingPostingUiTest,com.mendelev.mpos.StandaloneReceivingUiTest,com.mendelev.mpos.InventoryUiTest,com.mendelev.mpos.StockUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
+                             PACKAGE + ".test/com.mendelev.mpos.MposTestRunner", timeout=180)
+                assert "OK (18 tests)" in result and "FAILURES" not in result, result[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
                 expected_shift = adb("shell", "run-as", PACKAGE, "cat", "files/qa/shiftId.txt").strip()
@@ -253,7 +253,7 @@ def main():
                 assert expected_workspace_line, "UI setup must create a real persistent current cart"
                 expected_parked_label = adb("shell", "run-as", PACKAGE, "cat", "files/qa/parkedLabel.txt").strip()
                 assert expected_parked_label, "UI setup must create a real parked order"
-                for name in ("refund-confirm", "refund-result", "refund-returned-receipt", "split-confirm", "split-progress", "sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders", "supplier-card", "supplier-list", "purchase-draft", "purchase-order", "purchase-history", "purchase-order-edit", "purchase-order-edited", "purchase-order-cancelled", "receiving-draft", "receiving-preview", "receiving-post-confirm", "receiving-posted", "standalone-draft", "standalone-posted", "inventory-start", "inventory-stale", "inventory-fix-confirm", "inventory-fixed", "inventory-summary", "inventory-completed", "inventory-cancel-confirm", "inventory-cancelled", "stock-list", "stock-history", "stock-document", "shift-cash-confirm", "shift-cash-history"):
+                for name in ("admin-login", "admin-session", "refund-confirm", "refund-result", "refund-returned-receipt", "split-confirm", "split-progress", "sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders", "supplier-card", "supplier-list", "purchase-draft", "purchase-order", "purchase-history", "purchase-order-edit", "purchase-order-edited", "purchase-order-cancelled", "receiving-draft", "receiving-preview", "receiving-post-confirm", "receiving-posted", "standalone-draft", "standalone-posted", "inventory-start", "inventory-stale", "inventory-fix-confirm", "inventory-fixed", "inventory-summary", "inventory-completed", "inventory-cancel-confirm", "inventory-cancelled", "stock-list", "stock-history", "stock-document", "shift-cash-confirm", "shift-cash-history"):
                     captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
                     assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
                     (reports / f"{name}.png").write_bytes(captured.stdout)
@@ -298,6 +298,9 @@ def main():
             launch(fixture=False)
             wait_text("Установлена версия " + re.escape(manifest["versionName"]))
             wait_text("Приложение успешно обновлено")
+            if not production:
+                wait_text("^Режим кассира$")
+                print("ADMIN SESSION UPDATE PASSED: new process starts without administrative access", flush=True)
             if production:
                 assert wait_text("^Последняя проверка:") == checked
             reports = ROOT / "app/build/reports/update-e2e"
@@ -335,7 +338,7 @@ def main():
                 print("SHIFT UPDATE PASSED: active shift identity and opening140 BYN survived package replacement", flush=True)
                 adb("install", "-r", str(test_apk))
                 financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest,com.mendelev.mpos.SupplierUpgradeTest,com.mendelev.mpos.PurchaseUpgradeTest,com.mendelev.mpos.PurchaseOrderUpgradeTest,com.mendelev.mpos.PurchaseOrderMutationUpgradeTest,com.mendelev.mpos.ReceivingUpgradeTest,com.mendelev.mpos.ReceivingPostingUpgradeTest,com.mendelev.mpos.StandaloneReceivingUpgradeTest,com.mendelev.mpos.InventoryUpgradeTest,com.mendelev.mpos.InventoryCountUpgradeTest,com.mendelev.mpos.InventoryClosingUpgradeTest,com.mendelev.mpos.StockDocumentUpgradeTest,com.mendelev.mpos.ShiftCashUpgradeTest",
-                                "-e", "saleUpgradeMode", "verify", PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
+                                "-e", "saleUpgradeMode", "verify", PACKAGE + ".test/com.mendelev.mpos.MposTestRunner", timeout=60)
                 assert "OK (15 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
                 adb("uninstall", PACKAGE + ".test")
                 print("SHIFT CASH UPDATE PASSED: manual cash journal, closed expected/count/difference, carry and original command replays preserved without duplication")

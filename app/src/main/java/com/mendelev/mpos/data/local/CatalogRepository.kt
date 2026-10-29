@@ -23,7 +23,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
     private fun requirePhoto(id: String?) {
         if(id!=null) (photos ?: throw CatalogFailure("photo","Хранилище фото недоступно")).requirePrepared(id)
     }
-    suspend fun saveDraft(draft: DraftEntity) = db.withTransaction {
+    suspend fun saveDraft(draft: DraftEntity) = db.adminTransaction {
         requirePhoto(JSONObject(draft.payload).optString("photoId").takeIf { it.isNotEmpty() && it!="null" })
         dao.draft(draft)
     }
@@ -44,8 +44,8 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
     }
     suspend fun saveProduct(raw: ProductInput): String {
         val input = raw.validated(); val fp = "product:" + input.fingerprint()
-        return db.withTransaction {
-            repeat(input.commandId, fp)?.let { return@withTransaction it }
+        return db.adminTransaction {
+            repeat(input.commandId, fp)?.let { return@adminTransaction it }
             SplitPaymentRepository(db).requireProductUnlocked(input.id)
             requirePhoto(input.photoId)
             val groups=ModifierRules.validate(input.id,input.modifierGroups,dao.allProducts().map { it.id }.toSet())
@@ -111,8 +111,8 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
         val legacyFp = CatalogRules.fingerprint("category", id, expectedRevision, name)
         val fp = if(cleanColor==CategoryAppearance.DEFAULT_COLOR && cleanSymbol.isEmpty()) legacyFp
             else CatalogRules.fingerprint("categoryAppearance",legacyFp,cleanColor,cleanSymbol)
-        return db.withTransaction {
-            repeat(commandId, fp)?.let { return@withTransaction it }
+        return db.adminTransaction {
+            repeat(commandId, fp)?.let { return@adminTransaction it }
             SplitPaymentRepository(db).requireCategoryUnlocked(id)
             val old = dao.category(id)
             if (old?.revision != expectedRevision) throw CatalogFailure("conflict", "Категория изменилась. Откройте её заново")
@@ -123,9 +123,9 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
             record(commandId, fp, id, "category.save"); id
         }
     }
-    suspend fun reorderCategories(order: List<CategoryOrderEntry>, commandId: String) = db.withTransaction {
+    suspend fun reorderCategories(order: List<CategoryOrderEntry>, commandId: String) = db.adminTransaction {
         val fp=CatalogRules.fingerprint("categoryOrder",*order.flatMap { listOf(it.id,it.revision.toString()) }.toTypedArray())
-        if(repeat(commandId,fp)!=null) return@withTransaction
+        if(repeat(commandId,fp)!=null) return@adminTransaction
         val current=dao.categorySnapshot()
         if(order.map { it.id }.distinct().size!=order.size || current.map { it.id }.toSet()!=order.map { it.id }.toSet() ||
             order.any { entry -> current.find { it.id==entry.id }?.revision!=entry.revision })
@@ -140,18 +140,18 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
         }
         record(commandId,fp,"categories","category.reorder")
     }
-    suspend fun deleteCategory(id: String, revision: Long, commandId: String) = db.withTransaction {
+    suspend fun deleteCategory(id: String, revision: Long, commandId: String) = db.adminTransaction {
         val fp = CatalogRules.fingerprint("deleteCategory", id, revision)
-        if (repeat(commandId, fp) != null) return@withTransaction
+        if (repeat(commandId, fp) != null) return@adminTransaction
         SplitPaymentRepository(db).requireCategoryUnlocked(id)
         if (dao.category(id)?.revision != revision) throw CatalogFailure("conflict", "Категория изменилась")
         if (dao.categoryUses(id) > 0) throw CatalogFailure("used", "В категории есть товары. Сначала переместите их")
         db.requireNoWorkspaceCategory(id)
         dao.deleteCategory(id); record(commandId, fp, id, "category.delete")
     }
-    suspend fun deleteProduct(id: String, revision: Long, commandId: String) = db.withTransaction {
+    suspend fun deleteProduct(id: String, revision: Long, commandId: String) = db.adminTransaction {
         val fp = CatalogRules.fingerprint("deleteProduct", id, revision)
-        if (repeat(commandId, fp) != null) return@withTransaction
+        if (repeat(commandId, fp) != null) return@adminTransaction
         SplitPaymentRepository(db).requireProductUnlocked(id)
         if (dao.product(id)?.revision != revision) throw CatalogFailure("conflict", "Товар изменился")
         db.requireNoWorkspaceProduct(id)

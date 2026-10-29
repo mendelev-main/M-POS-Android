@@ -18,9 +18,9 @@ class ReceivingPostingRepository(private val db: CatalogDatabase,private val clo
     }
     override suspend fun commit(c: ReceivingPostCommand): String {
         val c=c.copy(draft=c.draft.copy(lines=c.draft.lines.toList()));c.validate()
-        val id=InstallationGate.write {db.withTransaction {
+        val id=InstallationGate.write {db.adminTransaction {
             if(db.catalog().config()?.ownerId!=c.actorId) throw CatalogFailure("owner","Проводить приход может только локальный владелец")
-            outcome(c)?.let {return@withTransaction it}
+            outcome(c)?.let {return@adminTransaction it}
             if(c.costPolicy!=2) throw CatalogFailure("policy","Для нового прихода требуется актуальное правило себестоимости")
             val d=c.draft;val draftDoc=db.workspace().document(ReceivingCodec.KEY) ?: throw CatalogFailure("conflict","Сначала сохраните черновик")
             val drafts=ReceivingCodec.decode(draftDoc.payload);val saved=drafts.find {it.orderId==d.key}
