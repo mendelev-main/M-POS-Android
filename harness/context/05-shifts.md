@@ -1,0 +1,3 @@
+# Этап05 — контекст
+
+2026-10-29: владелец попросил перейти к следующему этапу. Складской программный checkpoint04 сверён в docs/PHASE-04-REVIEW.md; device pending, receiving charges/storno deferred, M17 excluded. Начат05a manual cash как независимый от ещё не согласованной role/auth matrix блок. Pinned shifts.js/source tests inspected. Web optional note preserved, positive exact cents, no overdraft. Native single-owner+CAS/InstallationGate/partial-payment guard; journal workspace payload1, SQLschema8 unchanged. UI unknown result retains exact command; known commit/read failure cannot duplicate. CM01–CM05 implemented, CI pending. No physical drawer/printing/Telegram effects.

@@ -50,6 +50,24 @@ class ShiftUiTest {
         assertEquals(documents,runBlocking {CatalogDatabase.get(compose.activity.applicationContext).workspace().documents()})
         val qa=File(compose.activity.filesDir,"qa").apply {mkdirs()};qa.resolve("shiftId.txt").writeText(model.state.value.snapshot!!.active!!.id)
         screenshot("shift-open")
+        val cashBefore=runBlocking {ShiftCashRepository(CatalogDatabase.get(compose.activity.applicationContext)).history(model.state.value.snapshot!!.active!!.id).size}
+        compose.onNodeWithTag("shiftDeposit").performScrollTo().performClick()
+        compose.onNodeWithTag("shiftCashAmount").performTextInput("25,50")
+        compose.onNodeWithTag("shiftCashNote").performTextInput("Размен");hideKeyboard()
+        compose.activityRule.scenario.recreate();compose.onNodeWithTag("shiftCashAmount").assertTextContains("25,50")
+        compose.onNodeWithTag("topNav-workspace").assertIsNotEnabled();screenshot("shift-cash-confirm")
+        compose.onNodeWithTag("shiftCashSave").performClick()
+        compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.cashForm==null && model.state.value.snapshot?.currentCash==16550L}
+        compose.onNodeWithTag("shiftWithdraw").performScrollTo().performClick()
+        compose.onNodeWithTag("shiftCashAmount").performTextInput("999");hideKeyboard()
+        compose.onNodeWithTag("shiftCashSave").performClick();compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.message!=null}
+        compose.onNodeWithTag("shiftCashAmount").performTextReplacement("25,50");hideKeyboard()
+        compose.onNodeWithTag("shiftCashSave").performClick()
+        compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.cashForm==null && model.state.value.snapshot?.currentCash==14000L && model.state.value.cashHistory.size==cashBefore+2}
+        compose.onNodeWithTag("shiftCash:${model.state.value.cashHistory.first().id}").performScrollTo().assertIsDisplayed()
+        screenshot("shift-cash-history")
+        assertEquals(documents.filterNot {it.id==ShiftCashCodec.KEY},runBlocking {CatalogDatabase.get(compose.activity.applicationContext).workspace().documents()}.filterNot {it.id==ShiftCashCodec.KEY})
+
     }
     private fun hideKeyboard() {compose.runOnIdle {(compose.activity.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).hideSoftInputFromWindow(compose.activity.window.decorView.windowToken,0)}}
     private fun screenshot(name: String) {

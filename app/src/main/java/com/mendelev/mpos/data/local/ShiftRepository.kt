@@ -10,6 +10,7 @@ import java.util.UUID
 
 class ShiftRepository(private val db: CatalogDatabase,private val clock: Clock=Clock.systemDefaultZone(),private val afterWrite: (() -> Unit)?=null) {
     private val dao=db.shifts()
+    fun cashAccess(): ShiftCashAccess=ShiftCashRepository(db,clock)
     suspend fun initialize() {CatalogRepository(db).initialize();db.withTransaction {dao.initialize(ShiftRegisterEntity())}}
     fun observe(): Flow<ShiftSnapshot> = dao.observe().filterNotNull().map {snapshot()}
     suspend fun snapshot(): ShiftSnapshot=db.withTransaction {
@@ -19,13 +20,15 @@ class ShiftRepository(private val db: CatalogDatabase,private val clock: Clock=C
         val active=dao.active()
         check(active.size<=1 && active.all {it.id==last?.id && it.activeSlot==1 && it.closedAt==null}) {"Нарушен журнал смен"}
         check(last==null || last.registerId==config.registerId && (last.closedAt==null)==(last.activeSlot==1)) {"Нарушен статус смены"}
+        val manual=ShiftCashCodec.all(db)
         val cash=if(last==null) 0L else if(last.closedAt!=null) last.expectedCash ?: error("Не сохранён итог смены") else {
             // Exact aggregate: historical event ordering must not create a temporary negative/overflow.
             val sales=db.sales().inShift(last.id).fold(last.openingCash.toBigInteger()) {sum,r->
                 check(r.cash>=0 && r.deliveryCashOut>=0)
                 sum+r.cash.toBigInteger()-r.deliveryCashOut.toBigInteger()
             }
-            db.refunds().inShift(last.id).fold(sales) {sum,r->
+            val withManual=manual.filter {it.command.shiftId==last.id}.fold(sales) {sum,m->if(m.command.type=="deposit") sum+m.command.amount.toBigInteger() else sum-m.command.amount.toBigInteger()}
+            db.refunds().inShift(last.id).fold(withManual) {sum,r->
                 check(r.cash>=0 && r.deliveryCashCredit>=0)
                 sum+r.deliveryCashCredit.toBigInteger()-r.cash.toBigInteger()
             }.longValueExact().also {check(it>=0) {"Некорректный остаток кассы"}}

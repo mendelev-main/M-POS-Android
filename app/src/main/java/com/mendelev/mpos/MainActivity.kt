@@ -71,7 +71,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
     var receivingOrder by rememberSaveable { mutableStateOf<String?>(null) }
     val shiftUi by shiftModel.state.collectAsStateWithLifecycle()
     val navigation = MposTopNavigation(route, shiftUi.snapshot?.active != null,
-        shiftUi.loading, shiftUi.fatal, shiftUi.pending, shiftUi.snapshot?.active?.actorName ?: "Локальный владелец",
+        shiftUi.loading, shiftUi.fatal, shiftUi.pending || shiftUi.cashForm!=null || shiftUi.cashUnresolved!=null, shiftUi.snapshot?.active?.actorName ?: "Локальный владелец",
         inventoryReminder=!inventoryUi.blocked && inventoryUi.snapshot?.document?.let {it.draft!=null || com.mendelev.mpos.domain.warehouse.InventoryRules.due(it.config,calendarDay)}==true) {
             route=if(it=="inventory" && inventoryUi.snapshot?.document?.draft!=null) "inventoryWork" else it
         }

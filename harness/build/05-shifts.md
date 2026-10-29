@@ -1,6 +1,6 @@
 # Этап 05 — Смены и роли
 
-Статус: planned
+Статус: in progress —05a cash movements CM01–CM05; roles/auth/reporting planned
 
 ## Объём
 
@@ -35,3 +35,5 @@ H01: повтор закрытия не дублирует; H02: деньги с
 ## Контекст и результат
 
 Значимые решения в `harness/context/05-shifts.md` при начале работ; наблюдаемые результаты в `harness/build-log.md`.
+
+2026-10-29: 05a CM01–CM05 implemented, CI pending; manual cash deposit/withdrawal journal and exact reconciliation, same-command recovery. Контракт SHIFT-CASH-05A.md; single-owner только, roles/auth/analytics planned.
