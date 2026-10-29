@@ -11,6 +11,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mendelev.mpos.core.access.Administration
@@ -25,7 +27,7 @@ import com.mendelev.mpos.feature.access.AdminControl
     var panel by rememberSaveable {mutableStateOf(false)}
     var planned by rememberSaveable {mutableStateOf<String?>(null)}
     LaunchedEffect(admin.active) {if(!admin.active) panel=false}
-    Column(Modifier.fillMaxSize().safeDrawingPadding()) {
+    Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
         if(LocalMposTopNavigation.current!=null) MposAppBar {}
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
             FlowRow(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalArrangement=Arrangement.spacedBy(12.dp)) {

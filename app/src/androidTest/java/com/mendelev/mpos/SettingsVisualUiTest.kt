@@ -21,6 +21,16 @@ class SettingsVisualUiTest {
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("updatesWindow").assertExists()
         screenshot("settings-updates")
+        val automation=InstrumentationRegistry.getInstrumentation().uiAutomation
+        fun hasResource(node: android.view.accessibility.AccessibilityNodeInfo?,id: String): Boolean {
+            if(node==null) return false
+            if(node.viewIdResourceName==id) return true
+            return (0 until node.childCount).any {hasResource(node.getChild(it),id)}
+        }
+        val oldFlags=automation.serviceInfo.flags
+        automation.serviceInfo=automation.serviceInfo.apply {flags=flags or android.accessibilityservice.AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS}
+        try {compose.waitUntil(10_000) {hasResource(automation.rootInActiveWindow,"updatesBack")}}
+        finally {automation.serviceInfo=automation.serviceInfo.apply {flags=oldFlags}}
         compose.onNodeWithTag("updatesBack").performScrollTo().performClick()
         compose.onNodeWithTag("updatesWindow").assertDoesNotExist()
         compose.onNodeWithTag("settingsBackup").performScrollTo().performClick()

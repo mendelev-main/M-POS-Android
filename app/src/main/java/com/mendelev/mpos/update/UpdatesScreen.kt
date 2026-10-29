@@ -36,6 +36,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -70,7 +72,7 @@ fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGal
     LaunchedEffect(model) { model.openSettings() }
     com.mendelev.mpos.feature.settings.SettingsHome({updatesOpen=true},onCatalog,onSuppliers,onInventory,onStock,onGallery,onBack,state.candidate!=null)
     if(updatesOpen) com.mendelev.mpos.core.ui.MposDialog(stringResource(R.string.update_title),{updatesOpen=false},closable=!locked,maxWidth=820.dp) {
-        Column(Modifier.heightIn(max=520.dp).verticalScroll(rememberScrollState()).testTag("updatesWindow"),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+        Column(Modifier.heightIn(max=520.dp).verticalScroll(rememberScrollState()).testTag("updatesWindow").semantics {testTagsAsResourceId=true},verticalArrangement=Arrangement.spacedBy(16.dp)) {
             Text(if(administration.active) "Администрирование активно" else "Режим кассира",style=MaterialTheme.typography.bodySmall)
                 Text(stringResource(R.string.update_installed, model.repository.installedName, model.repository.installedCode))
                 Text(stringResource(R.string.update_channel))
