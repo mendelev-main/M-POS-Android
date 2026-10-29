@@ -1,6 +1,6 @@
 # 05b — сотрудники и административный доступ
 
-Статус: in progress; 05b.1 административная сессия и guards implemented, CI pending. Решения владельца получены2026-10-29. Справочник сотрудников/выбор кассира05b.2 ещё planned. Это контракт подготовки, не evidence реализации H03/H04 или ACC-01–ACC-07.
+Статус: in progress; 05b.1 административная сессия и guards A01–A04 ci-verified. Решения владельца получены2026-10-29. Справочник сотрудников/выбор кассира05b.2 ещё planned. Это контракт подготовки, не evidence реализации H03/H04 или ACC-01–ACC-07.
 
 ## Источник и текущая граница
 
@@ -50,3 +50,7 @@ A01–A04 для этого блока: точный slow verifier/wrong passwor
 Тестовый runner использует явный привилегированный adapter с отдельным фиктивным verifier только в androidTest APK для прежних business fixtures. Default Administration в debug/release всегда locked; нет Intent/BuildConfig bypass. Access tests явно выходят из fixture session и проверяют настоящий repository guard. После реального APK replacement самостоятельный процесс снова locked; updater и чтение каталога остаются работоспособны.
 
 Технические источники: [OWASP Password Storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html), [Android lifecycle](https://developer.android.com/guide/components/activities/activity-lifecycle). Обязательное физическое тестирование отложено владельцем.
+
+## Наблюдаемый результат
+
+05b.1 A01–A04 ci-verified/API36: [FullCI40859068370](https://github.com/mendelev-main/M-POS-Android/actions/runs/40859068370)/645f179 SUCCESS;141JVM/215instrumentation/0failures/0skipped,14Python/preflight/lint/debugAPK/testAPK.2workspace-scale/18UIseed/15upgrade fixtures and actual debugAPK1→2 passed. ADMIN SESSION UPDATE PASSED: standalone new process starts without admin access; all prior catalog/workspace/shift/cash/financial/warehouse upgrade assertions retained. Slow exact verifier, wrong password/input clearing, monotonic limiter, serialized logout/commit, default locked new session, direct catalog/supplier/inventory/layout refusals without writes and cashier shift/deposit after logout passed. Login/logout/recreation preserved cashier/shift cash; unique administration navigation tag regression passed. Login/session screenshots inspected: shared controls, readable, no overlap. Plaintext supplied credential absent in main sources and local APK entries; privileged fixture credential absent in target APK. Initial40857960735/9bcf34b failed with duplicate topNav-settings (7 UI flows) and3 subsequent split-fixture workspace failures; distinct indicator tag fixed, no gates weakened. Read-only catalog row IDs allow updater same-row stock verification without granting edit access. Employee directory/selection, complete UI form revocation and full SA01–SA06 remain planned; no full05b/H03 completion claim. Background lifecycle is implemented by process memory; physical tablet/dark/150% remain pending. SQLschema8/main/signing unchanged.
