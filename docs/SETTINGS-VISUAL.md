@@ -1,6 +1,6 @@
 # Настройки — визуальный перенос
 
-2026-10-29. Статус implemented; SET01–SET04 CI pending. Прямой запрос владельца перед продолжением05b.2; новая предметная функциональность настроек не вводится.
+2026-10-29. Статус ci-verified; SET01–SET04, FullCI40874119491/629bc08. Прямой запрос владельца перед продолжением05b.2; новая предметная функциональность настроек не вводится.
 
 Источник: pinned Web1682c883 `pos.html` renderSettingsScreen/renderAdminPanel, CSS settings-grid/settings-card/settings-main-action/settings-info-btn. Сохраняются иерархия заголовка, административный вход, три основных действия, сетка карточек сотрудников/поставщиков/тарифов/скидок/шаблонов. На ширине>700dp — две колонки1.2/.8, gap16dp; уже — одна. Для существующих native маршрутов остатков/инвентаризации/поставщиков оставлен отдельный быстрый блок. Модуль «Зал и бронирования» отсутствует.
 
@@ -13,3 +13,7 @@ Native mapping по DESIGN-SYSTEM: Manrope, semantic palette, shared кнопк�
 SET01: структурный перенос/settings routes без подмены готовых разделов заглушками. SET02: ⓘ открывает update window, recreation сохраняет окно, close возвращает settings; реальные проверки update сохраняются. SET03: planned действие показывает честное пояснение и ничего не сохраняет. SET04: узкая ширина520dp/font150% сохраняет доступность info/warehouse routes; light screenshot QA для home/update/planned. Dark и физический планшет отдельно pending.
 
 CI updater driver различает новый ⓘ и старую inline карточку по наблюдаемому UI; новый flow обязан открыть окно и пройти прежние check/download/recovery/tamper/install/preserved data assertions. Закрытие нового окна перед возвратом в каталог выполняется явно. Наличие кнопки/текста не объявляет готовым будущий раздел.
+
+## Наблюдаемый результат
+
+SET01–SET04 ci-verified/API36: [FullCI40874119491](https://github.com/mendelev-main/M-POS-Android/actions/runs/40874119491)/629bc08 SUCCESS;141JVM/217instrumentation/0failures/0skipped,14Python/harness/lint/debugAPK/testAPK.2workspace-scale/19UIseed/15upgrade fixtures and actual debugAPK1→2 passed. Settings info→update window/recreation/close, planned notice, narrow520dp/font150% warehouse/info routes, system-accessible dialog IDs passed. Home/update/admin/planned screenshots inspected: readable/shared components/no overlap; scroll clipping is intentional. Existing catalog/workspace/parked/home/shift/cash/sale/refund/split/supplier/purchase/receiving/inventory upgrade assertions retained and passed. Cancelled shift observers now have generation/cancellation fence; known-commit/read-failure recovery passed10 repetitions without resubmit. Preliminary runs retained:40865287001 gallery below-fold test navigation;40869516775 missing Dialog resource-ID export after successful install;40872203132 existing cash recovery timeout. Fixes kept all financial/update assertions; no gates weakened. SQLschema8/main/signing unchanged, M17 excluded; physical tablet/dark remain pending. This is settings visual scope, not completion of employee directory05b.2.
