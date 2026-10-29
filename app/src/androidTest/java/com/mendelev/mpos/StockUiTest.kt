@@ -14,7 +14,10 @@ class StockUiTest {
     @Test fun lowFilterSearchHistoryAndBackKeepExactQuantity() {
         val rows=listOf(StockRow("a","Мука","Сырьё","kg","0.0004","0.0004",2),StockRow("b","Чай","Напитки","piece","10",null,1))
         lateinit var model: StockViewModel
-        compose.runOnIdle {model=StockViewModel(StockReadAccess {id->StockSnapshot(rows,id,if(id==null) emptyList() else listOf(MovementEntity("movement",id,"-9.9996","product_card","command",1)),1)})}
+        compose.runOnIdle {model=StockViewModel(object: StockReadAccess {
+            override suspend fun snapshot(id: String?)=StockSnapshot(rows,id,if(id==null) emptyList() else listOf(MovementEntity("movement",id,"-9.9996","inventory","command",1,"d")),172800001,"UTC")
+            override suspend fun document(id: String)=StockDocument("Инвентаризация · Завершена",1,listOf("Мука: факт 0.0004 · разница -9.9996"))
+        })}
         compose.setContent {MposTheme {StockScreen(model) {}}}
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.snapshot!=null}
         shot("stock-list")
@@ -25,6 +28,15 @@ class StockUiTest {
         compose.onNodeWithTag("stockQuantity").assertTextContains("0.0004",substring=true)
         compose.onNodeWithTag("stockMovement:movement").performScrollTo().assertTextContains("-9.9996",substring=true)
         shot("stock-history")
+        compose.onNodeWithTag("stockPreset:today").performClick()
+        compose.onNodeWithTag("stockMovementsEmpty").performScrollTo().assertExists()
+        compose.onNodeWithTag("stockPeriodAll").performClick()
+        compose.onNodeWithTag("stockMovement:movement").performScrollTo().assertExists()
+        compose.onNodeWithTag("stockDocument:movement").performScrollTo().performClick()
+        compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.document!=null}
+        compose.onNodeWithText("Сохранённый документ · только просмотр").assertIsDisplayed();shot("stock-document")
+        compose.onNodeWithContentDescription("Закрыть").performClick()
+        compose.onNodeWithTag("stockMovement:movement").assertExists()
         compose.onNodeWithTag("stockBack").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.snapshot?.selectedId==null}
         compose.onNodeWithTag("stockProduct:b").assertDoesNotExist()
