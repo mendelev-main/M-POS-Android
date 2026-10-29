@@ -20,7 +20,7 @@ class StockDocumentTest {
             assertEquals(setOf("sale","refund","receiving","inventory"),docs.keys)
             assertTrue(docs.getValue("sale").title.contains("Чек"));assertTrue(docs.getValue("refund").title.contains("Возврат"))
             assertTrue(docs.getValue("receiving").title.contains("TTN-stock-doc"));assertTrue(docs.getValue("inventory").title.contains("Завершена"))
-            docs.values.forEach {assertTrue(it.lines.any {line->line.contains("Молоко stock-doc")});assertFalse(it.lines.any {line->line.contains("Новое имя")})}
+            docs.values.forEach {assertTrue(it.lines.any {line->line.contains("Молоко stock-doc")});assertTrue(it.lines.any {line->line.contains("л")});assertFalse(it.lines.any {line->line.contains("Новое имя")})}
             assertTrue(docs.getValue("inventory").lines.any {it.contains("0.0004")})
             assertEquals(before,db.workspace().documents());assertEquals(balance,db.catalog().balance(p.id));assertEquals(movements,db.catalog().stockHistory(p.id))
             assertTrue(runCatching {reader.read(movements.single {it.source=="opening"}.id)}.isFailure)
