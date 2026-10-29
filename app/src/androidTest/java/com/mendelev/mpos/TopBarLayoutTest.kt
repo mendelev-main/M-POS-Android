@@ -70,4 +70,17 @@ class TopBarLayoutTest {
         compose.runOnIdle {locked=false;shown=false};compose.onNodeWithTag("topNav-inventory").assertDoesNotExist()
     }
 
+    @Test fun administrationIndicatorHasDistinctTagAndBothControlsNavigateToSettings() {
+        var selected by mutableStateOf("workspace");var calls=0
+        compose.setContent {MposTheme {Box(Modifier.width(1280.dp)) {
+            MposTopBar(MposTopNavigation(selected,true,adminActive=true) {selected=it;calls++})
+        }}}
+        compose.onAllNodesWithTag("topNav-settings").assertCountEquals(1)
+        compose.onAllNodesWithTag("topNav-administration").assertCountEquals(1)
+        compose.onNodeWithTag("topNav-administration").performScrollTo().performClick()
+        assertEquals("settings",selected)
+        compose.onNodeWithTag("topNav-settings").performScrollTo().performClick()
+        assertEquals(2,calls)
+    }
+
 }

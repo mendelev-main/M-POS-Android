@@ -97,7 +97,7 @@ def scroll_catalog_to_product(name, expected_stock=None):
             if re.search(pattern, node.get("text", "")):
                 # A clipped title can be visible while the stock in its row is still below the fold.
                 # Require the expected stock in this product's own clickable row, not another SKU.
-                rows = [row for row in nodes if row.get("clickable") == "true" and row.get("resource-id") != "catalogProducts" and node in list(row.iter("node"))]
+                rows = [row for row in nodes if (row.get("resource-id", "").startswith("catalogProduct:") or row.get("clickable") == "true") and row.get("resource-id") != "catalogProducts" and node in list(row.iter("node"))]
                 if expected_stock is None or any(any(child.get("text") == expected_stock for child in row.iter("node")) for row in rows):
                     return node.get("text") or node.get("content-desc")
         lists = [n for n in nodes if n.get("package") == PACKAGE and n.get("scrollable") == "true" and n.get("resource-id") == "catalogProducts"]

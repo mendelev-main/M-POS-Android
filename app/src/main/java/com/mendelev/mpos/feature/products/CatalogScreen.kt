@@ -134,7 +134,7 @@ import java.util.UUID
                 if(rows.isEmpty()) MposNotice(if(state.products.isEmpty()) "Пока нет товаров. Создайте первый товар." else "По запросу ничего не найдено")
                 LazyColumn(verticalArrangement=Arrangement.spacedBy(8.dp), modifier=Modifier.weight(1f).testTag("catalogProducts").semantics { testTagsAsResourceId=true }) {
                     items(rows,key={ it.product.id }) { row ->
-                        Surface(Modifier.fillMaxWidth().clickable(enabled=administration.active) { model.edit(row) }, shape=RoundedCornerShape(16.dp), border=BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
+                        Surface(Modifier.fillMaxWidth().testTag("catalogProduct:${row.product.id}").clickable(enabled=administration.active) { model.edit(row) }, shape=RoundedCornerShape(16.dp), border=BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
                             Row(Modifier.padding(18.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(16.dp)) {
                                 ProductPhoto(row.product.photoId,model.photos,Modifier.size(56.dp))
                                 Column(Modifier.weight(1f)) {
