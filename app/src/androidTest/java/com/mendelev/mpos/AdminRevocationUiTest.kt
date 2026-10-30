@@ -56,6 +56,37 @@ class AdminRevocationUiTest {
             assertEquals(0,runBlocking {db.catalog().categorySnapshot().size});assertEquals("Товар",runBlocking {db.catalog().product("p")!!.name})
         } finally {compose.runOnIdle {store.clear()};db.close()}
     }
+    @Test fun inventoryFixConfirmationClosesWhileSavedCountAndStockRemain() {
+        val context=InstrumentationRegistry.getInstrumentation().targetContext
+        val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build();val store=ViewModelStore()
+        lateinit var model: com.mendelev.mpos.feature.inventory.InventoryViewModel
+        try {
+            val repo=InventoryRepository(db,generation="fixture")
+            runBlocking {
+                val catalog=CatalogRepository(db);catalog.initialize();catalog.saveProduct(ProductInput("p",null,"Товар",null,"2","1","10",null,true,"create"))
+                val initial=repo.snapshot();val owner=initial.ownerId
+                repo.commit(com.mendelev.mpos.domain.warehouse.InventoryCommand("config",owner,0,com.mendelev.mpos.domain.warehouse.InventoryAction.Configure(com.mendelev.mpos.domain.warehouse.InventoryConfig(true,"monthly",setOf("p")))))
+                repo.commit(com.mendelev.mpos.domain.warehouse.InventoryCommand("start",owner,1,com.mendelev.mpos.domain.warehouse.InventoryAction.Start("inventory","adhoc")))
+                val snapshot=repo.snapshot()
+                repo.commit(com.mendelev.mpos.domain.warehouse.InventoryCommand("count",owner,2,com.mendelev.mpos.domain.warehouse.InventoryAction.Count("inventory",snapshot.products.single(),"3",snapshot.generation)))
+            }
+            compose.runOnIdle {model=ViewModelProvider(store,object: ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=com.mendelev.mpos.feature.inventory.InventoryViewModel(repo) as T
+            })[com.mendelev.mpos.feature.inventory.InventoryViewModel::class.java]}
+            compose.setContent {MposTheme {com.mendelev.mpos.feature.inventory.InventoryScreen(model,{},work=true)}}
+            compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.snapshot!=null}
+            compose.onNodeWithTag("inventoryFix:p").performScrollTo().performClick()
+            compose.onNodeWithTag("inventoryFixConfirm").assertIsDisplayed()
+            runBlocking {Administration.session.logout()}
+            compose.onNodeWithTag("inventoryFixConfirm").assertDoesNotExist()
+            compose.onNodeWithTag("inventoryFix:p").assertIsNotEnabled()
+            runBlocking {assertTrue(Administration.session.login("fixture-admin".toCharArray()))}
+            compose.onNodeWithTag("inventoryFixConfirm").assertDoesNotExist()
+            assertEquals("10",runBlocking {db.catalog().balance("p")!!.quantity})
+            val count=runBlocking {repo.snapshot().document.draft!!.counts.single()}
+            assertEquals("3",count.raw);assertNull(count.fixed)
+        } finally {compose.runOnIdle {store.clear()};db.close()}
+    }
     private fun shot(name: String) {
         compose.waitForIdle()
         val instrumentation=InstrumentationRegistry.getInstrumentation();val bitmap=checkNotNull(instrumentation.uiAutomation.takeScreenshot())

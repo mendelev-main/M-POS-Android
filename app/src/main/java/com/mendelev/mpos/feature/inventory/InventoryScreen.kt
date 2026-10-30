@@ -115,7 +115,7 @@ import java.time.LocalDate
         }
     }
     val fixCount=ui.snapshot?.document?.draft?.counts?.find {it.product.id==fixing && it.fixed==null}
-    if(fixing!=null && fixCount!=null) MposDialog("Зафиксировать остаток?",{fixing=null},!locked) {
+    if(administration.active && fixing!=null && fixCount!=null) MposDialog("Зафиксировать остаток?",{fixing=null},!locked) {
         Text("${fixCount.product.name}: ${fixCount.product.stock} → ${InventoryRules.actual(fixCount.raw)} ${unitLabel(fixCount.product.unit)}. Разница: ${InventoryRules.delta(fixCount)}.")
         Text("Это изменение склада. Повторная команда не применит разницу второй раз.")
         MposButton("Фиксировать",{val id=fixing!!;fixing=null;model.fix(id)},enabled=!locked && !ui.blocked && ui.canEdit,modifier=Modifier.testTag("inventoryFixConfirm"))
@@ -127,7 +127,7 @@ import java.time.LocalDate
     }
     if(administration.active && start!=null) MposDialog("Начать пересчёт?",{start=null},!locked) {
         Text("Список товаров будет взят из сохранённых настроек. Изменение настроек позже не заменит этот список. Остатки пока не меняются.")
-        MposButton("Начать",{val type=start!!;start=null;openAfterStart=true;model.start(type)},enabled=!locked,modifier=Modifier.testTag("inventoryStartConfirm"))
+        MposButton("Начать",{val type=start!!;start=null;openAfterStart=true;model.start(type)},enabled=!locked && ui.canEdit,modifier=Modifier.testTag("inventoryStartConfirm"))
     }
 }
 
