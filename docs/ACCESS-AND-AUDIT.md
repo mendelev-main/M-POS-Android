@@ -1,6 +1,6 @@
 # Доступ, секреты и аудит действий
 
-Статус: требования, текущая реализация05b.1–05b.3 ci-verified;05b.4 audit выполняется, [матрица существующих действий](CAPABILITY-MATRIX-05B4.md). Владелец2026-10-29 подтвердил employee/admin, общий заданный password как salted slow verifier и Web runtime lifecycle; employee directory и UI revoke реализованы; будущие backup/integration capabilities planned. Здесь не задаются юридические правила consent/сроков хранения. Источник поведения Web: pinned `docs/ADMINISTRATION_SESSION_RU.md`, feature guards и `android-safety.js`; native UI следует общей дизайн-системе из Web.
+Статус: требования, текущая реализация05b.1–05b.3 ci-verified;05b.4 текущие команды ci-verified/API36/run41100246927, [матрица существующих действий](CAPABILITY-MATRIX-05B4.md). Владелец2026-10-29 подтвердил employee/admin, общий заданный password как salted slow verifier и Web runtime lifecycle; employee directory и UI revoke реализованы; будущие backup/integration capabilities planned. Здесь не задаются юридические правила consent/сроков хранения. Источник поведения Web: pinned `docs/ADMINISTRATION_SESSION_RU.md`, feature guards и `android-safety.js`; native UI следует общей дизайн-системе из Web.
 
 ## Кто действует и от чьего имени
 

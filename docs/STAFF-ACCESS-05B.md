@@ -1,6 +1,6 @@
 # 05b — сотрудники и административный доступ
 
-Статус на2026-10-30: 05b.1 A01–A04,05b.2 ED01–ED06 и05b.3 AR01–AR05 ci-verified/API36. Заключительная сверка05b.4 выполняется; новый matrix test ещё не имеет CI evidence. Полный этап05 включает будущие отчёты и не закрыт.
+Статус на2026-10-30: 05b.1 A01–A04,05b.2 ED01–ED06 и05b.3 AR01–AR05 ci-verified/API36. Заключительная сверка05b.4 ci-verified/API36: [CI41100246927](https://github.com/mendelev-main/M-POS-Android/actions/runs/41100246927)/f668fef,151JVM/236instrumentation/0failures/0skipped. Полный этап05 включает будущие отчёты и не закрыт.
 
 ## Источник и решения владельца
 
@@ -33,7 +33,7 @@ Test runner имеет отдельный фиктивный verifier тольк
 
 | ID | Действующее требование | Evidence / граница |
 |---|---|---|
-| SA01 | Кассир выполняет разрешённые операции своей смены; прямой admin commit без входа не пишет данные; role/owner payload не повышает права | AdminAccessTest, EmployeeRepositoryTest; полная матрица дополнена05b.4, CI pending |
+| SA01 | Кассир выполняет разрешённые операции своей смены; прямой admin commit без входа не пишет данные; role/owner payload не повышает права | AdminAccessTest, EmployeeRepositoryTest; полная матрица35 вариантов ci-verified05b.4/CI41100246927 |
 | SA02 | Logout закрывает формы; очередь не использует новый login; граница logout/commit определена | AdminFormsTest, AdminFormRepositoryTest, AdminFormViewModelTest, AdminRevocationUiTest; AR01–AR05 ci-verified |
 | SA03 | Неверный credential не меняет кассира/кассу; exact verifier/limiter/очистка ввода | A01–A04 ci-verified; изменение/recovery через UI исключено решением владельца |
 | SA04 | Employee save/delete + audit/result атомарны; CAS/rollback/replay; исторический автор неизменен; активный кассир неизменяем | ED01–ED06 ci-verified, EmployeeRepositoryTest/EmployeeUiTest/EmployeeUpgradeTest |

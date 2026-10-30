@@ -1,6 +1,6 @@
 # Этап 05 — Смены и роли
 
-Статус: in progress —05a cash CM01–CM05 и05b.1–05b.3 ci-verified/API36;05b.4 audit выполняется; отчёты05c/05d planned
+Статус: in progress —05a cash CM01–CM05 и05b.1–05b.3 ci-verified/API36;05b.4 текущие H03/H04 ci-verified/API36/run41100246927; отчёты05c/05d planned
 
 ## Объём
 
@@ -56,3 +56,6 @@ H01: повтор закрытия не дублирует; H02: деньги с
 
 
 2026-10-30: 05b.3 AR01–AR05 ci-verified/API36: [FullCI41028916124](https://github.com/mendelev-main/M-POS-Android/actions/runs/41028916124)/ea7e656 SUCCESS.151JVM/235instrumentation/0failures/0skipped,16Python/preflight/lint/debugAPK/testAPK; actual debugAPK1→2 и все existing catalog/workspace/home/employee/shift/cash/financial/warehouse upgrade assertions passed. Native visible name+slot проверка и read-only HOME UPDATE PASSED без admin bypass. Runtime epoch, queued gate rejection, admitted transaction ordering, unknown-result recovery, locked legacy draft read/explicit resume и UI revocation прошли. Light component/admin-revoked и actual updated-home screenshots inspected: readable/shared components/no overlap. Первый screenshot использует component host, не главный navigation shell. Полный05b/H03/SA01–SA06 ещё не завершён; следующий05b.4 capability matrix review. Physical tablet/dark/large-font pending. SQLschema8/main/signing unchanged.
+
+
+2026-10-30: 05b.4 текущие H03/H04 и SA01–SA06 в действующем owner-approved scope ci-verified/API36: [CI41100246927](https://github.com/mendelev-main/M-POS-Android/actions/runs/41100246927)/f668fef SUCCESS;151JVM/236instrumentation/0failures/0skipped,16Python/preflight/lint/debugAPK/testAPK и actual debugAPK1→2 passed. Downloaded JUnit/connected reports проверены: AdminCapabilityMatrixTest1/0fail/0skip,35 real repository calls с валидным ownerId получили access и не изменили ни одну persisted таблицу. Existing A/ED/AR и financial/warehouse/lifecycle/upgrade tests сохранены. Runtime без изменений; новые права/интеграции не добавлены, SQLschema8/main/signing прежние. Matrix и STAFF-ACCESS приведены к фактическим решениям; NEXT-IMPLEMENTATION-PLAN описывает05c/05d→06→07→08→09 и зависимости. Physical tablet/dark/large-font и полные backup/secret/integration ACC04/05/07 остаются pending. Отчёты05c кодом не начаты; решение владельца event-date sale/refund записано.
