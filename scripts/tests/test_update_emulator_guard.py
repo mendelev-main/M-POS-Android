@@ -118,3 +118,21 @@ class AccessibleNavigationTests(unittest.TestCase):
             with self.assertRaisesRegex(AssertionError,"topNav-shift"):
                 module.wait_navigation("shift",timeout=1)
         adb.assert_not_called()
+
+
+class HomeSlotTests(unittest.TestCase):
+    def test_read_only_tile_requires_its_own_name_and_slot_in_one_visible_app_node(self):
+        import xml.etree.ElementTree as ET
+        tile=ET.Element("node", {"package":module.PACKAGE,"content-desc":"Чай · Место 8","bounds":"[10,20][200,180]"})
+        self.assertTrue(module.home_slot_matches([tile],"Чай",8))
+        self.assertFalse(module.home_slot_matches([tile],"Кофе",8))
+        self.assertFalse(module.home_slot_matches([tile],"Чай",7))
+        wrong=ET.Element("node", {"package":module.PACKAGE,"content-desc":"Кофе · Место 8","bounds":"[10,20][200,180]"})
+        tile.set("content-desc","Чай · Место 7")
+        self.assertFalse(module.home_slot_matches([tile,wrong],"Чай",8))
+
+    def test_invisible_or_other_app_tile_cannot_satisfy_upgrade_assertion(self):
+        import xml.etree.ElementTree as ET
+        for package,bounds in [("android","[10,20][200,180]"),(module.PACKAGE,"[0,0][0,0]"),(module.PACKAGE,"")]:
+            tile=ET.Element("node", {"package":package,"content-desc":"Чай · Место 8","bounds":bounds})
+            self.assertFalse(module.home_slot_matches([tile],"Чай",8))

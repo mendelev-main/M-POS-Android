@@ -14,6 +14,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
@@ -67,7 +69,7 @@ import com.mendelev.mpos.domain.workspace.*
                     } else {
                         val tag=if(tile.type=="category") "workspaceCategory:${tile.id}" else "workspaceHomeProduct:${tile.id}"
                         MposWorkspaceTile({if(editing) manage(tile) else if(tile.type=="category") onCategory(tile.id) else s.products.find {it.id==tile.id}?.let(onProduct)},
-                            Modifier.height(rowHeight).testTag(tag).then(highlight),!busy,
+                            Modifier.height(rowHeight).testTag(tag).semantics {contentDescription="${title(tile)} · Место ${tile.slot+1}"}.then(highlight),!busy,
                             categoryColor=if(tile.type=="category") s.categories.find {it.id==tile.id}?.color else null,
                             symbol=if(tile.type=="category") s.categories.find {it.id==tile.id}?.symbol else null) {
                             Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {

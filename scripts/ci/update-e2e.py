@@ -81,6 +81,26 @@ def wait_text(pattern, timeout=75, click=False, preferred_resource_id=None):
     raise AssertionError(f"UI control not found: {preferred_resource_id or pattern}")
 
 
+def home_slot_matches(nodes, label, slot):
+    """Read-only accessible tile identity and position must agree on the same visible app node."""
+    expected = f"{label} · Место {slot}"
+    for node in nodes:
+        bounds = list(map(int, re.findall(r"-?\d+", node.get("bounds", ""))))
+        if (node.get("package") == PACKAGE and node.get("content-desc") == expected
+                and len(bounds) == 4 and bounds[2] > bounds[0] and bounds[3] > bounds[1]):
+            return True
+    return False
+
+
+def wait_home_slot(label, slot, timeout=75):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if home_slot_matches(ui_nodes(), label, slot):
+            return
+        time.sleep(1)
+    raise AssertionError(f"Home tile or preserved slot missing: {label}, slot {slot}")
+
+
 def wait_navigation(route, timeout=75, click=True):
     # Stable IDs for the new header, exact legacy labels for APKs published before NAV01.
     legacy = {"workspace": r"^(Рабочая зона|M POS)$", "shift": r"^Смена$", "settings": r"^Настройки$"}
@@ -334,8 +354,7 @@ def main():
                 print("PARKED UPDATE PASSED: delivery order label, type and total5 survived package replacement", flush=True)
                 adb("shell", "input", "keyevent", "KEYCODE_BACK")
                 wait_text(re.escape(expected_home))
-                wait_text("^Раскладка$", click=True, preferred_resource_id="workspaceEdit")
-                wait_text(r"(?:^|\n)Место 8(?:$|\n)")
+                wait_home_slot(expected_home, 8)
                 (reports / "updated-home.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("HOME UPDATE PASSED: custom product tile and slot8 survived package replacement", flush=True)
                 wait_navigation("shift")

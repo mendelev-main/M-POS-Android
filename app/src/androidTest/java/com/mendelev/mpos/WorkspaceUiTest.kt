@@ -98,6 +98,7 @@ class WorkspaceUiTest {
         File(compose.activity.filesDir,"qa/homeTileName.txt").writeText(homeName)
         compose.onNodeWithTag("workspaceBack").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceHomeProduct:home-upgrade-$suffix").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("workspaceHomeProduct:home-upgrade-$suffix").assertContentDescriptionEquals("$homeName · Место 8")
         screenshot("workspace-home")
 
         compose.onNodeWithTag("topNav-settings").performClick();compose.onNodeWithText("Товары").performClick();waitText("Добавить товар")
