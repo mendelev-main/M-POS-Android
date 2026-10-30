@@ -125,6 +125,12 @@ class HomeSlotTests(unittest.TestCase):
         import xml.etree.ElementTree as ET
         tile=ET.Element("node", {"package":module.PACKAGE,"content-desc":"Чай · Место 8","bounds":"[10,20][200,180]"})
         self.assertTrue(module.home_slot_matches([tile],"Чай",8))
+        for description in ["Чай · Место 8, Количество: ∞","Чай · Место 8\nКоличество: 10"]:
+            tile.set("content-desc",description)
+            self.assertTrue(module.home_slot_matches([tile],"Чай",8))
+        tile.set("content-desc","Чай · Место 80, Количество: ∞")
+        self.assertFalse(module.home_slot_matches([tile],"Чай",8))
+        tile.set("content-desc","Чай · Место 8")
         self.assertFalse(module.home_slot_matches([tile],"Кофе",8))
         self.assertFalse(module.home_slot_matches([tile],"Чай",7))
         wrong=ET.Element("node", {"package":module.PACKAGE,"content-desc":"Кофе · Место 8","bounds":"[10,20][200,180]"})

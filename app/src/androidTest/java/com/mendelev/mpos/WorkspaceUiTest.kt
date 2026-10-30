@@ -26,6 +26,19 @@ class WorkspaceUiTest {
             File(folder,"$name.png").outputStream().use {bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};bitmap.recycle()
         }
     }
+    private fun assertPlatformHomeDescription(tag: String,expected: String) {
+        val automation=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation
+        fun find(node: android.view.accessibility.AccessibilityNodeInfo?): String? {
+            if(node==null) return null
+            if(node.viewIdResourceName==tag) return node.contentDescription?.toString()
+            return (0 until node.childCount).firstNotNullOfOrNull {find(node.getChild(it))}
+        }
+        val flags=automation.serviceInfo.flags
+        automation.serviceInfo=automation.serviceInfo.apply {this.flags=this.flags or android.accessibilityservice.AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS}
+        try {
+            compose.waitUntil(10_000) {find(automation.rootInActiveWindow)?.let {it==expected || it.startsWith(expected+",") || it.startsWith(expected+"\n")}==true}
+        } finally {automation.serviceInfo=automation.serviceInfo.apply {this.flags=flags}}
+    }
     @Test fun folderConfigurationAndCommittedCartSurviveRecreation() {
         val suffix=UUID.randomUUID().toString().take(6);val category="workspace-category-$suffix";val coffee="workspace-coffee-$suffix";val milk="workspace-milk-$suffix"
         val name="Кофе POS $suffix";val folderName="Популярное $suffix"
@@ -98,7 +111,8 @@ class WorkspaceUiTest {
         File(compose.activity.filesDir,"qa/homeTileName.txt").writeText(homeName)
         compose.onNodeWithTag("workspaceBack").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceHomeProduct:home-upgrade-$suffix").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithTag("workspaceHomeProduct:home-upgrade-$suffix").assertContentDescriptionEquals("$homeName · Место 8")
+        compose.onNodeWithTag("workspaceHomeProduct:home-upgrade-$suffix").assertContentDescriptionContains("$homeName · Место 8",substring=false)
+        assertPlatformHomeDescription("workspaceHomeProduct:home-upgrade-$suffix","$homeName · Место 8")
         screenshot("workspace-home")
 
         compose.onNodeWithTag("topNav-settings").performClick();compose.onNodeWithText("Товары").performClick();waitText("Добавить товар")

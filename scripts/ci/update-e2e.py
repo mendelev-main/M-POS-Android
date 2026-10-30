@@ -86,7 +86,8 @@ def home_slot_matches(nodes, label, slot):
     expected = f"{label} · Место {slot}"
     for node in nodes:
         bounds = list(map(int, re.findall(r"-?\d+", node.get("bounds", ""))))
-        if (node.get("package") == PACKAGE and node.get("content-desc") == expected
+        if (node.get("package") == PACKAGE and (node.get("content-desc", "") == expected or node.get("content-desc", "").startswith(expected + ",")
+                    or node.get("content-desc", "").startswith(expected + "\n"))
                 and len(bounds) == 4 and bounds[2] > bounds[0] and bounds[3] > bounds[1]):
             return True
     return False
