@@ -61,4 +61,4 @@ A01–A04 для этого блока: точный slow verifier/wrong passwor
 
 ## Блок05b.3
 
-Отзыв transient forms и queued command authority implemented/validation pending; [контракт AR01–AR05](ADMIN-FORMS-05B3.md). Epoch не хранится в бизнес-данных и не меняет старые command fingerprints; durable черновики читаются отдельно от права их изменять.
+Отзыв transient forms и queued command authority AR01–AR05 ci-verified/API36, FullCI41028916124/ea7e656; [контракт AR01–AR05](ADMIN-FORMS-05B3.md). Epoch не хранится в бизнес-данных и не меняет старые command fingerprints; durable черновики читаются отдельно от права их изменять.
