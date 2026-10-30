@@ -23,6 +23,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
     private fun requirePhoto(id: String?) {
         if(id!=null) (photos ?: throw CatalogFailure("photo","Хранилище фото недоступно")).requirePrepared(id)
     }
+    suspend fun discardDraft()=db.adminTransaction {dao.clearDraft()}
     suspend fun saveDraft(draft: DraftEntity) = db.adminTransaction {
         requirePhoto(JSONObject(draft.payload).optString("photoId").takeIf { it.isNotEmpty() && it!="null" })
         dao.draft(draft)

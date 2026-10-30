@@ -27,14 +27,15 @@ import com.mendelev.mpos.domain.warehouse.*
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable fun PurchaseScreen(model: PurchaseViewModel,onReceive: (String)->Unit,onBack: ()->Unit) {
+    val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val ui by model.state.collectAsStateWithLifecycle();val form=ui.form;val snapshot=ui.snapshot
     val locked=ui.pending || ui.unresolved!=null || ui.orderUnresolved!=null
-    val editable=!locked && !ui.blocked
-    var expanded by rememberSaveable {mutableStateOf(false)}
+    val editable=!locked && !ui.blocked && ui.canEdit
+    var expanded by rememberSaveable(administration.generation) {mutableStateOf(false)}
     var history by rememberSaveable {mutableStateOf(false)}
     val clipboard=LocalClipboardManager.current
-    var dialog by rememberSaveable {mutableStateOf<String?>(null)}
-    LaunchedEffect(model) {model.refresh()}
+    var dialog by rememberSaveable(administration.generation) {mutableStateOf<String?>(null)}
+    LaunchedEffect(model,administration.generation) {model.refresh()}
     LaunchedEffect(ui.lastPlacedId) {ui.lastPlacedId?.let {dialog="order:$it";history=true}}
     LaunchedEffect(snapshot?.draft?.id) {if(snapshot?.draft!=null) expanded=true}
     fun back() {if(!locked) {if(ui.dirty) dialog="back" else onBack()}}
@@ -45,10 +46,11 @@ import com.mendelev.mpos.domain.warehouse.*
             FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 MposButton("Назад",::back,enabled=!locked,style=ActionStyle.Secondary)
                 MposButton(if(history) "Вернуться к черновику" else "История",{history=!history},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseHistory"))
-                MposButton("Новый заказ",{expanded=if(history) true else !expanded;history=false},enabled=!locked && !ui.blocked,modifier=Modifier.testTag("purchaseNew"))
+                MposButton("Новый заказ",{expanded=if(history) true else !expanded;history=false},enabled=!locked && !ui.blocked && ui.canEdit,modifier=Modifier.testTag("purchaseNew"))
                 MposButton("Перечитать",{if(history || ui.orderReloadNeeded) model.refreshOrders() else if(ui.dirty) dialog="reload" else model.refresh()},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseReload"))
             }
             Text("Заказы поставщикам",style=MaterialTheme.typography.titleLarge)
+            if(!administration.active) MposNotice("Изменения доступны после входа в администрирование. Историю можно просматривать.")
             if(ui.message!=null) MposNotice(ui.message!!,ui.blocked || ui.unresolved!=null)
             if(ui.pending) LinearProgressIndicator(Modifier.fillMaxWidth())
             if(ui.orderUnresolved!=null && ui.editing==null) MposButton("Проверить результат",model::retryOrder,enabled=!ui.pending,modifier=Modifier.testTag("purchaseOrderRetry"))
@@ -65,7 +67,7 @@ import com.mendelev.mpos.domain.warehouse.*
             }
             if(!history && expanded && snapshot!=null) {
                 MposSelect("Поставщик",form?.supplierId ?: "",(if(form==null) listOf("" to "Выберите поставщика") else emptyList())+snapshot.suppliers.map {it.id to it.name},model::supplier,
-                    enabled=!locked && !ui.blocked && form?.lines.orEmpty().isEmpty(),modifier=Modifier.testTag("purchaseSupplier"))
+                    enabled=!locked && !ui.blocked && ui.canEdit && form?.lines.orEmpty().isEmpty(),modifier=Modifier.testTag("purchaseSupplier"))
                 if(form!=null) {
                     val supplier=snapshot.suppliers.find {it.id==form.supplierId}
                     val available=snapshot.products.filter {it.id in supplier?.productIds.orEmpty()}
@@ -104,9 +106,9 @@ import com.mendelev.mpos.domain.warehouse.*
                         if(available.isEmpty() && missing.isEmpty()) item {Text("Закрепите простые товары за поставщиком в Настройках → Поставщики")}
                     }
                     FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                        MposButton("Сохранить черновик",model::save,enabled=!locked && !ui.blocked,modifier=Modifier.testTag("purchaseSave"))
-                        MposButton("Обновить ссылки",model::revalidate,enabled=!locked && !ui.blocked,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseRevalidate"))
-                        MposButton("Удалить черновик",{dialog="clear"},enabled=!locked && !ui.blocked,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseClear"))
+                        MposButton("Сохранить черновик",model::save,enabled=!locked && !ui.blocked && ui.canEdit,modifier=Modifier.testTag("purchaseSave"))
+                        MposButton("Обновить ссылки",model::revalidate,enabled=!locked && !ui.blocked && ui.canEdit,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseRevalidate"))
+                        MposButton("Удалить черновик",{dialog="clear"},enabled=!locked && !ui.blocked && ui.canEdit,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseClear"))
                         MposButton("Сформировать заказ",{dialog="place"},enabled=editable && !ui.dirty && snapshot.draft!=null,modifier=Modifier.testTag("purchasePlace"))
                     }
                 } else Text("Выберите поставщика. Остатки при сохранении черновика не меняются.")
@@ -115,7 +117,7 @@ import com.mendelev.mpos.domain.warehouse.*
     }
     val order=if(ui.orderReloadNeeded) null else dialog?.takeIf {it.startsWith("order:")}?.substringAfter("order:")?.let {id->snapshot?.orders?.find {it.id==id}}
     val orderDialog=dialog?.startsWith("order:")==true
-    if(dialog!=null) MposDialog(when {orderDialog->"Заказ поставщику";dialog?.startsWith("cancel:")==true->"Отменить заказ?";dialog=="place"->"Сформировать заказ?";dialog=="soon"->"Скоро будет подключено";dialog=="clear"->"Удалить черновик?";else->"Закрыть без сохранения?"},
+    if(dialog!=null && (administration.active || orderDialog)) MposDialog(when {orderDialog->"Заказ поставщику";dialog?.startsWith("cancel:")==true->"Отменить заказ?";dialog=="place"->"Сформировать заказ?";dialog=="soon"->"Скоро будет подключено";dialog=="clear"->"Удалить черновик?";else->"Закрыть без сохранения?"},
         {if(!locked) {dialog=null;model.dismissPlaced()}},!locked,wide=orderDialog) {
         when {
             orderDialog -> if(order==null) {

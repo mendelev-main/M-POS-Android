@@ -36,7 +36,8 @@ import java.util.UUID
     val state by model.state.collectAsStateWithLifecycle()
     val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val context=LocalContext.current
-    var photoSession by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(model,administration.generation) {model.reopenForms()}
+    var photoSession by rememberSaveable(administration.generation) { mutableStateOf<String?>(null) }
     val photoPicker=rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         val session=photoSession
         photoSession=null
@@ -46,16 +47,16 @@ import java.util.UUID
     }
     var search by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf<String?>(null) }
-    var categories by rememberSaveable { mutableStateOf(false) }
-    var categoryId by rememberSaveable { mutableStateOf<String?>(null) }
-    var categoryName by rememberSaveable { mutableStateOf("") }
-    var categoryColor by rememberSaveable { mutableStateOf(CategoryAppearance.DEFAULT_COLOR) }
-    var categorySymbol by rememberSaveable { mutableStateOf("") }
-    var categoryRevision by rememberSaveable { mutableStateOf<Long?>(null) }
-    var categoryCommand by rememberSaveable { mutableStateOf("") }
-    var confirmDiscard by rememberSaveable { mutableStateOf(false) }
-    var confirmDelete by rememberSaveable { mutableStateOf(false) }
-    var deleteCategory by rememberSaveable { mutableStateOf(false) }
+    var categories by rememberSaveable(administration.generation) { mutableStateOf(false) }
+    var categoryId by rememberSaveable(administration.generation) { mutableStateOf<String?>(null) }
+    var categoryName by rememberSaveable(administration.generation) { mutableStateOf("") }
+    var categoryColor by rememberSaveable(administration.generation) { mutableStateOf(CategoryAppearance.DEFAULT_COLOR) }
+    var categorySymbol by rememberSaveable(administration.generation) { mutableStateOf("") }
+    var categoryRevision by rememberSaveable(administration.generation) { mutableStateOf<Long?>(null) }
+    var categoryCommand by rememberSaveable(administration.generation) { mutableStateOf("") }
+    var confirmDiscard by rememberSaveable(administration.generation) { mutableStateOf(false) }
+    var confirmDelete by rememberSaveable(administration.generation) { mutableStateOf(false) }
+    var deleteCategory by rememberSaveable(administration.generation) { mutableStateOf(false) }
     fun closeEditor() { if(!state.busy) { if(state.draft?.dirty == true) confirmDiscard=true else model.discard() } }
     BackHandler(enabled=state.draft!=null) { closeEditor() }
     val d = state.draft.takeIf {administration.active}
@@ -122,7 +123,7 @@ import java.util.UUID
                 Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                     Text("Товары", Modifier.weight(1f), style=MaterialTheme.typography.titleLarge)
                     MposButton("Категории", { categories=true }, style=ActionStyle.Secondary)
-                    MposButton("Добавить товар", { model.edit() },enabled=administration.active)
+                    MposButton(if(state.hasSavedDraft) "Открыть сохранённый черновик" else "Добавить товар", { model.edit() },enabled=administration.active)
                     if(!administration.active) Text("Для изменения каталога войдите в администрирование через Настройки")
                 }
                 if(state.message!=null) MposNotice(state.message!!, state.error)
@@ -175,9 +176,9 @@ import java.util.UUID
             }
         }
         if(state.categories.isEmpty()) Text("Категорий пока нет")
-        MposButton("Создать категорию", { categoryId=UUID.randomUUID().toString();categoryRevision=null;categoryName="";categoryColor=CategoryAppearance.DEFAULT_COLOR;categorySymbol="";categoryCommand=UUID.randomUUID().toString() })
+        MposButton("Создать категорию", { categoryId=UUID.randomUUID().toString();categoryRevision=null;categoryName="";categoryColor=CategoryAppearance.DEFAULT_COLOR;categorySymbol="";categoryCommand=UUID.randomUUID().toString() },enabled=administration.active && !state.busy)
     }
-    if(categoryId!=null) MposDialog(if(categoryRevision==null) "Новая категория" else "Изменить категорию", { categoryId=null }, !state.busy) {
+    if(administration.active && categoryId!=null) MposDialog(if(categoryRevision==null) "Новая категория" else "Изменить категорию", { categoryId=null }, !state.busy) {
         if(state.error && state.message!=null) MposNotice(state.message!!, true)
         Column(Modifier.heightIn(max=380.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             MposField(categoryName, { categoryName=it;categoryCommand=UUID.randomUUID().toString(); model.dismissMessage() }, "Название категории", Modifier.testTag("categoryName"), !state.busy)
@@ -198,16 +199,16 @@ import java.util.UUID
         }
         if(categoryRevision!=null) MposButton("Удалить категорию", { deleteCategory=true }, enabled=!state.busy && administration.active, style=ActionStyle.Danger)
     }
-    if(confirmDiscard) MposDialog("Несохранённые изменения", { confirmDiscard=false }) {
+    if(administration.active && confirmDiscard) MposDialog("Несохранённые изменения", { confirmDiscard=false }) {
         Text("Отбросить изменения карточки?")
         MposButton("Продолжить редактирование", { confirmDiscard=false }, style=ActionStyle.Secondary)
         MposButton("Отбросить", { confirmDiscard=false; model.discard() }, style=ActionStyle.Danger)
     }
-    if(confirmDelete) MposDialog("Удаление товара", { confirmDelete=false }) {
+    if(administration.active && confirmDelete) MposDialog("Удаление товара", { confirmDelete=false }) {
         Text("Удалить товар без складской истории?")
         MposButton("Удалить", { confirmDelete=false;model.deleteProduct() }, style=ActionStyle.Danger)
     }
-    if(deleteCategory) MposDialog("Удаление категории", { deleteCategory=false }) {
+    if(administration.active && deleteCategory) MposDialog("Удаление категории", { deleteCategory=false }) {
         Text("Удалить пустую категорию? Категория с товарами будет сохранена.")
         MposButton("Удалить", {
             deleteCategory=false

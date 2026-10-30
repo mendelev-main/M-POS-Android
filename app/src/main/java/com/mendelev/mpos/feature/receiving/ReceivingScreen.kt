@@ -23,6 +23,7 @@ import java.math.BigDecimal
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable fun ReceivingScreen(model: ReceivingViewModel,posting: ReceivingPostingViewModel,requestedOrder: String?,consumeRequest: ()->Unit,onBack: ()->Unit) {
+    val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val ui by model.state.collectAsStateWithLifecycle();val d=ui.form;val snapshot=ui.snapshot
     // Capture nullable content before Dialog creates a separate composition.
     val preview=ui.preview
@@ -30,18 +31,19 @@ import java.math.BigDecimal
     val locked=ui.pending || ui.unresolved!=null || post.pending || post.unresolved!=null
     var showHistory by rememberSaveable {mutableStateOf(false)}
     var detail by rememberSaveable {mutableStateOf<String?>(null)}
-    var overage by rememberSaveable {mutableStateOf(false)}
+    var overage by rememberSaveable(administration.generation) {mutableStateOf(false)}
     var search by rememberSaveable {mutableStateOf("")}
     LaunchedEffect(post.committed,post.pending) {
         if(post.committed!=null && !post.pending) {model.dismissPreview();model.refresh();showHistory=true;detail=post.committed}
     }
     val order=snapshot?.orders?.find {it.id==d?.order?.id}
-    val editable=!locked && !ui.blocked && (d?.order==null || order?.status=="pending")
-    var dialog by rememberSaveable {mutableStateOf<String?>(null)}
-    var switchOrder by rememberSaveable {mutableStateOf<String?>(null)}
-    LaunchedEffect(model) {model.refresh();posting.refresh()}
+    val editable=!locked && !ui.blocked && ui.canEdit && (d?.order==null || order?.status=="pending")
+    var dialog by rememberSaveable(administration.generation) {mutableStateOf<String?>(null)}
+    var switchOrder by rememberSaveable(administration.generation) {mutableStateOf<String?>(null)}
+    LaunchedEffect(model,administration.generation) {model.refresh();posting.refresh()}
+    LaunchedEffect(administration.generation,post.pending,post.unresolved) {posting.reopenForms()}
     LaunchedEffect(requestedOrder,ui.pending,ui.snapshot,locked,ui.blocked) {
-        if(requestedOrder!=null && snapshot!=null && !locked && !ui.blocked) {
+        if(requestedOrder!=null && snapshot!=null && !locked && !ui.blocked && ui.canEdit) {
             if(ui.dirty) {switchOrder=requestedOrder;dialog="switch"} else {posting.acknowledge();showHistory=false;model.open(requestedOrder)}
             consumeRequest()
         }
@@ -55,11 +57,12 @@ import java.math.BigDecimal
                 MposButton("Назад",::back,enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("receivingBack"))
                 MposButton("Перечитать",{if(ui.dirty) dialog="reload" else {model.refresh();if(showHistory) posting.refresh()}},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("receivingReload"))
                 if(d!=null) MposButton("К заказам приёмки",{if(ui.dirty) dialog="close" else model.close()},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("receivingClose"))
-                MposButton("Приёмка без заказа",{if(ui.dirty) dialog="standalone" else {posting.acknowledge();showHistory=false;model.standalone()}},enabled=!locked && !ui.blocked,style=ActionStyle.Secondary,modifier=Modifier.testTag("receivingNew"))
+                MposButton("Приёмка без заказа",{if(ui.dirty) dialog="standalone" else {posting.acknowledge();showHistory=false;model.standalone()}},enabled=!locked && !ui.blocked && ui.canEdit,style=ActionStyle.Secondary,modifier=Modifier.testTag("receivingNew"))
                 MposButton("История приходов",{showHistory=true;detail=null;posting.refresh()},enabled=!locked && !ui.dirty,style=ActionStyle.Secondary,modifier=Modifier.testTag("receivingHistory"))
             }
             if(post.message!=null) MposNotice(post.message!!,post.unresolved!=null)
             if(post.unresolved!=null) MposButton("Проверить проведение",posting::retry,enabled=!post.pending,modifier=Modifier.testTag("receivingPostRetry"))
+            if(!administration.active) MposNotice("Изменения доступны после входа в администрирование. Историю можно просматривать.")
             if(ui.message!=null) MposNotice(ui.message!!,ui.blocked || ui.unresolved!=null)
             if(ui.pending) LinearProgressIndicator(Modifier.fillMaxWidth())
             if(ui.unresolved!=null) MposButton("Проверить результат",model::retry,enabled=!ui.pending,modifier=Modifier.testTag("receivingRetry"))
@@ -87,7 +90,7 @@ import java.math.BigDecimal
                     if(orders.isEmpty()) Text("Нет ожидающих заказов")
                     orders.forEach {o->val saved=snapshot?.records?.any {it.orderId==o.id && it.draft!=null}==true
                         MposButton("${o.source.supplierName} · ${purchaseDate(o.createdAt)} · ${if(o.status!="pending") "Отменён · сохранённый черновик" else if(saved) "Продолжить приёмку" else "Начать приёмку"}",
-                            {posting.acknowledge();model.open(o.id)},enabled=!locked && !ui.blocked,style=ActionStyle.Secondary,modifier=Modifier.fillMaxWidth().testTag("receivingOrder:${o.id}"))
+                            {posting.acknowledge();model.open(o.id)},enabled=!locked && !ui.blocked && ui.canEdit,style=ActionStyle.Secondary,modifier=Modifier.fillMaxWidth().testTag("receivingOrder:${o.id}"))
                     }
                 }
             } else {
@@ -136,7 +139,7 @@ import java.math.BigDecimal
                     MposButton("Сохранить черновик",model::save,enabled=editable,modifier=Modifier.testTag("receivingSave"))
                     MposButton("Обновить основание",model::rebase,enabled=editable,style=ActionStyle.Secondary,modifier=Modifier.testTag("receivingRebase"))
                     MposButton("Предварительный расчёт",model::preview,enabled=editable,style=ActionStyle.Secondary,modifier=Modifier.testTag("receivingPreview"))
-                    MposButton("Удалить черновик",{dialog="clear"},enabled=!locked && !ui.blocked,style=ActionStyle.Danger,modifier=Modifier.testTag("receivingClear"))
+                    MposButton("Удалить черновик",{dialog="clear"},enabled=!locked && !ui.blocked && ui.canEdit,style=ActionStyle.Danger,modifier=Modifier.testTag("receivingClear"))
                 }
             }
         }
@@ -159,7 +162,7 @@ import java.math.BigDecimal
             MposButton("Провести приход",{overage=false;dialog="post"},enabled=!locked && !ui.dirty,modifier=Modifier.testTag("receivingPost"))
         }
     }
-    if(dialog!=null) MposDialog(when(dialog) {"product"->"Добавить товар";"post"->"Подтвердить приход?";"soon"->"Скоро будет подключено";"clear"->"Удалить черновик?";else->"Закрыть без сохранения?"},{if(!locked) dialog=null},!locked) {
+    if(dialog!=null && administration.active) MposDialog(when(dialog) {"product"->"Добавить товар";"post"->"Подтвердить приход?";"soon"->"Скоро будет подключено";"clear"->"Удалить черновик?";else->"Закрыть без сохранения?"},{if(!locked) dialog=null},!locked) {
         when(dialog) {
             "product" -> {
                 MposField(search,{search=it},"Поиск товара",Modifier.fillMaxWidth().testTag("receivingSearch"))

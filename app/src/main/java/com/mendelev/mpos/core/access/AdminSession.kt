@@ -54,7 +54,8 @@ class AdminSession(private val verifier: PasswordVerifier=EmbeddedPasswordVerifi
     }
     suspend fun logout()=mutex.withLock {mutable.value=AdminState(false,mutable.value.generation+1)}
     /** A command admitted before logout finishes before logout; logout winning the lock refuses it. */
-    suspend fun <T> authorized(block: suspend ()->T): T=mutex.withLock {
+    suspend fun <T> authorized(expected: AdminAuthorization?=null,block: suspend ()->T): T=mutex.withLock {
+        if(expected!=null && (expected.session!==this || expected.generation!=mutable.value.generation)) throw CatalogFailure("access","Сессия этой формы завершена. Откройте форму заново")
         if(!mutable.value.active) throw CatalogFailure("access","Откройте сессию администрирования в Настройках")
         block()
     }

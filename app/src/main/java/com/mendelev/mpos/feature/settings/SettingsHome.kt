@@ -24,7 +24,7 @@ import com.mendelev.mpos.feature.access.AdminControl
 @Composable fun SettingsHome(onUpdates: ()->Unit,onCatalog: (() -> Unit)?,onSuppliers: (() -> Unit)?,
     onInventory: (() -> Unit)?,onStock: (() -> Unit)?,onGallery: (() -> Unit)?,onBack: ()->Unit,updateAvailable: Boolean,onEmployees: (() -> Unit)?=null) {
     val admin by Administration.session.state.collectAsStateWithLifecycle()
-    var panel by rememberSaveable {mutableStateOf(false)}
+    var panel by rememberSaveable(admin.generation) {mutableStateOf(false)}
     var planned by rememberSaveable {mutableStateOf<String?>(null)}
     LaunchedEffect(admin.active) {if(!admin.active) panel=false}
     Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {

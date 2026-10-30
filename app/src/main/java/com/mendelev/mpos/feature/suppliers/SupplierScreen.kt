@@ -21,11 +21,12 @@ import com.mendelev.mpos.domain.catalog.CatalogRules
 
 /** Pinned suppliers.js modal: name + searchable checklist of simple products. */
 @Composable fun SupplierScreen(model: SupplierViewModel,onBack: ()->Unit) {
+    val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val ui by model.state.collectAsStateWithLifecycle()
     val locked=ui.pending || ui.unresolved!=null
     val form=ui.form
     var query by rememberSaveable(form?.id) {mutableStateOf("")}
-    LaunchedEffect(model) {model.refresh()}
+    LaunchedEffect(model,administration.generation) {model.refresh()}
     val close={if(form?.discarding==true) model.change {it.copy(discarding=false)} else if(form?.deleting==true) model.change {it.copy(deleting=false)} else model.dismiss()}
     BackHandler {if(!locked) {if(form!=null) close() else onBack()}}
     Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
@@ -34,7 +35,7 @@ import com.mendelev.mpos.domain.catalog.CatalogRules
             Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                 MposButton("Настройки",onBack,enabled=!locked,style=ActionStyle.Secondary)
                 Text("Поставщики",Modifier.weight(1f),style=MaterialTheme.typography.titleLarge)
-                MposButton("Новый поставщик",{model.edit()},enabled=!locked && !ui.blocked,modifier=Modifier.testTag("supplierNew"))
+                MposButton("Новый поставщик",{model.edit()},enabled=!locked && !ui.blocked && ui.canEdit,modifier=Modifier.testTag("supplierNew"))
             }
             if(ui.message!=null && form==null) MposNotice(ui.message!!,ui.blocked)
             if(ui.unresolved!=null && form==null) MposButton("Проверить результат",model::retry,enabled=!ui.pending,modifier=Modifier.testTag("supplierRetry"))
@@ -42,14 +43,14 @@ import com.mendelev.mpos.domain.catalog.CatalogRules
             if(ui.pending) LinearProgressIndicator(Modifier.fillMaxWidth())
             LazyColumn(Modifier.weight(1f).testTag("supplierList"),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 items(ui.snapshot?.suppliers.orEmpty(),key={it.id}) {s->
-                    Surface(onClick={model.edit(s.id)},enabled=!locked && !ui.blocked,shape=MaterialTheme.shapes.large,modifier=Modifier.fillMaxWidth().testTag("supplier:${s.id}")) {
+                    Surface(onClick={model.edit(s.id)},enabled=!locked && !ui.blocked && ui.canEdit,shape=MaterialTheme.shapes.large,modifier=Modifier.fillMaxWidth().testTag("supplier:${s.id}")) {
                         Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                             Text(s.name,style=MaterialTheme.typography.titleMedium)
                             Text("Товаров: ${s.productIds.size}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
-                if(!ui.pending && !ui.blocked && ui.snapshot?.suppliers?.isEmpty()==true) item {Text("Поставщиков пока нет")}
+                if(!ui.pending && !ui.blocked && ui.canEdit && ui.snapshot?.suppliers?.isEmpty()==true) item {Text("Поставщиков пока нет")}
             }
         }
     }

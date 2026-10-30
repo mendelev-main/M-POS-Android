@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalDensity
 private fun money(value: String)=value.replace('.',',')+" BYN"
 
 @Composable fun WorkspaceScreen(model: WorkspaceViewModel, photos: ProductPhotoStore, onCatalog: () -> Unit, onSettings: () -> Unit, onShift: () -> Unit = {}, onCheckout: () -> Unit = {}, onHistory: () -> Unit = {}) {
+    val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val ui by model.state.collectAsStateWithLifecycle()
     val s=ui.snapshot
     var comingSoon by rememberSaveable {mutableStateOf<String?>(null)}
@@ -46,18 +47,18 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
     var category by rememberSaveable { mutableStateOf<String?>(null) }
     var folder by rememberSaveable { mutableStateOf<String?>(null) }
     var search by rememberSaveable { mutableStateOf("") }
-    var editing by rememberSaveable { mutableStateOf(false) }
+    var editing by rememberSaveable(administration.generation) { mutableStateOf(false) }
     var configId by rememberSaveable { mutableStateOf<String?>(null) }
     var configOwner by rememberSaveable { mutableStateOf("") }
     var configRevision by rememberSaveable { mutableStateOf(0L) }
     var selected by rememberSaveable { mutableStateOf(listOf<String>()) }
     var manual by rememberSaveable { mutableStateOf("") }
-    var manageId by rememberSaveable { mutableStateOf<String?>(null) }
-    var manageType by rememberSaveable { mutableStateOf("") }
-    var manageName by rememberSaveable { mutableStateOf("") }
-    var moveFolder by rememberSaveable { mutableStateOf("") }
-    var manageRevision by rememberSaveable { mutableStateOf(0L) }
-    var confirmFolderDelete by rememberSaveable { mutableStateOf(false) }
+    var manageId by rememberSaveable(administration.generation) { mutableStateOf<String?>(null) }
+    var manageType by rememberSaveable(administration.generation) { mutableStateOf("") }
+    var manageName by rememberSaveable(administration.generation) { mutableStateOf("") }
+    var moveFolder by rememberSaveable(administration.generation) { mutableStateOf("") }
+    var manageRevision by rememberSaveable(administration.generation) { mutableStateOf(0L) }
+    var confirmFolderDelete by rememberSaveable(administration.generation) { mutableStateOf(false) }
     var quantityId by rememberSaveable { mutableStateOf<String?>(null) }
     var quantity by rememberSaveable { mutableStateOf("") }
     var quantityOwner by rememberSaveable { mutableStateOf("") }
@@ -122,7 +123,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                         }
                         WorkspaceToolbar(if(category==null) "Рабочая зона" else s.categories.find {it.id==category}?.name ?: "Без категории",
                             category!=null,editing,busy,s.parked.size,{category=null;folder=null;search=""},
-                            {editing=!editing},{ordersDialog="list"},{searchOpen=!searchOpen;if(!searchOpen) search=""},{comingSoon=it})
+                            {if(administration.active) editing=!editing else comingSoon="Для изменения раскладки войдите в администрирование в настройках"},{ordersDialog="list"},{searchOpen=!searchOpen;if(!searchOpen) search=""},{comingSoon=it})
                         if(searchOpen) MposField(search,{search=it},"Поиск товара",Modifier.testTag("workspaceSearch"),!busy)
                         if(ui.message!=null && !modal && folder==null) MposNotice(ui.message!!,true)
                         if(editing && category!=null && search.isBlank()) PosAction("Создать папку",{
@@ -213,7 +214,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                 }
             }
         }
-        if(manageId!=null) MposDialog(if(confirmFolderDelete) "Удалить папку?" else if(manageType=="folder") "Папка" else "Размещение товара",
+        if(manageId!=null && administration.active) MposDialog(if(confirmFolderDelete) "Удалить папку?" else if(manageType=="folder") "Папка" else "Размещение товара",
             {if(!busy) {manageId=null;confirmFolderDelete=false;model.dismiss()}},!busy) {
             if(ui.message!=null) MposNotice(ui.message!!,true)
             val id=manageId!!

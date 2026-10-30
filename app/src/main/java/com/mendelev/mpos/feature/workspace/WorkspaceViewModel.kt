@@ -82,10 +82,13 @@ class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
         val command=UUID.randomUUID().toString()
         enqueue {repo.deleteParked(id,revision,command);withContext(Dispatchers.Main) {done()} }
     }
+    private fun adminPermit()=try {com.mendelev.mpos.core.access.AdminForms(viewModelScope).permit()} catch(e:CatalogFailure) {mutable.update {it.copy(message=e.message)};null}
     fun home(action: HomeAction,revision: Long,done: () -> Unit = {}) {
-        val command=UUID.randomUUID().toString();enqueue {repo.home(action,revision,command);withContext(Dispatchers.Main) {done()}}
+        val permit=adminPermit() ?: return
+        val command=UUID.randomUUID().toString();enqueue {permit.write {repo.home(action,revision,command)};withContext(Dispatchers.Main) {done()}}
     }
     fun layout(action: LayoutAction,revision: Long,done: () -> Unit = {}) {
-        val command=UUID.randomUUID().toString();enqueue { repo.layout(action,revision,command);withContext(Dispatchers.Main) { done() } }
+        val permit=adminPermit() ?: return
+        val command=UUID.randomUUID().toString();enqueue { permit.write {repo.layout(action,revision,command)};withContext(Dispatchers.Main) { done() } }
     }
 }

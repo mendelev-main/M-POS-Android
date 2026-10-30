@@ -24,7 +24,7 @@ import com.mendelev.mpos.core.ui.*
     val admin by Administration.session.state.collectAsStateWithLifecycle()
     val locked=ui.pending || ui.unresolved!=null
     val form=ui.form
-    LaunchedEffect(model,admin.active) {model.refresh()}
+    LaunchedEffect(model,admin.generation) {model.refresh()}
     val close={if(form?.discarding==true) model.change {it.copy(discarding=false)} else if(form?.deleting==true) model.change {it.copy(deleting=false)} else model.dismiss()}
     BackHandler {if(!locked) {if(form!=null && admin.active) close() else onBack()}}
     Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
@@ -33,7 +33,7 @@ import com.mendelev.mpos.core.ui.*
             FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 MposButton("Настройки",onBack,enabled=!locked && form==null,style=ActionStyle.Secondary)
                 Text("Сотрудники",style=MaterialTheme.typography.titleLarge)
-                MposButton("Новый сотрудник",{model.edit()},enabled=admin.active && !locked && !ui.blocked,modifier=Modifier.testTag("employeeNew"))
+                MposButton("Новый сотрудник",{model.edit()},enabled=admin.active && !locked && !ui.blocked && ui.canEdit,modifier=Modifier.testTag("employeeNew"))
             }
             if(!admin.active) MposNotice("Для изменения сотрудников войдите в администрирование в настройках")
             if(ui.message!=null && (form==null || !admin.active)) MposNotice(ui.message!!,ui.blocked)
@@ -43,7 +43,7 @@ import com.mendelev.mpos.core.ui.*
             LazyColumn(Modifier.weight(1f).testTag("employeeList"),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 items(ui.snapshot?.employees.orEmpty(),key={it.id}) {employee->
                     val active=employee.id==ui.snapshot?.activeActorId
-                    Surface(onClick={model.edit(employee.id)},enabled=admin.active && !locked && !ui.blocked && !active,shape=MaterialTheme.shapes.large,modifier=Modifier.fillMaxWidth().testTag("employee:${employee.id}")) {
+                    Surface(onClick={model.edit(employee.id)},enabled=admin.active && !locked && !ui.blocked && ui.canEdit && !active,shape=MaterialTheme.shapes.large,modifier=Modifier.fillMaxWidth().testTag("employee:${employee.id}")) {
                         Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                             Text(employee.name,style=MaterialTheme.typography.titleMedium)
                             Text(if(employee.role=="admin") "Администратор · не открывает смены" else "Кассир",style=MaterialTheme.typography.bodySmall)
@@ -52,7 +52,7 @@ import com.mendelev.mpos.core.ui.*
                         }
                     }
                 }
-                if(!ui.pending && !ui.blocked && ui.snapshot?.employees?.isEmpty()==true) item {Text("Сотрудников пока нет. Создайте кассира перед открытием новой смены.",Modifier.testTag("employeeEmpty"))}
+                if(!ui.pending && !ui.blocked && ui.canEdit && ui.snapshot?.employees?.isEmpty()==true) item {Text("Сотрудников пока нет. Создайте кассира перед открытием новой смены.",Modifier.testTag("employeeEmpty"))}
             }
         }
     }

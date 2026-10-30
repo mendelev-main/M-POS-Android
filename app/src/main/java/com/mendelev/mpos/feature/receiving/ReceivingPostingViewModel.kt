@@ -1,5 +1,6 @@
 package com.mendelev.mpos.feature.receiving
 
+import com.mendelev.mpos.core.access.AdminForms
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mendelev.mpos.data.local.ReceivingPostingAccess
@@ -13,6 +14,8 @@ data class ReceivingPostingUi(val pending: Boolean=false,val unresolved: Receivi
     val history: List<PostedReceiving> = emptyList(),val message: String?=null)
 class ReceivingPostingViewModel(private val access: ReceivingPostingAccess): ViewModel() {
     private val mutable=MutableStateFlow(ReceivingPostingUi());val state=mutable.asStateFlow()
+    private val forms=AdminForms(viewModelScope)
+    fun reopenForms() {if(!state.value.pending && state.value.unresolved==null) forms.reopen {}}
     fun refresh() {
         if(state.value.pending || state.value.unresolved!=null) return
         mutable.update {it.copy(pending=true)}
@@ -24,7 +27,7 @@ class ReceivingPostingViewModel(private val access: ReceivingPostingAccess): Vie
         }
     }
     fun post(owner: String,revision: Long,draft: ReceivingDraft,overage: Boolean) {
-        if(state.value.pending || state.value.unresolved!=null || state.value.committed!=null) return
+        if(!forms.current() || state.value.pending || state.value.unresolved!=null || state.value.committed!=null) return
         val c=ReceivingPostCommand(UUID.randomUUID().toString(),owner,revision,draft,overage)
         try {c.validate()} catch(e:Exception) {mutable.update {it.copy(message=e.message)};return}
         submit(c)
@@ -32,9 +35,10 @@ class ReceivingPostingViewModel(private val access: ReceivingPostingAccess): Vie
     fun retry() {if(!state.value.pending) state.value.unresolved?.let(::submit)}
     fun acknowledge() {if(!state.value.pending && state.value.unresolved==null) mutable.update {it.copy(committed=null,message=null)}}
     private fun submit(c: ReceivingPostCommand) {
+        val permit=try {forms.command(c.commandId)} catch(e:CatalogFailure) {mutable.update {it.copy(message=e.message)};return}
         mutable.update {it.copy(pending=true,unresolved=c,message=null)}
         viewModelScope.launch {
-            try {val id=withContext(Dispatchers.IO) {access.outcome(c) ?: access.commit(c)};known(id,c)}
+            try {val id=withContext(Dispatchers.IO) {access.outcome(c) ?: permit.write {access.commit(c)}};known(id,c)}
             catch(e:CancellationException) {throw e}
             catch(e:Exception) {
                 try {val id=withContext(Dispatchers.IO) {access.outcome(c)}

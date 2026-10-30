@@ -58,3 +58,7 @@ A01–A04 для этого блока: точный slow verifier/wrong passwor
 ## Уточнение05b.2
 
 Владелец выбрал обязательное создание сотрудника перед новой сменой и полный запрет изменений кассира активной смены. Legacy смена продолжается/закрывается с исходным автором; bootstrap owner нет. Runtime directory/actor integration implemented, ED01–ED06 ci-verified/API36 (FullCI40887920523); точный актуальный контракт [EMPLOYEES-05B2](EMPLOYEES-05B2.md). Историческое описание owner-only выше относится к состоянию до05b.2.
+
+## Блок05b.3
+
+Отзыв transient forms и queued command authority implemented/validation pending; [контракт AR01–AR05](ADMIN-FORMS-05B3.md). Epoch не хранится в бизнес-данных и не меняет старые command fingerprints; durable черновики читаются отдельно от права их изменять.
