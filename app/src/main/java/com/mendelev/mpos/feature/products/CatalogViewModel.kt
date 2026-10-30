@@ -89,8 +89,13 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
         commands.trySend {
         try {
             withContext(Dispatchers.IO) { repo.initialize() }
-            val restored = withContext(Dispatchers.IO) { repo.dao.draft()?.let { ProductDraft.parse(it.payload) } }
-            // Read recovery is allowed while locked. Never rewrite a draft merely to display the catalogue.
+            val stored = withContext(Dispatchers.IO) { repo.dao.draft() }
+            val restored = stored?.let {ProductDraft.parse(it.payload)}
+            // Legacy picker identity must be durable before leaving the activity, but a locked read never writes.
+            if(restored!=null && stored!=null && !JSONObject(stored.payload).has("sessionId") && startup?.current()==true) {
+                try {withContext(Dispatchers.IO) {startup.write {repo.saveDraft(DraftEntity(payload=restored.json()))}}}
+                catch(e:CatalogFailure) {if(e.kind!="access") throw e}
+            }
             update { it.copy(loading=false, fatal=false, draft=restored.takeIf {startup?.current()==true},hasSavedDraft=restored!=null, message=null) }
             withContext(Dispatchers.IO) { runCatching { repo.cleanupPhotos() } } // cleanup cannot invalidate an otherwise usable catalogue.
             viewModelScope.launch { repo.products.catch { update { it.copy(fatal=true, message="Не удалось прочитать товары. Данные не удалены", error=true) } }.collect { p -> update { it.copy(products=p) } } }

@@ -107,7 +107,7 @@ class AdminFormViewModelTest {
         val db=Room.inMemoryDatabaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext,CatalogDatabase::class.java).build();val store=ViewModelStore()
         try {
             val repo=CatalogRepository(db);repo.initialize();val draft=ProductDraft(name="Черновик до перезапуска",dirty=true)
-            repo.saveDraft(DraftEntity(payload=draft.json()));val original=db.catalog().draft();Administration.session.logout()
+            repo.saveDraft(DraftEntity(payload=org.json.JSONObject(draft.json()).apply {remove("sessionId")}.toString()));val original=db.catalog().draft();Administration.session.logout()
             val model=withContext(Dispatchers.Main) {ViewModelProvider(store,object: ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=CatalogViewModel(repo) as T
             })[CatalogViewModel::class.java]}
@@ -116,6 +116,7 @@ class AdminFormViewModelTest {
             assertNull(model.state.value.draft)
             withContext(Dispatchers.Main) {model.edit()};waitFor {!model.state.value.busy && model.state.value.draft!=null}
             assertEquals(draft.id,model.state.value.draft!!.id);assertEquals(draft.name,model.state.value.draft!!.name)
+            assertEquals(model.state.value.draft!!.sessionId,org.json.JSONObject(db.catalog().draft()!!.payload).getString("sessionId"))
         } finally {withContext(Dispatchers.Main) {store.clear()};db.close()}
     }
 }
