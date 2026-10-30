@@ -27,3 +27,5 @@
 
 
 2026-10-30: начат05b.4: audit текущих repository entry points и35 direct denied variants в AdminCapabilityMatrixTest с полным сравнением persisted таблиц. CAPABILITY-MATRIX-05B4.md связывает UI/repository/evidence; STAFF-ACCESS-05B.md приведён к фактическим решениям владельца, без обещания credential setup/reset. Локальный build/lint/debug/test APK SUCCESS; новый API36 test pending. Runtime не менялся, SQLschema8/main/signing прежние.
+
+2026-10-30: владелец утвердил для будущих05c отчётов event-date sale/refund:30октября продажа100→+100,31октября возврат100→−100, общий net0. Старый период не переписывается исключением чека как pinned Web. Остальные метрики ещё уточняются, код05c не начат.
