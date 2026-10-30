@@ -1,6 +1,6 @@
 # Этап 05 — Смены и роли
 
-Статус: in progress —05a cash movements CM01–CM05 ci-verified; roles/auth/reporting planned
+Статус: in progress —05a cash CM01–CM05 и05b.1–05b.3 ci-verified/API36;05b.4 audit выполняется; отчёты05c/05d planned
 
 ## Объём
 
@@ -12,7 +12,7 @@
 
 ## Спецификация
 
-[Сценарии, отказы и открытые контракты](../../docs/OPERATIONS-SPEC.md); [команды и регрессионные examples](../../docs/IMPLEMENTATION-CONTRACTS.md). Статус planned; описание не является evidence реализации.
+[Сценарии, отказы и открытые контракты](../../docs/OPERATIONS-SPEC.md); [команды и регрессионные examples](../../docs/IMPLEMENTATION-CONTRACTS.md). Текущие проверенные scopes — PARITY.md; описание будущих отчётов не является evidence реализации.
 
 ## Системные контракты
 

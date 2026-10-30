@@ -18,7 +18,7 @@
 | M08 Рабочая зона | layout/folders/tiles, cart/current/parked, параметры, reservations | M07/M10, M03/M06 | 02; [каталог/корзина](CATALOG-WORKSPACE-SPEC.md) |
 | M09 Продажи | checkout, receipt snapshots/history, payment allocations, refunds | M08/M10/M13, M03/M05/M06 | 03; [операции](OPERATIONS-SPEC.md), [состояния](STATE-MACHINES.md) |
 | M10 Складское ядро | ledger/balance/stockRevision, расход и доступность по recipes, reservation calculation | M02/M03; получает catalog snapshot через port | opening01a, availability02, sale03, UI04; [модель](DOMAIN-MODEL.md) |
-| M11 Поставщики и закупки | supplier, purchase orders, receiving draft/documents, partial receiving | M07/M10/M03/M06 | 04; [закупки](WAREHOUSE-SPEC.md) |
+| M11 Поставщики и закупки | supplier, purchase orders, receiving draft/documents; shortage закрывает заказ как Web | M07/M10/M03/M06 | 04; [закупки](WAREHOUSE-SPEC.md) |
 | M12 Инвентаризация | физический count/baseline, apply correction, history/cancel remainder | M10/M03/M06 | 04; [склад](WAREHOUSE-SPEC.md) |
 | M13 Смена и касса | open/close shift, cash movements, shift boundary, totals contract | M02/M03/M06; read ports sales, без вызова checkout | minimum03a, full05; [управление](MANAGEMENT-REPORTS-SPEC.md) |
 | M14 Сотрудники и admin | employee directory, credentials provider, runtime admin session, role assignment | M06/M03; права не следуют из shift | 05; [управление](MANAGEMENT-REPORTS-SPEC.md) |
