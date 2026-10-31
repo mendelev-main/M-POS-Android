@@ -26,7 +26,7 @@
 
 ## Дополнение05c.1
 
-SalesReportRepository.snapshot — полный денежный read model: только active admin, чтение внутри adminTransaction; без initialize/result/audit writes. SalesReportRepositoryTest проверяет locked/stale permit и неизменность таблиц. UI/ограниченный cashier report scope —05c.2; прежняя матрица35 изменяющих вариантов от этого не меняется. CI05c.1 pending.
+SalesReportRepository.snapshot — полный денежный read model: только active admin, чтение внутри adminTransaction; без initialize/result/audit writes. SalesReportRepositoryTest проверяет locked/stale permit и неизменность таблиц. UI/ограниченный cashier report scope —05c.2; прежняя матрица35 изменяющих вариантов от этого не меняется. RPT05 ci-verified/API36: [CI41184335908](https://github.com/mendelev-main/M-POS-Android/actions/runs/41184335908).
 
 ## Оставшиеся границы
 

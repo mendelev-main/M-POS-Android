@@ -1,6 +1,6 @@
 # 05c.1 — ядро отчёта продаж и возвратов
 
-Статус: implemented, локальные проверки/CI выполняются. RPT01–RPT05 не объявлены verified до evidence. Экран аналитики05c.2, прибыль/COGS/товарные группировки05d и экспорт08 сюда не входят. Клиенты/лояльность06 и сайт09 отложены: [TODO](PRODUCT-TODO.md).
+Статус: RPT01–RPT05 ci-verified/API36: [FullCI41184335908](https://github.com/mendelev-main/M-POS-Android/actions/runs/41184335908)/2c0b08e.159JVM/239instrumentation/0failures/0skipped,16Python/lint/build и actual debugAPK1→2 passed. Экран аналитики05c.2, прибыль/COGS/товарные группировки05d и экспорт08 сюда не входят. Клиенты/лояльность06 и сайт09 отложены: [TODO](PRODUCT-TODO.md).
 
 ## Источник и утверждённые примеры
 

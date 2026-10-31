@@ -1,6 +1,6 @@
 # Этап 05 — Смены и роли
 
-Статус: in progress —05a cash CM01–CM05 и05b.1–05b.3 ci-verified/API36;05b.4 текущие H03/H04 ci-verified/API36/run41100246927; отчёты05c/05d planned
+Статус: in progress —05a cash CM01–CM05 и05b.1–05b.3 ci-verified/API36;05b.4 текущие H03/H04 ci-verified/API36/run41100246927; 05c.1 RPT01–RPT05 ci-verified/API36/run41184335908; UI05c.2/05d planned
 
 ## Объём
 
@@ -62,3 +62,6 @@ H01: повтор закрытия не дублирует; H02: деньги с
 
 
 2026-10-31: владелец перенёс06/M16 и09/M20 в TODO без реализации; PRODUCT-TODO.md. Активная очередь05c/05d→07→08; backup07 охватывает реально реализованные модели01–05, не требует фиктивного06. Начат05c.1 RPT01–RPT05 implemented/validation pending, REPORTS-05C.md: pure exact BigInteger event-date report + authorized read-only Room snapshot. Подтверждены average только новых продаж и total включает delivery отдельно; cash drawer и report income различаются.8JVM/3instrumentation новых tests, UI05c.2 не начат; SQLschema8/signing/main прежние.
+
+
+2026-10-31: 05c.1 RPT01–RPT05 ci-verified/API36: [FullCI41184335908](https://github.com/mendelev-main/M-POS-Android/actions/runs/41184335908)/2c0b08e SUCCESS; report runtime329417e, последующий код — только UI-seed batch budget.159JVM/239instrumentation/0failures/0errors/0skipped,16Python/preflight/lint/debugAPK/testAPK;3 SalesReportRepositoryTest passed. Downloaded JUnit/connected reports проверены. Actual debugAPK1→2 UPDATE E2E PASSED; ADMIN SESSION/EMPLOYEE/SHIFT CASH и прежние financial/warehouse assertions сохранены. UI seed22 прошёл с bounded360s общим лимитом, per-test/assertOK22 неизменны; scale budget180 прежний. Точные event-date sales/refunds, average new sales HALF_UP/empty0, delivery included/separate, exact BigInteger/negative net, DST/half-open dates, no-write authorized read/stale permit/reopen/corruption passed. SQLschema8/main/signing прежние; новый report UI/COGS/exports не заявлены.06/M16 и09/M20 в TODO по владельцу; активная очередь05c.2→05d→07→08. Physical tablet позже; новый APK для UI результата не выдаётся, экран аналитики ещё не подключён.
