@@ -28,7 +28,9 @@ class ReportUiTest {
             override suspend fun snapshot(period: ReportPeriod): SalesReport {
                 val sold=ReportSale("sale",Instant.parse("2026-10-30T12:00:00Z").toEpochMilli(),2500,1000,1500,500)
                 val refund=ReportRefund("refund",sold.id,clock.millis(),2500,1000,1500,500)
-                return SalesReports.build(period,clock.millis(),listOf(sold),listOf(refund))
+                val report=SalesReports.build(period,clock.millis(),listOf(sold),listOf(refund))
+                val history=ReportDetailSale("sale","anna","Анна",listOf(ReportDetailLine("line","coffee","Кофе","drinks","Напитки","piece",java.math.BigDecimal("2"),2000,800.toBigInteger())))
+                return report.copy(details=ReportGroups.build(report,listOf(history)))
             }
         },SavedStateHandle(),clock) as T
     })[ReportViewModel::class.java]
@@ -48,9 +50,19 @@ class ReportUiTest {
         compose.waitUntil(20_000) {vm.state.value.report?.saleCount==1L}
         compose.onNodeWithTag("reportNet").assertTextEquals("0,00 BYN")
         shot("analytics-period")
+        compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportProfit"))
+        compose.onNodeWithTag("reportProfit").assertTextEquals("0,00 BYN")
+        compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportGroup:products"))
+        compose.onNodeWithTag("reportGroup:products").performClick()
+        compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportRow:products:coffee"))
+        compose.onNodeWithText("Продано: 2 шт.").assertExists()
+        compose.onNodeWithText("Возвращено: 2 шт.").assertExists()
+        shot("analytics-groups")
+        compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportFrom"))
         compose.onNodeWithTag("reportFrom").performClick()
         runBlocking {Administration.session.logout()}
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("reportLocked").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("reportProfit").assertDoesNotExist();compose.onNodeWithTag("reportRow:products:coffee").assertDoesNotExist()
         compose.onNodeWithTag("reportNet").assertDoesNotExist();compose.onNodeWithTag("reportApply").assertDoesNotExist()
         shot("analytics-locked")
         runBlocking {Administration.session.login("fixture-admin".toCharArray())}

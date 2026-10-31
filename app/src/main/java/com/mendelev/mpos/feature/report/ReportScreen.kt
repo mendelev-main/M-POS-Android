@@ -2,6 +2,7 @@ package com.mendelev.mpos.feature.report
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -15,6 +16,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mendelev.mpos.core.access.Administration
 import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.domain.report.ReportAmounts
+import com.mendelev.mpos.domain.report.ReportGroup
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -24,6 +26,7 @@ fun reportMoney(minor: BigInteger)=BigDecimal(minor,2).toPlainString().replace('
 @Composable fun ReportScreen(model: ReportViewModel,onSettings: ()->Unit,onBack: ()->Unit) {
     val ui by model.state.collectAsStateWithLifecycle()
     val admin by Administration.session.state.collectAsStateWithLifecycle()
+    var dimension by rememberSaveable(admin.generation) {mutableStateOf("employees")}
     var periodDialog by rememberSaveable(admin.generation) {mutableStateOf(false)}
     var from by rememberSaveable(admin.generation) {mutableStateOf("")}
     var through by rememberSaveable(admin.generation) {mutableStateOf("")}
@@ -87,10 +90,33 @@ fun reportMoney(minor: BigInteger)=BigDecimal(minor,2).toPlainString().replace('
                         if(report.saleCount==0L && report.refundCount==0L) Text("За выбранный период продаж и возвратов нет",Modifier.testTag("reportEmpty"))
                     }
                 }
-                item {MposAnalyticsCard(Modifier.fillMaxWidth()) {
-                    Text("Расширенная аналитика",style=MaterialTheme.typography.titleMedium)
-                    Text("Прибыль, продажи сотрудников, категории и топ товаров будут подключены на следующем этапе.")
-                }}
+                if(report!=null && !ui.pending && ui.error==null) {
+                    val details=report.details
+                    if(details==null) item {Text("Историческая детализация недоступна")}
+                    else {
+                        item {MposAnalyticsCard(Modifier.fillMaxWidth()) {
+                            Text("Прибыль за период",style=MaterialTheme.typography.titleMedium)
+                            Text(reportMoney(details.profit),Modifier.testTag("reportProfit"),style=MaterialTheme.typography.headlineSmall)
+                            Text("Продажи − возвраты − историческая себестоимость − расход курьеру с учётом отмены при возврате.",style=MaterialTheme.typography.bodySmall)
+                            Text("Себестоимость продаж: ${reportMoney(details.saleCost)}")
+                            Text("Себестоимость возвратов: ${reportMoney(details.refundCost)}")
+                            Text("Курьеру: ${reportMoney(details.courierOut)}; отменено: ${reportMoney(details.courierCredit)}")
+                        }}
+                        item {MposAnalyticsCard(Modifier.fillMaxWidth()) {
+                            Text("Историческая детализация",style=MaterialTheme.typography.titleMedium)
+                            FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                                listOf("employees" to "Сотрудники","categories" to "Категории","products" to "Товары").forEach {(id,label)->
+                                    MposButton(label,{dimension=id},Modifier.testTag("reportGroup:$id"),style=if(dimension==id) ActionStyle.Primary else ActionStyle.Outline)
+                                }
+                            }
+                            Text("По сумме продаж, по убыванию. Сотрудники — с доставкой; категории и товары — без доставки. Возврат относится к автору исходной продажи.",style=MaterialTheme.typography.bodySmall)
+                            Text("Названия и категории на момент продажи; разные единицы не суммируются.",style=MaterialTheme.typography.bodySmall)
+                        }}
+                        val groups=when(dimension) {"categories"->details.categories;"products"->details.products;else->details.employees}
+                        if(groups.isEmpty()) item {Text("За период нет данных для детализации")}
+                        items(groups,key={"$dimension:${it.id}"}) {group->ReportGroupPanel(group,dimension)}
+                    }
+                }
             }
         }
     }
@@ -119,5 +145,19 @@ fun reportMoney(minor: BigInteger)=BigDecimal(minor,2).toPlainString().replace('
         Text("Доставка включена в сумму",style=MaterialTheme.typography.bodySmall)
         Text(reportMoney(amounts.delivery),Modifier.testTag("report${tag}Delivery"))
         Text("Оплаты без вычета расходов кассы",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable private fun ReportGroupPanel(group: ReportGroup,dimension: String) {
+    fun quantities(values: Map<String,BigDecimal>)=values.entries.joinToString("; ") {(unit,qty)->
+        val label=when(unit) {"piece"->"шт.";"kg"->"кг";"g"->"г";"l"->"л";"ml"->"мл";else->unit}
+        "${qty.stripTrailingZeros().toPlainString().replace('.',',')} $label"
+    }
+    MposAnalyticsCard(Modifier.fillMaxWidth().testTag("reportRow:$dimension:${group.id}")) {
+        Text(group.names.joinToString(" / "),style=MaterialTheme.typography.titleMedium)
+        Text("Продажи: ${reportMoney(group.sales)} · Возвраты: ${reportMoney(group.refunds)}")
+        Text("Итог: ${reportMoney(group.net)}",style=MaterialTheme.typography.titleMedium)
+        if(group.sold.isNotEmpty()) Text("Продано: ${quantities(group.sold)}")
+        if(group.returned.isNotEmpty()) Text("Возвращено: ${quantities(group.returned)}")
     }
 }

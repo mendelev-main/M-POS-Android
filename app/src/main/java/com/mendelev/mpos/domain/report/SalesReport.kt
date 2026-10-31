@@ -26,7 +26,7 @@ data class ReportEvent(val kind: String,val id: String,val receiptId: String,val
 data class ReportAmounts(val total: BigInteger,val cash: BigInteger,val card: BigInteger,val delivery: BigInteger)
 data class SalesReport(val period: ReportPeriod,val generatedAt: Long,val events: List<ReportEvent>,
     val saleCount: Long,val refundCount: Long,val sales: ReportAmounts,val refunds: ReportAmounts,
-    val net: ReportAmounts,val averageSale: BigInteger) {
+    val net: ReportAmounts,val averageSale: BigInteger,val details: ReportDetails?=null) {
     val currency: String get()="BYN"
     val policyVersion: Int get()=1
 }

@@ -68,6 +68,16 @@ class RecipeCalculator(products: Collection<RecipeProduct>) {
         sum + qty * Fraction.of(cost)
     }.decimal()
 
+    /** Monetary report boundary: round the exact rational once, without the scale12 stock conversion. */
+    fun costMinor(requests: List<RecipeRequest>): BigInteger {
+        val exact=expand(requests).entries.fold(Fraction.ZERO) {sum,(id,qty)->
+            val cost=(products.getValue(id) as RecipeProduct.Simple).cost
+            if(cost.signum()<0) throw CatalogFailure("cost","Себестоимость не может быть отрицательной")
+            sum+qty*Fraction.of(cost)
+        }
+        return BigDecimal(exact.numerator).multiply(BigDecimal(100)).divide(BigDecimal(exact.denominator),0,RoundingMode.HALF_UP).toBigIntegerExact()
+    }
+
     fun shortages(
         requests: List<RecipeRequest>, balances: Map<String, BigDecimal>,
         reservations: Map<String, BigDecimal> = emptyMap(),

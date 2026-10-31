@@ -1,6 +1,6 @@
 # Смены, сотрудники и отчёты
 
-Паспорта M13/M14/M15; текущие cash/staff scopes05a/05b и ядро05c.1 ci-verified, UI05c.2/расширенные05d planned. Evidence в PARITY.md; контракт ядра REPORTS-05C.md. Минимальное M13 вводится 03a как предпосылка продажи; полный UI/roles/reporting —05. Источники Web: `shifts.js` (currentShift/shiftTotals/cashDrawerBalance, submit handlers), `employees.js`, `analytics.js` (analyticsRange/analyticsData), administration-session docs. Literal credentials/legacy hardcoded secrets не переносятся в native.
+Паспорта M13/M14/M15; текущие cash/staff scopes05a/05b и ядро05c.1 ci-verified, UI05c.2 ci-verified;05d.1 implemented/validation pending, контракт REPORT-GROUPS-05D.md;05d.2 planned. Evidence в PARITY.md; контракт ядра REPORTS-05C.md. Минимальное M13 вводится 03a как предпосылка продажи; полный UI/roles/reporting —05. Источники Web: `shifts.js` (currentShift/shiftTotals/cashDrawerBalance, submit handlers), `employees.js`, `analytics.js` (analyticsRange/analyticsData), administration-session docs. Literal credentials/legacy hardcoded secrets не переносятся в native.
 
 ## M13: минимальная смена 03a
 

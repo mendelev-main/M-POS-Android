@@ -11,8 +11,9 @@ interface SalesReportAccess { suspend fun snapshot(period: ReportPeriod): SalesR
 class SalesReportRepository(private val db: CatalogDatabase,private val clock: Clock=Clock.systemUTC()): SalesReportAccess {
     override suspend fun snapshot(period: ReportPeriod): SalesReport=db.adminTransaction {
         val receipts=db.sales().history()
+        val snapshots=receipts.associate {it.id to ReceiptCodec.decode(it.payload)}
         val sales=receipts.map {r->
-            val saved=ReceiptCodec.decode(r.payload)
+            val saved=snapshots.getValue(r.id)
             if(saved.quote.total!=r.total || saved.payment.cash!=r.cash || saved.payment.card!=r.card ||
                 saved.payment.deliveryCashOut!=r.deliveryCashOut || (saved.quote.delivery?.fee ?: 0)!=r.deliveryCashOut)
                 throw CatalogFailure("report","Суммы чека не совпадают с историческим снимком")
@@ -25,6 +26,7 @@ class SalesReportRepository(private val db: CatalogDatabase,private val clock: C
                 throw CatalogFailure("report","Исторический снимок возврата не совпадает с чеком")
             ReportRefund(r.id,r.receiptId,r.createdAt,r.total,r.cash,r.card,r.deliveryCashCredit)
         }
-        SalesReports.build(period,clock.millis(),sales,refunds)
+        val summary=SalesReports.build(period,clock.millis(),sales,refunds)
+        summary.copy(details=ReportGroups.build(summary,db.reportHistory(receipts,snapshots)))
     }
 }
