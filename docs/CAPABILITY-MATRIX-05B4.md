@@ -24,6 +24,10 @@
 
 Служебные initialize/config и cleanupPhotos не являются пользовательскими административными командами. initialize не выдаёт admin session/employee. Photo cleanup удаляет только файлы без product/draft references; это существующее безопасное обслуживание, не редактирование каталога от кассира. Фотография в карточке/черновике меняется через guarded draft/product команды.
 
+## Дополнение05c.1
+
+SalesReportRepository.snapshot — полный денежный read model: только active admin, чтение внутри adminTransaction; без initialize/result/audit writes. SalesReportRepositoryTest проверяет locked/stale permit и неизменность таблиц. UI/ограниченный cashier report scope —05c.2; прежняя матрица35 изменяющих вариантов от этого не меняется. CI05c.1 pending.
+
 ## Оставшиеся границы
 
 Нет нового permission editor и индивидуального входа администраторов. Нет обещания защиты от root/подмены APK. Physical tablet и новые интеграционные capabilities остаются отдельными gates. В полном этапе05 ещё нет аналитики/выдачи отчётов. Поддерживаемые версии — только Android16+/API36.

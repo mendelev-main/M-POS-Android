@@ -49,10 +49,10 @@ flowchart TD
 | 04a | suppliers/purchase/receiving with shortage | документ закупки не меняет stock, один receipt движения |
 | 04b | inventory/baseline/history | I01–I04, stale reject/cancel remainder |
 | 05 | сотрудники/auth/permissions, полная смена/cash UI, отчёты | H01–H04, sums/role checks/snapshot queries |
-| 06 | customer/consent/loyalty | C01–C04, server parts по fake+staging contract; C05 исключён |
+| 06 TODO | отложено владельцем2026-10-31 | Сейчас не реализуем и не блокируем07/08 |
 | 07 | native backup + supported Web import | B01–B05 и fault activation/roundtrip |
 | 08 | LAN printer/drawer, report export/Telegram | D01–D05, физическое оборудование |
-| 09 | binding, remote orders, menu/photos/availability/tariffs | N01–N06, fake/replay/restart/staging |
+| 09 TODO | отложено владельцем2026-10-31 | Сейчас не реализуем |
 
 ## Уточнение зависимости смен
 
@@ -60,7 +60,7 @@ flowchart TD
 
 ## Что можно готовить независимо
 
-После 01a возможно отдельно разрабатывать фото adapter и pure recipe tests. После 03 — чтение отчётов, fixtures закупок/инвентаризации, проектирование прав. Remote loyalty06 требует минимальный transport/binding contract раньше общего UI сайта 09; shared binding/secret provider выделяется по необходимости, без включения online orders заранее.
+После 01a возможно отдельно разрабатывать фото adapter и pure recipe tests. После 03 — чтение отчётов, fixtures закупок/инвентаризации, проектирование прав. Remote loyalty06 и весь09 сейчас в TODO: transport/binding не выделяется в текущую очередь ради отложенных функций.
 
 Пользовательский перенос Web backup остаётся 07 по выбранному порядку. Если для пилота раньше нужен реальный каталог, решение о раннем ограниченном импорте — отдельное изменение объёма, не скрытая часть 01a. Синтетические данные достаточно для разработки.
 
