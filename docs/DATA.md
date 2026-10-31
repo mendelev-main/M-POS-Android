@@ -71,3 +71,8 @@ Inventory close04b.3: history payload3 reads1/2, loss policy1=negative delta × 
 05b.1: admin session/attempt limiter process-memory only, not Room/workspace/preferences/SavedState/backup. Salted embedded PBKDF2 verifier is APK configuration chosen explicitly by owner, not plaintext/device credential. Admin authorization spans protected Room commit and serializes logout; operational shifts/receipts/cash actors remain unchanged until employee-directory block. SQLschema8 and durable payloads unchanged. See STAFF-ACCESS-05B.md.
 
 05b.2: `employees` workspace payload1/SQLschema8, stable identity/revision/tombstone + operation_result/audit одной admin transaction. Отсутствие документа означает пустой справочник, legacy owner автоматически не создаётся. Новые смены требуют employee; исторические shifts.actorId/actorName неизменны. Все изменения кассира активной смены запрещены. [Контракт](EMPLOYEES-05B2.md). Registry входит в будущий backup scope, не временный cache.
+
+
+## Историческая себестоимость отчёта05d.1
+
+Контракт [REPORT-GROUPS-05D.md](REPORT-GROUPS-05D.md): сохранённые recipe graph и requests оплаченной строки → точная рациональная стоимость с модификаторами/noStockTracking → HALF_UP до копейки один раз на строку → сумма. Не использовать округлённый до12 знаков складской preview как промежуточное денежное значение. Две строки по0,005BYN дают0,02BYN. Текущие product cost/category/employee name не участвуют. Возврат полностью отменяет историческую стоимость и прибыль исходных строк в день возврата; группы сотрудников используют автора продажи. Это read-only проекция, не изменение стоимости товара/накладной/движений.

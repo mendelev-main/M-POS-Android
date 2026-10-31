@@ -1,6 +1,6 @@
 # 05d.1 — исторические группы и прибыль
 
-Статус: implemented, проверки выполняются. Это часть05d; отчёт по сменам и сверка склада остаются следующим блоком.
+Статус: ci-verified/API36, [FullCI41188178378](https://github.com/mendelev-main/M-POS-Android/actions/runs/41188178378)/935d821;163JVM/244Android tests/0failures/0skipped. Это часть05d; отчёт по сменам и сверка склада остаются следующим блоком.
 
 Источник: pinned Web1682c88334e6fb13586ce4b530157c59ca062e43, `js/features/analytics.js`, `analyticsData`; Android admin/safety adapters не меняют этот расчёт. Регрессия источника: `tests/source-product-stock.test.cjs`, сценарий analytics selected period. Native сохраняет утверждённое владельцем отличие: продажа остаётся в своём дне, возврат отражается в день возврата. Текущие карточки не заменяют историю.
 
@@ -14,3 +14,6 @@
 - RG06: единый read-only admin snapshot сводки и групп в Room transaction. Нет загрузки текущих товаров/сотрудников, записи, миграции или новых внешних эффектов. Повреждённая история вызывает ошибку, не подстановку нулей. UI не показывает денежные группы после logout и не сохраняет их в SavedState.
 
 Владелец подтвердил RG01–RG05 примерами в чате31октября2026. Категории/товары сверяются с продажами минус доставка; сотрудники — с полной суммой. Общий API36/Room/UI прогон и физический планшет отмечаются отдельно по фактическому результату. Экспорт PDF/XLSX/Telegram относится к08;06/09 вTODO.
+
+
+2026-10-31: 05d.1 RG01–RG06 ci-verified/API36: [FullCI41188178378](https://github.com/mendelev-main/M-POS-Android/actions/runs/41188178378)/935d821 SUCCESS first attempt.163JVM/244instrumentation/0failures/0skipped,16Python/preflight/lint/debugAPK/testAPK; actual debugAPK1→2 UPDATE E2E PASSED с сохранностью данных и сбросом admin session. SalesReportRepositoryTest3 и ReportUiTest2 passed. Исторические имена/стоимость после live edit, no-write/reopen/corruption/epoch, original seller refund, separate units/IDs, exact rational line HALF_UP/discounted goods/net delivery profit подтверждены тестами. Light component-host analytics-groups/locked screenshots inspected: читаемо/общие компоненты/без наложений; это synthetic25BYN, main navigation отдельно покрыта существующим TopNavigation test. SQLschema8/main/signing прежние; physical tablet/dark/exact Web comparison pending. Следующий05d.2 — смены и сверка склада, затем07/08;06/09 TODO.

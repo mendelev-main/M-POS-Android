@@ -47,3 +47,6 @@
 
 
 2026-10-31: начат05d.1 RG01–RG06, docs/REPORT-GROUPS-05D.md. Владелец подтвердил original seller refund, historical labels/separate units, profit excluding courier expense и HALF_UP каждой исторической строки. Read-only snapshot групп/COGS, shared analytics UI; SQLschema8/main/signing без изменений. Проверки выполняются, verified не заявлен; отчёт смен/сверка склада05d.2 pending,06/09 TODO.
+
+
+2026-10-31: 05d.1 RG01–RG06 ci-verified/API36: [FullCI41188178378](https://github.com/mendelev-main/M-POS-Android/actions/runs/41188178378)/935d821 SUCCESS first attempt.163JVM/244instrumentation/0failures/0skipped,16Python/preflight/lint/debugAPK/testAPK; actual debugAPK1→2 UPDATE E2E PASSED с сохранностью данных и сбросом admin session. SalesReportRepositoryTest3 и ReportUiTest2 passed. Исторические имена/стоимость после live edit, no-write/reopen/corruption/epoch, original seller refund, separate units/IDs, exact rational line HALF_UP/discounted goods/net delivery profit подтверждены тестами. Light component-host analytics-groups/locked screenshots inspected: читаемо/общие компоненты/без наложений; это synthetic25BYN, main navigation отдельно покрыта существующим TopNavigation test. SQLschema8/main/signing прежние; physical tablet/dark/exact Web comparison pending. Следующий05d.2 — смены и сверка склада, затем07/08;06/09 TODO.
