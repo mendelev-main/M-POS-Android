@@ -1,6 +1,6 @@
 # 05c.2 — экран аналитики
 
-Статус: UI01–UI05 implemented/validation pending. Основание — [ядро05c.1](REPORTS-05C.md), pinned Web1682c883 analytics.js/pos.html; regression source-product-stock.test.cjs «analytics keeps local payment, cost and grouping rules within the selected period». Android admin presentation/session adapter не заменяет analyticsData.06/09 в TODO, M17 исключён.
+Статус: UI01–UI05 logic/layout ci-verified/API36, [CI41186247439](https://github.com/mendelev-main/M-POS-Android/actions/runs/41186247439)/84ad98b,159JVM/244instrumentation/0failures/0skipped; actual debugAPK1→2 passed. Palette-only c88ccb7 local build/lint/JVM verified; screenshots относятся к84ad98b, post-palette visual/device check отдельно. Основание — [ядро05c.1](REPORTS-05C.md), pinned Web1682c883 analytics.js/pos.html; regression source-product-stock.test.cjs «analytics keeps local payment, cost and grouping rules within the selected period». Android admin presentation/session adapter не заменяет analyticsData.06/09 в TODO, M17 исключён.
 
 ## Визуальный контракт
 

@@ -1,6 +1,6 @@
 # Этап 05 — Смены и роли
 
-Статус: in progress —05a cash CM01–CM05 и05b.1–05b.3 ci-verified/API36;05b.4 текущие H03/H04 ci-verified/API36/run41100246927; 05c.1 RPT01–RPT05 ci-verified/API36/run41184335908; UI05c.2/05d planned
+Статус: in progress —05a cash CM01–CM05 и05b.1–05b.3 ci-verified/API36;05b.4 текущие H03/H04 ci-verified/API36/run41100246927; 05c.1 RPT01–RPT05 ci-verified/API36/run41184335908; UI05c.2 ci-verified/API36/run41186247439;05d planned
 
 ## Объём
 
@@ -68,3 +68,6 @@ H01: повтор закрытия не дублирует; H02: деньги с
 
 
 2026-10-31: начат05c.2 UI01–UI05 implemented/validation pending, ANALYTICS-UI-05C2.md. Main analytics route, saved dates/zone, request+epoch fences, shared Web-derived analytics cards, manual/preset/error/empty/locked states.3VM+2UI новых tests, TopNavigation real route/recreation обновлён; UI seed24, прежний общий360s/scale180/assertions сохранены.159JVM/local lint/debug/testAPK passed; новый финальный build/API36/upgrade pending.06/09 TODO; SQLschema8/signing/main прежние.
+
+
+2026-10-31: 05c.2 UI01–UI05 ci-verified в logic/layout scope: [FullCI41186247439](https://github.com/mendelev-main/M-POS-Android/actions/runs/41186247439)/84ad98b SUCCESS first attempt.159JVM/244instrumentation/0failures/0errors/0skipped,16Python/preflight/lint/debugAPK/testAPK;2scale/24UIseed/16upgrade fixtures и actual debugAPK1→2 passed.3ReportViewModelTest/2ReportUiTest/root TopNavigation analytics+recreation passed. Manual/preset periods, negative/zero net, latest-request/error/retry, invalid dates preserve applied range, saved-date locked restart, logout/relogin stale-result rejection and dialog revocation verified. Wide/locked/narrow520dp/font150% component-host screenshots inspected: readable/shared styling/no overlap, main shell separately tested via TopNavigation. Palette-only follow-up c88ccb7 neutral track/no stop marker locally build/lint/159JVM verified; screenshots/CI are84ad98b, no separate post-palette instrument/device claim. Physical tablet/dark/exact Web pixel comparison pending. SQLschema8/main/signing unchanged;06/09 TODO. Next05d extended historical reports, не начат автоматически.

@@ -40,4 +40,4 @@ SalesReportRepository.snapshot читает receipts/refunds внутри adminT
 - RPT04: суммы больше Long сохраняются точно; duplicate/missing/mismatched/ранний refund и corrupt amounts не дают отчёт из ложных0.
 - RPT05: одна authorized Room transaction, locked/stale permit отказ; read даже пустой БД не создаёт config; полное сравнение таблиц после success/error/reopen.
 
-8 JVM SalesReportsTest и3 API36 SalesReportRepositoryTest. Новое ядро ещё не связано с main navigation, поэтому новый визуальный результат/production report export не заявляется. Следующий инкремент05c.2 — ViewModel/shared UI старой аналитики с утверждёнными метриками; остальные будущие показатели не показывать как готовые.
+8 JVM SalesReportsTest и3 API36 SalesReportRepositoryTest. Ядро подключено к main analytics route в [05c.2](ANALYTICS-UI-05C2.md), CI41186247439. Прибыль/группировки05d и production report export08 остаются будущими; не показывать их как готовые.
