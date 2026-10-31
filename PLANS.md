@@ -11,10 +11,12 @@
 | 03 | Минимальная смена03a → оплата, скидки, возврат, история и сохранность | 02 | 03a ci-verified API36/run40206673038; D02 дополнен,03b.1 money ci-verified/run40223239353; 03b.2a checkout inputs ci-verified/run40224718420; 03b.2b atomic sale/history repository ci-verified/run40226577890; 03b.2c manual checkout/history UI ci-verified/run40231561635; 03b.3a split progress repository ci-verified (40234272200 emulator +40273381968 checks); 03b.3b.2 persisted editing ci-verified/run40285964291; 03b.3c sequential UI ci-verified/run40291228647; 03b manual block released0.1.61.1/main40348323683/public upgrade40354353799; refund03c.2a repository ci-verified/run40380296921, upgrade fixture ci-verified/run40382070117; UI/recovery ci-verified/run40387854147; docs/SALE-03B.md |
 | 04 | Склад, приёмка, поставщики, закупки, инвентаризация | 03 | 04a.1 suppliers ci-verified/API36/run40472850012; docs/SUPPLIERS-04A.md;04a.2 purchase drafts ci-verified/API36/run40477779141;04a.3 submit/history ci-verified/API36/run40483522354;04a.4 edit/cancel ci-verified/API36/run40487143428;04a.5 receiving draft/preview ci-verified/API36/run40502219375;04a.6 posting/history ci-verified/API36/run40512178440 (rounding follow-up40519616659);04a.7 standalone +price mode SA01–SA08 ci-verified/API36/run40576618684;04b.1 inventory config/start IC01–IC04 ci-verified/API36/run40581633690;04b.2 count/fix IF01–IF05 ci-verified/API36/run40640734638;04b.3 close/history IT01–IT05 ci-verified/API36/run40698882065; 04c.1 stock reads SR01–SR04 ci-verified/API36/run40750124798 attempt2; 04c.2 period/documents SD01–SD05 ci-verified/API36/run40829976103; warehouse/device audit pending |
 | 05 | Полное управление сменой/кассой, сотрудники/роли, отчёты/аналитика | 03, 04 | in progress:05a/05b.1–05b.3 ci-verified;05b.4 текущие H03/H04 ci-verified/API36/run41100246927; отчёты05c/05d planned |
-| 06 | Клиенты, согласия, лояльность | 05 | planned |
-| 07 | Backup/import, фото, проверяемые миграции и восстановление | 01–06 | planned |
+| 06 | Клиенты, согласия, лояльность | — | TODO: отложено владельцем2026-10-31, не реализуем |
+| 07 | Backup/import, фото, проверяемые миграции и восстановление | реализованные01–05 | planned |
 | 08 | Принтер/ящик, PDF/XLSX, Telegram, настройки устройства | 05, 07 | planned |
-| 09 | Backend/сайт, HTTPS/SSE, online orders/menu/availability, конфигурация | 03–08 | planned |
+| 09 | Backend/сайт, HTTPS/SSE, online orders/menu/availability, конфигурация | — | TODO: отложено владельцем2026-10-31, не реализуем |
+
+06 и09 перенесены владельцем в [TODO](docs/PRODUCT-TODO.md), не блокируют07/08. Активная очередь:05c/05d→07→08.
 
 Актуальный остаток и подробная последовательность: [NEXT-IMPLEMENTATION-PLAN.md](docs/NEXT-IMPLEMENTATION-PLAN.md).
 

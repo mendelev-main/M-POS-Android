@@ -4,6 +4,8 @@
 
 Зависимости ниже означают предметные/инфраструктурные предпосылки. Они не задают прямые Kotlin imports экранов. Domain использует интерфейсы портов; Room/platform adapters подключаются в composition root. Данные разных областей объединяет одна transaction, когда этого требует команда продажи/переноса.
 
+06/M16 и09/M20 отложены владельцем2026-10-31: [TODO](PRODUCT-TODO.md). Логические области сохранены, реализация не начинается;07/08 используют только готовые модели.
+
 ## Реестр
 
 | ID / область | Владеет | Нужные предпосылки | Ввод / документ |
@@ -23,11 +25,11 @@
 | M13 Смена и касса | open/close shift, cash movements, shift boundary, totals contract | M02/M03/M06; read ports sales, без вызова checkout | minimum03a, full05; [управление](MANAGEMENT-REPORTS-SPEC.md) |
 | M14 Сотрудники и admin | employee directory, credentials provider, runtime admin session, role assignment | M06/M03; права не следуют из shift | 05; [управление](MANAGEMENT-REPORTS-SPEC.md) |
 | M15 Отчёты и аналитика | report query/snapshot, показатели/периоды/группировки, сверка | M09/M10/M13, складские read models M11/M12 | 05, exports08; [отчёты](MANAGEMENT-REPORTS-SPEC.md) |
-| M16 Клиенты и лояльность | customer reference/search/consent, gift allocation, loyalty effects | M09/M06/M05; server contract/staging для remote части | 06; [клиенты](CUSTOMERS-HALL-SPEC.md) |
+| M16 Клиенты и лояльность — TODO | customer reference/search/consent, gift allocation, loyalty effects | M09/M06/M05; server contract/staging для remote части | 06; [клиенты](CUSTOMERS-HALL-SPEC.md) |
 | M17 | Исключён: зал, столы и бронирования | — | решение владельца2026-10-28 |
-| M18 Backup и перенос | native export/restore, Web v13 adapter, preview/activation | модели 01–06, M03/M04/M06, coordination M05 | 07; [recovery](RESILIENCE.md), [операции](OPERATIONS-SPEC.md) |
+| M18 Backup и перенос | native export/restore, Web v13 adapter, preview/activation | реализованные модели01–05, M03/M04/M06, coordination M05 | 07; [recovery](RESILIENCE.md), [операции](OPERATIONS-SPEC.md) |
 | M19 Оборудование и выдача | print/drawer adapters, PDF/XLSX/Telegram transport, result jobs | M09/M13/M15/M04/M05/M06 | 08; [операции](OPERATIONS-SPEC.md) |
-| M20 Сайт и конфигурация обмена | device binding, remote orders/SSE, menu/photos/availability/tariffs | M07/M08/M09/M10/M16/M05/M06; restore binding policy M18 | 09; [сайт](SETTINGS-SITE-SPEC.md) |
+| M20 Сайт и конфигурация обмена — TODO | device binding, remote orders/SSE, menu/photos/availability/tariffs | M07/M08/M09/M10/M16/M05/M06; restore binding policy M18 | 09; [сайт](SETTINGS-SITE-SPEC.md) |
 | M21 Обновления APK | release channel/check/download/verify/system install/receipt | Android/HTTP; future guard M01/M03 | 00.1 ci-verified; [updater](UPDATES.md) |
 
 ## Границы и взаимодействие
