@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.activity.compose.BackHandler
@@ -161,7 +162,15 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                         })
                         com.mendelev.mpos.feature.receiving.ReceivingScreen(model,posting,receivingOrder,{receivingOrder=null}) {route="purchaseOrders"}
                     }
-                    "analytics", "events" -> PlannedModuleScreen(route)
+                    "analytics" -> {
+                        val model: com.mendelev.mpos.feature.report.ReportViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>,extras: androidx.lifecycle.viewmodel.CreationExtras): T =
+                                com.mendelev.mpos.feature.report.ReportViewModel(com.mendelev.mpos.data.local.SalesReportRepository(
+                                    com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext)),extras.createSavedStateHandle()) as T
+                        })
+                        com.mendelev.mpos.feature.report.ReportScreen(model,{route="settings"},{route="workspace"})
+                    }
+                    "events" -> PlannedModuleScreen(route)
                     else -> {
                         val model: com.mendelev.mpos.feature.products.CatalogViewModel = viewModel(factory = object : ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST")

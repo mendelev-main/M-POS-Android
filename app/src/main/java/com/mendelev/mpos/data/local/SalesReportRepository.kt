@@ -5,9 +5,11 @@ import com.mendelev.mpos.domain.catalog.CatalogRules
 import com.mendelev.mpos.domain.report.*
 import java.time.Clock
 
+interface SalesReportAccess { suspend fun snapshot(period: ReportPeriod): SalesReport }
+
 /** One authorized read transaction; no initialize, result/audit writes, live catalogue or remote calls. */
-class SalesReportRepository(private val db: CatalogDatabase,private val clock: Clock=Clock.systemUTC()) {
-    suspend fun snapshot(period: ReportPeriod): SalesReport=db.adminTransaction {
+class SalesReportRepository(private val db: CatalogDatabase,private val clock: Clock=Clock.systemUTC()): SalesReportAccess {
+    override suspend fun snapshot(period: ReportPeriod): SalesReport=db.adminTransaction {
         val receipts=db.sales().history()
         val sales=receipts.map {r->
             val saved=ReceiptCodec.decode(r.payload)
