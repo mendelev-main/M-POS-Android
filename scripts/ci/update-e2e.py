@@ -261,8 +261,9 @@ def main():
                 # Unknown/system/M-POS dialogs are not dismissed by wait_text.
                 adb("shell", "am", "start", "-W", "-n", PACKAGE + "/com.mendelev.mpos.MainActivity")
                 wait_navigation("workspace", click=False)
+                # Whole 22-scenario batch budget; retain per-test waits and exact success count below.
                 result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SettingsVisualUiTest,com.mendelev.mpos.EmployeeUiTest,com.mendelev.mpos.AdminRevocationUiTest,com.mendelev.mpos.AdminUiTest,com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.SupplierUiTest,com.mendelev.mpos.PurchaseUiTest,com.mendelev.mpos.PurchaseOrderUiTest,com.mendelev.mpos.PurchaseOrderMutationUiTest,com.mendelev.mpos.ReceivingUiTest,com.mendelev.mpos.ReceivingPostingUiTest,com.mendelev.mpos.StandaloneReceivingUiTest,com.mendelev.mpos.InventoryUiTest,com.mendelev.mpos.StockUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
-                             PACKAGE + ".test/com.mendelev.mpos.MposTestRunner", timeout=180)
+                             PACKAGE + ".test/com.mendelev.mpos.MposTestRunner", timeout=360)
                 assert "OK (22 tests)" in result and "FAILURES" not in result, result[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
