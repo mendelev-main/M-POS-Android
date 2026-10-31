@@ -112,7 +112,8 @@ fun reportMoney(minor: BigInteger)=BigDecimal(minor,2).toPlainString().replace('
             Text(label,style=MaterialTheme.typography.bodySmall)
             Text(reportMoney(value),Modifier.testTag("report$tag$key"),style=MaterialTheme.typography.titleMedium)
             val ratio=if(amounts.total.signum()==0) 0f else value.toBigDecimal().divide(amounts.total.toBigDecimal(),6,RoundingMode.HALF_UP).toFloat().coerceIn(0f,1f)
-            LinearProgressIndicator(progress={ratio},modifier=Modifier.fillMaxWidth().height(8.dp))
+            LinearProgressIndicator(progress={ratio},modifier=Modifier.fillMaxWidth().height(8.dp),
+                trackColor=MaterialTheme.colorScheme.outline,gapSize=0.dp,drawStopIndicator={})
         }
         HorizontalDivider()
         Text("Доставка включена в сумму",style=MaterialTheme.typography.bodySmall)
