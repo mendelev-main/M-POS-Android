@@ -1,6 +1,6 @@
 # Этап 05 — Смены и роли
 
-Статус: in progress —05a cash CM01–CM05 и05b.1–05b.3 ci-verified/API36;05b.4 текущие H03/H04 ci-verified/API36/run41100246927; 05c.1 RPT01–RPT05 ci-verified/API36/run41184335908; UI05c.2 ci-verified/API36/run41186247439;05d.1 RG01–RG06 ci-verified/API36/run41188178378;05d.2 RS01–RS05 ci-verified/API36/run41293338713
+Статус: in progress —05a cash CM01–CM05 и05b.1–05b.3 ci-verified/API36;05b.4 текущие H03/H04 ci-verified/API36/run41100246927; 05c.1 RPT01–RPT05 ci-verified/API36/run41184335908; UI05c.2 ci-verified/API36/run41186247439;05d.1 RG01–RG06 ci-verified/API36/run41188178378;05d.2 RS01–RS05 ci-verified/API36/run41293338713;05d.3 WH01–WH06 ci-verified/API36/run41305115280 attempt2/schema9; program checkpoint ready07a, device pending
 
 ## Объём
 
@@ -86,3 +86,6 @@ H01: повтор закрытия не дублирует; H02: деньги с
 
 
 05d.3: [WH01–WH06](../../docs/WAREHOUSE-REPORTS-05D3.md), quantitative read model/unit schema9/legacy migration and UI implemented/validation pending (05d.3a); current-cost valuation approved, row rounding pending owner (05d.3b).07 not started.
+
+
+2026-11-01: 05d.3 WH01–WH06 ci-verified/API36: [FullCI41305115280 attempt2](https://github.com/mendelev-main/M-POS-Android/actions/runs/41305115280/attempts/2)/883bbaf SUCCESS.173JVM/247instrumentation/0failures/0skipped,16Python/preflight/lint/debugAPK/testAPK. Downloaded HTML: WarehouseReportTest2/ReportUiTest2/RefundRepositoryTest8 passed; real8→9 preserves null legacy unit/old command replay/read-only reopen, SQL abort rolls back creation, all schema1..8→9 preserve stock/receipt. Exact0.0004/manual boundaries/unknown unit/incomplete ledger/noTracking, current-cost HALF_UP rows7.06, no partial money total and future-date rejection passed. Actual debugAPK1→2 UPDATE E2E PASSED with existing financial/warehouse fixtures and locked admin new process. Light component-host analytics-warehouse/locked screenshots inspected: readable/shared controls/no overlap, lower card edge is scroll position. Main navigation separately in existing suite; physical tablet/dark/new warehouse rows150%/large data/exact Web comparison pending. Schema9 only nullable movement.unit, JSON/fingerprints/main/signing unchanged. Attempt1 retained: Quickstep system ANR caused13 UI failures; unchanged emulator-only retry passed, no gates weakened. Earlier413039 failed old target8 assertion, corrected to9 and extended1..8;413037 intentionally cancelled after owner rounding reply. Programmatic checkpoint05 ready for07a,06/09 TODO, M17 excluded. Production package8→9 upgrade remains part of a future explicit release. Meaningful evidence/logs retained in harness.
