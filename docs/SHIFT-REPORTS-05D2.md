@@ -1,6 +1,6 @@
 # 05d.2 — сводка смен и сверка финансовых движений склада
 
-Статус: implemented, validation pending. Продолжение05d.1, не начало backup07. SQLschema8, без новых payload/записей/внешних эффектов.
+Статус: ci-verified/API36, [FullCI41293338713](https://github.com/mendelev-main/M-POS-Android/actions/runs/41293338713)/9f1e08a. Продолжение05d.1, не начало backup07. SQLschema8, без новых payload/записей/внешних эффектов.
 
 Источник: pinned1682c88334e6fb13586ce4b530157c59ca062e43, shifts.js shiftTotals/cashDrawerBalance/buildShiftReportPayload и warehouse-reporting.js warehouseReport. Android admin/safety adapters не переопределяют эти функции. Регрессии source-product-stock.test.cjs: shift mixed/manual totals (около563), refund drawer (около785), warehouse date/read-only (1294+). Native сохраняет ранее утверждённые event-date возвраты и отдельную кассу: Web исключает возвращённую продажу из исходной смены, это не переносится.
 
@@ -11,3 +11,6 @@
 - RS05: единая admin read transaction для сводки, групп, смен и сверки. Нет чтения текущих карточек для расчёта, инициализации или auto repair. Logout/epoch поведение экрана сохраняется.
 
 Граница сверки RS04 — списания продаж и восстановление возвратов. Это не утверждение полной сверки всех остатков/стоимостной оценки/приёмки/инвентаризации. Их документы доступны в проверенном04c.2; начало/конец исторических остатков и стоимость склада остаются отдельным объёмом. Количества разных товаров/единиц не складываются. UI использует shared Mpos cards/buttons/theme; PDF/XLSX/Telegram —08;06/09 TODO.
+
+
+2026-11-01: 05d.2 RS01–RS05 ci-verified/API36: [FullCI41293338713](https://github.com/mendelev-main/M-POS-Android/actions/runs/41293338713)/9f1e08a SUCCESS first attempt.167JVM/245instrumentation/0failures/0skipped,16Python/preflight/lint/debugAPK/testAPK; actual debugAPK1→2 UPDATE E2E PASSED, admin new-process locked и прежние financial/warehouse data assertions сохранены. Downloaded reports: SalesReportRepositoryTest4/ReportUiTest2 passed. Cross-shift sale/refund/carry, whole overlapping shift, closed expected/count/difference mismatch, exact0.0004 ledger/missing/duplicate/orphan/date/command checks, no-write/reopen/authorization и UI logout passed. Light component-host analytics-shifts/locked screenshots inspected: readable/shared components/no overlap; нижний край карточки — позиция прокрутки. Main navigation отдельно в existing TopNavigation suite; физический планшет/dark/new shift rows150% и exact Web comparison pending. SQLschema8/main/signing прежние;06/09 TODO. Это сверка financial stock links, не полная оценка склада/исторические beginning-end balances. Остаток M15 требует следующего checkpoint до07a.

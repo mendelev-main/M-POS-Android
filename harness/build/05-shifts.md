@@ -1,6 +1,6 @@
 # Этап 05 — Смены и роли
 
-Статус: in progress —05a cash CM01–CM05 и05b.1–05b.3 ci-verified/API36;05b.4 текущие H03/H04 ci-verified/API36/run41100246927; 05c.1 RPT01–RPT05 ci-verified/API36/run41184335908; UI05c.2 ci-verified/API36/run41186247439;05d.1 RG01–RG06 ci-verified/API36/run41188178378;05d.2 RS01–RS05 implemented/validation pending
+Статус: in progress —05a cash CM01–CM05 и05b.1–05b.3 ci-verified/API36;05b.4 текущие H03/H04 ci-verified/API36/run41100246927; 05c.1 RPT01–RPT05 ci-verified/API36/run41184335908; UI05c.2 ci-verified/API36/run41186247439;05d.1 RG01–RG06 ci-verified/API36/run41188178378;05d.2 RS01–RS05 ci-verified/API36/run41293338713
 
 ## Объём
 
@@ -80,3 +80,6 @@ H01: повтор закрытия не дублирует; H02: деньги с
 
 
 2026-11-01: [05d.2 RS01–RS05](../../docs/SHIFT-REPORTS-05D2.md) implemented/validation pending: whole-shift cash and sale/refund stock links, no writes; full inventory valuation/boundary balances outside this slice.
+
+
+2026-11-01: 05d.2 RS01–RS05 ci-verified/API36: [FullCI41293338713](https://github.com/mendelev-main/M-POS-Android/actions/runs/41293338713)/9f1e08a SUCCESS first attempt.167JVM/245instrumentation/0failures/0skipped,16Python/preflight/lint/debugAPK/testAPK; actual debugAPK1→2 UPDATE E2E PASSED, admin new-process locked и прежние financial/warehouse data assertions сохранены. Downloaded reports: SalesReportRepositoryTest4/ReportUiTest2 passed. Cross-shift sale/refund/carry, whole overlapping shift, closed expected/count/difference mismatch, exact0.0004 ledger/missing/duplicate/orphan/date/command checks, no-write/reopen/authorization и UI logout passed. Light component-host analytics-shifts/locked screenshots inspected: readable/shared components/no overlap; нижний край карточки — позиция прокрутки. Main navigation отдельно в existing TopNavigation suite; физический планшет/dark/new shift rows150% и exact Web comparison pending. SQLschema8/main/signing прежние;06/09 TODO. Это сверка financial stock links, не полная оценка склада/исторические beginning-end balances. Остаток M15 требует следующего checkpoint до07a.
