@@ -197,7 +197,7 @@ class RefundRepositoryTest {
     }
     @Test fun allHistoricalSchemasMigrateWithoutChangingStockOrExistingReceipt(): Unit=runBlocking {
         val source=memory();val receipt=try {sale(source)} finally {source.close()}
-        for(version in 1..7) {
+        for(version in 1..8) {
             val name="refund-migration-$version-${UUID.randomUUID()}.db"
             val schema=InstrumentationRegistry.getInstrumentation().context.assets.open("com.mendelev.mpos.data.local.CatalogDatabase/$version.json")
                 .bufferedReader().use {JSONObject(it.readText()).getJSONObject("database")}
@@ -217,7 +217,7 @@ class RefundRepositoryTest {
                     old.execSQL("INSERT INTO shifts VALUES(?,'r','owner','Владелец',1,'UTC',0,NULL,NULL,NULL,NULL,NULL,1)",arrayOf(receipt.shiftId))
                     old.execSQL("INSERT INTO shift_register VALUES(1,9,?)",arrayOf(receipt.shiftId))
                 }
-                if(version==7) {
+                if(version>=7) {
                     old.execSQL("INSERT INTO receipts VALUES(?,?,?,?,?,?,?,?,?,?,?)",arrayOf<Any>(receipt.id,receipt.commandId,receipt.sessionId,receipt.shiftId,receipt.number,receipt.createdAt,receipt.total,receipt.cash,receipt.card,receipt.deliveryCashOut,receipt.payload))
                     old.execSQL("INSERT INTO receipt_products VALUES(?,'p')",arrayOf(receipt.id))
                 }
@@ -229,8 +229,8 @@ class RefundRepositoryTest {
             try {
                 assertEquals("0.0004",db.catalog().balance("p")!!.quantity);assertEquals(8L,db.catalog().balance("p")!!.revision)
                 assertTrue(db.refunds().history().isEmpty())
-                if(version==7) assertEquals(receipt,db.sales().receipt(receipt.id)) else assertTrue(db.sales().history().isEmpty())
-                assertEquals(8,db.openHelper.readableDatabase.version)
+                if(version>=7) assertEquals(receipt,db.sales().receipt(receipt.id)) else assertTrue(db.sales().history().isEmpty())
+                assertEquals(9,db.openHelper.readableDatabase.version)
             } finally {db.close();context.deleteDatabase(name)}
         }
     }

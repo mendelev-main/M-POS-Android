@@ -32,14 +32,15 @@ class ReportViewModel(private val access: SalesReportAccess,private val saved: S
             require(from.matches(Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}")) && through.matches(Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}")))
             ReportPeriod(LocalDate.parse(from),LocalDate.parse(through),zone)
         } catch(_:Exception) {mutable.update {it.copy(filterError="Введите обе даты в формате ГГГГ-ММ-ДД; начало не позже окончания")};return false}
+        if(LocalDate.parse(through)>today()) {mutable.update {it.copy(filterError="Дата окончания не может быть в будущем")};return false}
         saved["reportFrom"]=from;saved["reportThrough"]=through
         mutable.update {it.copy(from=from,through=through,filterError=null)};refresh();return true
     }
     fun preset(days: Long) {if(days in listOf(1L,7L,30L)) dates(today().minusDays(days-1).toString(),today().toString())}
     fun refresh() {
         if(!forms.current()) {revoke();return}
-        val period=try {ReportPeriod(LocalDate.parse(state.value.from),LocalDate.parse(state.value.through),zone)}
-            catch(_:Exception) {mutable.update {it.copy(report=null,error="Проверьте выбранный период",pending=false)};return}
+        val period=try {ReportPeriod(LocalDate.parse(state.value.from),LocalDate.parse(state.value.through),zone).also {require(it.through<=today())}}
+            catch(_:Exception) {request++;job?.cancel();job=null;mutable.update {it.copy(report=null,error="Проверьте выбранный период",pending=false)};return}
         val permit=forms.permit();val serial=++request;job?.cancel()
         mutable.update {it.copy(report=null,epoch=permit.generation,pending=true,error=null)}
         job=viewModelScope.launch {

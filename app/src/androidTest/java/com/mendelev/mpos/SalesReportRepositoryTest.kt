@@ -66,6 +66,9 @@ class SalesReportRepositoryTest {
         try {
             val repo=SalesReportRepository(db,clock("2026-11-01"));val p=period("2026-10-30")
             assertEquals(BigInteger.ZERO,repo.snapshot(p).net.total);assertNull(db.catalog().config())
+            val emptyBefore=tables(db)
+            try {repo.snapshot(period("2026-11-02"));fail()} catch(e: CatalogFailure) {assertEquals("report",e.kind)}
+            assertEquals(emptyBefore,tables(db));assertNull(db.catalog().config())
             val old=AdminForms(this).permit();val before=tables(db)
             Administration.session.logout()
             try {repo.snapshot(p);fail()} catch(e: CatalogFailure) {assertEquals("access",e.kind)}

@@ -4,6 +4,7 @@ import com.mendelev.mpos.domain.catalog.CatalogFailure
 import com.mendelev.mpos.domain.catalog.CatalogRules
 import com.mendelev.mpos.domain.report.*
 import java.time.Clock
+import java.time.LocalDate
 import org.json.JSONObject
 
 interface SalesReportAccess { suspend fun snapshot(period: ReportPeriod): SalesReport }
@@ -11,6 +12,7 @@ interface SalesReportAccess { suspend fun snapshot(period: ReportPeriod): SalesR
 /** One authorized read transaction; no initialize, result/audit writes, live catalogue or remote calls. */
 class SalesReportRepository(private val db: CatalogDatabase,private val clock: Clock=Clock.systemUTC()): SalesReportAccess {
     override suspend fun snapshot(period: ReportPeriod): SalesReport=db.adminTransaction {
+        if(period.through>LocalDate.now(clock.withZone(period.zone))) throw CatalogFailure("report","Дата окончания не может быть в будущем")
         val receipts=db.sales().history()
         val snapshots=receipts.associate {it.id to ReceiptCodec.decode(it.payload)}
         val sales=receipts.map {r->

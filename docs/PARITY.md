@@ -291,3 +291,6 @@ Rounding follow-up acceptance: [CI40519616659](https://github.com/mendelev-main/
 
 
 2026-11-01: владелец подтвердил HALF_UP по строкам оценки склада (1,5×2,35→3,53; две строки7,06). WH04 current-cost valuation теперь implemented/validation pending. NoStockTracking исключены из итоговой стоимости с coverage; unavailable tracked row не даёт ложную частичную сумму. Промежуточный CI41303717173/0e31565 отменён в начале, не evidence; полный обновлённый прогон готовится.
+
+
+2026-11-01: FullCI41303928937/b813bfa checks173JVM SUCCESS; Android247 suite failed only old allHistoricalSchemas assertion expected8/actual9. Assertion target исправлен на9, coverage расширен1..8 с сохранением receipt checks для7/8 (не ослаблен). Новые WH tests не объявлены общим verified до повторного прогона. Также закрыт boundary future-period: UI/repository отказывают дате окончания после local today, без запроса/записи и смены применённых чисел; saved invalid period отменяет старый request. Никакого прогноза будущих остатков. UI/Room tests расширены без снижения gates.

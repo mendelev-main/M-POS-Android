@@ -59,6 +59,10 @@ class ReportViewModelTest {
             waitFor {model.state.value.report!=null};val before=model.state.value.report
             withContext(Dispatchers.Main) {assertFalse(model.dates("2026-11-01","2026-10-31"))}
             assertEquals(before,model.state.value.report);assertNotNull(model.state.value.filterError)
+            val called=calls
+            withContext(Dispatchers.Main) {assertFalse(model.dates("2026-10-30","2026-11-01"))}
+            assertEquals("Дата окончания не может быть в будущем",model.state.value.filterError)
+            assertEquals(before,model.state.value.report);assertEquals(called,calls)
             assertEquals(setOf("reportFrom","reportThrough","reportZone"),saved.keys())
             Administration.session.logout();withContext(Dispatchers.Main) {first.clear()}
             val count=calls;val restored=create(second,access,SavedStateHandle(saved.keys().associateWith {saved.get<Any?>(it)}))
