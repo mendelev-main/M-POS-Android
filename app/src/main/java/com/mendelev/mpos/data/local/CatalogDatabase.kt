@@ -42,7 +42,7 @@ data class BalanceEntity(@PrimaryKey val productId: String, val quantity: String
 
 @Entity(tableName = "stock_movements", foreignKeys = [ForeignKey(entity = ProductEntity::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("productId"), Index(value = ["commandId"], unique = true)])
 data class MovementEntity(@PrimaryKey val id: String, val productId: String, val delta: String, val source: String,
-    val commandId: String, val createdAt: Long, val reason: String? = null)
+    val commandId: String, val createdAt: Long, val reason: String? = null, val unit: String? = null)
 
 @Entity(tableName = "operation_results")
 data class ResultEntity(@PrimaryKey val commandId: String, val fingerprint: String, val resultId: String)
@@ -110,7 +110,13 @@ interface CatalogDao {
     @Update suspend fun updateCategory(value: CategoryEntity)
     @Insert suspend fun insertBalance(value: BalanceEntity)
     @Update suspend fun updateBalance(value: BalanceEntity)
-    @Insert suspend fun movement(value: MovementEntity)
+    @Insert suspend fun insertMovement(value: MovementEntity)
+    @Transaction suspend fun movement(value: MovementEntity) {
+        val p=checkNotNull(product(value.productId)) {"Не найден товар движения"}
+        require(p.type=="simple" && (value.unit==null || value.unit==p.unit)) {"Единица движения не совпадает с базовой"}
+        insertMovement(value.copy(unit=p.unit))
+    }
+    @Query("SELECT * FROM stock_movements ORDER BY createdAt,id") suspend fun movements(): List<MovementEntity>
     @Insert suspend fun result(value: ResultEntity)
     @Insert suspend fun audit(value: AuditEntity)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun draft(value: DraftEntity)
@@ -122,7 +128,7 @@ interface CatalogDao {
 }
 
 @Database(entities = [CategoryEntity::class, ProductEntity::class, BalanceEntity::class, MovementEntity::class,
-    ResultEntity::class, AuditEntity::class, DraftEntity::class, ConfigEntity::class, RecipeComponentEntity::class, ModifierGroupEntity::class, ModifierOptionEntity::class, WorkspaceDocument::class, ShiftEntity::class, ShiftRegisterEntity::class, ReceiptEntity::class, ReceiptProductEntity::class, RefundEntity::class], version = 8, exportSchema = true)
+    ResultEntity::class, AuditEntity::class, DraftEntity::class, ConfigEntity::class, RecipeComponentEntity::class, ModifierGroupEntity::class, ModifierOptionEntity::class, WorkspaceDocument::class, ShiftEntity::class, ShiftRegisterEntity::class, ReceiptEntity::class, ReceiptProductEntity::class, RefundEntity::class], version = 9, exportSchema = true)
 abstract class CatalogDatabase : RoomDatabase() {
     abstract fun catalog(): CatalogDao
     abstract fun workspace(): WorkspaceDao
@@ -190,10 +196,16 @@ abstract class CatalogDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_refunds_shiftId ON refunds(shiftId)")
             }
         }
+        val MIGRATION_8_9 = object : Migration(8,9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // A missing historical unit is unknown, never backfilled from the mutable catalogue.
+                db.execSQL("ALTER TABLE stock_movements ADD COLUMN unit TEXT")
+            }
+        }
         @Volatile private var instance: CatalogDatabase? = null
         fun get(context: Context): CatalogDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(context.applicationContext, CatalogDatabase::class.java, "mpos.db")
-                .addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4,MIGRATION_4_5,MIGRATION_5_6,MIGRATION_6_7,MIGRATION_7_8).build().also { instance = it }
+                .addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4,MIGRATION_4_5,MIGRATION_5_6,MIGRATION_6_7,MIGRATION_7_8,MIGRATION_8_9).build().also { instance = it }
         }
     }
 }

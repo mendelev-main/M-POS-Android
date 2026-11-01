@@ -83,3 +83,8 @@ Inventory close04b.3: history payload3 reads1/2, loss policy1=negative delta × 
 [RS01–RS05](SHIFT-REPORTS-05D2.md): календарная сводка продаж и целая смена — разные разрезы. Смены выбираются по пересечению времени открытия/закрытия с диапазоном; суммы строки охватывают всю смену. Refund финансово относится к shiftId фактической выдачи; группировка продавцов05d.1 использует автора исходной продажи. Закрытый expected/count/difference остаётся сохранённым, дополнительно рассчитывается cash по всем финансовым событиям и ручному журналу; несоответствие показывается без записи. No partial-payment income до финализации.
 
 Сверка sale/refund stock использует сохранённый consumption (и stock возврата), точный signed decimal delta, source/reason/hashed command/time. Правильная ссылка с неверным временем также проверяется; orphan финансовые движения периода видимы. Это не восстановление балансов из текущей рецептуры и не автоматическое исправление. Roomschema8 и payload formats не меняются; новые DAO запросы только читают существующие таблицы.
+
+
+## Schema9: единица складского движения
+
+05d.3a добавляет nullable `stock_movements.unit`. Запись через CatalogDao.movement сохраняет базовую unit simple-товара в той же транзакции, отвергая переданную несовместимую unit. Все production writers используют эту точку; количество/source/command/reason/replay неизменны. Migration8→9 только ALTER ADD COLUMN unit TEXT, без UPDATE/backfill. Старые null не означают piece. Legacy source документы могут дать unit в read projection после проверки связи, без записи в ledger. См. [WAREHOUSE-REPORTS-05D3](WAREHOUSE-REPORTS-05D3.md).

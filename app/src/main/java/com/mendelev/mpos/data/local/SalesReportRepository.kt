@@ -55,6 +55,6 @@ class SalesReportRepository(private val db: CatalogDatabase,private val clock: C
             ReportStockFact(it.source,it.reason,it.productId,it.commandId,it.createdAt,it.delta.toBigDecimal())
         }
         summary.copy(details=ReportGroups.build(summary,db.reportHistory(receipts,snapshots)),
-            shifts=ShiftReports.build(period,db.shifts().history().map {it.domain()},shiftEvents),stock=StockReconciler.compare(expected,actual))
+            shifts=ShiftReports.build(period,db.shifts().history().map {it.domain()},shiftEvents),stock=StockReconciler.compare(expected,actual),warehouse=db.warehouseReport(period))
     }
 }

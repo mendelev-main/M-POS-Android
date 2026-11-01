@@ -225,7 +225,7 @@ class RefundRepositoryTest {
             } finally {old.close()}
             val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(
                 CatalogDatabase.MIGRATION_1_2,CatalogDatabase.MIGRATION_2_3,CatalogDatabase.MIGRATION_3_4,
-                CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7,CatalogDatabase.MIGRATION_7_8).build()
+                CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7,CatalogDatabase.MIGRATION_7_8,CatalogDatabase.MIGRATION_8_9).build()
             try {
                 assertEquals("0.0004",db.catalog().balance("p")!!.quantity);assertEquals(8L,db.catalog().balance("p")!!.revision)
                 assertTrue(db.refunds().history().isEmpty())

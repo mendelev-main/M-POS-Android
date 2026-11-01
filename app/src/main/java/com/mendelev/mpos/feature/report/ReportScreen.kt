@@ -18,6 +18,8 @@ import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.domain.report.ReportAmounts
 import com.mendelev.mpos.domain.report.ReportGroup
 import com.mendelev.mpos.domain.report.ShiftReportRow
+import com.mendelev.mpos.domain.report.WarehouseRow
+import com.mendelev.mpos.domain.catalog.unitLabel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -109,14 +111,23 @@ fun reportMoney(minor: BigInteger)=BigDecimal(minor,2).toPlainString().replace('
                         item {MposAnalyticsCard(Modifier.fillMaxWidth()) {
                             Text("Историческая детализация",style=MaterialTheme.typography.titleMedium)
                             FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                                listOf("employees" to "Сотрудники","categories" to "Категории","products" to "Товары","shifts" to "Смены").forEach {(id,label)->
+                                listOf("employees" to "Сотрудники","categories" to "Категории","products" to "Товары","shifts" to "Смены","warehouse" to "Склад").forEach {(id,label)->
                                     MposButton(label,{dimension=id},Modifier.testTag("reportGroup:$id"),style=if(dimension==id) ActionStyle.Primary else ActionStyle.Outline)
                                 }
                             }
-                            Text(if(dimension=="shifts") "Смены по дате открытия, сначала новые. Кассовый возврат учитывается в смене выдачи денег." else "По сумме продаж, по убыванию. Сотрудники — с доставкой; категории и товары — без доставки. Возврат относится к автору исходной продажи.",style=MaterialTheme.typography.bodySmall)
-                            Text("Названия и категории на момент продажи; разные единицы не суммируются.",style=MaterialTheme.typography.bodySmall)
+                            Text(if(dimension=="warehouse") "Данные по выбранному периоду; товары по текущим названиям. Количества разных единиц не суммируются." else if(dimension=="shifts") "Смены по дате открытия, сначала новые. Кассовый возврат учитывается в смене выдачи денег." else "По сумме продаж, по убыванию. Сотрудники — с доставкой; категории и товары — без доставки. Возврат относится к автору исходной продажи.",style=MaterialTheme.typography.bodySmall)
+                            Text(if(dimension=="warehouse") "Исторические единицы подтверждаются движениями и сохранёнными документами." else "Названия и категории на момент продажи; разные единицы не суммируются.",style=MaterialTheme.typography.bodySmall)
                         }}
-                        if(dimension=="shifts") {
+                        if(dimension=="warehouse") {
+                            item {Text("Текущие названия товаров. Остатки на начало и конец выбранных дат восстановлены по журналу; прочерк означает недоступные данные.")}
+                            val warehouse=report.warehouse
+                            if(warehouse==null) item {Text("Складской отчёт недоступен")}
+                            else {
+                                item {Text("Фактическая сумма накладных за период: ${reportMoney(warehouse.invoiceValue)}",Modifier.testTag("reportWarehouseInvoices"))}
+                                if(warehouse.rows.isEmpty()) item {Text("Складских товаров нет")}
+                                items(warehouse.rows,key={"warehouse:${it.product.id}"}) {WarehouseReportPanel(it)}
+                            }
+                        } else if(dimension=="shifts") {
                             item {Text("Смены, пересекающие выбранные даты. Каждая строка — вся смена, а не только выбранные дни. Открытая смена: предварительный итог.",Modifier.testTag("reportShiftScope"))}
                             val shifts=report.shifts
                             if(shifts==null) item {Text("Сводка смен недоступна")}
@@ -206,5 +217,21 @@ fun reportMoney(minor: BigInteger)=BigDecimal(minor,2).toPlainString().replace('
             Text("Пересчитано: ${reportMoney(requireNotNull(s.countedCash).toBigInteger())} · Разница: ${reportMoney(requireNotNull(s.difference).toBigInteger())}")
             if(row.savedCashMatches==false) MposNotice("Расчёт не совпадает с сохранённым итогом смены",true)
         }
+    }
+}
+
+@Composable private fun WarehouseReportPanel(row: WarehouseRow) {
+    val p=row.product
+    fun quantity(value: BigDecimal?)=value?.let {it.stripTrailingZeros().toPlainString().replace('.',',')+" "+unitLabel(p.unit)} ?: "—"
+    MposAnalyticsCard(Modifier.fillMaxWidth().testTag("reportWarehouse:${p.id}")) {
+        Text(p.name,style=MaterialTheme.typography.titleMedium)
+        Text("На начало: ${quantity(row.start)}")
+        Text("Складской приход: ${quantity(row.incoming)} · Списано: ${quantity(row.outgoing)}")
+        Text("Возвращено: ${quantity(row.returned)} · Прочие изменения: ${quantity(row.adjustments)}")
+        Text("На конец: ${quantity(row.end)}",Modifier.testTag("reportWarehouseEnd:${p.id}"),style=MaterialTheme.typography.titleMedium)
+        Text("Сейчас: ${quantity(p.current)}")
+        Text("Получено по накладным: ${quantity(row.invoiceQuantity)} · ${reportMoney(row.invoiceValue)}")
+        Text("Складской приход и количество по накладным могут различаться при отключённом учёте.",style=MaterialTheme.typography.bodySmall)
+        row.warnings.forEach {MposNotice(it,true)}
     }
 }

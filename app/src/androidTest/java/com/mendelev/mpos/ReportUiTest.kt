@@ -34,7 +34,9 @@ class ReportUiTest {
                 val shift=Shift("shift","register","anna","Анна",sold.at,"Europe/Minsk",1000,null)
                 val shifts=ShiftReports.build(period,listOf(shift),listOf(
                     ShiftReportEvent("s",shift.id,sold.at,"sale",1000,1500,500),ShiftReportEvent("r",shift.id,refund.at,"refund",1000,1500,500)))
-                return report.copy(details=ReportGroups.build(report,listOf(history)),shifts=shifts,stock=StockReconciliation(2,emptyList()))
+                return report.copy(details=ReportGroups.build(report,listOf(history)),shifts=shifts,stock=StockReconciliation(2,emptyList()),warehouse=WarehouseReports.build(period,
+                    listOf(WarehouseProduct("flour","Мука","kg",java.math.BigDecimal("10"),java.math.BigDecimal("3"))),
+                    listOf(WarehouseMovement("opening","flour",sold.at,"opening",java.math.BigDecimal("10"),"kg")),emptyList()))
             }
         },SavedStateHandle(),clock) as T
     })[ReportViewModel::class.java]
@@ -67,13 +69,18 @@ class ReportUiTest {
         compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportShiftCash:shift"))
         compose.onNodeWithTag("reportShiftCash:shift").assertTextEquals("Расчётная касса: 10,00 BYN")
         shot("analytics-shifts")
+        compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportGroup:warehouse"))
+        compose.onNodeWithTag("reportGroup:warehouse").performClick()
+        compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportWarehouseEnd:flour"))
+        compose.onNodeWithTag("reportWarehouseEnd:flour").assertTextEquals("На конец: 10 кг")
+        shot("analytics-warehouse")
         compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportStockStatus"))
         compose.onNodeWithTag("reportStockStatus").assertTextEquals("Совпало движений: 2 · Расхождений: 0")
         compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportFrom"))
         compose.onNodeWithTag("reportFrom").performClick()
         runBlocking {Administration.session.logout()}
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("reportLocked").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithTag("reportShift:shift").assertDoesNotExist();compose.onNodeWithTag("reportStockStatus").assertDoesNotExist()
+        compose.onNodeWithTag("reportWarehouse:flour").assertDoesNotExist();compose.onNodeWithTag("reportShift:shift").assertDoesNotExist();compose.onNodeWithTag("reportStockStatus").assertDoesNotExist()
         compose.onNodeWithTag("reportProfit").assertDoesNotExist();compose.onNodeWithTag("reportRow:products:coffee").assertDoesNotExist()
         compose.onNodeWithTag("reportNet").assertDoesNotExist();compose.onNodeWithTag("reportApply").assertDoesNotExist()
         shot("analytics-locked")

@@ -7,7 +7,7 @@ data class StockRow(val id: String,val name: String,val category: String,val uni
     val low get()=quantity!=null && minimum!=null && quantity.toBigDecimal()<=minimum.toBigDecimal()
 }
 data class StockSnapshot(val rows: List<StockRow>,val selectedId: String?,val movements: List<MovementEntity>,val at: Long,val zone: String=java.time.ZoneId.systemDefault().id)
-data class StockDocument(val title: String,val at: Long,val lines: List<String>)
+data class StockDocument(val title: String,val at: Long,val lines: List<String>,val unit: String?=null)
 fun interface StockReadAccess {
     suspend fun snapshot(productId: String?): StockSnapshot
     suspend fun document(movementId: String): StockDocument = error("Документ недоступен")
