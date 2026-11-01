@@ -37,4 +37,20 @@ class WarehouseReportsTest {
         val row=WarehouseReports.build(period,listOf(p.copy(current=BigDecimal("0.0004"))),listOf(move("tiny","0.0004","opening",period.start)),emptyList()).rows.single()
         equal("0",row.start);equal("0.0004",row.end);equal("0.0004",row.adjustments)
     }
+    @Test fun currentCostValuationRoundsPerRowAndExcludesUntrackedStockExplicitly() {
+        val products=listOf(p.copy(id="a",current=BigDecimal("1.5"),cost=BigDecimal("2.35")),
+            p.copy(id="b",current=BigDecimal("1.5"),cost=BigDecimal("2.35")),p.copy(id="untracked",current=null))
+        val moves=products.take(2).map {WarehouseMovement(it.id,it.id,period.start,"opening",BigDecimal("1.5"),"kg")}
+        val report=WarehouseReports.build(period,products,moves,emptyList())
+        assertEquals(706.toBigInteger(),report.endValue);assertEquals(2,report.valuedEndCount)
+        assertEquals(353.toBigInteger(),report.rows.first {it.product.id=="a"}.endValue)
+        val changed=WarehouseReports.build(period,products.map {if(it.id=="a") it.copy(cost=BigDecimal("3")) else it},moves,emptyList())
+        assertEquals(803.toBigInteger(),changed.endValue)
+        equal("1.5",changed.rows.first {it.product.id=="a"}.end)
+    }
+    @Test fun missingHistoricalQuantityNeverProducesAPartialMoneyTotal() {
+        val report=WarehouseReports.build(period,listOf(p),events.map {if(it.id=="after") it.copy(unit=null) else it},emptyList())
+        assertNull(report.endValue);assertEquals(0,report.valuedEndCount)
+        assertEquals(2400.toBigInteger(),report.currentValue)
+    }
 }

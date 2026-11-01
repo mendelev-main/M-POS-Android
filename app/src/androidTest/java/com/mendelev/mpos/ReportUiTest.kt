@@ -73,6 +73,8 @@ class ReportUiTest {
         compose.onNodeWithTag("reportGroup:warehouse").performClick()
         compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportWarehouseEnd:flour"))
         compose.onNodeWithTag("reportWarehouseEnd:flour").assertTextEquals("На конец: 10 кг")
+        compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportWarehouseEndValue:flour"))
+        compose.onNodeWithTag("reportWarehouseEndValue:flour").assertTextEquals("Оценка на конец: 30,00 BYN")
         shot("analytics-warehouse")
         compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportStockStatus"))
         compose.onNodeWithTag("reportStockStatus").assertTextEquals("Совпало движений: 2 · Расхождений: 0")

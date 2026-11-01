@@ -123,7 +123,14 @@ fun reportMoney(minor: BigInteger)=BigDecimal(minor,2).toPlainString().replace('
                             val warehouse=report.warehouse
                             if(warehouse==null) item {Text("Складской отчёт недоступен")}
                             else {
-                                item {Text("Фактическая сумма накладных за период: ${reportMoney(warehouse.invoiceValue)}",Modifier.testTag("reportWarehouseInvoices"))}
+                                item {MposAnalyticsCard(Modifier.fillMaxWidth()) {
+                                    Text("Оценка по текущей себестоимости",style=MaterialTheme.typography.titleMedium)
+                                    Text("На конец периода: ${warehouse.endValue?.let(::reportMoney) ?: "—"}",Modifier.testTag("reportWarehouseTotalValue"))
+                                    Text("Сейчас: ${warehouse.currentValue?.let(::reportMoney) ?: "—"}")
+                                    Text("Оценено на конец: ${warehouse.valuedEndCount} из ${warehouse.tracked.size} товаров с учётом. Без учёта исключено: ${warehouse.rows.size-warehouse.tracked.size}.")
+                                    Text("Это оценка по сегодняшней стоимости, не историческая себестоимость. HALF_UP до копейки по товару, затем сумма. При недоступной строке полный итог — прочерк.",style=MaterialTheme.typography.bodySmall)
+                                    Text("Фактическая сумма накладных за период: ${reportMoney(warehouse.invoiceValue)}",Modifier.testTag("reportWarehouseInvoices"))
+                                }}
                                 if(warehouse.rows.isEmpty()) item {Text("Складских товаров нет")}
                                 items(warehouse.rows,key={"warehouse:${it.product.id}"}) {WarehouseReportPanel(it)}
                             }
@@ -230,6 +237,10 @@ fun reportMoney(minor: BigInteger)=BigDecimal(minor,2).toPlainString().replace('
         Text("Возвращено: ${quantity(row.returned)} · Прочие изменения: ${quantity(row.adjustments)}")
         Text("На конец: ${quantity(row.end)}",Modifier.testTag("reportWarehouseEnd:${p.id}"),style=MaterialTheme.typography.titleMedium)
         Text("Сейчас: ${quantity(p.current)}")
+        Text("Текущая себестоимость: ${p.cost.toPlainString().replace('.',',')} BYN/${unitLabel(p.unit)}")
+        Text("Оценка на начало: ${row.startValue?.let(::reportMoney) ?: "—"}")
+        Text("Оценка на конец: ${row.endValue?.let(::reportMoney) ?: "—"}",Modifier.testTag("reportWarehouseEndValue:${p.id}"))
+        Text("Оценка списаний: ${row.outgoingValue?.let(::reportMoney) ?: "—"} · Возвратов: ${row.returnedValue?.let(::reportMoney) ?: "—"}")
         Text("Получено по накладным: ${quantity(row.invoiceQuantity)} · ${reportMoney(row.invoiceValue)}")
         Text("Складской приход и количество по накладным могут различаться при отключённом учёте.",style=MaterialTheme.typography.bodySmall)
         row.warnings.forEach {MposNotice(it,true)}

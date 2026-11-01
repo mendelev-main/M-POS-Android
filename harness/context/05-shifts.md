@@ -59,3 +59,6 @@
 
 
 2026-11-01: начат05d.3 WH01–WH06, WAREHOUSE-REPORTS-05D3.md. Владелец подтвердил текущую себестоимость с явной подписью для исторической оценки; rounding оценки строк ещё ожидает ответа. Quantity read model и schema9 nullable movement.unit foundation implemented/validation pending. Старые единицы не backfill из карточек; verified source docs могут дать unit без записи. Migration/tests/общая приёмка pending; main/signing прежние,06/09 TODO.
+
+
+2026-11-01: владелец подтвердил HALF_UP по строкам оценки склада (1,5×2,35→3,53; две строки7,06). WH04 current-cost valuation теперь implemented/validation pending. NoStockTracking исключены из итоговой стоимости с coverage; unavailable tracked row не даёт ложную частичную сумму. Промежуточный CI41303717173/0e31565 отменён в начале, не evidence; полный обновлённый прогон готовится.

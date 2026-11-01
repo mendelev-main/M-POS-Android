@@ -4,14 +4,31 @@ import com.mendelev.mpos.domain.catalog.CatalogFailure
 import com.mendelev.mpos.domain.catalog.quantityUnit
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 
 data class WarehouseProduct(val id: String,val name: String,val unit: String,val current: BigDecimal?,val cost: BigDecimal)
 data class WarehouseMovement(val id: String,val productId: String,val at: Long,val source: String,val delta: BigDecimal,val unit: String?)
 data class WarehousePurchase(val productId: String,val at: Long,val quantity: BigDecimal,val unit: String,val totalMinor: Long)
 data class WarehouseRow(val product: WarehouseProduct,val start: BigDecimal?,val end: BigDecimal?,
     val incoming: BigDecimal?,val outgoing: BigDecimal?,val returned: BigDecimal?,val adjustments: BigDecimal?,
-    val invoiceQuantity: BigDecimal?,val invoiceValue: BigInteger,val warnings: List<String>)
-data class WarehouseReport(val rows: List<WarehouseRow>,val invoiceValue: BigInteger)
+    val invoiceQuantity: BigDecimal?,val invoiceValue: BigInteger,val warnings: List<String>) {
+    private fun value(quantity: BigDecimal?)=quantity?.multiply(product.cost)?.setScale(2,RoundingMode.HALF_UP)?.unscaledValue()
+    val startValue: BigInteger? get()=value(start)
+    val endValue: BigInteger? get()=value(end)
+    val currentValue: BigInteger? get()=value(product.current)
+    val outgoingValue: BigInteger? get()=value(outgoing)
+    val returnedValue: BigInteger? get()=value(returned)
+}
+data class WarehouseReport(val rows: List<WarehouseRow>,val invoiceValue: BigInteger) {
+    val tracked: List<WarehouseRow> get()=rows.filter {it.product.current!=null}
+    val valuedEndCount: Int get()=tracked.count {it.endValue!=null}
+    private fun total(value: (WarehouseRow)->BigInteger?): BigInteger? {
+        val values=tracked.map(value)
+        return if(values.any {it==null}) null else values.fold(BigInteger.ZERO) {sum,v->sum+requireNotNull(v)}
+    }
+    val endValue: BigInteger? get()=total {it.endValue}
+    val currentValue: BigInteger? get()=total {it.currentValue}
+}
 object WarehouseReports {
     /** Current balance is the anchor; only proven base-unit movements may be reversed across a boundary. */
     fun build(period: ReportPeriod,products: List<WarehouseProduct>,movements: List<WarehouseMovement>,purchases: List<WarehousePurchase>): WarehouseReport {
