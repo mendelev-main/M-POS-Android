@@ -17,6 +17,10 @@ import com.mendelev.mpos.core.access.Administration
 import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.domain.report.ReportAmounts
 import com.mendelev.mpos.domain.report.ReportGroup
+import com.mendelev.mpos.domain.report.ShiftReportRow
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -105,16 +109,38 @@ fun reportMoney(minor: BigInteger)=BigDecimal(minor,2).toPlainString().replace('
                         item {MposAnalyticsCard(Modifier.fillMaxWidth()) {
                             Text("Историческая детализация",style=MaterialTheme.typography.titleMedium)
                             FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                                listOf("employees" to "Сотрудники","categories" to "Категории","products" to "Товары").forEach {(id,label)->
+                                listOf("employees" to "Сотрудники","categories" to "Категории","products" to "Товары","shifts" to "Смены").forEach {(id,label)->
                                     MposButton(label,{dimension=id},Modifier.testTag("reportGroup:$id"),style=if(dimension==id) ActionStyle.Primary else ActionStyle.Outline)
                                 }
                             }
-                            Text("По сумме продаж, по убыванию. Сотрудники — с доставкой; категории и товары — без доставки. Возврат относится к автору исходной продажи.",style=MaterialTheme.typography.bodySmall)
+                            Text(if(dimension=="shifts") "Смены по дате открытия, сначала новые. Кассовый возврат учитывается в смене выдачи денег." else "По сумме продаж, по убыванию. Сотрудники — с доставкой; категории и товары — без доставки. Возврат относится к автору исходной продажи.",style=MaterialTheme.typography.bodySmall)
                             Text("Названия и категории на момент продажи; разные единицы не суммируются.",style=MaterialTheme.typography.bodySmall)
                         }}
-                        val groups=when(dimension) {"categories"->details.categories;"products"->details.products;else->details.employees}
-                        if(groups.isEmpty()) item {Text("За период нет данных для детализации")}
-                        items(groups,key={"$dimension:${it.id}"}) {group->ReportGroupPanel(group,dimension)}
+                        if(dimension=="shifts") {
+                            item {Text("Смены, пересекающие выбранные даты. Каждая строка — вся смена, а не только выбранные дни. Открытая смена: предварительный итог.",Modifier.testTag("reportShiftScope"))}
+                            val shifts=report.shifts
+                            if(shifts==null) item {Text("Сводка смен недоступна")}
+                            else {
+                                if(shifts.isEmpty()) item {Text("За период смен нет")}
+                                items(shifts,key={"shift:${it.shift.id}"}) {ShiftReportPanel(it)}
+                            }
+                        } else {
+                            val groups=when(dimension) {"categories"->details.categories;"products"->details.products;else->details.employees}
+                            if(groups.isEmpty()) item {Text("За период нет данных для детализации")}
+                            items(groups,key={"$dimension:${it.id}"}) {group->ReportGroupPanel(group,dimension)}
+                        }
+                        report.stock?.let {stock->
+                            item {MposAnalyticsCard(Modifier.fillMaxWidth()) {
+                                Text("Сверка склада · продажи и возвраты",style=MaterialTheme.typography.titleMedium)
+                                Text("Совпало движений: ${stock.checked} · Расхождений: ${stock.issues.size}",Modifier.testTag("reportStockStatus"))
+                                Text("За выбранные даты. Сравниваются сохранённые документы и движения; остатки не исправляются. Приёмка и инвентаризация сюда не входят.",style=MaterialTheme.typography.bodySmall)
+                            }}
+                            items(stock.issues) {issue->MposAnalyticsCard(Modifier.fillMaxWidth()) {
+                                MposNotice(issue.problem,true)
+                                Text("${if(issue.source=="sale") "Продажа" else "Возврат"} · документ ${issue.documentId ?: "без ссылки"}")
+                                Text("Товар: ${issue.productId}")
+                            }}
+                        }
                     }
                 }
             }
@@ -159,5 +185,26 @@ fun reportMoney(minor: BigInteger)=BigDecimal(minor,2).toPlainString().replace('
         Text("Итог: ${reportMoney(group.net)}",style=MaterialTheme.typography.titleMedium)
         if(group.sold.isNotEmpty()) Text("Продано: ${quantities(group.sold)}")
         if(group.returned.isNotEmpty()) Text("Возвращено: ${quantities(group.returned)}")
+    }
+}
+
+@Composable private fun ShiftReportPanel(row: ShiftReportRow) {
+    val s=row.shift
+    fun date(at: Long)=Instant.ofEpochMilli(at).atZone(ZoneId.of(s.zoneId)).format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
+    MposAnalyticsCard(Modifier.fillMaxWidth().testTag("reportShift:${s.id}")) {
+        Text(s.actorName,style=MaterialTheme.typography.titleMedium)
+        Text("${date(s.openedAt)} — ${s.closedAt?.let(::date) ?: "Открыта"} · ${s.zoneId}")
+        Text("Продажи: ${reportMoney(row.sales)} · Возвраты: ${reportMoney(row.refunds)}")
+        Text("Наличные: продажи ${reportMoney(row.saleCash)} · возвраты ${reportMoney(row.refundCash)}")
+        Text("Карта: продажи ${reportMoney(row.saleCard)} · возвраты ${reportMoney(row.refundCard)}")
+        Text("Начало: ${reportMoney(s.openingCash.toBigInteger())}")
+        Text("Внесения: ${reportMoney(row.deposits)} · Изъятия: ${reportMoney(row.withdrawals)}")
+        Text("Курьеру: ${reportMoney(row.courierOut)} · Отмена: ${reportMoney(row.courierCredit)}")
+        Text("Расчётная касса: ${reportMoney(row.calculatedCash)}",Modifier.testTag("reportShiftCash:${s.id}"),style=MaterialTheme.typography.titleMedium)
+        if(!s.isOpen) {
+            Text("Сохранено при закрытии: ${reportMoney(requireNotNull(s.expectedCash).toBigInteger())}")
+            Text("Пересчитано: ${reportMoney(requireNotNull(s.countedCash).toBigInteger())} · Разница: ${reportMoney(requireNotNull(s.difference).toBigInteger())}")
+            if(row.savedCashMatches==false) MposNotice("Расчёт не совпадает с сохранённым итогом смены",true)
+        }
     }
 }

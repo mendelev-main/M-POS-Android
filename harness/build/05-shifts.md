@@ -1,6 +1,6 @@
 # Этап 05 — Смены и роли
 
-Статус: in progress —05a cash CM01–CM05 и05b.1–05b.3 ci-verified/API36;05b.4 текущие H03/H04 ci-verified/API36/run41100246927; 05c.1 RPT01–RPT05 ci-verified/API36/run41184335908; UI05c.2 ci-verified/API36/run41186247439;05d.1 RG01–RG06 ci-verified/API36/run41188178378;05d.2 planned
+Статус: in progress —05a cash CM01–CM05 и05b.1–05b.3 ci-verified/API36;05b.4 текущие H03/H04 ci-verified/API36/run41100246927; 05c.1 RPT01–RPT05 ci-verified/API36/run41184335908; UI05c.2 ci-verified/API36/run41186247439;05d.1 RG01–RG06 ci-verified/API36/run41188178378;05d.2 RS01–RS05 implemented/validation pending
 
 ## Объём
 
@@ -77,3 +77,6 @@ H01: повтор закрытия не дублирует; H02: деньги с
 
 
 2026-10-31: 05d.1 RG01–RG06 ci-verified/API36: [FullCI41188178378](https://github.com/mendelev-main/M-POS-Android/actions/runs/41188178378)/935d821 SUCCESS first attempt.163JVM/244instrumentation/0failures/0skipped,16Python/preflight/lint/debugAPK/testAPK; actual debugAPK1→2 UPDATE E2E PASSED с сохранностью данных и сбросом admin session. SalesReportRepositoryTest3 и ReportUiTest2 passed. Исторические имена/стоимость после live edit, no-write/reopen/corruption/epoch, original seller refund, separate units/IDs, exact rational line HALF_UP/discounted goods/net delivery profit подтверждены тестами. Light component-host analytics-groups/locked screenshots inspected: читаемо/общие компоненты/без наложений; это synthetic25BYN, main navigation отдельно покрыта существующим TopNavigation test. SQLschema8/main/signing прежние; physical tablet/dark/exact Web comparison pending. Следующий05d.2 — смены и сверка склада, затем07/08;06/09 TODO.
+
+
+2026-11-01: [05d.2 RS01–RS05](../../docs/SHIFT-REPORTS-05D2.md) implemented/validation pending: whole-shift cash and sale/refund stock links, no writes; full inventory valuation/boundary balances outside this slice.

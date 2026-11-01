@@ -279,3 +279,6 @@ Rounding follow-up acceptance: [CI40519616659](https://github.com/mendelev-main/
 
 
 2026-10-31: 05d.1 RG01–RG06 ci-verified/API36: [FullCI41188178378](https://github.com/mendelev-main/M-POS-Android/actions/runs/41188178378)/935d821 SUCCESS first attempt.163JVM/244instrumentation/0failures/0skipped,16Python/preflight/lint/debugAPK/testAPK; actual debugAPK1→2 UPDATE E2E PASSED с сохранностью данных и сбросом admin session. SalesReportRepositoryTest3 и ReportUiTest2 passed. Исторические имена/стоимость после live edit, no-write/reopen/corruption/epoch, original seller refund, separate units/IDs, exact rational line HALF_UP/discounted goods/net delivery profit подтверждены тестами. Light component-host analytics-groups/locked screenshots inspected: читаемо/общие компоненты/без наложений; это synthetic25BYN, main navigation отдельно покрыта существующим TopNavigation test. SQLschema8/main/signing прежние; physical tablet/dark/exact Web comparison pending. Следующий05d.2 — смены и сверка склада, затем07/08;06/09 TODO.
+
+
+2026-11-01: начат05d.2 RS01–RS05, SHIFT-REPORTS-05D2.md. Whole-shift cash snapshot и сверка sale/refund consumption→ledger в общей admin read transaction. Отличие от календарной аналитики явно показывается; full warehouse valuation/beginning-end balances не заявлены. Validation pending; SQLschema8/main/signing прежние,06/09 TODO.

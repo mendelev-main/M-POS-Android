@@ -18,6 +18,7 @@ data class ShiftRegisterEntity(@PrimaryKey val id: Int=1,val revision: Long=0,va
     @Query("SELECT * FROM shift_register WHERE id=1") fun observe(): Flow<ShiftRegisterEntity?>
     @Query("SELECT * FROM shifts WHERE id=:id") suspend fun shift(id: String): ShiftEntity?
     @Query("SELECT * FROM shifts WHERE activeSlot IS NOT NULL") suspend fun active(): List<ShiftEntity>
+    @Query("SELECT * FROM shifts ORDER BY openedAt DESC,id") suspend fun history(): List<ShiftEntity>
     @Insert suspend fun insert(shift: ShiftEntity)
     @Update suspend fun update(shift: ShiftEntity)
     @Insert(onConflict=OnConflictStrategy.IGNORE) suspend fun initialize(value: ShiftRegisterEntity)

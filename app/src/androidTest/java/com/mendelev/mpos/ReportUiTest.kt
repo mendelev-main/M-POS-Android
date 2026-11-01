@@ -13,6 +13,7 @@ import com.mendelev.mpos.core.access.Administration
 import com.mendelev.mpos.core.ui.MposTheme
 import com.mendelev.mpos.data.local.SalesReportAccess
 import com.mendelev.mpos.domain.report.*
+import com.mendelev.mpos.domain.shift.Shift
 import com.mendelev.mpos.feature.report.*
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -30,7 +31,10 @@ class ReportUiTest {
                 val refund=ReportRefund("refund",sold.id,clock.millis(),2500,1000,1500,500)
                 val report=SalesReports.build(period,clock.millis(),listOf(sold),listOf(refund))
                 val history=ReportDetailSale("sale","anna","Анна",listOf(ReportDetailLine("line","coffee","Кофе","drinks","Напитки","piece",java.math.BigDecimal("2"),2000,800.toBigInteger())))
-                return report.copy(details=ReportGroups.build(report,listOf(history)))
+                val shift=Shift("shift","register","anna","Анна",sold.at,"Europe/Minsk",1000,null)
+                val shifts=ShiftReports.build(period,listOf(shift),listOf(
+                    ShiftReportEvent("s",shift.id,sold.at,"sale",1000,1500,500),ShiftReportEvent("r",shift.id,refund.at,"refund",1000,1500,500)))
+                return report.copy(details=ReportGroups.build(report,listOf(history)),shifts=shifts,stock=StockReconciliation(2,emptyList()))
             }
         },SavedStateHandle(),clock) as T
     })[ReportViewModel::class.java]
@@ -58,10 +62,18 @@ class ReportUiTest {
         compose.onNodeWithText("Продано: 2 шт.").assertExists()
         compose.onNodeWithText("Возвращено: 2 шт.").assertExists()
         shot("analytics-groups")
+        compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportGroup:shifts"))
+        compose.onNodeWithTag("reportGroup:shifts").performClick()
+        compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportShiftCash:shift"))
+        compose.onNodeWithTag("reportShiftCash:shift").assertTextEquals("Расчётная касса: 10,00 BYN")
+        shot("analytics-shifts")
+        compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportStockStatus"))
+        compose.onNodeWithTag("reportStockStatus").assertTextEquals("Совпало движений: 2 · Расхождений: 0")
         compose.onNodeWithTag("reportScroll").performScrollToNode(hasTestTag("reportFrom"))
         compose.onNodeWithTag("reportFrom").performClick()
         runBlocking {Administration.session.logout()}
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("reportLocked").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("reportShift:shift").assertDoesNotExist();compose.onNodeWithTag("reportStockStatus").assertDoesNotExist()
         compose.onNodeWithTag("reportProfit").assertDoesNotExist();compose.onNodeWithTag("reportRow:products:coffee").assertDoesNotExist()
         compose.onNodeWithTag("reportNet").assertDoesNotExist();compose.onNodeWithTag("reportApply").assertDoesNotExist()
         shot("analytics-locked")
