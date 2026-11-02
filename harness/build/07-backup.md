@@ -1,6 +1,6 @@
 # Этап 07 — Backup и перенос
 
-Статус: in progress,07.1 WP01–WP06 ci-verified (inspection scope only); после05c/05d, без ожидания отложенных06/09. Scope — реально реализованные модели01–05 и фото.
+Статус: in progress,07.1 WP01–WP06 +07.2 NX01–NX06 ci-verified (inspection/native export scope only); после05c/05d, без ожидания отложенных06/09. Scope — реально реализованные модели01–05 и фото.
 
 ## Объём
 
@@ -40,3 +40,6 @@ B01: malformed отказ без потери данных; B02: roundtrip; B03:
 
 
 2026-11-02: начат07.2 NX01–NX06, [NATIVE-BACKUP-07-2.md](../../docs/NATIVE-BACKUP-07-2.md): exact SQLite tables/types snapshot+referenced photos, manifest1/schema9/SHA-256, SAF export+readback/native inspection/admin chooser epoch. Implemented/validation pending. Snapshot из source transaction, без live db/wal copy/пересчёта. Это не live restore/protective activation/Web converter, B02–B04 не закрыты.
+
+
+2026-11-02:07.2 NX01–NX06 ci-verified в рамках native export/integrity: [FullCI41415093355](https://github.com/mendelev-main/M-POS-Android/actions/runs/41415093355)/b789ae6 SUCCESS first attempt.184JVM/257API36/0failures/0skipped;16Python/preflight/lint/debugAPK/testAPK. Downloaded HTML NativeBackupTest3/BackupViewModelTest4/BackupUiTest2/SettingsVisualUiTest1 passed. Source transaction→independent snapshot→archive→extraction→Room createFromFile preserves all table rows/types, completed receipt, purchase/supplier documents, active shift, frozen partial paid4000/given5000/change1000, exact stock9.0004, command replay and two photos (product/draft-only). Faults captured/archived/verified/written, cancellation, provider readback corruption, missing photo, old chooser authority and late result leave source unchanged/no false success. Actual debugAPK1→2 UPDATE E2E PASSED/app-private data preserved;26UIseed strict gate retained. Light native-backup component screenshot (synthetic report) and main-shell settings-backup inspected: shared controls, readable/no overlap. Physical tablet/dark/150%/large backups/cloud SAF/real disk-full/power-loss remain pending. Native export format1/schema9 implemented; live restore/app-private durable protective activation/Web converters still planned, B02/B04 full acceptance not closed. Main/signing/schema unchanged;06/09 TODO,M17 excluded.

@@ -1,6 +1,6 @@
 # 07.2 — native-экспорт и проверка целостности
 
-Статус: NX01–NX06 implemented / validation pending. Это следующий блок после read-only Web inspection07.1. Восстановление рабочей базы, автоматическая защитная копия перед заменой и Web→native converters ещё не реализованы. B02 roundtrip полного приложения/B04 activation recovery не закрыты.
+Статус: NX01–NX06 ci-verified/API36/FullCI41415093355 (b789ae6,184JVM/257Android,0failures/0skipped). Это следующий блок после read-only Web inspection07.1. Восстановление рабочей базы, автоматическая защитная копия перед заменой и Web→native converters ещё не реализованы. B02 roundtrip полного приложения/B04 activation recovery не закрыты.
 
 ## Формат и границы
 
@@ -19,10 +19,13 @@
 
 ## Проверяемый пример
 
-Native заказ100BYN, cash40 (given50/change10), card60 unpaid, открытая смена. Snapshot сохраняет frozen checkout+split-progress/paid indexes/stablepartIDs/revision и command results. Открытие копии новой Room-базой в тесте должно дать те же документы/баланс10.0004/смену/paid4000; replay первой части возвращает прежний результат и не меняет документы. Product photo и отдельное draft-only photo сохраняются byte-for-byte. Проверяется reopen независимой копии; переключение рабочих consumers и полноценный live restore не заявляются.
+Native заказ100BYN, cash40 (given50/change10), card60 unpaid, открытая смена. Snapshot сохраняет frozen checkout+split-progress/paid indexes/stablepartIDs/revision и command results. Открытие копии новой Room-базой в тесте должно дать те же документы/баланс9.0004 после завершённой продажи/смену/paid4000; replay первой части возвращает прежний результат и не меняет документы. Product photo и отдельное draft-only photo сохраняются byte-for-byte. Проверяется reopen независимой копии; переключение рабочих consumers и полноценный live restore не заявляются.
 
 Faults: captured/archived/verified/written, cancellation, изменившийся источник, provider readback corruption, missing photo, malformed archive, old authorization и late result. Source должен остаться прежним. Реальный disk-full, разные SAF/cloud providers, power-loss и физический планшет — отдельная будущая приёмка.07.3 activation требует RESILIENCE.md и fault/restart на каждом checkpoint.
 
 ## Следующий блок
 
 07.3: app-private verified protective copy текущего target (включая active/paid), durable prepared/activate/recovery protocol, повторный preview при target revision/generation change, дополнительное подтверждение активного target.07.4: legacy Web converters, frozen payments, lost acknowledgement и historical unknown coverage.07.5: явное подтверждение unsupported skip и применение. Замена разрешена владельцем; target paid30 и source paid40 — отдельные dataset, не сумма70.
+
+
+2026-11-02:07.2 NX01–NX06 ci-verified в рамках native export/integrity: [FullCI41415093355](https://github.com/mendelev-main/M-POS-Android/actions/runs/41415093355)/b789ae6 SUCCESS first attempt.184JVM/257API36/0failures/0skipped;16Python/preflight/lint/debugAPK/testAPK. Downloaded HTML NativeBackupTest3/BackupViewModelTest4/BackupUiTest2/SettingsVisualUiTest1 passed. Source transaction→independent snapshot→archive→extraction→Room createFromFile preserves all table rows/types, completed receipt, purchase/supplier documents, active shift, frozen partial paid4000/given5000/change1000, exact stock9.0004, command replay and two photos (product/draft-only). Faults captured/archived/verified/written, cancellation, provider readback corruption, missing photo, old chooser authority and late result leave source unchanged/no false success. Actual debugAPK1→2 UPDATE E2E PASSED/app-private data preserved;26UIseed strict gate retained. Light native-backup component screenshot (synthetic report) and main-shell settings-backup inspected: shared controls, readable/no overlap. Physical tablet/dark/150%/large backups/cloud SAF/real disk-full/power-loss remain pending. Native export format1/schema9 implemented; live restore/app-private durable protective activation/Web converters still planned, B02/B04 full acceptance not closed. Main/signing/schema unchanged;06/09 TODO,M17 excluded.
