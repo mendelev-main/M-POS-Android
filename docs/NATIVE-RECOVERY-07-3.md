@@ -1,6 +1,6 @@
 # 07.3 — подготовка, защита и восстановление
 
-Статус:07.3a RA01–RA06 implemented/validation pending. Live application replacement07.3b и crash recovery активации ещё planned. B02/B04 full restore не закрыты.07.4 Web conversion и07.5 Web activation следующие.
+Статус:07.3a RA01–RA06 ci-verified/API36/run41421510948 (85b473c,184JVM/265Android,0failures/0skipped). Live application replacement07.3b и crash recovery активации ещё planned. B02/B04 full restore не закрыты.07.4 Web conversion и07.5 Web activation следующие.
 
 ## Почему два инкремента
 
@@ -26,3 +26,6 @@ Fault checkpoints sourceVerified/protectionCaptured/protectionArchived/protectio
 ## Следующий 07.3b
 
 Полный schema/domain validator (не доверять одному Room identity_hash), source lost-ack/command provenance, paid draft/cart/shift/receipts reconciliation; durable maintenance marker до остановки writers/consumers; verified protection точного target под тем же fence; повторный preview при изменении и отдельный confirm активного target; old-or-new activation, authoritative outcome при restart, recovery UI. Сохранить app identity/signature/preferences/admin locked. Existing local command IDs остаются фактами, external effects не отправляются автоматически. Не вводить постоянный запрет активного target вместо согласованного переноса.
+
+
+2026-11-02:07.3a RA01–RA06 ci-verified (protection/preparation only): [FullCI41421510948](https://github.com/mendelev-main/M-POS-Android/actions/runs/41421510948)/85b473c SUCCESS first attempt.184JVM/265API36/0failures/0skipped,16Python/preflight/lint/debugAPK/testAPK. Downloaded HTML NativeRecoveryPreparationTest5/NativeRecoveryUiTest1/BackupViewModelTest6/SettingsVisualUiTest1 passed. Actual source40/target30 separate persisted snapshots, independent Room protection reopen/old part-command replay, all9 publication checkpoints/finally cleanup/prior published copies retained, malformed source/corrupt linked protection/cancellation/old authority, VACUUM/time-independent fingerprint and exact0.0004→0.0005 detection/unknown payment=null passed. Fresh repository inventory reads published files, incomplete .stage does not activate; working documents/shift/stock/paid30 and original source bytes unchanged. Actual debugAPK1→2 UPDATE E2E PASSED/app-private data preserved,27UIseed strict count retained. Light native-protection component screenshot(synthetic adapter) + main-shell settings-backup inspected: shared controls/clear40vs30/readable/no overlap; lower Web card edge is scrolling position. Physical tablet/dark/150%/large retained inventory/real disk-full/power-loss/process-kill timing remain pending. No live replacement/activation implemented, B02/B04 full restore and07.3b maintenance/domain/schema/generation/recovery remain planned. Schema9/main/signing unchanged;06/09 TODO,M17 excluded.

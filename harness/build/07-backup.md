@@ -1,6 +1,6 @@
 # Этап 07 — Backup и перенос
 
-Статус: in progress,07.1 WP01–WP06 +07.2 NX01–NX06 ci-verified (inspection/native export scope only); после05c/05d, без ожидания отложенных06/09. Scope — реально реализованные модели01–05 и фото.
+Статус: in progress,07.1 WP01–WP06 +07.2 NX01–NX06 +07.3a RA01–RA06 ci-verified (inspection/export/protection/preparation only); после05c/05d, без ожидания отложенных06/09. Scope — реально реализованные модели01–05 и фото.
 
 ## Объём
 
@@ -46,3 +46,6 @@ B01: malformed отказ без потери данных; B02: roundtrip; B03:
 
 
 2026-11-02: начат07.3a RA01–RA06, durable protection+prepared source/inventory без live activation. Контракт [NATIVE-RECOVERY-07-3.md](../../docs/NATIVE-RECOVERY-07-3.md), implemented/validation pending. Приёмка source40/target30 отдельно, publication faults/reopen/auth/fingerprint; B02/B04 full restore и07.3b writers/generation/activation planned. Main/schema/signing неизменны.
+
+
+2026-11-02:07.3a RA01–RA06 ci-verified (protection/preparation only): [FullCI41421510948](https://github.com/mendelev-main/M-POS-Android/actions/runs/41421510948)/85b473c SUCCESS first attempt.184JVM/265API36/0failures/0skipped,16Python/preflight/lint/debugAPK/testAPK. Downloaded HTML NativeRecoveryPreparationTest5/NativeRecoveryUiTest1/BackupViewModelTest6/SettingsVisualUiTest1 passed. Actual source40/target30 separate persisted snapshots, independent Room protection reopen/old part-command replay, all9 publication checkpoints/finally cleanup/prior published copies retained, malformed source/corrupt linked protection/cancellation/old authority, VACUUM/time-independent fingerprint and exact0.0004→0.0005 detection/unknown payment=null passed. Fresh repository inventory reads published files, incomplete .stage does not activate; working documents/shift/stock/paid30 and original source bytes unchanged. Actual debugAPK1→2 UPDATE E2E PASSED/app-private data preserved,27UIseed strict count retained. Light native-protection component screenshot(synthetic adapter) + main-shell settings-backup inspected: shared controls/clear40vs30/readable/no overlap; lower Web card edge is scrolling position. Physical tablet/dark/150%/large retained inventory/real disk-full/power-loss/process-kill timing remain pending. No live replacement/activation implemented, B02/B04 full restore and07.3b maintenance/domain/schema/generation/recovery remain planned. Schema9/main/signing unchanged;06/09 TODO,M17 excluded.

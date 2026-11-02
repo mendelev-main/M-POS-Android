@@ -49,4 +49,4 @@
 2026-11-02:07.1 WP01–WP06 ci-verified/API36/run41407482232.07.2 NX01–NX06 native export/integrity ci-verified, CI41415093355 SUCCESS; [контракт](NATIVE-BACKUP-07-2.md). Дальнейшая очередь07.3 durable app-private защитная копия и restore/recovery→07.4 Web mappings/legacy financial facts/frozen payments→07.5 mapped preview/unsupported explicit skip/activation. Native файл сейчас можно экспортировать/проверить, применение ещё не подключено.06/09 TODO, M17 исключён.
 
 
-2026-11-02:07.3a [RA01–RA06](NATIVE-RECOVERY-07-3.md) implemented/validation pending: durable protective copy + prepared source, metadata/hash/fingerprint + explicit inventory. Не live restore. Далее07.3b domain/schema validation + all-writer/generation maintenance/activation/recovery→07.4 Web conversion→07.5 mapped activation.
+2026-11-02:07.3a [RA01–RA06](NATIVE-RECOVERY-07-3.md) ci-verified/API36/run41421510948: durable protective copy + prepared source, metadata/hash/fingerprint + explicit inventory. Не live restore. Далее07.3b domain/schema validation + all-writer/generation maintenance/activation/recovery→07.4 Web conversion→07.5 mapped activation.

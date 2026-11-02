@@ -60,3 +60,6 @@ Pinned Web1682c88334e6fb13586ce4b530157c59ca062e43: backup.js completeBackupData
 
 
 07.2: [native export/integrity contract](NATIVE-BACKUP-07-2.md), NX01–NX06 ci-verified/API36/run41415093355. Общий этап07 не завершён; restore/converters/activation остаются следующими блоками.
+
+
+07.3a: [durable protection/preparation](NATIVE-RECOVERY-07-3.md), RA01–RA06 ci-verified/API36/run41421510948. Live native activation/recovery07.3b и Web conversion07.4/activation07.5 ещё planned.
