@@ -108,4 +108,59 @@ internal object NativeSnapshotDatabase {
         }
         return counts
     }
+    /** Logical target identity: independent of SQLite page layout, ZIP timestamps and device locale. */
+    fun fingerprint(files: NativeBackupFiles,check: ()->Unit={}): String {
+        val digest=java.security.MessageDigest.getInstance("SHA-256")
+        val sink=java.io.DataOutputStream(java.security.DigestOutputStream(object: java.io.OutputStream() {
+            override fun write(b: Int) {}
+            override fun write(b: ByteArray,off: Int,len: Int) {}
+        },digest))
+        fun bytes(b: ByteArray) {sink.writeInt(b.size);sink.write(b)}
+        fun text(s: String)=bytes(s.toByteArray(Charsets.UTF_8))
+        text("mpos-target-v1");sink.writeInt(NativeBackupArchive.SCHEMA_VERSION);var rowCount=0L
+        open(files.database).use {db->
+            for(table in tables.sorted()) {
+                check();text(table)
+                db.rawQuery("SELECT * FROM ${quoted(table)} LIMIT 0",null).use {shape->
+                    val columns=shape.columnNames;text(columns.joinToString("|"))
+                    db.rawQuery("SELECT * FROM ${quoted(table)} ORDER BY "+columns.joinToString(",",transform=::quoted),null).use {rows->
+                        while(rows.moveToNext()) {
+                            check();if(++rowCount>2_000_000) throw BackupFailure("limit","Слишком большая база");sink.writeByte(1)
+                            for(i in columns.indices) {val type=rows.getType(i);sink.writeByte(type);when(type) {
+                                Cursor.FIELD_TYPE_NULL->Unit
+                                Cursor.FIELD_TYPE_INTEGER->sink.writeLong(rows.getLong(i))
+                                Cursor.FIELD_TYPE_STRING->text(rows.getString(i))
+                                Cursor.FIELD_TYPE_BLOB->bytes(rows.getBlob(i))
+                                else->throw BackupFailure("schema","Неожиданный тип данных")
+                            }}
+                        }
+                        sink.writeByte(0)
+                    }
+                }
+            }
+        }
+        files.photos.toSortedMap().forEach {(id,file)->check();text(id);text(NativeBackupArchive.sha256(file))}
+        sink.flush();return digest.digest().joinToString("") {"%02x".format(it)}
+    }
+    fun activity(files: NativeBackupFiles): NativeSnapshotActivity = open(files.database).use {db->
+        val shifts=db.rawQuery("SELECT COUNT(*) FROM shifts WHERE activeSlot IS NOT NULL",null).use {it.moveToFirst();it.getInt(0)}
+        try {
+            val raw=db.rawQuery("SELECT payload FROM workspace_documents WHERE id='split-progress'",null).use {if(it.moveToFirst()) it.getString(0) else null}
+            if(raw==null) NativeSnapshotActivity(shifts,0,0) else {
+                val j=JSONObject(raw);require(j.getInt("version") in 1..2)
+                if(j.getBoolean("completed")) NativeSnapshotActivity(shifts,0,0) else {
+                    val saved=com.mendelev.mpos.data.local.SavedCheckout(j.getLong("checkoutRevision"),com.mendelev.mpos.data.local.CheckoutCodec.decode(j.getJSONObject("checkout").toString()))
+                    val a=j.getJSONArray("paid");val paid=(0 until a.length()).map {a.getInt(it)}
+                    require(saved.draft.parts.size in 2..10 && paid.isNotEmpty() && paid.distinct().size==paid.size && paid.all {it in saved.draft.parts.indices})
+                    val progress=if(j.getInt("version")==1) com.mendelev.mpos.data.local.SplitProgress(0,saved,paid.toSet()) else {
+                        val ids=j.getJSONArray("partIds");require(ids.length()==saved.draft.parts.size)
+                        com.mendelev.mpos.data.local.SplitProgress(0,saved,paid.toSet(),(0 until ids.length()).map {ids.getLong(it)},j.getLong("nextPartId"),2)
+                    }
+                    com.mendelev.mpos.domain.sale.SplitEditor.validate(progress.editable())
+                    NativeSnapshotActivity(shifts,1,progress.paidAmount)
+                }
+            }
+        } catch(_:Exception) {NativeSnapshotActivity(shifts,null,null)}
+    }
+
 }

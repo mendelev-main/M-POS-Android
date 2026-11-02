@@ -21,12 +21,52 @@ import java.math.BigInteger
     val ui by model.state.collectAsStateWithLifecycle()
     val admin by Administration.session.state.collectAsStateWithLifecycle()
     LaunchedEffect(model,admin.generation) {model.open()}
+    val recoveryChooser=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {model.preparationSelected(it?.toString())}
     val nativeChooser=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {model.nativeSelected(it?.toString())}
     val exporter=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) {model.exportSelected(it?.toString())}
     val chooser=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {model.selected(it?.toString())}
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
         MposAppBar("Резервная копия") {MposButton("Назад",onBack,style=ActionStyle.Secondary)}
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
+            if(admin.active && (ui.picking || ui.busy || ui.error!=null)) MposAnalyticsCard(Modifier.fillMaxWidth()) {
+                if(ui.picking) Text("Завершите выбор файла в системном окне")
+                if(ui.busy) Text("Подготавливаем или проверяем копию…",Modifier.testTag("backupBusy"))
+                ui.error?.let {MposNotice(it,true)}
+            }
+            if(model.recoveryEnabled && admin.active) MposAnalyticsCard(Modifier.fillMaxWidth().testTag("recoveryActions")) {
+                Text("Подготовка восстановления",style=MaterialTheme.typography.titleLarge)
+                Text("Выберите native-копию. Приложение проверит файл и сохранит защитную копию текущих данных, включая открытую смену и уже оплаченные части.")
+                FlowRow(horizontalArrangement=Arrangement.spacedBy(10.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                    MposButton("Подготовить native-восстановление",{if(model.beginPreparation()) try {recoveryChooser.launch(arrayOf("*/*"))} catch(_:Exception) {model.preparationSelected(null)}},Modifier.testTag("recoveryPrepare"),enabled=!ui.picking && !ui.busy)
+                    MposButton("Показать защитные копии",{model.loadRecovery()},Modifier.testTag("recoveryInventory"),style=ActionStyle.Secondary,enabled=!ui.picking && !ui.busy)
+                }
+                Text("Применение ещё не подключено. Подготовка сохраняется после перезапуска, рабочая база не заменяется.",Modifier.testTag("recoveryPreparationOnly"))
+            }
+            ui.prepared?.takeIf {admin.active && ui.epoch==admin.generation}?.let {p->
+                MposAnalyticsCard(Modifier.fillMaxWidth().testTag("recoveryPrepared")) {
+                    Text("Файл подготовлен, защитная копия сохранена",style=MaterialTheme.typography.titleMedium)
+                    Text("В выбранной копии: товаров ${p.source.products}, смен ${p.source.shifts}, чеков ${p.source.receipts}")
+                    RecoveryActivity("Выбранная копия",p.sourceActivity)
+                    RecoveryActivity("Защитная копия текущих данных",p.protection.activity)
+                    Text("Защитная копия: ${p.protection.id.take(8)} · "+java.time.Instant.ofEpochMilli(p.protection.createdAt).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime().toString().replace('T',' '))
+                    Text("Наборы данных сохранены отдельно. Для будущего применения нужно повторно проверить, не изменились ли рабочие данные, и подтвердить замену. Активная смена потребует дополнительного подтверждения.")
+                    MposButton("Очистить предпросмотр",{model.clear()},style=ActionStyle.Secondary)
+                }
+            }
+            ui.recovery?.takeIf {admin.active && ui.epoch==admin.generation}?.let {r->
+                MposAnalyticsCard(Modifier.fillMaxWidth().testTag("recoveryInventoryResult")) {
+                    Text("Защитные копии",style=MaterialTheme.typography.titleMedium)
+                    Text("Проверено: ${r.protections.size} · Подготовлено восстановлений: ${r.prepared.size}")
+                    if(r.damaged>0) MposNotice("Записей, не прошедших проверку: ${r.damaged}. Их файлы сохранены и не будут применены автоматически",true)
+                    if(r.protections.isEmpty()) Text("Проверенных защитных копий пока нет")
+                    r.protections.forEach {p->
+                        Text("Копия ${p.id.take(8)} · "+java.time.Instant.ofEpochMilli(p.createdAt).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime().toString().replace('T',' '))
+                        Text("Товаров: ${p.report.products} · Смен: ${p.report.shifts} · Чеков: ${p.report.receipts}")
+                        RecoveryActivity("Сохранённое состояние",p.activity)
+                    }
+                    Text("Список проверяет сохранённые файлы и не выполняет восстановление. Удаление приложения удалит и эти внутренние копии; внешние копии сохраняйте отдельно.")
+                }
+            }
             if(model.nativeEnabled && admin.active) MposAnalyticsCard(Modifier.fillMaxWidth().testTag("nativeBackupActions")) {
                 Text("Копия этого приложения",style=MaterialTheme.typography.titleLarge)
                 Text("Сохраняет товары, фото, историю, открытую смену и частичные оплаты. Данные не пересчитываются. После записи файл читается повторно и проверяется.")
@@ -56,9 +96,6 @@ import java.math.BigInteger
                 } else {
                     MposButton("Выбрать Web-копию",{if(model.beginSelection()) try {chooser.launch(arrayOf("*/*"))} catch(_:Exception) {model.selected(null)}},
                         Modifier.testTag("backupChoose"),enabled=!ui.picking && !ui.busy)
-                    if(ui.picking) Text("Завершите выбор файла в системном окне")
-                    if(ui.busy) Text("Подготавливаем или проверяем копию…",Modifier.testTag("backupBusy"))
-                    ui.error?.let {MposNotice(it,true)}
                 }
             }
             ui.preview?.takeIf {admin.active && ui.epoch==admin.generation}?.let {p->
@@ -94,3 +131,8 @@ import java.math.BigInteger
     }
 }
 private fun money(minor: BigInteger)=BigDecimal(minor,2).toPlainString().replace('.',',')+" BYN"
+
+@Composable private fun RecoveryActivity(label: String,a: com.mendelev.mpos.data.backup.NativeSnapshotActivity) {
+    Text("$label: открытых смен ${a.openShifts}; "+(a.partials?.let {"частичных оплат $it"} ?: "частичные оплаты требуют отдельной проверки"))
+    a.paidMinor?.let {Text("$label — отмечено оплаченным: "+money(it.toBigInteger()))}
+}

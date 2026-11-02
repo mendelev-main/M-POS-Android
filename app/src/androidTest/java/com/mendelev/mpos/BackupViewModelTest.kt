@@ -10,9 +10,9 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class BackupViewModelTest {
-    private suspend fun make(store: ViewModelStore,access: BackupInspectionAccess,native: NativeBackupAccess?=null)=withContext(Dispatchers.Main) {
+    private suspend fun make(store: ViewModelStore,access: BackupInspectionAccess,native: NativeBackupAccess?=null,recovery: NativeRecoveryAccess?=null)=withContext(Dispatchers.Main) {
         ViewModelProvider(store,object: ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>)=BackupViewModel(access,native) as T
+            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>)=BackupViewModel(access,native,recovery) as T
         })[BackupViewModel::class.java].also {it.open()}
     }
     @Test fun stalePickerCannotBorrowNewLoginAndErrorsNeverExposeSourceContent()=runBlocking {
@@ -69,6 +69,43 @@ class BackupViewModelTest {
             Administration.session.logout();Administration.session.login("fixture-admin".toCharArray())
             withContext(Dispatchers.Main) {model.open()};release.complete(Unit);delay(100)
             assertNull(model.state.value.native);assertFalse(model.state.value.busy)
+        } finally {release.complete(Unit);withContext(Dispatchers.Main) {store.clear()}}
+    }
+
+    @Test fun oldRecoveryChooserCannotBorrowAuthorityAndInventoryErrorsAreSanitized()=runBlocking {
+        val store=ViewModelStore();var calls=0
+        val recovery=object: NativeRecoveryAccess {
+            override suspend fun prepare(uri: String): PreparedNativeRestore {calls++;error("SECRET $uri")}
+            override suspend fun inventory(): NativeRecoveryInventory=error("SECRET PATH")
+        }
+        val model=make(store,BackupInspectionAccess {error("unused")},recovery=recovery)
+        try {
+            withContext(Dispatchers.Main) {assertTrue(model.beginPreparation());model.selected("wrong-kind");assertTrue(model.state.value.picking)}
+            Administration.session.logout();Administration.session.login("fixture-admin".toCharArray())
+            withContext(Dispatchers.Main) {model.open();assertFalse(model.beginPreparation());model.preparationSelected("old");assertTrue(model.beginPreparation());model.preparationSelected("private-new")}
+            withTimeout(20_000) {while(model.state.value.error==null) delay(10)}
+            assertEquals(1,calls);assertNull(model.state.value.prepared);assertFalse(model.state.value.error!!.contains("private"))
+            withContext(Dispatchers.Main) {model.loadRecovery()}
+            withTimeout(20_000) {while(model.state.value.error==null) delay(10)}
+            assertFalse(model.state.value.error!!.contains("SECRET"));assertNull(model.state.value.recovery)
+        } finally {withContext(Dispatchers.Main) {store.clear()}}
+    }
+    @Test fun latePreparedCopyNeedsExplicitInventoryReadInNewSession()=runBlocking {
+        val store=ViewModelStore();val entered=CompletableDeferred<Unit>();val release=CompletableDeferred<Unit>()
+        val prepared=recoveryUiFixture()
+        val recovery=object: NativeRecoveryAccess {
+            override suspend fun prepare(uri: String): PreparedNativeRestore {withContext(NonCancellable) {entered.complete(Unit);release.await()};return prepared}
+            override suspend fun inventory()=NativeRecoveryInventory(listOf(prepared.protection),listOf(prepared),0)
+        }
+        val model=make(store,BackupInspectionAccess {error("unused")},recovery=recovery)
+        try {
+            withContext(Dispatchers.Main) {assertTrue(model.beginPreparation());model.preparationSelected("uri")};entered.await()
+            Administration.session.logout();Administration.session.login("fixture-admin".toCharArray())
+            withContext(Dispatchers.Main) {model.open()};release.complete(Unit);delay(100)
+            assertNull(model.state.value.prepared);assertNull(model.state.value.recovery)
+            withContext(Dispatchers.Main) {model.loadRecovery()}
+            withTimeout(20_000) {while(model.state.value.recovery==null) delay(10)}
+            assertEquals(listOf(prepared),model.state.value.recovery!!.prepared)
         } finally {release.complete(Unit);withContext(Dispatchers.Main) {store.clear()}}
     }
 
