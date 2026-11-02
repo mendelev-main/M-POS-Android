@@ -22,7 +22,7 @@ import com.mendelev.mpos.feature.access.AdminControl
 /** Pinned renderSettingsScreen/renderAdminPanel, mapped to shared native controls. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable fun SettingsHome(onUpdates: ()->Unit,onCatalog: (() -> Unit)?,onSuppliers: (() -> Unit)?,
-    onInventory: (() -> Unit)?,onStock: (() -> Unit)?,onGallery: (() -> Unit)?,onBack: ()->Unit,updateAvailable: Boolean,onEmployees: (() -> Unit)?=null) {
+    onInventory: (() -> Unit)?,onStock: (() -> Unit)?,onGallery: (() -> Unit)?,onBack: ()->Unit,updateAvailable: Boolean,onEmployees: (() -> Unit)?=null,onBackup: (() -> Unit)?=null) {
     val admin by Administration.session.state.collectAsStateWithLifecycle()
     var panel by rememberSaveable(admin.generation) {mutableStateOf(false)}
     var planned by rememberSaveable {mutableStateOf<String?>(null)}
@@ -42,7 +42,7 @@ import com.mendelev.mpos.feature.access.AdminControl
             MposButton("Панель администратора",{panel=true},Modifier.fillMaxWidth().testTag("settingsAdminPanel"),enabled=admin.active)
             if(!admin.active) Text("Для управления приложением войдите в администрирование",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             onCatalog?.let {MposButton("Товары",it,Modifier.fillMaxWidth(),style=ActionStyle.Outline)}
-            MposButton("Резервная копия",{planned="Резервная копия"},Modifier.fillMaxWidth().testTag("settingsBackup"),style=ActionStyle.Outline)
+            MposButton("Резервная копия",{onBackup?.invoke() ?: run {planned="Резервная копия"}},Modifier.fillMaxWidth().testTag("settingsBackup"),style=ActionStyle.Outline)
             SettingsCard("Складской учёт","Остатки, движения товаров и инвентаризация уже подключены.") {
                 FlowRow(horizontalArrangement=Arrangement.spacedBy(10.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
                     onStock?.let {MposButton("Остатки и движения",it,Modifier.testTag("settingsStock"),style=ActionStyle.Outline)}

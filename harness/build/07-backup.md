@@ -1,6 +1,6 @@
 # Этап 07 — Backup и перенос
 
-Статус: planned; после05c/05d, без ожидания отложенных06/09. Scope — реально реализованные модели01–05 и фото.
+Статус: in progress,07.1 WP01–WP06 implemented/validation pending; после05c/05d, без ожидания отложенных06/09. Scope — реально реализованные модели01–05 и фото.
 
 ## Объём
 
@@ -31,3 +31,6 @@ B01: malformed отказ без потери данных; B02: roundtrip; B03:
 ## Контекст и результат
 
 Значимые решения в `harness/context/07-backup.md` при начале работ; наблюдаемые результаты в `harness/build-log.md`.
+
+
+Текущий контракт [BACKUP-07.md](../../docs/BACKUP-07.md): source формат JSON (также Android .mposbackup), не ZIP. Только structural/photo/payment preview сейчас; native export/restore/Web activation не реализованы. Source active shifts/partials required пользователем.

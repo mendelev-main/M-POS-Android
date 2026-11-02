@@ -1,0 +1,113 @@
+{
+  "version": 13,
+  "exportedAt": 1,
+  "printerSettings": {
+    "printers": [],
+    "posNotifications": {
+      "soundEnabled": true,
+      "sound": "default"
+    }
+  },
+  "products": [
+    {
+      "id": "p",
+      "type": "simple",
+      "unit": "piece",
+      "name": "Синтетический товар",
+      "price": 100,
+      "cost": 20,
+      "stock": 10
+    }
+  ],
+  "employees": [
+    {
+      "id": "cashier",
+      "name": "Синтетический кассир",
+      "role": "employee"
+    }
+  ],
+  "shifts": [
+    {
+      "id": "s",
+      "employeeId": "cashier",
+      "status": "open",
+      "openingCash": 0,
+      "openedAt": 1
+    }
+  ],
+  "orders": [],
+  "parked": [],
+  "receivings": [],
+  "receivingDraft": null,
+  "suppliers": [],
+  "purchaseOrders": [],
+  "discounts": [],
+  "hallTables": [],
+  "bookings": [],
+  "inventoryConfig": {
+    "enabled": false,
+    "frequency": "monthly",
+    "productIds": [],
+    "lastCompletedAt": null
+  },
+  "inventoryHistory": [],
+  "inventoryDraft": null,
+  "currentOrderSession": {
+    "items": [
+      {
+        "productId": "p",
+        "name": "Синтетический товар",
+        "price": 100,
+        "qty": 1
+      }
+    ],
+    "paymentDraft": {
+      "version": 1,
+      "totalCents": 10000,
+      "parts": [
+        {
+          "method": "cash",
+          "amount": 40,
+          "paid": true,
+          "cashGiven": 50,
+          "change": 10
+        },
+        {
+          "method": "card",
+          "amount": 60,
+          "paid": false,
+          "cashGiven": null,
+          "change": null
+        }
+      ],
+      "updatedAt": 1
+    }
+  },
+  "company": {},
+  "deliveryRates": [],
+  "receiptLabelTemplates": [],
+  "posNavigation": {
+    "version": 1,
+    "categories": []
+  },
+  "layout": {
+    "categoryOrder": [],
+    "categoryColors": {},
+    "categorySymbols": {},
+    "tiles": [
+      {
+        "type": "product",
+        "id": "p"
+      }
+    ]
+  },
+  "printer": {},
+  "theme": "light",
+  "telegram": {},
+  "network": {},
+  "demandOverload": false,
+  "operationalOutbox": [],
+  "operationalRevision": 0,
+  "webEvents": [],
+  "webOrderAcceptances": {}
+}

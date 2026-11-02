@@ -88,7 +88,14 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                             override fun <T : ViewModel> create(modelClass: Class<T>): T =
                                 UpdateViewModel(UpdateRepository(context.applicationContext, fixture)) as T
                         })
-                        UpdatesScreen(model, onCatalog={route="catalog"}, onGallery={route="gallery"},onSuppliers={route="suppliers"},onInventory={route="inventory"},onStock={route="stock"},onEmployees={route="employees"}) { route = "catalog" }
+                        UpdatesScreen(model, onCatalog={route="catalog"}, onGallery={route="gallery"},onSuppliers={route="suppliers"},onInventory={route="inventory"},onStock={route="stock"},onEmployees={route="employees"},onBackup={route="backup"}) { route = "catalog" }
+                    }
+                    "backup" -> {
+                        val model: com.mendelev.mpos.feature.backup.BackupViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T =
+                                com.mendelev.mpos.feature.backup.BackupViewModel(com.mendelev.mpos.data.backup.WebBackupInspection(context.contentResolver)) as T
+                        })
+                        com.mendelev.mpos.feature.backup.BackupScreen(model,{route="settings"},{route="settings"})
                     }
                     "inventory", "inventoryWork", "inventoryHistory" -> {
                         com.mendelev.mpos.feature.inventory.InventoryScreen(inventoryModel,
