@@ -27,7 +27,7 @@ class NativeRecoveryPreparationTest {
         val root=File(context.noBackupFilesDir,"recovery-test-${UUID.randomUUID()}").apply {mkdirs()}
         val sourcePhotos=ProductPhotoStore(File(root,"source"));val targetPhotos=ProductPhotoStore(File(root,"target"))
         val vault=File(root,"vault");val input=File(root,"input.mposnative")
-        fun repo(checkpoint: (String)->Unit={})=NativeRecoveryPreparation(context,target,targetPhotos,vault,checkpoint)
+        fun repo(checkpoint: (String)->Unit={})=NativeRecoveryPreparation(context,target,targetPhotos,vault,checkpoint=checkpoint)
         override fun close() {source.close();target.close();context.deleteDatabase(sourceName);context.deleteDatabase(targetName);root.deleteRecursively()}
     }
     private suspend fun seed(db: CatalogDatabase,photos: ProductPhotoStore,paid: Long,label: String) {

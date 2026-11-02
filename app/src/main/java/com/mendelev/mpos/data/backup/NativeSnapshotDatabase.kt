@@ -13,7 +13,7 @@ import org.json.JSONObject
 import java.io.File
 
 internal object NativeSnapshotDatabase {
-    private val tables=setOf("categories","products","stock_balances","stock_movements","operation_results","audit_events","editor_drafts","app_config","recipe_components","modifier_groups","modifier_options","workspace_documents","shifts","shift_register","receipts","receipt_products","refunds","room_master_table")
+    internal val tables=setOf("categories","products","stock_balances","stock_movements","operation_results","audit_events","editor_drafts","app_config","recipe_components","modifier_groups","modifier_options","workspace_documents","shifts","shift_register","receipts","receipt_products","refunds","room_master_table")
     private const val IDENTITY="9bb6667a9d85501c211c4629dbdaa2d2"
     private fun quoted(name: String)="\""+name.replace("\"","\"\"")+"\""
     /** Clone committed tables, exact SQLite types and schema under one source transaction, including WAL data. */
@@ -73,7 +73,7 @@ internal object NativeSnapshotDatabase {
         NativeBackupFiles(file,copies,System.currentTimeMillis()).also {validate(it)}
     }
     private fun open(file: File)=SQLiteDatabase.openDatabase(file.absolutePath,null,SQLiteDatabase.OPEN_READONLY or SQLiteDatabase.NO_LOCALIZED_COLLATORS)
-    private fun referencedPhotos(file: File): Set<String> = open(file).use {db->
+    internal fun referencedPhotos(file: File): Set<String> = open(file).use {db->
         val refs=mutableSetOf<String>()
         db.rawQuery("SELECT photoId FROM products WHERE photoId IS NOT NULL",null).use {c->while(c.moveToNext()) refs+=c.getString(0)}
         db.rawQuery("SELECT payload FROM editor_drafts",null).use {c->while(c.moveToNext()) {
@@ -162,5 +162,7 @@ internal object NativeSnapshotDatabase {
             }
         } catch(_:Exception) {NativeSnapshotActivity(shifts,null,null)}
     }
+
+    fun activeFiles(database: File,mediaRoot: File): NativeBackupFiles = NativeBackupFiles(database,referencedPhotos(database).associateWith {File(File(mediaRoot,"product-photos"),it)},0)
 
 }

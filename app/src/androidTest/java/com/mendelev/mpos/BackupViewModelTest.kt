@@ -109,4 +109,36 @@ class BackupViewModelTest {
         } finally {release.complete(Unit);withContext(Dispatchers.Main) {store.clear()}}
     }
 
+    @Test fun oldApplyConfirmationCannotBorrowNewLogin()=runBlocking {
+        val store=ViewModelStore();var calls=0;val prepared=recoveryUiFixture()
+        val recovery=object: NativeRecoveryAccess {
+            override val activationEnabled=true
+            override suspend fun prepare(uri: String)=prepared
+            override suspend fun inventory()=NativeRecoveryInventory(listOf(prepared.protection),listOf(prepared),0)
+            override suspend fun apply(id: String,confirmed: Boolean,activeConfirmed: Boolean): com.mendelev.mpos.data.recovery.NativeActivationResult {calls++;return com.mendelev.mpos.data.recovery.NativeActivationResult("new")}
+        }
+        val model=make(store,BackupInspectionAccess {error("unused")},recovery=recovery)
+        try {
+            withContext(Dispatchers.Main) {model.requestApply(prepared)}
+            Administration.session.logout();Administration.session.login("fixture-admin".toCharArray())
+            withContext(Dispatchers.Main) {model.open();model.confirmApply(true)}
+            delay(100);assertEquals(0,calls);assertNull(model.state.value.confirmation);assertFalse(model.state.value.activated)
+        } finally {withContext(Dispatchers.Main) {store.clear()}}
+    }
+    @Test fun activationFailureDoesNotClaimReplacementOrLeakExceptionPayload()=runBlocking {
+        val store=ViewModelStore();val prepared=recoveryUiFixture()
+        val recovery=object: NativeRecoveryAccess {
+            override val activationEnabled=true
+            override suspend fun prepare(uri: String)=prepared
+            override suspend fun inventory()=NativeRecoveryInventory(listOf(prepared.protection),listOf(prepared),0)
+            override suspend fun apply(id: String,confirmed: Boolean,activeConfirmed: Boolean): com.mendelev.mpos.data.recovery.NativeActivationResult=throw BackupFailure("staleTarget","SECRET SOURCE")
+        }
+        val model=make(store,BackupInspectionAccess {error("unused")},recovery=recovery)
+        try {
+            withContext(Dispatchers.Main) {model.requestApply(prepared);model.confirmApply(true)}
+            withTimeout(20_000) {while(model.state.value.error==null) delay(10)}
+            assertFalse(model.state.value.activated);assertNull(model.state.value.prepared);assertFalse(model.state.value.error!!.contains("SECRET"));assertTrue(model.state.value.error!!.contains("изменились"))
+        } finally {withContext(Dispatchers.Main) {store.clear()}}
+    }
+
 }

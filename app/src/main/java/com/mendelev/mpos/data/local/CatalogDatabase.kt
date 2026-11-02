@@ -204,7 +204,7 @@ abstract class CatalogDatabase : RoomDatabase() {
         }
         @Volatile private var instance: CatalogDatabase? = null
         fun get(context: Context): CatalogDatabase = instance ?: synchronized(this) {
-            instance ?: Room.databaseBuilder(context.applicationContext, CatalogDatabase::class.java, "mpos.db")
+            instance ?: Room.databaseBuilder(context.applicationContext, CatalogDatabase::class.java, com.mendelev.mpos.data.recovery.AppDataset.paths(context).database.absolutePath)
                 .addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4,MIGRATION_4_5,MIGRATION_5_6,MIGRATION_6_7,MIGRATION_7_8,MIGRATION_8_9).build().also { instance = it }
         }
     }

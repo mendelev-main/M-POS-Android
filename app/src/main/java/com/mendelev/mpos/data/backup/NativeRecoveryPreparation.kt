@@ -23,14 +23,20 @@ data class ProtectedNativeCopy(val id: String,val createdAt: Long,val report: Na
 data class PreparedNativeRestore(val id: String,val source: NativeBackupReport,val sourceActivity: NativeSnapshotActivity,val protection: ProtectedNativeCopy)
 data class NativeRecoveryInventory(val protections: List<ProtectedNativeCopy>,val prepared: List<PreparedNativeRestore>,val damaged: Int)
 interface NativeRecoveryAccess {
+    val activationEnabled: Boolean get()=false
+    suspend fun apply(id: String,confirmed: Boolean,activeConfirmed: Boolean): com.mendelev.mpos.data.recovery.NativeActivationResult = throw BackupFailure("unsupported","Восстановление не подключено")
+    suspend fun prepareProtection(id: String): PreparedNativeRestore = throw BackupFailure("unsupported","Подготовка защиты не подключена")
     suspend fun prepare(uri: String): PreparedNativeRestore
     suspend fun inventory(): NativeRecoveryInventory
 }
 /** Durable preparation only. No application database/photo replacement and no activation authority. */
 class NativeRecoveryPreparation(context: Context,private val db: CatalogDatabase=CatalogDatabase.get(context),
     private val photos: ProductPhotoStore=ProductPhotoStore(context.applicationContext.filesDir),
-    private val root: File=File(context.noBackupFilesDir,"native-recovery"),private val checkpoint: (String)->Unit={}): NativeRecoveryAccess {
+    private val root: File=File(context.noBackupFilesDir,"native-recovery"),
+    private val activationStore: com.mendelev.mpos.data.recovery.NativeGenerationStore?=null,private val activationRuntime: com.mendelev.mpos.data.recovery.RecoveryRuntime?=null,private val checkpoint: (String)->Unit={}): NativeRecoveryAccess {
+    private val context=context.applicationContext
     private val resolver=context.applicationContext.contentResolver
+    override val activationEnabled=true
     private companion object {
         val mutex=Mutex()
         val idPattern=Regex("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
@@ -126,6 +132,26 @@ class NativeRecoveryPreparation(context: Context,private val db: CatalogDatabase
         val c=checkArchive(File(dir,"source.mposnative"),p)
         if(c.report.sha256!=text(m,"sha256",hashPattern) || c.fingerprint!=text(m,"fingerprint",hashPattern)) throw BackupFailure("protection","Подготовленная копия не прошла проверку")
         return PreparedNativeRestore(id,c.report,c.activity,loadProtection(text(m,"protection",idPattern),p))
+    }
+    override suspend fun prepareProtection(id: String): PreparedNativeRestore {
+        val p=permit()
+        val uri=mutex.withLock {folders();loadProtection(id,p);Uri.fromFile(File(File(File(root,"protections"),id),"backup.mposnative")).toString()}
+        return p.write {prepare(uri)}
+    }
+    override suspend fun apply(id: String,confirmed: Boolean,activeConfirmed: Boolean): com.mendelev.mpos.data.recovery.NativeActivationResult {
+        val p=permit();return mutex.withLock {
+            folders();if(!idPattern.matches(id)) throw BackupFailure("protection","Недопустимая подготовка")
+            val prepared=loadPrepared(id,p)
+            temporary {work->
+                val extract=File(work,"source").apply {mkdir()}
+                val archive=File(File(File(root,"prepared"),id),"source.mposnative")
+                val files=archive.inputStream().use {NativeBackupArchive.read(it,extract) {p.requireCurrent()}}
+                val fingerprint=NativeSnapshotDatabase.fingerprint(files) {p.requireCurrent()}
+                val validation=File(work,"validation").apply {mkdir()}
+                com.mendelev.mpos.data.recovery.NativeActivation(context,db,photos,activationStore ?: com.mendelev.mpos.data.recovery.AppDataset.store(context),activationRuntime ?: com.mendelev.mpos.data.recovery.AppDataset.runtime,checkpoint)
+                    .apply(prepared,files,fingerprint,validation,p,confirmed,activeConfirmed)
+            }
+        }
     }
     override suspend fun inventory(): NativeRecoveryInventory {
         val p=permit();return mutex.withLock {

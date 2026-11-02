@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
         // Test fixture override is restricted to loopback/emulator host in DEBUG; release never accepts an endpoint from Intent.
         val fixture = if (BuildConfig.DEBUG) intent.getStringExtra("mpos.testUpdateUrl")
             ?.takeIf(UpdatePolicy::isLocalUrl) else null
-        setContent { FoundationScreen(fixture) }
+        setContent { com.mendelev.mpos.feature.backup.RecoveryStartupScreen(applicationContext,{finishAndRemoveTask();android.os.Process.killProcess(android.os.Process.myPid())}) {FoundationScreen(fixture)} }
     }
 }
 

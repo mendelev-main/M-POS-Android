@@ -25,6 +25,20 @@ import java.math.BigInteger
     val nativeChooser=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {model.nativeSelected(it?.toString())}
     val exporter=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) {model.exportSelected(it?.toString())}
     val chooser=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {model.selected(it?.toString())}
+    ui.confirmation?.takeIf {admin.active && ui.epoch==admin.generation}?.let {p->
+        var activeConfirmed by remember(p.id) {mutableStateOf(false)}
+        val needsActive=p.protection.activity.openShifts>0 || p.protection.activity.partials==null || p.protection.activity.partials!!>0
+        MposDialog("Заменить рабочие данные?",{model.dismissApply()}) {
+            Text("Будет применена выбранная native-копия целиком. Текущие данные сохранены в защитной копии ${p.protection.id.take(8)}. Объединения историй и повторного приёма оплаченных частей не будет")
+            Text("После применения закройте M-POS и откройте снова. До нового запуска рабочие операции будут остановлены")
+            if(needsActive) Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
+                Checkbox(activeConfirmed,{activeConfirmed=it},Modifier.testTag("recoveryActiveConfirmation"))
+                Text("Подтверждаю замену открытой смены и частичных оплат. Их текущее состояние сохранено в защитной копии")
+            }
+            MposButton("Заменить данные",{model.confirmApply(activeConfirmed)},Modifier.testTag("recoveryConfirmApply"),style=ActionStyle.Danger,enabled=!needsActive || activeConfirmed)
+            MposButton("Отмена",{model.dismissApply()},style=ActionStyle.Secondary)
+        }
+    }
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
         MposAppBar("Резервная копия") {MposButton("Назад",onBack,style=ActionStyle.Secondary)}
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
@@ -40,8 +54,9 @@ import java.math.BigInteger
                     MposButton("Подготовить native-восстановление",{if(model.beginPreparation()) try {recoveryChooser.launch(arrayOf("*/*"))} catch(_:Exception) {model.preparationSelected(null)}},Modifier.testTag("recoveryPrepare"),enabled=!ui.picking && !ui.busy)
                     MposButton("Показать защитные копии",{model.loadRecovery()},Modifier.testTag("recoveryInventory"),style=ActionStyle.Secondary,enabled=!ui.picking && !ui.busy)
                 }
-                Text("Применение ещё не подключено. Подготовка сохраняется после перезапуска, рабочая база не заменяется.",Modifier.testTag("recoveryPreparationOnly"))
+                Text(if(model.activationEnabled) "Подготовка не меняет рабочую базу. Применение потребует подтверждения и нового запуска M-POS" else "Применение ещё не подключено. Подготовка сохраняется после перезапуска, рабочая база не заменяется.",Modifier.testTag("recoveryPreparationOnly"))
             }
+            if(ui.activated && admin.active) MposNotice("Для завершения проверки закройте M-POS и откройте снова",false)
             ui.prepared?.takeIf {admin.active && ui.epoch==admin.generation}?.let {p->
                 MposAnalyticsCard(Modifier.fillMaxWidth().testTag("recoveryPrepared")) {
                     Text("Файл подготовлен, защитная копия сохранена",style=MaterialTheme.typography.titleMedium)
@@ -50,6 +65,7 @@ import java.math.BigInteger
                     RecoveryActivity("Защитная копия текущих данных",p.protection.activity)
                     Text("Защитная копия: ${p.protection.id.take(8)} · "+java.time.Instant.ofEpochMilli(p.protection.createdAt).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime().toString().replace('T',' '))
                     Text("Наборы данных сохранены отдельно. Для будущего применения нужно повторно проверить, не изменились ли рабочие данные, и подтвердить замену. Активная смена потребует дополнительного подтверждения.")
+                    if(model.activationEnabled) MposButton("Применить восстановление",{model.requestApply(p)},Modifier.testTag("recoveryApply"),enabled=!ui.busy)
                     MposButton("Очистить предпросмотр",{model.clear()},style=ActionStyle.Secondary)
                 }
             }
@@ -63,8 +79,10 @@ import java.math.BigInteger
                         Text("Копия ${p.id.take(8)} · "+java.time.Instant.ofEpochMilli(p.createdAt).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime().toString().replace('T',' '))
                         Text("Товаров: ${p.report.products} · Смен: ${p.report.shifts} · Чеков: ${p.report.receipts}")
                         RecoveryActivity("Сохранённое состояние",p.activity)
+                        if(model.activationEnabled) MposButton("Подготовить копию ${p.id.take(8)}",{model.prepareProtection(p.id)},style=ActionStyle.Secondary,enabled=!ui.busy)
                     }
-                    Text("Список проверяет сохранённые файлы и не выполняет восстановление. Удаление приложения удалит и эти внутренние копии; внешние копии сохраняйте отдельно.")
+                    if(model.activationEnabled) r.prepared.forEach {p->MposButton("Применить подготовку ${p.id.take(8)}",{model.requestApply(p)},style=ActionStyle.Secondary,enabled=!ui.busy)}
+                    Text("Список проверяет сохранённые файлы и не выполняет восстановление автоматически. Удаление приложения удалит и эти внутренние копии; внешние копии сохраняйте отдельно.")
                 }
             }
             if(model.nativeEnabled && admin.active) MposAnalyticsCard(Modifier.fillMaxWidth().testTag("nativeBackupActions")) {
