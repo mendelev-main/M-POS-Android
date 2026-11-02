@@ -88,3 +88,6 @@ Inventory close04b.3: history payload3 reads1/2, loss policy1=negative delta × 
 ## Schema9: единица складского движения
 
 05d.3a добавляет nullable `stock_movements.unit`. Запись через CatalogDao.movement сохраняет базовую unit simple-товара в той же транзакции, отвергая переданную несовместимую unit. Все production writers используют эту точку; количество/source/command/reason/replay неизменны. Migration8→9 только ALTER ADD COLUMN unit TEXT, без UPDATE/backfill. Старые null не означают piece. Legacy source документы могут дать unit в read projection после проверки связи, без записи в ledger. См. [WAREHOUSE-REPORTS-05D3](WAREHOUSE-REPORTS-05D3.md).
+
+
+07.3b native restore: версии Room9 и native archive1 прежние. Локация working DB+photos выбирается immutable generation selector, legacy path поддержан без копирования при обычном APK update. Restore/pending/descriptor metadata вне business tables; archive/source financial payloads не пересчитываются. [Протокол и ограничения](NATIVE-ACTIVATION-07-3B.md). Приложение/сертификат/preferences/admin session не берутся из backup.

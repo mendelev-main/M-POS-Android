@@ -1,6 +1,6 @@
 # 07.3b — применение native-копии и startup recovery
 
-Статус: AC01–AC06 implemented/validation pending. Native format1/schema9. Web JSON conversion07.4/activation07.5 не входят. Stable main/signing/applicationId и Room schema не меняются.
+Статус: AC01–AC06 ci-verified/API36 (FullCI41477976788 attempt2/6fff1e0). Native format1/schema9. Web JSON conversion07.4/activation07.5 не входят. Stable main/signing/applicationId и Room schema не меняются.
 
 ## Выбранный durable протокол
 
@@ -26,3 +26,6 @@ NativeActivationTest: independent data40/30, all checkpoint reopen, blocked raw 
 ## Ограничения текущего контракта
 
 Поддерживается native schema9/format1, не downgrade будущих схем. Domain validation опирается на действующие native codecs и immutable facts; непонятные версии/связи отказываются, не превращаются в пустую историю. Native snapshots с неизвестными legacy финансовыми фактами требуют отдельного compatibility profile. Полный Web migration остаётся07.4; source.Web payment privacy/loyalty/online несогласованные факты автоматически не активируются. Retention/paging/staging cleanup не удаляют защитные копии автоматически и остаются отдельной maintenance-задачей.
+
+
+2026-11-02:07.3b AC01–AC06 ci-verified/API36: [FullCI41477976788 attempt2](https://github.com/mendelev-main/M-POS-Android/actions/runs/41477976788/attempts/2)/6fff1e0 SUCCESS.184JVM/279Android16/0failures/0skipped,16Python/preflight/lint/debugAPK/testAPK. Downloaded reports inspected: NativeActivationTest11, NativeActivationUiTest1, BackupViewModelTest8; actual debugAPK1→2 UPDATE E2E PASSED and actual native restore process E2E PASSED. OLD process sealed/pinned, fresh ordinary MainActivity selects NEW DB+photos together/admin locked; paid40 retained, remaining60 completed once, change10/cash40, target30 protective copy retained. Missing authoritative pointer after completed restore blocks frozen legacy fallback. Light shared confirmation and fresh-process result screenshots inspected: readable/no overlap. Attempt1 had279tests/1failure: PurchaseOrderUiTest Compose AndroidPrefetchScheduler/Choreographer Looper error, stack resumed on CoroutineScheduler worker via test frame interceptor; no proven production cause. One unchanged failed-job rerun passed all gates; assertions/timeouts/runtime unchanged. Earlier41449112827 attempt2 also passed184JVM/278API36 and both E2E. Physical tablet/dark/150%/real power-loss/disk-full/large data remain pending; callback faults and force-stop do not prove these. Native format1/schema9 only; Web conversion07.4 and mapped activation07.5 remain planned.06/09 TODO,M17 excluded. Main/signing/applicationId/schema unchanged; no stable release.
