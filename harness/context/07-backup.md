@@ -30,3 +30,6 @@
 
 
 2026-11-02: начат07.3b AC01–AC06, [NATIVE-ACTIVATION-07-3B.md](../../docs/NATIVE-ACTIVATION-07-3B.md): native schema/domain validation, separate generations/pinned paths/durable pointer+pending, all-table SQL seal, explicit active confirm/stale target/lost-ack guard, startup-before-repositories. Implemented/validation pending, не Web migration. Локальный RestrictedApi lint на TableInfo заменён public PRAGMA verifier без suppression.
+
+
+2026-11-02: CI41444357890/beca21f checks184JVM SUCCESS; Android277/1fail/0skip. Единственный отказ NativeActivationTest.startupValidatorReadsCommittedWal...: Android execSQL нельзя использовать для PRAGMA wal_autocheckpoint, возвращающего row. Тест переведён на query с проверкой результата0; assertion invalid-WAL→blocked сохранён. Остальные activation/schema/payments/fault/UI сценарии прошли, но общий upgrade/process E2E не запускался из-за failing suite. Добавлен отдельный DatasetSavedState generation fence до super.onCreate/onRestore для old forms после process death; финальный повтор требуется. Предшествующий41444204518 на старом266be59 отменён, не evidence; OAuth workflow scope обойдён настроенным SSH push.

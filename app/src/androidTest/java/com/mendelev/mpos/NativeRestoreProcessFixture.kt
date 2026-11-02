@@ -52,6 +52,7 @@ object NativeRestoreProcessFixture {
         check(mode=="verify");val expected=JSONObject(report.readText())
         check(AppDataset.runtime.processId!=expected.getString("origin"))
         check(AppDataset.paths(context).id==expected.getString("generation"))
+        check(DatasetSavedState.filter(android.os.Bundle().apply {putString(DatasetSavedState.KEY,"legacy");putString("checkout-session","old")},AppDataset.paths(context).id)==null)
         check(AppDataset.store(context).journal()==null) {"Startup must reconcile before working UI"}
         val photo=expected.getString("sourcePhoto")
         check(photoStore.file(photo).parentFile!!.parentFile==AppDataset.paths(context).mediaRoot)

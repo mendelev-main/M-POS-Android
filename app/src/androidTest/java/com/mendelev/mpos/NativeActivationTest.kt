@@ -181,11 +181,21 @@ class NativeActivationTest {
         val p=AdminForms(this).permit();fixture(p).use {f->
             val prepared=p.write {f.repo().prepare(Uri.fromFile(f.input).toString())}
             try {p.write {f.repo {if(it=="journalWritten") throw java.io.IOException("before commit")}.apply(prepared.id,true,true)};fail()} catch(_:java.io.IOException) {}
-            f.target.openHelper.writableDatabase.execSQL("PRAGMA wal_autocheckpoint=0")
+            f.target.openHelper.writableDatabase.query("PRAGMA wal_autocheckpoint=0").use {assertTrue(it.moveToFirst());assertEquals(0,it.getInt(0))}
             f.target.openHelper.writableDatabase.execSQL("UPDATE products SET price='invalid' WHERE id='p'")
             assertFalse(NativeActivationStartup(context,f.store,RecoveryRuntime()).open().ready)
             assertNotNull(f.store.journal());assertEquals("legacy",f.store.selected().id)
         }
+    }
+
+    @Test fun oldSavedFormsCannotCrossGenerationButRotationKeepsTheSameInput() {
+        val old=android.os.Bundle().apply {putString(DatasetSavedState.KEY,"legacy");putString("checkout-session","old-form")}
+        assertSame(old,DatasetSavedState.filter(old,"legacy"))
+        assertNull(DatasetSavedState.filter(old,"00000000-0000-0000-0000-000000000001"))
+        assertNull(DatasetSavedState.filter(old,null))
+        val upgraded=android.os.Bundle().apply {putString("checkout-session","pre-generation-version")}
+        assertSame(upgraded,DatasetSavedState.filter(upgraded,"legacy"))
+        assertNull(DatasetSavedState.filter(upgraded,"00000000-0000-0000-0000-000000000001"))
     }
 
 }
