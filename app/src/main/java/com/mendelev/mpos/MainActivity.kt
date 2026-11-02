@@ -93,7 +93,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                     "backup" -> {
                         val model: com.mendelev.mpos.feature.backup.BackupViewModel = viewModel(factory=object: ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T =
-                                com.mendelev.mpos.feature.backup.BackupViewModel(com.mendelev.mpos.data.backup.WebBackupInspection(context.contentResolver)) as T
+                                com.mendelev.mpos.feature.backup.BackupViewModel(com.mendelev.mpos.data.backup.WebBackupInspection(context.contentResolver),com.mendelev.mpos.data.backup.NativeBackupRepository(context.applicationContext)) as T
                         })
                         com.mendelev.mpos.feature.backup.BackupScreen(model,{route="settings"},{route="settings"})
                     }

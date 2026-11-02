@@ -33,4 +33,29 @@ class BackupUiTest {
         compose.onNodeWithTag("backupPreview").assertDoesNotExist();compose.onNodeWithTag("backupPaid").assertDoesNotExist()
         compose.runOnIdle {store.clear()}
     }
+    @Test fun nativeExportReportIsExplicitAboutVerificationAndDisappearsOnLogout() {
+        val native=object: NativeBackupAccess {
+            override suspend fun export(uri: String)=NativeBackupReport(12345,"a".repeat(64),2,1,1,0)
+            override suspend fun inspectNative(uri: String)=error("unused")
+        }
+        val store=ViewModelStore();lateinit var model: BackupViewModel
+        compose.runOnIdle {model=ViewModelProvider(store,object: ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>)=BackupViewModel(BackupInspectionAccess {error("unused")},native) as T
+        })[BackupViewModel::class.java];model.open()}
+        compose.setContent {MposTheme {BackupScreen(model,{},{})}}
+        compose.onNodeWithTag("nativeBackupExport").assertIsEnabled();compose.onNodeWithTag("nativeBackupInspect").assertIsEnabled()
+        compose.runOnIdle {check(model.beginExport());model.exportSelected("fixture-uri")}
+        compose.waitUntil(20_000) {model.state.value.native!=null}
+        compose.onNodeWithTag("nativeBackupResult").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Копия сохранена и повторно проверена").assertIsDisplayed()
+        compose.onNodeWithText("Восстановить").assertDoesNotExist()
+        val i=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+        val bitmap=checkNotNull(i.uiAutomation.takeScreenshot());val file=java.io.File(i.targetContext.filesDir,"qa/native-backup.png")
+        file.parentFile!!.mkdirs();file.outputStream().use {bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};bitmap.recycle()
+        runBlocking {Administration.session.logout()}
+        compose.waitUntil(20_000) {model.state.value.native==null}
+        compose.onNodeWithTag("nativeBackupResult").assertDoesNotExist();compose.onNodeWithTag("nativeBackupExport").assertDoesNotExist()
+        compose.runOnIdle {store.clear()}
+    }
+
 }
