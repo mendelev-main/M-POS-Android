@@ -303,3 +303,6 @@ Rounding follow-up acceptance: [CI40519616659](https://github.com/mendelev-main/
 
 
 2026-11-01: начат07.1 WP01–WP06, BACKUP-07.md: Web JSON versions1–13 structural inspection/base64 photo bounds/exact paid draft/admin epoch/SAF preview. Validation pending. Это не live restore/полный Web import, B02–B04 planned. Owner decisions replace+protective copy, preserve source open shifts/partial payments, unsupported explicit skip записаны. Schema9/main/signing прежние.
+
+
+2026-11-02: CI41405536715/ec5ac24 checks179JVM SUCCESS; Android251 suite failed only SettingsVisualUiTest: после backup route/recreate тест искал локальный Text Назад, которого в main-shell нет (MposAppBar использует общий top navigation). Исправлен тестовый переход через unique topNav-settings; backup screen/recreation/planned-window/admin assertions сохранены, runtime/gates не ослаблены. Полный повтор готовится; restore/export всё ещё не заявлены.

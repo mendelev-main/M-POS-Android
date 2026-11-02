@@ -38,7 +38,7 @@ class SettingsVisualUiTest {
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("backupInspectionOnly").assertExists()
         screenshot("settings-backup")
-        compose.onNodeWithText("Назад").performClick()
+        compose.onNodeWithTag("topNav-settings").performScrollTo().performClick()
         compose.onNodeWithContentDescription("Информация: Шаблоны названий чеков").performScrollTo().performClick()
         compose.onNodeWithTag("settingsPlannedNotice").assertTextEquals("Будет реализовано")
         screenshot("settings-planned")
