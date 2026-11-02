@@ -811,3 +811,6 @@ Screenshots backup-preview/settings-backup из final CI осмотрены: lig
 
 
 2026-11-02: functional FullCI41446197007/eab3174 SUCCESS:184JVM/278API36/0fail/0skip, actual debugAPK1→2 UPDATE E2E PASSED и NATIVE RESTORE E2E PASSED (реальный новый процесс, DB+photos pinned together/admin locked/paid40/remainder60 once/change10/cash40/protected30). После этого добавлен SQLite synchronous=FULL + idempotent user_version9 header-write barrier/parent fsync перед durable pending. Это закрывает ordering prior WAL→pending без unmanaged открытия fd; local build/lint passed, заключительный FullCI требуется. Schema/main/signing прежние.
+
+
+2026-11-02: FullCI41449112827/9548fc7 attempt1 checks184JVM SUCCESS; Android278/13fail/0skip. В PurchaseOrder* screenshot foreground явно package=android и Quickstep isn’t responding/Close app/Wait, затем каскад UI timeout/foreground failures, ColorBuffer graphics errors. Downloaded HTML NativeActivationTest10/NativeActivationUiTest1 passed, включая synchronous FULL barrier. Общий update/process E2E на этой попытке не запускался. Запущен один unchanged failed-job/emulator retry attempt2; assertions/timeout/gates/runtime не изменены.

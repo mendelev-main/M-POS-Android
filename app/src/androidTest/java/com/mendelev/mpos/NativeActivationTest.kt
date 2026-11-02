@@ -198,4 +198,15 @@ class NativeActivationTest {
         assertNull(DatasetSavedState.filter(upgraded,"00000000-0000-0000-0000-000000000001"))
     }
 
+    @Test fun missingPointerAfterSuccessfulRecoveryDoesNotReopenTheOldFrozenRegister(): Unit=runBlocking {
+        val p=AdminForms(this).permit();fixture(p).use {f->
+            val prepared=p.write {f.repo().prepare(Uri.fromFile(f.input).toString())};p.write {f.repo().apply(prepared.id,true,true)}
+            assertTrue(NativeActivationStartup(context,f.store,RecoveryRuntime()).open().ready);assertNull(f.store.journal())
+            val current=f.store.selected();assertTrue(File(f.store.root,"active.json").delete())
+            assertFalse(NativeActivationStartup(context,f.store,RecoveryRuntime()).open().ready)
+            assertTrue(current.database.isFile);assertTrue(File(f.vault,"protections/${prepared.protection.id}/backup.mposnative").isFile)
+            assertEquals(3000L,SplitPaymentRepository(f.target).load()!!.paidAmount)
+        }
+    }
+
 }

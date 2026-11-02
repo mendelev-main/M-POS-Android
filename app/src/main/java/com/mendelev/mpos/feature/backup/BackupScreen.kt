@@ -92,7 +92,7 @@ import java.math.BigInteger
                     MposButton("Сохранить native-копию",{if(model.beginExport()) try {exporter.launch("M-POS-"+java.time.LocalDate.now()+".mposnative")} catch(_:Exception) {model.exportSelected(null)}},Modifier.testTag("nativeBackupExport"),enabled=!ui.picking && !ui.busy)
                     MposButton("Проверить native-копию",{if(model.beginNativeInspection()) try {nativeChooser.launch(arrayOf("*/*"))} catch(_:Exception) {model.nativeSelected(null)}},Modifier.testTag("nativeBackupInspect"),style=ActionStyle.Secondary,enabled=!ui.picking && !ui.busy)
                 }
-                Text("Восстановление будет подключено отдельно. Проверка файла не заменяет рабочую базу.")
+                Text("Проверка файла подтверждает целостность и не заменяет рабочую базу.")
             }
             ui.native?.takeIf {admin.active && ui.epoch==admin.generation}?.let {n->
                 MposAnalyticsCard(Modifier.fillMaxWidth().testTag("nativeBackupResult")) {

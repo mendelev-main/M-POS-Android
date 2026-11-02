@@ -31,6 +31,7 @@ internal object NativeWriteSeal {
     val completeCount get()=(NativeSnapshotDatabase.tables.size-1)*3
     fun remove(database: File) {
         SQLiteDatabase.openDatabase(database.absolutePath,null,SQLiteDatabase.OPEN_READWRITE or SQLiteDatabase.NO_LOCALIZED_COLLATORS).use {db->
+            db.execSQL("PRAGMA synchronous=FULL")
             db.beginTransaction();try {
                 for(table in NativeSnapshotDatabase.tables.filter {it!="room_master_table"}) for(event in listOf("INSERT","UPDATE","DELETE")) db.execSQL("DROP TRIGGER IF EXISTS \"${name(table,event)}\"")
                 db.setTransactionSuccessful()
@@ -111,7 +112,15 @@ class NativeActivationStartup(private val context: Context,private val store: Na
     companion object {private val mutex=Mutex()}
     suspend fun open(): RecoveryStartup=mutex.withLock {
         try {
-            val selected=store.selected();val journal=store.journal() ?: return@withLock RecoveryStartup(true)
+            val selected=store.selected();val journal=store.journal()
+            if(journal==null) {
+                if(selected.id=="legacy") {
+                    val generations=File(store.root,"generations").listFiles().orEmpty().any {it.isDirectory && NativeGenerationStore.UUID_PATTERN.matches(it.name)}
+                    if((!selected.database.isFile || selected.database.length()==0L) && generations || selected.database.isFile && NativeWriteSeal.count(selected.database)>0)
+                        throw BackupFailure("recovery","Отсутствует указатель активного набора")
+                }
+                return@withLock RecoveryStartup(true)
+            }
             if(journal.origin==runtime.processId) {runtime.requireRestart();return@withLock RecoveryStartup(false)}
             Administration.session.logout()
             val files=NativeSnapshotDatabase.activeFiles(selected.database,selected.mediaRoot)
