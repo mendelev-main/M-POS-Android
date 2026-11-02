@@ -61,7 +61,14 @@ internal class NativeActivation(private val context: Context,private val db: Cat
             store.generationRecord(next.id,sourceFingerprint,prepared.protection.fingerprint,prepared.id,prepared.protection.id);checkpoint("generationPrepared")
             p.requireCurrent();currentCoroutineContext().ensureActive()
             InstallationGate.prepare("restore:${next.id}") {Administration.session.authorized(p) {
+                val storage=db.openHelper.writableDatabase
+                check(storage.version==NativeBackupArchive.SCHEMA_VERSION)
+                // Flush prior committed WAL through SQLite itself; never open/close an unmanaged DB fd.
+                storage.execSQL("PRAGMA synchronous=FULL")
+                storage.version=NativeBackupArchive.SCHEMA_VERSION // durable header write barrier, no business-row changes
+                File(storage.path!!).parentFile?.let(NativeGenerationStore::sync)
                 db.withTransaction {
+                    storage.query("PRAGMA synchronous").use {check(it.moveToFirst() && it.getInt(0)==2)}
                     val captured=File(work,"target-at-confirm").apply {mkdir()}
                     val target=NativeSnapshotDatabase.capture(db,photos,captured)
                     if(NativeSnapshotDatabase.fingerprint(target)!=prepared.protection.fingerprint) throw BackupFailure("staleTarget","Рабочие данные изменились. Подготовьте восстановление заново")

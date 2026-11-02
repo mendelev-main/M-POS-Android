@@ -808,3 +808,6 @@ Screenshots backup-preview/settings-backup из final CI осмотрены: lig
 
 
 2026-11-02: CI41444357890/beca21f checks184JVM SUCCESS; Android277/1fail/0skip. Единственный отказ NativeActivationTest.startupValidatorReadsCommittedWal...: Android execSQL нельзя использовать для PRAGMA wal_autocheckpoint, возвращающего row. Тест переведён на query с проверкой результата0; assertion invalid-WAL→blocked сохранён. Остальные activation/schema/payments/fault/UI сценарии прошли, но общий upgrade/process E2E не запускался из-за failing suite. Добавлен отдельный DatasetSavedState generation fence до super.onCreate/onRestore для old forms после process death; финальный повтор требуется. Предшествующий41444204518 на старом266be59 отменён, не evidence; OAuth workflow scope обойдён настроенным SSH push.
+
+
+2026-11-02: functional FullCI41446197007/eab3174 SUCCESS:184JVM/278API36/0fail/0skip, actual debugAPK1→2 UPDATE E2E PASSED и NATIVE RESTORE E2E PASSED (реальный новый процесс, DB+photos pinned together/admin locked/paid40/remainder60 once/change10/cash40/protected30). После этого добавлен SQLite synchronous=FULL + idempotent user_version9 header-write barrier/parent fsync перед durable pending. Это закрывает ordering prior WAL→pending без unmanaged открытия fd; local build/lint passed, заключительный FullCI требуется. Schema/main/signing прежние.
