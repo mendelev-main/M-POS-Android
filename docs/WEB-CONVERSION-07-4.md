@@ -64,3 +64,9 @@ Integrity review: контрольная сумма обязательна та�
 
 
 Test fixture review: подмена source photo key выполняется через JSONObject, а не string replace сырого JSON: Android может экранировать slash в ключах. Сценарий обязан реально менять metadata, без зависимости от сериализации; expected refusal не ослабляется.
+
+
+Следующий07.4b.3: проверить поля `sortOrder`, `tileSymbol`, `sku`, `internalNote`, `recipeYieldManual` и online/description flags. SortOrder уже участвует в навигации, но это не подтверждает сохранение всех метаданных карточки. Для отсутствующих native-полей нужен явный preservation/unsupported контракт, а не удаление `productMetadataNotMapped`. После него — historical representation07.4c. Полный Room builder и archive проверки07.4e должны учитывать новые compatibility profiles; существующая07.3b restore validation не обходится.
+
+
+2026-11-03:41596949951/3551be7 attempt2 again Android282/13UI failures, WebPhotoPreparationTest3 still passed; same explicit Quickstep ANR foreground and repeated Failed to find ColorBuffer, checks209JVM passed. No third unchanged retry. CI log reveals emulator37.2.13.0 using action default -gpu swiftshader_indirect. Official Android acceleration docs mark that mode deprecated since36.4.9 and recommend current -gpu software for software rendering: https://developer.android.com/studio/run/emulator-acceleration . Updated disposable API36 AVD to explicit -gpu software, same tablet dp/RAM/cores/API, same full suite/seed/upgrade/process/foreground gates and timeouts. This is a hypothesis-driven graphics infrastructure fix, not proven sole root cause. Added logcat/last-anr artifacts via EXIT trap preserving original exit status; no ANR dismissal/launcher disabling/screenshot skip. Runtime3551be7 unchanged. New full CI required.
