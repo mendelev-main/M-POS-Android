@@ -66,3 +66,6 @@
 
 
 2026-11-03: software-GPU FullCI41600739211/b7dd92f emulator stopped before tests: action executes script input per line, multiline shell function yielded /usr/bin/sh syntax error expecting }. This is CI integration error, not Android acceptance evidence or app regression. Moved same connected suite/update E2E/native restore E2E + exit-status-preserving diagnostic trap to scripts/ci/android-emulator-checks.sh; action invokes one bash command. bash -n/preflight/Python checks required; no assertion/timeouts/gates removed. Explicit software backend remains a pending graphics hypothesis.
+
+
+2026-11-03: software backend41602235646/6890702 still failed full UI:282/13fail/0skip, new photo3 passed, checks209JVM passed. Captured logcat locates SystemUI startup ANR08:19:44 before action script08:19:46 and before Gradle/app install: failed to complete startup; guest CPU pressure avg10=73.47,99% CPU, memory pressure0. This disproves treating renderer-mode change alone as sufficient fix. Increased disposable API36 AVD vCPUs2→4, same RAM/dp/API; added fail-fast boot logcat check for SystemUI/launcher ANR before any M-POS installation, preserving diagnostic trap/full gates. No ANR dialog dismissal/service disabling. Hypothesis: CPU contention during Android boot; validation pending. scripts health gate uses explicit ANR event lines, not arbitrary matches of word anr.

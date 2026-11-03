@@ -99,7 +99,7 @@ jobs:
           # Current emulator software backend; avoid deprecated swiftshader_indirect default.
           emulator-options: -no-window -gpu software -no-snapshot -noaudio -no-boot-anim
           ram-size: 3072M
-          cores: 2
+          cores: 4
           pre-emulator-launch-script: python3 scripts/ci/configure-emulator.py --avd mpos-ci-api36
           disable-animations: true
           script: bash scripts/ci/android-emulator-checks.sh

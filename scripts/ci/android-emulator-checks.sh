@@ -9,6 +9,12 @@ capture_emulator_diagnostics() {
   return "$diagnostic_status"
 }
 trap capture_emulator_diagnostics EXIT
+# A boot-time SystemUI/launcher ANR is already a failed test environment, never dismiss it.
+adb logcat -d -v brief > app/build/reports/emulator-diagnostics/boot-logcat.txt
+if rg -q 'ANR in com\.android\.(systemui|launcher3)([^a-zA-Z0-9_.]|$)' app/build/reports/emulator-diagnostics/boot-logcat.txt; then
+  echo "CI emulator boot failed: SystemUI/launcher ANR before M-POS installation" >&2
+  exit 1
+fi
 ./gradlew --no-daemon connectedDebugAndroidTest
 python3 scripts/ci/update-e2e.py
 python3 scripts/ci/native-restore-e2e.py
