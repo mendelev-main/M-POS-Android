@@ -43,8 +43,9 @@ class WebLegacyHistoryArchiveTest {
     }
     @Test fun unsupportedCurrencyCannotBeHiddenByAllowlisting() {
         val raw=JSONObject().put("version",1).put("products",JSONArray()).put("employees",JSONArray())
-            .put("orders",JSONArray()).put("shifts",JSONArray().put(JSONObject().put("id","s").put("currency","USD")))
-        assertThrows(BackupFailure::class.java) {WebLegacyHistoryArchiveCodec.encode(WebBackupReader.read(raw.toString().byteInputStream()))}
+            .put("orders",JSONArray()).put("shifts",JSONArray().put(JSONObject().put("id","s").put("status","open").put("openedAt",1).put("currency","USD")))
+        val failure=assertThrows(BackupFailure::class.java) {WebLegacyHistoryArchiveCodec.encode(WebBackupReader.read(raw.toString().byteInputStream()))}
+        assertEquals("legacyHistoryCurrency",failure.kind)
     }
     @Test fun inventoryBaselineIsExcludedButEnteredValuesStillRequireRecount() {
         val j=JSONObject().put("version",1).put("products",JSONArray()).put("employees",JSONArray()).put("shifts",JSONArray()).put("orders",JSONArray())
