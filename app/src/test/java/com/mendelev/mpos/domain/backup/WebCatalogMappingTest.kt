@@ -55,7 +55,15 @@ class WebCatalogMappingTest {
         val f=mapped(product("a").put("category","Кофе").put("imageUrl","https://example.invalid/photo.jpg").put("sku","private-sku"),product("b").put("category","кофе"))
         assertEquals(2,f.categories.size);assertNotEquals(f.products[0].categoryId,f.products[1].categoryId)
         assertNull(f.products[0].photoKey);assertTrue(f.products[0].externalPhoto)
-        assertTrue(f.products[0].blockers.contains("externalPhotoNeedsExplicitSkip"));assertEquals(setOf("sku"),f.products[0].unmappedFields)
+        assertTrue(f.products[0].blockers.contains("externalPhotoNeedsExplicitSkip"));assertTrue(f.products[0].unmappedFields.isEmpty());assertTrue(f.products[0].metadata.retainedOnlyFields.contains("sku"));assertTrue(f.products[0].blockers.contains("metadataRetentionRequired"))
+    }
+    @Test fun metadataIsAttachedWithoutLosingUnknownFieldsOrInventingLegacyUnits() {
+        val p=product().apply {remove("stockUnit");remove("stockDisplayUnit")}.put("unit","piece").put("sku","A1").put("custom",true)
+        val f=mapped(p).products.single();assertNull(f.unit)
+        assertTrue(f.blockers.contains("legacyUnitUnknown"));assertTrue(f.blockers.contains("metadataRetentionRequired"))
+        assertEquals(setOf("custom"),f.unmappedFields);assertTrue(f.blockers.contains("productMetadataNotMapped"))
+        assertEquals(setOf("unit","sku"),f.metadata.presentFields)
+        assertEquals(f.metadata,WebProductMetadataCodec.decode(f.metadata.payload))
     }
     @Test fun missingCostAndStockStayUnknownWhileMissingPriceOrTypeRefuses() {
         val p=product().apply {remove("cost");remove("stock")}

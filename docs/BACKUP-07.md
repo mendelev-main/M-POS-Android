@@ -1,6 +1,6 @@
 # 07 — native backup и совместимый Web-перенос
 
-Статус: начат. Первый инкремент07.1 — WP01–WP06: bounded read/структурная проверка/фото/preview; реализован и ci-verified (FullCI41407482232/abe9e0c,179JVM/251API36,0failures/0skipped). Это **не восстановление**, не доказательство B02 roundtrip и не готовый импорт в Room. Рабочие данные из preview не меняются; кнопки применения ещё нет.
+Статус на2026-11-03: native export/проверка/защитная копия/замена с restart recovery реализованы07.2–07.3b. Web structural preview07.1, pure data mappings и isolated photo assets07.4a–b.2 проверены. Полная Web materialization/activation ещё не подключена. Текущая часть07.4b.3 — metadata contract; оставшиеся семь частей и критерии готовности: [BACKUP-REMAINING-PLAN.md](BACKUP-REMAINING-PLAN.md). Отдельные успешные parser/asset tests не закрывают весь B02/B04 для Web.
 
 ## Решения владельца2026-11-01
 

@@ -8,7 +8,7 @@ data class WebCatalogProduct(val id: String,val sourceId: String,val name: Strin
     val type: String,val price: String,val cost: String?,val stock: String?,val unit: String?,val displayUnit: String?,
     val noStockTracking: Boolean,val allowNegativeStock: Boolean,val minimumStock: String?,val purchaseUnit: String?,
     val packSize: String?,val recipeYield: String,val components: List<WebIngredient>,val modifierGroups: List<ModifierGroupInput>,
-    val photoKey: String?,val externalPhoto: Boolean,val unmappedFields: Set<String>,val blockers: Set<String>)
+    val photoKey: String?,val externalPhoto: Boolean,val metadata: WebProductMetadata,val unmappedFields: Set<String>,val blockers: Set<String>)
 data class WebIngredient(val productId: String,val quantity: String,val unit: String?)
 data class WebCategory(val id: String,val name: String)
 data class WebCatalogFacts(val products: List<WebCatalogProduct>,val categories: List<WebCategory>)
@@ -87,11 +87,13 @@ object WebCatalogMapping {
             val tracking=WebValues.bool(p["noStockTracking"])
             if(kind=="composite" && (tracking || negative || minimum!=null || pack!=null || purchase!=null)) blockers.add("compositeStockConfiguration")
             if(kind=="composite" && (p["stock"]!=null || p["cost"]!=null)) blockers.add("compositeLegacyStockFields")
-            val unmapped=p.keys-known
+            val metadata=WebProductMetadataCodec.project(p)
+            if(metadata.retainedOnlyFields.isNotEmpty()) blockers.add("metadataRetentionRequired")
+            val unmapped=p.keys-known-WebProductMetadataCodec.fields
             if(unmapped.isNotEmpty()) blockers.add("productMetadataNotMapped")
             WebCatalogProduct(id,sid,name,categoryId,kind,WebValues.number(p["price"],scale=2),
                 cost,stock,u,display,tracking,negative,minimum,purchase,
-                convertedPack,yield(p),components,modifiers,photo,external,unmapped,blockers)
+                convertedPack,yield(p),components,modifiers,photo,external,metadata,unmapped,blockers)
         }
         val byId=products.associateBy {it.id};val visiting=mutableSetOf<String>();val visited=mutableSetOf<String>()
         fun visit(id: String,depth: Int) {
