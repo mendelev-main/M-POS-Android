@@ -1,6 +1,6 @@
 # 07.4c — перенос истории Web и склада
 
-Статус:07.4c.1/HF01–HF05 и07.4c.2/WH01–WH06 реализованы;07.4c.3/PS01–PS05 — постоянное хранение и совместимость native-копий реализованы, проверки Android16 выполняются. Полная активация Web-копии остаётся07.4e/07.5.
+Статус:07.4c.1/HF01–HF05 и07.4c.2/WH01–WH06 реализованы;07.4c.3/PS01–PS05 — постоянное хранение и совместимость native-копий ci-verified: Actions41639165728 attempt2,243JVM/285API36 без ошибок и пропусков. Полная активация Web-копии остаётся07.4e/07.5.
 
 ## Решение о представлении
 
@@ -16,10 +16,10 @@ Legacy Web receipt не выдаётся за native ReceiptCodec1. Тот тр�
 - HF04: source v1 stockConsumption хранит aggregated qty без unit. Missing snapshot не восстанавливается по текущему рецепту; duplicate product/invalid quantity/version отказываются. Legacy decimal tails, например cost3.333333333333333 или qty0.30000000000000004, сохраняются точно в исторических строках с legacyDecimalPrecision, а не округляются к operational scale12. Это не разрешение применить такой расход к рабочему складу без profile/reconciliation.
 - HF05: pure event projection передаёт gaps вместе с events; неполные данные нельзя считать полным нулевым отчётом. События не являются кассовыми проводками и не прибавляются к уже сохранённому stock/cash. Refund cash movements и delivery expense/credit требуют отдельной сверки: не импортировать одновременно synthetic refund debit и source withdrawal. Для старого delivery refund нельзя задним числом изобрести кредит курьерских денег, которых source не вернул.
 
-## Следующие части перед07.4d
+## Порядок частей перед07.4d
 
-1. 07.4c.2: receiving/purchase/inventory snapshots, сроки/авторы/единицы/стоимости/связи и terminal status; posted операции не проводить повторно. Закрытые смены — counted facts, а unknown expected не вычислять по сегодняшнему каталогу/фильтру returned.
-2. 07.4c.3: legacy payload encoding/additive persistence и compatibility validator; native9 backup/migration/roundtrip/seals покрываются реальными Room/API36 fixtures. Coverage разделяется на допустимую неизвестность исторического отображения и условия, запрещающие финансовое действие/активацию. Unknown historical cost не должен превращаться в0profit; возможность будущего legacy refund требует отдельного достаточного historical restock plan.
+1. 07.4c.2 реализован: receiving/purchase/inventory snapshots, сроки/авторы/единицы/стоимости/связи и terminal status; posted операции не проводить повторно. Закрытые смены — counted facts, а unknown expected не вычислять по сегодняшнему каталогу/фильтру returned.
+2. 07.4c.3 реализован и ci-verified: legacy payload encoding/additive persistence и compatibility validator; native9 backup/migration/roundtrip/seals покрываются реальными Room/API36 fixtures. Coverage разделяется на допустимую неизвестность исторического отображения и условия, запрещающие финансовое действие/активацию. Unknown historical cost не должен превращаться в0profit; возможность будущего legacy refund требует отдельного достаточного historical restock plan.
 3. После этого07.4d сверяет открытые payments с завершённой историей/кассой/происхождением;07.4e собирает полный набор. История может требовать нескольких инкрементов, не меняя очередность общего плана.
 
 ## Проверки и источник
@@ -64,3 +64,6 @@ Source verification: pinned receiving.js invoiceReceivingItems/receivingStockUpd
 - PS05: existing workspace seals блокируют изменение legacy namespace после sealing. В API36 fixtures проверяются rollback после каждой вставки, повтор/конфликт, утрата старого administrative epoch, запрет активной БД, reopening, native backup roundtrip и отказ corruption. Фактические CI-результаты фиксируются отдельно ниже.
 
 Архив не подключает legacy-строки к отчётам/возвратам и не открывает смену. Сохранённые shifts здесь — исходные факты, не operational state; current/parked частичные оплаты — следующий07.4d. Полная материализация/сверка всех разделов07.4e, предварительный просмотр и подтверждение замены07.5, ресурсные/аварийные проверки07.6 и приёмка на планшете07.7 ещё впереди. Ограничения реального объёма, нехватки места и power-loss нельзя считать проверенными по synthetic roundtrip.
+
+
+2026-11-03:07.4c.3 PS01–PS05 ci-verified. Production commit762d8eb, Actions https://github.com/mendelev-main/M-POS-Android/actions/runs/41639165728 attempt2 SUCCESS:243JVM/0fail/0ignored,285API36/0fail/0skip (WebLegacyHistoryStoreTest3/3,0.957s), lint/debug/test APK and16Python harness tests passed. Artifact confirms atomic fault rollback at every insert, reopen/idempotence/conflict/admin epoch, active DB refusal, schema9 archive roundtrip preserving fractional legacy facts, corrupted chunk refusal and workspace write-seal protection. Raw job log confirms UPDATE E2E PASSED (system install1→2, private data retained) and NATIVE RESTORE E2E PASSED (old process sealed; fresh DB+photos selected together; admin locked; native paid40/remaining60 once/target30 protection). Existing process E2E is native regression, not full Web activation. Attempt1 failed before app installation on launcher ANR; one clean failed-job rerun succeeded, boot guard retained, no gates disabled. Follow-up426875e only strengthens currency-test assertion; local243JVM/lint/build passed, production code identical to CI. Preflight/git diff --check passed. Part2 history representation/persistence acceptance complete in this scope; legacy reports/refunds/UI/full Web operational activation remain unwired. Next07.4d active/parked payments and reconciliation, then07.4e full staged dataset/source-file retention and07.5 UI. Physical tablet, real volume/disk-full/power-loss remain pending07.6/07.7.06/09 TODO,M17 excluded; develop only, no main/release/signing changes.
