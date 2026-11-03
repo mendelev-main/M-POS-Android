@@ -40,7 +40,8 @@ class WebPhotoPreparationTest {
             val reopened=withContext(permit) {WebPhotoPreparation(context).open(f.id,doc.preview.sha256)}
             assertEquals(f,reopened)
             val manifest=File(f.mediaRoot.parentFile,"manifest.json");val saved=manifest.readBytes()
-            manifest.writeText(manifest.readText().replace("../../opaque-key","../../changed-key"))
+            val changed=JSONObject(manifest.readText()).apply {getJSONArray("photos").getJSONObject(0).put("key","../../changed-key")}.toString()
+            manifest.writeText(changed)
             try {withContext(permit) {WebPhotoPreparation(context).open(f.id,doc.preview.sha256)};fail()} catch(_:BackupFailure) {}
             manifest.writeBytes(saved)
             photo.writeBytes(byteArrayOf(1,2,3))

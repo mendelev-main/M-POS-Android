@@ -27,7 +27,7 @@ PM01–PM04 implemented/locally verified:191JVM, включая7новых те�
 
 ## 07.4b.1 — каталог и кадровые/кассовые факты
 
-CM01–CM05/SM01–SM03 implemented с локальными проверками:204JVM/0ошибок/пропусков, включая13новых тестов; lint/debug/preflight прошли. CI/emulator для этого чистого преобразования не запускались. Это чистые Kotlin-проекции в отдельной памяти, пока не durable staged Room и не готовый импорт. Следующая07.4b.2 завершит layout/фото/metadata и staged materialization; после неё07.4c history. Наличие DTO не означает прохождение native restore validation.
+CM01–CM05/SM01–SM03 implemented с локальными проверками:204JVM/0ошибок/пропусков, включая13новых тестов; lint/debug/preflight прошли. CI/emulator для этого чистого преобразования не запускались. Это чистые Kotlin-проекции в отдельной памяти, пока не durable staged Room и не готовый импорт. Раскладка/фото реализуются07.4b.2, metadata —07.4b.3; затем07.4c history/07.4d payments, полная materialization —07.4e. Наличие DTO не означает прохождение native restore validation.
 
 - CM01: ID преобразуются детерминированно `web-`+SHA256 с namespace вида записи и version1; source ID сохраняется. Числовой1 и строковый«1» эквивалентны как Web String(id); повтор отказ. Product/employee/shift/category/group/option разделены, local owner не используется. Категории берутся из trim product.category, «Без категории»→null; разные регистры названий не сливаются автоматически. Layout и порядок ещё отдельный шаг.
 - CM02: simple stock/cost/minimum хранятся в source.stockUnit, stockDisplayUnit не пересчитывает их. Отрицательный остаток не включает allowNegativeStock автоматически. Не заданная stockUnit остаётся null, старое `unit` не подставляется молча; legacyUnitUnknown. Отсутствующие cost/stock остаются null с blocker; price/type обязательны. Деньги/количества exact decimals, никаких default0 для неизвестных фактов и округления импортируемой истории.
@@ -61,3 +61,6 @@ LP01–LP04/PP01–PP04 implemented, проверки выполняются. Э
 
 
 Integrity review: контрольная сумма обязательна также для самого manifest/source-key mapping, а не только JPEG. Reopen проверяет отдельный64byte SHA256 seal до JSON parse; тест подмены ключа без изменения JPEG обязан отказать. Low-level assets не имеют пользовательского inventory/retention UI; published fault оставляет полный asset, не активирует и не удаляет его автоматически.
+
+
+Test fixture review: подмена source photo key выполняется через JSONObject, а не string replace сырого JSON: Android может экранировать slash в ключах. Сценарий обязан реально менять metadata, без зависимости от сериализации; expected refusal не ослабляется.
