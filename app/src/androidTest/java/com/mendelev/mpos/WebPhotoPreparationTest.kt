@@ -39,6 +39,10 @@ class WebPhotoPreparationTest {
             assertArrayEquals(bytes,doc.images.getValue("../../opaque-key"))
             val reopened=withContext(permit) {WebPhotoPreparation(context).open(f.id,doc.preview.sha256)}
             assertEquals(f,reopened)
+            val manifest=File(f.mediaRoot.parentFile,"manifest.json");val saved=manifest.readBytes()
+            manifest.writeText(manifest.readText().replace("../../opaque-key","../../changed-key"))
+            try {withContext(permit) {WebPhotoPreparation(context).open(f.id,doc.preview.sha256)};fail()} catch(_:BackupFailure) {}
+            manifest.writeBytes(saved)
             photo.writeBytes(byteArrayOf(1,2,3))
             try {withContext(permit) {WebPhotoPreparation(context).open(f.id,doc.preview.sha256)};fail()} catch(_:BackupFailure) {}
         } finally {f.mediaRoot.parentFile!!.deleteRecursively()}

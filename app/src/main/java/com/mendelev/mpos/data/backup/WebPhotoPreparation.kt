@@ -46,7 +46,9 @@ internal class WebPhotoPreparation(context: Context,private val checkpoint: (Str
             File(media,"product-photos").mkdirs()
             val manifest=JSONObject().put("version",1).put("id",id).put("source",document.preview.sha256).put("photos",records).toString().toByteArray()
             if(manifest.size>1024*1024) bad()
-            FileOutputStream(File(stage,"manifest.json")).use {it.write(manifest);it.fd.sync()}
+            val manifestFile=File(stage,"manifest.json")
+            FileOutputStream(manifestFile).use {it.write(manifest);it.fd.sync()}
+            FileOutputStream(File(stage,"manifest.sha256")).use {it.write(NativeBackupArchive.sha256(manifestFile).toByteArray(Charsets.US_ASCII));it.fd.sync()}
             NativeGenerationStore.sync(media);NativeGenerationStore.sync(stage)
             checkpoint("manifestWritten")
             validate(stage,id,document.preview.sha256)
@@ -64,6 +66,10 @@ internal class WebPhotoPreparation(context: Context,private val checkpoint: (Str
     }
     private fun validate(directory: File,id: String,source: String): WebPreparedPhotos {
         val file=File(directory,"manifest.json");if(!file.isFile || file.length() !in 1..1024*1024L) bad()
+        val seal=File(directory,"manifest.sha256")
+        if(!seal.isFile || seal.length()!=64L) bad()
+        val hash=seal.readText(Charsets.US_ASCII)
+        if(!NativeGenerationStore.HASH.matches(hash) || NativeBackupArchive.sha256(file)!=hash) bad()
         val m=(BackupJsonParser(file.readText()).parse() as? BackupJson.Obj)?.fields ?: bad()
         if(m.keys!=setOf("version","id","source","photos") || (m["version"] as? BackupJson.Num)?.raw!="1" ||
             (m["id"] as? BackupJson.Str)?.value!=id || (m["source"] as? BackupJson.Str)?.value!=source) bad()
