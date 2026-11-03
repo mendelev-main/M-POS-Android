@@ -1,0 +1,38 @@
+# 07.4c — перенос истории Web и склада
+
+Статус: начат07.4c.1/HF01–HF05, implemented, локальные225JVM/0ошибок/пропусков и lint/debug/preflight прошли; CI/Room/device validation для этого инкремента не заявляется. Часть2 [общего плана](BACKUP-REMAINING-PLAN.md) не закрыта целиком.
+
+## Решение о представлении
+
+Legacy Web receipt не выдаётся за native ReceiptCodec1. Тот требует frozen CurrentCart/Checkout/SaleQuote, граф ingredients/cost/flags, consumption и сохранённые command/session outcomes. Web exports часто имеют лишь order.total/payments/item snapshots/stockConsumption1, а иногда не имеют cost/unit/consumption. Генерация современной рецептуры, нулевой себестоимости или вымышленного command result для такой истории запрещена.
+
+Выбран отдельный immutable legacy-history compatibility profile. При материализации будет additive хранение legacy документов, отдельно от исполняемых native receipts/refunds/operation_results. Source IDs, source file digest, profile/version, nullable facts, immutable snapshot и coverage сохраняются явно. Legacy product reference не требует подставлять вымышленный активный товар при удалённой карточке. Точный SQL/schema migration и encoding payload вводятся после определения складских snapshot shapes, вместе с roundtrip/native validator/table allowlist/all-writer seals updates. В этом инкременте Room остаётся9; таблицы/миграция ещё не реализованы. Нельзя объявлять DTO готовым persisted archive или обходить native restore validation.
+
+## 07.4c.1 — HF01–HF05
+
+- HF01: source orders→отдельные исторические receipt facts с namespace ID, nullable timestamps/shift/actor/name, total/delivery/payments. Суммы итогов/оплат переводятся точно в Long minor, без Double/скрытого округления. Allocations проверяются на соответствие total/header, cash given/change не превращаются в cash contribution. Legacy method+total для single cash/card — распознанное header evidence с отдельным coverage, не новая платёжная команда. Неизвестный split без allocations не выдумывается.
+- HF02: исторические line name/category/qty/price/cost и сохранённый stockConsumption1 не ищутся в сегодняшнем каталоге. Удалённые products остаются историческими ссылками. Нет unit/recipe/cost→unknown coverage, не сегодняшний unit/recipe и не0cost. Source cost — unit-cost snapshot evidence, не полный ingredient graph. Дополнительные discount/modifier/comment fields отмечены как deferred; их перенос/сверка ещё обязательны. Исходный Web-файл остаётся полным источником, эту проекцию нельзя использовать для потери остальных полей.
+- HF03: сохраняются отдельные sale.timestamp и returnedAt/returnedShiftId/returnAmount. Событие +100 вчера и−100 сегодня, без удаления вчерашней продажи. Неизвестная сумма возврата даёт explicit gap, а не−0/−total. Неполный/несходящийся возврат сохраняется с coverage, не становится native full Refund. В источнике нет гарантированного автора возврата: не подставлять автора продажи как оператора возврата.
+- HF04: source v1 stockConsumption хранит aggregated qty без unit. Missing snapshot не восстанавливается по текущему рецепту; duplicate product/invalid quantity/version отказываются. Legacy decimal tails, например cost3.333333333333333 или qty0.30000000000000004, сохраняются точно в исторических строках с legacyDecimalPrecision, а не округляются к operational scale12. Это не разрешение применить такой расход к рабочему складу без profile/reconciliation.
+- HF05: pure event projection передаёт gaps вместе с events; неполные данные нельзя считать полным нулевым отчётом. События не являются кассовыми проводками и не прибавляются к уже сохранённому stock/cash. Refund cash movements и delivery expense/credit требуют отдельной сверки: не импортировать одновременно synthetic refund debit и source withdrawal. Для старого delivery refund нельзя задним числом изобрести кредит курьерских денег, которых source не вернул.
+
+## Следующие части перед07.4d
+
+1. 07.4c.2: receiving/purchase/inventory snapshots, сроки/авторы/единицы/стоимости/связи и terminal status; posted операции не проводить повторно. Закрытые смены — counted facts, а unknown expected не вычислять по сегодняшнему каталогу/фильтру returned.
+2. 07.4c.3: legacy payload encoding/additive persistence и compatibility validator; native9 backup/migration/roundtrip/seals покрываются реальными Room/API36 fixtures. Coverage разделяется на допустимую неизвестность исторического отображения и условия, запрещающие финансовое действие/активацию. Unknown historical cost не должен превращаться в0profit; возможность будущего legacy refund требует отдельного достаточного historical restock plan.
+3. После этого07.4d сверяет открытые payments с завершённой историей/кассой/происхождением;07.4e собирает полный набор. История может требовать нескольких инкрементов, не меняя очередность общего плана.
+
+## Проверки и источник
+
+Pinned features/payment.js finalize: normalizePaymentParts clean allocations, historical item cost/category, stockConsumption; receipts.js return: returnedAt/returnedShiftId/returnAmount и source withdrawal refund; pos.html stockConsumptionFor1; warehouse-reporting.js использует recorded quantities, при missing snapshot считает coverage. Android BackupManager переносит эти JSON записи без native ReceiptCodec conversion. Новая политика native event-date аналитики и refund delivery reversal принята владельцем ранее; source факты сохраняются, прежние source cash bugs не исправляются вымышленными проводками.
+
+HF tests: sale/refund dates, cash40/given50/change10/card60, deleted product/history unchanged, missing cost/unit/time/refund amount, delivery/movement reconciliation flags, corrupted payments/snapshot/version/dates, partial refund/source discounts, decimal tails, deterministic mapping. CI/device/persistence evidence не заявляется до соответствующих проверок.
+
+
+Валютный профиль этого преобразователя —BYN: явное source currency кромеBYN отказывается, без пересчёта курса. Отсутствующая currency отмечается currencyFromImportProfile; в финальном preview валюта должна быть видна, а в persisted profile — явно записана. Нельзя потерять/пропустить другую объявленную валюту как необязательное metadata.
+
+
+Повторный receipt ID отказывается также на границе event projection: объединение одного и того же набора дважды не должно удваивать отчёт. Это защита read model, не реализованная идемпотентность импорта/платежей; последние требуют07.4d/e/07.5.
+
+
+2026-11-03:07.4c.1 HF01–HF05 implemented with local evidence, not ci/device/persistence-verified: `/bin/bash scripts/local-android.sh build -Pkotlin.incremental=false` SUCCESS (final calendar assertion build20s; prior full1m7s),225JVM/0fail/0error/0skip including9WebReceiptHistoryTest, lintDebug/assembleDebug passed. Preflight/git diff --check passed. Source→facts preserves immutable name/category/cost, deleted product IDs, exact0.0004/missing units, source3.333333333333333 cost/0.30000000000000004 quantity tails; no current catalog lookup/financial/stock writes. Mixed40cash/given50/change10/60card, legacy header tender unknown, missing cost/time/refund amount explicit gaps, partial/delivery refund reconciliation flags, invalid amount/change/paid/version/duplicate consumption/negative qty/header/currency/dates refusal, deterministic mapping and duplicate event receipt IDs passed. Calendar test uses actual2026-10-30/31 Europe/Minsk boundaries: +10000 day1,−10000 day2, not retroactive exclusion. Separate immutable legacy-history profile selected/documented; native schema9 unchanged and ReceiptCodec/commands not fabricated. Warehouse snapshots07.4c.2 and additive persisted profile07.4c.3 remain before07.4d; part2 not complete. Pure increment, CI/emulator not rerun, no release/main/signing changes.06/09 TODO,M17 excluded.

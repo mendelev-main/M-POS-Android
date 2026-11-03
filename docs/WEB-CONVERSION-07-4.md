@@ -85,3 +85,7 @@ MD01–MD04 implemented с локальными проверками216JVM/0ош
 - MD04: JVM поведенческие tests проверяют roundtrip/повтор, raw numeric representation/string-vs-number, Unicode/quotes/newline, absent/null/false/empty, неизвестные поля, malformed/future version/oversize и catalog attachment. Никакие online flags, uploadPending, recipeYieldManual не запускают транспорт/пересчёт текущего рецепта; сортировка/metadata не меняют цену, себестоимость или stock. Room/UI/financial writes отсутствуют.
 
 Источник: pinned product-persistence.js/saveProduct (tileSymbol/sortOrder/online/description/recipeYieldManual), product-configuration.js/saveProductConfiguration (sku/internalNote), product-categories.js/limitTileSymbol; Android BackupManager переносит тот же JSON без отдельного native catalog metadata adapter. Native общая symbol policy отказывает избыточным glyphs вместо source truncation: импорт не должен терять данные молча.
+
+## 07.4c — исторический compatibility profile
+
+Первая часть07.4c.1/HF01–HF05: pure WebReceiptHistory, implemented/локальные225JVM, lint/debug/preflight passed. Не вызывает SaleRepository/RefundRepository и не записывает текущий stock/cash. Документ модели: [WEB-HISTORY-07-4C.md](WEB-HISTORY-07-4C.md). Приёмки/инвентаризации и постоянный Room profile остаются следующими инкрементами части2, до перехода07.4d.
