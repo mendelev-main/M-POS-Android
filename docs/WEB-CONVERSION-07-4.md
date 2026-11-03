@@ -89,3 +89,6 @@ MD01–MD04 implemented с локальными проверками216JVM/0ош
 ## 07.4c — исторический compatibility profile
 
 Первая часть07.4c.1/HF01–HF05: pure WebReceiptHistory, implemented/локальные225JVM, lint/debug/preflight passed. Не вызывает SaleRepository/RefundRepository и не записывает текущий stock/cash. Документ модели: [WEB-HISTORY-07-4C.md](WEB-HISTORY-07-4C.md). Приёмки/инвентаризации и постоянный Room profile остаются следующими инкрементами части2, до перехода07.4d.
+
+
+2026-11-03:07.4c.2 WH01–WH06 warehouse/draft projections implemented,237локальных JVM/lint/debug/preflight passed; см. [контракт](WEB-HISTORY-07-4C.md). Далее07.4c.3 persistent profile/native compatibility; часть2 пока не завершена.
