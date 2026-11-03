@@ -51,10 +51,22 @@ WebCashComparison всегда содержит nativePaidProvenancePending; OP/
 
 Pinned source: pos.html/productIngredients/stockConsumptionFor/checkedStockConsumption, android-pos-stock.js (точность и совместный reserve current+parked), cart-composition.js/readModifierSelection+addConfiguredCartItem. Source-product-stock.test.cjs содержит nested/tiny/flags/recorded consumption regressions; Kotlin tests отдельно проверяют преобразование source batch→native physical requests. Source unit graph не берётся из каталога целевого native-приложения.
 
+## 07.4d.3a — IP01–IP05: постоянное происхождение source-paid частей
+
+Статус: implemented, Android16 validation pending. Imported evidence v1 имеет фиксированный purpose=unadopted-source-evidence, currency BYN, source SHA/version, отдельные operation origins/location/source ID, candidate shift/actor, точный total и source parts с paid/given/change. Сохраняются remaining и paid как суммы отдельных частей, а не новый факт приёма денег. SHA versioned recipe binding связан с frozen price/qty/basis/requests/graph/cost; перед будущим adoption requireSource повторно сверяет evidence с полным исходным Web-файлом. Fingerprint не даёт права оплаты и не заменяет файл.
+
+- IP01:40cash/given50/change10 и60unpaid сохраняются точно; missing tender/all-paid/quote/cash/recipe gaps остаются вместе с фиксированными unadopted/native pending markers. Нет bank SDK ack, native commandId или invented result для source40. Отдельные current/parked не сливаются.
+- IP02: strict codec отказывает неизвестной версии/purpose/полям, coercion money/string/float/bool, неверным positions/total/tender/duplicate origins/locations/source identity. Version до toInt проверяется без wraparound. Профиль0–1000 records/8MiB; превышение лимитов и неизвестная структура отказываются, не пропускают принятые части.
+- IP03: existing workspace_documents namespace web-imported-payment-evidence с bounded48Ki-char parts/256KiB rows и manifest SHA/bytes/order. Missing/extra/corrupt chunks и revision кроме1 отказываются. В schema9 нет SQL-миграции; прежние копии без namespace остаются поддержанными.
+- IP04: internal install разрешён только в отдельной candidate DB, исходный admin epoch + InstallationGate + одна Room transaction. Отказ после каждой вставки откатывает весь профиль; одинаковый replay неизменен, иной источник — conflict без merge. Нельзя дописать evidence в активную кассу или позаимствовать новый login старой форме. Чтение не меняет shift/stock/receipt/operation results.
+- IP05: native snapshot export/inspection и independent restore validator проверяют namespace целиком; строгая общая проверка native numbers не ослаблена. Archive roundtrip/reopen/seals tests должны подтвердить сохранение40/50/10/60, старую schema9 без evidence и отказ corruption. Результаты CI записываются отдельно ниже, не выводятся из наличия теста.
+
+Это durable evidence до adoption. Источник/полная корзина ещё должны сохраниться в07.4e/новом cart encoding. Native SplitPaymentRepository/SaleRepository пока не потребляют этот namespace; пользователь не может продолжить оплату через него.07.4d.3b/c остаются обязательными: versioned sale basis + imported/native part variants + реальный payment/receipt/stock atomic path и его replay/fault/restart tests. Не следует помечать весь07.4d.3 готовым по одному evidence roundtrip.
+
 ## Оставшиеся шаги07.4d
 
 1. 07.4d.2a/2b: cash comparison и read-only native recipe binding реализованы в описанном scope. Финальная связка в executable cart+paid progress ещё требует версии persistence и imported provenance07.4d.3; DTO/совпадение расчётов не разрешают применение.
-2. 07.4d.3: версионированное сохранение reconciled paid provenance и продолжение native остатка с atomic outcome/idempotency/reopen/fault tests. Нужно доказать40+60 один раз, zero-unpaid без повторной оплаты и отсутствие повторного списания уже проведённого stock. Никаких фиктивных старых command/session outcomes ради прохождения validator.
+2. 07.4d.3: durable source evidence07.4d.3a реализован, native encoding/adoption/continuation07.4d.3b/c ещё впереди. Требуется версионированное сохранение reconciled paid provenance и продолжение native остатка с atomic outcome/idempotency/reopen/fault tests. Нужно доказать40+60 один раз, zero-unpaid без повторной оплаты и отсутствие повторного списания уже проведённого stock. Никаких фиктивных старых command/session outcomes ради прохождения validator.
 3. Только затем07.4e собирает полную отдельную БД и source file,07.5 подключает preview/protection/replace/generation restart. Part3 общего плана не закрывается одним OP mapper.
 
 ## Проверки

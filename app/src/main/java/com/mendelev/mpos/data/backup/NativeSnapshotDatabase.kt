@@ -103,6 +103,11 @@ internal object NativeSnapshotDatabase {
                 while(c.moveToNext()) {if(c.getLong(1)!=1L) throw BackupFailure("legacyHistoryRevision","Версия архива повреждена");legacy[c.getString(0)]=c.getString(2)}
             }
             WebLegacyHistoryDocuments.decode(legacy)
+            val imported=linkedMapOf<String,String>()
+            db.rawQuery("SELECT id,revision,payload FROM workspace_documents WHERE id=? OR id LIKE ?",arrayOf(WebImportedPaymentDocuments.KEY,WebImportedPaymentDocuments.KEY+":%")).use {c->
+                while(c.moveToNext()) {if(c.getLong(1)!=1L)throw BackupFailure("importedPaymentRevision","Версия источника оплат повреждена");imported[c.getString(0)]=c.getString(2)}
+            }
+            WebImportedPaymentDocuments.decode(imported)
             tables.filter {it!="room_master_table"}.associateWith {name->db.rawQuery("SELECT COUNT(*) FROM ${quoted(name)}",null).use {c->c.moveToFirst();c.getLong(0)}}
         }
         if(referencedPhotos(files.database)!=files.photos.keys) throw BackupFailure("missingPhoto","Не все фотографии доступны")

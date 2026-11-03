@@ -107,10 +107,11 @@ internal object NativeRestoreValidator {
         val docs=db.workspace().documents().associateBy {it.id}
         val known=setOf("current","layout","home","orders","checkout","split-progress",EmployeeCodec.KEY,SupplierCodec.KEY,PurchaseDraftCodec.KEY,PurchaseOrderCodec.KEY,ReceivingCodec.KEY,PostedReceivingCodec.KEY,InventoryCodec.KEY,ShiftCashCodec.KEY)
         WebLegacyHistoryDocuments.decode(docs.mapValues {it.value.payload})
+        WebImportedPaymentDocuments.decode(docs.mapValues {it.value.payload})
         for(d in docs.values) {
             currentCoroutineContext().ensureActive()
-            require(d.revision>=0 && (d.id in known || d.id.startsWith("parked:") || WebLegacyHistoryDocuments.owns(d.id)))
-            if(WebLegacyHistoryDocuments.owns(d.id))require(d.revision==1L)
+            require(d.revision>=0 && (d.id in known || d.id.startsWith("parked:") || WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id)))
+            if(WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id))require(d.revision==1L)
             // Part envelopes contain only integer version + escaped text. Fractional source facts are validated by the dedicated codec above.
             strict(d.payload)
         }
