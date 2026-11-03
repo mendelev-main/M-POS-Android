@@ -54,7 +54,7 @@ class WebImportedPaymentStoreTest {
             assertEquals(before,db.workspace().documents())
         } finally {db.close();root.deleteRecursively()}
     }
-    @Test fun nativeArchiveRoundtripAndIndependentValidationPreserveImportedPaidEvidence()=runBlocking {
+    @Test fun nativeArchivePreservesEvidenceButIncompletePaidDatasetCannotActivate()=runBlocking {
         val p=AdminForms(this).permit();val root=root();val path=File(root,"candidate.db").absolutePath
         val db=Room.databaseBuilder(context,CatalogDatabase::class.java,path).build()
         try {
@@ -66,7 +66,8 @@ class WebImportedPaymentStoreTest {
             val dir=File(root,"snapshot").apply {mkdir()};val files=NativeSnapshotDatabase.capture(db,photos,dir)
             val archive=File(root,"copy.mposnative");NativeBackupArchive.write(archive,files)
             val extracted=File(root,"extracted").apply {mkdir()};val restored=archive.inputStream().use {NativeBackupArchive.read(it,extracted)}
-            NativeRestoreValidator.validate(context,restored,extracted)
+            NativeSnapshotDatabase.validate(restored) // Archive/integrity is supported; operational activation is not ready.
+            try {NativeRestoreValidator.validate(context,restored,extracted);fail("unadopted dataset activated")} catch(e:BackupFailure) {assertEquals("restoreValidation",e.kind)}
             val clone=Room.databaseBuilder(context,CatalogDatabase::class.java,File(root,"clone.db").absolutePath).createFromFile(restored.database).build()
             try {
                 val value=WebImportedPaymentStore(context,clone).read()!!

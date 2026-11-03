@@ -107,7 +107,9 @@ internal object NativeRestoreValidator {
         val docs=db.workspace().documents().associateBy {it.id}
         val known=setOf("current","layout","home","orders","checkout","split-progress",EmployeeCodec.KEY,SupplierCodec.KEY,PurchaseDraftCodec.KEY,PurchaseOrderCodec.KEY,ReceivingCodec.KEY,PostedReceivingCodec.KEY,InventoryCodec.KEY,ShiftCashCodec.KEY)
         WebLegacyHistoryDocuments.decode(docs.mapValues {it.value.payload})
-        WebImportedPaymentDocuments.decode(docs.mapValues {it.value.payload})
+        val importedPaid=WebImportedPaymentDocuments.decode(docs.mapValues {it.value.payload})
+        // Until versioned native adoption exists, evidence-only candidates must never become an active cash register.
+        require(importedPaid==null || importedPaid.records.isEmpty()) {"unadopted imported payment evidence"}
         for(d in docs.values) {
             currentCoroutineContext().ensureActive()
             require(d.revision>=0 && (d.id in known || d.id.startsWith("parked:") || WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id)))
