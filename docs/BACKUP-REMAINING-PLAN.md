@@ -36,3 +36,6 @@
 
 
 07.4c.2 складские snapshots/черновики реализованы в scope pure projection,237локальных JVM/lint/debug/preflight passed. Следующий шаг части2 —07.4c.3 постоянное legacy-хранение/compatibility/schema и backup roundtrip; общий Web-импорт ещё не применяется.
+
+
+2026-11-03:07.4c.3 PS01–PS05 implemented, Android16 CI pending. Added immutable allowlisted WebLegacyHistoryArchive v1 (BYN/source identity/exact decimals/omission counts), bounded manifest+chunks in existing workspace_documents; schema9/identity/table list unchanged. Internal candidate-only Room installer uses original admin epoch/InstallationGate/atomic transaction; idempotent repeat, conflict refusal, active DB append refusal. Native snapshot inspection/export and independent restore domain validator validate profile/revision/parts/hash; old schema9 without legacy namespace remains accepted. General integer-only native validator remains strict. JVM codec/corruption/Unicode/currency and API36 fault/reopen/roundtrip/seal tests added. See WEB-HISTORY-07-4C.md PS01–PS05. Legacy facts do not execute financial/stock commands or wire reports/refunds. Next07.4d active payments, then07.4e full candidate and07.5 UI; no complete Web activation claim.06/09 TODO,M17 excluded; develop only/no release.

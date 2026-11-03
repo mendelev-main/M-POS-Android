@@ -106,7 +106,14 @@ internal object NativeRestoreValidator {
         c.draft()?.let {strict(it.payload);com.mendelev.mpos.feature.products.ProductDraft.parse(it.payload)}
         val docs=db.workspace().documents().associateBy {it.id}
         val known=setOf("current","layout","home","orders","checkout","split-progress",EmployeeCodec.KEY,SupplierCodec.KEY,PurchaseDraftCodec.KEY,PurchaseOrderCodec.KEY,ReceivingCodec.KEY,PostedReceivingCodec.KEY,InventoryCodec.KEY,ShiftCashCodec.KEY)
-        for(d in docs.values) {currentCoroutineContext().ensureActive();require(d.revision>=0 && (d.id in known || d.id.startsWith("parked:")));strict(d.payload)}
+        WebLegacyHistoryDocuments.decode(docs.mapValues {it.value.payload})
+        for(d in docs.values) {
+            currentCoroutineContext().ensureActive()
+            require(d.revision>=0 && (d.id in known || d.id.startsWith("parked:") || WebLegacyHistoryDocuments.owns(d.id)))
+            if(WebLegacyHistoryDocuments.owns(d.id))require(d.revision==1L)
+            // Part envelopes contain only integer version + escaped text. Fractional source facts are validated by the dedicated codec above.
+            strict(d.payload)
+        }
         docs[EmployeeCodec.KEY]?.let {EmployeeCodec.decode(it.payload)}
         val suppliers=docs[SupplierCodec.KEY]?.let {SupplierCodec.decode(it.payload)}.orEmpty()
         require(suppliers.all {s->s.productIds.all {it in ids}})

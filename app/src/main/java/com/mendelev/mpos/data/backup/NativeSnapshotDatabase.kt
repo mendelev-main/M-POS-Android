@@ -98,6 +98,11 @@ internal object NativeSnapshotDatabase {
             }}
             if(actual-tables-setOf("android_metadata")!=emptySet<String>() || !actual.containsAll(tables)) throw BackupFailure("schema","Структура базы не поддерживается")
             db.rawQuery("SELECT identity_hash FROM room_master_table WHERE id=42",null).use {if(!it.moveToFirst() || it.getString(0)!=IDENTITY || it.moveToNext()) throw BackupFailure("schema","Структура базы не поддерживается")}
+            val legacy=linkedMapOf<String,String>()
+            db.rawQuery("SELECT id,revision,payload FROM workspace_documents WHERE id=? OR id LIKE ?",arrayOf(WebLegacyHistoryDocuments.KEY,WebLegacyHistoryDocuments.PREFIX+"%")).use {c->
+                while(c.moveToNext()) {if(c.getLong(1)!=1L) throw BackupFailure("legacyHistoryRevision","Версия архива повреждена");legacy[c.getString(0)]=c.getString(2)}
+            }
+            WebLegacyHistoryDocuments.decode(legacy)
             tables.filter {it!="room_master_table"}.associateWith {name->db.rawQuery("SELECT COUNT(*) FROM ${quoted(name)}",null).use {c->c.moveToFirst();c.getLong(0)}}
         }
         if(referencedPhotos(files.database)!=files.photos.keys) throw BackupFailure("missingPhoto","Не все фотографии доступны")
