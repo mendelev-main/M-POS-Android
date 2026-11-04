@@ -5,7 +5,7 @@ import org.json.JSONObject
 
 /** Imported source evidence. Never a native confirmation command or a bank SDK acknowledgement. */
 data class WebImportedPaidRecord(val origin: String,val location: String,val sourceId: String?,val bindingSha256: String,
-    val candidateShiftId: String?,val candidateActorId: String?,val total: Long,val parts: List<WebPaymentPart>,val blockers: Set<String>) {
+    val candidateShiftId: String?,val candidateActorId: String?,val total: Long,val parts: List<WebPaymentPart>,val blockers: Set<String>,val cartSnapshot: String?=null) {
     val paid: Long get()=parts.filter {it.paid}.sumOf {it.amount}
     val remaining: Long get()=parts.filterNot {it.paid}.sumOf {it.amount}
 }
@@ -18,9 +18,9 @@ object WebImportedPaymentEvidenceCodec {
     private const val MAX_SAFE=9007199254740991L
     private fun json(value: Any?)=value ?: JSONObject.NULL
     /** Versioned digest of the adapter inputs/output, not data-class toString or a current-catalog reprice. */
-    private fun binding(cart: WebBoundRecipeCart): String {
+    private fun bindingPayload(cart: WebBoundRecipeCart): String {
         fun objects(rows: List<JSONObject>)=JSONArray(rows)
-        val j=JSONObject().put("version",1).put("origin",cart.origin).put("total",json(cart.operation.savedTotal)).put("compared",json(cart.operation.comparedTotal)).put("delivery",json(cart.operation.delivery))
+        val j=JSONObject().put("version",1).put("origin",cart.origin).put("createdAt",json(cart.operation.createdAt)).put("updatedAt",json(cart.operation.updatedAt)).put("orderType",json(cart.operation.orderType)).put("label",json(cart.operation.label)).put("comment",json(cart.operation.comment)).put("total",json(cart.operation.savedTotal)).put("compared",json(cart.operation.comparedTotal)).put("delivery",json(cart.operation.delivery))
             .put("lines",objects(cart.lines.map {l->val s=l.source
                 JSONObject().put("sourceId",json(s.sourceLineId)).put("product",json(s.sourceProductId)).put("name",json(s.name)).put("category",json(s.category)).put("comment",json(s.comment))
                     .put("qty",json(s.quantity)).put("price",json(s.price)).put("basePrice",json(s.basePrice)).put("manual",json(s.manualPrice)).put("unit",json(s.unit))
@@ -34,18 +34,19 @@ object WebImportedPaymentEvidenceCodec {
                     is com.mendelev.mpos.domain.catalog.RecipeProduct.Composite->r.put("type","composite").put("yield",p.yield.toPlainString()).put("components",objects(p.components.map {JSONObject().put("id",it.productId).put("qty",it.quantity.toPlainString()).put("unit",it.unit.name)}))
                 };r
             })} ?: JSONObject.NULL)
-        return WebLegacyHistoryArchiveCodec.digest(WebLegacyHistoryArchiveCodec.write(BackupJsonParser(j.toString()).parse()))
+        return WebLegacyHistoryArchiveCodec.write(BackupJsonParser(j.toString()).parse())
     }
     fun encode(document: WebBackupDocument): WebImportedPaymentEvidence {
         val recipe=WebRecipeBinding.bind(document);val cash=WebCashReconciliation.compare(document)
         val records=recipe.carts.mapNotNull {cart->val op=cart.operation;val payment=op.payment ?: return@mapNotNull null
+            val snapshot=bindingPayload(cart);WebFrozenCartSnapshot.validate(snapshot)
             val blockers=(cart.blockers+recipe.blockers+cash.blockers+cash.shifts.flatMap {it.blockers}+"unadoptedSourceEvidence").toSortedSet()
-            JSONObject().put("origin",op.origin).put("location",op.location).put("sourceId",json(op.sourceId)).put("bindingSha256",binding(cart))
+            JSONObject().put("origin",op.origin).put("location",op.location).put("sourceId",json(op.sourceId)).put("bindingSha256",WebLegacyHistoryArchiveCodec.digest(snapshot)).put("cartSnapshot",snapshot)
                 .put("candidateShiftId",json(op.candidateShiftId)).put("candidateActorId",json(op.candidateActorId)).put("total",payment.total)
                 .put("parts",JSONArray(payment.parts.map {p->JSONObject().put("position",p.position).put("method",p.method).put("amount",p.amount).put("paid",p.paid).put("given",json(p.given)).put("change",json(p.change))}))
                 .put("blockers",JSONArray(blockers.toList()))
         }
-        val raw=JSONObject().put("version",1).put("purpose","unadopted-source-evidence").put("currency","BYN").put("sourceVersion",document.preview.version).put("sourceSha256",document.preview.sha256).put("records",JSONArray(records)).toString()
+        val raw=JSONObject().put("version",2).put("purpose","unadopted-source-evidence").put("currency","BYN").put("sourceVersion",document.preview.version).put("sourceSha256",document.preview.sha256).put("records",JSONArray(records)).toString()
         return decode(WebLegacyHistoryArchiveCodec.write(BackupJsonParser(raw).parse()))
     }
     /** Revalidate against the complete source before any future adoption; digest possession alone grants no authority. */
@@ -61,12 +62,13 @@ object WebImportedPaymentEvidenceCodec {
         fun maybe(v: BackupJson?)=if(v===BackupJson.Nil)null else integer(v)
         fun rows(v: BackupJson?)=(v as? BackupJson.Arr)?.values ?: backupBad("importedPaymentShape")
         val root=obj(BackupJsonParser(payload).parse())
-        if(root.keys!=setOf("version","purpose","currency","sourceVersion","sourceSha256","records") || integer(root["version"])!=1L || text(root["purpose"])!="unadopted-source-evidence" || text(root["currency"])!="BYN")backupBad("importedPaymentVersion")
+        val format=integer(root["version"])
+        if(root.keys!=setOf("version","purpose","currency","sourceVersion","sourceSha256","records") || format !in 1L..2L || text(root["purpose"])!="unadopted-source-evidence" || text(root["currency"])!="BYN")backupBad("importedPaymentVersion")
         val source=text(root["sourceSha256"]);if(!hash.matches(source))backupBad("importedPaymentSource")
         val sourceVersion=integer(root["sourceVersion"]);if(sourceVersion !in 1L..13L)backupBad("importedPaymentVersion");val version=sourceVersion.toInt()
         val rawRecords=rows(root["records"]);if(rawRecords.size>1000)backupBad("importedPaymentLimit")
         val records=rawRecords.map {v->val r=obj(v)
-            if(r.keys!=setOf("origin","location","sourceId","bindingSha256","candidateShiftId","candidateActorId","total","parts","blockers"))backupBad("importedPaymentFields")
+            if(r.keys!=setOf("origin","location","sourceId","bindingSha256","candidateShiftId","candidateActorId","total","parts","blockers")+(if(format==2L)setOf("cartSnapshot") else emptySet()))backupBad("importedPaymentFields")
             val origin=text(r["origin"]);val location=text(r["location"]);val id=optional(r["sourceId"])
             if(location!="current" && !location.matches(Regex("parked:(0|[1-9][0-9]{0,5})")))backupBad("importedPaymentIdentity")
             if(id!=null && (id.isBlank() || id.length>512))backupBad("importedPaymentIdentity")
@@ -85,7 +87,13 @@ object WebImportedPaymentEvidenceCodec {
             val blockers=rows(r["blockers"]).map(::text)
             if(blockers.distinct().size!=blockers.size || blockers.size>500 || blockers.any {!it.matches(Regex("[A-Za-z][A-Za-z0-9:]{0,150}"))} || !blockers.containsAll(setOf("unadoptedSourceEvidence","nativeCartEncodingPending","nativePaidProvenancePending")))backupBad("importedPaymentBlockers")
             if(parts.all {it.paid} && "allPartsPaidReceiptReconciliation" !in blockers || parts.any {it.paid && it.method=="cash" && (it.given==null || it.change==null)} && "paidCashTenderUnknown" !in blockers)backupBad("importedPaymentBlockers")
-            WebImportedPaidRecord(origin,location,id,digest,shift,actor,total,parts,blockers.toSet())
+            val snapshot=if(format==2L)text(r["cartSnapshot"]) else null
+            if(snapshot!=null) {
+                WebFrozenCartSnapshot.validate(snapshot)
+                val frozen=obj(BackupJsonParser(snapshot).parse())
+                if(WebLegacyHistoryArchiveCodec.digest(snapshot)!=digest || text(frozen["origin"])!=origin || maybe(frozen["total"])!=total)backupBad("importedPaymentBinding")
+            }
+            WebImportedPaidRecord(origin,location,id,digest,shift,actor,total,parts,blockers.toSet(),snapshot)
         }
         if(records.map {it.origin}.distinct().size!=records.size || records.map {it.location}.distinct().size!=records.size)backupBad("importedPaymentIdentity")
         return WebImportedPaymentEvidence(payload,source,version,records)

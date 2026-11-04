@@ -34,15 +34,14 @@ class WebImportedPaymentEvidenceTest {
     @Test fun alteredBindingOrSourceRequiresNewPreparationNotAReusedProof() {
         val j=source();val a=encode(j);val changed=JSONObject(a.payload)
         changed.getJSONArray("records").getJSONObject(0).put("bindingSha256","0".repeat(64))
-        val forged=WebImportedPaymentEvidenceCodec.decode(changed.toString())
-        assertEquals("importedPaymentSource",assertThrows(BackupFailure::class.java) {WebImportedPaymentEvidenceCodec.requireSource(forged,doc(j))}.kind)
+        assertEquals("importedPaymentBinding",assertThrows(BackupFailure::class.java) {WebImportedPaymentEvidenceCodec.decode(changed.toString())}.kind)
         j.getJSONArray("products").getJSONObject(0).put("cost",21)
         assertThrows(BackupFailure::class.java) {WebImportedPaymentEvidenceCodec.requireSource(a,doc(j))}
     }
     @Test fun unknownFieldsPurposeVersionAndCoercedMoneyCannotImpersonateNativeAcknowledgement() {
         val a=encode(source())
         for(mutate in listOf<(JSONObject)->Unit>(
-            {it.put("version",2)}, {it.put("sourceVersion",4294967297L)}, {it.put("purpose","native-confirmed")},
+            {it.put("version",3)}, {it.put("sourceVersion",4294967297L)}, {it.put("purpose","native-confirmed")},
             {it.getJSONArray("records").getJSONObject(0).put("commandId","invented")},
             {it.getJSONArray("records").getJSONObject(0).getJSONArray("parts").getJSONObject(0).put("amount","4000")},
             {it.getJSONArray("records").getJSONObject(0).getJSONArray("parts").getJSONObject(0).put("amount",4000.5)},
@@ -70,6 +69,29 @@ class WebImportedPaymentEvidenceTest {
             assertThrows(BackupFailure::class.java) {WebImportedPaymentDocuments.decode(bad)}
         }
         assertNull(WebImportedPaymentDocuments.decode(emptyMap()))
+    }
+    @Test fun snapshotPreservesBatchPricingAndPhysicalRequestsAcrossChunkRoundtrip() {
+        val j=source();val products=j.getJSONArray("products")
+        products.put(JSONObject().put("id","batch").put("type","composite").put("name","Batch").put("price",999).put("recipeUnit","kg").put("recipeYield",3)
+            .put("components",JSONArray().put(JSONObject().put("productId","p").put("qty","0.0004"))))
+        j.getJSONObject("currentOrderSession").getJSONArray("items").getJSONObject(0).put("productId","batch").put("price",100)
+        val a=encode(j);val b=WebImportedPaymentDocuments.decode(WebImportedPaymentDocuments.encode(a))!!
+        val frozen=JSONObject(b.records.single().cartSnapshot!!);val l=frozen.getJSONArray("lines").getJSONObject(0)
+        assertEquals("recipe-batch",l.getString("basis"));assertEquals("100",l.getString("price"));assertEquals("3",l.getString("physicalPerSold"))
+        assertEquals("3",l.getJSONArray("requests").getJSONObject(0).getString("qty"));assertEquals(4000L,b.records.single().paid);assertEquals(6000L,b.records.single().remaining)
+    }
+    @Test fun version1RemainsReadableWithoutInventingMissingCart() {
+        val old=JSONObject(encode(source()).payload).put("version",1)
+        old.getJSONArray("records").getJSONObject(0).remove("cartSnapshot")
+        val a=WebImportedPaymentEvidenceCodec.decode(old.toString());assertNull(a.records.single().cartSnapshot);assertEquals(4000L,a.records.single().paid)
+    }
+    @Test fun rewrittenSnapshotStillRequiresTheVerifiedOriginalSource() {
+        val j=source();val raw=JSONObject(encode(j).payload);val r=raw.getJSONArray("records").getJSONObject(0)
+        val frozen=JSONObject(r.getString("cartSnapshot"));frozen.getJSONArray("lines").getJSONObject(0).put("price","200")
+        val text=frozen.toString();r.put("cartSnapshot",text).put("bindingSha256",WebLegacyHistoryArchiveCodec.digest(text))
+        val changed=WebImportedPaymentEvidenceCodec.decode(raw.toString())
+        assertThrows(BackupFailure::class.java) {WebImportedPaymentEvidenceCodec.requireSource(changed,doc(j))}
+        frozen.put("extra","unknown");assertThrows(BackupFailure::class.java) {WebFrozenCartSnapshot.validate(frozen.toString())}
     }
     @Test fun noSourceDraftNeverCreatesAcceptedPayments() {
         val j=source();j.getJSONObject("currentOrderSession").remove("paymentDraft")
