@@ -29,7 +29,7 @@ import java.math.BigInteger
         var activeConfirmed by remember(p.id) {mutableStateOf(false)}
         val needsActive=p.protection.activity.openShifts>0 || p.protection.activity.partials==null || p.protection.activity.partials!!>0
         MposDialog("Заменить рабочие данные?",{model.dismissApply()}) {
-            Text("Будет применена выбранная native-копия целиком. Текущие данные сохранены в защитной копии ${p.protection.id.take(8)}. Объединения историй и повторного приёма оплаченных частей не будет")
+            Text("Будет применён выбранный набор данных целиком. Текущие данные сохранены в защитной копии ${p.protection.id.take(8)}. Объединения историй и повторного приёма оплаченных частей не будет")
             Text("После применения закройте M-POS и откройте снова. До нового запуска рабочие операции будут остановлены")
             if(needsActive) Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
                 Checkbox(activeConfirmed,{activeConfirmed=it},Modifier.testTag("recoveryActiveConfirmation"))
@@ -107,13 +107,25 @@ import java.math.BigInteger
             MposAnalyticsCard(Modifier.fillMaxWidth()) {
                 Text("Проверка Web-копии",style=MaterialTheme.typography.titleLarge)
                 Text("Выберите .mposbackup или JSON старого приложения. Проверка не заменяет данные и не выполняет оплаты.")
-                Text("Сейчас доступен предварительный разбор. Преобразование в native и восстановление будут подключены следующим шагом.",Modifier.testTag("backupInspectionOnly"))
+                Text(if(model.webRestoreEnabled) "Файл проверяется в отдельной базе. Перед заменой сохраним защитную копию. Несовместимые данные остановят перенос с объяснением." else "Сейчас доступен предварительный разбор. Преобразование в native и восстановление будут подключены следующим шагом.",Modifier.testTag("backupInspectionOnly"))
                 if(!admin.active) {
                     Text("Для чтения копии войдите в администрирование",Modifier.testTag("backupLocked"))
                     MposButton("Открыть настройки",onSettings)
                 } else {
                     MposButton("Выбрать Web-копию",{if(model.beginSelection()) try {chooser.launch(arrayOf("*/*"))} catch(_:Exception) {model.selected(null)}},
                         Modifier.testTag("backupChoose"),enabled=!ui.picking && !ui.busy)
+                }
+            }
+            ui.web?.takeIf {admin.active && ui.epoch==admin.generation}?.let {web->
+                var confirmed by remember(web.token) {mutableStateOf(false)}
+                MposAnalyticsCard(Modifier.fillMaxWidth().testTag("webRestoreReady")) {
+                    Text("Web-копия подготовлена и проверена",style=MaterialTheme.typography.titleMedium)
+                    Text("Открытые оплаты сохраняются: принимается только неоплаченный остаток. Исторические Web-документы сохраняются в архиве, но пока не включаются в native-аналитику и возвраты. Исходный файл сохраняется целиком внутри копии.")
+                    Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
+                        Checkbox(confirmed,{confirmed=it},Modifier.testTag("webRestoreUnsupportedConfirmation"))
+                        Text("Подтверждаю: разделы сайта, лояльности, зала и неподключённых интеграций останутся в исходном архиве и не будут включены в работу")
+                    }
+                    MposButton("Создать защитную копию и подготовить замену",{model.prepareWeb(confirmed)},Modifier.testTag("webRestorePrepare"),enabled=confirmed && !ui.busy && !ui.picking)
                 }
             }
             ui.preview?.takeIf {admin.active && ui.epoch==admin.generation}?.let {p->

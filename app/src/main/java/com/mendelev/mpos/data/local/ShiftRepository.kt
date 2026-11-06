@@ -24,7 +24,8 @@ class ShiftRepository(private val db: CatalogDatabase,private val clock: Clock=C
         val manual=ShiftCashCodec.all(db)
         val cash=if(last==null) 0L else if(last.closedAt!=null) last.expectedCash ?: error("Не сохранён итог смены") else {
             // Exact aggregate: historical event ordering must not create a temporary negative/overflow.
-            val sales=db.sales().inShift(last.id).fold(last.openingCash.toBigInteger()) {sum,r->
+            val legacy=db.workspace().document(WebCandidateDatabase.BASELINE)?.let {org.json.JSONObject(it.payload).getJSONObject("cashDeltas").optLong(last.id,0)} ?: 0L
+            val sales=db.sales().inShift(last.id).fold(last.openingCash.toBigInteger()+legacy.toBigInteger()) {sum,r->
                 check(r.cash>=0 && r.deliveryCashOut>=0)
                 sum+r.cash.toBigInteger()-r.deliveryCashOut.toBigInteger()
             }

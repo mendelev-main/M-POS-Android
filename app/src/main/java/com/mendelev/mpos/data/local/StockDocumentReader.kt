@@ -21,7 +21,7 @@ class StockDocumentReader(private val db: CatalogDatabase) {
             "sale"->{
                 val r=checkNotNull(db.sales().receipt(link));val saved=ReceiptCodec.decode(r.payload)
                 val qty=checkNotNull(saved.consumption[m.productId]);matches("sale.stock.v1",r.commandId,r.createdAt,(-qty.toBigDecimal()).toPlainString())
-                StockDocument("Чек №${r.number}",r.createdAt,saved.cart.lines.map {"${it.name} × ${it.quantity} ${unitLabel(it.unit)}"}+listOf("Итого: ${money(r.total)}","Наличные: ${money(r.cash)} · карта: ${money(r.card)}"),quantityCode((saved.cart.graph.single {it.id==m.productId} as RecipeProduct.Simple).unit))
+                StockDocument("Чек №${r.number}",r.createdAt,saved.cart.lines.map {"${it.name} × ${it.quantity} ${if(it.sellingBasis=="recipe-batch") "порц." else unitLabel(it.unit)}"}+listOf("Итого: ${money(r.total)}","Наличные: ${money(r.cash)} · карта: ${money(r.card)}"),quantityCode((saved.cart.graph.single {it.id==m.productId} as RecipeProduct.Simple).unit))
             }
             "refund"->{
                 val r=checkNotNull(db.refunds().refund(link));val j=JSONObject(r.payload);require(j.getInt("version")==1 && j.getString("currency")=="BYN")
@@ -30,7 +30,7 @@ class StockDocumentReader(private val db: CatalogDatabase) {
                 val receipt=ReceiptCodec.decode(j.getJSONObject("receipt").toString())
                 val original=checkNotNull(db.sales().receipt(r.receiptId))
                 require(CatalogRules.fingerprint("refund.receipt.v1",original.payload)==r.receiptHash && ReceiptCodec.decode(original.payload)==receipt)
-                StockDocument("Возврат чека",r.createdAt,receipt.cart.lines.map {"${it.name} × ${it.quantity} ${unitLabel(it.unit)}"}+listOf("Возвращено: ${money(r.total)}","Наличные: ${money(r.cash)} · карта: ${money(r.card)}"),quantityCode((receipt.cart.graph.single {it.id==m.productId} as RecipeProduct.Simple).unit))
+                StockDocument("Возврат чека",r.createdAt,receipt.cart.lines.map {"${it.name} × ${it.quantity} ${if(it.sellingBasis=="recipe-batch") "порц." else unitLabel(it.unit)}"}+listOf("Возвращено: ${money(r.total)}","Наличные: ${money(r.cash)} · карта: ${money(r.card)}"),quantityCode((receipt.cart.graph.single {it.id==m.productId} as RecipeProduct.Simple).unit))
             }
             "receiving"->{
                 val r=PostedReceivingStore(db).all().single {it.id==link};val line=r.result.lines.single {it.productId==m.productId}

@@ -108,6 +108,11 @@ internal object NativeSnapshotDatabase {
                 while(c.moveToNext()) {if(c.getLong(1)!=1L)throw BackupFailure("importedPaymentRevision","Версия источника оплат повреждена");imported[c.getString(0)]=c.getString(2)}
             }
             WebImportedPaymentDocuments.decode(imported)
+            val original=linkedMapOf<String,String>()
+            db.rawQuery("SELECT id,revision,payload FROM workspace_documents WHERE id=? OR id LIKE ?",arrayOf(WebSourceDocuments.KEY,WebSourceDocuments.KEY+":%")).use {c->
+                while(c.moveToNext()) {require(c.getLong(1)==1L);original[c.getString(0)]=c.getString(2)}
+            }
+            WebSourceDocuments.decode(original)
             tables.filter {it!="room_master_table"}.associateWith {name->db.rawQuery("SELECT COUNT(*) FROM ${quoted(name)}",null).use {c->c.moveToFirst();c.getLong(0)}}
         }
         if(referencedPhotos(files.database)!=files.photos.keys) throw BackupFailure("missingPhoto","Не все фотографии доступны")
@@ -157,7 +162,7 @@ internal object NativeSnapshotDatabase {
         try {
             val raw=db.rawQuery("SELECT payload FROM workspace_documents WHERE id='split-progress'",null).use {if(it.moveToFirst()) it.getString(0) else null}
             if(raw==null) NativeSnapshotActivity(shifts,0,0) else {
-                val j=JSONObject(raw);require(j.getInt("version") in 1..2)
+                val j=JSONObject(raw);require(j.getInt("version") in 1..3)
                 if(j.getBoolean("completed")) NativeSnapshotActivity(shifts,0,0) else {
                     val saved=com.mendelev.mpos.data.local.SavedCheckout(j.getLong("checkoutRevision"),com.mendelev.mpos.data.local.CheckoutCodec.decode(j.getJSONObject("checkout").toString()))
                     val a=j.getJSONArray("paid");val paid=(0 until a.length()).map {a.getInt(it)}

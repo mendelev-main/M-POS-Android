@@ -56,7 +56,7 @@ class SalesReportRepository(private val db: CatalogDatabase,private val clock: C
         val actual=db.catalog().financialStock().filter {period.contains(it.createdAt) || (it.source to it.reason) in selectedDocs}.map {
             ReportStockFact(it.source,it.reason,it.productId,it.commandId,it.createdAt,it.delta.toBigDecimal())
         }
-        summary.copy(details=ReportGroups.build(summary,db.reportHistory(receipts,snapshots)),
+        summary.copy(archivedWebReceipts=db.workspace().document(WebOrderDefaults.KEY)?.let {WebOrderDefaults.historyCount(it.payload)} ?: 0,details=ReportGroups.build(summary,db.reportHistory(receipts,snapshots)),
             shifts=ShiftReports.build(period,db.shifts().history().map {it.domain()},shiftEvents),stock=StockReconciler.compare(expected,actual),warehouse=db.warehouseReport(period))
     }
 }

@@ -29,7 +29,7 @@ internal suspend fun CatalogDatabase.reportHistory(receipts: List<ReceiptEntity>
         val categoryName=product.getString("categoryName")
         if(category.isNotEmpty() && categoryName.isBlank()) corrupt()
         val cost=calculator.costMinor(CartEngine.requests(snapshot.cart.copy(lines=listOf(line))))
-        ReportDetailLine(line.id,line.productId,line.name,category,categoryName.ifBlank {"Без категории"},line.unit,quantity,amount.net,cost)
+        ReportDetailLine(line.id,line.productId,line.name,category,categoryName.ifBlank {"Без категории"},if(line.sellingBasis=="recipe-batch") "batch" else line.unit,quantity,amount.net,cost)
     }
     if(lines.fold(java.math.BigInteger.ZERO) {a,l->a+l.netMinor.toBigInteger()}!=snapshot.quote.subtotal.toBigInteger() ||
         snapshot.quote.subtotal.toBigInteger()+(snapshot.quote.delivery?.fee ?: 0).toBigInteger()!=r.total.toBigInteger()) corrupt()

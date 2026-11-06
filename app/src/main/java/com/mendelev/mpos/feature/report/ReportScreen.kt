@@ -70,6 +70,7 @@ fun reportMoney(minor: BigInteger)=BigDecimal(minor,2).toPlainString().replace('
                     MposNotice(ui.error!!,true)
                     MposButton("Повторить чтение",{model.refresh()},Modifier.testTag("reportRetry"))
                 } else if(report!=null) {
+                    if(report.archivedWebReceipts>0) item {MposNotice("Архив Web содержит ${report.archivedWebReceipts} чеков. Эта аналитика пока учитывает только native-операции; исторические Web-чеки в суммы не включены",false)}
                     val metrics=listOf(Triple("Продажи",reportMoney(report.sales.total),"Sales"),Triple("Возвраты",reportMoney(report.refunds.total),"Refunds"),
                         Triple("Итог за период",reportMoney(report.net.total),"Net"),Triple("Новых чеков",report.saleCount.toString(),"Count"),
                         Triple("Средний чек продаж",reportMoney(report.averageSale),"Average"),Triple("Возвратов",report.refundCount.toString(),"RefundCount"))
@@ -194,7 +195,7 @@ fun reportMoney(minor: BigInteger)=BigDecimal(minor,2).toPlainString().replace('
 
 @Composable private fun ReportGroupPanel(group: ReportGroup,dimension: String) {
     fun quantities(values: Map<String,BigDecimal>)=values.entries.joinToString("; ") {(unit,qty)->
-        val label=when(unit) {"piece"->"шт.";"kg"->"кг";"g"->"г";"l"->"л";"ml"->"мл";else->unit}
+        val label=when(unit) {"batch"->"порц.";"piece"->"шт.";"kg"->"кг";"g"->"г";"l"->"л";"ml"->"мл";else->unit}
         "${qty.stripTrailingZeros().toPlainString().replace('.',',')} $label"
     }
     MposAnalyticsCard(Modifier.fillMaxWidth().testTag("reportRow:$dimension:${group.id}")) {

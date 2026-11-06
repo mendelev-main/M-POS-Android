@@ -107,12 +107,12 @@ internal object NativeRestoreValidator {
         val docs=db.workspace().documents().associateBy {it.id}
         val known=setOf("current","layout","home","orders","checkout","split-progress",EmployeeCodec.KEY,SupplierCodec.KEY,PurchaseDraftCodec.KEY,PurchaseOrderCodec.KEY,ReceivingCodec.KEY,PostedReceivingCodec.KEY,InventoryCodec.KEY,ShiftCashCodec.KEY)
         WebLegacyHistoryDocuments.decode(docs.mapValues {it.value.payload})
-        val importedPaid=WebImportedPaymentDocuments.decode(docs.mapValues {it.value.payload})
-        // Until versioned native adoption exists, evidence-only candidates must never become an active cash register.
-        require(importedPaid==null || importedPaid.records.isEmpty()) {"unadopted imported payment evidence"}
+        WebImportedPaymentDocuments.decode(docs.mapValues {it.value.payload})
+        // Evidence alone is insufficient: require original source, cash baseline and an active or completed native adoption.
+        WebCandidateValidation.validate(db)
         for(d in docs.values) {
             currentCoroutineContext().ensureActive()
-            require(d.revision>=0 && (d.id in known || d.id.startsWith("parked:") || WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id)))
+            require(d.revision>=0 && (d.id in known || d.id.startsWith("parked:") || WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id) || WebSourceDocuments.owns(d.id) || d.id in setOf(WebCandidateDatabase.BASELINE,WebCandidateDatabase.BASIS,WebOrderDefaults.KEY)))
             if(WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id))require(d.revision==1L)
             // Part envelopes contain only integer version + escaped text. Fractional source facts are validated by the dedicated codec above.
             strict(d.payload)
@@ -131,7 +131,7 @@ internal object NativeRestoreValidator {
             if(!j.getBoolean("completed")) {
                 number(j,"checkoutRevision");checkoutShape(j.getJSONObject("checkout"))
                 val paid=j.getJSONArray("paid");for(i in 0 until paid.length()) require(paid.get(i) is Number && paid.get(i).toString().toLongOrNull()!=null)
-                if(j.getInt("version")==2) {number(j,"nextPartId");val ids=j.getJSONArray("partIds");for(i in 0 until ids.length()) require(ids.get(i) is Number && ids.get(i).toString().toLongOrNull()!=null)}
+                if(j.getInt("version") in 2..3) {number(j,"nextPartId");val ids=j.getJSONArray("partIds");for(i in 0 until ids.length()) require(ids.get(i) is Number && ids.get(i).toString().toLongOrNull()!=null)}
             }
         }
         val manual=ShiftCashCodec.all(db)
@@ -176,6 +176,7 @@ internal object NativeRestoreValidator {
             require(q.total==progress.editable().total)
             SaleMoney.payments(q,d.parts.map {if(it.method=="cash" && it.given==null) it.copy(given=it.amount) else it},s.currentCash)
             for(index in progress.paid) {
+                if(progress.partIds[index] in progress.importedParts) continue // Validated against immutable original above.
                 val part=d.parts[index];val id=progress.partIds[index]
                 val command=if(progress.format==1) CatalogRules.fingerprint("split.part.command.v1",d.commandId,index) else CatalogRules.fingerprint("split.part.command.v2",d.commandId,id)
                 val fp=if(progress.format==1) CatalogRules.fingerprint("split.part.v1",progress.checkout.revision,CheckoutCodec.encode(d),index) else CatalogRules.fingerprint("split.part.v2",CheckoutCodec.encode(d.copy(parts=emptyList())),id,part.method,part.amount,part.given)

@@ -13,7 +13,7 @@ import java.util.Base64
 data class WebBackupPreview(val version: Int,val bytes: Int,val sha256: String,val sections: Map<String,Int>,
     val imageCount: Int,val photoBytes: Long,val externalImages: Int,val inlineImages: Int,val openShifts: Int,val paymentDrafts: Int,
     val paidMinor: BigInteger,val unpaidMinor: BigInteger,val currentSessionPresent: Boolean,val deferredSections: List<String>,val unknownSections: Int)
-class WebBackupDocument internal constructor(val root: BackupJson.Obj,val images: Map<String,ByteArray>,val preview: WebBackupPreview) {
+class WebBackupDocument internal constructor(val root: BackupJson.Obj,val images: Map<String,ByteArray>,val preview: WebBackupPreview,internal val original: ByteArray?=null) {
     override fun toString()="WebBackupDocument(version=${preview.version}, bytes=${preview.bytes})"
 }
 object WebBackupReader {
@@ -115,7 +115,7 @@ object WebBackupReader {
             if(sessions.any {s->obj(s).fields.keys.any {it.startsWith("loyalty") || it in setOf("webOrderId","webOrderStatus")}}) listOf("sessionIntegrations") else emptyList()
         val known=(arrays+objects+nullable+listOf("version","exportedAt","printerSettings","productImages","imageCount","theme","demandOverload","operationalRevision")).toSet()
         val sha=MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") {"%02x".format(it)}
-        return WebBackupDocument(root,allImages.toMap(),WebBackupPreview(version,bytes.size,sha,rows.mapValues {it.value.size},allImages.size,photoBytes,external,inlineCount,open,drafts,paid,unpaid,f["currentOrderSession"] is BackupJson.Obj,deferred,f.keys.count {it !in known}))
+        return WebBackupDocument(root,allImages.toMap(),WebBackupPreview(version,bytes.size,sha,rows.mapValues {it.value.size},allImages.size,photoBytes,external,inlineCount,open,drafts,paid,unpaid,f["currentOrderSession"] is BackupJson.Obj,deferred,f.keys.count {it !in known}),bytes)
     }
     private val MAX_SAFE=BigInteger("9007199254740991")
     private fun obj(value: BackupJson)=value as? BackupJson.Obj ?: backupBad()

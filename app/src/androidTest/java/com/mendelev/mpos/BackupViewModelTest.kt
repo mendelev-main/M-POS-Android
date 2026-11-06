@@ -10,9 +10,9 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class BackupViewModelTest {
-    private suspend fun make(store: ViewModelStore,access: BackupInspectionAccess,native: NativeBackupAccess?=null,recovery: NativeRecoveryAccess?=null)=withContext(Dispatchers.Main) {
+    private suspend fun make(store: ViewModelStore,access: BackupInspectionAccess,native: NativeBackupAccess?=null,recovery: NativeRecoveryAccess?=null,web: WebRestoreAccess?=null)=withContext(Dispatchers.Main) {
         ViewModelProvider(store,object: ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>)=BackupViewModel(access,native,recovery) as T
+            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>)=BackupViewModel(access,native,recovery,web) as T
         })[BackupViewModel::class.java].also {it.open()}
     }
     @Test fun stalePickerCannotBorrowNewLoginAndErrorsNeverExposeSourceContent()=runBlocking {
@@ -139,6 +139,30 @@ class BackupViewModelTest {
             withTimeout(20_000) {while(model.state.value.error==null) delay(10)}
             assertFalse(model.state.value.activated);assertNull(model.state.value.prepared);assertFalse(model.state.value.error!!.contains("SECRET"));assertTrue(model.state.value.error!!.contains("изменились"))
         } finally {withContext(Dispatchers.Main) {store.clear()}}
+    }
+
+    @Test fun webPreparationRequiresExplicitConfirmationAndLateResultCannotBorrowLogin()=runBlocking {
+        val store=ViewModelStore();val entered=CompletableDeferred<Unit>();val release=CompletableDeferred<Unit>();var prepares=0
+        val source=WebBackupReader.read(backupSourceFixture().byteInputStream()).preview
+        val access=object: WebRestoreAccess {
+            override suspend fun inspect(uri: String)=WebRestorePreview(source,"candidate","hash")
+            override suspend fun prepare(preview: WebRestorePreview,unsupportedConfirmed: Boolean): PreparedNativeRestore {
+                assertTrue(unsupportedConfirmed);prepares++
+                withContext(NonCancellable) {entered.complete(Unit);release.await()}
+                val report=NativeBackupReport(1,"a".repeat(64),0,1,1,0)
+                return PreparedNativeRestore("prepared",report,NativeSnapshotActivity(1,1,4000),ProtectedNativeCopy("protection",1,report,"b".repeat(64),NativeSnapshotActivity(1,1,3000)))
+            }
+        }
+        val model=make(store,BackupInspectionAccess {error("inspection fallback must not run")},web=access)
+        try {
+            withContext(Dispatchers.Main) {assertTrue(model.beginSelection());model.selected("source")}
+            withTimeout(20_000) {while(model.state.value.web==null)delay(10)}
+            withContext(Dispatchers.Main) {model.prepareWeb(false)};assertEquals(0,prepares)
+            withContext(Dispatchers.Main) {model.prepareWeb(true)};entered.await()
+            Administration.session.logout();Administration.session.login("fixture-admin".toCharArray())
+            withContext(Dispatchers.Main) {model.open()};release.complete(Unit);delay(100)
+            assertEquals(1,prepares);assertNull(model.state.value.prepared);assertNull(model.state.value.web)
+        } finally {release.complete(Unit);withContext(Dispatchers.Main) {store.clear()}}
     }
 
 }

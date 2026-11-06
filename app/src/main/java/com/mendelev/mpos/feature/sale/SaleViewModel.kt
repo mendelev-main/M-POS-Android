@@ -26,7 +26,9 @@ class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
     private val mutable=MutableStateFlow(SaleUi());val state=mutable.asStateFlow()
     private fun decimal(value: Long)=BigDecimal.valueOf(value,2).toPlainString()
     private fun form(d: CheckoutDraft?,w: WorkspaceSnapshot): SaleForm {
-        if(d==null) return SaleForm(given=runCatching {decimal(SaleMoney.quote(w.cart.lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity)}).total)}.getOrDefault(""))
+        if(d==null || d.sessionId!=w.cart.sessionId || d.cartRevision!=w.cartRevision) return SaleForm(
+            given=runCatching {decimal(SaleMoney.quote(w.cart.lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity,w.sourceDiscounts[it.id])},w.cart.details.type,w.sourceDelivery).total)}.getOrDefault(""),
+            discounts=w.sourceDiscounts.mapValues {DiscountField(it.value.type,it.value.value)},tariff=w.sourceDelivery?.name.orEmpty(),fee=w.sourceDelivery?.fee?.let(::decimal).orEmpty())
         return SaleForm(if(d.parts.size>1) "split" else d.parts.firstOrNull()?.method ?: "cash",d.parts.singleOrNull()?.given?.let(::decimal) ?: "",
             d.parts.map {PartField(it.method,decimal(it.amount),it.given?.let(::decimal) ?: "")},
             d.discounts.mapValues {DiscountField(it.value.type,it.value.value)},d.delivery?.name ?: "",d.delivery?.fee?.let(::decimal) ?: "")

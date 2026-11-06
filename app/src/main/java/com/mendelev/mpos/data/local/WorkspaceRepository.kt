@@ -11,7 +11,7 @@ import java.util.UUID
 data class WorkspaceSnapshot(val products: List<WorkspaceProduct>, val categories: List<CategoryEntity>,
     val graph: List<RecipeProduct>, val balances: Map<String,BigDecimal>, val cart: CurrentCart,
     val cartRevision: Long, val layout: List<LayoutItem>, val layoutRevision: Long,
-    val parked: List<ParkedOrder> = emptyList(), val ordersRevision: Long = 0,val home: HomeLayout = HomeLayout(),val homeRevision: Long = 0,val completedReceiptId: String? = null)
+    val parked: List<ParkedOrder> = emptyList(), val ordersRevision: Long = 0,val home: HomeLayout = HomeLayout(),val homeRevision: Long = 0,val completedReceiptId: String? = null,val sourceDiscounts: Map<String,com.mendelev.mpos.domain.sale.SaleDiscount> = emptyMap(),val sourceDelivery: com.mendelev.mpos.domain.sale.DeliveryCharge?=null,val archivedWebReceipts: Int=0)
 
 class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrite: (() -> Unit)? = null) {
     private val dao=db.catalog();private val work=db.workspace()
@@ -39,9 +39,10 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
     suspend fun snapshot(): WorkspaceSnapshot = db.withTransaction {
         val entities=dao.allProducts().sortedWith(compareBy<ProductEntity> { it.name }.thenBy { it.id })
         val groups=dao.allModifierGroups().groupBy {it.ownerId};val options=dao.allModifierOptions().groupBy {it.ownerId to it.groupId}
+        val batchIds=work.document(WebCandidateDatabase.BASIS)?.let {org.json.JSONObject(it.payload).getJSONArray("products").let {a->(0 until a.length()).map {a.getString(it)}.toSet()}}.orEmpty()
         val products=entities.map { p -> WorkspaceProduct(p.id,p.name,p.categoryId ?: "",p.price,p.revision,p.unit,
             groups[p.id].orEmpty().map { g -> ModifierGroupInput(g.id,g.name,g.minimum.toString(),g.maximum.toString(),
-                options[p.id to g.id].orEmpty().map { ModifierOptionInput(it.id,it.productId,it.posName,it.quantity,it.priceDelta) }) },p.photoId) }
+                options[p.id to g.id].orEmpty().map { ModifierOptionInput(it.id,it.productId,it.posName,it.quantity,it.priceDelta) }) },p.photoId,if(p.type=="composite" && p.id in batchIds) "recipe-batch" else "stock-unit") }
         val categories=dao.categorySnapshot()
         val cart=work.document("current") ?: error("Рабочая зона не открыта")
         val layout=work.document("layout") ?: error("Раскладка не открыта")
@@ -54,9 +55,11 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         val owners=listOf(current.sessionId)+parked.map {it.id}
         if(owners.distinct().size!=owners.size) throw CatalogFailure("orderOwner","Заказ имеет двух владельцев")
         val home=work.document("home") ?: error("Главный экран не открыт")
+        val sourceDefaults=work.document(WebOrderDefaults.KEY)
+        val imported=sourceDefaults?.let {WebOrderDefaults.read(it.payload,current.sessionId)}
         WorkspaceSnapshot(products,categories,recipeSnapshot(entities,dao.allComponents()),dao.allBalances().associate { it.productId to it.quantity.toBigDecimal() },
             current,cart.revision,
-            LayoutEngine.project(WorkspaceCodec.layout(layout.payload),products,categories.map { it.id }.toSet()+""),layout.revision,parked,book.revision,HomeEngine.project(WorkspaceCodec.home(home.payload),products,categories.map {it.id}),home.revision,SaleRepository(db).unacknowledged())
+            LayoutEngine.project(WorkspaceCodec.layout(layout.payload),products,categories.map { it.id }.toSet()+""),layout.revision,parked,book.revision,HomeEngine.project(WorkspaceCodec.home(home.payload),products,categories.map {it.id}),home.revision,SaleRepository(db).unacknowledged(),imported?.discounts.orEmpty().filterKeys {id->current.lines.any {it.id==id}},imported?.delivery?.takeIf {current.details.type=="delivery"},sourceDefaults?.let {WebOrderDefaults.historyCount(it.payload)} ?: 0)
     }
     private suspend fun repeat(commandId: String, fp: String, legacyFp: String? = null): Boolean {
         val old=dao.result(commandId) ?: return false

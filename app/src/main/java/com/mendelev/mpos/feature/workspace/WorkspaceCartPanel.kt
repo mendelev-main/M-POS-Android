@@ -61,7 +61,7 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
                             Text(line.name,Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.sp,lineHeight=19.sp))
                             Text(posMoney(line.unitPrice.toBigDecimal()*line.quantity.toBigDecimal()),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp,fontWeight=FontWeight.ExtraBold))
                         }
-                        Text("${posMoney(line.unitPrice.toBigDecimal())} / ${unitLabel(line.unit)} · ×${line.quantity}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${posMoney(line.unitPrice.toBigDecimal())} / ${if(line.sellingBasis=="recipe-batch") "порция рецепта" else unitLabel(line.unit)} · ×${line.quantity}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                         if(line.options.isNotEmpty()) Text("↳ "+line.options.joinToString(" · ") {it.name},style=MaterialTheme.typography.bodySmall)
                         if(CartEngine.stale(line,s.products)) Text("Требуется проверка: каталог изменился",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.error)
                     }

@@ -4,12 +4,12 @@ import com.mendelev.mpos.domain.catalog.*
 import java.math.BigDecimal
 
 data class WorkspaceProduct(val id: String, val name: String, val categoryId: String, val price: String,
-    val revision: Long, val unit: String, val groups: List<ModifierGroupInput> = emptyList(), val photoId: String? = null)
+    val revision: Long, val unit: String, val groups: List<ModifierGroupInput> = emptyList(), val photoId: String? = null, val sellingBasis: String = "stock-unit")
 data class ChosenOption(val id: String, val name: String, val quantity: String, val priceDelta: String)
-data class CartLine(val id: String, val productId: String, val name: String, val basePrice: String,
-    val manual: Boolean, val unitPrice: String, val quantity: String, val unit: String,
-    val options: List<ChosenOption>, val requests: List<RecipeRequest>, val references: Map<String,Long>) {
-    fun key()=CatalogRules.fingerprint(productId,manual,basePrice,unitPrice,
+data class CartLine(val id: String, val productId: String, val name: String, val basePrice: String?,
+    val manual: Boolean?, val unitPrice: String, val quantity: String, val unit: String,
+    val options: List<ChosenOption>, val requests: List<RecipeRequest>, val references: Map<String,Long>, val sellingBasis: String = "stock-unit") {
+    fun key()=CatalogRules.fingerprint(productId,manual,basePrice,unitPrice,sellingBasis,
         CatalogRules.fingerprint(*options.sortedBy { it.id }.flatMap { listOf(it.id,it.quantity,it.priceDelta) }.toTypedArray()),
         CatalogRules.fingerprint(*references.toSortedMap().flatMap { (id,rev) -> listOf(id,rev.toString()) }.toTypedArray()))
 }
@@ -59,7 +59,11 @@ object CartEngine {
         val options=p.groups.flatMap { it.options }.filter { it.id in action.selected }.sortedBy { it.id }.map {
             ChosenOption(it.id,it.posName.ifBlank { byId.getValue(it.productId).name },it.quantity,it.priceDelta)
         }
-        val line=CartLine(action.lineId,p.id,p.name,base,manual,CatalogRules.canonical(configured.price),"1",p.unit,options,configured.requests,refs)
+        val requests=if(p.sellingBasis=="recipe-batch") {
+            val owner=graphById[p.id] as? RecipeProduct.Composite ?: throw CatalogFailure("recipe","Не найден выход рецепта")
+            configured.requests.mapIndexed {index,r->if(index==0) r.copy(quantity=owner.yield) else r}
+        } else configured.requests
+        val line=CartLine(action.lineId,p.id,p.name,base,manual,CatalogRules.canonical(configured.price),"1",p.unit,options,requests,refs,p.sellingBasis)
         return line
     }
     fun apply(cart: CurrentCart, action: CartAction, products: List<WorkspaceProduct>, graph: List<RecipeProduct>,

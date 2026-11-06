@@ -9,10 +9,11 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 data class NativeBackupUi(val report: NativeBackupReport,val exported: Boolean)
-data class BackupUi(val preview: WebBackupPreview?=null,val epoch: Long?=null,val picking: Boolean=false,val busy: Boolean=false,val error: String?=null,val native: NativeBackupUi?=null,val prepared: PreparedNativeRestore?=null,val recovery: NativeRecoveryInventory?=null,val confirmation: PreparedNativeRestore?=null,val activated: Boolean=false)
-class BackupViewModel(private val access: BackupInspectionAccess,private val nativeAccess: NativeBackupAccess?=null,private val recoveryAccess: NativeRecoveryAccess?=null): ViewModel() {
+data class BackupUi(val preview: WebBackupPreview?=null,val epoch: Long?=null,val picking: Boolean=false,val busy: Boolean=false,val error: String?=null,val native: NativeBackupUi?=null,val prepared: PreparedNativeRestore?=null,val recovery: NativeRecoveryInventory?=null,val confirmation: PreparedNativeRestore?=null,val activated: Boolean=false,val web: WebRestorePreview?=null)
+class BackupViewModel(private val access: BackupInspectionAccess,private val nativeAccess: NativeBackupAccess?=null,private val recoveryAccess: NativeRecoveryAccess?=null,private val webRestore: WebRestoreAccess?=null): ViewModel() {
     private val forms=AdminForms(viewModelScope)
     private val mutable=MutableStateFlow(BackupUi());val state=mutable.asStateFlow()
+    val webRestoreEnabled get()=webRestore!=null
     val nativeEnabled get()=nativeAccess!=null
     val recoveryEnabled get()=recoveryAccess!=null
     val activationEnabled get()=recoveryAccess?.activationEnabled==true
@@ -46,7 +47,7 @@ class BackupViewModel(private val access: BackupInspectionAccess,private val nat
                 val result=withContext(Dispatchers.IO) {permit.write {
                     when(kind) {
                         Choice.PREPARE->BackupUi(epoch=permit.generation,prepared=checkNotNull(recoveryAccess).prepare(uri))
-                        Choice.WEB->BackupUi(preview=access.inspect(uri),epoch=permit.generation)
+                        Choice.WEB->if(webRestore==null) BackupUi(preview=access.inspect(uri),epoch=permit.generation) else webRestore.inspect(uri).let {BackupUi(preview=it.source,web=it,epoch=permit.generation)}
                         Choice.NATIVE->BackupUi(epoch=permit.generation,native=NativeBackupUi(checkNotNull(nativeAccess).inspectNative(uri),false))
                         Choice.EXPORT->BackupUi(epoch=permit.generation,native=NativeBackupUi(checkNotNull(nativeAccess).export(uri),true))
                     }
@@ -58,11 +59,25 @@ class BackupViewModel(private val access: BackupInspectionAccess,private val nat
                     "size","limit"->"Файл превышает безопасные ограничения. Проверка остановлена"
                     "version"->"Версия копии не поддерживается"
                     "photo","missingPhoto"->"Фотографии повреждены, отсутствуют или превышают ограничения"
+                    "webCandidate","webCartAdoption"->e.message ?: "Копия требует сверки перед переносом"
+                    "restoreValidation"->"Копия не прошла сверку для переноса. Рабочие данные не изменены"
                     "payment"->"Данные частичной оплаты требуют проверки. Ничего не восстановлено"
                     else->"Не удалось проверить файл. Рабочие данные не изменены"
                 }
                 if(request==serial && permit.current()) mutable.value=BackupUi(epoch=permit.generation,error=message)
             }
+        }
+    }
+    fun prepareWeb(unsupportedConfirmed: Boolean) {
+        val preview=state.value.web ?: return
+        if(!forms.current() || state.value.busy || state.value.picking || webRestore==null || !unsupportedConfirmed) return
+        val permit=forms.permit();val request=++serial;job?.cancel();mutable.update {it.copy(busy=true,error=null)}
+        job=viewModelScope.launch {
+            try {
+                val prepared=withContext(Dispatchers.IO) {permit.write {webRestore.prepare(preview,true)}}
+                if(request==serial && permit.current()) mutable.value=BackupUi(epoch=permit.generation,prepared=prepared,preview=preview.source)
+            } catch(e:CancellationException) {throw e}
+            catch(_:Exception) {if(request==serial && permit.current()) mutable.value=BackupUi(epoch=permit.generation,error="Не удалось подготовить Web-восстановление. Рабочие данные не заменены; выберите файл заново")}
         }
     }
     fun loadRecovery() {
