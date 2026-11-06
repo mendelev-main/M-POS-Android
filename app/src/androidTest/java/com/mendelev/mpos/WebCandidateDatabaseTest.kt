@@ -68,10 +68,24 @@ class WebCandidateDatabaseTest {
         val db=Room.databaseBuilder(context,CatalogDatabase::class.java,File(root,"candidate.db").absolutePath).build()
         try {
             val permit=AdminForms(this).permit();val source=source()
-            var count=0
-            try {permit.write {WebCandidateDatabase(context,db) {count++;if(count==15)error("fault")}.install(source,emptyMap())};fail()} catch(_:IllegalStateException) {}
-            assertEquals(15,count);assertNull(db.catalog().config());assertTrue(db.catalog().allProducts().isEmpty());assertTrue(db.workspace().documents().isEmpty())
-            permit.write {WebCandidateDatabase(context,db).install(source,emptyMap())}
+            var boundaries=0
+            permit.write {WebCandidateDatabase(context,db) {boundaries++}.install(source,emptyMap())}
+            assertTrue(boundaries>15)
+            for(boundary in 1..boundaries) {
+                val candidate=Room.databaseBuilder(context,CatalogDatabase::class.java,File(root,"fault-$boundary.db").absolutePath).build()
+                try {
+                    var count=0
+                    try {permit.write {WebCandidateDatabase(context,candidate) {if(++count==boundary)throw java.io.IOException("injected")}.install(source,emptyMap())};fail("write boundary $boundary did not fail")} catch(_:java.io.IOException) {}
+                    assertEquals(boundary,count)
+                    assertNull(candidate.catalog().config())
+                    assertTrue(candidate.catalog().allProducts().isEmpty())
+                    assertTrue(candidate.catalog().allBalances().isEmpty())
+                    assertTrue(candidate.catalog().movements().isEmpty())
+                    assertTrue(candidate.workspace().documents().isEmpty())
+                    assertTrue(candidate.shifts().history().isEmpty())
+                    assertNull(candidate.shifts().register())
+                } finally {candidate.close()}
+            }
             val before=db.workspace().documents()
             try {permit.write {WebCandidateDatabase(context,db).install(source,emptyMap())};fail()} catch(_:BackupFailure) {}
             assertEquals(before,db.workspace().documents())
