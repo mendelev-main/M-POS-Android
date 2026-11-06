@@ -19,9 +19,6 @@ internal class WebCandidateDatabase(private val context: Context,private val db:
         permit.requireCurrent()
         val name=db.openHelper.databaseName ?: fail("Нужна отдельная база")
         if(context.getDatabasePath(name).canonicalFile==com.mendelev.mpos.data.recovery.AppDataset.paths(context).database.canonicalFile)fail("Рабочая база не является кандидатом")
-        val warehouse=WebWarehouseHistory.map(source)
-        if(warehouse.inventoryDraft!=null)fail("Перенос незавершённой инвентаризации пока не поддерживается. Файл не будет применён")
-        if(warehouse.receivingDrafts.isNotEmpty())fail("Перенос незавершённой приёмки пока не поддерживается. Файл не будет применён")
         val catalog=WebCatalogMapping.map(source);val staff=WebStaffMapping.map(source);val layout=WebLayoutMapping.map(source)
         val binding=WebRecipeBinding.bind(source);val cash=WebCashReconciliation.compare(source)
         val evidence=WebImportedPaymentEvidenceCodec.encode(source)
@@ -34,7 +31,7 @@ internal class WebCandidateDatabase(private val context: Context,private val db:
         if(cash.unassignedOrigins.isNotEmpty() || (cash.blockers-setOf("nativePaidProvenancePending")).isNotEmpty())fail("Не удалось связать оплаты со сменами")
         cash.shifts.forEach {if((it.blockers-resolved-setOf("expectedCashNeedsHistory","sourceRefundCompensationDifference")).isNotEmpty())fail("Не сошлись кассовые факты смены: "+it.blockers.sorted().joinToString())}
         // Every raw section survives byte-for-byte; legacy facts have a separate validated archive.
-        val retained=WebSourceDocuments.encode(source)+WebLegacyHistoryDocuments.encode(WebLegacyHistoryArchiveCodec.encode(source))+WebImportedPaymentDocuments.encode(evidence)
+        val retained=WebProductMetadataDocuments.encode(source)+WebSourceDocuments.encode(source)+WebLegacyHistoryDocuments.encode(WebLegacyHistoryArchiveCodec.encode(source))+WebImportedPaymentDocuments.encode(evidence)
         db.adminTransaction {
             permit.requireCurrent();currentCoroutineContext().ensureActive()
             if(db.catalog().config()!=null || db.catalog().allProducts().isNotEmpty() || db.workspace().documents().isNotEmpty())fail("Кандидат уже содержит данные")

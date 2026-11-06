@@ -40,9 +40,14 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         val entities=dao.allProducts().sortedWith(compareBy<ProductEntity> { it.name }.thenBy { it.id })
         val groups=dao.allModifierGroups().groupBy {it.ownerId};val options=dao.allModifierOptions().groupBy {it.ownerId to it.groupId}
         val batchIds=work.document(WebCandidateDatabase.BASIS)?.let {org.json.JSONObject(it.payload).getJSONArray("products").let {a->(0 until a.length()).map {a.getString(it)}.toSet()}}.orEmpty()
+        val metadataRows=work.productMetadataDocuments()
+        val sourceMetadata=if(metadataRows.isNotEmpty()) metadataRows.associate {it.id.removePrefix(com.mendelev.mpos.domain.backup.WebProductMetadataDocuments.PREFIX) to com.mendelev.mpos.domain.backup.WebProductMetadataDocuments.read(it.payload,it.id.removePrefix(com.mendelev.mpos.domain.backup.WebProductMetadataDocuments.PREFIX))}
+            else if(entities.isNotEmpty() && work.document(com.mendelev.mpos.domain.backup.WebSourceDocuments.KEY)!=null) {
+                com.mendelev.mpos.domain.backup.WebSourceDocuments.decode(work.documents().associate {it.id to it.payload})?.let {source->com.mendelev.mpos.domain.backup.WebCatalogMapping.map(source).products.associate {it.id to it.metadata}}.orEmpty()
+            } else emptyMap()
         val products=entities.map { p -> WorkspaceProduct(p.id,p.name,p.categoryId ?: "",p.price,p.revision,p.unit,
             groups[p.id].orEmpty().map { g -> ModifierGroupInput(g.id,g.name,g.minimum.toString(),g.maximum.toString(),
-                options[p.id to g.id].orEmpty().map { ModifierOptionInput(it.id,it.productId,it.posName,it.quantity,it.priceDelta) }) },p.photoId,if(p.type=="composite" && p.id in batchIds) "recipe-batch" else "stock-unit") }
+                options[p.id to g.id].orEmpty().map { ModifierOptionInput(it.id,it.productId,it.posName,it.quantity,it.priceDelta) }) },p.photoId,if(p.type=="composite" && p.id in batchIds) "recipe-batch" else "stock-unit",sourceMetadata[p.id]?.tileSymbol.orEmpty()) }
         val categories=dao.categorySnapshot()
         val cart=work.document("current") ?: error("Рабочая зона не открыта")
         val layout=work.document("layout") ?: error("Раскладка не открыта")

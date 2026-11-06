@@ -7,6 +7,7 @@ import org.json.JSONObject
 internal object WebCandidateValidation {
     suspend fun initial(db: CatalogDatabase,source: WebBackupDocument) {
         validate(db)
+        require(db.workspace().productMetadataDocuments().associate {it.id to it.payload}==WebProductMetadataDocuments.encode(source))
         val catalog=WebCatalogMapping.map(source);val products=db.catalog().allProducts().associateBy {it.id}
         require(products.keys==catalog.products.map {it.id}.toSet())
         for(p in catalog.products) {
@@ -25,6 +26,7 @@ internal object WebCandidateValidation {
         val rows=db.workspace().documents();val docs=rows.associate {it.id to it.payload}
         val original=WebSourceDocuments.decode(docs)
         val evidence=WebImportedPaymentDocuments.decode(docs)
+        WebProductMetadataDocuments.validate(docs,original)
         if(original==null) {
             require(WebCandidateDatabase.BASELINE !in docs && WebCandidateDatabase.BASIS !in docs && WebOrderDefaults.KEY !in docs && (evidence==null || evidence.records.isEmpty()))
             return

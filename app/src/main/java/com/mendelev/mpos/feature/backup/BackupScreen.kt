@@ -121,12 +121,14 @@ import java.math.BigInteger
                 MposAnalyticsCard(Modifier.fillMaxWidth().testTag("webRestoreReady")) {
                     Text("Web-копия подготовлена и проверена",style=MaterialTheme.typography.titleMedium)
                     Text("Открытые оплаты сохраняются: принимается только неоплаченный остаток. Исторические Web-документы сохраняются в архиве, но пока не включаются в native-аналитику и возвраты. Исходный файл сохраняется целиком внутри копии.")
+                    Text("Основной перенос: товары со свойствами, составами, модификаторами и фото; раскладка; сотрудники; поставщики. Реализованные открытые оплаты и ожидаемые закупки также сохраняются.")
+                    Text("TODO: продолжение черновиков приёмки (${web.deferredOperations["receivingDrafts"] ?: 0}), активная инвентаризация (${web.deferredOperations["inventoryDrafts"] ?: 0}) и история инвентаризаций (${web.deferredOperations["inventoryHistory"] ?: 0}) в рабочих страницах. Эти данные сохраняются в архиве и не проводятся заново.")
                     web.cashAdjustments.forEach {cash->
                         MposNotice("Сверка исторической кассы: Web показывал ${money(cash.sourceDisplayed.toBigInteger())}; по сохранённым движениям — ${money(cash.recorded.toBigInteger())}. Восстанавливается сумма по движениям, без повторной компенсации возвратов",false)
                     }
                     Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
                         Checkbox(confirmed,{confirmed=it},Modifier.testTag("webRestoreUnsupportedConfirmation"))
-                        Text("Подтверждаю: разделы сайта, лояльности, зала и неподключённых интеграций останутся в исходном архиве и не будут включены в работу")
+                        Text("Подтверждаю: история Web, черновики приёмки и инвентаризация останутся в архиве без подключения к рабочим страницам; сайт, лояльность, зал, внешние фото и неподключённые интеграции автоматически не включаются")
                     }
                     MposButton("Создать защитную копию и подготовить замену",{model.prepareWeb(confirmed)},Modifier.testTag("webRestorePrepare"),enabled=confirmed && !ui.busy && !ui.picking)
                 }

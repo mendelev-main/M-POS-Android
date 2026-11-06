@@ -15,7 +15,7 @@ import java.io.File
 import java.util.UUID
 
 data class WebCashAdjustment(val sourceDisplayed: Long,val recorded: Long)
-data class WebRestorePreview(val source: WebBackupPreview,val token: String,val archiveHash: String,val cashAdjustments: List<WebCashAdjustment> = emptyList())
+data class WebRestorePreview(val source: WebBackupPreview,val token: String,val archiveHash: String,val cashAdjustments: List<WebCashAdjustment> = emptyList(),val deferredOperations: Map<String,Int> = emptyMap())
 interface WebRestoreAccess {
     suspend fun inspect(uri: String): WebRestorePreview
     suspend fun prepare(preview: WebRestorePreview,unsupportedConfirmed: Boolean): PreparedNativeRestore
@@ -56,7 +56,8 @@ class WebRestorePreparation(context: Context,private val recovery: NativeRecover
             NativeRestoreValidator.validate(context,reopened,verify)
             p.requireCurrent();coroutine.ensureActive()
             val adjustments=WebCashReconciliation.compare(source).shifts.filter {it.sourceCompensationDifference!=null && it.sourceCompensationDifference!=0L}.map {WebCashAdjustment(it.sourceDisplayedCash!!,it.cashFromRecordedFacts!!)}
-            val preview=WebRestorePreview(source.preview,token,NativeBackupArchive.sha256(archive),adjustments)
+            val deferred=WebWarehouseHistory.map(source)
+            val preview=WebRestorePreview(source.preview,token,NativeBackupArchive.sha256(archive),adjustments,mapOf("receivingDrafts" to deferred.receivingDrafts.size,"inventoryDrafts" to if(deferred.inventoryDraft==null) 0 else 1,"inventoryHistory" to deferred.inventories.size))
             published=true
             return preview
         } finally {

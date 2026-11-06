@@ -60,6 +60,7 @@ data class WorkspaceDocument(@PrimaryKey val id: String, val revision: Long, val
 interface WorkspaceDao {
     @Query("SELECT * FROM workspace_documents ORDER BY id") fun observe(): Flow<List<WorkspaceDocument>>
     @Query("SELECT * FROM workspace_documents ORDER BY id") suspend fun documents(): List<WorkspaceDocument>
+    @Query("SELECT * FROM workspace_documents WHERE id LIKE 'web-product-metadata:%' ORDER BY id") suspend fun productMetadataDocuments(): List<WorkspaceDocument>
     @Query("DELETE FROM workspace_documents WHERE id=:id") suspend fun delete(id: String)
     @Query("SELECT * FROM workspace_documents WHERE id=:id") suspend fun document(id: String): WorkspaceDocument?
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun put(value: WorkspaceDocument)

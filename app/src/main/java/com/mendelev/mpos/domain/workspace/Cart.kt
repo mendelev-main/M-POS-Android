@@ -4,7 +4,7 @@ import com.mendelev.mpos.domain.catalog.*
 import java.math.BigDecimal
 
 data class WorkspaceProduct(val id: String, val name: String, val categoryId: String, val price: String,
-    val revision: Long, val unit: String, val groups: List<ModifierGroupInput> = emptyList(), val photoId: String? = null, val sellingBasis: String = "stock-unit")
+    val revision: Long, val unit: String, val groups: List<ModifierGroupInput> = emptyList(), val photoId: String? = null, val sellingBasis: String = "stock-unit", val symbol: String = "")
 data class ChosenOption(val id: String, val name: String, val quantity: String, val priceDelta: String)
 data class CartLine(val id: String, val productId: String, val name: String, val basePrice: String?,
     val manual: Boolean?, val unitPrice: String, val quantity: String, val unit: String,

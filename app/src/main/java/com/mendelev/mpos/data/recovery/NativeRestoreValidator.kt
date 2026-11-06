@@ -112,8 +112,8 @@ internal object NativeRestoreValidator {
         WebCandidateValidation.validate(db)
         for(d in docs.values) {
             currentCoroutineContext().ensureActive()
-            require(d.revision>=0 && (d.id in known || d.id.startsWith("parked:") || WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id) || WebSourceDocuments.owns(d.id) || d.id in setOf(WebCandidateDatabase.BASELINE,WebCandidateDatabase.BASIS,WebOrderDefaults.KEY)))
-            if(WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id))require(d.revision==1L)
+            require(d.revision>=0 && (d.id in known || d.id.startsWith("parked:") || WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id) || WebSourceDocuments.owns(d.id) || WebProductMetadataDocuments.owns(d.id) || d.id in setOf(WebCandidateDatabase.BASELINE,WebCandidateDatabase.BASIS,WebOrderDefaults.KEY)))
+            if(WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id) || WebProductMetadataDocuments.owns(d.id))require(d.revision==1L)
             // Part envelopes contain only integer version + escaped text. Fractional source facts are validated by the dedicated codec above.
             strict(d.payload)
         }

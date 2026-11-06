@@ -71,7 +71,7 @@ import com.mendelev.mpos.domain.workspace.*
                         MposWorkspaceTile({if(editing) manage(tile) else if(tile.type=="category") onCategory(tile.id) else s.products.find {it.id==tile.id}?.let(onProduct)},
                             Modifier.height(rowHeight).testTag(tag).semantics {contentDescription="${title(tile)} · Место ${tile.slot+1}"}.then(highlight),!busy,
                             categoryColor=if(tile.type=="category") s.categories.find {it.id==tile.id}?.color else null,
-                            symbol=if(tile.type=="category") s.categories.find {it.id==tile.id}?.symbol else null) {
+                            symbol=if(tile.type=="category") s.categories.find {it.id==tile.id}?.symbol else s.products.find {it.id==tile.id}?.symbol) {
                             Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                                 Text(title(tile)+(if(tile.type=="category") "  ›" else ""),Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp,lineHeight=18.sp),maxLines=2,overflow=TextOverflow.Ellipsis)
                                 if(tile.type=="product") s.products.find {it.id==tile.id}?.photoId?.let {ProductPhoto(it,photos,Modifier.size(32.dp))}

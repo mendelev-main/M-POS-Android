@@ -303,7 +303,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                 if(tile.type=="folder") MposWorkspaceTile({if(editing) onManage(tile) else onFolder(tile)},Modifier.height(144.dp).testTag("workspaceFolder:${tile.id}").then(highlight),enabled) {
                     Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {Text(tile.name,style=MaterialTheme.typography.titleMedium.copy(fontSize=19.sp,fontWeight=FontWeight.ExtraBold),textAlign=androidx.compose.ui.text.style.TextAlign.Center,maxLines=2)}
                 } else products[tile.id]?.let { p ->
-                    MposWorkspaceTile({onProduct(p)},Modifier.height(144.dp).testTag("workspaceProduct:${p.id}").then(highlight),enabled,compact=folder!=null) {
+                    MposWorkspaceTile({onProduct(p)},Modifier.height(144.dp).testTag("workspaceProduct:${p.id}").then(highlight),enabled,symbol=p.symbol,compact=folder!=null) {
                         Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                             Text(p.name,Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=if(folder!=null) 13.5.sp else 14.5.sp,lineHeight=18.sp),maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                             if(p.photoId!=null && folder==null) ProductPhoto(p.photoId,photos,Modifier.size(32.dp))
