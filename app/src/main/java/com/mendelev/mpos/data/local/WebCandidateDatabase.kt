@@ -22,7 +22,6 @@ internal class WebCandidateDatabase(private val context: Context,private val db:
         val warehouse=WebWarehouseHistory.map(source)
         if(warehouse.inventoryDraft!=null)fail("Перенос незавершённой инвентаризации пока не поддерживается. Файл не будет применён")
         if(warehouse.receivingDrafts.isNotEmpty())fail("Перенос незавершённой приёмки пока не поддерживается. Файл не будет применён")
-        if(warehouse.purchases.any {it.status=="pending"})fail("Перенос ожидаемых закупок пока не поддерживается. Файл не будет применён")
         val catalog=WebCatalogMapping.map(source);val staff=WebStaffMapping.map(source);val layout=WebLayoutMapping.map(source)
         val binding=WebRecipeBinding.bind(source);val cash=WebCashReconciliation.compare(source)
         val evidence=WebImportedPaymentEvidenceCodec.encode(source)
@@ -62,6 +61,8 @@ internal class WebCandidateDatabase(private val context: Context,private val db:
             }
             val supplierPayload=SupplierCodec.encode(suppliers);SupplierCodec.decode(supplierPayload)
             db.workspace().put(WorkspaceDocument(SupplierCodec.KEY,1,supplierPayload));wrote()
+            val purchases=WebPendingPurchases.map(source,products,suppliers)
+            db.workspace().put(WorkspaceDocument(PurchaseOrderCodec.KEY,1,PurchaseOrderCodec.encode(purchases)));wrote()
             val inventoryFields=source.root.fields["inventoryConfig"]?.let(WebValues::obj).orEmpty()
             val lastInventory=WebValues.time(inventoryFields["lastCompletedAt"])?.let {java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.of("Europe/Minsk")).toLocalDate().toString()}
             val inventory=InventoryConfig(WebValues.bool(inventoryFields["enabled"]),WebValues.text(inventoryFields["frequency"],"monthly"),WebValues.rows(inventoryFields["productIds"]).map {WebIdentity.mapped("product",WebIdentity.source(it))}.toSet(),lastInventory)

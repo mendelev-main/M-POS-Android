@@ -1,6 +1,6 @@
 # F02.PO — операционный перенос ожидаемых закупок
 
-Статус: PO01 model/codec4 implemented, локальные300JVM/lint/debug/testAPK/preflight прошли. Imported purchase restore пока явно отказывается до полного source/bootstrap reconciliation; API36 для нового формата не заявляется. PO02–PO05 planned; runtime-блокировка pending закупок сохраняется. F01 базовый Android-прогон прошёл292/0fail; новая F02 production-модель им не проверена.
+Статус: PO01–PO04 implemented для ожидаемых закупок без активного Web-черновика приёмки; PO05 API36 проверка ожидается. Локальные303JVM/lint/debug/testAPK/preflight прошли. Candidate сохраняет реальные native заявки, независимая restore validation сверяет bootstrap с оригиналом (после редактирования — с первой native history entry). Блокировки активной инвентаризации и черновиков приёмки сохраняются. Полный F02 не завершён.
 
 Источник: pinned Web1682c88334e6fb13586ce4b530157c59ca062e43, purchase-orders.js makePurchaseLine/createPurchaseOrder/savePurchaseOrderEdit; Android backup переносит исходный JSON. Web увеличивает requestVersion, но не сохраняет полную цепочку предыдущих вариантов заявки. Native PurchaseOrderRules требует все предыдущие версии, поэтому перенос числа5 вместе с пустой history запрещён.
 
@@ -27,3 +27,8 @@ Imported metadata требует полного исходного файла и
 ## PO05 — проверки перед снятием блокировки
 
 JVM: version5 без fabricated history, absent version, packaging known/unknown, decimal0.0004, mismatched expected, duplicate/missing refs, source unchanged, codec compatibility/tamper. API36: candidate→reopen→receiving3→repeat/fault rollback; source→native export→restore; supplier/product guards. Только после выполнения operational path и независимой validation снять запрет pending purchases в WebCandidateDatabase. Receiving drafts и inventory остаются отдельными частями F02.
+
+
+2026-11-06: implemented WebPendingPurchases, candidate attachment и WebPendingPurchaseValidation. Native строки сохраняют source historical name/request qty/unit/pack/expected, реальные начальные refs; source requestVersion остаётся importedOrigin, native epoch1 не создаёт прежние команды/history. Guard проверяет полный набор исходных pending IDs, происхождение и начальный snapshot независимо от текущего справочника. Старые native копии без original source принимаются только без imported provenance. Native receipt terminal transition не требует source order оставаться pending в рабочей БД: pending проверяется в оригинале, native received сохраняет bootstrap.
+
+Pure tests3: known pack3×2=6/source version5/historical names/no input mutation; unknown pack expectation=null/legacy0.0004; mismatched expected/missing unit/zero/duplicate product refusal. Added API36 WebPendingPurchaseTest: candidate/reopen/native archive restore; receiving3/10BYN→stock3/cost3.33/order received; faults8 boundaries/no extra movements; replay once; received native roundtrip. Эти API assertions пока только скомпилированы.
