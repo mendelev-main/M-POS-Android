@@ -1,6 +1,6 @@
 # F02.PO — операционный перенос ожидаемых закупок
 
-Статус: PO01–PO04 implemented для ожидаемых закупок без активного Web-черновика приёмки; PO05 API36 проверка ожидается. Локальные303JVM/lint/debug/testAPK/preflight прошли. Candidate сохраняет реальные native заявки, независимая restore validation сверяет bootstrap с оригиналом (после редактирования — с первой native history entry). Блокировки активной инвентаризации и черновиков приёмки сохраняются. Полный F02 не завершён.
+Статус: PO01–PO04 implemented для ожидаемых закупок без активного Web-черновика приёмки; Основной операционный путь PO05 ci-verified: e5470a8, CI42282692301 SUCCESS304JVM/294API36,0fail/skip. Последняя pure-проверка противоречивой истории a2cde58 проверена локально305JVM/lint/debug/testAPK/preflight; этот дополнительный guard в указанном CI отсутствует. Candidate сохраняет реальные native заявки, независимая restore validation сверяет bootstrap с оригиналом (после редактирования — с первой native history entry). Блокировки активной инвентаризации и черновиков приёмки сохраняются. Полный F02 не завершён.
 
 Источник: pinned Web1682c88334e6fb13586ce4b530157c59ca062e43, purchase-orders.js makePurchaseLine/createPurchaseOrder/savePurchaseOrderEdit; Android backup переносит исходный JSON. Web увеличивает requestVersion, но не сохраняет полную цепочку предыдущих вариантов заявки. Native PurchaseOrderRules требует все предыдущие версии, поэтому перенос числа5 вместе с пустой history запрещён.
 
