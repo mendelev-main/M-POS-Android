@@ -15,15 +15,17 @@ import org.junit.Test
 import java.io.File
 import java.util.UUID
 
-class WebCandidateDatabaseTest {
-    private val context=InstrumentationRegistry.getInstrumentation().targetContext
-    private fun source(): WebBackupDocument=WebBackupReader.read("""{
+internal fun webOpenBackupFixture(): WebBackupDocument=WebBackupReader.read("""{
       "version":1,"products":[{"id":"p","name":"Fixture","type":"simple","price":100,"cost":20,"stock":10,"stockUnit":"piece"}],
       "employees":[{"id":"e","name":"Fixture cashier","role":"employee"}],
       "shifts":[{"id":"s","employeeId":"e","employeeName":"Fixture cashier","status":"open","openedAt":1,"openingCash":0}],"orders":[],
       "currentOrderSession":{"createdAt":2,"orderType":"На месте","items":[{"productId":"p","name":"Fixture","price":100,"qty":1}],
         "paymentDraft":{"version":1,"updatedAt":3,"totalCents":10000,"parts":[{"method":"cash","amount":40,"paid":true,"cashGiven":50,"change":10},{"method":"card","amount":60,"paid":false}]}}
     }""".byteInputStream())
+
+class WebCandidateDatabaseTest {
+    private val context=InstrumentationRegistry.getInstrumentation().targetContext
+    private fun source()=webOpenBackupFixture()
     @Test fun candidateReopensNativeRemainderCommitsOnceAndBothStatesRestore()=runBlocking {
         val root=File(context.cacheDir,"web-candidate-${UUID.randomUUID()}").apply {mkdirs()}
         val path=File(root,"candidate.db").absolutePath

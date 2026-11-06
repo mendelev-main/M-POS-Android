@@ -64,7 +64,7 @@ import java.math.BigInteger
                     RecoveryActivity("Выбранная копия",p.sourceActivity)
                     RecoveryActivity("Защитная копия текущих данных",p.protection.activity)
                     Text("Защитная копия: ${p.protection.id.take(8)} · "+java.time.Instant.ofEpochMilli(p.protection.createdAt).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime().toString().replace('T',' '))
-                    Text("Наборы данных сохранены отдельно. Для будущего применения нужно повторно проверить, не изменились ли рабочие данные, и подтвердить замену. Активная смена потребует дополнительного подтверждения.")
+                    Text("Наборы данных сохранены отдельно. При применении повторно проверяется, не изменились ли рабочие данные, и требуется подтверждение замены. Активная смена потребует дополнительного подтверждения.")
                     if(model.activationEnabled) MposButton("Применить восстановление",{model.requestApply(p)},Modifier.testTag("recoveryApply"),enabled=!ui.busy)
                     MposButton("Очистить предпросмотр",{model.clear()},style=ActionStyle.Secondary)
                 }
@@ -121,6 +121,9 @@ import java.math.BigInteger
                 MposAnalyticsCard(Modifier.fillMaxWidth().testTag("webRestoreReady")) {
                     Text("Web-копия подготовлена и проверена",style=MaterialTheme.typography.titleMedium)
                     Text("Открытые оплаты сохраняются: принимается только неоплаченный остаток. Исторические Web-документы сохраняются в архиве, но пока не включаются в native-аналитику и возвраты. Исходный файл сохраняется целиком внутри копии.")
+                    web.cashAdjustments.forEach {cash->
+                        MposNotice("Сверка исторической кассы: Web показывал ${money(cash.sourceDisplayed.toBigInteger())}; по сохранённым движениям — ${money(cash.recorded.toBigInteger())}. Восстанавливается сумма по движениям, без повторной компенсации возвратов",false)
+                    }
                     Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
                         Checkbox(confirmed,{confirmed=it},Modifier.testTag("webRestoreUnsupportedConfirmation"))
                         Text("Подтверждаю: разделы сайта, лояльности, зала и неподключённых интеграций останутся в исходном архиве и не будут включены в работу")
