@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.domain.shift.ShiftRules
+import com.mendelev.mpos.domain.shift.ShiftCashRules
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -21,21 +22,25 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalLayoutApi::class)
 @Composable fun ShiftScreen(model: ShiftViewModel,onCatalog: () -> Unit,onWorkspace: () -> Unit,onSettings: () -> Unit) {
     val ui by model.state.collectAsStateWithLifecycle();val s=ui.snapshot
+    LaunchedEffect(model) {model.loadCashiers()}
     var dialog by rememberSaveable {mutableStateOf<String?>(null)}
     var revision by rememberSaveable {mutableStateOf(0L)};var previous by rememberSaveable {mutableStateOf<String?>(null)}
     var actor by rememberSaveable {mutableStateOf("")};var token by rememberSaveable {mutableStateOf("")}
     var expected by rememberSaveable {mutableStateOf(0L)};var counted by rememberSaveable {mutableStateOf("")}
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        MposAppBar("M-POS · Смена", navigationEnabled=!ui.pending && dialog==null) {
+        MposAppBar("M-POS · Смена", navigationEnabled=!ui.pending && dialog==null && ui.cashForm==null && ui.cashUnresolved==null) {
             MposNavigationAction("Товары",onCatalog);MposNavigationAction("Рабочая зона",onWorkspace);MposNavigationAction("Настройки",onSettings)
         }
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
             Text("Смена",style=MaterialTheme.typography.headlineMedium)
             if(ui.loading) CircularProgressIndicator()
-            else if(ui.fatal || s==null) MposNotice(ui.message ?: "Смена недоступна",true)
+            else if(ui.fatal || s==null) {
+                MposNotice(ui.message ?: "Смена недоступна",true)
+                if(ui.cashUnresolved==null && ui.cashForm==null) MposButton("Повторить чтение",model::refresh,enabled=!ui.pending)
+            }
             else {
                 if(ui.message!=null && dialog==null) MposNotice(ui.message!!,true)
-                Text("Локальный владелец",style=MaterialTheme.typography.titleMedium)
+                Text(s.last?.actorName ?: "Кассир не выбран",Modifier.testTag("shiftCashier"),style=MaterialTheme.typography.titleMedium)
                 Text("Касса: ${s.registerId}",style=MaterialTheme.typography.bodySmall)
                 Surface(shape=MaterialTheme.shapes.large,color=MaterialTheme.colorScheme.surface,modifier=Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -56,17 +61,53 @@ import java.time.format.DateTimeFormatter
                         if(active==null) {
                             Text("Наличные следующей смены: ${ShiftRules.money(s.carry)}",Modifier.testTag("shiftCarry"))
                             Text(if(last==null) "Первая смена начинается с 0 BYN" else "Сумма перенесена с прошлой смены. Проверьте наличные в кассе.",style=MaterialTheme.typography.bodySmall)
-                            MposButton("Открыть смену",{revision=s.revision;previous=last?.id;actor=s.ownerId;expected=s.carry;dialog="open";model.dismiss()},Modifier.testTag("shiftOpen"),busy=ui.pending)
-                        } else MposButton("Закрыть смену",{revision=s.revision;previous=active.id;actor=s.ownerId;token=ShiftRules.token(s);expected=s.currentCash;counted=java.math.BigDecimal.valueOf(expected,2).toPlainString();dialog="close";model.dismiss()},Modifier.testTag("shiftClose"),busy=ui.pending,style=ActionStyle.Secondary)
+                            MposButton("Открыть смену",{revision=s.revision;previous=last?.id;actor=ui.cashiers.singleOrNull()?.id ?: "";expected=s.carry;dialog="open";model.dismiss()},Modifier.testTag("shiftOpen"),busy=ui.pending,enabled=!ui.staffLoading && ui.staffMessage==null && ui.cashiers.isNotEmpty())
+                            if(ui.staffMessage!=null) {MposNotice(ui.staffMessage!!,true);MposButton("Повторить чтение сотрудников",model::loadCashiers)}
+                            if(!ui.staffLoading && ui.staffMessage==null && ui.cashiers.isEmpty()) {
+                                Text("Перед новой сменой создайте сотрудника в настройках. Администратор кассовые смены не открывает.")
+                                MposButton("Настройки сотрудников",onSettings,Modifier.testTag("shiftSetupEmployees"),style=ActionStyle.Secondary)
+                            }
+                        } else MposButton("Закрыть смену",{revision=s.revision;previous=active.id;actor=active.actorId;token=ShiftRules.token(s);expected=s.currentCash;counted=java.math.BigDecimal.valueOf(expected,2).toPlainString();dialog="close";model.dismiss()},Modifier.testTag("shiftClose"),busy=ui.pending,style=ActionStyle.Secondary)
+                    }
+                }
+                if(s.active!=null) FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                    MposButton("Внести наличные",{model.cashOpen("deposit")},enabled=!ui.pending && ui.cashForm==null && ui.cashUnresolved==null,modifier=Modifier.testTag("shiftDeposit"))
+                    MposButton("Изъять наличные",{model.cashOpen("withdrawal")},enabled=!ui.pending && ui.cashForm==null && ui.cashUnresolved==null,style=ActionStyle.Secondary,modifier=Modifier.testTag("shiftWithdraw"))
+                }
+                if(ui.cashHistory.isNotEmpty()) {
+                    Text("Ручные движения наличных",style=MaterialTheme.typography.titleMedium)
+                    ui.cashHistory.forEach {m->
+                        Text("${if(m.command.type=="deposit") "Внесено" else "Изъято"}: ${ShiftRules.money(m.command.amount)} · ${date(m.at,s.last!!.zoneId)}${if(m.command.note.isBlank()) "" else " · ${m.command.note}"}",Modifier.testTag("shiftCash:${m.id}"))
                     }
                 }
                 Text("Оплаты и возвраты учитываются в текущей кассовой смене.",style=MaterialTheme.typography.bodySmall)
             }
         }
     }
+    val cashForm=ui.cashForm
+    if(cashForm!=null) MposDialog(if(cashForm.type=="deposit") "Внести наличные" else "Изъять наличные",model::cashClose,!ui.pending && ui.cashUnresolved==null) {
+        if(ui.message!=null) MposNotice(ui.message!!,true)
+        Text("В кассе при открытии операции: ${ShiftRules.money(cashForm.available)}")
+        MposField(cashForm.amount,{model.cashEdit(amount=it)},"Сумма, BYN",Modifier.testTag("shiftCashAmount"),enabled=!ui.pending && ui.cashUnresolved==null,numeric=true)
+        MposField(cashForm.note,{model.cashEdit(note=it)},"Комментарий (необязательно)",Modifier.testTag("shiftCashNote"),enabled=!ui.pending && ui.cashUnresolved==null)
+        val after=runCatching {ShiftCashRules.after(cashForm.available,cashForm.type,ShiftCashRules.amount(cashForm.amount))}.getOrNull()
+        if(after!=null) Text("После операции: ${ShiftRules.money(after)}",Modifier.testTag("shiftCashPreview"))
+        if(ui.cashUnresolved!=null) MposButton("Проверить результат",model::cashRetry,enabled=!ui.pending,modifier=Modifier.testTag("shiftCashRetry"))
+        else MposButton(if(cashForm.type=="deposit") "Внести" else "Изъять",model::cashSave,enabled=!ui.pending && !ui.fatal,modifier=Modifier.testTag("shiftCashSave"))
+    }
     if(dialog!=null) MposDialog(if(dialog=="open") "Открыть смену" else "Закрыть смену",{dialog=null;model.dismiss()},!ui.pending) {
         if(ui.message!=null) MposNotice(ui.message!!,true)
-        Text("Локальный владелец")
+        if(dialog=="open") {
+            Text("Выберите кассира",style=MaterialTheme.typography.titleMedium)
+            androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max=220.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                items(ui.cashiers.size) {index->val employee=ui.cashiers[index]
+                    Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
+                        RadioButton(actor==employee.id,{actor=employee.id},enabled=!ui.pending,modifier=Modifier.testTag("shiftEmployee:${employee.id}"))
+                        Text(employee.name,Modifier.weight(1f))
+                    }
+                }
+            }
+        } else Text(s?.active?.actorName ?: s?.last?.actorName ?: "Кассир")
         Text((if(dialog=="open") "Наличные при открытии: " else "Ожидается в кассе: ")+ShiftRules.money(expected))
         if(dialog=="close") {
             MposField(counted,{counted=it},"Фактически пересчитано",modifier=Modifier.testTag("shiftCounted"),numeric=true,enabled=!ui.pending)
@@ -78,7 +119,7 @@ import java.time.format.DateTimeFormatter
             MposButton(if(dialog=="open") "Открыть" else "Подтвердить закрытие",{
                 if(dialog=="open") model.open(revision,previous,actor) {dialog=null}
                 else model.close(previous!!,revision,token,counted,actor) {dialog=null}
-            },Modifier.testTag("shiftConfirm"),busy=ui.pending)
+            },Modifier.testTag("shiftConfirm"),busy=ui.pending,enabled=dialog!="open" || ui.cashiers.any {it.id==actor})
         }
     }
 }

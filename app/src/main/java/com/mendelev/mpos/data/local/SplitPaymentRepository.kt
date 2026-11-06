@@ -12,7 +12,8 @@ import java.util.UUID
 /** Confirmed manual parts are not receipts or bank SDK acknowledgements. */
 data class SplitProgress(val revision: Long,val checkout: SavedCheckout,val paid: Set<Int>,
     val partIds: List<Long> = checkout.draft.parts.indices.map {it.toLong()+1},
-    val nextPartId: Long = checkout.draft.parts.size.toLong()+1,val format: Int=1) {
+    val nextPartId: Long = checkout.draft.parts.size.toLong()+1,val format: Int=1,
+    val importedOrigin: String?=null,val importedParts: Map<Long,Int> = emptyMap()) {
     fun editable(): EditableSplit=EditableSplit(checkout.draft.parts.fold(0L) {sum,p->Math.addExact(sum,p.amount)},
         nextPartId,checkout.draft.parts.mapIndexed {i,p->SplitPart(partIds[i],p,i in paid)})
     val complete: Boolean get()=paid.size==checkout.draft.parts.size
@@ -26,16 +27,18 @@ class SplitPaymentRepository(private val db: CatalogDatabase,private val afterWr
         val doc=db.workspace().document(key) ?: return@withTransaction null
         val j=JSONObject(doc.payload)
         val version=j.getInt("version")
-        if(version !in 1..2) throw CatalogFailure("split","Неизвестный формат раздельной оплаты")
+        if(version !in 1..3) throw CatalogFailure("split","Неизвестный формат раздельной оплаты")
         if(j.getBoolean("completed")) return@withTransaction null
         val saved=SavedCheckout(j.getLong("checkoutRevision"),CheckoutCodec.decode(j.getJSONObject("checkout").toString()))
         val a=j.getJSONArray("paid");val paid=(0 until a.length()).map {a.getInt(it)}
         require(saved.draft.parts.size in 2..10 && paid.isNotEmpty() && paid.distinct().size==paid.size && paid.all {it in saved.draft.parts.indices})
         val progress=if(version==1) SplitProgress(doc.revision,saved,paid.toSet()) else {
             val ids=j.getJSONArray("partIds");require(ids.length()==saved.draft.parts.size)
-            SplitProgress(doc.revision,saved,paid.toSet(),(0 until ids.length()).map {ids.getLong(it)},j.getLong("nextPartId"),2)
+            SplitProgress(doc.revision,saved,paid.toSet(),(0 until ids.length()).map {ids.getLong(it)},j.getLong("nextPartId"),version,if(version==3) j.getString("importedOrigin") else null,
+                if(version==3) j.getJSONArray("importedParts").let {a->(0 until a.length()).associate {i->a.getJSONObject(i).let {it.getLong("id") to it.getInt("position")}}.also {require(it.size==a.length())}} else emptyMap())
         }
         SplitEditor.validate(progress.editable())
+        if(version==3) WebPaidProvenance.validate(db,progress)
         progress
     }
     suspend fun revision(): Long=db.withTransaction {db.workspace().document(key)?.revision ?: 0L}
@@ -80,7 +83,7 @@ class SplitPaymentRepository(private val db: CatalogDatabase,private val afterWr
     }}
     private suspend fun validateContext(d: CheckoutDraft,allowIncomplete: Boolean): Long {
         val shift=ShiftRepository(db).snapshot()
-        if(shift.active?.id!=d.shiftId || shift.revision!=d.shiftRevision || shift.ownerId!=d.actorId) conflict()
+        if(shift.active?.id!=d.shiftId || shift.revision!=d.shiftRevision || shift.active?.actorId!=d.actorId) conflict()
         val now=System.currentTimeMillis()
         if(now<shift.active!!.openedAt) throw CatalogFailure("clock","Время подтверждения раньше открытия смены")
         val work=WorkspaceRepository(db).snapshot();val cart=work.cart
@@ -99,9 +102,11 @@ class SplitPaymentRepository(private val db: CatalogDatabase,private val afterWr
     private fun partCommand(d: CheckoutDraft,id: Long)=CatalogRules.fingerprint("split.part.command.v2",d.commandId,id)
     private fun partFingerprint(d: CheckoutDraft,id: Long,p: PaymentInput)=CatalogRules.fingerprint(
         "split.part.v2",CheckoutCodec.encode(d.copy(parts=emptyList())),id,p.method,p.amount,p.given)
-    private fun payload(progress: SplitProgress): String=JSONObject().put("version",2).put("completed",false)
+    internal fun payload(progress: SplitProgress): String=JSONObject().put("version",if(progress.importedOrigin==null) 2 else 3).put("completed",false)
         .put("checkoutRevision",progress.checkout.revision).put("checkout",JSONObject(CheckoutCodec.encode(progress.checkout.draft)))
-        .put("paid",JSONArray(progress.paid.sorted())).put("partIds",JSONArray(progress.partIds)).put("nextPartId",progress.nextPartId).toString()
+        .put("paid",JSONArray(progress.paid.sorted())).put("partIds",JSONArray(progress.partIds)).put("nextPartId",progress.nextPartId).also {j->if(progress.importedOrigin!=null) {
+            j.put("importedOrigin",progress.importedOrigin).put("importedParts",JSONArray(progress.importedParts.toSortedMap().map {(id,position)->JSONObject().put("id",id).put("position",position)}))
+        }}.toString()
 
     /** Preserve legacy result keys and add stable-ID aliases in the same transaction as migration. */
     private suspend fun aliasLegacy(progress: SplitProgress) {
@@ -132,7 +137,7 @@ class SplitPaymentRepository(private val db: CatalogDatabase,private val afterWr
         val index=progress.partIds.indexOf(id)
         if(index<0 || d.parts[index]!=payment || index in progress.paid) conflict()
         require(revision<Long.MAX_VALUE)
-        val next=progress.copy(revision=revision+1,paid=progress.paid+index,format=2)
+        val next=progress.copy(revision=revision+1,paid=progress.paid+index,format=if(progress.importedOrigin==null) 2 else 3)
         SplitEditor.validate(next.editable())
         val now=validateContext(d,true)
         if(prior!=null) aliasLegacy(prior)
@@ -161,7 +166,7 @@ class SplitPaymentRepository(private val db: CatalogDatabase,private val afterWr
         val nextSaved=SavedCheckout(saved.revision+1,d.copy(parts=edited.parts.map {it.payment}))
         val now=validateContext(nextSaved.draft,true)
         val next=SplitProgress(prior.revision+1,nextSaved,edited.parts.indices.filter {edited.parts[it].paid}.toSet(),
-            edited.parts.map {it.id},edited.nextId,2)
+            edited.parts.map {it.id},edited.nextId,if(prior.importedOrigin==null) 2 else 3,prior.importedOrigin,prior.importedParts)
         aliasLegacy(prior)
         db.workspace().put(WorkspaceDocument("checkout",nextSaved.revision,CheckoutCodec.encode(nextSaved.draft)));afterWrite?.invoke()
         db.workspace().put(WorkspaceDocument(key,next.revision,payload(next)));afterWrite?.invoke()

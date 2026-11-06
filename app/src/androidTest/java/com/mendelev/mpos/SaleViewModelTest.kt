@@ -20,7 +20,7 @@ class SaleViewModelTest {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build();val store=ViewModelStore()
         try {
             val c=CatalogRepository(db);c.initialize();c.saveProduct(ProductInput("p",null,"Блюдо",null,"20","1","10",null,true,"create"))
-            val w=WorkspaceRepository(db);w.initialize();val shifts=ShiftRepository(db);shifts.initialize();val initial=shifts.snapshot();shifts.open("open",0,null,initial.ownerId)
+            val w=WorkspaceRepository(db);w.initialize();val shifts=ShiftRepository(db);shifts.initializeCashierFixture();val initial=shifts.snapshot();shifts.open("open",0,null,initial.ownerId)
             suspend fun add(command: String) {w.cart(CartAction.Add("p",1,emptySet(),null,"line-$command"),command,w.snapshot().cart.sessionId)}
             add("first");var current=w.snapshot();w.cart(CartAction.SetDetails(OrderDetails(type="delivery"),current.cartRevision),"delivery",current.cart.sessionId)
             val model=withContext(Dispatchers.Main) {ViewModelProvider(store,object: ViewModelProvider.Factory {
@@ -64,7 +64,7 @@ class SaleViewModelTest {
         try {
             val c=CatalogRepository(db);c.initialize();c.saveProduct(ProductInput("p",null,"Заказ",null,"100","1","10",null,true,"product"))
             val w=WorkspaceRepository(db);w.initialize();w.cart(CartAction.Add("p",1,emptySet(),null,"line"),"add",w.snapshot().cart.sessionId)
-            val shifts=ShiftRepository(db);shifts.initialize();val initial=shifts.snapshot();shifts.open("open",0,null,initial.ownerId)
+            val shifts=ShiftRepository(db);shifts.initializeCashierFixture();val initial=shifts.snapshot();shifts.open("open",0,null,initial.ownerId)
             suspend fun model()=withContext(Dispatchers.Main) {ViewModelProvider(store,object: ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=SaleViewModel(db) as T
             })[SaleViewModel::class.java]}

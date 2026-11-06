@@ -28,8 +28,8 @@ class ShiftRepositoryTest {
         fun db()=Room.databaseBuilder(context,CatalogDatabase::class.java,name).build()
         var database=db()
         try {
-            val work=WorkspaceRepository(database);work.initialize();val documents=database.workspace().documents()
-            val repo=ShiftRepository(database,clock);repo.initialize();val s=repo.snapshot()
+            val work=WorkspaceRepository(database);work.initialize()
+            val repo=ShiftRepository(database,clock);repo.initializeCashierFixture();val documents=database.workspace().documents();val s=repo.snapshot()
             val results=coroutineScope {(1..2).map {n->async(Dispatchers.IO) {runCatching {repo.open("open$n",s.revision,null,s.ownerId)}}}.awaitAll()}
             assertEquals(1,results.count {it.isSuccess});val winner=results.indexOfFirst {it.isSuccess}+1;val id=results.first {it.isSuccess}.getOrThrow()
             assertEquals(id,repo.open("open$winner",0,null,s.ownerId))
@@ -57,7 +57,7 @@ class ShiftRepositoryTest {
     @Test fun everyOpenAndCloseWriteFailureRollsBackShiftRegisterResultAndAudit(): Unit=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         try {
-            val repo=ShiftRepository(db,clock);repo.initialize();val before=repo.snapshot()
+            val repo=ShiftRepository(db,clock);repo.initializeCashierFixture();val before=repo.snapshot()
             suspend fun faults(close: Boolean) {
                 val baseline=repo.snapshot()
                 for(boundary in 1..4) {
@@ -83,7 +83,7 @@ class ShiftRepositoryTest {
     @Test fun installationWaitsForCommittedWriteAndBlocksNewShiftCommands(): Unit=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build();val entered=CountDownLatch(1);val resume=CountDownLatch(1)
         try {
-            val repo=ShiftRepository(db,clock);repo.initialize();val s=repo.snapshot();var first=true
+            val repo=ShiftRepository(db,clock);repo.initializeCashierFixture();val s=repo.snapshot();var first=true
             val slow=ShiftRepository(db,clock,afterWrite={if(first) {first=false;entered.countDown();check(resume.await(10,TimeUnit.SECONDS))}})
             coroutineScope {
                 val write=async(Dispatchers.IO) {slow.open("slow",0,null,s.ownerId)}
@@ -113,7 +113,7 @@ class ShiftRepositoryTest {
             old.execSQL("INSERT INTO stock_balances VALUES('p','0.0004',8)")
             old.execSQL("INSERT INTO workspace_documents VALUES('custom',11,'unchanged-payload')");old.version=5
         } finally {old.close()}
-        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7,CatalogDatabase.MIGRATION_7_8).build()
+        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7,CatalogDatabase.MIGRATION_7_8,CatalogDatabase.MIGRATION_8_9).build()
         try {
             val repo=ShiftRepository(db,clock);repo.initialize();assertNull(repo.snapshot().last);assertEquals("legacy-register",repo.snapshot().registerId)
             assertEquals("0.0004",db.catalog().balance("p")!!.quantity);assertEquals(11L,db.workspace().document("custom")!!.revision);assertEquals("unchanged-payload",db.workspace().document("custom")!!.payload)

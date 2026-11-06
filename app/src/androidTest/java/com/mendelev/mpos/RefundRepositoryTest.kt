@@ -26,7 +26,7 @@ class RefundRepositoryTest {
         val catalog=CatalogRepository(db);catalog.initialize()
         catalog.saveProduct(ProductInput("p",null,"Товар",null,"20","1","10",null,true,"create",unit="kg",noStockTracking=untracked))
         val work=WorkspaceRepository(db);work.initialize()
-        val shifts=ShiftRepository(db);shifts.initialize();val initial=shifts.snapshot()
+        val shifts=ShiftRepository(db);shifts.initializeCashierFixture();val initial=shifts.snapshot()
         shifts.open("open",initial.revision,null,initial.ownerId)
         // Funding sale is unnecessary: cash delivery funds its own courier expense.
         work.cart(CartAction.Add("p",1,emptySet(),null,"line"),"add",work.snapshot().cart.sessionId)
@@ -143,7 +143,7 @@ class RefundRepositoryTest {
             catalog.saveProduct(ProductInput("ingredient",null,"Ингредиент",null,"1","1","10",null,true,"ingredient",unit="kg"))
             catalog.saveProduct(ProductInput("dish",null,"Блюдо",null,"20","0","0",null,false,"dish",type="composite",
                 components=listOf(IngredientInput("ingredient","0.0004","kg"))))
-            val work=WorkspaceRepository(db);work.initialize();val shifts=ShiftRepository(db);shifts.initialize()
+            val work=WorkspaceRepository(db);work.initialize();val shifts=ShiftRepository(db);shifts.initializeCashierFixture()
             val initial=shifts.snapshot();shifts.open("open",initial.revision,null,initial.ownerId)
             work.cart(CartAction.Add("dish",1,emptySet(),null,"line"),"add",work.snapshot().cart.sessionId)
             val w=work.snapshot();val state=shifts.snapshot()
@@ -197,7 +197,7 @@ class RefundRepositoryTest {
     }
     @Test fun allHistoricalSchemasMigrateWithoutChangingStockOrExistingReceipt(): Unit=runBlocking {
         val source=memory();val receipt=try {sale(source)} finally {source.close()}
-        for(version in 1..7) {
+        for(version in 1..8) {
             val name="refund-migration-$version-${UUID.randomUUID()}.db"
             val schema=InstrumentationRegistry.getInstrumentation().context.assets.open("com.mendelev.mpos.data.local.CatalogDatabase/$version.json")
                 .bufferedReader().use {JSONObject(it.readText()).getJSONObject("database")}
@@ -217,7 +217,7 @@ class RefundRepositoryTest {
                     old.execSQL("INSERT INTO shifts VALUES(?,'r','owner','Владелец',1,'UTC',0,NULL,NULL,NULL,NULL,NULL,1)",arrayOf(receipt.shiftId))
                     old.execSQL("INSERT INTO shift_register VALUES(1,9,?)",arrayOf(receipt.shiftId))
                 }
-                if(version==7) {
+                if(version>=7) {
                     old.execSQL("INSERT INTO receipts VALUES(?,?,?,?,?,?,?,?,?,?,?)",arrayOf<Any>(receipt.id,receipt.commandId,receipt.sessionId,receipt.shiftId,receipt.number,receipt.createdAt,receipt.total,receipt.cash,receipt.card,receipt.deliveryCashOut,receipt.payload))
                     old.execSQL("INSERT INTO receipt_products VALUES(?,'p')",arrayOf(receipt.id))
                 }
@@ -225,12 +225,12 @@ class RefundRepositoryTest {
             } finally {old.close()}
             val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(
                 CatalogDatabase.MIGRATION_1_2,CatalogDatabase.MIGRATION_2_3,CatalogDatabase.MIGRATION_3_4,
-                CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7,CatalogDatabase.MIGRATION_7_8).build()
+                CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7,CatalogDatabase.MIGRATION_7_8,CatalogDatabase.MIGRATION_8_9).build()
             try {
                 assertEquals("0.0004",db.catalog().balance("p")!!.quantity);assertEquals(8L,db.catalog().balance("p")!!.revision)
                 assertTrue(db.refunds().history().isEmpty())
-                if(version==7) assertEquals(receipt,db.sales().receipt(receipt.id)) else assertTrue(db.sales().history().isEmpty())
-                assertEquals(8,db.openHelper.readableDatabase.version)
+                if(version>=7) assertEquals(receipt,db.sales().receipt(receipt.id)) else assertTrue(db.sales().history().isEmpty())
+                assertEquals(9,db.openHelper.readableDatabase.version)
             } finally {db.close();context.deleteDatabase(name)}
         }
     }

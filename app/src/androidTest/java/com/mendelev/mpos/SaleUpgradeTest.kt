@@ -22,7 +22,7 @@ class SaleUpgradeTest {
             if(!verify) {
                 val c=CatalogRepository(db);c.initialize()
                 c.saveProduct(ProductInput("p",null,"Исторический чай",null,"2","1","10",null,true,"product"))
-                val work=WorkspaceRepository(db);work.initialize();val shifts=ShiftRepository(db);shifts.initialize();val s=shifts.snapshot();shifts.open("open",s.revision,null,s.ownerId)
+                val work=WorkspaceRepository(db);work.initialize();val shifts=ShiftRepository(db);shifts.initializeCashierFixture();val s=shifts.snapshot();shifts.open("open",s.revision,null,s.ownerId)
                 work.cart(CartAction.Add("p",1,emptySet(),null,"line"),"add",work.snapshot().cart.sessionId)
                 val w=work.snapshot();val active=shifts.snapshot()
                 val saved=CheckoutRepository(db).save(0,CheckoutDraft("upgrade-sale",w.cart.sessionId,w.cartRevision,active.active!!.id,active.revision,active.ownerId,parts=listOf(PaymentInput("cash",200,500))))

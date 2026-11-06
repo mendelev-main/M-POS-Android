@@ -11,7 +11,7 @@ import java.util.UUID
 data class WorkspaceSnapshot(val products: List<WorkspaceProduct>, val categories: List<CategoryEntity>,
     val graph: List<RecipeProduct>, val balances: Map<String,BigDecimal>, val cart: CurrentCart,
     val cartRevision: Long, val layout: List<LayoutItem>, val layoutRevision: Long,
-    val parked: List<ParkedOrder> = emptyList(), val ordersRevision: Long = 0,val home: HomeLayout = HomeLayout(),val homeRevision: Long = 0,val completedReceiptId: String? = null)
+    val parked: List<ParkedOrder> = emptyList(), val ordersRevision: Long = 0,val home: HomeLayout = HomeLayout(),val homeRevision: Long = 0,val completedReceiptId: String? = null,val sourceDiscounts: Map<String,com.mendelev.mpos.domain.sale.SaleDiscount> = emptyMap(),val sourceDelivery: com.mendelev.mpos.domain.sale.DeliveryCharge?=null,val archivedWebReceipts: Int=0)
 
 class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrite: (() -> Unit)? = null) {
     private val dao=db.catalog();private val work=db.workspace()
@@ -39,9 +39,15 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
     suspend fun snapshot(): WorkspaceSnapshot = db.withTransaction {
         val entities=dao.allProducts().sortedWith(compareBy<ProductEntity> { it.name }.thenBy { it.id })
         val groups=dao.allModifierGroups().groupBy {it.ownerId};val options=dao.allModifierOptions().groupBy {it.ownerId to it.groupId}
+        val batchIds=work.document(WebCandidateDatabase.BASIS)?.let {org.json.JSONObject(it.payload).getJSONArray("products").let {a->(0 until a.length()).map {a.getString(it)}.toSet()}}.orEmpty()
+        val metadataRows=work.productMetadataDocuments()
+        val sourceMetadata=if(metadataRows.isNotEmpty()) metadataRows.associate {it.id.removePrefix(com.mendelev.mpos.domain.backup.WebProductMetadataDocuments.PREFIX) to com.mendelev.mpos.domain.backup.WebProductMetadataDocuments.read(it.payload,it.id.removePrefix(com.mendelev.mpos.domain.backup.WebProductMetadataDocuments.PREFIX))}
+            else if(entities.isNotEmpty() && work.document(com.mendelev.mpos.domain.backup.WebSourceDocuments.KEY)!=null) {
+                com.mendelev.mpos.domain.backup.WebSourceDocuments.decode(work.documents().associate {it.id to it.payload})?.let {source->com.mendelev.mpos.domain.backup.WebCatalogMapping.map(source).products.associate {it.id to it.metadata}}.orEmpty()
+            } else emptyMap()
         val products=entities.map { p -> WorkspaceProduct(p.id,p.name,p.categoryId ?: "",p.price,p.revision,p.unit,
             groups[p.id].orEmpty().map { g -> ModifierGroupInput(g.id,g.name,g.minimum.toString(),g.maximum.toString(),
-                options[p.id to g.id].orEmpty().map { ModifierOptionInput(it.id,it.productId,it.posName,it.quantity,it.priceDelta) }) },p.photoId) }
+                options[p.id to g.id].orEmpty().map { ModifierOptionInput(it.id,it.productId,it.posName,it.quantity,it.priceDelta) }) },p.photoId,if(p.type=="composite" && p.id in batchIds) "recipe-batch" else "stock-unit",sourceMetadata[p.id]?.tileSymbol.orEmpty()) }
         val categories=dao.categorySnapshot()
         val cart=work.document("current") ?: error("Рабочая зона не открыта")
         val layout=work.document("layout") ?: error("Раскладка не открыта")
@@ -54,9 +60,11 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         val owners=listOf(current.sessionId)+parked.map {it.id}
         if(owners.distinct().size!=owners.size) throw CatalogFailure("orderOwner","Заказ имеет двух владельцев")
         val home=work.document("home") ?: error("Главный экран не открыт")
+        val sourceDefaults=work.document(WebOrderDefaults.KEY)
+        val imported=sourceDefaults?.let {WebOrderDefaults.read(it.payload,current.sessionId)}
         WorkspaceSnapshot(products,categories,recipeSnapshot(entities,dao.allComponents()),dao.allBalances().associate { it.productId to it.quantity.toBigDecimal() },
             current,cart.revision,
-            LayoutEngine.project(WorkspaceCodec.layout(layout.payload),products,categories.map { it.id }.toSet()+""),layout.revision,parked,book.revision,HomeEngine.project(WorkspaceCodec.home(home.payload),products,categories.map {it.id}),home.revision,SaleRepository(db).unacknowledged())
+            LayoutEngine.project(WorkspaceCodec.layout(layout.payload),products,categories.map { it.id }.toSet()+""),layout.revision,parked,book.revision,HomeEngine.project(WorkspaceCodec.home(home.payload),products,categories.map {it.id}),home.revision,SaleRepository(db).unacknowledged(),imported?.discounts.orEmpty().filterKeys {id->current.lines.any {it.id==id}},imported?.delivery?.takeIf {current.details.type=="delivery"},sourceDefaults?.let {WebOrderDefaults.historyCount(it.payload)} ?: 0)
     }
     private suspend fun repeat(commandId: String, fp: String, legacyFp: String? = null): Boolean {
         val old=dao.result(commandId) ?: return false
@@ -146,7 +154,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         work.delete("parked:$id");afterWrite?.invoke()
         advanceOrders(state);record("deleteParked",id,commandId,fp)
     }
-    suspend fun home(action: HomeAction,expectedRevision: Long,commandId: String) = db.withTransaction {
+    suspend fun home(action: HomeAction,expectedRevision: Long,commandId: String) = db.adminTransaction {
         val intent=when(action) {
             is HomeAction.Add->listOf("add",action.type,action.id)
             is HomeAction.Move->listOf("move",action.type,action.id,action.slot.toString())
@@ -154,13 +162,13 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
             is HomeAction.Reset->listOf("reset")
         }
         val fp=CatalogRules.fingerprint("workspace.home",expectedRevision,*intent.toTypedArray())
-        if(repeat(commandId,fp)) return@withTransaction
+        if(repeat(commandId,fp)) return@adminTransaction
         val state=snapshot()
         if(state.homeRevision!=expectedRevision) throw CatalogFailure("conflict","Главный экран изменился. Повторите по обновлённой раскладке")
         val next=HomeEngine.apply(state.home,state.products,state.categories.map {it.id},action)
         write("home",WorkspaceCodec.home(next),state.homeRevision,commandId,fp)
     }
-    suspend fun layout(action: LayoutAction, expectedRevision: Long, commandId: String) = db.withTransaction {
+    suspend fun layout(action: LayoutAction, expectedRevision: Long, commandId: String) = db.adminTransaction {
         val intent=when(action) {
             is LayoutAction.SaveFolder -> listOf("folder",action.id,action.categoryId,action.name)
             is LayoutAction.DeleteFolder -> listOf("deleteFolder",action.id)
@@ -170,7 +178,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
             is LayoutAction.Step -> listOf("step",action.type,action.id,action.delta.toString())
         }
         val fp=CatalogRules.fingerprint("workspace.layout",expectedRevision,*intent.toTypedArray())
-        if(repeat(commandId,fp)) return@withTransaction
+        if(repeat(commandId,fp)) return@adminTransaction
         val state=snapshot()
         if(state.layoutRevision!=expectedRevision) throw CatalogFailure("conflict","Раскладка изменилась. Повторите по обновлённому экрану")
         val next=LayoutEngine.apply(state.layout,state.products,state.categories.map { it.id }.toSet()+"",action)

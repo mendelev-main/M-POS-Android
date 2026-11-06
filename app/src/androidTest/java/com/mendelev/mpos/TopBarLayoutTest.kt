@@ -46,6 +46,8 @@ class TopBarLayoutTest {
                 }
             }
         } }
+        compose.onNodeWithTag("topNav-bookings").assertDoesNotExist()
+        compose.onNodeWithText("Бронирования").assertDoesNotExist()
         compose.onNodeWithTag("mposTopBar").assertHeightIsEqualTo(68.dp)
         compose.onNodeWithTag("topNav-settings").assertIsDisplayed()
         compose.runOnIdle {large=true}
@@ -55,6 +57,30 @@ class TopBarLayoutTest {
         compose.onNodeWithTag("topNav-settings").assertIsSelected()
         compose.onNodeWithTag("topNav-workspace").performScrollTo().assertIsDisplayed().performClick()
         assertEquals("workspace",selected)
+    }
+
+    @Test fun inventoryReminderIsConditionalReachableAndRespectsCommandLock() {
+        var shown by mutableStateOf(false);var locked by mutableStateOf(false);var selected by mutableStateOf("workspace");var calls=0
+        compose.setContent {MposTheme {Box(Modifier.width(520.dp)) {MposTopBar(MposTopNavigation(selected,false,inventoryReminder=shown) {selected=it;calls++},enabled=!locked)}}}
+        compose.onNodeWithTag("topNav-inventory").assertDoesNotExist()
+        compose.runOnIdle {shown=true}
+        compose.onNodeWithTag("topNav-inventory").performScrollTo().assertIsDisplayed().performClick().assertIsSelected();assertEquals("inventory",selected)
+        compose.runOnIdle {locked=true}
+        compose.onNodeWithTag("topNav-inventory").assertIsNotEnabled().performClick();assertEquals(1,calls)
+        compose.runOnIdle {locked=false;shown=false};compose.onNodeWithTag("topNav-inventory").assertDoesNotExist()
+    }
+
+    @Test fun administrationIndicatorHasDistinctTagAndBothControlsNavigateToSettings() {
+        var selected by mutableStateOf("workspace");var calls=0
+        compose.setContent {MposTheme {Box(Modifier.width(1280.dp)) {
+            MposTopBar(MposTopNavigation(selected,true,adminActive=true) {selected=it;calls++})
+        }}}
+        compose.onAllNodesWithTag("topNav-settings").assertCountEquals(1)
+        compose.onAllNodesWithTag("topNav-administration").assertCountEquals(1)
+        compose.onNodeWithTag("topNav-administration").performScrollTo().performClick()
+        assertEquals("settings",selected)
+        compose.onNodeWithTag("topNav-settings").performScrollTo().performClick()
+        assertEquals(2,calls)
     }
 
 }

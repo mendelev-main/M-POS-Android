@@ -42,7 +42,7 @@ UUID/стабильная строка — технический ID. Назва
 | 03 OperationResult/Outbox | scope, commandId/fingerprint, resultId; effectId, payloadVersion, status, bindingId | операция и её эффекты фиксируются вместе, секрет не сериализуется в payload |
 | 04 Inventory/Receiving/Purchase | header+lines, baseline, supplier snapshot, applied document references | закупка не есть приёмка; applied lines не отменяются удалением draft |
 | 05 Shift/Employee/AuditEvent | ссылки/снимки автора, статус смены, период, action/result | автор истории сохраняется после удаления/отключения сотрудника |
-| 06 CustomerRef/Consent/Booking | local/server IDs, минимальные поля, consent metadata, table/time range | серверное право на подарок не подменяется локальным флагом |
+| 06 CustomerRef/Consent | local/server IDs, минимальные поля, consent metadata | серверное право на подарок не подменяется локальным флагом |
 | 09 RemoteOrderLink/SyncCheckpoint | bindingId, serverOrderId, localSessionId, confirmed status/version | уникальность в scope привязки, replay не создаёт второй заказ |
 
 Поля не являются обязательством создать все таблицы в 01. Сначала реализуется нужный вертикальный сценарий. Имена/индексы/foreign keys фиксируются в schema review соответствующей PR; обязательные уникальности нельзя оставлять только проверкой UI.
@@ -73,3 +73,5 @@ P10: первая Room schema, export schema, round-trip decimal/IDs, failure tr
 
 
 Уточнение01b: precision для recipeYield закреплена в [CATALOG-01B.md](CATALOG-01B.md): exact rational intermediates, aggregate per ingredient, final scale12 HALF_EVEN; underflow — явная ошибка. Ядро подключено к Room schema2/редактору; результат CI отражён в build-log.
+
+M17/Booking/table model исключён владельцем2026-10-28. В native-модели этапа06 остаются клиенты, согласия и лояльность.

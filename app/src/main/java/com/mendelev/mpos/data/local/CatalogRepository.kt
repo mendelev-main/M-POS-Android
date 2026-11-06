@@ -23,7 +23,8 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
     private fun requirePhoto(id: String?) {
         if(id!=null) (photos ?: throw CatalogFailure("photo","Хранилище фото недоступно")).requirePrepared(id)
     }
-    suspend fun saveDraft(draft: DraftEntity) = db.withTransaction {
+    suspend fun discardDraft()=db.adminTransaction {dao.clearDraft()}
+    suspend fun saveDraft(draft: DraftEntity) = db.adminTransaction {
         requirePhoto(JSONObject(draft.payload).optString("photoId").takeIf { it.isNotEmpty() && it!="null" })
         dao.draft(draft)
     }
@@ -44,8 +45,8 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
     }
     suspend fun saveProduct(raw: ProductInput): String {
         val input = raw.validated(); val fp = "product:" + input.fingerprint()
-        return db.withTransaction {
-            repeat(input.commandId, fp)?.let { return@withTransaction it }
+        return db.adminTransaction {
+            repeat(input.commandId, fp)?.let { return@adminTransaction it }
             SplitPaymentRepository(db).requireProductUnlocked(input.id)
             requirePhoto(input.photoId)
             val groups=ModifierRules.validate(input.id,input.modifierGroups,dao.allProducts().map { it.id }.toSet())
@@ -91,10 +92,14 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
             if (input.type == "simple" && (old == null || input.stockEdited)) {
                 val targetText = baseQuantity(input.stock)
                 val target = targetText.toBigDecimal(); val delta = target - (balance?.quantity?.toBigDecimal() ?: java.math.BigDecimal.ZERO)
-                val next = BalanceEntity(input.id, targetText, (balance?.revision ?: 0) + if (delta.signum() != 0 || old == null) 1 else 0)
+                val next = BalanceEntity(input.id, targetText, (balance?.revision ?: 0) + if (delta.signum() != 0 || old == null || old.noStockTracking != input.noStockTracking) 1 else 0)
                 if (balance == null) dao.insertBalance(next) else dao.updateBalance(next)
                 if (delta.signum() != 0) dao.movement(MovementEntity(UUID.randomUUID().toString(), input.id, CatalogRules.canonical(delta),
                     if (old == null) "opening" else "product_card", input.commandId, System.currentTimeMillis()))
+            }
+            if (input.type == "simple" && old != null && !input.stockEdited && old.noStockTracking != input.noStockTracking) {
+                val current=balance ?: error("Нет складского baseline")
+                dao.updateBalance(current.copy(revision=Math.addExact(current.revision,1)))
             }
             record(input.commandId, fp, input.id, if (old == null) "product.create" else "product.update")
             dao.clearDraft()
@@ -107,8 +112,8 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
         val legacyFp = CatalogRules.fingerprint("category", id, expectedRevision, name)
         val fp = if(cleanColor==CategoryAppearance.DEFAULT_COLOR && cleanSymbol.isEmpty()) legacyFp
             else CatalogRules.fingerprint("categoryAppearance",legacyFp,cleanColor,cleanSymbol)
-        return db.withTransaction {
-            repeat(commandId, fp)?.let { return@withTransaction it }
+        return db.adminTransaction {
+            repeat(commandId, fp)?.let { return@adminTransaction it }
             SplitPaymentRepository(db).requireCategoryUnlocked(id)
             val old = dao.category(id)
             if (old?.revision != expectedRevision) throw CatalogFailure("conflict", "Категория изменилась. Откройте её заново")
@@ -119,9 +124,9 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
             record(commandId, fp, id, "category.save"); id
         }
     }
-    suspend fun reorderCategories(order: List<CategoryOrderEntry>, commandId: String) = db.withTransaction {
+    suspend fun reorderCategories(order: List<CategoryOrderEntry>, commandId: String) = db.adminTransaction {
         val fp=CatalogRules.fingerprint("categoryOrder",*order.flatMap { listOf(it.id,it.revision.toString()) }.toTypedArray())
-        if(repeat(commandId,fp)!=null) return@withTransaction
+        if(repeat(commandId,fp)!=null) return@adminTransaction
         val current=dao.categorySnapshot()
         if(order.map { it.id }.distinct().size!=order.size || current.map { it.id }.toSet()!=order.map { it.id }.toSet() ||
             order.any { entry -> current.find { it.id==entry.id }?.revision!=entry.revision })
@@ -136,18 +141,18 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
         }
         record(commandId,fp,"categories","category.reorder")
     }
-    suspend fun deleteCategory(id: String, revision: Long, commandId: String) = db.withTransaction {
+    suspend fun deleteCategory(id: String, revision: Long, commandId: String) = db.adminTransaction {
         val fp = CatalogRules.fingerprint("deleteCategory", id, revision)
-        if (repeat(commandId, fp) != null) return@withTransaction
+        if (repeat(commandId, fp) != null) return@adminTransaction
         SplitPaymentRepository(db).requireCategoryUnlocked(id)
         if (dao.category(id)?.revision != revision) throw CatalogFailure("conflict", "Категория изменилась")
         if (dao.categoryUses(id) > 0) throw CatalogFailure("used", "В категории есть товары. Сначала переместите их")
         db.requireNoWorkspaceCategory(id)
         dao.deleteCategory(id); record(commandId, fp, id, "category.delete")
     }
-    suspend fun deleteProduct(id: String, revision: Long, commandId: String) = db.withTransaction {
+    suspend fun deleteProduct(id: String, revision: Long, commandId: String) = db.adminTransaction {
         val fp = CatalogRules.fingerprint("deleteProduct", id, revision)
-        if (repeat(commandId, fp) != null) return@withTransaction
+        if (repeat(commandId, fp) != null) return@adminTransaction
         SplitPaymentRepository(db).requireProductUnlocked(id)
         if (dao.product(id)?.revision != revision) throw CatalogFailure("conflict", "Товар изменился")
         db.requireNoWorkspaceProduct(id)
@@ -162,6 +167,9 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
             }
             if(recipeUse || modifierUse) throw CatalogFailure("used","Товар используется в несохранённой карточке")
         }
+        InventoryRepository(db).requireProductUnused(id)
+        SupplierRepository(db).requireProductUnlinked(id)
+        PurchaseDraftRepository(db).requireProductUnused(id)
         if (dao.modifierUses(id) > 0) throw CatalogFailure("used", "Товар используется в модификаторах: сначала измените варианты")
         if (dao.recipeUses(id) > 0) throw CatalogFailure("used", "Товар используется в рецептуре: сначала измените состав")
         if (db.sales().productUses(id)>0) throw CatalogFailure("used", "Товар есть в истории чеков: удалить нельзя")

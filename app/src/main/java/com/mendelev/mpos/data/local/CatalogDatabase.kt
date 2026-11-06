@@ -42,7 +42,7 @@ data class BalanceEntity(@PrimaryKey val productId: String, val quantity: String
 
 @Entity(tableName = "stock_movements", foreignKeys = [ForeignKey(entity = ProductEntity::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.RESTRICT)], indices = [Index("productId"), Index(value = ["commandId"], unique = true)])
 data class MovementEntity(@PrimaryKey val id: String, val productId: String, val delta: String, val source: String,
-    val commandId: String, val createdAt: Long, val reason: String? = null)
+    val commandId: String, val createdAt: Long, val reason: String? = null, val unit: String? = null)
 
 @Entity(tableName = "operation_results")
 data class ResultEntity(@PrimaryKey val commandId: String, val fingerprint: String, val resultId: String)
@@ -60,6 +60,7 @@ data class WorkspaceDocument(@PrimaryKey val id: String, val revision: Long, val
 interface WorkspaceDao {
     @Query("SELECT * FROM workspace_documents ORDER BY id") fun observe(): Flow<List<WorkspaceDocument>>
     @Query("SELECT * FROM workspace_documents ORDER BY id") suspend fun documents(): List<WorkspaceDocument>
+    @Query("SELECT * FROM workspace_documents WHERE id LIKE 'web-product-metadata:%' ORDER BY id") suspend fun productMetadataDocuments(): List<WorkspaceDocument>
     @Query("DELETE FROM workspace_documents WHERE id=:id") suspend fun delete(id: String)
     @Query("SELECT * FROM workspace_documents WHERE id=:id") suspend fun document(id: String): WorkspaceDocument?
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun put(value: WorkspaceDocument)
@@ -100,6 +101,9 @@ interface CatalogDao {
     @Query("SELECT COALESCE(MAX(sortOrder), -1) + 1 FROM categories") suspend fun nextCategoryOrder(): Int
     @Query("SELECT COUNT(*) FROM categories") suspend fun categoryCount(): Int
     @Query("SELECT COUNT(*) FROM products WHERE categoryId=:id") suspend fun categoryUses(id: String): Int
+    @Query("SELECT * FROM stock_movements WHERE source IN ('sale','refund') ORDER BY createdAt,id") suspend fun financialStock(): List<MovementEntity>
+    @Query("SELECT * FROM stock_movements WHERE id=:id") suspend fun stockMovement(id: String): MovementEntity?
+    @Query("SELECT * FROM stock_movements WHERE productId=:id ORDER BY createdAt DESC, id DESC") suspend fun stockHistory(id: String): List<MovementEntity>
     @Query("SELECT COUNT(*) FROM stock_movements WHERE productId=:id") suspend fun movementCount(id: String): Int
     @Insert suspend fun insertProduct(value: ProductEntity)
     @Update suspend fun updateProduct(value: ProductEntity)
@@ -107,7 +111,13 @@ interface CatalogDao {
     @Update suspend fun updateCategory(value: CategoryEntity)
     @Insert suspend fun insertBalance(value: BalanceEntity)
     @Update suspend fun updateBalance(value: BalanceEntity)
-    @Insert suspend fun movement(value: MovementEntity)
+    @Insert suspend fun insertMovement(value: MovementEntity)
+    @Transaction suspend fun movement(value: MovementEntity) {
+        val p=checkNotNull(product(value.productId)) {"Не найден товар движения"}
+        require(p.type=="simple" && (value.unit==null || value.unit==p.unit)) {"Единица движения не совпадает с базовой"}
+        insertMovement(value.copy(unit=p.unit))
+    }
+    @Query("SELECT * FROM stock_movements ORDER BY createdAt,id") suspend fun movements(): List<MovementEntity>
     @Insert suspend fun result(value: ResultEntity)
     @Insert suspend fun audit(value: AuditEntity)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun draft(value: DraftEntity)
@@ -119,7 +129,7 @@ interface CatalogDao {
 }
 
 @Database(entities = [CategoryEntity::class, ProductEntity::class, BalanceEntity::class, MovementEntity::class,
-    ResultEntity::class, AuditEntity::class, DraftEntity::class, ConfigEntity::class, RecipeComponentEntity::class, ModifierGroupEntity::class, ModifierOptionEntity::class, WorkspaceDocument::class, ShiftEntity::class, ShiftRegisterEntity::class, ReceiptEntity::class, ReceiptProductEntity::class, RefundEntity::class], version = 8, exportSchema = true)
+    ResultEntity::class, AuditEntity::class, DraftEntity::class, ConfigEntity::class, RecipeComponentEntity::class, ModifierGroupEntity::class, ModifierOptionEntity::class, WorkspaceDocument::class, ShiftEntity::class, ShiftRegisterEntity::class, ReceiptEntity::class, ReceiptProductEntity::class, RefundEntity::class], version = 9, exportSchema = true)
 abstract class CatalogDatabase : RoomDatabase() {
     abstract fun catalog(): CatalogDao
     abstract fun workspace(): WorkspaceDao
@@ -187,10 +197,16 @@ abstract class CatalogDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_refunds_shiftId ON refunds(shiftId)")
             }
         }
+        val MIGRATION_8_9 = object : Migration(8,9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // A missing historical unit is unknown, never backfilled from the mutable catalogue.
+                db.execSQL("ALTER TABLE stock_movements ADD COLUMN unit TEXT")
+            }
+        }
         @Volatile private var instance: CatalogDatabase? = null
         fun get(context: Context): CatalogDatabase = instance ?: synchronized(this) {
-            instance ?: Room.databaseBuilder(context.applicationContext, CatalogDatabase::class.java, "mpos.db")
-                .addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4,MIGRATION_4_5,MIGRATION_5_6,MIGRATION_6_7,MIGRATION_7_8).build().also { instance = it }
+            instance ?: Room.databaseBuilder(context.applicationContext, CatalogDatabase::class.java, com.mendelev.mpos.data.recovery.AppDataset.paths(context).database.absolutePath)
+                .addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4,MIGRATION_4_5,MIGRATION_5_6,MIGRATION_6_7,MIGRATION_7_8,MIGRATION_8_9).build().also { instance = it }
         }
     }
 }

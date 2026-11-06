@@ -13,9 +13,9 @@ object CartRevalidator {
         if(cart.lines.isEmpty()) throw CatalogFailure("empty","Заказ пуст")
         val lines=cart.lines.map { old ->
             val p=products.find {it.id==old.productId} ?: throw CatalogFailure("reference","Товар ${old.name} больше не существует")
-            if(p.unit!=old.unit) throw CatalogFailure("unit","Изменилась единица товара ${old.name}. Удалите позицию и добавьте заново")
+            if(p.unit!=old.unit || p.sellingBasis!=old.sellingBasis) throw CatalogFailure("unit","Изменилась единица товара ${old.name}. Удалите позицию и добавьте заново")
             val manual=if(p.price.toBigDecimal().signum()==0) {
-                if(!old.manual) throw CatalogFailure("price","Для ${p.name} теперь требуется ручная цена. Добавьте позицию заново")
+                if(old.manual!=true) throw CatalogFailure("price","Для ${p.name} теперь требуется ручная цена. Добавьте позицию заново")
                 old.basePrice
             } else null
             CartEngine.configure(CartAction.Add(p.id,p.revision,old.options.map {it.id}.toSet(),manual,old.id),products,graph)

@@ -81,13 +81,34 @@ def wait_text(pattern, timeout=75, click=False, preferred_resource_id=None):
     raise AssertionError(f"UI control not found: {preferred_resource_id or pattern}")
 
 
+def home_slot_matches(nodes, label, slot):
+    """Read-only accessible tile identity and position must agree on the same visible app node."""
+    expected = f"{label} · Место {slot}"
+    for node in nodes:
+        bounds = list(map(int, re.findall(r"-?\d+", node.get("bounds", ""))))
+        if (node.get("package") == PACKAGE and (node.get("content-desc", "") == expected or node.get("content-desc", "").startswith(expected + ",")
+                    or node.get("content-desc", "").startswith(expected + "\n"))
+                and len(bounds) == 4 and bounds[2] > bounds[0] and bounds[3] > bounds[1]):
+            return True
+    return False
+
+
+def wait_home_slot(label, slot, timeout=75):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if home_slot_matches(ui_nodes(), label, slot):
+            return
+        time.sleep(1)
+    raise AssertionError(f"Home tile or preserved slot missing: {label}, slot {slot}")
+
+
 def wait_navigation(route, timeout=75, click=True):
     # Stable IDs for the new header, exact legacy labels for APKs published before NAV01.
     legacy = {"workspace": r"^(Рабочая зона|M POS)$", "shift": r"^Смена$", "settings": r"^Настройки$"}
     return wait_text(legacy[route], timeout=timeout, click=click, preferred_resource_id="topNav-"+route)
 
 
-def scroll_catalog_to_product(name):
+def scroll_catalog_to_product(name, expected_stock=None):
     """A new seed can push the preserved row below the fold; absence must still fail."""
     pattern = "^" + re.escape(name) + "$"
     wait_text("^Товары$")
@@ -95,7 +116,11 @@ def scroll_catalog_to_product(name):
         nodes = ui_nodes()
         for node in nodes:
             if re.search(pattern, node.get("text", "")):
-                return node.get("text") or node.get("content-desc")
+                # A clipped title can be visible while the stock in its row is still below the fold.
+                # Require the expected stock in this product's own clickable row, not another SKU.
+                rows = [row for row in nodes if (row.get("resource-id", "").startswith("catalogProduct:") or row.get("clickable") == "true") and row.get("resource-id") != "catalogProducts" and node in list(row.iter("node"))]
+                if expected_stock is None or any(any(child.get("text") == expected_stock for child in row.iter("node")) for row in rows):
+                    return node.get("text") or node.get("content-desc")
         lists = [n for n in nodes if n.get("package") == PACKAGE and n.get("scrollable") == "true" and n.get("resource-id") == "catalogProducts"]
         assert len(lists) == 1, "Expected one catalog list before scrolling to preserved product"
         x1, y1, x2, y2 = map(int, re.findall(r"\d+", lists[0].get("bounds", "")))
@@ -117,7 +142,13 @@ def launch(fixture=True):
         try:
             # Do not use am -W: API 28 can retain a waiter for an Activity killed by package replacement.
             adb(*args, timeout=15)
+            if any(n.get("resource-id")=="updatesWindow" for n in ui_nodes()):
+                wait_text("^Обновления приложения$",timeout=12)
+                return
             wait_navigation("settings", timeout=12)
+            entry=wait_text("^(Обновления приложения|Проверить обновления приложения)$",timeout=12)
+            if entry=="Проверить обновления приложения":
+                wait_text("^Проверить обновления приложения$",timeout=12,click=True,preferred_resource_id="settingsUpdatesInfo")
             wait_text("^Обновления приложения$", timeout=12)
             return
         except (AssertionError, subprocess.TimeoutExpired):
@@ -208,7 +239,7 @@ def main():
                 # UTP removes apps after connected tests. Capture scale evidence in an explicit
                 # instrumentation lifetime, just like the existing persistent update seed.
                 scale = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.WorkspaceScaleUiTest",
-                            PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
+                            PACKAGE + ".test/com.mendelev.mpos.MposTestRunner", timeout=180)
                 assert "OK (2 tests)" in scale and "FAILURES" not in scale, scale[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
@@ -223,16 +254,17 @@ def main():
                 adb("uninstall", PACKAGE)
                 adb("install", str(base))
                 adb("install", "-r", str(test_apk))
-                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest",
-                                PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
-                assert "OK (3 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
+                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest,com.mendelev.mpos.SupplierUpgradeTest,com.mendelev.mpos.PurchaseUpgradeTest,com.mendelev.mpos.PurchaseOrderUpgradeTest,com.mendelev.mpos.PurchaseOrderMutationUpgradeTest,com.mendelev.mpos.ReceivingUpgradeTest,com.mendelev.mpos.ReceivingPostingUpgradeTest,com.mendelev.mpos.StandaloneReceivingUpgradeTest,com.mendelev.mpos.InventoryUpgradeTest,com.mendelev.mpos.InventoryCountUpgradeTest,com.mendelev.mpos.InventoryClosingUpgradeTest,com.mendelev.mpos.StockDocumentUpgradeTest,com.mendelev.mpos.ShiftCashUpgradeTest,com.mendelev.mpos.EmployeeUpgradeTest",
+                                PACKAGE + ".test/com.mendelev.mpos.MposTestRunner", timeout=60)
+                assert "OK (16 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
                 # Recover only the already-supported, exact Quickstep infrastructure ANR before UI captures.
                 # Unknown/system/M-POS dialogs are not dismissed by wait_text.
                 adb("shell", "am", "start", "-W", "-n", PACKAGE + "/com.mendelev.mpos.MainActivity")
                 wait_navigation("workspace", click=False)
-                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
-                             PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=180)
-                assert "OK (8 tests)" in result and "FAILURES" not in result, result[-4000:]
+                # Whole 28-scenario batch budget; retain per-test waits and exact success count below.
+                result = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SettingsVisualUiTest,com.mendelev.mpos.NativeActivationUiTest,com.mendelev.mpos.NativeRecoveryUiTest,com.mendelev.mpos.BackupUiTest,com.mendelev.mpos.ReportUiTest,com.mendelev.mpos.EmployeeUiTest,com.mendelev.mpos.AdminRevocationUiTest,com.mendelev.mpos.AdminUiTest,com.mendelev.mpos.RefundUiTest,com.mendelev.mpos.SplitSaleUiTest,com.mendelev.mpos.SaleUiTest,com.mendelev.mpos.CatalogExtrasUiTest,com.mendelev.mpos.LaunchTest,com.mendelev.mpos.ParkedOrdersUiTest,com.mendelev.mpos.SupplierUiTest,com.mendelev.mpos.PurchaseUiTest,com.mendelev.mpos.PurchaseOrderUiTest,com.mendelev.mpos.PurchaseOrderMutationUiTest,com.mendelev.mpos.ReceivingUiTest,com.mendelev.mpos.ReceivingPostingUiTest,com.mendelev.mpos.StandaloneReceivingUiTest,com.mendelev.mpos.InventoryUiTest,com.mendelev.mpos.StockUiTest,com.mendelev.mpos.WorkspaceUiTest,com.mendelev.mpos.ShiftUiTest",
+                             PACKAGE + ".test/com.mendelev.mpos.MposTestRunner", timeout=360)
+                assert "OK (28 tests)" in result and "FAILURES" not in result, result[-4000:]
                 reports = ROOT / "app/build/reports/update-e2e"
                 reports.mkdir(parents=True, exist_ok=True)
                 expected_shift = adb("shell", "run-as", PACKAGE, "cat", "files/qa/shiftId.txt").strip()
@@ -249,7 +281,7 @@ def main():
                 assert expected_workspace_line, "UI setup must create a real persistent current cart"
                 expected_parked_label = adb("shell", "run-as", PACKAGE, "cat", "files/qa/parkedLabel.txt").strip()
                 assert expected_parked_label, "UI setup must create a real parked order"
-                for name in ("refund-confirm", "refund-result", "refund-returned-receipt", "split-confirm", "split-progress", "sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders"):
+                for name in ("native-restore-confirm", "native-protection", "native-backup", "backup-preview", "settings-backup", "analytics-warehouse", "analytics-shifts", "analytics-groups", "analytics-period", "analytics-locked", "analytics-narrow", "admin-revoked-catalog", "employee-card", "employee-list", "employee-shift-select", "settings-home", "settings-updates", "settings-planned", "settings-admin", "admin-login", "admin-session", "refund-confirm", "refund-result", "refund-returned-receipt", "split-confirm", "split-progress", "sale-preview", "sale-receipt", "sale-history", "catalog", "product-editor", "shared-dialog", "launcher-icon", "extras-editor", "category-editor", "workspace", "workspace-folder", "workspace-configuration", "workspace-home", "order-details", "parked-swap", "parked-orders", "supplier-card", "supplier-list", "purchase-draft", "purchase-order", "purchase-history", "purchase-order-edit", "purchase-order-edited", "purchase-order-cancelled", "receiving-draft", "receiving-preview", "receiving-post-confirm", "receiving-posted", "standalone-draft", "standalone-posted", "inventory-start", "inventory-stale", "inventory-fix-confirm", "inventory-fixed", "inventory-summary", "inventory-completed", "inventory-cancel-confirm", "inventory-cancelled", "stock-list", "stock-history", "stock-document", "shift-cash-confirm", "shift-cash-history"):
                     captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
                     assert captured.stdout.startswith(b"\x89PNG"), "Invalid screenshot artifact"
                     (reports / f"{name}.png").write_bytes(captured.stdout)
@@ -294,14 +326,19 @@ def main():
             launch(fixture=False)
             wait_text("Установлена версия " + re.escape(manifest["versionName"]))
             wait_text("Приложение успешно обновлено")
+            if not production:
+                wait_text("^Режим кассира$")
+                print("ADMIN SESSION UPDATE PASSED: new process starts without administrative access", flush=True)
             if production:
                 assert wait_text("^Последняя проверка:") == checked
             reports = ROOT / "app/build/reports/update-e2e"
             reports.mkdir(parents=True, exist_ok=True)
             (reports / "updated-settings.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20).stdout)
             if not production:
+                if any(n.get("resource-id")=="updatesBack" for n in ui_nodes()):
+                    wait_text("^К настройкам$",click=True,preferred_resource_id="updatesBack")
                 wait_text("^Назад$", click=True)
-                scroll_catalog_to_product(expected_product)
+                scroll_catalog_to_product(expected_product, expected_stock="8 шт")
                 wait_text("^8 шт$")
                 (reports / "updated-catalog.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("CATALOG UPDATE PASSED: Room product and stock=8 survived actual package replacement", flush=True)
@@ -319,8 +356,7 @@ def main():
                 print("PARKED UPDATE PASSED: delivery order label, type and total5 survived package replacement", flush=True)
                 adb("shell", "input", "keyevent", "KEYCODE_BACK")
                 wait_text(re.escape(expected_home))
-                wait_text("^Раскладка$", click=True, preferred_resource_id="workspaceEdit")
-                wait_text(r"(?:^|\n)Место 8(?:$|\n)")
+                wait_home_slot(expected_home, 8)
                 (reports / "updated-home.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("HOME UPDATE PASSED: custom product tile and slot8 survived package replacement", flush=True)
                 wait_navigation("shift")
@@ -330,10 +366,22 @@ def main():
                 (reports / "updated-shift.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("SHIFT UPDATE PASSED: active shift identity and opening140 BYN survived package replacement", flush=True)
                 adb("install", "-r", str(test_apk))
-                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest",
-                                "-e", "saleUpgradeMode", "verify", PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner", timeout=60)
-                assert "OK (3 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
+                financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest,com.mendelev.mpos.SupplierUpgradeTest,com.mendelev.mpos.PurchaseUpgradeTest,com.mendelev.mpos.PurchaseOrderUpgradeTest,com.mendelev.mpos.PurchaseOrderMutationUpgradeTest,com.mendelev.mpos.ReceivingUpgradeTest,com.mendelev.mpos.ReceivingPostingUpgradeTest,com.mendelev.mpos.StandaloneReceivingUpgradeTest,com.mendelev.mpos.InventoryUpgradeTest,com.mendelev.mpos.InventoryCountUpgradeTest,com.mendelev.mpos.InventoryClosingUpgradeTest,com.mendelev.mpos.StockDocumentUpgradeTest,com.mendelev.mpos.ShiftCashUpgradeTest,com.mendelev.mpos.EmployeeUpgradeTest",
+                                "-e", "saleUpgradeMode", "verify", PACKAGE + ".test/com.mendelev.mpos.MposTestRunner", timeout=60)
+                assert "OK (16 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
                 adb("uninstall", PACKAGE + ".test")
+                print("EMPLOYEE UPDATE PASSED: directory roles/contact/revisions/tombstones, immutable historical cashier, current shift and original command replays preserved")
+                print("SHIFT CASH UPDATE PASSED: manual cash journal, closed expected/count/difference, carry and original command replays preserved without duplication")
+                print("STOCK DOCUMENT UPDATE PASSED: sale/refund/receiving/inventory movement links resolve immutable snapshots without writes")
+                print("INVENTORY CLOSING UPDATE PASSED: completed/cancelled history, loss/date/actor/raw/fixed and original close replay retained without stock writes")
+                print("INVENTORY COUNT UPDATE PASSED: fixed exact movement/history/replay retained; unfixed raw count preserved with expired process authority")
+                print("INVENTORY START UPDATE PASSED: configuration, active scope and original replay retained without stock writes")
+                print("STANDALONE RECEIVING UPDATE PASSED: independent invoice/slot, posted stock/cost, legacy history and original replays survived APK replacement", flush=True)
+                print("RECEIVING POST UPDATE PASSED: immutable invoice, stock/cost, terminal order, tombstone and command replay survived APK replacement", flush=True)
+                print("RECEIVING DRAFT UPDATE PASSED: invoice facts, baselines, preview and replay preserved without stock or order posting", flush=True)
+                print("PURCHASE ORDER MUTATION UPDATE PASSED: previous request history, cancellation actor/status, no stock writes and old edit replay preserved", flush=True)
+                print("PURCHASE ORDER UPDATE PASSED: pending snapshots, raw quantities, cleared draft and replay survived APK replacement", flush=True)
+                print("SUPPLIER UPDATE PASSED: registry, product links, tombstones, audit and replay survived APK replacement", flush=True)
                 print("SPLIT UPDATE PASSED: dedicated partial progress2, stable IDs, unpaid tender and replay survived APK replacement")
                 print("REFUND UPDATE PASSED: dedicated full delivery refund, exact historical restock, closed shift and replay survived APK replacement")
                 print("SALE UPDATE PASSED: dedicated Room receipt snapshot, ledger, result, shift cash and cleared draft survived APK replacement; replay did not duplicate sale", flush=True)

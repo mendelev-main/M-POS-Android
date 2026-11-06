@@ -29,7 +29,7 @@ class RefundRepository(private val db: CatalogDatabase,private val clock: Clock=
         if(db.refunds().forReceipt(receiptId)!=null) throw CatalogFailure("refund","Чек уже возвращён")
         val state=ShiftRepository(db).snapshot()
         val shift=state.active ?: throw CatalogFailure("shift","Для возврата откройте смену")
-        if(actorId!=state.ownerId || actorId!=shift.actorId) throw CatalogFailure("owner","Недопустимый оператор возврата")
+        if(actorId!=shift.actorId) throw CatalogFailure("owner","Недопустимый оператор возврата")
         SplitPaymentRepository(db).requireNone()
         if(state.revision==Long.MAX_VALUE) conflict()
         val saved=ReceiptCodec.decode(receipt.payload)

@@ -24,14 +24,14 @@ object WorkspaceCodec {
     fun layout(raw: String): List<LayoutItem> = root(raw).getJSONArray("items").list {
         LayoutItem(it.getString("type"),it.getString("id"),it.getString("categoryId"),it.getString("folderId"),it.getString("name"))
     }
-    fun cartVersion(raw: String)=root(raw,setOf(1,2)).getInt("version")
-    fun cart(cart: CurrentCart): String=JSONObject().put("version",2).put("sessionId",cart.sessionId).put("createdAt",cart.createdAt)
+    fun cartVersion(raw: String)=root(raw,setOf(1,2,3)).getInt("version")
+    fun cart(cart: CurrentCart): String=JSONObject().put("version",3).put("sessionId",cart.sessionId).put("createdAt",cart.createdAt)
         .put("details",JSONObject().put("label",cart.details.label).put("type",cart.details.type).put("comment",cart.details.comment)
             .put("address",cart.details.address).put("phone",cart.details.phone))
         .put("lines",objects(cart.lines.map { line ->
-        JSONObject().put("id",line.id).put("productId",line.productId).put("name",line.name).put("basePrice",line.basePrice)
-            .put("manual",line.manual).put("unitPrice",line.unitPrice).put("quantity",line.quantity).put("unit",line.unit)
-            .put("options",objects(line.options.map { JSONObject().put("id",it.id).put("name",it.name).put("quantity",it.quantity).put("priceDelta",it.priceDelta) }))
+        JSONObject().put("id",line.id).put("productId",line.productId).put("name",line.name).put("basePrice",line.basePrice ?: JSONObject.NULL)
+            .put("manual",line.manual ?: JSONObject.NULL).put("unitPrice",line.unitPrice).put("quantity",line.quantity).put("unit",line.unit)
+            .put("sellingBasis",line.sellingBasis).put("options",objects(line.options.map { JSONObject().put("id",it.id).put("name",it.name).put("quantity",it.quantity).put("priceDelta",it.priceDelta) }))
             .put("requests",objects(line.requests.map { JSONObject().put("id",it.productId).put("quantity",CatalogRules.canonical(it.quantity)).put("unit",it.unit.name) }))
             .put("references",objects(line.references.toSortedMap().map { (id,rev) -> JSONObject().put("id",id).put("revision",rev) }))
     })).put("graph",objects(cart.graph.map { p ->
@@ -45,7 +45,7 @@ object WorkspaceCodec {
         j
     })).toString()
     fun cart(raw: String): CurrentCart {
-        val j=root(raw,setOf(1,2))
+        val j=root(raw,setOf(1,2,3))
         val graph=j.getJSONArray("graph").list { p ->
             val id=p.getString("id");val unit=QuantityUnit.valueOf(p.getString("unit"))
             when(p.getString("type")) {
@@ -57,12 +57,14 @@ object WorkspaceCodec {
             }
         }
         return CurrentCart(j.getJSONArray("lines").list { l ->
-            CartLine(l.getString("id"),l.getString("productId"),l.getString("name"),l.getString("basePrice"),l.getBoolean("manual"),
+            CartLine(l.getString("id"),l.getString("productId"),l.getString("name"),if(j.getInt("version")==3 && l.isNull("basePrice")) null else l.getString("basePrice"),if(j.getInt("version")==3 && l.isNull("manual")) null else l.getBoolean("manual"),
                 l.getString("unitPrice"),l.getString("quantity"),l.getString("unit"),l.getJSONArray("options").list {
                     ChosenOption(it.getString("id"),it.getString("name"),it.getString("quantity"),it.getString("priceDelta"))
                 },l.getJSONArray("requests").list {
                     RecipeRequest(it.getString("id"),it.getString("quantity").toBigDecimal(),QuantityUnit.valueOf(it.getString("unit")))
-                },l.getJSONArray("references").list { it.getString("id") to it.getLong("revision") }.toMap())
+                },l.getJSONArray("references").list { it.getString("id") to it.getLong("revision") }.toMap(),if(j.getInt("version")<3) "stock-unit" else l.getString("sellingBasis").also {
+                    require(it in setOf("stock-unit","recipe-batch"))
+                })
         },graph,sessionId=if(j.getInt("version")==1) "" else j.getString("sessionId").also {
             if(it.isBlank() || it.length>100) throw CatalogFailure("workspace","Не найден владелец заказа")
         },createdAt=if(j.getInt("version")==1) 0 else j.getLong("createdAt"),details=if(j.getInt("version")==1) OrderDetails() else j.getJSONObject("details").let {

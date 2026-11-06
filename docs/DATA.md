@@ -39,3 +39,55 @@ Native решения для первоначального каталога и 
 
 
 03c.2a Room8 adds immutable refunds, unique original receipt/command and foreign keys to receipt/refund shift. Refund snapshot1 retains original receipt, exact restored quantities/balance revisions and cash outcome. Active cash includes deliveryCashCredit−refund.cash in refund shift only; original sale postings remain. Full refund transaction advances register revision and each restored balance revision; no generic duplicate withdrawal. Evidence/scope: REFUND-03C/build-log.
+
+04a.1: Supplier registry payload1 в Room workspace_documents namespace `suppliers`, SQLschema8 без изменений; supplier revisions/tombstones/simple refs + operation_result/audit в одной transaction. Формат и guard каталога — [SUPPLIERS-04A](SUPPLIERS-04A.md). Registry включать в будущий backup scope, не считать его временным workspace cache.
+
+04a.2: persistent `purchase-draft` payload1 в workspace_documents/Room8: raw decimal fields + supplier/product snapshots + CAS document revision. Save/Clear+result+audit атомарны, stock/cost/defaults не меняются; [контракт](PURCHASE-DRAFT-04A.md). Включать в будущий backup scope; не cache.
+
+04a.3: persistent `purchase-orders` payload1/Room8: immutable request snapshots, raw packaging +expected base/null, order/requestVersion1/pending; append+catalog purchase defaults revisions+draft clear+result/audit atomарны. Stock/cost не меняются. Historical product/supplier deletion guards и [контракт](PURCHASE-ORDERS-04A.md); включать в будущий backup.
+
+04a.4: `purchase-orders` payload2 reads payload1/SQLschema8 unchanged. Separate order revision/requestVersion, previous request snapshots and cancelled actor/time; mutation+result+audit atomic, independent purchase-draft CAS untouched. Guards include historical removed lines. [Contract](PURCHASE-ORDER-CHANGES-04A.md).
+
+04a.5: persistent `receiving-drafts` payload1/Room8: per-order draft revision/tombstone, order snapshot +raw invoice facts +product/stock/cost baseline. Registry/result/audit atomic; Save allows stale economic baseline, preview refuses it until explicit rebase. No stock/cost/order writes. [Contract](RECEIVING-DRAFT-04A.md); include in future backup.
+
+04a.6: persistent `receivings` payload1/Room8 stores immutable invoice/order/economic baseline and posted changes/totalMinor/actor/time/command. Orders payload3 reads1/2, terminal received link/actor/time; receiving draft tombstone CAS advances atomically with product cost/revisions, tracked stock/ledger, result/audit. Policy-v1 final cost12 HALF_EVEN, positive economic underflow refused; line totals exact minor units. [Contract](RECEIVING-POST-04A.md). No cash movements.
+
+Уточнение владельца2026-10-27: новая receiving cost policy2 —2fraction HALF_UP (3шт/10BYN→3.33; invoice total10.00 exact). Приходы payload2 reads1, per-record policy; прежние документы/result/replay/остатки неизменны. Quantity precision и другие операции не меняются. Подробности: RECEIVING-POST-04A.md, актуальная policy2 supersedes policy1 для новых приходов.
+
+04a.7a: receiving-drafts payload2 reads1; ReceivingDraft.order nullable +optional ReceivingSupplier snapshot, reserved standalone slot `receiving:standalone`. Existing order fingerprints preserved; immutable history may contain many standalone receipts (unique invoice IDs), order uniqueness only for order refs. Existing receivings payload2 supports nullable order in nested invoice version2; no SQL migration. Reference guards cover standalone draft/history. See RECEIVING-STANDALONE-04A.md.
+
+04a.7b: владелец подтвердил line quantity×unitPrice HALF_UP2, затем sum rounded lines (1.5×2.35→3.53; две строки7.06). Receiving draft payload3 reads1/2, priceMode+unitPrice raw; единственный источник суммы зависит от режима. Старые total fingerprints/replay неизменны, price fingerprint содержит режим/цену. Контракт RECEIVING-STANDALONE-04A.md.
+
+04b.1: inventory payload1/SQLschema8, config+optional active draft scope/id/type/start timestamp/scheduled calendar date/product snapshots. CAS/result/audit atomic; old payload absence means disabled config. Snapshot on start informational, no physical count authority. Include durable document in future backup; no reset on corrupt/unknown version. Product references protected; stock/cost/cash unchanged. See INVENTORY-04B.md.
+
+04b.2: inventory payload2 reads1, counts raw+stock baseline/process generation, immutable fixed product/actual/delta/actor/time/command/movement/stockRevisionAfter. Count3writes;Fix5writes, zero included, cost/cash unchanged. Tracking off/on now increases balance revision even when product-card stockEdited=false; no stock delta for tracking toggle. Legacy Configure/Start fingerprints retained. See INVENTORY-04B.md.
+
+Inventory close04b.3: history payload3 reads1/2, loss policy1=negative delta × cost-at-Fix rounded HALF_UP2 per row then sum cents, surplus separate/unfixed excluded. Overflow=null/unavailable, never0. Close only persists history/marker/tombstone/result/audit, no stock/cost/cash writes. Scheduled marker actual local completion date; cancel/adhoc unchanged. See INVENTORY-04B.md.
+
+04c.2: StockPeriod is transient UI state, inclusive local dates mapped to [start,next-day-start) using snapshot Clock.zone (DST safe); current balances unchanged by filtering. StockDocumentReader follows existing reason+source links to historical receipt/refund/receiving/inventory snapshots and verifies product/delta/command/time (inventory movementId too). Read-only, no new payload/schema. See STOCK-READ-04C.md, SD01–SD05.
+
+05a: immutable manual cash journal `shift_cash` workspace payload1, SQLschema8 unchanged. Missing document means empty legacy journal; corrupt/unknown payload is refused without reset. Deposit/withdrawal stores exact positive minor units, optional normalized note, actor/shift/command/time and validated before/after. InstallationGate + Room commits journal/register revision/result/audit atomically. Current cash aggregates opening, finalized sales/refunds/delivery and manual movements exactly once; closed expected/count/difference remain stored, next opening carries counted cash without replaying the old journal. Original command replay returns its original movement even after closing/updating. Include this document in future backup. Contract: [SHIFT-CASH-05A](SHIFT-CASH-05A.md).
+
+05b.1: admin session/attempt limiter process-memory only, not Room/workspace/preferences/SavedState/backup. Salted embedded PBKDF2 verifier is APK configuration chosen explicitly by owner, not plaintext/device credential. Admin authorization spans protected Room commit and serializes logout; operational shifts/receipts/cash actors remain unchanged until employee-directory block. SQLschema8 and durable payloads unchanged. See STAFF-ACCESS-05B.md.
+
+05b.2: `employees` workspace payload1/SQLschema8, stable identity/revision/tombstone + operation_result/audit одной admin transaction. Отсутствие документа означает пустой справочник, legacy owner автоматически не создаётся. Новые смены требуют employee; исторические shifts.actorId/actorName неизменны. Все изменения кассира активной смены запрещены. [Контракт](EMPLOYEES-05B2.md). Registry входит в будущий backup scope, не временный cache.
+
+
+## Историческая себестоимость отчёта05d.1
+
+Контракт [REPORT-GROUPS-05D.md](REPORT-GROUPS-05D.md): сохранённые recipe graph и requests оплаченной строки → точная рациональная стоимость с модификаторами/noStockTracking → HALF_UP до копейки один раз на строку → сумма. Не использовать округлённый до12 знаков складской preview как промежуточное денежное значение. Две строки по0,005BYN дают0,02BYN. Текущие product cost/category/employee name не участвуют. Возврат полностью отменяет историческую стоимость и прибыль исходных строк в день возврата; группы сотрудников используют автора продажи. Это read-only проекция, не изменение стоимости товара/накладной/движений.
+
+
+## Сводка смен и сверка ledger05d.2
+
+[RS01–RS05](SHIFT-REPORTS-05D2.md): календарная сводка продаж и целая смена — разные разрезы. Смены выбираются по пересечению времени открытия/закрытия с диапазоном; суммы строки охватывают всю смену. Refund финансово относится к shiftId фактической выдачи; группировка продавцов05d.1 использует автора исходной продажи. Закрытый expected/count/difference остаётся сохранённым, дополнительно рассчитывается cash по всем финансовым событиям и ручному журналу; несоответствие показывается без записи. No partial-payment income до финализации.
+
+Сверка sale/refund stock использует сохранённый consumption (и stock возврата), точный signed decimal delta, source/reason/hashed command/time. Правильная ссылка с неверным временем также проверяется; orphan финансовые движения периода видимы. Это не восстановление балансов из текущей рецептуры и не автоматическое исправление. Roomschema8 и payload formats не меняются; новые DAO запросы только читают существующие таблицы.
+
+
+## Schema9: единица складского движения
+
+05d.3a добавляет nullable `stock_movements.unit`. Запись через CatalogDao.movement сохраняет базовую unit simple-товара в той же транзакции, отвергая переданную несовместимую unit. Все production writers используют эту точку; количество/source/command/reason/replay неизменны. Migration8→9 только ALTER ADD COLUMN unit TEXT, без UPDATE/backfill. Старые null не означают piece. Legacy source документы могут дать unit в read projection после проверки связи, без записи в ledger. См. [WAREHOUSE-REPORTS-05D3](WAREHOUSE-REPORTS-05D3.md).
+
+
+07.3b native restore: версии Room9 и native archive1 прежние. Локация working DB+photos выбирается immutable generation selector, legacy path поддержан без копирования при обычном APK update. Restore/pending/descriptor metadata вне business tables; archive/source financial payloads не пересчитываются. [Протокол и ограничения](NATIVE-ACTIVATION-07-3B.md). Приложение/сертификат/preferences/admin session не берутся из backup.

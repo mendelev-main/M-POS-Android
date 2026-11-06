@@ -35,12 +35,14 @@ data class MposTopNavigation(
     val shiftUnavailable: Boolean = false,
     val shiftPending: Boolean = false,
     val shiftName: String = "Локальный владелец",
+    val inventoryReminder: Boolean=false,
+    val adminActive: Boolean=false,
     val navigate: (String) -> Unit,
 )
 val LocalMposTopNavigation = staticCompositionLocalOf<MposTopNavigation?> { null }
 private val destinations = listOf(
     "purchaseOrders" to "Заказы", "receiving" to "Приёмка", "history" to "Чеки",
-    "analytics" to "Аналитика", "bookings" to "Бронирования",
+    "analytics" to "Аналитика",
 )
 
 @Composable
@@ -61,8 +63,10 @@ fun MposTopBar(navigation: MposTopNavigation, enabled: Boolean = true) {
                 destinations.forEach { (route, label) ->
                     TopItem(label, route, navigation, allowed, compact=compact)
                 }
+                if(navigation.inventoryReminder) TopItem("Инвентаризация","inventory",navigation,allowed,selected=navigation.route in setOf("inventory","inventoryWork","inventoryHistory"),compact=compact)
             }
             Spacer(Modifier.weight(1f))
+            if(navigation.adminActive) TopItem("Администрирование активно","settings",navigation,allowed,compact=compact,testId="topNav-administration")
             TopItem("События", "events", navigation, allowed, compact=compact, icon="bell", selected=false)
             val shiftLabel = when {
                 navigation.shiftLoading -> "Загрузка смены"
@@ -85,13 +89,13 @@ fun MposTopBar(navigation: MposTopNavigation, enabled: Boolean = true) {
 @Composable
 private fun TopItem(label: String, route: String, nav: MposTopNavigation, enabled: Boolean,
     selected: Boolean = nav.route==route, compact: Boolean=false, bold: Boolean=false,
-    icon: String?=null, shift: Boolean=false) {
+    icon: String?=null, shift: Boolean=false, testId: String="topNav-$route") {
     val ink=if(selected || shift) Color.White else Color.White.copy(alpha=.62f)
     // 44dp interaction row, 36dp capsule at normal text scale; source header is 68dp tall.
     Box(Modifier.heightIn(min=44.dp).clip(CircleShape)
         .clickable(enabled=enabled, role=Role.Tab) {nav.navigate(route)}
         .semantics { this.selected=selected }
-        .testTag("topNav-$route"), contentAlignment=Alignment.Center) {
+        .testTag(testId), contentAlignment=Alignment.Center) {
         Row(Modifier.clip(CircleShape)
             .background(Color.White.copy(alpha=if(selected) .14f else if(shift) .08f else 0f))
             .padding(horizontal=if(compact) (if(shift) 10.dp else 11.dp) else 14.dp,

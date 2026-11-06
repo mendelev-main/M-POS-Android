@@ -96,14 +96,13 @@ jobs:
           arch: x86_64
           profile: pixel_c
           avd-name: mpos-ci-api36
+          # Current emulator software backend; avoid deprecated swiftshader_indirect default.
+          emulator-options: -no-window -gpu software -no-snapshot -noaudio -no-boot-anim
           ram-size: 3072M
-          cores: 2
+          cores: 4
           pre-emulator-launch-script: python3 scripts/ci/configure-emulator.py --avd mpos-ci-api36
           disable-animations: true
-          script: |
-            set -e
-            ./gradlew --no-daemon connectedDebugAndroidTest
-            python3 scripts/ci/update-e2e.py
+          script: bash scripts/ci/android-emulator-checks.sh
       - name: UI reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -111,7 +110,9 @@ jobs:
           name: android-ui-reports-api-${{ matrix.api }}
           path: |
             app/build/reports/androidTests/
+            app/build/reports/emulator-diagnostics/
             app/build/reports/update-e2e/
+            app/build/reports/native-restore-e2e/
           if-no-files-found: warn
           retention-days: 14
 

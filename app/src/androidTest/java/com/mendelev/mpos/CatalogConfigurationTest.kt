@@ -32,10 +32,13 @@ class CatalogConfigurationTest {
                 noStockTracking=true,allowNegativeStock=true)
             repo.saveProduct(metadata);repo.saveProduct(metadata)
             assertEquals(1,repo.dao.movementCount("flour"));assertEquals("1",repo.dao.balance("flour")!!.quantity)
-            val negative=metadata.copy(commandId="negative",expectedRevision=2,stock="-1",stockEdited=true)
+            assertEquals(2L,repo.dao.balance("flour")!!.revision) // tracking toggle invalidates earlier physical counts
+            failure("conflict") {repo.saveProduct(metadata.copy(commandId="pre-toggle-baseline",expectedRevision=2,stock="-1",stockEdited=true))}
+            val negative=metadata.copy(commandId="negative",expectedRevision=2,expectedStockRevision=2,stock="-1",stockEdited=true)
             repo.saveProduct(negative)
             assertEquals("-1",repo.dao.balance("flour")!!.quantity)
-            repo.saveProduct(negative.copy(commandId="disable",expectedRevision=3,expectedStockRevision=2,stockEdited=false,allowNegativeStock=false))
+            assertEquals(3L,repo.dao.balance("flour")!!.revision)
+            repo.saveProduct(negative.copy(commandId="disable",expectedRevision=3,expectedStockRevision=3,stockEdited=false,allowNegativeStock=false))
             assertEquals("-1",repo.dao.balance("flour")!!.quantity)
             failure("conflict") { repo.saveProduct(negative.copy(commandId="stale",expectedRevision=4,expectedStockRevision=1)) }
             failure("type") { repo.saveProduct(metadata.copy(commandId="unit-change",expectedRevision=4,unit="g",displayUnit="g")) }
@@ -69,7 +72,7 @@ class CatalogConfigurationTest {
 
     @Test fun recipeAndExpandedDraftSurviveDiskReopen() = runBlocking {
         val name="recipe-${UUID.randomUUID()}.db"
-        fun open()=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_1_2,CatalogDatabase.MIGRATION_2_3,CatalogDatabase.MIGRATION_3_4,CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7,CatalogDatabase.MIGRATION_7_8).build()
+        fun open()=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_1_2,CatalogDatabase.MIGRATION_2_3,CatalogDatabase.MIGRATION_3_4,CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7,CatalogDatabase.MIGRATION_7_8,CatalogDatabase.MIGRATION_8_9).build()
         var db=open()
         try {
             var repo=CatalogRepository(db);repo.initialize();repo.saveProduct(input("a"))
@@ -110,7 +113,7 @@ class CatalogConfigurationTest {
             legacy.execSQL("INSERT INTO editor_drafts VALUES ('product',?)",arrayOf(oldDraft))
             legacy.version=1
         } finally { legacy.close() }
-        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_1_2,CatalogDatabase.MIGRATION_2_3,CatalogDatabase.MIGRATION_3_4,CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7,CatalogDatabase.MIGRATION_7_8).build()
+        val db=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(CatalogDatabase.MIGRATION_1_2,CatalogDatabase.MIGRATION_2_3,CatalogDatabase.MIGRATION_3_4,CatalogDatabase.MIGRATION_4_5,CatalogDatabase.MIGRATION_5_6,CatalogDatabase.MIGRATION_6_7,CatalogDatabase.MIGRATION_7_8,CatalogDatabase.MIGRATION_8_9).build()
         try {
             val repo=CatalogRepository(db);repo.initialize()
             assertEquals("owner-original",repo.dao.config()!!.ownerId)

@@ -26,7 +26,7 @@ class RefundUpgradeTest {
                 c.saveProduct(ProductInput("ingredient",null,"Ингредиент",null,"1","1","10",null,true,"ingredient",unit="kg"))
                 c.saveProduct(ProductInput("dish",null,"Историческое блюдо",null,"20","0","0",null,false,"dish",type="composite",
                     components=listOf(IngredientInput("ingredient","0.0004","kg"))))
-                val work=WorkspaceRepository(db);work.initialize();val shifts=ShiftRepository(db);shifts.initialize()
+                val work=WorkspaceRepository(db);work.initialize();val shifts=ShiftRepository(db);shifts.initializeCashierFixture()
                 val initial=shifts.snapshot();shifts.open("open",initial.revision,null,initial.ownerId)
                 work.cart(CartAction.Add("dish",1,emptySet(),null,"line"),"add",work.snapshot().cart.sessionId)
                 var w=work.snapshot()

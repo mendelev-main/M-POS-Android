@@ -19,11 +19,19 @@ class TopNavigationUiTest {
             }
             exposed(androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation.rootInActiveWindow)
         }
-        for(route in listOf("purchaseOrders","receiving","analytics","bookings","events")) {
+        for(route in listOf("purchaseOrders","receiving","analytics","events")) {
             compose.onNodeWithTag("topNav-$route").performScrollTo().performClick()
             if(route=="events") compose.onNodeWithTag("topNav-$route").assertIsNotSelected()
             else compose.onNodeWithTag("topNav-$route").assertIsSelected()
-            compose.onNodeWithText("Раздел будет подключён на соответствующем этапе плана. Сейчас доступна навигация; данные и операции этого модуля ещё не реализованы.").assertIsDisplayed()
+            if(route=="purchaseOrders") compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("purchaseNew") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
+            else if(route=="receiving") compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("receivingNew") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
+            else if(route=="analytics") {
+                compose.waitUntil(20_000) {compose.onAllNodesWithTag("reportNet").fetchSemanticsNodes().isNotEmpty()}
+                compose.activityRule.scenario.recreate()
+                compose.onNodeWithTag("topNav-analytics").assertIsSelected()
+                compose.waitUntil(20_000) {compose.onAllNodesWithTag("reportNet").fetchSemanticsNodes().isNotEmpty()}
+            }
+            else compose.onNodeWithText("Раздел будет подключён на соответствующем этапе плана. Сейчас доступна навигация; данные и операции этого модуля ещё не реализованы.").assertIsDisplayed()
         }
         compose.onNodeWithTag("topNav-workspace").performScrollTo().performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceCheckout").fetchSemanticsNodes().isNotEmpty()}
@@ -34,6 +42,12 @@ class TopNavigationUiTest {
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("topNav-history").assertIsSelected()
         compose.onNodeWithTag("topNav-settings").performScrollTo().performClick()
+        compose.onNodeWithTag("topNav-bookings").assertDoesNotExist()
+        compose.onNodeWithTag("settingsStock").performClick()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("stockSearch").fetchSemanticsNodes().isNotEmpty()}
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithTag("stockSearch").assertExists()
+        compose.onNodeWithTag("stockBack").performClick()
         compose.onNodeWithText("Товары").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithText("Добавить товар").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithText("Добавить товар").performClick()

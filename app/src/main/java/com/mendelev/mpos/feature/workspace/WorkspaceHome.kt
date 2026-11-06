@@ -11,8 +11,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
@@ -29,9 +32,10 @@ import com.mendelev.mpos.domain.workspace.*
 @OptIn(ExperimentalLayoutApi::class)
 @Composable internal fun WorkspaceHome(s: WorkspaceSnapshot,ui: WorkspaceUi,editing: Boolean,model: WorkspaceViewModel,photos: ProductPhotoStore,
     modifier: Modifier,onCategory: (String)->Unit,onProduct: (WorkspaceProduct)->Unit) {
-    var dialog by rememberSaveable {mutableStateOf<String?>(null)}
-    var type by rememberSaveable {mutableStateOf("")};var id by rememberSaveable {mutableStateOf("")}
-    var slot by rememberSaveable {mutableStateOf("")};var revision by rememberSaveable {mutableStateOf(0L)}
+    val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
+    var dialog by rememberSaveable(administration.generation) {mutableStateOf<String?>(null)}
+    var type by rememberSaveable(administration.generation) {mutableStateOf("")};var id by rememberSaveable(administration.generation) {mutableStateOf("")}
+    var slot by rememberSaveable(administration.generation) {mutableStateOf("")};var revision by rememberSaveable(administration.generation) {mutableStateOf(0L)}
     val busy=ui.pending>0
     val state=rememberLazyGridState()
     val tiles=s.home.tiles.associateBy {it.slot}
@@ -65,9 +69,9 @@ import com.mendelev.mpos.domain.workspace.*
                     } else {
                         val tag=if(tile.type=="category") "workspaceCategory:${tile.id}" else "workspaceHomeProduct:${tile.id}"
                         MposWorkspaceTile({if(editing) manage(tile) else if(tile.type=="category") onCategory(tile.id) else s.products.find {it.id==tile.id}?.let(onProduct)},
-                            Modifier.height(rowHeight).testTag(tag).then(highlight),!busy,
+                            Modifier.height(rowHeight).testTag(tag).semantics {contentDescription="${title(tile)} · Место ${tile.slot+1}"}.then(highlight),!busy,
                             categoryColor=if(tile.type=="category") s.categories.find {it.id==tile.id}?.color else null,
-                            symbol=if(tile.type=="category") s.categories.find {it.id==tile.id}?.symbol else null) {
+                            symbol=if(tile.type=="category") s.categories.find {it.id==tile.id}?.symbol else s.products.find {it.id==tile.id}?.symbol) {
                             Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                                 Text(title(tile)+(if(tile.type=="category") "  ›" else ""),Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp,lineHeight=18.sp),maxLines=2,overflow=TextOverflow.Ellipsis)
                                 if(tile.type=="product") s.products.find {it.id==tile.id}?.photoId?.let {ProductPhoto(it,photos,Modifier.size(32.dp))}
@@ -89,7 +93,7 @@ import com.mendelev.mpos.domain.workspace.*
         }
     }
 
-    if(dialog!=null) MposDialog(when(dialog) {"add"->"Добавить плитку";"categories"->"Все категории";"reset"->"Сбросить раскладку?";"remove"->"Убрать плитку?";else->"Плитка главного экрана"},
+    if(dialog!=null && administration.active) MposDialog(when(dialog) {"add"->"Добавить плитку";"categories"->"Все категории";"reset"->"Сбросить раскладку?";"remove"->"Убрать плитку?";else->"Плитка главного экрана"},
         {dialog=null;model.dismiss()},!busy) {
         if(ui.message!=null) MposNotice(ui.message!!,true)
         when(dialog) {

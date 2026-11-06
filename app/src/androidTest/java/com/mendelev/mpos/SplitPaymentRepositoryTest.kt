@@ -20,7 +20,7 @@ class SplitPaymentRepositoryTest {
         val c=CatalogRepository(db);c.initialize();c.saveCategory("c",null,"Категория","category")
         c.saveProduct(ProductInput("p",null,"Заказ","c",price,"1","10",null,true,"product"))
         val w=WorkspaceRepository(db);w.initialize();w.cart(CartAction.Add("p",1,emptySet(),null,"line"),"add",w.snapshot().cart.sessionId)
-        val s=ShiftRepository(db);s.initialize();val before=s.snapshot();s.open("open",0,null,before.ownerId)
+        val s=ShiftRepository(db);s.initializeCashierFixture();val before=s.snapshot();s.open("open",0,null,before.ownerId)
         val active=s.snapshot();val cart=w.snapshot()
         return CheckoutRepository(db).save(0,CheckoutDraft("sale",cart.cart.sessionId,cart.cartRevision,active.active!!.id,active.revision,active.ownerId,
             parts=parts))

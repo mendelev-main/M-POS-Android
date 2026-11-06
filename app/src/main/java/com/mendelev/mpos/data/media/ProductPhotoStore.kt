@@ -10,9 +10,10 @@ import java.io.InputStream
 import java.util.UUID
 
 /** Immutable app-private files. A prepared photo is not active until Room commits its ID. */
-class ProductPhotoStore(private val root: File, private val checkpoint: (String) -> Unit = {}) {
-    private val photos=File(root,"product-photos")
-    private val staging=File(root,"product-photo-staging")
+class ProductPhotoStore(root: File, private val checkpoint: (String) -> Unit = {}) {
+    private val activeRoot=com.mendelev.mpos.data.recovery.AppDataset.mediaRoot(root)
+    private val photos=File(activeRoot,"product-photos")
+    private val staging=File(activeRoot,"product-photo-staging")
     private val lock=Any()
     fun file(id: String): File {
         if(!Regex("[0-9a-f-]{36}\\.jpg").matches(id)) throw CatalogFailure("photo","Некорректная ссылка на фото")

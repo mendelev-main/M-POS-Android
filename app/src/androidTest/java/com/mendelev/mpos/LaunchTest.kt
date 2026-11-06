@@ -63,7 +63,7 @@ class LaunchTest {
         java.io.File(compose.activity.filesDir,"qa/launcher-icon.png").outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it) }
         bitmap.recycle()
         compose.onNodeWithTag("topNav-settings").performClick()
-        compose.onNodeWithText("Компоненты").performClick()
+        compose.onNodeWithText("Компоненты").performScrollTo().assertIsDisplayed().performClick()
         compose.onNodeWithText("Пример окна").performScrollTo().performClick()
         screenshot("shared-dialog")
         compose.onNodeWithContentDescription("Закрыть").performClick()

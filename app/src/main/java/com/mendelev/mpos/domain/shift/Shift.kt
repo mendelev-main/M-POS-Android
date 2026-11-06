@@ -3,6 +3,8 @@ package com.mendelev.mpos.domain.shift
 import com.mendelev.mpos.domain.catalog.CatalogFailure
 import com.mendelev.mpos.domain.catalog.CatalogRules
 import java.math.BigDecimal
+import com.mendelev.mpos.domain.staff.Employee
+import com.mendelev.mpos.domain.staff.EmployeeRules
 
 /** Immutable closed snapshot; money is always BYN minor units. */
 data class Shift(val id: String,val registerId: String,val actorId: String,val actorName: String,
@@ -27,21 +29,19 @@ object ShiftRules {
         val shift=state.active ?: throw CatalogFailure("shift","Смена не открыта")
         return CatalogRules.fingerprint("shift.close.preview.v2",state.registerId,state.revision,shift.id,state.currentCash)
     }
-    fun open(state: ShiftSnapshot,expectedRevision: Long,previousId: String?,actor: String,id: String,now: Long,zone: String): Shift {
-        requireOwner(state,actor)
+    fun open(state: ShiftSnapshot,expectedRevision: Long,previousId: String?,employee: Employee,id: String,now: Long,zone: String): Shift {
+        EmployeeRules.validate(employee)
+        if(!employee.selectable) throw CatalogFailure("employee","Выберите кассира")
         if(state.revision!=expectedRevision || state.last?.id!=previousId || state.active!=null) conflict()
         if(state.carry<0 || now<0 || zone.isBlank() || id.isBlank()) throw CatalogFailure("shift","Некорректные данные смены")
-        return Shift(id,state.registerId,actor,"Локальный владелец",now,zone,state.carry,state.last?.id)
+        return Shift(id,state.registerId,employee.id,employee.name,now,zone,state.carry,state.last?.id)
     }
     fun close(state: ShiftSnapshot,id: String,revision: Long,token: String,counted: Long,actor: String,now: Long): Shift {
-        requireOwner(state,actor)
         val shift=state.active ?: conflict()
+        if(actor.isBlank() || actor!=shift.actorId) throw CatalogFailure("owner","Недопустимый оператор смены")
         if(shift.id!=id || state.revision!=revision || token!=ShiftRules.token(state)) conflict()
         if(counted<0 || now<shift.openedAt) throw CatalogFailure("cash","Некорректная сумма или время закрытия смены")
         return shift.copy(closedAt=now,countedCash=counted,expectedCash=state.currentCash,difference=counted-state.currentCash)
-    }
-    private fun requireOwner(state: ShiftSnapshot,actor: String) {
-        if(actor.isBlank() || actor!=state.ownerId) throw CatalogFailure("owner","Недопустимый оператор смены")
     }
     private fun conflict(): Nothing=throw CatalogFailure("conflict","Смена изменилась. Откройте подтверждение заново")
 }

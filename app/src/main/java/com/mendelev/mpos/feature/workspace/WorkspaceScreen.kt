@@ -36,8 +36,10 @@ import androidx.compose.ui.platform.LocalDensity
 private fun money(value: String)=value.replace('.',',')+" BYN"
 
 @Composable fun WorkspaceScreen(model: WorkspaceViewModel, photos: ProductPhotoStore, onCatalog: () -> Unit, onSettings: () -> Unit, onShift: () -> Unit = {}, onCheckout: () -> Unit = {}, onHistory: () -> Unit = {}) {
+    val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val ui by model.state.collectAsStateWithLifecycle()
     val s=ui.snapshot
+    var layoutAccessDenied by rememberSaveable(administration.generation) {mutableStateOf(false)}
     var comingSoon by rememberSaveable {mutableStateOf<String?>(null)}
     var searchOpen by rememberSaveable {mutableStateOf(false)}
     val navigation=LocalMposTopNavigation.current
@@ -46,18 +48,19 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
     var category by rememberSaveable { mutableStateOf<String?>(null) }
     var folder by rememberSaveable { mutableStateOf<String?>(null) }
     var search by rememberSaveable { mutableStateOf("") }
-    var editing by rememberSaveable { mutableStateOf(false) }
+    var editingState by rememberSaveable(administration.generation) { mutableStateOf(false) }
+    val editing=editingState && administration.active
     var configId by rememberSaveable { mutableStateOf<String?>(null) }
     var configOwner by rememberSaveable { mutableStateOf("") }
     var configRevision by rememberSaveable { mutableStateOf(0L) }
     var selected by rememberSaveable { mutableStateOf(listOf<String>()) }
     var manual by rememberSaveable { mutableStateOf("") }
-    var manageId by rememberSaveable { mutableStateOf<String?>(null) }
-    var manageType by rememberSaveable { mutableStateOf("") }
-    var manageName by rememberSaveable { mutableStateOf("") }
-    var moveFolder by rememberSaveable { mutableStateOf("") }
-    var manageRevision by rememberSaveable { mutableStateOf(0L) }
-    var confirmFolderDelete by rememberSaveable { mutableStateOf(false) }
+    var manageId by rememberSaveable(administration.generation) { mutableStateOf<String?>(null) }
+    var manageType by rememberSaveable(administration.generation) { mutableStateOf("") }
+    var manageName by rememberSaveable(administration.generation) { mutableStateOf("") }
+    var moveFolder by rememberSaveable(administration.generation) { mutableStateOf("") }
+    var manageRevision by rememberSaveable(administration.generation) { mutableStateOf(0L) }
+    var confirmFolderDelete by rememberSaveable(administration.generation) { mutableStateOf(false) }
     var quantityId by rememberSaveable { mutableStateOf<String?>(null) }
     var quantity by rememberSaveable { mutableStateOf("") }
     var quantityOwner by rememberSaveable { mutableStateOf("") }
@@ -92,7 +95,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
         if(folder!=null && s!=null && s.layout.none { it.type=="folder" && it.id==folder }) folder=null
     }
     BackHandler(enabled=!modal && (folder!=null || category!=null || editing || searchOpen)) {
-        when { folder!=null -> folder=null; searchOpen -> {searchOpen=false;search=""}; editing -> editing=false;else -> {category=null;search=""} }
+        when { folder!=null -> folder=null; searchOpen -> {searchOpen=false;search=""}; editing -> editingState=false;else -> {category=null;search=""} }
     }
     Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
         MposAppBar("M-POS · Рабочая зона", navigationEnabled=!busy && !modal) {
@@ -122,8 +125,9 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                         }
                         WorkspaceToolbar(if(category==null) "Рабочая зона" else s.categories.find {it.id==category}?.name ?: "Без категории",
                             category!=null,editing,busy,s.parked.size,{category=null;folder=null;search=""},
-                            {editing=!editing},{ordersDialog="list"},{searchOpen=!searchOpen;if(!searchOpen) search=""},{comingSoon=it})
+                            {if(administration.active) editingState=!editing else layoutAccessDenied=true},{ordersDialog="list"},{searchOpen=!searchOpen;if(!searchOpen) search=""},{comingSoon=it})
                         if(searchOpen) MposField(search,{search=it},"Поиск товара",Modifier.testTag("workspaceSearch"),!busy)
+                        if(layoutAccessDenied) MposNotice("Для изменения раскладки войдите в администрирование в настройках")
                         if(ui.message!=null && !modal && folder==null) MposNotice(ui.message!!,true)
                         if(editing && category!=null && search.isBlank()) PosAction("Создать папку",{
                             manageId=UUID.randomUUID().toString();manageType="folder";manageName="";manageRevision=s.layoutRevision
@@ -213,7 +217,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                 }
             }
         }
-        if(manageId!=null) MposDialog(if(confirmFolderDelete) "Удалить папку?" else if(manageType=="folder") "Папка" else "Размещение товара",
+        if(manageId!=null && administration.active) MposDialog(if(confirmFolderDelete) "Удалить папку?" else if(manageType=="folder") "Папка" else "Размещение товара",
             {if(!busy) {manageId=null;confirmFolderDelete=false;model.dismiss()}},!busy) {
             if(ui.message!=null) MposNotice(ui.message!!,true)
             val id=manageId!!
@@ -299,7 +303,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                 if(tile.type=="folder") MposWorkspaceTile({if(editing) onManage(tile) else onFolder(tile)},Modifier.height(144.dp).testTag("workspaceFolder:${tile.id}").then(highlight),enabled) {
                     Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {Text(tile.name,style=MaterialTheme.typography.titleMedium.copy(fontSize=19.sp,fontWeight=FontWeight.ExtraBold),textAlign=androidx.compose.ui.text.style.TextAlign.Center,maxLines=2)}
                 } else products[tile.id]?.let { p ->
-                    MposWorkspaceTile({onProduct(p)},Modifier.height(144.dp).testTag("workspaceProduct:${p.id}").then(highlight),enabled,compact=folder!=null) {
+                    MposWorkspaceTile({onProduct(p)},Modifier.height(144.dp).testTag("workspaceProduct:${p.id}").then(highlight),enabled,symbol=p.symbol,compact=folder!=null) {
                         Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                             Text(p.name,Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=if(folder!=null) 13.5.sp else 14.5.sp,lineHeight=18.sp),maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                             if(p.photoId!=null && folder==null) ProductPhoto(p.photoId,photos,Modifier.size(32.dp))

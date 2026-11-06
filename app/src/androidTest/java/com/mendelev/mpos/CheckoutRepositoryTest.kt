@@ -20,7 +20,7 @@ class CheckoutRepositoryTest {
         fun open()=Room.databaseBuilder(context,CatalogDatabase::class.java,name).build()
         var db=open()
         try {
-            WorkspaceRepository(db).initialize();val shifts=ShiftRepository(db);shifts.initialize()
+            WorkspaceRepository(db).initialize();val shifts=ShiftRepository(db);shifts.initializeCashierFixture()
             val initial=shifts.snapshot();shifts.open("open",initial.revision,null,initial.ownerId)
             val shift=shifts.snapshot()
             val cart=CurrentCart(lines=listOf(CartLine("line","product","Товар","1",false,"1","2","piece",emptyList(),emptyList(),emptyMap())),sessionId="session")

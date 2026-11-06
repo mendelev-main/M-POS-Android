@@ -16,7 +16,7 @@ android {
         targetSdk = 36
         versionCode = providers.environmentVariable("MPOS_VERSION_CODE").orElse("1").get().toInt()
         versionName = providers.environmentVariable("MPOS_VERSION_NAME").orElse("0.1.0-dev").get()
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.mendelev.mpos.MposTestRunner"
     }
     val keystorePath = providers.environmentVariable("MPOS_KEYSTORE_PATH").orNull
     signingConfigs {
@@ -42,6 +42,7 @@ android {
         }
     }
     sourceSets.getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    sourceSets.getByName("androidTest").assets.srcDir("$projectDir/src/test/resources")
     buildFeatures { compose = true; buildConfig = true }
     defaultConfig {
         buildConfigField("String", "UPDATE_CERT_SHA256", "\"d484cd0166df7f043f65c25e058aba4d3a2b59ea058e6f39948e3e5684b12da4\"")

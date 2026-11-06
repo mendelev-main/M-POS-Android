@@ -8,6 +8,7 @@ import coil3.memory.MemoryCache
 
 /** Shared offline thumbnail loader. Files are immutable UUIDs owned by ProductPhotoStore. */
 class MposApplication: Application(), SingletonImageLoader.Factory {
+    override fun onCreate() {super.onCreate();com.mendelev.mpos.data.recovery.AppDataset.initialize(this)}
     override fun newImageLoader(context: Context): ImageLoader = ImageLoader.Builder(context)
         .memoryCache {MemoryCache.Builder().maxSizeBytes(16L*1024*1024).build()}
         .diskCache(null)

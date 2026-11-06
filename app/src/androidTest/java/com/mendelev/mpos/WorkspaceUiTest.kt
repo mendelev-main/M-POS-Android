@@ -26,6 +26,26 @@ class WorkspaceUiTest {
             File(folder,"$name.png").outputStream().use {bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};bitmap.recycle()
         }
     }
+    private fun assertPlatformHomeDescription(expected: String) {
+        val automation=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation
+        var diagnostic=""
+        fun find(node: android.view.accessibility.AccessibilityNodeInfo?,lines: MutableList<String>): Boolean {
+            if(node==null) return false
+            val bounds=android.graphics.Rect();node.getBoundsInScreen(bounds)
+            val description=node.contentDescription?.toString().orEmpty()
+            if(lines.size<200) lines.add("${node.packageName}/${node.viewIdResourceName}: text=${node.text}; description=$description; visible=${node.isVisibleToUser}; bounds=$bounds")
+            if(node.packageName?.toString()==BuildConfig.APPLICATION_ID && node.isVisibleToUser && bounds.width()>0 && bounds.height()>0 &&
+                (description==expected || description.startsWith(expected+",") || description.startsWith(expected+"\n"))) return true
+            for(index in 0 until node.childCount) if(find(node.getChild(index),lines)) return true
+            return false
+        }
+        try {
+            compose.waitUntil(10_000) {
+                val lines=mutableListOf<String>();val found=find(automation.rootInActiveWindow,lines)
+                diagnostic=lines.joinToString("\n");found
+            }
+        } catch(e:Exception) {throw AssertionError("Accessible home identity/slot missing: $expected\n$diagnostic",e)}
+    }
     @Test fun folderConfigurationAndCommittedCartSurviveRecreation() {
         val suffix=UUID.randomUUID().toString().take(6);val category="workspace-category-$suffix";val coffee="workspace-coffee-$suffix";val milk="workspace-milk-$suffix"
         val name="Кофе POS $suffix";val folderName="Популярное $suffix"
@@ -98,7 +118,9 @@ class WorkspaceUiTest {
         File(compose.activity.filesDir,"qa/homeTileName.txt").writeText(homeName)
         compose.onNodeWithTag("workspaceBack").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceHomeProduct:home-upgrade-$suffix").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("workspaceHomeProduct:home-upgrade-$suffix").assertContentDescriptionContains("$homeName · Место 8",substring=false)
         screenshot("workspace-home")
+        assertPlatformHomeDescription("$homeName · Место 8")
 
         compose.onNodeWithTag("topNav-settings").performClick();compose.onNodeWithText("Товары").performClick();waitText("Добавить товар")
     }

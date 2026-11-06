@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.activity.compose.BackHandler
@@ -38,14 +39,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.safeDrawingPadding
 
 class MainActivity : ComponentActivity() {
+    private var acceptDatasetState=false
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        val generation=runCatching {com.mendelev.mpos.data.recovery.AppDataset.paths(this).id}.getOrNull()
+        val filtered=com.mendelev.mpos.data.recovery.DatasetSavedState.filter(savedInstanceState,generation)
+        acceptDatasetState=savedInstanceState==null || filtered!=null
+        super.onCreate(filtered)
         enableEdgeToEdge()
         // Test fixture override is restricted to loopback/emulator host in DEBUG; release never accepts an endpoint from Intent.
         val fixture = if (BuildConfig.DEBUG) intent.getStringExtra("mpos.testUpdateUrl")
             ?.takeIf(UpdatePolicy::isLocalUrl) else null
-        setContent { FoundationScreen(fixture) }
+        setContent { com.mendelev.mpos.feature.backup.RecoveryStartupScreen(applicationContext,{finishAndRemoveTask();android.os.Process.killProcess(android.os.Process.myPid())}) {FoundationScreen(fixture)} }
     }
+    override fun onSaveInstanceState(outState: Bundle) {
+        runCatching {com.mendelev.mpos.data.recovery.AppDataset.paths(this).id}.getOrNull()?.let {outState.putString(com.mendelev.mpos.data.recovery.DatasetSavedState.KEY,it)}
+        super.onSaveInstanceState(outState)
+    }
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        if(acceptDatasetState) super.onRestoreInstanceState(savedInstanceState)
+    }
+
 }
 
 @Composable
@@ -61,9 +74,22 @@ fun FoundationScreen(fixtureUrl: String? = null) {
         override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.shift.ShiftViewModel(
             com.mendelev.mpos.data.local.ShiftRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
     })
+    val inventoryModel: com.mendelev.mpos.feature.inventory.InventoryViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.inventory.InventoryViewModel(
+            com.mendelev.mpos.data.local.InventoryRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+    })
+    val inventoryUi by inventoryModel.state.collectAsStateWithLifecycle()
+    var calendarDay by androidx.compose.runtime.remember {mutableStateOf(java.time.LocalDate.now())}
+    androidx.compose.runtime.LaunchedEffect(Unit) {while(true) {kotlinx.coroutines.delay(60_000);calendarDay=java.time.LocalDate.now()}}
+    var receivingOrder by rememberSaveable { mutableStateOf<String?>(null) }
     val shiftUi by shiftModel.state.collectAsStateWithLifecycle()
+    val admin by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val navigation = MposTopNavigation(route, shiftUi.snapshot?.active != null,
-        shiftUi.loading, shiftUi.fatal, shiftUi.pending, shiftUi.snapshot?.active?.actorName ?: "Локальный владелец") { route = it }
+        shiftUi.loading, shiftUi.fatal, shiftUi.pending || shiftUi.cashForm!=null || shiftUi.cashUnresolved!=null, shiftUi.snapshot?.active?.actorName ?: "Кассир не выбран",
+        adminActive=admin.active,
+        inventoryReminder=!inventoryUi.blocked && inventoryUi.snapshot?.document?.let {it.draft!=null || com.mendelev.mpos.domain.warehouse.InventoryRules.due(it.config,calendarDay)}==true) {
+            route=if(it=="inventory" && inventoryUi.snapshot?.document?.draft!=null) "inventoryWork" else it
+        }
     com.mendelev.mpos.core.ui.MposTheme {
         CompositionLocalProvider(LocalMposTopNavigation provides navigation) {
             Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -74,7 +100,40 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                             override fun <T : ViewModel> create(modelClass: Class<T>): T =
                                 UpdateViewModel(UpdateRepository(context.applicationContext, fixture)) as T
                         })
-                        UpdatesScreen(model, onCatalog={route="catalog"}, onGallery={route="gallery"}) { route = "catalog" }
+                        UpdatesScreen(model, onCatalog={route="catalog"}, onGallery={route="gallery"},onSuppliers={route="suppliers"},onInventory={route="inventory"},onStock={route="stock"},onEmployees={route="employees"},onBackup={route="backup"}) { route = "catalog" }
+                    }
+                    "backup" -> {
+                        val model: com.mendelev.mpos.feature.backup.BackupViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T =
+                                com.mendelev.mpos.data.backup.NativeRecoveryPreparation(context.applicationContext).let {recovery -> com.mendelev.mpos.feature.backup.BackupViewModel(com.mendelev.mpos.data.backup.WebBackupInspection(context.contentResolver),com.mendelev.mpos.data.backup.NativeBackupRepository(context.applicationContext),recovery,com.mendelev.mpos.data.backup.WebRestorePreparation(context.applicationContext,recovery)) } as T
+                        })
+                        com.mendelev.mpos.feature.backup.BackupScreen(model,{route="settings"},{route="settings"})
+                    }
+                    "inventory", "inventoryWork", "inventoryHistory" -> {
+                        com.mendelev.mpos.feature.inventory.InventoryScreen(inventoryModel,
+                            onBack={route=if(route=="inventoryWork" || route=="inventoryHistory") "inventory" else "settings"},onWork={route="inventoryWork"},work=route=="inventoryWork",onPause={route="workspace"},history=route=="inventoryHistory",onHistory={route="inventoryHistory"})
+                    }
+                    "stock" -> {
+                        val model: com.mendelev.mpos.feature.stock.StockViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.stock.StockViewModel(
+                                com.mendelev.mpos.data.local.StockReadRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                        })
+                        com.mendelev.mpos.feature.stock.StockScreen(model) {route="settings"}
+                    }
+                    "employees" -> {
+                        val model: com.mendelev.mpos.feature.staff.EmployeeViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.staff.EmployeeViewModel(
+                                com.mendelev.mpos.data.local.EmployeeRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                        })
+                        com.mendelev.mpos.feature.staff.EmployeeScreen(model) {route="settings"}
+                    }
+                    "suppliers" -> {
+                        val model: com.mendelev.mpos.feature.suppliers.SupplierViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
+                            override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.suppliers.SupplierViewModel(
+                                com.mendelev.mpos.data.local.SupplierRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                        })
+                        com.mendelev.mpos.feature.suppliers.SupplierScreen(model) {route="settings"}
                     }
                     "shift" -> {
                         com.mendelev.mpos.feature.shift.ShiftScreen(shiftModel,{route="catalog"},{route="workspace"},{route="settings"})
@@ -103,7 +162,34 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                         com.mendelev.mpos.feature.workspace.WorkspaceScreen(model,photos,{route="catalog"},{route="settings"},{route="shift"},{route="checkout"},{route="history"})
                     }
                     "gallery" -> com.mendelev.mpos.feature.products.ComponentGallery { route = "catalog" }
-                    "purchaseOrders", "receiving", "analytics", "bookings", "events" -> PlannedModuleScreen(route)
+                    "purchaseOrders" -> {
+                        val model: com.mendelev.mpos.feature.purchasing.PurchaseViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
+                            override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.purchasing.PurchaseViewModel(
+                                com.mendelev.mpos.data.local.PurchaseDraftRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                        })
+                        com.mendelev.mpos.feature.purchasing.PurchaseScreen(model,{id->receivingOrder=id;route="receiving"}) {route="workspace"}
+                    }
+                    "receiving" -> {
+                        val model: com.mendelev.mpos.feature.receiving.ReceivingViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.receiving.ReceivingViewModel(
+                                com.mendelev.mpos.data.local.ReceivingRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                        })
+                        val posting: com.mendelev.mpos.feature.receiving.ReceivingPostingViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.receiving.ReceivingPostingViewModel(
+                                com.mendelev.mpos.data.local.ReceivingPostingRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                        })
+                        com.mendelev.mpos.feature.receiving.ReceivingScreen(model,posting,receivingOrder,{receivingOrder=null}) {route="purchaseOrders"}
+                    }
+                    "analytics" -> {
+                        val model: com.mendelev.mpos.feature.report.ReportViewModel = viewModel(factory=object: ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>,extras: androidx.lifecycle.viewmodel.CreationExtras): T =
+                                com.mendelev.mpos.feature.report.ReportViewModel(com.mendelev.mpos.data.local.SalesReportRepository(
+                                    com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext)),extras.createSavedStateHandle()) as T
+                        })
+                        com.mendelev.mpos.feature.report.ReportScreen(model,{route="settings"},{route="workspace"})
+                    }
+                    "events" -> PlannedModuleScreen(route)
                     else -> {
                         val model: com.mendelev.mpos.feature.products.CatalogViewModel = viewModel(factory = object : ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST")

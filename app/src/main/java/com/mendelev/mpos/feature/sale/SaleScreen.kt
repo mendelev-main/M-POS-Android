@@ -49,6 +49,7 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
             if(refund.message!=null && ui.selected==null) MposNotice(refund.message!!,true)
             if(refund.blocked && refund.unresolved==null) MposButton("Прочитать возвраты",refundModel::refresh,busy=refund.pending,style=ActionStyle.Secondary)
             LazyColumn(Modifier.fillMaxSize().padding(20.dp).testTag("receiptHistory"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                if((ui.work?.archivedWebReceipts ?: 0)>0) item {MposNotice("Чеки из Web (${ui.work!!.archivedWebReceipts}) сохранены в исходном архиве. Этот список и возвраты пока работают только с native-чеками",false)}
                 if(ui.history.isEmpty()) item {Text("Проведённых чеков пока нет")}
                 items(ui.history,key={it.id}) {r->Surface(shape=MaterialTheme.shapes.large) {
                     Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -159,7 +160,7 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
             if(refund.message!=null) MposNotice(refund.message!!,true)
             if(refund.history.none {it.receiptId==selected.first.id}) {
                 if(ui.shift?.active==null) Text("Для возврата откройте смену")
-                MposButton("Вернуть чек",{refundModel.prepare(selected.first.id,ui.shift!!.ownerId)},Modifier.fillMaxWidth().testTag("refundPrepare"),
+                MposButton("Вернуть чек",{refundModel.prepare(selected.first.id,ui.shift!!.active!!.actorId)},Modifier.fillMaxWidth().testTag("refundPrepare"),
                     enabled=!ui.pending && !refund.blocked && ui.shift?.active!=null && ui.split?.paid.isNullOrEmpty(),style=ActionStyle.Danger,busy=refund.pending)
             }
         }

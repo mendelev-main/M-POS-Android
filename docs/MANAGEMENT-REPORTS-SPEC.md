@@ -1,6 +1,6 @@
 # Смены, сотрудники и отчёты
 
-Паспорта M13/M14/M15; planned. Минимальное M13 вводится 03a как предпосылка продажи; полный UI/roles/reporting —05. Источники Web: `shifts.js` (currentShift/shiftTotals/cashDrawerBalance, submit handlers), `employees.js`, `analytics.js` (analyticsRange/analyticsData), administration-session docs. Literal credentials/legacy hardcoded secrets не переносятся в native.
+Паспорта M13/M14/M15; текущие cash/staff scopes05a/05b и ядро05c.1 ci-verified, UI05c.2 ci-verified;05d.1 ci-verified/API36/run41188178378, контракт REPORT-GROUPS-05D.md;05d.2 RS01–RS05 ci-verified/API36/run41293338713, контракт SHIFT-REPORTS-05D2.md. Evidence в PARITY.md; контракт ядра REPORTS-05C.md. Минимальное M13 вводится 03a как предпосылка продажи; полный UI/roles/reporting —05. Источники Web: `shifts.js` (currentShift/shiftTotals/cashDrawerBalance, submit handlers), `employees.js`, `analytics.js` (analyticsRange/analyticsData), administration-session docs. Literal credentials/legacy hardcoded secrets не переносятся в native.
 
 ## M13: минимальная смена 03a
 
@@ -24,7 +24,7 @@ Close snapshot хранит expected/actual/difference и набор связе�
 
 EmployeeDirectory: стабильный employeeId, отображаемое имя, role/capabilities binding, active/revision. Выбор сотрудника в смену не является admin login. Сотрудник с историей отключается безопасно по принятой политике, история не теряет автора.
 
-Команды Create/UpdateEmployee, DeactivateEmployee, AssignCapabilities и LoginAdmin/LogoutAdmin различны. Назначение прав требует соответствующего actor и проверки revision; нельзя повысить свои права произвольным полем UI. Credential verifier/восстановление доступа/attempt throttling определяются D04. Встроенный общий пароль Web не переносится.
+Команды Create/UpdateEmployee, DeactivateEmployee, AssignCapabilities и LoginAdmin/LogoutAdmin различны. Назначение прав требует соответствующего actor и проверки revision; нельзя повысить свои права произвольным полем UI. Credential verifier/восстановление доступа/attempt throttling определяются D04. Решение владельца2026-10-29: заданный общий административный пароль проверяется по встроенному salted PBKDF2 verifier; plaintext не переносится. Смена/восстановление credential через UI в этом блоке не предусмотрены.
 
 Runtime admin session имеет явный indicator и exit, подтверждения после logout снова проверяют доступ. Ошибка входа не изменяет кассира, shiftId, receipts и права. Реализованный выбор ролей не считается готовым без use-case tests [ACCESS-AND-AUDIT.md](ACCESS-AND-AUDIT.md).
 
@@ -47,3 +47,19 @@ MG01:open повтор/два конкурентных open →одна смен
 Текущий контракт подготовки03a: [SHIFT-03A](SHIFT-03A.md), перенос openingCash из последнего counted согласно pinned Web; single-owner граница явная. Подтверждённая часть D02 и оставшиеся allocations — [MONEY-03](MONEY-03.md). Старые candidate/open questions выше читать с этими уточнениями, не как реализованный runtime.
 
 03a реализует минимальную открытую/закрытую смену, перенос counted, расхождение, atomic result/audit и admission API внутри Room transaction; текущий scope/evidence — [SHIFT-03A](SHIFT-03A.md). MG01 проверяется непосредственно, MG02 sale+close и MG03 money/refund остаются до продажи. Не считать прошедший close/open тест доказательством ещё отсутствующей продажи или полного05.
+
+
+## Решение для будущих отчётов05c.1
+
+Владелец2026-10-30 подтвердил ось событий: продажа100 BYN30октября → продажи +10030октября; полный возврат31октября → возвраты −10031октября; net за оба дня0. Возврат не исключает исходную продажу из исторического периода. Pinned Web analyticsData фильтрует returnedAt и меняет прошлый период — это поведение намеренно не переносится. Денежный журнал уже следует дате выдачи, но отчёт продаж и движение cash — разные показатели. Количество чеков, средний чек, доставка/COGS/filter по сотруднику требуют отдельного точного контракта перед05c.1. Реализация отчётов пока planned.
+
+
+2026-10-31: начат [05c.1 REPORTS-05C](REPORTS-05C.md): ядро и authorized read-only Room totals. Владелец подтвердил saleCount/average только по новым продажам и total включает delivery с отдельной строкой. 06/09 отложены в [TODO](PRODUCT-TODO.md); remote loyalty KPI не подключаются. Ниже/выше исторические candidate scopes не отменяют текущий контракт.
+
+2026-10-31: RPT01–RPT05 ядра05c.1 ci-verified/API36, [FullCI41184335908](https://github.com/mendelev-main/M-POS-Android/actions/runs/41184335908). UI05c.2/COGS05d/export08 не объявлены реализованными.
+
+
+2026-11-01: [05d.2 SHIFT-REPORTS-05D2](SHIFT-REPORTS-05D2.md) добавляет целые смены по пересечению периода и сверку финансовых stock links. Эти суммы нельзя складывать как календарные карточки05c.1. Продажи остаются в исходной смене, возврат/отмена courier выдачи относятся к фактической текущей; historical seller группировка05d.1 отдельно. Сохранённый закрытый expected/count/difference не переписывается. Проверки API36 pending; RS04 не является полной оценкой склада/историческими остатками.
+
+
+2026-11-01:05d.3 WH01–WH06 ci-verified/API36/run41305115280 attempt2/schema9. Исторические количества и оценка по текущей cost HALF_UP по строкам, с явными unavailable/coverage и noTracking/invoice distinction. [Контракт](WAREHOUSE-REPORTS-05D3.md), [checkpoint05](PHASE-05-REVIEW.md). Export08/physical gates отдельно; следующий07a.

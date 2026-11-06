@@ -26,7 +26,9 @@ class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
     private val mutable=MutableStateFlow(SaleUi());val state=mutable.asStateFlow()
     private fun decimal(value: Long)=BigDecimal.valueOf(value,2).toPlainString()
     private fun form(d: CheckoutDraft?,w: WorkspaceSnapshot): SaleForm {
-        if(d==null) return SaleForm(given=runCatching {decimal(SaleMoney.quote(w.cart.lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity)}).total)}.getOrDefault(""))
+        if(d==null || d.sessionId!=w.cart.sessionId || d.cartRevision!=w.cartRevision) return SaleForm(
+            given=runCatching {decimal(SaleMoney.quote(w.cart.lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity,w.sourceDiscounts[it.id])},w.cart.details.type,w.sourceDelivery).total)}.getOrDefault(""),
+            discounts=w.sourceDiscounts.mapValues {DiscountField(it.value.type,it.value.value)},tariff=w.sourceDelivery?.name.orEmpty(),fee=w.sourceDelivery?.fee?.let(::decimal).orEmpty())
         return SaleForm(if(d.parts.size>1) "split" else d.parts.firstOrNull()?.method ?: "cash",d.parts.singleOrNull()?.given?.let(::decimal) ?: "",
             d.parts.map {PartField(it.method,decimal(it.amount),it.given?.let(::decimal) ?: "")},
             d.discounts.mapValues {DiscountField(it.value.type,it.value.value)},d.delivery?.name ?: "",d.delivery?.fee?.let(::decimal) ?: "")
@@ -79,7 +81,7 @@ class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
             val parts=f.parts.map {PaymentInput(it.method,ShiftRules.cash(it.amount),if(it.method=="cash" && it.given.isNotBlank()) ShiftRules.cash(it.given) else null)}
             val old=ui.draft?.draft
             val command=old?.takeIf {it.sessionId==w.cart.sessionId && it.cartRevision==w.cartRevision && it.shiftId==active.id && it.shiftRevision==s.revision}?.commandId ?: UUID.randomUUID().toString()
-            checkout.saveSplit(ui.draftRevision,CheckoutDraft(command,w.cart.sessionId,w.cartRevision,active.id,s.revision,s.ownerId,
+            checkout.saveSplit(ui.draftRevision,CheckoutDraft(command,w.cart.sessionId,w.cartRevision,active.id,s.revision,active.actorId,
                 f.discounts.filterValues {it.type!="none"}.mapValues {SaleDiscount(it.value.type,it.value.value)},q.delivery,parts))
         }
     }
@@ -158,7 +160,7 @@ class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
                     val p=SaleMoney.payments(q,parts,s.currentCash)
                     val old=ui.draft?.draft
                     val command=old?.takeIf {it.sessionId==w.cart.sessionId && it.cartRevision==w.cartRevision && it.shiftId==active.id && it.shiftRevision==s.revision}?.commandId ?: UUID.randomUUID().toString()
-                    val d=CheckoutDraft(command,w.cart.sessionId,w.cartRevision,active.id,s.revision,s.ownerId,
+                    val d=CheckoutDraft(command,w.cart.sessionId,w.cartRevision,active.id,s.revision,active.actorId,
                         f.discounts.filterKeys {id->w.cart.lines.any {it.id==id}}.filterValues {it.type!="none"}.mapValues {SaleDiscount(it.value.type,it.value.value)},q.delivery,parts)
                     Triple(checkout.save(ui.draftRevision,d),q,p)
                 }

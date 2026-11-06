@@ -75,7 +75,7 @@ class SaleRepository(private val db: CatalogDatabase,private val clock: Clock=Cl
         val shiftRepo=ShiftRepository(db)
         val shift=shiftRepo.requireActive(d.shiftId,d.shiftRevision)
         val shiftState=shiftRepo.snapshot()
-        if(d.actorId!=shiftState.ownerId || d.actorId!=shift.actorId) throw CatalogFailure("owner","Недопустимый оператор продажи")
+        if(d.actorId!=shift.actorId) throw CatalogFailure("owner","Недопустимый оператор продажи")
         val work=WorkspaceRepository(db).snapshot();val cart=work.cart
         if(cart.sessionId!=d.sessionId || work.cartRevision!=d.cartRevision || cart.lines.isEmpty()) conflict()
         if(cart.lines.any {CartEngine.stale(it,work.products)}) conflict()
