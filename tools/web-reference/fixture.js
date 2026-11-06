@@ -24,7 +24,7 @@
   const receiving={id:'rec1',timestamp:now-86400000,supplierId:'sup1',supplierName:'Кофейный поставщик',invoiceNumber:'ДЕМО-001',invoiceDate:'2026-11-06',totalCost:48,items:[{productId:'beans',productName:'Кофе в зёрнах',stockUnit:'kg',qty:2,totalCost:48,unitCost:24}]};
   const inventory={id:'inv1',type:'adhoc',startedAt:now-600000,scheduledDate:'2026-11-07',items:[{productId:'beans',name:'Кофе в зёрнах',unit:'kg',expected:3.5,actual:null,difference:0,fixedAt:null},{productId:'milk',name:'Молоко 3,2%',unit:'l',expected:8,actual:7.5,difference:-0.5,fixedAt:now-300000}]};
   Object.assign(state,{loaded:true,products:clone(products),employees:[employee,{id:'boris',name:'Борис Петров',phone:'',role:'employee'}],shifts:[shift],orders:[order],cart:clone(cart),currency:'BYN',tab:scene[3],search:'',category:'Все',posPath:null,posFolder:'',editMode:false,
-    categoryOrder:['Кофе','Напитки','Десерты','Сырьё'],categoryColors:{'Кофе':'#E9DCCF','Напитки':'#DBEAFE','Десерты':'#FCE7F3','Сырьё':'#E4F3EE'},categorySymbols:{'Кофе':'☕','Напитки':'🥤','Десерты':'🍰','Сырьё':'📦'},
+    operationalOutbox:[],operationalRevision:0,categoryOrder:['Кофе','Напитки','Десерты','Сырьё'],categoryColors:{'Кофе':'#E9DCCF','Напитки':'#DBEAFE','Десерты':'#FCE7F3','Сырьё':'#E4F3EE'},categorySymbols:{'Кофе':'☕','Напитки':'🥤','Десерты':'🍰','Сырьё':'📦'},
     layoutTiles:[{type:'category',id:'Кофе',col:1,row:1},{type:'category',id:'Напитки',col:2,row:1},{type:'category',id:'Десерты',col:3,row:1},{type:'product',id:'coffee',col:1,row:2},{type:'product',id:'cake',col:2,row:2}],
     posNavigation:{version:1,categories:[{category:'Кофе',items:[{type:'folder',id:'classic',name:'Классика'},{type:'product',id:'coffee',parentId:'classic'},{type:'product',id:'espresso'}]}]},
     parked:[{id:'park1',orderLabel:'Заказ у окна',createdAt:now-600000,items:clone(cart),cart:clone(cart),orderType:'С собой',customer:{name:'',phone:'',address:'',id:''},deliveryFee:0,total:21}],
@@ -38,11 +38,12 @@
   const admin=!['W01','W02','W03','W04','W05','C01','C02','C03','C04','C05','C06','C07','C08','C09','C10','P01','P02','P03','P04','P05','P06','P07','P08','P09','K01','K02'].includes(id);
   // Fixture authorization only. No password is copied or persisted; production code is untouched.
   administrationSession.active=()=>admin;
-  applyTheme();render();
+  document.querySelectorAll('.flash-toast').forEach(e=>e.remove());applyTheme();render();
   const category=()=>{state.posPath='Кофе';render();};
   const split=()=>{renderPaymentScreen();openSplitPayment();};
   const receivingDraft=()=>{window._receivingDraft={version:1,orderId:'po1',supplierId:'sup1',invoiceNumber:'ДЕМО-002',invoiceDate:'2026-11-07',lines:[{productId:'beans',qtyInput:'2',unit:'kg',contentUnit:'kg',packSize:'',priceMode:'total',priceInput:'',totalInput:'48'}]};renderReceivingDocument();};
   const actions={
+    folderDelete(){category();state.editMode=true;render();requestRemovePosFolder('classic');},productDelete(){requestDelete('product','water');},categoryDelete(){requestDelete('category','Десерты');},employeeDelete(){deleteEmployee('boris');},supplierDelete(){deleteSupplier('sup1');},shiftReport(){state.shifts[0].status='closed';state.shifts[0].closedAt=now;state.shifts[0].countedCash=141;render();viewShiftModal('shift1');},
     empty(){state.cart=[];render();},cart(){},category,folder(){category();openPosFolder('classic');},search(){state.search='коф';render();},
     layoutEdit(){state.editMode=true;render();},layoutPicker(){state.editMode=true;render();openLayoutEditor();},folderEdit(){category();state.editMode=true;render();openPosFolderEditor();},tileMove(){category();state.editMode=true;render();openPosTileMove('espresso');},
     line(){openCartItemModal('line1');},modifiers(){openModifierSelection('coffee');},manualPrice(){openManualPriceModal(getProduct('manual'));},order(){openOrderSettings();},delivery(){state.orderType='Доставка';state.deliveryFee=5;state.deliveryTariffSelected=true;state.deliveryTariff=clone(state.deliveryRates[0]);state.customer={name:'Демо-покупатель',phone:'',address:'Демонстрационный адрес',id:''};render();openOrderSettings();},

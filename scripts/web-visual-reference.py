@@ -39,7 +39,7 @@ def main():
             path = unquote(urlparse(self.path).path)
             if path == '/': path = '/index.html'
             base, rel = (assets, path[8:]) if path.startswith('/source/') else (args.output.resolve(), path[1:])
-            if path in ['/fixture.js', '/bootstrap.js']:
+            if path in ['/fixture.js', '/bootstrap.js', '/preload.js']:
                 base, rel = TOOLS, path[1:]
             f = (base / rel).resolve()
             if not f.is_relative_to(base.resolve()) or not f.is_file():
@@ -47,6 +47,7 @@ def main():
             data = f.read_bytes()
             if path == '/source/pos.html':
                 data = data.replace(b'<head>', b'<head><script src="/bootstrap.js"></script>', 1)
+                data = data.replace(b'<script>loadAll();</script>', b'<script src="/preload.js"></script><script>loadAll();</script>', 1)
                 data = data.replace(b'</body>', b'<script src="/measure.js"></script><script src="/fixture.js"></script></body>', 1)
             self.send_response(200)
             self.send_header('Content-Type', mimetypes.guess_type(f.name)[0] or 'application/octet-stream')
