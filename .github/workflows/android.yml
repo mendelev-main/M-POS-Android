@@ -50,6 +50,7 @@ jobs:
       - name: Harness and release tooling tests
         run: |
           python3 scripts/harness.py preflight
+          python3 scripts/visual-progress.py --check
           python3 -m unittest discover -s scripts/tests -v
       - name: JVM tests, lint and debug APK
         run: python3 scripts/harness.py android
@@ -96,8 +97,8 @@ jobs:
           arch: x86_64
           profile: pixel_c
           avd-name: mpos-ci-api36
-          # Current emulator software backend; avoid deprecated swiftshader_indirect default.
-          emulator-options: -no-window -gpu software -no-snapshot -noaudio -no-boot-anim
+          # Pin the documented direct backend after repeat software-auto boot ANRs; keep every gate.
+          emulator-options: -no-window -gpu swiftshader -no-snapshot -noaudio -no-boot-anim
           ram-size: 3072M
           cores: 4
           pre-emulator-launch-script: python3 scripts/ci/configure-emulator.py --avd mpos-ci-api36

@@ -1,0 +1,48 @@
+{
+  "updated_on": "2026-11-07",
+  "blocker": "Последний Android-прогон42304791948 остановился на boot ANR SystemUI/launcher до установки приложения. Локальная сборка не заменяет API/визуальную проверку. Новый CI с явным SwiftShader будет записан после наблюдаемого результата.",
+  "windows": {
+    "W01": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Тени, toolbar, точные границы/пустое состояние и парные снимки"
+    },
+    "W02": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Тени, меню, комментарии/скидки строк, итоги и парные снимки"
+    },
+    "W03": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Сетка, поиск/навигация, фото, тени и парные снимки"
+    },
+    "W04": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Окно папки/сетка/действия, фото, тени и парные снимки"
+    },
+    "W05": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Поле поиска, результаты/empty/loading, фото и парные снимки"
+    },
+    "W06": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Сетка/drag/drop/управление, точный пунктир и парные снимки"
+    }
+  }
+}

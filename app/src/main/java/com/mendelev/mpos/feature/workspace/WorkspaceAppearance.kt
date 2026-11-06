@@ -114,11 +114,11 @@ internal enum class PosTone { Neutral, Info, Zone, Primary, Warning, Demand }
         stock=projection.first;availability=projection.second
     }
     Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(4.dp),verticalAlignment=Alignment.Bottom) {
-        Text(if(product.price.toBigDecimal().signum()==0) "Ввести цену" else posMoney(product.price.toBigDecimal()),Modifier.weight(1f),
+        Text(if(product.price.toBigDecimal().signum()==0) "Ввести цену" else posMoney(product.price.toBigDecimal()),Modifier.weight(1f).alignByBaseline(),
             style=MaterialTheme.typography.titleSmall.copy(fontSize=13.sp,fontWeight=FontWeight.ExtraBold),maxLines=1,overflow=TextOverflow.Ellipsis)
         Text(stock,style=MaterialTheme.typography.bodySmall.copy(fontSize=11.5.sp,fontWeight=FontWeight.SemiBold),maxLines=1,
             color=if(stock.replace(',','.').toBigDecimalOrNull()?.let {it<=java.math.BigDecimal(3)}==true) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier=Modifier.semantics {contentDescription="Количество: $stock"; stateDescription=when(availability) {
+            modifier=Modifier.alignByBaseline().semantics {contentDescription="Количество: $stock"; stateDescription=when(availability) {
                 com.mendelev.mpos.domain.workspace.ProductAvailability.SHORTAGE -> "Недостаточно для добавления"
                 com.mendelev.mpos.domain.workspace.ProductAvailability.STALE -> "Проверьте текущий заказ"
                 com.mendelev.mpos.domain.workspace.ProductAvailability.INVALID -> "Требуется проверка состава"

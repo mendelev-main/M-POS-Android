@@ -1,5 +1,7 @@
 # Сверка интерфейса с Web окно за окном
 
+Актуальные количества и статус каждого окна: [счётчик сверки](VISUAL-PARITY-PROGRESS.md).
+
 Запрос владельца от 2026-11-07: внешний вид native должен воспроизводить Web, включая размеры, расположение, цвета и типографику. Начинаем с рабочей зоны, текущего заказа и оплаты. Новый дизайн не разрабатываем.
 
 До начала этого этапа PR [#6](https://github.com/mendelev-main/M-POS-Android/pull/6) develop→main слит в b36f6101f711c26abc8d48feda1c9055b7c05778 после успешных PR checks42297461552. Штатный выпуск42298540849 остановлен на boot ANR SystemUI/launcher до установки приложения, включая единственный повтор failed jobs; signing/publish не состоялись. Не называть merge опубликованным APK.
@@ -168,3 +170,11 @@ CI Web-атласа: [42299895910](https://github.com/mendelev-main/M-POS-Androi
 Незакрытые отличия: CSS shadow/точные метрики текста, меню действий C06 (native DropdownMenu), комментарий и скидка строки не представлены полями CartLine, исходные скидки/доставка в отображении итогов требуют отдельной сверки с уже существующей моделью оплаты. Не подменять эти данные фиктивными значениями ради картинки. W02 с Web-комментарием нельзя считать парным совпавшим fixture до поддержки отображения комментария. Верхнее меню при admin-active содержит дополнительный native chip; состояние пока не совпадает с исходным Web. Сетка/папки, все остальные C/P окна остаются незакрытыми.
 
 Проверка V04.1: локальные307JVM/lint/debug/testAPK прошли, CI [42304791948](https://github.com/mendelev-main/M-POS-Android/actions/runs/42304791948)/d739900 checks SUCCESS307JVM; Android-задача остановилась на boot ANR SystemUI/launcher до установки приложения. Геометрический instrumentation test **не выполнен**, парный native PNG не проверен. Статус V04.1: source-audited / implemented; API/pixel/device verification pending. Повтор без устранения нестабильного boot не запускался.
+
+## V03.1 — плитки W01–W06, 2026-11-07
+
+Частичная сверка общих плиток: whole-glyph opacity вместо tint alpha (важно для emoji); обычный символ46/line46/spacing1/opacity0,6, compact/edit32/line32/opacity0,12. Рамки: folder1,5/outline/radius14; edit1,5/dashed; dark category2/color. Content inset включает CSS border: обычный15, folder11,5, edit9,5, dark category16dp. В compact/edit заголовок13,5/16,2, обычный14,5/18,125. Стрелка категории20/14 вынесена вправо; category subtitle600; price/stock baseline. Disabled opacity0,42 применяется к целой карточке; разрешения и команды не менялись. Точный рисунок CSS dashed, shadows/glow, фото, toolbar, сетка/перетаскивание и парные screenshots ещё не закрыты.
+
+Локально visual-tiles-build.log:307JVM/lint/debug/testAPK SUCCESS1m15s; preflight/16Python/diff прошли. Изменения V03.1 не дают статуса verified ни одному полному окну. Сводка:6partial/80not-started/0complete; детали — VISUAL-PARITY-PROGRESS.md.
+
+Для диагностики повторных cold-boot ANR в CI выбран явный `-gpu swiftshader` вместо автоматически выбираемого `software`. Это проверяемая гипотеза стабилизации, не установленная причина ANR и не подтверждённое исправление до нового run. Direct swiftshader является поддержанным backend, в отличие от deprecated swiftshader_indirect: [официальная документация Android](https://developer.android.com/studio/run/emulator-acceleration#accel-gpu). API36, размеры/плотность, boot-ANR guard и все тесты сохранены. Production APK и его renderer не изменяются этой настройкой CI.
