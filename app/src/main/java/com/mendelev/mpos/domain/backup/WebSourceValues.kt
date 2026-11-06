@@ -12,7 +12,7 @@ object WebIdentity {
         else->backupBad("identity")
     }
     fun mapped(kind: String,source: String): String {
-        require(kind in setOf("product","employee","shift","category","modifierGroup","modifierOption","folder","receipt","receiving","purchaseOrder","inventory"))
+        require(kind in setOf("product","supplier","employee","shift","category","modifierGroup","modifierOption","folder","receipt","receiving","purchaseOrder","inventory"))
         return "web-"+CatalogRules.fingerprint("web-identity-v1",kind,source)
     }
 }

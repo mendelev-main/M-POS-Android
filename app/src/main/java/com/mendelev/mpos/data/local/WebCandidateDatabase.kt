@@ -40,7 +40,7 @@ internal class WebCandidateDatabase(private val context: Context,private val db:
             permit.requireCurrent();currentCoroutineContext().ensureActive()
             if(db.catalog().config()!=null || db.catalog().allProducts().isNotEmpty() || db.workspace().documents().isNotEmpty())fail("Кандидат уже содержит данные")
             suspend fun wrote() {afterWrite();permit.requireCurrent();currentCoroutineContext().ensureActive()}
-            val config=ConfigEntity(registerId=WebIdentity.mapped("register",source.preview.sha256),ownerId=WebIdentity.mapped("owner",source.preview.sha256))
+            val config=ConfigEntity(registerId=CatalogRules.fingerprint("web.native.register.v1",source.preview.sha256),ownerId=CatalogRules.fingerprint("web.native.owner.v1",source.preview.sha256))
             db.catalog().config(config);wrote()
             db.workspace().put(WorkspaceDocument(BASIS,1,JSONObject().put("version",1).put("products",org.json.JSONArray(catalog.products.filter {it.type=="composite"}.map {it.id}.sorted())).toString()));wrote()
             layout.categories.filter {it.id.isNotEmpty()}.forEachIndexed {i,c->db.catalog().insertCategory(CategoryEntity(c.id,c.name,CatalogRules.key(c.name),i,1,c.color,c.symbol));wrote()}
@@ -85,7 +85,7 @@ internal class WebCandidateDatabase(private val context: Context,private val db:
             db.shifts().initialize(ShiftRegisterEntity(revision=1,lastShiftId=last?.id));wrote()
             val current=binding.carts.singleOrNull {it.location=="current"}
             val adopted=binding.carts.associate {it.origin to WebCartAdoption.map(it,products,source)}
-            val cart=current?.let {adopted.getValue(it.origin).cart} ?: CurrentCart(sessionId=WebIdentity.mapped("empty-session",source.preview.sha256))
+            val cart=current?.let {adopted.getValue(it.origin).cart} ?: CurrentCart(sessionId=CatalogRules.fingerprint("web.native.empty-session.v1",source.preview.sha256))
             db.workspace().put(WorkspaceDocument("current",1,WorkspaceCodec.cart(cart)));wrote()
             db.workspace().put(WorkspaceDocument("layout",1,WorkspaceCodec.layout(layout.items)));wrote()
             db.workspace().put(WorkspaceDocument("home",1,WorkspaceCodec.home(HomeLayout(true,layout.home.map {HomeTile(it.type,it.id,it.nativeSlot ?: fail("Нет позиции"))}))));wrote()

@@ -136,7 +136,7 @@ class ParkedOrdersRepositoryTest {
             db.catalog().result(ResultEntity("old-result",fp,"current"))
             db.close();db=open();repo=WorkspaceRepository(db);repo.initialize();val after=repo.snapshot()
             assertEquals(before.cart.lines,after.cart.lines);assertEquals(before.cart.graph,after.cart.graph)
-            assertEquals(before.cartRevision,after.cartRevision);assertTrue(after.cart.sessionId.isNotBlank());assertEquals(2,WorkspaceCodec.cartVersion(db.workspace().document("current")!!.payload))
+            assertEquals(before.cartRevision,after.cartRevision);assertTrue(after.cart.sessionId.isNotBlank());assertEquals(3,WorkspaceCodec.cartVersion(db.workspace().document("current")!!.payload))
             repo.cart(action,"old-result",after.cart.sessionId);assertEquals(after,repo.snapshot())
             val owner=after.cart.sessionId;repo.initialize();assertEquals(owner,repo.snapshot().cart.sessionId)
             assertEquals("10",db.catalog().balance("p")!!.quantity)
