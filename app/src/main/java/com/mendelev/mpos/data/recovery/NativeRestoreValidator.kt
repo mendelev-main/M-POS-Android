@@ -121,7 +121,11 @@ internal object NativeRestoreValidator {
         val suppliers=docs[SupplierCodec.KEY]?.let {SupplierCodec.decode(it.payload)}.orEmpty()
         require(suppliers.all {s->s.productIds.all {it in ids}})
         docs[PurchaseDraftCodec.KEY]?.let {PurchaseDraftCodec.decode(it.payload)}
-        docs[PurchaseOrderCodec.KEY]?.let {PurchaseOrderCodec.decode(it.payload)}
+        docs[PurchaseOrderCodec.KEY]?.let {row->
+            val orders=PurchaseOrderCodec.decode(row.payload)
+            // PO01 only defines the storage model. Full source/bootstrap reconciliation is required before adoption.
+            require(orders.none {it.importedOrigin!=null}) {"imported purchase adoption pending"}
+        }
         docs[ReceivingCodec.KEY]?.let {ReceivingCodec.decode(it.payload)}
         docs[PostedReceivingCodec.KEY]?.let {PostedReceivingCodec.decode(it.payload)}
         docs[InventoryCodec.KEY]?.let {InventoryCodec.decode(it.payload)}

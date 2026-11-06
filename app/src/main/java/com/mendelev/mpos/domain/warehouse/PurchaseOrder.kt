@@ -3,12 +3,15 @@ package com.mendelev.mpos.domain.warehouse
 import com.mendelev.mpos.domain.catalog.*
 import java.time.Instant
 
+data class ImportedPurchaseOrigin(val sourceSha256: String,val sourceId: String,val requestVersion: Long?)
+
 /** Versioned request. Receipt/stock postings are deliberately a separate operation. */
 data class PurchaseOrder(val id: String,val source: PurchaseDraft,val createdAt: Long,
     val expectedQuantities: List<String?>,val requestVersion: Long=1,val status: String="pending",
     val revision: Long=1,val updatedAt: Long?=null,val cancelledAt: Long?=null,val cancelledBy: String?=null,
     val history: List<PurchaseRequestRevision> = emptyList(),
-    val receivingId: String?=null,val receivedAt: Long?=null,val receivedBy: String?=null)
+    val receivingId: String?=null,val receivedAt: Long?=null,val receivedBy: String?=null,
+    val importedOrigin: ImportedPurchaseOrigin?=null)
 data class PurchaseRequestRevision(val source: PurchaseDraft,val expectedQuantities: List<String?>,val requestVersion: Long,val at: Long)
 object PurchaseOrderRules {
     fun positive(d: PurchaseDraft): PurchaseDraft {
@@ -25,6 +28,11 @@ object PurchaseOrderRules {
         return PurchaseOrder(id,positive,now,positive.lines.map {PurchaseDraftRules.expected(it)?.let(CatalogRules::canonical)})
     }
     fun validate(o: PurchaseOrder) {
+        o.importedOrigin?.let {
+            require(it.sourceSha256.matches(Regex("[0-9a-f]{64}")))
+            require(it.sourceId.isNotBlank() && it.sourceId.length<=512)
+            require(it.requestVersion==null || it.requestVersion in 1..9007199254740991L)
+        }
         val expected=create(o.id,o.source,o.createdAt)
         require(o.requestVersion>=1 && o.source==expected.source && o.expectedQuantities==expected.expectedQuantities)
         require(o.history.size.toLong()==o.requestVersion-1 && o.updatedAt?.let {it>=0}!=false)
@@ -57,6 +65,7 @@ object PurchaseOrderRules {
         append("Заказ поставщику: ${o.source.supplierName}\n")
         append("Номер: ${o.id}\n")
         append("Версия заявки: ${o.requestVersion} · ${purchaseOrderStatus(o)}\n")
+        o.importedOrigin?.let {append("Перенесено из Web: исходная версия ${it.requestVersion ?: "не сохранена"}; версии native считаются отдельно\n")}
         append("Дата (UTC): ${Instant.ofEpochMilli(o.createdAt)}\n\n")
         o.source.lines.forEachIndexed {i,l->append("${i+1}. ${l.productName} — ${requested(l)}\n")}
         append(if(o.status=="cancelled") "\nЗаказ отменён; поставка по этому запросу не ожидается." else if(o.status=="received") "\nПоставка принята; заказ закрыт." else "\nПросьба подтвердить наличие и сроки поставки.")

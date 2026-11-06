@@ -125,6 +125,7 @@ import com.mendelev.mpos.domain.warehouse.*
                 MposButton("Перечитать историю",model::refreshOrders,enabled=!locked,modifier=Modifier.testTag("purchaseOrderReload"))
             } else {
                 Text("${purchaseDate(order.createdAt)} · ${purchaseOrderStatus(order)} · Версия ${order.requestVersion}",modifier=Modifier.testTag("purchaseOrderStatus"))
+                order.importedOrigin?.let {Text("Из Web: исходная версия ${it.requestVersion ?: "не сохранена"}. Версии native считаются отдельно",style=MaterialTheme.typography.bodySmall)}
                 Column(Modifier.weight(1f,fill=false).heightIn(max=450.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                     SelectionContainer {Text(PurchaseOrderRules.text(order),modifier=Modifier.testTag("purchaseOrderText"))}
                     order.source.lines.forEachIndexed {i,l->Text("${l.productName}: ожидается ${order.expectedQuantities[i]?.replace('.',',')?.let {"$it ${unitLabel(l.stockUnit)}"} ?: "уточнить при приёмке"}")}

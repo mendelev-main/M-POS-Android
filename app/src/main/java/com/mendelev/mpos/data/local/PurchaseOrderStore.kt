@@ -7,8 +7,9 @@ import org.json.JSONObject
 
 object PurchaseOrderCodec {
     const val KEY="purchase-orders"
-    fun encode(rows: List<PurchaseOrder>): String=JSONObject().put("version",3).put("items",JSONArray(rows.map {o->
+    fun encode(rows: List<PurchaseOrder>): String=JSONObject().put("version",4).put("items",JSONArray(rows.map {o->
         JSONObject().put("id",o.id).put("source",JSONObject(PurchaseDraftCodec.encode(o.source)))
+            .put("importedOrigin",o.importedOrigin?.let {JSONObject().put("sourceSha256",it.sourceSha256).put("sourceId",it.sourceId).put("requestVersion",it.requestVersion ?: JSONObject.NULL)} ?: JSONObject.NULL)
             .put("createdAt",o.createdAt).put("requestVersion",o.requestVersion).put("status",o.status)
             .put("expected",JSONArray(o.expectedQuantities.map {it ?: JSONObject.NULL}))
             .put("revision",o.revision).put("updatedAt",o.updatedAt ?: JSONObject.NULL).put("cancelledAt",o.cancelledAt ?: JSONObject.NULL).put("cancelledBy",o.cancelledBy ?: JSONObject.NULL)
@@ -17,7 +18,7 @@ object PurchaseOrderCodec {
     })).toString()
     fun decode(raw: String): List<PurchaseOrder> {
         try {
-            val j=JSONObject(raw);require(j.get("version") is Number && j.get("version").toString() in setOf("1","2","3"));val version=j.get("version").toString()
+            val j=JSONObject(raw);require(j.get("version") is Number && j.get("version").toString() in setOf("1","2","3","4"));val version=j.get("version").toString()
             val a=j.getJSONArray("items")
             fun long(j: JSONObject,key: String): Long {require(j.get(key) is Number);return j.get(key).toString().toLong()}
             return (0 until a.length()).map {i->
@@ -29,9 +30,12 @@ object PurchaseOrderCodec {
                     order.also(PurchaseOrderRules::validate)
                 } else {
                     listOf("updatedAt","cancelledAt","cancelledBy","history").forEach {require(o.has(it))}
-                    if(version=="3") listOf("receivingId","receivedAt","receivedBy").forEach {require(o.has(it))}
+                    if(version in setOf("3","4")) listOf("receivingId","receivedAt","receivedBy").forEach {require(o.has(it))}
                     val history=o.getJSONArray("history")
-                    order.copy(receivingId=if(version=="3" && !o.isNull("receivingId")) o.getString("receivingId") else null,receivedAt=if(version=="3" && !o.isNull("receivedAt")) long(o,"receivedAt") else null,receivedBy=if(version=="3" && !o.isNull("receivedBy")) o.getString("receivedBy") else null,revision=long(o,"revision"),updatedAt=if(o.isNull("updatedAt")) null else long(o,"updatedAt"),cancelledAt=if(o.isNull("cancelledAt")) null else long(o,"cancelledAt"),cancelledBy=if(o.isNull("cancelledBy")) null else o.getString("cancelledBy"),
+                    order.copy(importedOrigin=if(version=="4") {require(o.has("importedOrigin"));if(o.isNull("importedOrigin")) null else o.getJSONObject("importedOrigin").let {p->
+                        require(p.keys().asSequence().toSet()==setOf("sourceSha256","sourceId","requestVersion"))
+                        ImportedPurchaseOrigin(p.getString("sourceSha256"),p.getString("sourceId"),if(p.isNull("requestVersion"))null else long(p,"requestVersion"))
+                    }} else null,receivingId=if(version in setOf("3","4") && !o.isNull("receivingId")) o.getString("receivingId") else null,receivedAt=if(version in setOf("3","4") && !o.isNull("receivedAt")) long(o,"receivedAt") else null,receivedBy=if(version in setOf("3","4") && !o.isNull("receivedBy")) o.getString("receivedBy") else null,revision=long(o,"revision"),updatedAt=if(o.isNull("updatedAt")) null else long(o,"updatedAt"),cancelledAt=if(o.isNull("cancelledAt")) null else long(o,"cancelledAt"),cancelledBy=if(o.isNull("cancelledBy")) null else o.getString("cancelledBy"),
                         history=(0 until history.length()).map {k->val h=history.getJSONObject(k);val e=h.getJSONArray("expected")
                             PurchaseRequestRevision(PurchaseDraftCodec.decode(h.getJSONObject("source").toString())!!,(0 until e.length()).map {if(e.isNull(it)) null else e.getString(it)},long(h,"requestVersion"),long(h,"at"))
                         }).also(PurchaseOrderRules::validate)

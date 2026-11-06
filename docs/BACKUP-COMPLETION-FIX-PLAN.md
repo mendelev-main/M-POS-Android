@@ -4,7 +4,7 @@
 
 ## F01 — открытые оплаты и ошибки Android проверки
 
-Статус: исправления реализованы, Android подтверждение ожидается.
+Статус: основной сценарий a091a1c ci-verified — CI42266379584 attempt2,297JVM/292API36,0ошибок/пропусков. Усиленный тест отката каждой записи9fc7416 пока только скомпилирован; его API execution pending. Настоящий процессный Web restart остаётся F05.
 
 Исправить смешение source identity с новыми native register/owner/session identity; проверить supplier identity и миграцию cart1/2→3. Сохранить отдельное происхождение source-paid и новых native подтверждений.
 
