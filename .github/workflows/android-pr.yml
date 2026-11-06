@@ -5,6 +5,11 @@ on:
     branches: [main]
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
+    inputs:
+      visual_reference:
+        description: 'Capture pinned Web windows only; no APK or release'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -15,7 +20,7 @@ concurrency:
 
 jobs:
   checks:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    if: (github.event_name == 'workflow_dispatch' && inputs.visual_reference != true) || (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -48,3 +53,33 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+
+  web-reference:
+    if: github.event_name == 'workflow_dispatch' && inputs.visual_reference == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: mendelev-main/M-POS-Android-Web
+          ref: 1682c88334e6fb13586ce4b530157c59ca062e43
+          path: reference-web
+          persist-credentials: false
+      - name: Install pinned capture runtime
+        working-directory: tools/web-reference
+        run: |
+          npm ci --ignore-scripts
+          npx playwright install --with-deps chromium
+      - name: Capture Web reference windows
+        env:
+          MPOS_REFERENCE_SOURCE: reference-web
+        run: node tools/web-reference/capture.mjs
+      - name: Reference gallery and measurements
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: web-visual-reference
+          path: output/playwright/web-reference/
+          retention-days: 30
+          if-no-files-found: error

@@ -23,3 +23,8 @@ signing-private/
 
 # Also ignore app/build when the local generated directory is a symlink.
 /app/build
+
+# Generated visual reference / isolated browser data
+/output/playwright/
+/.playwright-cli/
+/tools/web-reference/node_modules/
