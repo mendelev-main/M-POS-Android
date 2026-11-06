@@ -37,6 +37,8 @@ class ReceivingPostingRepository(private val db: CatalogDatabase,private val clo
             }
             val result=ReceivingPostingRules.preview(d,order,products,c.costPolicy)
             if(result.hasOverage && !c.overageConfirmed) throw CatalogFailure("overage","Подтвердите превышение заказа")
+            // Cost/revision changes must not invalidate a cart whose payment has already started.
+            for(line in result.lines.filter {it.actual.toBigDecimal().signum()>0}) SplitPaymentRepository(db).requireProductUnlocked(line.productId)
             val recordsDoc=db.workspace().document(PostedReceivingCodec.KEY) ?: WorkspaceDocument(PostedReceivingCodec.KEY,0,PostedReceivingCodec.encode(emptyList()))
             val rows=PostedReceivingCodec.decode(recordsDoc.payload)
             if(rows.any {it.draft.id==d.id || (order!=null && it.draft.order?.id==order.id)}) throw CatalogFailure("conflict","Этот заказ уже принят")
