@@ -47,4 +47,13 @@ class WebPendingPurchasesTest {
         val legacy=converted();assertEquals(listOf("6000"),legacy.expectedQuantities);assertEquals("6",legacy.source.lines.single().quantity);assertEquals("kg",legacy.source.lines.single().unit)
     }
 
+    @Test fun existingReceivingIncludingHiddenHistoryCannotBecomeAnotherPendingReceipt() {
+        for(hidden in listOf(false,true)) {
+            val j=source().put("receivings",JSONArray().put(JSONObject().put("id","r").put("purchaseOrderId","o").put("adminDeleted",hidden)))
+            assertThrows(BackupFailure::class.java) {map(j)}
+        }
+        val j=source();j.getJSONArray("purchaseOrders").getJSONObject(0).put("receivedItems",JSONArray().put(JSONObject().put("productId","p").put("qty",3)))
+        assertThrows(BackupFailure::class.java) {map(j)}
+    }
+
 }

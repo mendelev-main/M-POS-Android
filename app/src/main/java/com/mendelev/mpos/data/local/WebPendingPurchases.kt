@@ -8,9 +8,14 @@ import com.mendelev.mpos.domain.warehouse.*
 internal object WebPendingPurchases {
     fun map(source: WebBackupDocument,products: List<ProductEntity>,suppliers: List<Supplier>): List<PurchaseOrder> {
         val ps=products.associateBy {it.id};val ss=suppliers.associateBy {it.id}
+        // Hidden/deleted historical documents still describe a posting; hiding is not a stock reversal.
+        val receivedOrders=WebValues.rows(source.root.fields["receivings"]).mapNotNull {v->
+            WebValues.obj(v)["purchaseOrderId"]?.takeUnless {it===BackupJson.Nil || it is BackupJson.Str && it.value.isEmpty()}?.let(WebIdentity::source)
+        }.toSet()
         return WebValues.rows(source.root.fields["purchaseOrders"]).map(WebValues::obj).filter {WebValues.text(it["status"])=="pending"}.map {o->
             fun fail(): Nothing=throw BackupFailure("webCandidate","Не удалось сверить ожидаемую закупку: проверьте поставщика, единицы и ожидаемое количество")
             val sid=WebIdentity.source(o["id"])
+            if(sid in receivedOrders || WebValues.rows(o["receivedItems"]).isNotEmpty())fail()
             if(listOf("receivedAt","deletedAt").any {o[it]!=null && o[it]!==BackupJson.Nil})fail()
             val supplier=ss[WebIdentity.mapped("supplier",WebIdentity.source(o["supplierId"]))]?.takeUnless {it.deleted} ?: fail()
             val lines=WebValues.rows(o["items"]).map {v->val l=WebValues.obj(v)
