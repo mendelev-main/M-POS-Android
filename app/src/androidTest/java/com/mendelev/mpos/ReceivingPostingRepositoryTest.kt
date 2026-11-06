@@ -97,7 +97,7 @@ class ReceivingPostingRepositoryTest {
             assertEquals("10.0004",db.catalog().balance(tiny.draft.lines.single().product.id)!!.quantity)
         } finally {db.close()}
     }
-    @Test fun oldOrderPayloadTwoIsReadAndWrittenAsThreeOnlyOnMutation(): Unit=runBlocking {
+    @Test fun oldOrderPayloadTwoIsReadAndWrittenAsFourOnlyOnMutation(): Unit=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         try {
             val c=prepare(db);val doc=db.workspace().document(PurchaseOrderCodec.KEY)!!
@@ -106,7 +106,7 @@ class ReceivingPostingRepositoryTest {
             val old=doc.copy(payload=json.toString());db.workspace().put(old)
             assertEquals(c.draft.order,PurchaseOrderStore(db).all().single());assertEquals(old,db.workspace().document(PurchaseOrderCodec.KEY))
             ReceivingPostingRepository(db).commit(c)
-            assertEquals(3,org.json.JSONObject(db.workspace().document(PurchaseOrderCodec.KEY)!!.payload).getInt("version"))
+            assertEquals(4,org.json.JSONObject(db.workspace().document(PurchaseOrderCodec.KEY)!!.payload).getInt("version"))
         } finally {db.close()}
     }
     @Test fun zeroRowsStayUnchangedButOrderClosesAndAllZeroDraftCannotPost(): Unit=runBlocking {

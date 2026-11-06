@@ -36,4 +36,15 @@ class WebPendingPurchasesTest {
         val j=source();val rows=j.getJSONArray("purchaseOrders").getJSONObject(0).getJSONArray("items");rows.put(JSONObject(rows.getJSONObject(0).toString()))
         assertThrows(BackupFailure::class.java) {map(j)}
     }
+    @Test fun recordedKilogramsConvertExactlyToCurrentGramBaseWithoutChangingOrderUnits() {
+        val j=source();j.getJSONArray("products").getJSONObject(0).put("stockUnit","g")
+        val line=j.getJSONArray("purchaseOrders").getJSONObject(0).getJSONArray("items").getJSONObject(0)
+        line.put("stockUnit","kg").put("contentUnit","kg")
+        fun converted()=WebPendingPurchases.map(WebBackupReader.read(j.toString().byteInputStream()),products.map {it.copy(unit="g")},listOf(supplier)).single()
+        val modern=converted();assertEquals(listOf("6000"),modern.expectedQuantities)
+        assertEquals("3",modern.source.lines.single().quantity);assertEquals("box",modern.source.lines.single().unit);assertEquals("kg",modern.source.lines.single().contentUnit)
+        line.remove("requestedQty");line.remove("requestedUnit");line.remove("expectedQty");line.remove("packSize")
+        val legacy=converted();assertEquals(listOf("6000"),legacy.expectedQuantities);assertEquals("6",legacy.source.lines.single().quantity);assertEquals("kg",legacy.source.lines.single().unit)
+    }
+
 }
