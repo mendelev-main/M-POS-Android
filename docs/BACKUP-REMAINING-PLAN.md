@@ -83,3 +83,5 @@ Native export/restore подключены ранее. Web-путь теперь
 
 
 2026-11-06: AD01–AD06/UI01 implementation in progress; [WEB-RESTORE-07-5.md](WEB-RESTORE-07-5.md). Added native cart3 selling basis, source-linked split3 confirmations, immutable original chunks, isolated candidate/catalog/staff/shifts/cash baseline/photos, guarded UI preparation using existing native activation. Native references start with actual candidate revisions; no fake source payment outcomes. Full Web restoration is NOT complete: legacy history retained but not wired to native reports/refunds; active inventory/receiving/pending purchases refuse rather than disappear. API36/new Web process E2E pending; local JVM/lint/build validation ongoing. develop only/no release.
+
+Актуальный порядок устранения недостатков и критерии полной готовности: [BACKUP-COMPLETION-FIX-PLAN.md](BACKUP-COMPLETION-FIX-PLAN.md), F01–F07. Начат F01: исходные identity/codec ошибки исправлены; CI42266379584 emulator отказал до установки M-POS на boot SystemUI/launcher ANR. Это не новый результат app tests. Локальный исправленный build SUCCESS1m19s.
