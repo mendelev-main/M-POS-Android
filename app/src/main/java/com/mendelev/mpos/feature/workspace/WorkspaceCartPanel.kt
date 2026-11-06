@@ -34,8 +34,8 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
                 val muted=MaterialTheme.colorScheme.onSurfaceVariant
                 Text(androidx.compose.ui.text.buildAnnotatedString {
                     withStyle(androidx.compose.ui.text.SpanStyle(fontSize=17.sp,fontWeight=FontWeight.ExtraBold)) {append("Текущий заказ")}
-                    withStyle(androidx.compose.ui.text.SpanStyle(fontSize=13.sp,fontWeight=FontWeight.Normal,color=muted)) {append(" — ${CatalogRules.canonical(count)} поз.")}
-                },Modifier.weight(1f),style=MaterialTheme.typography.titleMedium)
+                    withStyle(androidx.compose.ui.text.SpanStyle(fontSize=13.sp,fontWeight=FontWeight.Medium,color=muted)) {append(" — ${CatalogRules.canonical(count)} поз.")}
+                },Modifier.weight(1f),style=MaterialTheme.typography.titleMedium.copy(lineHeight=23.8.sp))
                 PosIconButton("customer","Выбрать клиента",{onSoon("Клиент заказа")},enabled=pending==0,modifier=Modifier.testTag("workspaceCustomer"))
                 Box {
                     PosIconButton("more","Действия с чеком",{more=true},enabled=pending==0,modifier=Modifier.testTag("workspaceMore"))
@@ -56,13 +56,13 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
             if(s.cart.details.comment.isNotBlank()) Text(s.cart.details.comment,Modifier.padding(horizontal=18.dp,vertical=6.dp),style=MaterialTheme.typography.bodySmall)
             LazyColumn(Modifier.weight(1f).padding(horizontal=14.dp).testTag("workspaceCart")) {
                 items(s.cart.lines,key={it.id}) {line ->
-                    Column(Modifier.fillMaxWidth().testTag("workspaceLine:${line.id}").clickable(enabled=pending==0) {selected=line.id}.padding(horizontal=6.dp,vertical=9.dp),verticalArrangement=Arrangement.spacedBy(3.dp)) {
-                        Row(horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.Top) {
-                            Text(line.name,Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.sp,lineHeight=19.sp))
-                            Text(posMoney(line.unitPrice.toBigDecimal()*line.quantity.toBigDecimal()),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp,fontWeight=FontWeight.ExtraBold))
+                    Column(Modifier.fillMaxWidth().testTag("workspaceLine:${line.id}").clickable(enabled=pending==0) {selected=line.id}.padding(horizontal=6.dp,vertical=9.dp)) {
+                        Row(horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.Top,modifier=Modifier.padding(bottom=3.dp)) {
+                            Text(line.name,Modifier.weight(1f).alignByBaseline(),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.sp,lineHeight=18.9.sp))
+                            Text(posMoney(line.unitPrice.toBigDecimal()*line.quantity.toBigDecimal()),modifier=Modifier.alignByBaseline(),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp,fontWeight=FontWeight.ExtraBold))
                         }
-                        Text("${posMoney(line.unitPrice.toBigDecimal())} / ${if(line.sellingBasis=="recipe-batch") "порция рецепта" else unitLabel(line.unit)} · ×${line.quantity}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                        if(line.options.isNotEmpty()) Text("↳ "+line.options.joinToString(" · ") {it.name},style=MaterialTheme.typography.bodySmall)
+                        Text("${posMoney(line.unitPrice.toBigDecimal())} / ${if(line.sellingBasis=="recipe-batch") "порция рецепта" else unitLabel(line.unit)} · ×${line.quantity}",modifier=Modifier.padding(top=2.dp),style=MaterialTheme.typography.bodySmall.copy(lineHeight=17.4.sp),color=MaterialTheme.colorScheme.onSurfaceVariant)
+                        if(line.options.isNotEmpty()) Text("↳ "+line.options.joinToString(" · ") {it.name},Modifier.padding(top=5.dp),style=MaterialTheme.typography.bodySmall.copy(lineHeight=17.4.sp))
                         if(CartEngine.stale(line,s.products)) Text("Требуется проверка: каталог изменился",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.error)
                     }
                     HorizontalDivider(color=MaterialTheme.colorScheme.outline)
@@ -86,10 +86,13 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
                 }
                 if(pending>0) Text("Сохраняем…",style=MaterialTheme.typography.bodySmall)
                 if(s.cart.lines.any {CartEngine.stale(it,s.products)}) MposButton("Пересчитать заказ",onRevalidate,enabled=pending==0,modifier=Modifier.testTag("workspaceRevalidate"))
+                BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val parkWidth=maxWidth*.34f
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    PosAction("Отложить",onPark,Modifier.weight(.34f).testTag("workspacePark"),enabled=pending==0 && s.cart.lines.isNotEmpty(),footer=true)
-                    PosAction(if(s.completedReceiptId!=null) "Чек сохранён" else "Оплатить",onCheckout,Modifier.weight(.66f).testTag("workspaceCheckout"),
+                    PosAction("Отложить",onPark,Modifier.width(parkWidth).testTag("workspacePark"),enabled=pending==0 && s.cart.lines.isNotEmpty(),footer=true)
+                    PosAction(if(s.completedReceiptId!=null) "Чек сохранён" else "Оплатить",onCheckout,Modifier.weight(1f).testTag("workspaceCheckout"),
                         enabled=pending==0 && (s.completedReceiptId!=null || (s.cart.lines.isNotEmpty() && shiftOpen)),tone=PosTone.Primary,footer=true)
+                }
                 }
             }
         }

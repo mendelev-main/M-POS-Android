@@ -34,13 +34,13 @@ internal enum class PosTone { Neutral, Info, Zone, Primary, Warning, Demand }
             else Triple(MaterialTheme.colorScheme.background,MaterialTheme.colorScheme.onSurface,Color.Transparent)
     }
     val shape=RoundedCornerShape(if(meta || (footer && tone!=PosTone.Primary)) 12.dp else 16.dp)
-    Box(modifier.heightIn(min=if(footer) 48.dp else if(meta) 40.dp else 44.dp).clip(shape)
+    Box(modifier.heightIn(min=if(footer) 47.dp else if(meta) 40.dp else 44.dp).clip(shape)
         .background(colors.first.copy(alpha=if(enabled) 1f else .4f)).border(1.dp,colors.third,shape)
         .clickable(enabled=enabled,role=Role.Button,onClick=onClick)
         .padding(horizontal=if(footer || meta) 12.dp else 15.dp,vertical=if(footer) 14.dp else if(meta) 10.dp else 11.dp),contentAlignment=if(meta) Alignment.CenterStart else Alignment.Center) {
         Text(label,color=colors.second.copy(alpha=if(enabled) 1f else .45f),
             style=MaterialTheme.typography.bodyMedium.copy(fontSize=if(meta) 13.sp else if(footer || tone==PosTone.Zone) 14.5.sp else 14.sp,
-                lineHeight=20.sp,fontWeight=if(tone==PosTone.Zone) FontWeight.ExtraBold else FontWeight.Bold),
+                lineHeight=if(footer) 19.sp else 20.sp,fontWeight=if(tone==PosTone.Zone) FontWeight.ExtraBold else FontWeight.Bold),
             maxLines=1,softWrap=false,overflow=TextOverflow.Ellipsis)
     }
 }

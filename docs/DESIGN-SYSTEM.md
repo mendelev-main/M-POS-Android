@@ -133,3 +133,5 @@ Shared MposDialog maxWidth — ограничение ширины без отд
 
 
 05c.2 shared variant: MposAnalyticsCard(metric=true) переносит analytics-kpi radius18/padding16/border1, panel radius20/padding18/border1; остальные controls прежние. Контракт/адаптивность/неподключённые показатели — [ANALYTICS-UI-05C2](ANALYTICS-UI-05C2.md).
+
+2026-11-07, V04.1: существующий PosAction.footer — именованный Web cart footer variant: font14,5sp/700, lineHeight19sp, vertical padding14dp, высота47dp при font100%; park radius12dp, pay radius16dp. Это measured exception к обычному min48dp, по новому требованию точного Web. При увеличении шрифта содержимое растёт; фиксированная высота не навязывается. Ширина park —34% полной строки до gap8.
