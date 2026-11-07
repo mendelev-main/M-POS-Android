@@ -31,3 +31,25 @@ class BootReadinessTests(unittest.TestCase):
         from unittest.mock import patch
         with patch.dict('os.environ',{},clear=True):
             with self.assertRaises(RuntimeError):module.ci_only()
+
+    def test_start_uses_one_explicit_job_temp_path_for_sdk_and_emulator(self):
+        from unittest.mock import patch,Mock
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            manager=Path(tmp)/'sdk/cmdline-tools/latest/bin/avdmanager'
+            (Path(tmp)/'mpos-ci-avd/mpos-ci-api36.avd').mkdir(parents=True)
+            process=Mock();process.pid=123;process.poll.return_value=None
+            with patch.dict('os.environ',{'RUNNER_TEMP':tmp,'ANDROID_HOME':str(Path(tmp)/'sdk'),'ANDROID_AVD_HOME':'/legacy/path','ANDROID_USER_HOME':'/different/sdk-home'}):
+                with patch.object(module.subprocess,'run') as run,patch.object(module.subprocess,'Popen',return_value=process),patch.object(module,'wait_ready'),patch.object(module,'assert_ready'),patch.object(module,'adb'),patch.object(module.importlib.util,'module_from_spec') as load,patch.object(module,'REPORTS',Path(tmp)/'reports'):
+                    load.return_value=Mock()
+                    # The real loader would execute configure-emulator.py against a dummy module;
+                    # use the real configure module, but stub only its file mutation.
+                    fake=Mock();fake.configure=Mock()
+                    loader=Mock();loader.loader.exec_module=Mock()
+                    with patch.object(module.importlib.util,'spec_from_file_location',return_value=loader):
+                        load.return_value=fake
+                        module.start()
+                    command=run.call_args.args[0]
+                    self.assertEqual(str(Path(tmp)/'mpos-ci-avd/mpos-ci-api36.avd'),command[command.index('--path')+1])
+                    import os
+                    self.assertEqual(str(Path(tmp)/'mpos-ci-avd'),os.environ['ANDROID_AVD_HOME'])

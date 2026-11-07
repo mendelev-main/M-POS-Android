@@ -62,8 +62,10 @@ def assert_ready():
 def start():
     sdk=Path(os.environ['ANDROID_HOME'])
     manager=sdk/'cmdline-tools/latest/bin/avdmanager'
-    subprocess.run([str(manager),'create','avd','--force','--name',AVD,'--package','system-images;android-36;default;x86_64','--device','pixel_c'],input='no\n',text=True,check=True)
-    home=Path(os.environ.get('ANDROID_AVD_HOME',str(Path.home()/'.android/avd')))
+    home=Path(os.environ['RUNNER_TEMP'])/'mpos-ci-avd'
+    home.mkdir(parents=True,exist_ok=True)
+    os.environ['ANDROID_AVD_HOME']=str(home)
+    subprocess.run([str(manager),'create','avd','--force','--name',AVD,'--package','system-images;android-36;default;x86_64','--device','pixel_c','--path',str(home/(AVD+'.avd'))],input='no\n',text=True,check=True)
     config=home/(AVD+'.avd/config.ini')
     spec=importlib.util.spec_from_file_location('mpos_avd',ROOT/'scripts/ci/configure-emulator.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
     module.configure(config)
