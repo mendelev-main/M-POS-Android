@@ -53,12 +53,7 @@ class SplitSaleUiTest {
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceCheckout").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("workspaceCheckout").performClick()
         compose.runOnIdle {model=ViewModelProvider(compose.activity)[SaleViewModel::class.java]};ready()
-        compose.onNodeWithTag("checkoutFields").performScrollToNode(hasTestTag("saleMode"))
-        compose.onNode(hasText("Наличные") and hasAnyAncestor(hasTestTag("saleMode"))).performClick()
-        compose.onNodeWithText("Разделить / смешанная").performClick()
-        compose.onNodeWithTag("checkoutFields").performScrollToNode(hasTestTag("splitEqual"))
-        compose.onNodeWithTag("splitEqual").performClick()
-        compose.onNodeWithTag("splitStart").performClick();ready()
+        compose.onNodeWithTag("paymentSplit").performClick();ready()
         assertNotNull(model.state.value.split);assertTrue(model.state.value.split!!.checkout.draft.parts.all {it.given==null})
         value("splitEditGiven:1","6")
         scroll("splitPay:1");compose.onNodeWithTag("splitPay:1").performClick()

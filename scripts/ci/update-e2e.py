@@ -275,6 +275,14 @@ def main():
                     (reports / name).write_bytes(captured.stdout)
                 expected_home = adb("shell", "run-as", PACKAGE, "cat", "files/qa/homeTileName.txt").strip()
                 assert expected_home, "UI setup must preserve a custom home tile"
+                visual = adb("shell", "am", "instrument", "-w", "-e", "class",
+                             "com.mendelev.mpos.feature.sale.PaymentAppearanceTest,com.mendelev.mpos.feature.workspace.ParkedAppearanceTest",
+                             PACKAGE + ".test/com.mendelev.mpos.MposTestRunner", timeout=180)
+                assert "OK (2 tests)" in visual and "FAILURES" not in visual, visual[-4000:]
+                for name in ("P01-native-light", "P01-native-dark", "P02-native-light", "P02-native-dark", "P03-native-light", "P03-native-dark", "C09-native-light", "C09-native-dark", "C09-empty-native-dark"):
+                    captured = subprocess.run(["adb", "exec-out", "run-as", PACKAGE, "cat", f"files/qa/{name}.png"], capture_output=True, timeout=20, check=True)
+                    assert captured.stdout.startswith(b"\x89PNG"), "Invalid visual parity screenshot"
+                    (reports / f"{name}.png").write_bytes(captured.stdout)
                 expected_product = adb("shell", "run-as", PACKAGE, "cat", "files/qa/productName.txt").strip()
                 assert expected_product, "UI setup must create a real catalog record"
                 expected_workspace_line = adb("shell", "run-as", PACKAGE, "cat", "files/qa/workspaceLineName.txt").strip()

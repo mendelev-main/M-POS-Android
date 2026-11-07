@@ -32,14 +32,18 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
     LaunchedEffect(refund.result?.id) {if(refund.result!=null) model.refresh()}
     val locked=ui.pending || refund.pending || refund.unresolved!=null || ui.unresolved!=null || ui.splitUncertain || (ui.split?.paid?.isNotEmpty()==true && ui.completed==null)
     BackHandler {if(!ui.pending) {if(refund.review!=null || refund.result!=null) refundModel.dismiss() else if(ui.selected!=null && refund.unresolved==null && !refund.pending) model.closeDetails() else if(ui.partPreview!=null) model.dismissPart() else if(ui.preview!=null) model.dismissPreview() else if(!locked) onBack()}}
+    val webPayment=!history && !ui.loading && !ui.fatal && ui.completed==null && ui.split==null
+    var options by androidx.compose.runtime.saveable.rememberSaveable {mutableStateOf(false)}
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        MposAppBar(if(history) "M-POS · История чеков" else "M-POS · Оплата", navigationEnabled=!locked) {
-            MposNavigationAction("Назад",{if(!locked) onBack()})
-            if(!history) MposNavigationAction("История чеков",{if(!locked) onHistory()})
-        }
-        if(LocalMposTopNavigation.current != null) {
-            Row(Modifier.padding(horizontal=20.dp, vertical=8.dp)) {
-                MposButton("Назад", onBack, enabled=!locked, style=ActionStyle.Secondary)
+        if(!webPayment) {
+            MposAppBar(if(history) "M-POS · История чеков" else "M-POS · Оплата", navigationEnabled=!locked) {
+                MposNavigationAction("Назад",{if(!locked) onBack()})
+                if(!history) MposNavigationAction("История чеков",{if(!locked) onHistory()})
+            }
+            if(LocalMposTopNavigation.current != null) {
+                Row(Modifier.padding(horizontal=20.dp, vertical=8.dp)) {
+                    MposButton("Назад", onBack, enabled=!locked, style=ActionStyle.Secondary)
+                }
             }
         }
         if(ui.loading) Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {CircularProgressIndicator()}
@@ -70,61 +74,74 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
         } else if(ui.split!=null) {
             SplitCheckout(ui,model)
         } else {
-            val work=ui.work!!;val f=ui.form;val enabled=!locked
-            if(ui.message!=null) MposNotice(ui.message!!,true)
-            LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal=20.dp).testTag("checkoutFields"),verticalArrangement=Arrangement.spacedBy(12.dp),contentPadding=PaddingValues(vertical=16.dp)) {
-                item {
-                    Text("Оплата заказа",style=MaterialTheme.typography.headlineSmall)
-                    Text(listOf(work.cart.details.label,OrderRules.typeLabel(work.cart.details.type)).filter {it.isNotBlank()}.joinToString(" · "))
-                    Text("Карта учитывается вручную. Банковский терминал не подключён.",style=MaterialTheme.typography.bodySmall)
+            val work=ui.work!!;val enabled=!locked
+            PaymentPage(work.cart,model.estimate(),ui.form.given,enabled,work.cart.lines.isNotEmpty() && ui.shift?.active!=null,
+                ui.message,ui.draft!=null,{value->model.edit {it.copy(given=value)}},onBack,
+                {model.equal(2);model.startSplit()},
+                {method->model.edit {it.copy(mode=method,given=it.given.ifBlank {"0"}.trimEnd(',','.'))};model.prepare()},
+                {options=true},notice={
                     if(work.cart.lines.isEmpty()) Text("Заказ пуст. Добавьте товары в рабочей зоне",Modifier.testTag("checkoutEmpty"))
                     if(ui.shift?.active==null) {MposNotice("Откройте смену перед оплатой",true);MposButton("Перейти к смене",onShift,enabled=enabled,style=ActionStyle.Secondary)}
                     if(work.cart.lines.any {CartEngine.stale(it,work.products)}) MposNotice("Каталог изменился. Вернитесь в рабочую зону и пересчитайте заказ",true)
-                    if(ui.draft!=null) Text("Подготовленная оплата сохранена. Перед проведением проверьте итог заново.",Modifier.testTag("checkoutRestored"),style=MaterialTheme.typography.bodySmall)
-                }
-                items(work.cart.lines,key={it.id}) {line->
-                    val discount=f.discounts[line.id] ?: DiscountField()
-                    Surface(shape=MaterialTheme.shapes.large) {Column(Modifier.fillMaxWidth().padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                        Text(line.name,style=MaterialTheme.typography.titleMedium)
-                        Text("${line.unitPrice} BYN × ${line.quantity}")
-                        if(line.options.isNotEmpty()) Text(line.options.joinToString {it.name})
-                        MposSelect("Скидка строки",discount.type,listOf("none" to "Без скидки","percent" to "Процент","fixed" to "BYN за единицу"),{type->model.edit {it.copy(discounts=it.discounts+(line.id to discount.copy(type=type)))}},enabled)
-                        if(discount.type!="none") MposField(discount.value,{value->model.edit {it.copy(discounts=it.discounts+(line.id to discount.copy(value=value)))}},if(discount.type=="percent") "Скидка, %" else "Скидка на единицу, BYN",Modifier.testTag("discount:${line.id}"),enabled,numeric=true)
-                    }}
-                }
-                if(work.cart.details.type=="delivery") item {
-                    Text("Доставка",style=MaterialTheme.typography.titleMedium)
-                    MposField(f.tariff,{v->model.edit {it.copy(tariff=v)}},"Название тарифа",Modifier.testTag("deliveryName"),enabled)
-                    MposField(f.fee,{v->model.edit {it.copy(fee=v)}},"Стоимость доставки, BYN (0 — бесплатно)",Modifier.testTag("deliveryFee"),enabled,numeric=true)
-                    Text("Стоимость доставки сразу выдаётся из наличной кассы, в том числе при оплате картой.",style=MaterialTheme.typography.bodySmall)
-                }
-                item {
-                    Text("Способ оплаты",style=MaterialTheme.typography.titleMedium)
-                    MposSelect("Оплата",f.mode,listOf("cash" to "Наличные","card" to "Карта","split" to "Разделить / смешанная"),{v->model.edit {it.copy(mode=v)}},enabled,Modifier.testTag("saleMode"))
-                    if(f.mode=="cash") MposField(f.given,{v->model.edit {it.copy(given=v)}},"Получено наличными, BYN",Modifier.testTag("cashGiven"),enabled,numeric=true)
-                    if(f.mode=="split") {
-                        Text("Сначала сохраните части. Затем подтвердите каждую отдельно; наличные вводятся при оплате части.",style=MaterialTheme.typography.bodySmall)
-                        var count by remember {mutableStateOf("2")}
-                        MposField(count,{count=it},"Количество равных частей (2–10)",Modifier.testTag("splitCount"),enabled,numeric=true)
-                        MposButton("Разделить поровну",{model.equal(count.toIntOrNull() ?: 0)},Modifier.testTag("splitEqual"),enabled=enabled,style=ActionStyle.Secondary)
+                },resolve=if(ui.unresolved!=null) {{MposButton("Проверить результат оплаты",model::commit,Modifier.fillMaxWidth().testTag("saleResolve"),busy=ui.pending)}} else null)
+            if(options) MposDialog("Параметры оплаты",{if(!ui.pending) options=false},!ui.pending,wide=true) {
+                val work=ui.work!!;val f=ui.form;val enabled=!locked
+                if(ui.message!=null) MposNotice(ui.message!!,true)
+                LazyColumn(Modifier.heightIn(max=420.dp).fillMaxWidth().testTag("checkoutOptionsFields"),verticalArrangement=Arrangement.spacedBy(12.dp),contentPadding=PaddingValues(vertical=16.dp)) {
+                    item {
+                        Text("Оплата заказа",style=MaterialTheme.typography.headlineSmall)
+                        Text(listOf(work.cart.details.label,OrderRules.typeLabel(work.cart.details.type)).filter {it.isNotBlank()}.joinToString(" · "))
+                        Text("Карта учитывается вручную. Банковский терминал не подключён.",style=MaterialTheme.typography.bodySmall)
+                        if(work.cart.lines.isEmpty()) Text("Заказ пуст. Добавьте товары в рабочей зоне",Modifier.testTag("checkoutEmpty"))
+                        if(ui.shift?.active==null) {MposNotice("Откройте смену перед оплатой",true);MposButton("Перейти к смене",onShift,enabled=enabled,style=ActionStyle.Secondary)}
+                        if(work.cart.lines.any {CartEngine.stale(it,work.products)}) MposNotice("Каталог изменился. Вернитесь в рабочую зону и пересчитайте заказ",true)
+                        if(ui.draft!=null) Text("Подготовленная оплата сохранена. Перед проведением проверьте итог заново.",Modifier.testTag("checkoutRestored"),style=MaterialTheme.typography.bodySmall)
                     }
+                    items(work.cart.lines,key={it.id}) {line->
+                        val discount=f.discounts[line.id] ?: DiscountField()
+                        Surface(shape=MaterialTheme.shapes.large) {Column(Modifier.fillMaxWidth().padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                            Text(line.name,style=MaterialTheme.typography.titleMedium)
+                            Text("${line.unitPrice} BYN × ${line.quantity}")
+                            if(line.options.isNotEmpty()) Text(line.options.joinToString {it.name})
+                            MposSelect("Скидка строки",discount.type,listOf("none" to "Без скидки","percent" to "Процент","fixed" to "BYN за единицу"),{type->model.edit {it.copy(discounts=it.discounts+(line.id to discount.copy(type=type)))}},enabled)
+                            if(discount.type!="none") MposField(discount.value,{value->model.edit {it.copy(discounts=it.discounts+(line.id to discount.copy(value=value)))}},if(discount.type=="percent") "Скидка, %" else "Скидка на единицу, BYN",Modifier.testTag("discount:${line.id}"),enabled,numeric=true)
+                        }}
+                    }
+                    if(work.cart.details.type=="delivery") item {
+                        Text("Доставка",style=MaterialTheme.typography.titleMedium)
+                        MposField(f.tariff,{v->model.edit {it.copy(tariff=v)}},"Название тарифа",Modifier.testTag("deliveryName"),enabled)
+                        MposField(f.fee,{v->model.edit {it.copy(fee=v)}},"Стоимость доставки, BYN (0 — бесплатно)",Modifier.testTag("deliveryFee"),enabled,numeric=true)
+                        Text("Стоимость доставки сразу выдаётся из наличной кассы, в том числе при оплате картой.",style=MaterialTheme.typography.bodySmall)
+                    }
+                    item {
+                        Text("Способ оплаты",style=MaterialTheme.typography.titleMedium)
+                        MposSelect("Оплата",f.mode,listOf("cash" to "Наличные","card" to "Карта","split" to "Разделить / смешанная"),{v->model.edit {it.copy(mode=v)}},enabled,Modifier.testTag("saleMode"))
+                        if(f.mode=="cash") MposField(f.given,{v->model.edit {it.copy(given=v)}},"Получено наличными, BYN",Modifier.testTag("cashGiven"),enabled,numeric=true)
+                        if(f.mode=="split") {
+                            Text("Сначала сохраните части. Затем подтвердите каждую отдельно; наличные вводятся при оплате части.",style=MaterialTheme.typography.bodySmall)
+                            var count by remember {mutableStateOf("2")}
+                            MposField(count,{count=it},"Количество равных частей (2–10)",Modifier.testTag("splitCount"),enabled,numeric=true)
+                            MposButton("Разделить поровну",{model.equal(count.toIntOrNull() ?: 0)},Modifier.testTag("splitEqual"),enabled=enabled,style=ActionStyle.Secondary)
+                        }
+                    }
+                    if(f.mode=="split") items(f.parts.indices.toList(),key={"part$it"}) {i->
+                        val p=f.parts[i]
+                        fun change(next: PartField)=model.edit {it.copy(parts=it.parts.mapIndexed {n,old->if(n==i) next else old})}
+                        Surface(shape=MaterialTheme.shapes.large) {Column(Modifier.fillMaxWidth().padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                            Text("Часть ${i+1}",style=MaterialTheme.typography.titleMedium)
+                            MposSelect("Способ части",p.method,listOf("cash" to "Наличные","card" to "Карта"),{change(p.copy(method=it))},enabled)
+                            MposField(p.amount,{change(p.copy(amount=it))},"Сумма части, BYN",Modifier.testTag("partAmount:$i"),enabled,numeric=true)
+                            if(p.method=="cash") MposField(p.given,{change(p.copy(given=it))},"Получено, BYN",Modifier.testTag("partGiven:$i"),enabled,numeric=true)
+                        }}
+                    }
+                    item {MposButton("Обновить заказ и смену",model::refresh,enabled=enabled,style=ActionStyle.Secondary)}
                 }
-                if(f.mode=="split") items(f.parts.indices.toList(),key={"part$it"}) {i->
-                    val p=f.parts[i]
-                    fun change(next: PartField)=model.edit {it.copy(parts=it.parts.mapIndexed {n,old->if(n==i) next else old})}
-                    Surface(shape=MaterialTheme.shapes.large) {Column(Modifier.fillMaxWidth().padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                        Text("Часть ${i+1}",style=MaterialTheme.typography.titleMedium)
-                        MposSelect("Способ части",p.method,listOf("cash" to "Наличные","card" to "Карта"),{change(p.copy(method=it))},enabled)
-                        MposField(p.amount,{change(p.copy(amount=it))},"Сумма части, BYN",Modifier.testTag("partAmount:$i"),enabled,numeric=true)
-                        if(p.method=="cash") MposField(p.given,{change(p.copy(given=it))},"Получено, BYN",Modifier.testTag("partGiven:$i"),enabled,numeric=true)
-                    }}
-                }
-                item {MposButton("Обновить заказ и смену",model::refresh,enabled=enabled,style=ActionStyle.Secondary)}
+                model.estimate()?.let {Text("Итого: ${money(it.total)}",Modifier.padding(horizontal=20.dp),style=MaterialTheme.typography.titleMedium)}
+                if(ui.unresolved!=null) MposButton("Проверить результат оплаты",model::commit,Modifier.fillMaxWidth().padding(16.dp).testTag("saleResolve"),busy=ui.pending)
+                else if(f.mode=="split") MposButton("Начать оплату по частям",model::startSplit,Modifier.fillMaxWidth().padding(16.dp).testTag("splitStart"),enabled=work.cart.lines.isNotEmpty() && ui.shift?.active!=null,busy=ui.pending)
+                else MposButton("Проверить оплату",model::prepare,Modifier.fillMaxWidth().padding(16.dp).testTag("salePrepare"),enabled=work.cart.lines.isNotEmpty() && ui.shift?.active!=null,busy=ui.pending)
             }
-            model.estimate()?.let {Text("Итого: ${money(it.total)}",Modifier.padding(horizontal=20.dp),style=MaterialTheme.typography.titleMedium)}
-            if(ui.unresolved!=null) MposButton("Проверить результат оплаты",model::commit,Modifier.fillMaxWidth().padding(16.dp).testTag("saleResolve"),busy=ui.pending)
-            else if(f.mode=="split") MposButton("Начать оплату по частям",model::startSplit,Modifier.fillMaxWidth().padding(16.dp).testTag("splitStart"),enabled=work.cart.lines.isNotEmpty() && ui.shift?.active!=null,busy=ui.pending)
-            else MposButton("Проверить оплату",model::prepare,Modifier.fillMaxWidth().padding(16.dp).testTag("salePrepare"),enabled=work.cart.lines.isNotEmpty() && ui.shift?.active!=null,busy=ui.pending)
+
         }
     }
     if(ui.preview!=null && !history) MposDialog("Подтверждение оплаты",model::dismissPreview,!ui.pending,wide=true) {

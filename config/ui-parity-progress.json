@@ -1,6 +1,6 @@
 {
   "updated_on": "2026-11-07",
-  "blocker": "Android-прогон42308531747: checks прошли, но boot ANR SystemUI/launcher снова произошёл до установки M-POS. Эксперимент с direct SwiftShader проблему не решил; прежний software backend возвращён. API/парная визуальная проверка окон не выполнялась; частичные правки не считаются готовностью.",
+  "blocker": "Основной pipeline42353849951 устранил прежний boot blocker API36; новая сверка C09/P01–P03 требует прогона текущего commit и парных снимков. Частичные изменения не считаются пиксельной готовностью.",
   "windows": {
     "W01": {
       "source_reviewed": true,
@@ -43,6 +43,34 @@
       "api_verified": false,
       "pixel_verified": false,
       "remaining": "Сетка/drag/drop/управление, точный пунктир и парные снимки"
+    },
+    "C09": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Парные снимки обеих тем и длинный список; метаданные импортированных чеков отдельно"
+    },
+    "P01": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Парные снимки обеих тем; оформление дополнительных native-параметров"
+    },
+    "P02": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Парные снимки обеих тем и узкий экран/увеличенный шрифт"
+    },
+    "P03": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Парные снимки обеих тем и проверка реального устройства"
     }
   }
 }

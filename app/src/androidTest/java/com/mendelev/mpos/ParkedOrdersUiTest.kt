@@ -81,7 +81,7 @@ class ParkedOrdersUiTest {
         compose.onNodeWithTag("parkedDelete:$ownerB").performScrollTo().performClick()
         compose.onNodeWithText("Удалить заказ").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.parked.isEmpty()}
-        compose.onNodeWithContentDescription("Закрыть").performClick()
+        compose.onNodeWithContentDescription("Закрыть отложенные чеки").performClick()
         compose.onNodeWithTag("workspacePark").performClick();compose.onNodeWithTag("orderSubmit").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.parked.size==1}
         compose.onNodeWithTag("workspaceProduct:$productId").assertIsEnabled().performClick()
@@ -95,7 +95,7 @@ class ParkedOrdersUiTest {
         compose.onNodeWithTag("parkedOpen:$ownerA").assertExists();screenshot("parked-orders")
         assertEquals(labelA,model.state.value.snapshot!!.parked.single().cart.details.label)
         File(compose.activity.filesDir,"qa/parkedLabel.txt").writeText(labelA)
-        compose.onNodeWithContentDescription("Закрыть").performClick()
+        compose.onNodeWithContentDescription("Закрыть отложенные чеки").performClick()
         compose.onNodeWithTag("topNav-settings").performClick();compose.onNodeWithText("Товары").performClick();waitText("Добавить товар")
     }
 }

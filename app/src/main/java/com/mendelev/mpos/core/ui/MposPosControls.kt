@@ -1,0 +1,66 @@
+package com.mendelev.mpos.core.ui
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.vector.PathParser
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+/** Explicit pinned Web POS variants; do not change generic editor/dialog controls. */
+enum class PosControl { Surface, Outline, Cash, Card, Delete, Close }
+@Composable fun MposPosControl(label: String,onClick: ()->Unit,modifier: Modifier=Modifier,enabled: Boolean=true,
+    kind: PosControl=PosControl.Surface,height: Dp=46.dp,radius: Dp=12.dp,fontSize: Float=14f,icon: String?=null,horizontalPadding: Dp=14.dp) {
+    val c=MaterialTheme.colorScheme
+    val background=when(kind) {
+        PosControl.Cash->c.primary
+        PosControl.Card->if(isSystemInDarkTheme()) Color(0xFF10131A) else Color(0xFF22273A)
+        PosControl.Delete->c.errorContainer
+        PosControl.Close,PosControl.Outline->c.background
+        else->c.surface
+    }
+    val ink=when(kind) {PosControl.Cash->c.onPrimary;PosControl.Card->Color.White;PosControl.Delete->c.error;PosControl.Close->c.onSurfaceVariant;else->c.onSurface}
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+    Surface(onClick=onClick,enabled=enabled,modifier=modifier.heightIn(min=height),shape=RoundedCornerShape(radius),
+        color=background,contentColor=ink.copy(alpha=if(enabled) 1f else .45f),
+        border=if(kind in listOf(PosControl.Cash,PosControl.Card,PosControl.Close)) null else BorderStroke(1.dp,if(kind==PosControl.Delete) c.error else c.outline)) {
+        Row(Modifier.padding(horizontal=if(label.isEmpty()) 0.dp else horizontalPadding),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.Center) {
+            if(icon!=null) {MposPosIcon(icon,Modifier.size(if(kind==PosControl.Close) 22.dp else if(kind==PosControl.Delete) 18.dp else 20.dp));if(label.isNotEmpty()) Spacer(Modifier.width(8.dp))}
+            if(label.isNotEmpty()) Text(label,fontSize=fontSize.sp,fontWeight=if(kind==PosControl.Cash || kind==PosControl.Card || label=="Разделить") FontWeight.Bold else FontWeight.ExtraBold)
+        }
+    }
+    }
+}
+
+/** Paths are copied from pinned pos.html / parked-orders.js, in a 24×24 viewport. */
+@Composable fun MposPosIcon(name: String,modifier: Modifier=Modifier) {
+    val ink=LocalContentColor.current
+    val path=when(name) {
+        "close"->"M6 6L18 18M18 6L6 18"
+        "delete"->"M4 7H20M9 7V4H15V7M6 7L7 20H17L18 7M10 11V16M14 11V16"
+        "takeaway"->"M6 7H18L20 21H4L6 7ZM9 8V6A3 3 0 0 1 15 6V8"
+        "delivery"->"M3 6H14V18H3ZM14 10H18L21 14V18H14M9 18A2 2 0 1 1 5 18A2 2 0 1 1 9 18M20 18A2 2 0 1 1 16 18A2 2 0 1 1 20 18"
+        "here"->"M5 3V9A3 3 0 0 0 11 9V3M8 3V21M19 21V3C15 5 14 10 18 12H19"
+        "card"->"M6 5H18Q21 5 21 8V16Q21 19 18 19H6Q3 19 3 16V8Q3 5 6 5ZM3 10H21M7 15H10"
+        else->"M4 5H20Q22 5 22 7V17Q22 19 20 19H4Q2 19 2 17V7Q2 5 4 5ZM15 12A3 3 0 1 1 9 12A3 3 0 1 1 15 12M6 9H6.01M18 15H18.01"
+    }
+    Canvas(modifier) {scale(size.width/24f,size.height/24f,pivot=androidx.compose.ui.geometry.Offset.Zero) {
+        drawPath(PathParser().parsePathString(path).toPath(),ink,style=Stroke(if(name=="close") 1.8f else 1.7f,cap=StrokeCap.Round,join=StrokeJoin.Round))
+    }}
+}

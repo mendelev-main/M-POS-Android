@@ -1,8 +1,6 @@
 package com.mendelev.mpos.feature.workspace
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -13,11 +11,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.data.local.WorkspaceSnapshot
-import com.mendelev.mpos.domain.catalog.CatalogRules
 import com.mendelev.mpos.domain.workspace.*
-import java.text.DateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable fun OrderButtons(pending: Int,s: WorkspaceSnapshot,onDetails: ()->Unit,onPark: ()->Unit,onParked: ()->Unit,onClear: ()->Unit) {
@@ -53,30 +47,15 @@ import java.util.Locale
         else if(s.cart.lines.isEmpty() && s.cart.details==OrderDetails()) model.resume(order.id,order.revision,s.cartRevision,s.cart.sessionId) {close()}
         else onMode("resume")
     }
+    if(mode=="list") {
+        ParkedOrdersWindow(s.parked,busy,ui.message,{order->order.cart.lines.any {CartEngine.stale(it,s.products)}},
+            {close()},{choose(it,false)},{choose(it,true)})
+        return
+    }
     MposDialog(when(mode) {"details" -> "Параметры заказа";"park" -> "Отложить заказ";"resume" -> "Открыть отложенный заказ?";"delete" -> "Удалить отложенный заказ?";else -> "Отложенные заказы"},
         {if(!busy) close()},!busy) {
         if(ui.message!=null) MposNotice(ui.message!!,true)
         when(mode) {
-            "list" -> {
-                LazyColumn(Modifier.heightIn(max=420.dp).testTag("parkedList"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                    items(s.parked,key={it.id}) {order ->
-                        Surface(shape=MaterialTheme.shapes.medium,color=MaterialTheme.colorScheme.background,modifier=Modifier.fillMaxWidth().testTag("parkedCard:${order.id}")) {
-                            Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                                Text(order.cart.details.label,style=MaterialTheme.typography.titleMedium)
-                                Text(OrderRules.typeLabel(order.cart.details.type),style=MaterialTheme.typography.bodySmall)
-                                Text(DateFormat.getDateTimeInstance(DateFormat.SHORT,DateFormat.SHORT,Locale.forLanguageTag("ru")).format(Date(order.parkedAt)),style=MaterialTheme.typography.bodySmall)
-                                Text("${CatalogRules.canonical(CartEngine.total(order.cart)).replace('.',',')} BYN",style=MaterialTheme.typography.titleMedium)
-                                if(order.cart.lines.any {CartEngine.stale(it,s.products)}) Text("Требуется проверка: каталог изменился",color=MaterialTheme.colorScheme.error)
-                                Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                                    MposButton("Открыть",{choose(order,false)},enabled=!busy,modifier=Modifier.testTag("parkedOpen:${order.id}"))
-                                    MposButton("Удалить",{choose(order,true)},enabled=!busy,style=ActionStyle.Danger,modifier=Modifier.testTag("parkedDelete:${order.id}"))
-                                }
-                            }
-                        }
-                    }
-                    if(s.parked.isEmpty()) item {Text("Нет отложенных заказов")}
-                }
-            }
             "delete" -> {
                 Text("Удалить «$targetLabel»? Его резерв будет освобождён")
                 Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {

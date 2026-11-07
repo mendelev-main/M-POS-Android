@@ -50,13 +50,13 @@ class SaleUiTest {
         lateinit var model: SaleViewModel
         compose.runOnIdle {model=ViewModelProvider(compose.activity)[SaleViewModel::class.java]}
         compose.waitUntil(20_000) {!model.state.value.loading && !model.state.value.pending}
-        compose.onNodeWithTag("checkoutFields").performScrollToNode(hasTestTag("cashGiven"))
-        compose.onNodeWithTag("cashGiven").performTextReplacement("1");hideKeyboard()
+        compose.onNodeWithTag("cashGiven").performClick()
+        compose.onNodeWithTag("paymentKey:1").performClick()
         compose.onNodeWithTag("salePrepare").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.message!=null}
         assertNull(model.state.value.preview);assertEquals("10",runBlocking {db.catalog().balance(id)!!.quantity})
-        compose.onNodeWithTag("checkoutFields").performScrollToNode(hasTestTag("cashGiven"))
-        compose.onNodeWithTag("cashGiven").performTextReplacement("5");hideKeyboard()
+        compose.onNodeWithTag("paymentKey:backspace").performClick()
+        compose.onNodeWithTag("paymentKey:5").performClick()
         compose.onNodeWithTag("salePrepare").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview!=null}
         compose.onNodeWithTag("salePreviewTotal").assertTextEquals("Итого: 2,00 BYN")
@@ -64,7 +64,6 @@ class SaleUiTest {
         val command=model.state.value.preview!!.draft.commandId
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview==null && model.state.value.draft!=null}
-        compose.onNodeWithTag("checkoutFields").performScrollToIndex(0)
         compose.onNodeWithTag("checkoutRestored").assertExists()
         compose.onNodeWithTag("salePrepare").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview!=null}
