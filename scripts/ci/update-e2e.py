@@ -359,7 +359,7 @@ def main():
                 wait_text("^Отложенные$", click=True, preferred_resource_id="workspaceParked")
                 wait_text("^" + re.escape(expected_parked_label) + "$")
                 wait_text("^Доставка$")
-                wait_text("^5 BYN$")
+                wait_text("^5,00 BYN$")
                 (reports / "updated-parked.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("PARKED UPDATE PASSED: delivery order label, type and total5 survived package replacement", flush=True)
                 adb("shell", "input", "keyevent", "KEYCODE_BACK")
