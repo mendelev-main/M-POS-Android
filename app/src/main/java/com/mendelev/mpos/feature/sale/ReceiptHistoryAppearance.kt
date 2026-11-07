@@ -148,7 +148,7 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
     }
 }
 @Composable private fun ReturnSticker(modifier: Modifier=Modifier) {
-    Surface(modifier,shape=RoundedCornerShape(100.dp),color=MaterialTheme.colorScheme.errorContainer,border=BorderStroke(1.dp,MaterialTheme.colorScheme.error)) {
+    Surface(modifier.semantics(mergeDescendants=true) {},shape=RoundedCornerShape(100.dp),color=MaterialTheme.colorScheme.errorContainer,border=BorderStroke(1.dp,MaterialTheme.colorScheme.error)) {
         Box(Modifier.padding(horizontal=10.dp,vertical=5.dp),contentAlignment=Alignment.Center) {Text("Возврат",fontSize=11.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.error)}
     }
 }

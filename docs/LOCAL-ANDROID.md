@@ -1,6 +1,10 @@
 # Локальный Android 16 на Mac
 
-## Текущий статус —2026-10-27
+## Актуальная проверка —2026-11-07
+
+Планшет повторно запущен из установленного Android Studio через More Actions → Virtual Device Manager → ▶. Подтверждены M_POS_API36, emulator-5554, Android16/API36/arm64, boot_completed1, экран1600×1125/200dpi. Данные не сбрасывались. Адресные PaymentAppearanceTest/ReceiptHistoryAppearanceTest прошли на Mac: OK(2tests),9,711s. Полный локальный RefundUiTest остановился на существующей открытой смене в setup — не считать его выполненным; чистый CI остаётся обязательным. Эмулятор оставлен работающим для локальных проверок, повторная установка Studio/SDK не требуется.
+
+## Предыдущая проверка —2026-10-27
 
 Android Studio Rabbit1/2026.2.1 находится в `/Applications/Android Studio.app`; signature `codesign --verify --deep --strict` прошла. Первичная настройка Studio завершена с существующим SDK, без повторной загрузки компонентов и без отправки usage statistics.
 

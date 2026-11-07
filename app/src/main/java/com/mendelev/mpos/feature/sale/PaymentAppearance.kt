@@ -19,6 +19,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mendelev.mpos.core.ui.*
@@ -105,15 +107,20 @@ private fun displayCash(raw: String)=runCatching {ShiftRules.money(ShiftRules.ca
     val total=quote?.total ?: 0L
     PaymentPanel(modifier.testTag("paymentBox")) {
         Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).testTag("checkoutFields")) {
-            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+            // Round the combined CSS block once, rather than accumulating rounding at 1.25 density.
+            val introHeight=with(LocalDensity.current) {70.7.sp.toDp()}+28.dp
+            val totalHeight=with(LocalDensity.current) {53.2.sp.toDp()}+22.dp
+            Column(Modifier.fillMaxWidth().height(introHeight)) {
+            Row(Modifier.fillMaxWidth().height(totalHeight),verticalAlignment=Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     PaymentLabel("К оплате",13f)
-                    Text(quote?.total?.let(ShiftRules::money) ?: "—",Modifier.padding(top=4.dp,bottom=18.dp).height(with(LocalDensity.current) {35.2.sp.toDp()}).testTag("paymentTotal"),fontSize=32.sp,lineHeight=35.2.sp,fontWeight=FontWeight.ExtraBold)
+                    Text(quote?.total?.let(ShiftRules::money) ?: "—",Modifier.padding(top=4.dp,bottom=18.dp).height(with(LocalDensity.current) {35.2.sp.toDp()}).testTag("paymentTotal"),fontSize=32.sp,lineHeight=35.2.sp,fontWeight=FontWeight.ExtraBold,overflow=TextOverflow.Visible,style=LocalTextStyle.current.copy(platformStyle=PlatformTextStyle(includeFontPadding=false),lineHeightStyle=LineHeightStyle(LineHeightStyle.Alignment.Center,LineHeightStyle.Trim.None)))
                 }
                 MposPosControl("Разделить",onSplit,Modifier.widthIn(min=120.dp).testTag("paymentSplit"),enabled && canPay,PosControl.Outline,height=49.dp,radius=16.dp,fontSize=14.5f)
             }
             PaymentLabel("Сумма")
             Spacer(Modifier.height(6.dp))
+            }
             Surface(onClick=openKeypad,enabled=enabled,modifier=Modifier.fillMaxWidth().heightIn(min=58.dp).testTag("cashGiven"),shape=RoundedCornerShape(14.dp),border=BorderStroke(1.dp,MaterialTheme.colorScheme.outline)) {
                 Box(Modifier.padding(horizontal=14.dp),contentAlignment=Alignment.CenterEnd) {Text(displayCash(given),fontSize=28.sp,letterSpacing=.2.sp,lineHeight=38.5.sp,fontWeight=FontWeight.ExtraBold)}
             }

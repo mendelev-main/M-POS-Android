@@ -1,6 +1,6 @@
 {
   "updated_on": "2026-11-07",
-  "blocker": "C09/P01–P03:298API36 и9PNG в42363311024; парная сверка выявила font-padding/line-height и BYN suffix в оплате, исправлены, новый API прогон pending. Run42364502471 прошёл API/update/recovery, но signed-install остановился на SystemUI startup ANR до M-POS; релиз не опубликован. Полная pixel-приёмка не закрыта.",
+  "blocker": "Run42372632697 исполнил300API tests:3fail (геометрия оплаты и merging метки возврата). Причины исправлены; локальные PaymentAppearanceTest/ReceiptHistoryAppearanceTest прошли API36 на Mac9,711s. Полный следующий CI/release pending; локальный RefundUiTest заблокирован существующей сменой в fixture setup. Полная pixel-приёмка не закрыта.",
   "windows": {
     "W01": {
       "source_reviewed": true,
