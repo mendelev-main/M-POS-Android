@@ -71,6 +71,20 @@
       "api_verified": false,
       "pixel_verified": false,
       "remaining": "Парные снимки обеих тем и проверка реального устройства"
+    },
+    "R01": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Локальный API36 прогон, парные PNG обеих тем, точные тени/типографика, длинная история и узкий экран"
+    },
+    "R04": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Локальный API36 прогон, парные PNG обеих тем, точные тени/типографика, длинная история и узкий экран"
     }
   }
 }

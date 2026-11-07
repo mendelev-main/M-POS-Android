@@ -31,7 +31,7 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
     LaunchedEffect(history) {model.refresh();refundModel.refresh()}
     LaunchedEffect(refund.result?.id) {if(refund.result!=null) model.refresh()}
     val locked=ui.pending || refund.pending || refund.unresolved!=null || ui.unresolved!=null || ui.splitUncertain || (ui.split?.paid?.isNotEmpty()==true && ui.completed==null)
-    BackHandler {if(!ui.pending) {if(refund.review!=null || refund.result!=null) refundModel.dismiss() else if(ui.selected!=null && refund.unresolved==null && !refund.pending) model.closeDetails() else if(ui.partPreview!=null) model.dismissPart() else if(ui.preview!=null) model.dismissPreview() else if(!locked) onBack()}}
+    BackHandler {if(!ui.pending) {if(refund.review!=null || refund.result!=null) refundModel.dismiss() else if(!history && ui.selected!=null && refund.unresolved==null && !refund.pending) model.closeDetails() else if(ui.partPreview!=null) model.dismissPart() else if(ui.preview!=null) model.dismissPreview() else if(!locked) onBack()}}
     val webPayment=!history && !ui.loading && !ui.fatal && ui.completed==null && ui.split==null
     var options by androidx.compose.runtime.saveable.rememberSaveable {mutableStateOf(false)}
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
@@ -40,7 +40,7 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
                 MposNavigationAction("Назад",{if(!locked) onBack()})
                 if(!history) MposNavigationAction("История чеков",{if(!locked) onHistory()})
             }
-            if(LocalMposTopNavigation.current != null) {
+            if(LocalMposTopNavigation.current != null && !history) {
                 Row(Modifier.padding(horizontal=20.dp, vertical=8.dp)) {
                     MposButton("Назад", onBack, enabled=!locked, style=ActionStyle.Secondary)
                 }
@@ -50,19 +50,23 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
         else if(ui.fatal) Column(Modifier.padding(20.dp)) {MposNotice(ui.message ?: "Не удалось открыть оплату",true);MposButton("Повторить открытие",model::refresh)}
         else if(history) {
             if(ui.message!=null) MposNotice(ui.message!!,true)
-            if(refund.message!=null && ui.selected==null) MposNotice(refund.message!!,true)
+            if(refund.message!=null) MposNotice(refund.message!!,true)
             if(refund.blocked && refund.unresolved==null) MposButton("Прочитать возвраты",refundModel::refresh,busy=refund.pending,style=ActionStyle.Secondary)
-            LazyColumn(Modifier.fillMaxSize().padding(20.dp).testTag("receiptHistory"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                if((ui.work?.archivedWebReceipts ?: 0)>0) item {MposNotice("Чеки из Web (${ui.work!!.archivedWebReceipts}) сохранены в исходном архиве. Этот список и возвраты пока работают только с native-чеками",false)}
-                if(ui.history.isEmpty()) item {Text("Проведённых чеков пока нет")}
-                items(ui.history,key={it.id}) {r->Surface(shape=MaterialTheme.shapes.large) {
-                    Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                        Text("Чек №${r.number} · ${money(r.total)}",style=MaterialTheme.typography.titleMedium)
-                        refund.history.firstOrNull {it.receiptId==r.id}?.let {Text("Возвращён · ${date(it.createdAt)}",Modifier.testTag("returned:${r.id}"))}
-                        Text(date(r.createdAt));Text("Наличные: ${money(r.cash)} · Карта: ${money(r.card)}")
-                        MposButton("Открыть чек",{model.select(r.id)},Modifier.testTag("receipt:${r.commandId}"),enabled=!locked,style=ActionStyle.Secondary)
-                    }
-                }}
+            var picked by androidx.compose.runtime.saveable.rememberSaveable {mutableStateOf("")}
+            var printNotice by remember {mutableStateOf(false)}
+            val chosen=picked.takeIf {id->ui.history.any {it.id==id}} ?: ui.history.firstOrNull()?.id.orEmpty()
+            LaunchedEffect(chosen,ui.selected?.first?.id,ui.history) {
+                if(chosen.isNotEmpty() && ui.selected?.first?.id!=chosen) model.select(chosen)
+            }
+            if((ui.work?.archivedWebReceipts ?: 0)>0) MposNotice("Чеки из Web (${ui.work!!.archivedWebReceipts}) сохранены в исходном архиве. Список и возвраты работают с native-чеками.")
+            ReceiptHistoryPage(ui.history,ui.receiptTypes,ui.receiptMethods,chosen,ui.selected?.takeIf {it.first.id==chosen},refund.history,!locked,
+                ui.shift?.active!=null && !refund.blocked && ui.split?.paid.isNullOrEmpty(),
+                {id->picked=id;model.select(id)},
+                {ui.selected?.takeIf {it.first.id==chosen}?.let {refundModel.prepare(it.first.id,ui.shift!!.active!!.actorId)}},
+                {printNotice=true},ui.message)
+            if(printNotice) MposDialog("Печать чека",{printNotice=false}) {
+                Text("Печать чеков будет подключена на этапе интеграции принтера.")
+                MposButton("Понятно",{printNotice=false},style=ActionStyle.Secondary)
             }
         } else if(ui.completed!=null) {
             Column(Modifier.fillMaxSize().padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -168,7 +172,7 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
         Text("Подтверждённую часть нельзя изменить или отменить. Чек будет завершён после подтверждения всех частей.")
         MposButton("Подтвердить часть",model::confirmPart,Modifier.fillMaxWidth().testTag("splitConfirm"),busy=ui.pending)
     }}
-    if(refund.review==null && refund.unresolved==null && refund.result==null) ui.selected?.let {selected->
+    if(!history && refund.review==null && refund.unresolved==null && refund.result==null) ui.selected?.let {selected->
         MposDialog("Чек №${selected.first.number}",{if(!refund.pending) {refundModel.dismiss();model.closeDetails()}},!refund.pending,wide=true) {
             Column(Modifier.heightIn(max=400.dp).verticalScroll(rememberScrollState()).testTag("receiptDetails")) {
                 ReceiptBody(selected)

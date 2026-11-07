@@ -16,6 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.unit.dp
@@ -107,7 +108,7 @@ private fun displayCash(raw: String)=runCatching {ShiftRules.money(ShiftRules.ca
             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     PaymentLabel("К оплате",13f)
-                    Text(quote?.total?.let(ShiftRules::money) ?: "—",Modifier.padding(top=4.dp,bottom=18.dp).testTag("paymentTotal"),fontSize=32.sp,lineHeight=35.2.sp,fontWeight=FontWeight.ExtraBold)
+                    Text(quote?.total?.let(ShiftRules::money) ?: "—",Modifier.padding(top=4.dp,bottom=18.dp).height(with(LocalDensity.current) {35.2.sp.toDp()}).testTag("paymentTotal"),fontSize=32.sp,lineHeight=35.2.sp,fontWeight=FontWeight.ExtraBold)
                 }
                 MposPosControl("Разделить",onSplit,Modifier.widthIn(min=120.dp).testTag("paymentSplit"),enabled && canPay,PosControl.Outline,height=49.dp,radius=16.dp,fontSize=14.5f)
             }
@@ -152,4 +153,4 @@ private fun displayCash(raw: String)=runCatching {ShiftRules.money(ShiftRules.ca
         }
     }
 }
-@Composable private fun PaymentLabel(text: String,size: Float=12.5f) {Text(text,fontSize=size.sp,lineHeight=(size+5).sp,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+@Composable private fun PaymentLabel(text: String,size: Float=12.5f) {Text(text,Modifier.height(with(LocalDensity.current) {(size+5).sp.toDp()}),fontSize=size.sp,lineHeight=(size+5).sp,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurfaceVariant)}

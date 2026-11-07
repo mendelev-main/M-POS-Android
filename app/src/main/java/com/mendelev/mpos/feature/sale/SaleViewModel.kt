@@ -18,7 +18,7 @@ data class SaleForm(val mode: String="cash",val given: String="",val parts: List
     val discounts: Map<String,DiscountField> = emptyMap(),val tariff: String="",val fee: String="")
 data class SaleUi(val loading: Boolean=true,val pending: Boolean=false,val fatal: Boolean=false,val message: String?=null,
     val work: WorkspaceSnapshot?=null,val shift: ShiftSnapshot?=null,val draft: SavedCheckout?=null,val draftRevision: Long=0,
-    val form: SaleForm=SaleForm(),val preview: SavedCheckout?=null,val quote: SaleQuote?=null,val payment: SalePayment?=null,
+    val receiptTypes: Map<String,String> = emptyMap(),val receiptMethods: Map<String,String> = emptyMap(),val form: SaleForm=SaleForm(),val preview: SavedCheckout?=null,val quote: SaleQuote?=null,val payment: SalePayment?=null,
     val completed: Pair<ReceiptEntity,ReceiptSnapshot>?=null,val history: List<ReceiptEntity> = emptyList(),val selected: Pair<ReceiptEntity,ReceiptSnapshot>?=null,
     val unresolved: SavedCheckout?=null,val split: SplitProgress?=null,val partPreview: SplitPart?=null,val splitUncertain: Boolean=false)
 class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
@@ -51,7 +51,11 @@ class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
         val w=WorkspaceRepository(db).snapshot();val s=ShiftRepository(db).snapshot();val d=checkout.load();val progress=splits.load()
         if(progress!=null && progress.checkout!=d) error("Сохранённые части не совпадают с оплатой")
         val split=progress ?: d?.takeIf {it.draft.parts.size>1}?.let {SplitProgress(splits.revision(),it,emptySet(),format=2)}
-        SaleUi(loading=false,work=w,shift=s,draft=d,draftRevision=checkout.revision(),form=form(d?.draft,w),history=repo.history(),
+        val history=repo.history()
+        val snapshots=history.mapNotNull {r->runCatching {r.id to ReceiptCodec.decode(r.payload)}.getOrNull()}.toMap()
+        val types=snapshots.mapValues {it.value.cart.details.type}
+        val methods=snapshots.mapValues {receiptPaymentLabel(it.value)}
+        SaleUi(loading=false,work=w,shift=s,draft=d,receiptTypes=types,receiptMethods=methods,draftRevision=checkout.revision(),form=form(d?.draft,w),history=history,
             completed=repo.unacknowledged()?.let {repo.receipt(it)},split=split)
     }
     private fun splitOperation(block: suspend ()->Unit) {
@@ -202,6 +206,17 @@ class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
             finally {mutable.update {it.copy(pending=false)}}
         }
     }
-    fun select(id: String) {viewModelScope.launch {try {val r=withContext(Dispatchers.IO) {repo.receipt(id)};mutable.update {it.copy(selected=r)}} catch(e:CancellationException) {throw e} catch(_:Exception) {mutable.update {it.copy(message="Не удалось прочитать чек")}}}}
-    fun closeDetails() {mutable.update {it.copy(selected=null)}}
+    private var receiptRequest=0L
+    fun select(id: String) {
+        val request=++receiptRequest
+        mutable.update {it.copy(selected=null,message=null)}
+        viewModelScope.launch {
+            try {
+                val r=withContext(Dispatchers.IO) {repo.receipt(id) ?: error("Чек не найден")}
+                if(request==receiptRequest) mutable.update {it.copy(selected=r)}
+            } catch(e:CancellationException) {throw e}
+            catch(_:Exception) {if(request==receiptRequest) mutable.update {it.copy(message="Не удалось прочитать чек")}}
+        }
+    }
+    fun closeDetails() {receiptRequest++;mutable.update {it.copy(selected=null)}}
 }

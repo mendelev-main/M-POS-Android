@@ -27,7 +27,7 @@ python3 scripts/install-signing-secrets.py --source /absolute/private/path/crede
 
 ## Workflow
 
-Работа напрямую в main по [основному workflow](DEVELOPMENT-WORKFLOW.md), решение владельца2026-11-07. Каждый push, включая Markdown, запускает полный pipeline. Harness/tooling, JVM/lint/debug build и API36 UI/update/recovery идут параллельно. Только после всех трёх gates signing job получает постоянный ключ, собирает release, проверяет package/version/minSdk/certificate и сохраняет candidate artifact. Затем отдельный API36 job устанавливает/обновляет подписанный APK и проверяет cold start/сохранение UID и app-private маркера. Публикация GitHub Release/канала — последняя функциональная стадия и зависит от этой проверки.
+Работа локально в main по [основному workflow](DEVELOPMENT-WORKFLOW.md), последнее решение владельца2026-11-07: push/release только после утверждения подготовленного набора правок. Каждый push, включая Markdown, запускает полный pipeline. Harness/tooling, JVM/lint/debug build и API36 UI/update/recovery идут параллельно. Только после всех трёх gates signing job получает постоянный ключ, собирает release, проверяет package/version/minSdk/certificate и сохраняет candidate artifact. Затем отдельный API36 job устанавливает/обновляет подписанный APK и проверяет cold start/сохранение UID и app-private маркера. Публикация GitHub Release/канала — последняя функциональная стадия и зависит от этой проверки.
 
 Все внешние actions закреплены по SHA. Общий toolchain вынесен в локальный composite action. Удаление временного ключа выполняется always; приватные значения в logs/artifacts не попадают. Очередь прогонов не отменяет предыдущий commit. Не создавать новые ключи, не менять identity и не переименовывать Android workflow ради перестройки DAG.
 

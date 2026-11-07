@@ -90,7 +90,7 @@ class SaleUiTest {
         compose.onNodeWithTag("receiptHistory").performScrollToNode(hasTestTag("receipt:$command"))
         compose.onNodeWithTag("receipt:$command").performClick()
         compose.waitUntil(20_000) {model.state.value.selected!=null}
-        compose.onNodeWithTag("receiptLine:sale-line-$suffix").assertTextEquals(name)
-        compose.onNodeWithTag("receiptTotal").assertTextEquals("Итого: 2,00 BYN");shot("sale-history")
+        compose.onNodeWithTag("receiptLine:sale-line-$suffix").assertTextEquals("$name × 1")
+        compose.onNodeWithTag("receiptTotal").assertTextEquals("2,00 BYN");shot("sale-history")
     }
 }

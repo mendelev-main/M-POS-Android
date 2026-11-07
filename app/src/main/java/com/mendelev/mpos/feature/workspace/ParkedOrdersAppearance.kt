@@ -44,6 +44,7 @@ import java.util.Locale
         }
     }
     Dialog(onDismissRequest={if(!busy) onClose()},properties=DialogProperties(usePlatformDefaultWidth=false,decorFitsSystemWindows=false)) {
+        MposDialogStatusBar()
         val window=(LocalView.current.parent as DialogWindowProvider).window
         SideEffect {window.setDimAmount(0f)}
         BoxWithConstraints(Modifier.fillMaxSize().background(Color(0xFF1B1F2A).copy(alpha=.45f))

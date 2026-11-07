@@ -137,3 +137,7 @@ Shared MposDialog maxWidth — ограничение ширины без отд
 2026-11-07, V04.1: существующий PosAction.footer — именованный Web cart footer variant: font14,5sp/700, lineHeight19sp, vertical padding14dp, высота47dp при font100%; park radius12dp, pay radius16dp. Это measured exception к обычному min48dp, по новому требованию точного Web. При увеличении шрифта содержимое растёт; фиксированная высота не навязывается. Ширина park —34% полной строки до gap8.
 
 2026-11-07, V03.1: MposWorkspaceTile теперь имеет именованный editing variant из `.pcard.edit-tile`; compact следует `.folder-product-card`. Символы получают alpha всего слоя, чтобы цветные emoji также соответствовали opacity Web. Padding включает ширину CSS border. Shadows/glow и рисунок dashes требуют парной проверки, поэтому native equality ещё не подтверждена.
+
+## Верхняя системная строка Android
+
+По запросу владельца2026-11-07 в рабочих экранах и диалогах скрыта status bar с часами/батареей/уведомлениями. Единая policy `MposSystemBars.kt` применяется к MainActivity и отдельным Dialog windows; при возврате фокуса восстанавливается. Safe drawing для вырезов, клавиатуры и нижней навигации сохраняется. Политика не распространяется на внешние системные окна (например установщик APK). Системный жест временно показывает скрытую панель по [штатному Android API](https://developer.android.com/develop/ui/views/layout/immersive); это не kiosk-mode.
