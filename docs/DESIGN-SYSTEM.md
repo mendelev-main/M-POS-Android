@@ -1,5 +1,7 @@
 # Единый дизайн M-POS
 
+Актуальный запрос точной визуальной сверки от 2026-11-07: [атлас окон и план V01–V07](VISUAL-PARITY-PLAN.md). До парных скриншотов размеры/token specs и наличие shared компонентов не доказывают идентичность Web.
+
 Требование пользователя от 2026-10-24: **внешний вид берём из старого M-POS-Android-Web; общие элементы одинаковы во всех окнах**. Это обязательный стандарт native реализации, не новый визуальный стиль. В01a реализованы базовые shared theme/Primary/Secondary/Danger/Close/Dialog/Field/Notice и debug gallery. Это частичное выполнение стандарта; полный visual parity/variants/font-scale/device приёмка ещё pending.
 
 ## Источник и степень точности
@@ -131,3 +133,7 @@ Shared MposDialog maxWidth — ограничение ширины без отд
 
 
 05c.2 shared variant: MposAnalyticsCard(metric=true) переносит analytics-kpi radius18/padding16/border1, panel radius20/padding18/border1; остальные controls прежние. Контракт/адаптивность/неподключённые показатели — [ANALYTICS-UI-05C2](ANALYTICS-UI-05C2.md).
+
+2026-11-07, V04.1: существующий PosAction.footer — именованный Web cart footer variant: font14,5sp/700, lineHeight19sp, vertical padding14dp, высота47dp при font100%; park radius12dp, pay radius16dp. Это measured exception к обычному min48dp, по новому требованию точного Web. При увеличении шрифта содержимое растёт; фиксированная высота не навязывается. Ширина park —34% полной строки до gap8.
+
+2026-11-07, V03.1: MposWorkspaceTile теперь имеет именованный editing variant из `.pcard.edit-tile`; compact следует `.folder-product-card`. Символы получают alpha всего слоя, чтобы цветные emoji также соответствовали opacity Web. Padding включает ширину CSS border. Shadows/glow и рисунок dashes требуют парной проверки, поэтому native equality ещё не подтверждена.

@@ -71,14 +71,15 @@ import com.mendelev.mpos.domain.workspace.*
                         MposWorkspaceTile({if(editing) manage(tile) else if(tile.type=="category") onCategory(tile.id) else s.products.find {it.id==tile.id}?.let(onProduct)},
                             Modifier.height(rowHeight).testTag(tag).semantics {contentDescription="${title(tile)} · Место ${tile.slot+1}"}.then(highlight),!busy,
                             categoryColor=if(tile.type=="category") s.categories.find {it.id==tile.id}?.color else null,
-                            symbol=if(tile.type=="category") s.categories.find {it.id==tile.id}?.symbol else s.products.find {it.id==tile.id}?.symbol) {
+                            symbol=if(tile.type=="category") s.categories.find {it.id==tile.id}?.symbol else s.products.find {it.id==tile.id}?.symbol,editing=editing) {
                             Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-                                Text(title(tile)+(if(tile.type=="category") "  ›" else ""),Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp,lineHeight=18.sp),maxLines=2,overflow=TextOverflow.Ellipsis)
+                                Text(title(tile),Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=if(editing) 13.5.sp else 14.5.sp,lineHeight=if(editing) 16.2.sp else 18.125.sp),maxLines=2,overflow=TextOverflow.Ellipsis)
+                                if(tile.type=="category") Text("›",style=MaterialTheme.typography.titleSmall.copy(fontSize=20.sp,lineHeight=14.sp),color=MaterialTheme.colorScheme.onSurfaceVariant)
                                 if(tile.type=="product") s.products.find {it.id==tile.id}?.photoId?.let {ProductPhoto(it,photos,Modifier.size(32.dp))}
                             }
                             Spacer(Modifier.weight(1f))
                             if(editing) Text("Место ${index+1}",style=MaterialTheme.typography.bodySmall)
-                            else if(tile.type=="category") Text("Категория",style=MaterialTheme.typography.bodySmall.copy(fontSize=11.5.sp),color=MaterialTheme.colorScheme.onSurfaceVariant)
+                            else if(tile.type=="category") Text("Категория",style=MaterialTheme.typography.bodySmall.copy(fontSize=11.5.sp,fontWeight=FontWeight.SemiBold),color=MaterialTheme.colorScheme.onSurfaceVariant)
                             else s.products.find {it.id==tile.id}?.let {p->WorkspaceTileFooter(ui.availability,p)}
                         }
                     }

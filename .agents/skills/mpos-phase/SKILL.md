@@ -14,3 +14,5 @@ description: "Вести поэтапную разработку нативно�
 После изменений выполните `python3 scripts/harness.py preflight`; для кода — `python3 scripts/harness.py android`, для UI/Room — подходящие instrumentation tests. При отсутствии среды записать blocker и оставить проверки pending.
 
 Обновите parity для точных IDs. В журнале укажите commit, команды/Actions URL, наблюдаемый результат и незакрытые device cases. В context хранить решения/ограничения, а не полный транскрипт и не секреты. Завершение этапа требует его acceptance, частичное выполнение так и назвать.
+
+С2026-11-07 рабочая ветка main, новые изменения в develop запрещены решением владельца. Каждый commit/push main запускает полный release pipeline, включая docs-only. Итоговые evidence можно приложить отдельным отчётом в outputs без создания рекурсивных коммитов ради записи результата каждого такого docs pipeline.
