@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mendelev.mpos.core.ui.*
@@ -43,6 +44,7 @@ private fun displayCash(raw: String)=runCatching {ShiftRules.money(ShiftRules.ca
     message: String?,restored: Boolean,onGiven: (String)->Unit,onBack: ()->Unit,onSplit: ()->Unit,onPay: (String)->Unit,
     onOptions: ()->Unit,notice: @Composable ()->Unit={},resolve: (@Composable ()->Unit)?=null) {
     var keypad by rememberSaveable(cart.sessionId) {mutableStateOf(false)}
+    ProvideTextStyle(LocalTextStyle.current.copy(platformStyle=PlatformTextStyle(includeFontPadding=false),letterSpacing=0.sp)) {
     BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding().testTag("paymentPage")) {
         val compact=maxWidth<=800.dp
         val receiptMax=maxHeight*.30f
@@ -60,32 +62,33 @@ private fun displayCash(raw: String)=runCatching {ShiftRules.money(ShiftRules.ca
             }
         }
     }
+    }
 }
 @Composable private fun PaymentReceipt(cart: CurrentCart,quote: SaleQuote?,enabled: Boolean,onOptions: ()->Unit,modifier: Modifier) {
     PaymentPanel(modifier.testTag("paymentReceipt")) {
         Column(Modifier.verticalScroll(rememberScrollState())) {
-            Text("Чек",Modifier.padding(bottom=12.dp),fontSize=16.sp,fontWeight=FontWeight.ExtraBold)
+            Text("Чек",Modifier.padding(bottom=12.dp),fontSize=16.sp,lineHeight=22.sp,fontWeight=FontWeight.ExtraBold)
             if(cart.details.label.isNotBlank()) Text(cart.details.label,Modifier.padding(bottom=6.dp),fontSize=18.sp,lineHeight=24.3.sp,fontWeight=FontWeight.ExtraBold)
             Text(OrderRules.typeLabel(cart.details.type),Modifier.padding(bottom=12.dp),fontSize=12.5.sp,lineHeight=18.125.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
             cart.lines.forEach {line->
                 val net=quote?.lines?.find {it.id==line.id}
                 Row(Modifier.fillMaxWidth().clickable(enabled=enabled,onClickLabel="Параметры оплаты",onClick=onOptions).padding(vertical=5.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                    Text("${line.name} × ${line.quantity.replace('.',',')}",Modifier.weight(1f),fontSize=13.5.sp)
-                    Text(net?.net?.let {ShiftRules.money(it).removeSuffix(" BYN")} ?: "—",fontSize=13.5.sp)
+                    Text("${line.name} × ${line.quantity.replace('.',',')}",Modifier.weight(1f),fontSize=13.5.sp,lineHeight=18.5.sp)
+                    Text(net?.net?.let {ShiftRules.money(it)} ?: "—",fontSize=13.5.sp,lineHeight=18.5.sp)
                 }
-                if((net?.discount ?: 0)>0) Row(Modifier.fillMaxWidth()) {Text("↳ Скидка",Modifier.weight(1f),fontSize=12.sp,color=MaterialTheme.colorScheme.primary);Text("−${ShiftRules.money(net!!.discount).removeSuffix(" BYN")}",fontSize=12.sp,color=MaterialTheme.colorScheme.primary)}
+                if((net?.discount ?: 0)>0) Row(Modifier.fillMaxWidth()) {Text("↳ Скидка",Modifier.weight(1f),fontSize=12.sp,color=MaterialTheme.colorScheme.primary);Text("−${ShiftRules.money(net!!.discount)}",fontSize=12.sp,color=MaterialTheme.colorScheme.primary)}
             }
             if(cart.details.type=="delivery") {
                 Row(Modifier.fillMaxWidth().clickable(enabled=enabled,onClickLabel="Параметры оплаты",onClick=onOptions).padding(vertical=5.dp).testTag("paymentDelivery")) {
-                    Text("Доставка",Modifier.weight(1f),fontSize=13.5.sp);Text(quote?.delivery?.fee?.let(ShiftRules::money) ?: "Выбрать тариф",fontSize=13.5.sp)
+                    Text("Доставка",Modifier.weight(1f),fontSize=13.5.sp,lineHeight=18.5.sp);Text(quote?.delivery?.fee?.let(ShiftRules::money) ?: "Выбрать тариф",fontSize=13.5.sp,lineHeight=18.5.sp)
                 }
             }
             Spacer(Modifier.height(8.dp))
             val border=MaterialTheme.colorScheme.outline
             Canvas(Modifier.fillMaxWidth().height(1.5.dp)) {drawLine(border,Offset(0f,center.y),Offset(size.width,center.y),strokeWidth=size.height,pathEffect=PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(),3.dp.toPx())))}
             Row(Modifier.fillMaxWidth().padding(top=10.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                Text("Итого",Modifier.weight(1f),fontSize=17.sp,fontWeight=FontWeight.ExtraBold)
-                Text(quote?.total?.let(ShiftRules::money) ?: "—",fontSize=17.sp,fontWeight=FontWeight.ExtraBold)
+                Text("Итого",Modifier.weight(1f),fontSize=17.sp,lineHeight=23.5.sp,fontWeight=FontWeight.ExtraBold)
+                Text(quote?.total?.let(ShiftRules::money) ?: "—",fontSize=17.sp,lineHeight=23.5.sp,fontWeight=FontWeight.ExtraBold)
             }
         }
     }
@@ -111,7 +114,7 @@ private fun displayCash(raw: String)=runCatching {ShiftRules.money(ShiftRules.ca
             PaymentLabel("Сумма")
             Spacer(Modifier.height(6.dp))
             Surface(onClick=openKeypad,enabled=enabled,modifier=Modifier.fillMaxWidth().heightIn(min=58.dp).testTag("cashGiven"),shape=RoundedCornerShape(14.dp),border=BorderStroke(1.dp,MaterialTheme.colorScheme.outline)) {
-                Box(Modifier.padding(horizontal=14.dp),contentAlignment=Alignment.CenterEnd) {Text(displayCash(given),fontSize=28.sp,fontWeight=FontWeight.ExtraBold)}
+                Box(Modifier.padding(horizontal=14.dp),contentAlignment=Alignment.CenterEnd) {Text(displayCash(given),fontSize=28.sp,letterSpacing=.2.sp,lineHeight=38.5.sp,fontWeight=FontWeight.ExtraBold)}
             }
             Spacer(Modifier.height(if(keypad) 26.dp else 24.dp))
             if(keypad) BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -137,7 +140,7 @@ private fun displayCash(raw: String)=runCatching {ShiftRules.money(ShiftRules.ca
             }
             Spacer(Modifier.height(14.dp));PaymentLabel("Сдача");Spacer(Modifier.height(6.dp))
             val tender=runCatching {ShiftRules.cash(given.ifBlank {"0"}.trimEnd(',','.'))}.getOrDefault(0)
-            Text(ShiftRules.money((tender-total).coerceAtLeast(0)),Modifier.testTag("paymentChange"),fontSize=21.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.primary)
+            Text(ShiftRules.money((tender-total).coerceAtLeast(0)),Modifier.testTag("paymentChange"),fontSize=21.sp,lineHeight=29.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.primary)
             if(restored) Text("Подготовленная оплата сохранена. Перед проведением проверьте итог заново.",Modifier.padding(top=12.dp).testTag("checkoutRestored"),style=MaterialTheme.typography.bodySmall)
             if(message!=null) {Spacer(Modifier.height(12.dp));MposNotice(message,true)}
             notice()
@@ -149,4 +152,4 @@ private fun displayCash(raw: String)=runCatching {ShiftRules.money(ShiftRules.ca
         }
     }
 }
-@Composable private fun PaymentLabel(text: String,size: Float=12.5f) {Text(text,fontSize=size.sp,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+@Composable private fun PaymentLabel(text: String,size: Float=12.5f) {Text(text,fontSize=size.sp,lineHeight=(size+5).sp,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurfaceVariant)}
