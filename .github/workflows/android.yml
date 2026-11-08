@@ -75,8 +75,12 @@ jobs:
           emulator: 'true'
       - name: Boot API36 and wait for a focused window
         run: python3 scripts/ci/emulator.py start
-      - name: Room, Compose, real debug update and process restore
-        run: bash scripts/ci/android-emulator-checks.sh
+      - name: '3.1 · Room и Compose: Android-тесты'
+        run: bash scripts/ci/android-emulator-checks.sh suite
+      - name: '3.2 · Обновление debug APK с сохранением данных'
+        run: python3 scripts/ci/update-e2e.py
+      - name: '3.3 · Восстановление данных после перезапуска процесса'
+        run: python3 scripts/ci/native-restore-e2e.py
       - name: Stop disposable emulator and collect diagnostics
         if: always()
         run: python3 scripts/ci/emulator.py stop

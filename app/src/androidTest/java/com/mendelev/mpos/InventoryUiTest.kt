@@ -40,7 +40,7 @@ class InventoryUiTest {
         compose.onNodeWithTag("adminControl").performClick()
         compose.onNodeWithTag("settingsInventory").performScrollTo().performClick()
         compose.waitUntil(20_000) {!vm.state.value.pending && !vm.state.value.blocked}
-        compose.onNodeWithTag("inventoryStart").performClick();compose.onNodeWithTag("inventoryStartConfirm").performClick()
+        startInventory(vm)
         compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.document?.draft!=null}
         val id=vm.state.value.snapshot!!.document.draft!!.id
         compose.activityRule.scenario.recreate()
@@ -99,7 +99,7 @@ class InventoryUiTest {
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("inventoryRecordStatus").assertTextContains("Завершена",substring=true)
         compose.onNodeWithTag("inventoryBack").performClick()
-        compose.onNodeWithTag("inventoryStart").performClick();compose.onNodeWithTag("inventoryStartConfirm").performClick()
+        startInventory(vm)
         compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.document?.draft!=null && compose.onAllNodesWithTag("inventoryCancel").fetchSemanticsNodes().isNotEmpty()}
         val cancelledId=vm.state.value.snapshot!!.document.draft!!.id
         compose.onNodeWithTag("inventoryComplete").assertIsNotEnabled()
@@ -110,6 +110,24 @@ class InventoryUiTest {
         compose.onNodeWithTag("inventoryRecord:$cancelledId").performScrollTo().performClick()
         compose.onNodeWithTag("inventoryRecordStatus").performScrollTo().assertTextContains("Отменена",substring=true);shot("inventory-cancelled")
         assertEquals(balanceBeforeCancel,runBlocking {db.catalog().balance(p)});assertEquals(3,runBlocking {db.catalog().movementCount(p)})
+    }
+    private fun startInventory(model: InventoryViewModel) {
+        hideKeyboard()
+        // Re-entering the screen starts an asynchronous refresh. A visible button can
+        // still be disabled; a touch at that point does not open the confirmation.
+        try {
+            compose.waitUntil(20_000) {
+                val ui=model.state.value
+                !ui.pending && !ui.blocked && ui.canEdit && !ui.dirty &&
+                    compose.onAllNodes(hasTestTag("inventoryStart") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+            }
+        } catch(e: androidx.compose.ui.test.ComposeTimeoutException) {
+            val ui=model.state.value
+            throw AssertionError("Inventory start not ready: pending=${ui.pending}, blocked=${ui.blocked}, canEdit=${ui.canEdit}, dirty=${ui.dirty}, enabled=${ui.snapshot?.document?.config?.enabled}, draft=${ui.snapshot?.document?.draft?.id}, message=${ui.message}",e)
+        }
+        compose.onNodeWithTag("inventoryStart").assertIsEnabled().assertIsDisplayed().performClick()
+        compose.waitUntil(10_000) {compose.onAllNodesWithTag("inventoryStartConfirm").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("inventoryStartConfirm").assertIsEnabled().performClick()
     }
     private fun hideKeyboard() {compose.runOnIdle {(compose.activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).hideSoftInputFromWindow(compose.activity.window.decorView.windowToken,0)}}
     private fun shot(name: String) {

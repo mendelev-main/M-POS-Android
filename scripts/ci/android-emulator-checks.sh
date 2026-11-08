@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Called inside the disposable API36 emulator-runner action. Preserve every test gate and exit code.
 set -euo pipefail
+case "${1:-all}" in
+  all|suite) check_scope="${1:-all}" ;;
+  *) echo "Usage: $0 [all|suite]" >&2; exit 2 ;;
+esac
 mkdir -p app/build/reports/emulator-diagnostics
 capture_emulator_diagnostics() {
   diagnostic_status=$?
@@ -17,5 +21,7 @@ if grep -Eq 'ANR in com\.android\.(systemui|launcher3)([^a-zA-Z0-9_.]|$)' app/bu
   exit 1
 fi
 ./gradlew --no-daemon connectedDebugAndroidTest
-python3 scripts/ci/update-e2e.py
-python3 scripts/ci/native-restore-e2e.py
+if [[ "$check_scope" == all ]]; then
+  python3 scripts/ci/update-e2e.py
+  python3 scripts/ci/native-restore-e2e.py
+fi

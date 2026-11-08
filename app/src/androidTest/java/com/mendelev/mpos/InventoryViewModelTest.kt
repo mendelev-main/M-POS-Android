@@ -13,8 +13,9 @@ class InventoryViewModelTest {
         val p=InventoryProduct("p","Молоко","Сырьё","l",1,1,"10","2")
         var s=InventorySnapshot("owner",0,InventoryDocument(),listOf(p),"2026-10-27","runtime")
         var calls=0;var lose=false;var unknown=false;var readFail=false
+        var readGate: CompletableDeferred<Unit>?=null
         val results=mutableMapOf<String,String>()
-        override suspend fun snapshot(): InventorySnapshot {if(readFail) error("read");return s}
+        override suspend fun snapshot(): InventorySnapshot {readGate?.await();if(readFail) error("read");return s}
         override suspend fun outcome(c: InventoryCommand): String? {if(unknown) error("outcome");return results[c.commandId]}
         override suspend fun commit(c: InventoryCommand): String {
             calls++
@@ -27,6 +28,20 @@ class InventoryViewModelTest {
         @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=com.mendelev.mpos.feature.inventory.InventoryViewModel(f) as T
     })[com.mendelev.mpos.feature.inventory.InventoryViewModel::class.java]
     private suspend fun ready(vm: com.mendelev.mpos.feature.inventory.InventoryViewModel)=withTimeout(20_000) {vm.state.first {!it.pending}}
+    @Test fun delayedRefreshBlocksStartUntilSavedConfigurationIsRead(): Unit=runBlocking {
+        val store=ViewModelStore();val f=Fake()
+        try {
+            f.s=f.s.copy(document=InventoryDocument(config=InventoryConfig(true,"monthly",setOf("p"))))
+            val vm=withContext(Dispatchers.Main) {model(store,f)};ready(vm)
+            val gate=CompletableDeferred<Unit>();f.readGate=gate
+            withContext(Dispatchers.Main) {vm.refresh();vm.start("adhoc")}
+            assertTrue(vm.state.value.pending);assertEquals(0,f.calls)
+            assertNull(vm.state.value.snapshot!!.document.draft)
+            gate.complete(Unit);ready(vm)
+            withContext(Dispatchers.Main) {vm.start("adhoc")}
+            assertNotNull(ready(vm).snapshot!!.document.draft);assertEquals(1,f.calls)
+        } finally {f.readGate?.complete(Unit);withContext(Dispatchers.Main) {store.clear()}}
+    }
     @Test fun dirtySelectionCannotStartAndDiscardRestoresSavedConfiguration(): Unit=runBlocking {
         val store=ViewModelStore();val f=Fake()
         try {
