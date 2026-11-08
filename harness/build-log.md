@@ -1147,3 +1147,12 @@ Run42463979323 attempt1 остановился до установки M-POS и�
 Run42464924883, job128682099526: startup ANR com.android.systemui до установки M-POS. В boot-log CPU pressure avg10=25.86%, SurfaceFlinger73%, graphics composer51%; emulator37.2.13 выбрал software→swangle/lavapipe Vulkan. Это не доказывает конкретную причину ANR, но указывает на графический путь как кандидата. В общем launcher заменён неоднозначный gpu software на gpu swiftshader и feature -Vulkan согласно https://developer.android.com/studio/run/emulator-troubleshooting. Android36/планшетная геометрия/проверка focus и ANR сохранены; новый флаг применяется также к signed APK smoke через общий launcher.
 
 Адресные Python emulator boot/config:6 tests passed. Mock запуска проверяет renderer/feature и вызов wait_ready/assert_ready; прежние тесты подтверждают блокировку ANR и отсутствие focus. Harness preflight/diff-check passed. Успех реального hosted boot пока не подтверждён: требуется новый CI после утверждения push. Исправление локальное, не опубликовано.
+
+
+## 2026-11-08 — HTTP504 при bootstrap Gradle
+
+Run42465397087 job128683615637: API36 READY без boot ANR; SwiftShader/GLES workaround прошёл этот запуск. После этого Gradle8.13 download получил HTTP504 от github.com/gradle/gradle-distributions. downloads.gradle.org также перенаправляет в тот же GitHub и при проверке вернул504, URL не меняли.
+
+В shared android-setup добавлен отдельный bootstrap --version перед SDK image/boot: до3 попыток только для502/503/504, SocketTimeout/Connect/UnknownHost; паузы10/20s. SHA validation failure и прочие ошибки не повторяются. При исчерпании попыток сохраняется failure; сборка/тесты не входят в retry. Версия/SHA/120s wrapper timeout/все release gates прежние.
+
+Python tooling suite:29 tests passed, включая3 новых сценария bootstrap (восстановление после сетевого сбоя, исчерпание попыток, запрет повторов validation). Harness preflight/diff-check passed. CI успех ещё не подтверждён; изменение локальное до разрешения на push.
