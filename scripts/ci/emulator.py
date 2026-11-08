@@ -72,7 +72,9 @@ def start():
     with config.open('a') as f:f.write('hw.cpu.ncore=4\nhw.ramSize=3072M\nhw.keyboard=yes\n')
     REPORTS.mkdir(parents=True,exist_ok=True)
     with (REPORTS/'emulator-process.log').open('w') as log:
-        process=subprocess.Popen([str(sdk/'emulator/emulator'),'-avd',AVD,'-port','5554','-no-window','-gpu','software','-no-snapshot','-noaudio','-no-boot-anim'],stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+        # `software` may select ANGLE/Vulkan (lavapipe) on hosted runners.
+        # Use the explicit GLES software backend for this Compose-only suite.
+        process=subprocess.Popen([str(sdk/'emulator/emulator'),'-avd',AVD,'-port','5554','-no-window','-gpu','swiftshader','-feature','-Vulkan','-no-snapshot','-noaudio','-no-boot-anim'],stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
     (Path(os.environ['RUNNER_TEMP'])/'mpos-emulator.pid').write_text(str(process.pid))
     wait_ready(alive=lambda:process.poll() is None)
     for name in ('window_animation_scale','transition_animation_scale','animator_duration_scale'):

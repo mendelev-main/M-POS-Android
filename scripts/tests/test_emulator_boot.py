@@ -51,5 +51,11 @@ class BootReadinessTests(unittest.TestCase):
                         module.start()
                     command=run.call_args.args[0]
                     self.assertEqual(str(Path(tmp)/'mpos-ci-avd/mpos-ci-api36.avd'),command[command.index('--path')+1])
+                    launch=module.subprocess.Popen.call_args.args[0]
+                    self.assertEqual('swiftshader',launch[launch.index('-gpu')+1])
+                    self.assertEqual('-Vulkan',launch[launch.index('-feature')+1])
+                    self.assertIn('-no-snapshot',launch)
+                    module.wait_ready.assert_called_once()
+                    module.assert_ready.assert_called_once()
                     import os
                     self.assertEqual(str(Path(tmp)/'mpos-ci-avd'),os.environ['ANDROID_AVD_HOME'])

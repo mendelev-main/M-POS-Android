@@ -1140,3 +1140,10 @@ assembleDebug/assembleDebugAndroidTest — BUILD SUCCESSFUL. JVM адресны�
 ## 2026-11-08 — диагностика CI attempt2 и тайм-аут Gradle Wrapper
 
 Run42463979323 attempt1 остановился до установки M-POS из-за startup ANR SystemUI. На attempt2 boot/focus/ANR gate прошёл; следующий шаг завершился IOException/SocketTimeoutException при загрузке gradle-8.13-bin.zip: timeout10000ms. Это другая причина внутри той же Android job, тесты приложения ещё не начались. networkTimeout Wrapper увеличен до120000ms. Версия8.13, SHA256, validateDistributionUrl и все gates сохранены. Исправление локальное, remote не обновлён; успешная сетевая загрузка/CI этим изменением пока не доказана.
+
+
+## 2026-11-08 — явный GLES renderer для CI API36
+
+Run42464924883, job128682099526: startup ANR com.android.systemui до установки M-POS. В boot-log CPU pressure avg10=25.86%, SurfaceFlinger73%, graphics composer51%; emulator37.2.13 выбрал software→swangle/lavapipe Vulkan. Это не доказывает конкретную причину ANR, но указывает на графический путь как кандидата. В общем launcher заменён неоднозначный gpu software на gpu swiftshader и feature -Vulkan согласно https://developer.android.com/studio/run/emulator-troubleshooting. Android36/планшетная геометрия/проверка focus и ANR сохранены; новый флаг применяется также к signed APK smoke через общий launcher.
+
+Адресные Python emulator boot/config:6 tests passed. Mock запуска проверяет renderer/feature и вызов wait_ready/assert_ready; прежние тесты подтверждают блокировку ANR и отсутствие focus. Harness preflight/diff-check passed. Успех реального hosted boot пока не подтверждён: требуется новый CI после утверждения push. Исправление локальное, не опубликовано.
