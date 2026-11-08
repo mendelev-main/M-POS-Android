@@ -36,31 +36,29 @@ import androidx.compose.ui.platform.LocalDensity
 private fun money(value: String)=value.replace('.',',')+" BYN"
 
 @Composable fun WorkspaceScreen(model: WorkspaceViewModel, photos: ProductPhotoStore, onCatalog: () -> Unit, onSettings: () -> Unit, onShift: () -> Unit = {}, onCheckout: () -> Unit = {}, onHistory: () -> Unit = {}) {
-    val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
+    val dictionaries by com.mendelev.mpos.feature.settings.settingsCatalogModel().state.collectAsStateWithLifecycle()
     val ui by model.state.collectAsStateWithLifecycle()
     val s=ui.snapshot
-    var layoutAccessDenied by rememberSaveable(administration.generation) {mutableStateOf(false)}
     var comingSoon by rememberSaveable {mutableStateOf<String?>(null)}
-    var searchOpen by rememberSaveable {mutableStateOf(false)}
     val navigation=LocalMposTopNavigation.current
     val shiftOpen=navigation?.shiftOpen ?: true
     var compactOrder by rememberSaveable { mutableStateOf(false) }
     var category by rememberSaveable { mutableStateOf<String?>(null) }
     var folder by rememberSaveable { mutableStateOf<String?>(null) }
     var search by rememberSaveable { mutableStateOf("") }
-    var editingState by rememberSaveable(administration.generation) { mutableStateOf(false) }
-    val editing=editingState && administration.active
+    var editingState by rememberSaveable { mutableStateOf(false) }
+    val editing=editingState
     var configId by rememberSaveable { mutableStateOf<String?>(null) }
     var configOwner by rememberSaveable { mutableStateOf("") }
     var configRevision by rememberSaveable { mutableStateOf(0L) }
     var selected by rememberSaveable { mutableStateOf(listOf<String>()) }
     var manual by rememberSaveable { mutableStateOf("") }
-    var manageId by rememberSaveable(administration.generation) { mutableStateOf<String?>(null) }
-    var manageType by rememberSaveable(administration.generation) { mutableStateOf("") }
-    var manageName by rememberSaveable(administration.generation) { mutableStateOf("") }
-    var moveFolder by rememberSaveable(administration.generation) { mutableStateOf("") }
-    var manageRevision by rememberSaveable(administration.generation) { mutableStateOf(0L) }
-    var confirmFolderDelete by rememberSaveable(administration.generation) { mutableStateOf(false) }
+    var manageId by rememberSaveable { mutableStateOf<String?>(null) }
+    var manageType by rememberSaveable { mutableStateOf("") }
+    var manageName by rememberSaveable { mutableStateOf("") }
+    var moveFolder by rememberSaveable { mutableStateOf("") }
+    var manageRevision by rememberSaveable { mutableStateOf(0L) }
+    var confirmFolderDelete by rememberSaveable { mutableStateOf(false) }
     var quantityId by rememberSaveable { mutableStateOf<String?>(null) }
     var quantity by rememberSaveable { mutableStateOf("") }
     var quantityOwner by rememberSaveable { mutableStateOf("") }
@@ -94,8 +92,8 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
         if(category!=null && category!="" && s!=null && s.categories.none { it.id==category }) { category=null;folder=null }
         if(folder!=null && s!=null && s.layout.none { it.type=="folder" && it.id==folder }) folder=null
     }
-    BackHandler(enabled=!modal && (folder!=null || category!=null || editing || searchOpen)) {
-        when { folder!=null -> folder=null; searchOpen -> {searchOpen=false;search=""}; editing -> editingState=false;else -> {category=null;search=""} }
+    BackHandler(enabled=!modal && (folder!=null || category!=null || editing)) {
+        when { folder!=null -> folder=null; editing -> editingState=false;else -> {category=null;search=""} }
     }
     Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
         MposAppBar("M-POS · Рабочая зона", navigationEnabled=!busy && !modal) {
@@ -116,7 +114,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                     CompositionLocalProvider(LocalWorkspaceGeometry provides geometry) {
                     Column(modifier,verticalArrangement=Arrangement.spacedBy(12.dp)) {
                         if(navigation!=null && !navigation.shiftLoading && !navigation.shiftUnavailable && !shiftOpen) {
-                            Surface(shape=RoundedCornerShape(16.dp),color=if(androidx.compose.foundation.isSystemInDarkTheme()) Color(0xFF3A3022) else Color(0xFFFFF4E9)) {
+                            Surface(shape=RoundedCornerShape(16.dp),color=if(com.mendelev.mpos.core.ui.isMposDarkTheme()) Color(0xFF3A3022) else Color(0xFFFFF4E9)) {
                                 Row(Modifier.fillMaxWidth().padding(horizontal=16.dp,vertical=12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
                                     Text("Чтобы принимать оплату, откройте кассовую смену.",Modifier.weight(1f),style=MaterialTheme.typography.bodySmall)
                                     PosAction("Открыть смену",onShift,tone=PosTone.Warning,enabled=!busy)
@@ -125,9 +123,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                         }
                         WorkspaceToolbar(if(category==null) "Рабочая зона" else s.categories.find {it.id==category}?.name ?: "Без категории",
                             category!=null,editing,busy,s.parked.size,{category=null;folder=null;search=""},
-                            {if(administration.active) editingState=!editing else layoutAccessDenied=true},{ordersDialog="list"},{searchOpen=!searchOpen;if(!searchOpen) search=""},{comingSoon=it})
-                        if(searchOpen) MposField(search,{search=it},"Поиск товара",Modifier.testTag("workspaceSearch"),!busy)
-                        if(layoutAccessDenied) MposNotice("Для изменения раскладки войдите в администрирование в настройках")
+                            {editingState=!editing},{ordersDialog="list"},{comingSoon=it})
                         if(ui.message!=null && !modal && folder==null) MposNotice(ui.message!!,true)
                         if(editing && category!=null && search.isBlank()) PosAction("Создать папку",{
                             manageId=UUID.randomUUID().toString();manageType="folder";manageName="";manageRevision=s.layoutRevision
@@ -141,11 +137,11 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                 val cart: @Composable (Modifier)->Unit = { modifier ->
                     WorkspaceCartPanel(s,ui.pending,modifier,{id -> quantityId=id;quantity=s.cart.lines.first {it.id==id}.quantity;quantityRevision=s.cartRevision;quantityOwner=s.cart.sessionId;model.dismiss()},
                         {id,delta -> model.step(id,delta,s.cart.sessionId)},{id -> model.remove(id,s.cart.sessionId)},
-                        {clearRevision=s.cartRevision;clearOwner=s.cart.sessionId},{ordersDialog="details"},{ordersDialog="park"},{
+                        {clearRevision=s.cartRevision;clearOwner=s.cart.sessionId},{ordersDialog="details"},{if(s.cart.details.label.isBlank()) ordersDialog="park" else model.park(s.cart.details.label,s.cartRevision,s.cart.sessionId) {}},{
                             revalidationOwner=s.cart.sessionId;revalidationRevision=s.cartRevision
                             revalidationToken=runCatching {CartRevalidator.preview(s.cart,s.products,s.graph,s.balances,OrderReservations.total(s.parked.map {it.cart})).token}.getOrNull()
                             revalidationOpen=true;model.dismiss()
-                        },onCheckout,{comingSoon=it},shiftOpen)
+                        },onCheckout,{comingSoon=it},shiftOpen,onOptions={action,owner,done->model.options(action,owner,done)},error=ui.message,discounts=dictionaries.catalog.rows(com.mendelev.mpos.domain.settings.SettingKind.DISCOUNT))
                 }
                 val scale=LocalDensity.current.fontScale.coerceIn(1f,2f)
                 val cartWidth=(380*scale).dp
@@ -217,7 +213,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                 }
             }
         }
-        if(manageId!=null && administration.active) MposDialog(if(confirmFolderDelete) "Удалить папку?" else if(manageType=="folder") "Папка" else "Размещение товара",
+        if(manageId!=null) MposDialog(if(confirmFolderDelete) "Удалить папку?" else if(manageType=="folder") "Папка" else "Размещение товара",
             {if(!busy) {manageId=null;confirmFolderDelete=false;model.dismiss()}},!busy) {
             if(ui.message!=null) MposNotice(ui.message!!,true)
             val id=manageId!!
@@ -306,7 +302,6 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                     MposWorkspaceTile({onProduct(p)},Modifier.height(144.dp).testTag("workspaceProduct:${p.id}").then(highlight),enabled,symbol=p.symbol,compact=folder!=null,editing=editing) {
                         Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                             Text(p.name,Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=if(folder!=null || editing) 13.5.sp else 14.5.sp,lineHeight=if(folder!=null || editing) 16.2.sp else 18.125.sp),maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                            if(p.photoId!=null && folder==null) ProductPhoto(p.photoId,photos,Modifier.size(32.dp))
                         }
                         if(editing) Text("Настроить размещение",style=MaterialTheme.typography.bodySmall)
                         Spacer(Modifier.weight(1f))

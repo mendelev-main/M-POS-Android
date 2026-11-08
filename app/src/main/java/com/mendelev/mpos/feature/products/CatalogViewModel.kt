@@ -21,7 +21,7 @@ data class ProductDraft(val id: String = UUID.randomUUID().toString(), val expec
     val minimumStock: String = "", val purchaseLabel: String = "", val packSize: String = "",
     val recipeYield: String = "1", val components: List<IngredientInput> = emptyList(),
     val modifierGroups: List<ModifierGroupInput> = emptyList(), val photoId: String? = null,
-    val sessionId: String = UUID.randomUUID().toString()) {
+    val sessionId: String = UUID.randomUUID().toString(),val details: ProductDetails?=null) {
     fun json(): String = JSONObject().put("id",id).put("revision",expectedRevision).put("stockRevision",expectedStockRevision)
         .put("name",name).put("categoryId",categoryId).put("price",price).put("cost",cost).put("stock",stock)
         .put("type",type).put("unit",unit).put("displayUnit",displayUnit).put("noStockTracking",noStockTracking)
@@ -34,9 +34,10 @@ data class ProductDraft(val id: String = UUID.randomUUID().toString(), val expec
                 .put("options",JSONArray().also { options -> g.options.forEach { o -> options.put(JSONObject().put("id",o.id)
                     .put("productId",o.productId).put("posName",o.posName).put("quantity",o.quantity).put("priceDelta",o.priceDelta)) } }))
         } })
+        .put("details",details?.let {ProductDetailsCodec.fields(it)})
         .put("stockEdited",stockEdited).put("dirty",dirty).put("commandId",commandId).toString()
     fun input() = ProductInput(id, expectedRevision, name, categoryId, price, cost, stock, expectedStockRevision, stockEdited, commandId, type, unit, displayUnit, noStockTracking, allowNegativeStock,
-        minimumStock.takeIf { it.isNotBlank() }, purchaseLabel, packSize.takeIf { it.isNotBlank() }, recipeYield, components,modifierGroups,photoId)
+        minimumStock.takeIf { it.isNotBlank() }, purchaseLabel, ProductStockRules.packInput(this), recipeYield, components,modifierGroups,photoId,details)
     companion object {
         fun parse(raw: String): ProductDraft { val j = JSONObject(raw)
             return ProductDraft(j.getString("id"), if(j.has("revision")) j.getLong("revision") else null,
@@ -50,6 +51,7 @@ data class ProductDraft(val id: String = UUID.randomUUID().toString(), val expec
                     val c=a.getJSONObject(it); IngredientInput(c.getString("productId"),c.getString("quantity"),c.getString("unit"))
                 } } ?: emptyList(), photoId=if(j.isNull("photoId")) null else j.getString("photoId"),
                 sessionId=j.optString("sessionId",UUID.randomUUID().toString()),
+                details=if(j.has("details") && !j.isNull("details")) ProductDetailsCodec.value(j.getJSONObject("details")) else null,
                 modifierGroups=j.optJSONArray("modifierGroups")?.let { a -> (0 until a.length()).map {
                     val g=a.getJSONObject(it);val options=g.getJSONArray("options")
                     ModifierGroupInput(g.getString("id"),g.getString("name"),g.getString("minimum"),g.getString("maximum"),
@@ -62,7 +64,7 @@ data class ProductDraft(val id: String = UUID.randomUUID().toString(), val expec
 data class CatalogUi(val loading: Boolean = true, val fatal: Boolean = false, val busy: Boolean = false,
     val products: List<ProductRow> = emptyList(), val categories: List<CategoryEntity> = emptyList(),
     val components: List<RecipeComponentEntity> = emptyList(),
-    val draft: ProductDraft? = null, val hasSavedDraft: Boolean=false, val message: String? = null, val error: Boolean = false, val field: String? = null)
+    val draft: ProductDraft? = null, val hasSavedDraft: Boolean=false, val message: String? = null, val error: Boolean = false, val field: String? = null,val recipeBatchIds: Set<String> = emptySet(),val usage: ProductUsage?=null,val usageMessage: String?=null)
 
 class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
     val photos get() = repo.photos
@@ -99,6 +101,7 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
             update { it.copy(loading=false, fatal=false, draft=restored.takeIf {startup?.current()==true},hasSavedDraft=restored!=null, message=null) }
             withContext(Dispatchers.IO) { runCatching { repo.cleanupPhotos() } } // cleanup cannot invalidate an otherwise usable catalogue.
             viewModelScope.launch { repo.products.catch { update { it.copy(fatal=true, message="Не удалось прочитать товары. Данные не удалены", error=true) } }.collect { p -> update { it.copy(products=p) } } }
+            viewModelScope.launch {repo.recipeBatchIds.catch {update {it.copy(fatal=true,message="Не удалось прочитать единицы каталога",error=true)}}.collect {ids->update {it.copy(recipeBatchIds=ids)}}}
             viewModelScope.launch { repo.components.catch { update { it.copy(fatal=true, message="Не удалось прочитать составы", error=true) } }.collect { c -> update { it.copy(components=c) } } }
             viewModelScope.launch { repo.categories.catch { update { it.copy(fatal=true, message="Не удалось прочитать категории. Данные не удалены", error=true) } }.collect { c -> update { it.copy(categories=c) } } }
         } catch(c: CancellationException) { throw c } catch(_: Exception) {
@@ -122,6 +125,7 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
     }
     fun reopenForms() {if(!state.value.busy) forms.reopen(::revoke)}
     fun invalidNumber() { update { it.copy(message="Сначала исправьте количество ингредиента", error=true) } }
+    fun configurationProblem(message: String) {update {it.copy(message=message,error=true)}}
     fun dismissMessage() { update { it.copy(message=null, field=null) } }
     fun edit(row: ProductRow? = null) {
         if(state.value.busy || state.value.draft!=null) return
@@ -136,15 +140,16 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
         }
     }
     private suspend fun loadDraft(id: String): ProductDraft {
-        val (p,b,components,groups) = repo.editorSnapshot(id)
+        val snapshot=repo.editorSnapshot(id)
+        val (p,b,components,groups) = snapshot
         fun display(value: String) = CatalogRules.canonical(quantityUnit(p.unit).convert(value.toBigDecimal(), quantityUnit(p.displayUnit)))
         val cost = CatalogRules.canonical(p.cost.toBigDecimal().multiply(quantityUnit(p.displayUnit).convert(java.math.BigDecimal.ONE, quantityUnit(p.unit))))
         return ProductDraft(id=p.id, expectedRevision=p.revision, expectedStockRevision=b?.revision,
             name=p.name, categoryId=p.categoryId, price=p.price, cost=cost, stock=display(b?.quantity ?: "0"),
             type=p.type, unit=p.unit, displayUnit=p.displayUnit, noStockTracking=p.noStockTracking,
             allowNegativeStock=p.allowNegativeStock, minimumStock=p.minimumStock?.let(::display) ?: "",
-            purchaseLabel=p.purchaseLabel, packSize=p.packSize?.let(::display) ?: "", recipeYield=p.recipeYield,
-            components=components.map { IngredientInput(it.productId,it.quantity,it.unit) }, modifierGroups=groups, photoId=p.photoId)
+            purchaseLabel=p.purchaseLabel, packSize=p.packSize?.let {value->snapshot.details.purchaseContentUnit?.let {CatalogRules.canonical(quantityUnit(p.unit).convert(value.toBigDecimal(),quantityUnit(it)))} ?: display(value)} ?: "", recipeYield=p.recipeYield,
+            components=components.map { IngredientInput(it.productId,it.quantity,it.unit) }, modifierGroups=groups, photoId=p.photoId,details=snapshot.details)
     }
     fun changeDisplayUnit(next: String) {
         val d = state.value.draft ?: return
@@ -153,7 +158,7 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
             fun convert(value: String): String = if(value.isBlank()) value else CatalogRules.canonical(from.convert(value.replace(',', '.').toBigDecimal(),to))
             val factor=from.convert(java.math.BigDecimal.ONE,to)
             change { it.copy(displayUnit=next,stock=convert(it.stock),minimumStock=convert(it.minimumStock),
-                packSize=convert(it.packSize),cost=CatalogRules.canonical(it.cost.replace(',', '.').toBigDecimal().divide(factor))) }
+                packSize=if(it.details?.purchaseContentUnit==null) convert(it.packSize) else it.packSize,cost=if(it.cost.isBlank()) it.cost else CatalogRules.canonical(it.cost.replace(',', '.').toBigDecimal().divide(factor))) }
         } catch(_: Exception) { update { it.copy(message="Сначала исправьте числовые поля", error=true) } }
     }
     private fun persist(d: ProductDraft) { enqueueAdmin { withContext(Dispatchers.IO) { repo.saveDraft(DraftEntity(payload=d.json())) } } }
@@ -162,18 +167,20 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
         val d = state.value.draft?.let(transform)?.copy(dirty=true, commandId=UUID.randomUUID().toString()) ?: return
         update { it.copy(draft=d, message=null, field=null) }; persist(d)
     }
-    fun discard() {
+    fun discard()=discardAndContinue {}
+    fun discardAndContinue(done: ()->Unit) {
         if(state.value.busy) return
         update { it.copy(busy=true) }
-        enqueueAdmin { withContext(Dispatchers.IO) { repo.discardDraft() }; update { it.copy(draft=null,hasSavedDraft=false, busy=false, message=null) } }
+        enqueueAdmin { withContext(Dispatchers.IO) { repo.discardDraft() }; update { it.copy(draft=null,hasSavedDraft=false, busy=false, message=null) };done() }
     }
-    fun save() {
+    fun save()=saveAndContinue {}
+    fun saveAndContinue(done: ()->Unit) {
         val d = state.value.draft ?: return
         if(state.value.busy) return
         update { it.copy(busy=true, message=null, field=null) }
         enqueueAdmin {
             withContext(Dispatchers.IO) { repo.saveProduct(d.input()) }
-            update { it.copy(draft=null,hasSavedDraft=false, busy=false, message="Товар сохранён", error=false) }
+            update { it.copy(draft=null,hasSavedDraft=false, busy=false, message="Товар сохранён", error=false) };done()
         }
     }
     fun reloadProduct() {
@@ -196,6 +203,16 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
         enqueueAdmin {
             withContext(Dispatchers.IO) { repo.deleteProduct(d.id, revision, "delete:${d.commandId}") }
             update { it.copy(draft=null,hasSavedDraft=false, busy=false, message="Товар удалён", error=false) }
+        }
+    }
+    private var usageJob: Job?=null
+    fun loadUsage() {
+        usageJob?.cancel();val draft=state.value.draft ?: return
+        update {it.copy(usage=null,usageMessage=null)}
+        usageJob=viewModelScope.launch {
+            try {val result=withContext(Dispatchers.IO) {repo.usage(draft.id)};if(state.value.draft?.sessionId==draft.sessionId) update {it.copy(usage=result)}}
+            catch(e: CancellationException) {throw e}
+            catch(_: Exception) {if(state.value.draft?.sessionId==draft.sessionId) update {it.copy(usageMessage="Не удалось прочитать связи товара")}}
         }
     }
     fun moveCategory(id: String, direction: Int) {

@@ -2,7 +2,7 @@ package com.mendelev.mpos.core.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.mendelev.mpos.core.ui.isMposDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -31,7 +31,12 @@ private fun manropeFont(weight: FontWeight) = Font(R.font.manrope, weight=weight
 private val manrope = FontFamily(manropeFont(FontWeight.Normal), manropeFont(FontWeight.Medium),
     manropeFont(FontWeight.SemiBold), manropeFont(FontWeight.Bold), manropeFont(FontWeight.ExtraBold))
 @Composable fun MposTheme(content: @Composable () -> Unit) {
-    val dark = isSystemInDarkTheme()
+    val choice=rememberThemeChoice()
+    androidx.compose.runtime.CompositionLocalProvider(LocalMposDarkTheme provides choice.dark,LocalMposThemeChoice provides choice) {
+        MposThemeColors(choice.dark,content)
+    }
+}
+@Composable private fun MposThemeColors(dark: Boolean,content: @Composable ()->Unit) {
     val colors = if (dark) darkColorScheme(primary=Color(0xFF31B98D), onPrimary=Color(0xFF07140F), primaryContainer=Color(0xFF173B31), onPrimaryContainer=Color(0xFF31B98D),
         background=Color(0xFF171A21), surface=Color(0xFF222631), onSurface=Color(0xFFF4F6FA), onBackground=Color(0xFFF4F6FA),
         onSurfaceVariant=Color(0xFFA9B0BF), outline=Color(0xFF353B49), error=Color(0xFFFF6B61),
@@ -60,7 +65,7 @@ enum class ActionStyle { Primary, Secondary, Outline, Danger }
         ActionStyle.Primary -> ButtonDefaults.buttonColors()
         ActionStyle.Outline -> ButtonDefaults.buttonColors(containerColor=c.surface, contentColor=c.onSurface)
         ActionStyle.Secondary -> ButtonDefaults.buttonColors(containerColor=c.background, contentColor=c.onSurface)
-        ActionStyle.Danger -> ButtonDefaults.buttonColors(containerColor=c.error, contentColor=if(isSystemInDarkTheme()) Color(0xFF1B1F2A) else Color.White)
+        ActionStyle.Danger -> ButtonDefaults.buttonColors(containerColor=c.error, contentColor=if(isMposDarkTheme()) Color(0xFF1B1F2A) else Color.White)
     }
     Button(onClick=onClick, enabled=enabled && !busy, modifier=modifier.heightIn(min=48.dp),
         shape=RoundedCornerShape(16.dp), colors=colors, border=if(style==ActionStyle.Outline) androidx.compose.foundation.BorderStroke(1.5.dp,c.outline) else null, contentPadding=PaddingValues(horizontal=16.dp, vertical=12.dp)) {

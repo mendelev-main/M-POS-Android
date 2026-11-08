@@ -93,12 +93,13 @@ class WorkspaceUiTest {
         val line=model.state.value.snapshot!!.cart.lines.single().id
         compose.onNodeWithTag("workspaceLine:$line").performClick()
         repeat(4) {compose.onNodeWithTag("workspacePlus:$line").performClick()}
+        assertEquals("1",model.state.value.snapshot!!.cart.lines.single().quantity)
+        compose.onNodeWithTag("cartItemSave").performScrollTo().performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.cart.lines.single().quantity=="5"}
-        compose.onNodeWithTag("workspaceEditQuantity:$line").performClick()
-        compose.onNodeWithTag("workspaceQuantity").performTextReplacement("0")
-        compose.onNodeWithText("Применить количество").performClick();waitText("Количество должно быть больше нуля")
-        compose.onNodeWithText("Отмена").performClick()
-        assertEquals("5",model.state.value.snapshot!!.cart.lines.single().quantity)
+        compose.onNodeWithTag("workspaceLine:$line").performClick()
+        compose.onNodeWithTag("cartItemComment").performTextInput("Не сохранять")
+        compose.onNodeWithText("Отмена").performScrollTo().performClick()
+        assertEquals("",model.state.value.snapshot!!.cart.lines.single().comment)
         compose.onNodeWithTag("workspaceFolder:$folder").performClick()
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("workspaceFolderGrid").assertExists();screenshot("workspace-folder")

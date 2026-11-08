@@ -10,6 +10,27 @@ class WebLayoutMappingTest {
         .put("employees",JSONArray()).put("orders",JSONArray()).put("shifts",JSONArray())
     private fun mapped(j: JSONObject)=WebLayoutMapping.map(WebBackupReader.read(j.toString().byteInputStream()))
     private fun layout()=JSONObject().put("categoryOrder",JSONArray().put("Пустая").put("Напитки")).put("categoryColors",JSONObject().put("Напитки","#ddeBff")).put("categorySymbols",JSONObject().put("Напитки","☕"))
+    @Test fun retainedTileMetadataDoesNotBlockInstallationButCapacityStillDoes() {
+        val j=source().put("layout",layout().put("tiles",JSONArray().put(JSONObject()
+            .put("type","product").put("id","p").put("col",2).put("row",1).put("mark","legacy"))))
+        val doc=WebBackupReader.read(j.toString().byteInputStream())
+        val f=WebLayoutMapping.map(doc)
+        assertTrue(f.blockers.contains("homeMetadataNotMapped"))
+        assertTrue(WebLayoutMapping.installationBlockers(f).isEmpty())
+        assertEquals(7,f.home.single().nativeSlot)
+        val retained=WebSourceDocuments.decode(WebSourceDocuments.encode(doc))!!
+        assertEquals(f,WebLayoutMapping.map(retained))
+        assertArrayEquals(doc.original,retained.original)
+        j.getJSONObject("layout").getJSONArray("tiles").getJSONObject(0).put("row",100)
+        assertEquals(setOf("homePositionBeyondNativeCapacity"),WebLayoutMapping.installationBlockers(mapped(j)))
+    }
+    @Test fun movedProductIgnoresStaleCategoryNavigationLikeWeb() {
+        val j=source().put("layout",layout())
+        j.put("posNavigation",JSONObject().put("version",1).put("categories",JSONArray().put(JSONObject().put("category","Пустая").put("items",JSONArray().put(JSONObject().put("type","product").put("id","p")).put(JSONObject().put("type","product").put("id","removed"))))))
+        val f=mapped(j)
+        assertEquals(1,f.items.count {it.type=="product"})
+        assertEquals(WebIdentity.mapped("category","Напитки"),f.items.single {it.type=="product"}.categoryId)
+    }
     @Test fun emptyCategoriesAppearanceAndFiveColumnHomePositionsAreRetained() {
         val j=source().put("layout",layout().put("tiles",JSONArray().put(JSONObject().put("type","category").put("id","Пустая").put("col",4).put("row",3)).put(JSONObject().put("type","product").put("id","p").put("col",1).put("row",2))))
         val before=j.toString();val f=mapped(j)
@@ -34,7 +55,7 @@ class WebLayoutMappingTest {
         assertTrue(far.blockers.contains("homePositionBeyondNativeCapacity"))
     }
     @Test fun staleProductFolderAndDuplicateNavigationRefuseInsteadOfDisappearing() {
-        for(mode in 0..2) {
+        for(mode in 1..2) {
             val j=source().put("layout",layout())
             val item=JSONObject().put("type","product").put("id",if(mode==0) "missing" else "p").put("parentId",if(mode==1) "missing" else "")
             val rows=JSONArray().put(item);if(mode==2) rows.put(JSONObject(item.toString()))

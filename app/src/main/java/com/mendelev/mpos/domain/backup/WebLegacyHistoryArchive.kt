@@ -81,9 +81,17 @@ object WebLegacyHistoryArchiveCodec {
         val omitted=(root["omitted"] as? BackupJson.Obj)?.fields?.mapValues {(_,v)->(v as? BackupJson.Num)?.raw?.toIntOrNull()?.takeIf {it in 1..400_000} ?: backupBad("legacyHistory")} ?: backupBad("legacyHistory")
         // Re-encoding the filtered view must not exclude anything: no arbitrary secrets/runtime objects in the archive.
         val doc=view(data,sha,version)
-        val checked=filter(doc);if(checked.second.isNotEmpty() || write(checked.first)!=write(data)) backupBad("legacyHistoryFields")
+        val checked=filter(doc);if(checked.second.isNotEmpty() || !sameJson(checked.first,data)) backupBad("legacyHistoryFields")
         val receipts=WebReceiptHistory.map(doc);val warehouse=WebWarehouseHistory.map(doc);WebStaffMapping.map(doc)
         return WebLegacyHistoryArchive(payload,sha,version,receipts,warehouse,omitted)
+    }
+    private fun sameJson(a: BackupJson,b: BackupJson): Boolean=when(a) {
+        is BackupJson.Obj->b is BackupJson.Obj && a.fields.keys==b.fields.keys && a.fields.all {(k,v)->sameJson(v,b.fields.getValue(k))}
+        is BackupJson.Arr->b is BackupJson.Arr && a.values.size==b.values.size && a.values.indices.all {sameJson(a.values[it],b.values[it])}
+        is BackupJson.Str->b is BackupJson.Str && a.value==b.value
+        is BackupJson.Num->b is BackupJson.Num && a.raw==b.raw
+        is BackupJson.Bool->b is BackupJson.Bool && a.value==b.value
+        BackupJson.Nil->b===BackupJson.Nil
     }
     internal fun view(data: BackupJson.Obj,sha: String,version: Int)=WebBackupDocument(data,emptyMap(),WebBackupPreview(version,0,sha,emptyMap(),0,0,0,0,0,0,BigInteger.ZERO,BigInteger.ZERO,false,emptyList(),0))
     fun digest(text: String)=MessageDigest.getInstance("SHA-256").digest(text.toByteArray(Charsets.UTF_8)).joinToString("") {"%02x".format(it)}

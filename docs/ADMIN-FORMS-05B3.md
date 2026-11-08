@@ -16,7 +16,7 @@ Supplier/Employee/Purchase/Receiving/Inventory модели закрывают e
 
 Supplier/Employee/Purchase/Receiving/Inventory/ReceivingPosting command retries: сначала outcome без привилегированной записи; если сохранённый результат найден, показывается факт. Если результата нет, исходный permit проверяется перед commit. После logout/relogin он недействителен: повторная отправка запрещается, unresolved снимается только после наблюдаемого отсутствия результата; ошибка чтения оставляет ту же unresolved команду и recovery lock. Новая операция требует нового явного действия/формы, а не замены command ID неизвестной операции.
 
-Compose local category/delete/discard confirmations, warehouse confirmations, POS edit mode/folder/home management и settings admin panel связаны с session generation. Logout закрывает их; повторный login не возвращает подтверждение. Операционные формы кассира (корзина, количество, конфигурация продажи, split, наличные) не отзывает административный logout. Home/layout команды получают собственный permit до постановки в очередь. Чтение каталогов, складской истории и результатов сохраняется.
+Compose local category/delete/discard confirmations, warehouse confirmations и settings admin panel связаны с session generation. Logout закрывает их; повторный login не возвращает подтверждение. Операционные формы кассира (корзина, количество, конфигурация продажи, split, наличные) не отзывает административный logout. По уточнению владельца2026-11-08 POS edit mode/folder/home management также доступны без административной сессии: Home/layout команды не требуют permit и сохраняются под InstallationGate/Room. Чтение каталогов, складской истории и результатов сохраняется.
 
 ## Приёмка AR01–AR05
 

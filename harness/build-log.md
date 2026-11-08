@@ -964,3 +964,174 @@ Pinned receipts.js/payment.js/pos.html и R01-light PNG просмотрены. 
 Run42372632697/09b996b: checks309JVM/26Python SUCCESS; API36 исполнил300tests,3failures. Два assertExists относились к одной проблеме semantics: возвратная метка поглощалась merging Surface строки. Добавлена отдельная merge boundary метки, без изменения refund guards/расчётов/тестовых ожиданий. Третий — cash top201,6 vs199,695 (накопленное округление fractional dp при1.25density). Верхний блок оплаты теперь округляется целиком по внешнему CSS-контракту, fontScale сохранён; строгие tolerances не расширялись. TextOverflow.Visible/LineHeightStyle предотвращают обрезку comma-descender в35,2sp line box.
 
 Для адресной проверки через установленный /Applications/Android Studio.app → More Actions → Virtual Device Manager запущен M_POS_API36: adb emulator-5554/API36/arm64/boot_completed1/1600×1125/200dpi. Без wipe/очистки данных. Установлены debug/test APK. PaymentAppearanceTest и ReceiptHistoryAppearanceTest прошли локально: OK(2tests)10,313s; после последней правки текста повторно OK(2tests)9,711s, approved-ui-local-api36-final.log. P01-native-light PNG просмотрен: comma не обрезана. Сборка approved-ui-last-local.log SUCCESS1m31s (309JVM/lint/debug/testAPK),26Python/preflight/diff passed. Отдельный RefundUiTest не прошёл local fixture setup: существующая открытая смена не позволяет изменять кассира; деньги/возврат сценария не исполнялись, данные эмулятора не сбрасывались. Этот тест остаётся обязательным в чистом CI. Нельзя считать его локально прошедшим. Эмулятор оставлен запущенным для последующей локальной работы. Отправляется исправление в рамках утверждённого UI-пакета.
+
+## 2026-11-07 · Уточнение локального рабочего процесса
+
+Зафиксированы роли владельца/агента и прямое разрешение на каждый новый push: AGENTS, DEVELOPMENT-WORKFLOW, phase/release skills и context. Агент — код/адресные тесты/docs/harness; владелец — Android Studio/Web visual acceptance. Для этой документационной правки только harness preflight и diff check; Android-сборки, тестовые suites, remote/Actions/release не запускались.
+
+## 2026-11-07 — карточка товара Web
+
+Перенесены шапка, навигация разделов, форма и сводка; сохранены существующие операции каталога. Метаданные без поддержки и онлайн отмечены TODO. Адресные тесты себестоимости добавлены, UI-сценарии адаптированы. Визуальная приёмка владельцем pending; публикация не выполнялась. Контракт: docs/PRODUCT-EDITOR-VISUAL.md.
+
+Проверено: compileDebugKotlin и compileDebugAndroidTestKotlin успешно; ProductEditorCostTest — 2 теста, 0 ошибок (локальный Gradle, work/product-editor-targeted-check.log); harness preflight и git diff --check прошли. UI-тесты на устройстве не запускались.
+
+## 2026-11-07 — лупа, мерцание и настройки
+
+Локальная работа по mpos-phase; детали и ограничения: docs/WORKSPACE-SETTINGS-CORRECTIONS.md. Удалён поиск toolbar; домашние плитки перестали массово затемняться на каждой записи, footer не меняет высоту; guards оплаты сохранены. Главные настройки перенесены по K01/K03, обновления открываются знаком !. Добавлена регрессия pending-геометрии, адаптированы settings/parked/scale тесты. compileDebugKotlin и compileDebugAndroidTestKotlin SUCCESS49s, лог work/workspace-settings-check.log; API-тесты только скомпилированы, визуальная приёмка pending. Вначале исправлена ошибка неявного BoxWithConstraints receiver; Kotlin daemon запрещён средой, успешная компиляция in-process. Никаких commit/push/release.
+
+## 2026-11-07 — ST01–ST05 тема и справочники
+
+По запросу владельца локально реализованы тема, CRUD тарифов/шаблонов, добавление/удаление скидок; выбор шаблонов при откладывании и определений при оплате. Источник/ограничения: docs/SETTINGS-CATALOGS.md. Admin-transaction/revision/result/audit, новый документ settings-catalog принят native restore validator. Тема устройства вне кассового backup; Web-import определений ещё deferred, прямые скидки рабочей зоны через параметры оплаты.
+
+Проверено: compileDebugKotlin + compileDebugAndroidTestKotlin и адресный SettingsRulesTest3/0failures/0errors (settings-catalog-check.log, SUCCESS1m2s); Room/Theme API-тесты добавлены и скомпилированы, не запускались. Исправлены при компиляции приоритет if в сравнении длины и импорт общего theme helper. Никаких full suite/lint/APK/commit/push/release; визуальная приёмка владельцем pending.
+
+Финальная компиляция API-тестов после правки ThemePreferenceUiTest: SUCCESS22s, work/settings-final-api-compile.log. Harness preflight и git diff --check прошли.
+
+## 2026-11-07 — C04/C05 параметры заказа
+
+По mpos-phase/mpos-domain перенесён openOrderSettings из pinned Web; источник/C05-light и контракт docs/ORDER-SETTINGS-WEB.md. Кнопки типа, подпись, имя/телефон, адрес/тарифы/итог доставки; тип/тариф записываются сразу, текст по Save, Cancel не отменяет выборы. Контакты и снимок тарифа в обратно совместимых optional details; расширен fingerprint с сохранением старого формата. Итоги используют прежний SaleMoney, checkout получает выбранный тариф. Статус implemented-partial, device/pixel pending.
+
+Проверки: compileDebugKotlin + compileDebugAndroidTestKotlin SUCCESS54s, 7 адресных JVM (OrderRulesTest5 + OrderSettingsTotalTest2), 0failures/errors, лог work/order-settings-check.log. Новые OrderSettingsStorageTest и OrderSettingsWindowTest скомпилированы, не запускались; ParkedOrdersUiTest адаптирован. Harness preflight / git diff --check прошли. Без full suite/lint/APK/commit/push/release; визуальная проверка владельцем через Android Studio.
+
+## 2026-11-07 — C01 позиция текущего заказа
+
+По mpos-phase/mpos-domain перенесён openCartItemModal, сверены C01 screenshot и computed measurements. docs/CART-ITEM-WEB.md: счётчик/textarea/скидки/note/Save+Cancel, единая транзакция SetOptions с проверкой склада и owner/revision, необязательные CartLine metadata и прежний payload3, сохранение при park/resume/revalidation и передача в оплату. Удаление из окна вынесено на свайп строки с ожиданием durable write. Дроби не округляются до1 по ошибке Web.
+
+Проверки: compileDebugKotlin + compileDebugAndroidTestKotlin SUCCESS40s; 11 адресных JVM/0failures/0errors (CartItemOptionsTest, WorkspaceRulesTest, CartItemStepTest, OrderSettingsTotalTest), лог work/cart-item-check.log. Новые Room/UI-тесты только скомпилированы; существующие WorkspaceUiTest/WorkspaceScaleUiTest адаптированы к Save вместо мгновенного изменения. Harness preflight/diff-check прошли. Известное предупреждение Material3: confirmValueChange deprecated; используется для запрета визуального удаления до commit, исключения/ошибки не подавлялись. Визуальная и API-приёмка pending; без full suite/lint/APK/commit/push/release.
+
+## 2026-11-07 — S01–S07 кассовая смена
+
+Локально по mpos-phase/mpos-domain перенесены экран открытой/закрытой смены, история20, отчёт и модальные открытия/внесения/изъятия/закрытия. Источник pinned shifts.js/CSS, просмотрены S01/S02/S07; контракт docs/SHIFT-WEB.md. Read model в одной транзакции, точные суммы BigInteger, возврат в смене выплаты, delivery credit без удвоения; импортированный остаток явно отделён от доступной native-истории. Financial writes/schema не менялись, recovery неизвестного результата сохранён. Печать/ящик явно TODO, внешних действий не было.
+
+Проверки: compileDebugKotlin + compileDebugAndroidTestKotlin SUCCESS1m; 12 адресных JVM (ShiftDashboardTest/ShiftRulesTest/ShiftCashTest), 0failures/errors, work/shift-web-check.log. Новые ShiftDashboardReaderTest/ShiftAppearanceTest и адаптированные ShiftUiTest/EmployeeUiTest только скомпилированы; устройство/полная визуальная приёмка pending. Harness preflight и git diff --check прошли. Без full suite/lint/APK/commit/push/release.
+
+## 2026-11-08 — T01–T10 вкладка товаров
+
+mpos-phase/mpos-domain, источник pinned product-* JS/CSS, просмотрены T01 и measurements. Локально таблица/поиск/фильтр/категории/подтверждения, редактируемые sku/note/symbol в атомарном sidecar, usage с переходами, поисковый picker состава/модификаторов, recipe-batch проекции. Контракт/границы: docs/CATALOG-WEB-PARITY.md. Исходные Web-sidecars не переписываются, native restore validator распознаёт локальные metadata, SQL-схема прежняя. Онлайн09 TODO, финансовые guards сохранены.
+
+Проверки: compileDebugKotlin + compileDebugAndroidTestKotlin SUCCESS1m21s, 5 адресных JVM/0failures/errors (CatalogPresentationTest + ProductEditorCostTest), work/catalog-web-check.log. ProductDetailsStoreTest/CatalogAppearanceTest и обновлённые сценарии каталога/категорий только скомпилированы, не запускались. При первом проходе исправлен неявный BoxWithConstraints receiver maxWidth в header Row; без подавления ошибки. Harness preflight и git diff --check прошли. Визуальная/реальное устройство/реальный backup pending. Без full suite/lint/APK/commit/push/release.
+
+## 2026-11-08 — автоматическое обновление заказов и Android Web ZIP
+
+Локально, без commit/push. Применены mpos-phase/mpos-domain. При сохранении товара неоплаченные текущий/отложенные заказы обновляются в одной транзакции с каталогом; оплаченный split не переписывается. Generic-уведомления о каталоге и кнопка ручного пересчёта убраны. Добавлены регрессии refresh/rollback/retry (Room-тесты скомпилированы, не запускались).
+
+WebReader поддерживает Android ZIP с фотографиями и сохраняет исходные байты. Добавлены ограничения архива, регрессии путей/дубликатов/лимитов/retention, совместимость чисел Web. Устаревшие тесты отклонения единиц/точности обновлены под явно описанную политику совместимости. Для закрытых Web-смен без автора используется обозначение неизвестного исторического кассира; неполные/расходящиеся сведения о доставке закрытой истории остаются архивными, денежный baseline проверяется. Открытые смены не получают этих послаблений.
+
+Реальный предоставленный файл проверен вне репозитория, без вывода содержимого: чтение ZIP (232 товара, 78 фото), каталог, сотрудники, раскладка, связка 6 заказов с рецептами (нехваток 0), кассовое сопоставление, legacy history archive и imported payment evidence — успешно. Это доменная проверка, не применение данных к приложению. Полная подготовка Room-кандидата/активация через SAF остаются для проверки на устройстве; пользовательские данные инструментами не заменялись.
+
+Проверки: compileDebugAndroidTestKotlin + testDebugUnitTest с фильтрами WebBackupArchiveTest/WebBackupReaderTest/WebCatalogMappingTest/WebRecipeBindingTest/WebStaffMappingTest/WebCashReconciliationTest/RevalidationTest — BUILD SUCCESSFUL, 57 tests, 0 failures/errors; включает compileDebugKotlin. harness preflight passed; git diff --check passed. Полный suite/APK/release не выполнялись.
+
+Дополнение той же проверки: в реальном файле обнаружены 1 перемещённая и 2 удалённые ссылки posNavigation. Web `posCategoryItems` их фильтрует; адаптер приведён к этому правилу, добавлена синтетическая регрессия. Первоначальное сообщение о проверке раскладки было преждевременным; окончательный результат фиксируется ниже после повторного запуска.
+
+Окончательный повтор: compileDebugAndroidTestKotlin и адресные JVM-тесты (добавлен WebLayoutMappingTest) — BUILD SUCCESSFUL. Повторная проверка реального ZIP на пересобранных классах: reader, layout, catalog, staff, recipe binding, cash reconciliation, legacy history archive, imported payment evidence — OK; shortages=0, unassigned payment origins=0. Room-кандидат/SAF/активация на устройстве всё ещё не проверялись. Никаких исходных пользовательских данных в tracked-файлы не добавлено.
+
+## 2026-11-08 — отказ «Раскладка не прошла проверку»
+
+Причина воспроизведена на предоставленном ZIP: WebLayoutMapping возвращал homeMetadataNotMapped из-за дополнительного поля плитки mark, а WebCandidateDatabase отвергал весь набор blocker-кодов. Ранее проверялось успешное выполнение mapping, но не последующий запрет установки — недостаток той проверки.
+
+Добавлена общая политика installationBlockers: архивные метаданные плиток/навигации и оформление удалённых категорий не блокируют поддерживаемую раскладку; реальные ограничения сохраняются. Коды реальных блокеров добавлены к сообщению отказа. Исходный ZIP неизменен. Регрессия проверяет mark, позицию, byte retention и отклонение превышения ёмкости.
+
+compileDebugKotlin + testDebugUnitTest --tests '*WebLayoutMappingTest': BUILD SUCCESSFUL. Повтор на реальном ZIP: reader OK, layout OK, layout installation blockers=[]; архивный homeMetadataNotMapped остаётся видимым для диагностики. harness preflight и git diff --check прошли. Первая попытка сборки упала в KSP без доступа к temp macOS; после выдачи доступа повтор прошёл. Применение/активация через UI не запускались. Всё локально, без commit/push.
+
+## 2026-11-08 — устаревшая связь поставщика
+
+На реальном ZIP воспроизведено: среди productIds поставщиков 73 ссылки на существующие simple-товары и 1 на отсутствующий товар. Web purchase-orders.js строит список через state.products.filter(simple && supplier.productIds.includes(id)); устаревшая ссылка не блокирует справочник.
+
+Выделен WebSupplierMapping, подключён в WebCandidateDatabase: сохраняет всех поставщиков и пересечение связей с существующими simple-товарами. Первоначальные связи остаются в точной исходной копии. Проверки ожидаемых закупок не ослаблены. Дополнительно проверены ссылки inventoryConfig и строк pending закупок реального файла: отсутствующих simple-товаров нет.
+
+compileDebugKotlin + testDebugUnitTest --tests '*WebSupplierMappingTest': BUILD SUCCESSFUL. Синтетическая регрессия проверяет удалённую ссылку, сохранение действующей, отсеивание рецепта, дубликат ID, поставщика без доступных товаров и точный original roundtrip. Отдельная проверка реального файла: 8 suppliers, 73 valid links. harness preflight и git diff --check прошли. Полную подготовку/активацию через UI не выполняли. Без commit/push.
+
+## 2026-11-08 — сверка рецептуры открытого заказа
+
+Отказ WebCartAdoption воспроизведён напрямую на реальном ZIP: 2 из 6 заказов не проходили строковое сравнение расхода (строка 48), при этом сверка денег проходила. Binding допускал установленный шум исходного JS-расчёта, а adoption требовал буквального равенства. Дополнительно один заказ имел разницу scale12 между суммой округлённых расходов строк и расчётом всего заказа.
+
+Исправление: единая sourceConsumptionMatches для сравнения исходного расхода с нативным (прежний предел 1e-9); нативный расход binding вычисляется по запросам всего заказа, как CartEngine.reserved. Adoption по-прежнему требует точного совпадения пересчитанного расхода с нативным binding, той же номенклатуры ингредиентов и неизменности денежных итогов. Оплаты и цены не подгоняются. Добавлен JVM WebCartAdoptionTest с двумя дробными строками, сверкой рабочего расхода и отказами при изменении source/native расхода или суммы.
+
+compileDebugKotlin + testDebugUnitTest --tests '*WebCartAdoptionTest' --tests '*WebRecipeBindingTest': BUILD SUCCESSFUL. Прямой повтор WebCartAdoption.map на реальном ZIP: все 6/6 заказов OK, без применения к рабочей базе и без вывода частных данных. harness preflight и git diff --check прошли. Полная Room-подготовка/SAF-активация остаются непроверенными на устройстве. Всё локально, без commit/push.
+
+## 2026-11-08 — расследование вылета при подготовке Web-копии (не завершено)
+
+Первоначально эмулятор отсутствовал в ADB. После подключения crash buffer пуст; exit-info debug содержит только USER REQUESTED/FORCE STOP, причины CRASH/OOM/ANR не обнаружены. Не считать OOM установленной причиной. Запрошено воспроизведение свежим Run при включённом захвате crash buffer, без подтверждения применения копии.
+
+Независимо устранены лишние полные копии исходника: WebSourceDocuments собирает части непосредственно в итоговый ByteArray; WebBackupReader.readBytes принимает готовый массив без повторного InputStream-накопления. Сохранены размеры, SHA, формат/ZIP-проверки. Добавлен multipart-тест с неполным последним чанком.
+
+compileDebugKotlin + testDebugUnitTest --tests '*WebBackupArchiveTest' --tests '*WebBackupReaderTest' --tests '*WebSourceDocumentsTest': BUILD SUCCESSFUL, 12 tests, 0 failures. Реальный ZIP прошёл encode/decode original roundtrip в отдельной JVM с -Xmx256m; это не Android-проверка памяти и не доказательство исправления вылета. harness preflight/git diff --check passed. Работа с данными приложения/установка APK/публикация не выполнялись. Расследование ждёт нового crash log.
+
+## 2026-11-08 — устранение подтверждённого Android OutOfMemoryError
+
+Новый crash log подтвердил OutOfMemoryError (лимит 201326592 байт/192m) в WebLegacyHistoryDocuments.decode → WebCandidateValidation. Изолированный Android-тест полного WebRestorePreparation.inspect на реальной копии позволил выявить дополнительные точки OOM: строковая повторная сериализация истории и повторный decode в WebPendingPurchaseValidation.
+
+Исправлено: (1) известный прочитанный source повторно используется в кандидатной/native/закупочной/paid-provenance проверках только после побайтной сверки всех сохранённых частей/manifest/SHA через WebSourceDocuments.requireSource; (2) после photo staging освобождаются распакованные изображения с сохранением ключей и точного original ZIP; (3) whitelist истории сравнивается структурно, без двух полных строк. Ни largeHeap, ни подавление Error не применялись. Default-пути без knownSource по-прежнему самостоятельно читают сохранённый original.
+
+Регрессии: requireSource отвергает отсутствующие/изменённые части и другой источник; освобождение image payloads сохраняет catalog mapping, photo keys и exact original. JVM фильтры WebSourceDocumentsTest/WebLegacyHistory*Test/WebBackupArchiveTest: BUILD SUCCESSFUL, 13 tests, 0 failures. Последующие изменения передачи knownSource компилируются в assembleDebug.
+
+Результат полной проверки на Android16 эмуляторе с heapgrowthlimit=192m: WebRestorePreparation.inspect реального ZIP (232 товара/78 фото) — OK (1 test), 42.411 s. Пройдены photo staging, Room candidate install/initial validation, native snapshot, обе native validation, запись/повторное открытие candidate.mposnative, формирование preview. apply/prepareProtection были запрещены fake recovery, рабочая база не заменялась. Первые прогоны диагностического теста падали с OOM до исправления; техническая первая попытка имела ошибку void signature временного теста, устранена до содержательных прогонов.
+
+Для необходимой Android-проверки локально собраны/установлены debug и test APK. Старый несовместимо подписанный пакет только instrumentation (.debug.test) переустановлен; основной пакет установлен с -r без удаления данных. Временный исходный пользовательский ZIP из app cache удалён; диагностический код без данных вынесен из source set в outputs/diagnostics/WebRestoreDiagnosticTest.kt. Исправленный debug уже на эмуляторе. Проверка реального пользовательского SAF-перехода и активации остаётся за владельцем. Без commit/push/release. harness preflight/git diff --check passed.
+
+## 2026-11-08 — OOM после «Заменить данные», полный изолированный цикл
+
+Сохранившийся crash log пользователя вновь показал OutOfMemoryError/192m в WebCandidateValidation (encode/decode архивной истории). Предыдущий успешный реальный тест действительно проверял только inspect; он не был доказательством успешного native prepare/apply.
+
+Исправлен независимый путь NativeRestoreValidator без knownSource: retained original читается один раз, image payloads освобождаются, validationSource используется в кандидатной, закупочной и split/provenance проверках с сохранением побайтного requireSource. Самостоятельный WebCandidateValidation также не держит распакованные изображения после чтения. Никакие проверки/защитные копии не отключались, largeHeap не включён.
+
+assembleDebug + assembleDebugAndroidTest — BUILD SUCCESSFUL, включая компиляцию всех instrumentation исходников. На Android16/heapgrowthlimit192m выполнен временный replacementOnIsolatedTarget с реальным ZIP: Web inspect → Web prepare (настоящий NativeRecoveryPreparation, защитная копия отдельного target) → NativeRecovery.apply с отдельным NativeGenerationStore/RecoveryRuntime → NativeActivationStartup.open → Room-проверка232 товаров. Результат: OK (1 test), 87.666s. Рабочий AppDataset ни разу не использован в качестве target/store; реальная база пользователя не заменялась.
+
+Локальные debug/test APK обновлены с -r. Диагностический исходник перенесён из source set в outputs/diagnostics/WebRestoreReplacementDiagnosticTest.kt, приватный входной ZIP из app cache удалён; тестовые БД/генерации/защиты очищены в finally. Пользовательские подготовленные копии/защиты не удалялись. UI/SAF-путь и реальная активация остаются для проверки владельцем, но основные prepare/apply/startup use cases на реальном наборе теперь пройдены. Без commit/push/release. harness preflight и diff-check — passed.
+
+## 2026-11-08 — восстановленный отложенный заказ / недоступная рабочая зона
+
+В PID5520 журнал показал серию OutOfMemoryError в03:53:15 при активности рабочей зоны (лимит192МБ). Найдены live-чтения полного workspace_documents: WorkspaceRepository.observe плюс многократные snapshot-фильтры, CatalogRepository.recipeBatchIds и SettingsRepository.observe. После импорта полный retained ZIP (~35МБ base64) читался несколькими подписками на каждую операцию.
+
+WorkspaceDao получил проекцию id/revision и точечные observeDocument/documentsByPrefix. Workspace snapshot читает собственные product-details и parked по префиксу; workspace observe не содержит payloads; настройки и recipe-batch подписаны только на свои IDs. Старые полные методы сохранены для backup. Ни документы архива, ни расчёты чеков/склада не изменены, schema version не менялась.
+
+assembleDebug/assembleDebugAndroidTest — BUILD SUCCESSFUL; preflight и diff-check passed. На эмуляторе Android16/192m: WorkspaceLiveDocumentsTest (16МиБ opaque архивных частей, текущий→отложенный→resume с3 подписками, архив и остаток сохранены) + временный реальный resumeEveryRestoredOrderWithLiveSubscriptions (изолированный кандидат из пользовательского ZIP, WorkspaceViewModel, дополнительные подписки, последовательно все6 заказов с сохранением cart snapshot/общего резерва) — OK (2 tests),6.896s. После каждого resume fatal=false, корректный текущий owner. Рабочий AppDataset пользователя не менялся. Debug/test APK обновлены с-r; повторное восстановление пользователю не требуется для применения этого изменения к уже восстановленным данным.
+
+Временный диагностический исходник вынесен в outputs/diagnostics/WebRestoreParkedDiagnosticTest.kt, приватный вход из app cache удалён, отдельные БД/фото очищены. Permanent-регрессия WorkspaceLiveDocumentsTest остаётся в androidTest. Реальные UI-нажатия владельца после обновления ещё не подтверждены. Без commit/push/release.
+
+## 2026-11-08 — повторное откладывание подписанного заказа и фото плиток
+
+По уточнению владельца WorkspaceScreen отправляет подписанный текущий заказ напрямую в park; WorkspaceOrdersDialogs при выборе другого отложенного заказа сохраняет текущий с его подписью и выполняет resume без диалога. Для неподписанного текущего сохранено первое окно подписи; защита непустой корзины и атомарность park/resume не менялись. Убраны ProductPhoto из WorkspaceHome и WorkspaceGrid; photoId/файлы и карточка товара не изменены. Символы плиток остаются отдельными данными.
+
+Обновлена UI-регрессия ParkedOrdersUiTest: первое подписание, отмена первого запроса, переключение двух уже подписанных заказов без orderLabel, сохранение обеих подписей, повторное откладывание без submit диалога. compileDebugAndroidTestKotlin (включая основной Kotlin) — BUILD SUCCESSFUL; preflight/diff-check passed. Connected UI-тест не запускался, визуальная приёмка владельцем в Android Studio pending. APK не собирался/не устанавливался, commit/push/release отсутствуют. Первая попытка проверки упала из-за прав записи на фактический app/build (symlink в /private/tmp); после предоставления доступа повтор прошёл.
+
+## 2026-11-08 — история смен порциями10 и порядок сводки
+
+Уточнение владельца отменило годовое ограничение: сохраняем и показываем по запросу всю историю, без удаления или скрытия старше365 дней. Реализован SQL keyset closedAt/id по10+1 строке без OFFSET; receipts/refunds читаются только для страницы и активной смены. Для прежней нумерации цепочек читается лёгкая sequence-проекция без payloads. ViewModel добавляет страницы, блокирует повторный запрос, отбрасывает устаревшие ответы; обновление кассового состояния возвращает первые10. Отдельная ошибка подгрузки не удаляет показанные строки. Схема БД не менялась. Монолитный JSON ручных движений сохраняется, ограничение описано в docs/SHIFT-HISTORY-PAGING.md.
+
+UI: одинаковые по ширине Итоги продаж и Выручка в одной строке, Наличные в кассе ниже во всю ширину; кнопка Показать10 предыдущих и счётчик загруженных смен. Добавлены теги блоков для проверки расположения.
+
+Итоговые assembleDebug/assembleDebugAndroidTest + JVM ShiftDashboardTest: BUILD SUCCESSFUL,5 tests/0 failures. На эмуляторе изолированные ShiftHistoryPagingTest + ShiftDashboardReaderTest + ShiftAppearanceTest: OK (3 tests),3.274s. Проверены23 смены10+10+3, одинаковые timestamps, смена старше400 дней, стабильность следующей страницы при добавлении новой смены, отсутствие чужих payloads, неизменность регистра/закрытого остатка, положение блоков и callback кнопки. Нумерация по цепочке сохранена общим helper.
+
+Debug/test APK локально обновлены с-r; реальные рабочие записи тестами не изменялись (Room in-memory/Compose fixtures). Полный suite и release не запускались. Визуальное подтверждение владельца pending. harness preflight и git diff --check passed. Без commit/push.
+
+## 2026-11-08 — ящик, раскладка без admin и баннер Web
+
+Кнопка ящика в открытой смене больше не скрывается при admin=false; callback остаётся заглушкой с объяснением будущего подключения. Web-архивный баннер убран из SaleScreen, сами source/evidence документы и история не менялись.
+
+Раскладка: убраны active/generation guards из WorkspaceScreen/WorkspaceHome и AdminForms permit из WorkspaceViewModel.home/layout. Repository.home/layout используют InstallationGate + Room вместо adminTransaction: revisions/replay/audit/rollback и защита восстановления сохранены. Другие административные repositories не менялись. Матрица прав, audit/form docs и harness обновлены; home/layout исключены из старой denied matrix, добавлена отдельная разрешённая регрессия.
+
+Итоговая assembleDebug/assembleDebugAndroidTest — BUILD SUCCESSFUL. Android targeted: LayoutCashierAccessTest, AdminAccessTest, AdminCapabilityMatrixTest, ShiftAppearanceTest — OK (5 tests),4.13s. Проверены разрешённые изменения home/folder без session, повтор команды, stale conflict, rollback/fault result, запрет каталога/склада/прочих admin методов, кнопка ящика и callback для admin=false. Тесты в отдельных in-memory БД/Compose host; реальные рабочие данные не изменены. Debug/test APK локально обновлены с-r. Полная ручная визуальная приёмка владельцем pending. preflight/diff-check passed; без commit/push/release.
+
+## 2026-11-08 — кнопки шапки настроек без статусов режима
+
+SettingsHome: вместо круглого значка обновлений — текстовая кнопка Обновления, следующая кнопка Администрирование. Переключатель темы сохранён. Текст доступного обновления ссылается на новое название кнопки. AdminControl не выводит adminStatus; постоянная кнопка открывает пароль при закрытой сессии или меню панели/завершения при открытой. Отдельная полноширинная кнопка панели перенесена в это меню. Пароль остаётся ephemeral, session active/generation и проверки прав не изменены. Из MposTopBar удалён административный баннер, обычный переход в настройки сохранён.
+
+Обновлены AdminUiTest/SettingsVisualUiTest и TopBarLayoutTest под новое управление. Добавлен изолированный AdminHeaderControlTest на panel callback, logout, повторный login и отсутствие статусов. assembleDebug/assembleDebugAndroidTest — BUILD SUCCESSFUL. Android targeted AdminHeaderControlTest + TopBarLayoutTest + SettingsLayoutTest: OK (6 tests),12.823s, включая narrow520dp/font150%, обновления и маршруты справочников. MainActivity-тесты с реальными рабочими данными не запускались; тестовый Compose host/fixture session, без изменения рабочих записей. Debug/test APK обновлены с-r. harness preflight/diff-check passed. Визуальная приёмка владельцем pending, commit/push/release не выполнялись.
+
+## 2026-11-08 — прямой вход в панель и векторные иконки темы/обновления
+
+По последнему уточнению владельца AdminControl переименован в Панель администратора: при закрытой сессии запрашивает пароль и после успеха сразу вызывает открытие панели; при активной — сразу панель. Промежуточное меню удалено. Завершение сессии перенесено внутрь SettingsHome panel, крестик закрывает только окно. Статусы/верхний admin banner не возвращались; password/session/role checks не менялись.
+
+Обновления — круглая refresh-кнопка с двумя стрелками рядом с темой (прежний callback/accessible description). MposPosIcon дополнен sun/moon (точные SVG paths из pinned pos.html:2169/2174, viewport24/stroke1.8) и refresh. Unicode заменён графикой, активная тема выделена акцентом. Иконки не требуют изображений/новых зависимостей.
+
+assembleDebug/assembleDebugAndroidTest: BUILD SUCCESSFUL. Android targeted AdminHeaderControlTest + TopBarLayoutTest + SettingsLayoutTest: OK (6 tests),13.086s. Проверены пароль→немедленная панель, завершение внутри панели, сохранение session при закрытии окна, отсутствие старых статусов, refresh callback и narrow520/font150% доступность. MainActivity AdminUiTest/SettingsVisualUiTest адаптированы и скомпилированы, не запускались. Debug/test APK локально обновлены с-r; рабочие данные не менялись. preflight/diff-check passed. Визуальное подтверждение владельца pending; без commit/push/release.
+
+
+## 2026-11-08 — единая шапка настроек и состав/остатки Web
+
+Шапка SettingsHome: название и элементы управления в одной строке, высота48dp; административная иконка справа с selected-состоянием и акцентной подсветкой активной сессии. Вход/выход, refresh и тема сохранены. Геометрия проверена на520dp/font150%.
+
+Вкладка простого товара перенесена в порядок Web: отрицательный остаток, единица ввода, себестоимость/остаток, закупочная упаковка с единицей внутри, минимум и отключение учёта. Себестоимость сохранённого товара read-only с repository guard. Для составного — выход с авто/ручным режимом, компактные ингредиенты, физические единицы, стоимость всего состава, inline поиск/категории/Добавить/+ещё. Новые рецепты продаются целиком; прежняя модель существующих товаров сохраняется. Циклы и смена единиц при открытом заказе защищены. Новые optional metadata записываются в document v2, старые v1 читаются; native restore валидирует новые поля. См. docs/PRODUCT-STOCK-WEB.md.
+
+assembleDebug/assembleDebugAndroidTest — BUILD SUCCESSFUL. JVM адресные:10 tests,0 failures. Android первый набор:11 tests passed (stock/store/details/configuration/header/admin). После итоговых изменений формата metadata и стоимости состава повторный набор Store/Panel/Details:OK (5 tests),4.023s. Исправлены тестовая геометрия bottom-top и substring assertion суммы. Тесты изолированы in-memory/Compose host, рабочие данные не менялись. Debug/test APK обновлены локально. Harness preflight и diff-check passed. Визуальная приёмка владельцем pending; commit/push/release не выполнялись.

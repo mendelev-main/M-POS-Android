@@ -5,6 +5,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -39,18 +46,26 @@ class AdminViewModel : ViewModel() {
     }
 }
 
-@Composable fun AdminControl(model: AdminViewModel=viewModel(),compact: Boolean=false) {
+@Composable fun AdminControl(model: AdminViewModel=viewModel(),compact: Boolean=false,onPanel: (() -> Unit)?=null,iconOnly: Boolean=false) {
     val session by Administration.session.state.collectAsStateWithLifecycle()
     val ui by model.state.collectAsStateWithLifecycle()
     var opened by remember {mutableStateOf(false)}
     // Deliberately not rememberSaveable: password never enters saved instance state.
     var password by remember {mutableStateOf("")}
-    LaunchedEffect(session.active) {if(session.active) {opened=false;password=""}}
+    LaunchedEffect(session.active) {
+        if(session.active && opened) {opened=false;password="";onPanel?.invoke()}
+        if(!session.active) password=""
+    }
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
-        Text(if(session.active) "Администрирование активно" else "Режим кассира",style=if(compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.titleMedium,
-            modifier=Modifier.testTag("adminStatus"))
-        MposButton(if(session.active) "Закрыть сессию администрирования" else "Администрирование",
-            {if(session.active) model.logout() else opened=true},enabled=!ui.busy,style=ActionStyle.Secondary,
+        if(iconOnly) Surface(onClick={if(session.active) onPanel?.invoke() else opened=true},enabled=!ui.busy,
+            modifier=Modifier.size(48.dp).testTag("adminControl").semantics {contentDescription="Панель администратора";selected=session.active},
+            shape=RoundedCornerShape(16.dp),color=if(session.active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+            contentColor=if(session.active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            border=BorderStroke(if(session.active) 2.dp else 1.dp,if(session.active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)) {
+            Box(contentAlignment=Alignment.Center) {MposPosIcon("admin",Modifier.size(22.dp))}
+        } else
+        MposButton("Панель администратора",
+            {if(session.active) onPanel?.invoke() else opened=true},enabled=!ui.busy,style=ActionStyle.Secondary,
             modifier=Modifier.testTag("adminControl"))
     }
     if(opened && !session.active) MposDialog("Администрирование",{opened=false;password=""},closable=!ui.busy) {

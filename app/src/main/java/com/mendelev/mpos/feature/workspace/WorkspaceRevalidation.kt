@@ -26,7 +26,7 @@ import java.math.BigDecimal
             if(plan==null) Text((result.exceptionOrNull() as? CatalogFailure)?.message ?: "Не удалось пересчитать заказ",color=MaterialTheme.colorScheme.error)
             else if(!same) MposNotice("Данные изменились. Закройте окно и откройте пересчёт заново",true)
             else {
-                Text("Сумма: ${amount(CartEngine.total(plan.before))} → ${amount(CartEngine.total(plan.after))} BYN",modifier=Modifier.testTag("revalidationTotal"))
+                Text("Сумма: ${com.mendelev.mpos.domain.shift.ShiftRules.money(orderSettingsTotal(plan.before,emptyMap(),plan.before.details.deliveryTariff))} → ${com.mendelev.mpos.domain.shift.ShiftRules.money(orderSettingsTotal(plan.after,emptyMap(),plan.after.details.deliveryTariff))}",modifier=Modifier.testTag("revalidationTotal"))
                 plan.before.lines.zip(plan.after.lines).filter {(a,b)->a!=b}.forEach {(a,b) ->
                     Text("${a.name} → ${b.name}: ${a.quantity} ${unitLabel(a.unit)}, цена ${a.unitPrice} → ${b.unitPrice} BYN")
                     Text("Варианты: ${a.options.joinToString { "${it.name} × ${it.quantity} (${it.priceDelta})" }.ifBlank {"нет"}} → ${b.options.joinToString { "${it.name} × ${it.quantity} (${it.priceDelta})" }.ifBlank {"нет"}}",style=MaterialTheme.typography.bodySmall)

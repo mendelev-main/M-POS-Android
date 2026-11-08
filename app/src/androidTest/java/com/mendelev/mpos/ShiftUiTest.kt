@@ -41,11 +41,11 @@ class ShiftUiTest {
         compose.onNodeWithTag("shiftCounted").assertTextContains("140,00")
         compose.onNodeWithTag("shiftConfirm").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.snapshot?.last?.countedCash==14000L}
-        compose.onNodeWithTag("shiftCountedSummary").assertTextEquals("Пересчитано: 140,00 BYN")
+        compose.onNodeWithTag("shiftHistory:${model.state.value.snapshot!!.last!!.id}").performScrollTo().assertIsDisplayed()
         screenshot("shift-closed")
         compose.onNodeWithTag("shiftOpen").performClick();compose.onNodeWithTag("shiftConfirm").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.snapshot?.active?.openingCash==14000L}
-        compose.activityRule.scenario.recreate();compose.onNodeWithTag("shiftStatus").assertTextEquals("Смена открыта")
+        compose.activityRule.scenario.recreate();compose.onNodeWithTag("shiftStatus").assertTextContains("Кассовая смена №",substring=true)
         assertEquals(documents,runBlocking {CatalogDatabase.get(compose.activity.applicationContext).workspace().documents()})
         val qa=File(compose.activity.filesDir,"qa").apply {mkdirs()};qa.resolve("shiftId.txt").writeText(model.state.value.snapshot!!.active!!.id)
         screenshot("shift-open")

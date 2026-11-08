@@ -9,7 +9,7 @@ import com.mendelev.mpos.feature.products.CatalogViewModel
 /** A failed preceding UI test must not supply its unfinished editor to another test. */
 object CatalogUiTestSupport {
     fun waitEditor(compose: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>,MainActivity>) {
-        compose.waitUntil(20_000) { compose.onAllNodesWithTag("productName").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(20_000) { compose.onAllNodesWithTag("productEditor").fetchSemanticsNodes().isNotEmpty() }
     }
     fun prepare(compose: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>,MainActivity>) {
         lateinit var model: CatalogViewModel

@@ -1,7 +1,7 @@
 package com.mendelev.mpos.core.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.mendelev.mpos.core.ui.isMposDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.*
     categoryColor: String?=null, symbol: String?=null, compact: Boolean=false, editing: Boolean=false,
     content: @Composable ColumnScope.() -> Unit) {
     val category=categoryColor?.let {Color(android.graphics.Color.parseColor(it))}
-    val dark=isSystemInDarkTheme()
+    val dark=isMposDarkTheme()
     val outlinedCategory=category!=null && dark
     val borderWidth=if(outlinedCategory) 2.dp else if(compact || editing) 1.5.dp else 1.dp
     val borderColor=if(outlinedCategory) category!! else if(compact || editing) MaterialTheme.colorScheme.outline else Color.Transparent

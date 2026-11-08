@@ -16,19 +16,19 @@ class CategoryAppearanceUiTest {
     private fun waitText(value: String) { compose.waitUntil(20_000) { compose.onAllNodesWithText(value).fetchSemanticsNodes().isNotEmpty() } }
     @Test fun appearanceRestoresWithEditorAndCancelDoesNotSave() {
         waitText("Категории");compose.onNodeWithText("Категории").performClick()
-        compose.onNodeWithText("Создать категорию").performClick()
+        compose.onNodeWithText("+ Добавить категорию").performClick()
         val name="Цвет QA ${UUID.randomUUID().toString().take(6)}"
         compose.onNodeWithTag("categoryName").performTextInput(name)
         compose.onNodeWithTag("categorySymbol").performTextInput("АБВГ")
-        compose.onNodeWithText("Сохранить категорию").performClick()
+        compose.onNodeWithText("Сохранить").performClick()
         waitText("Обозначение: до 3 символов, без переносов строк")
         compose.onNodeWithTag("categorySymbol").assertTextContains("АБВГ").performTextReplacement("КФ")
         compose.onNodeWithTag("categoryColor:#DFF5E8").performScrollTo().performClick()
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("categorySymbol").assertTextContains("КФ")
         compose.onNodeWithTag("categoryColor:#DFF5E8").assertIsSelected()
-        compose.onNodeWithText("Сохранить категорию").performClick()
-        waitText("Создать категорию")
+        compose.onNodeWithText("Сохранить").performClick()
+        waitText("+ Добавить категорию")
         lateinit var model: CatalogViewModel
         compose.runOnIdle { model=ViewModelProvider(compose.activity)[CatalogViewModel::class.java] }
         compose.waitUntil(20_000) { model.state.value.categories.any { it.name==name } }
@@ -37,8 +37,8 @@ class CategoryAppearanceUiTest {
         compose.onNodeWithTag("categoryEdit:${saved.id}").performScrollTo().performClick()
         compose.onNodeWithTag("categorySymbol").performTextReplacement("Х")
         compose.onNodeWithText("Отмена").performClick()
-        waitText("Создать категорию")
+        waitText("+ Добавить категорию")
         assertEquals(saved,model.state.value.categories.first { it.id==saved.id })
-        compose.onNodeWithContentDescription("Закрыть").performClick()
+        compose.onNodeWithText("Закрыть").performClick()
     }
 }

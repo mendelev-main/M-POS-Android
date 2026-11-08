@@ -12,6 +12,17 @@ class RevalidationTest {
     private fun cart(ps: List<WorkspaceProduct> = products,manual: String? = null)=CartEngine.apply(CurrentCart(sessionId="owner",createdAt=123,details=OrderDetails("Стол")),
         CartAction.Add("p",1,emptySet(),manual,"line"),ps,graph,balances)
     private fun reject(block: () -> Unit) {try {block();fail("Expected refusal")} catch(_:CatalogFailure) {}}
+    @Test fun automaticRefreshPreservesExtrasAndUpdatesSnapshotWithoutSpendingStock() {
+        val old=cart().let {it.copy(lines=it.lines.map {l->l.copy(comment="Без сахара",discountId="d",discountEdited=true)})}
+        val ps=products.map {it.copy(price="3",revision=2)}
+        val next=CartRevalidator.refresh(old,ps,graph)
+        assertEquals("3",next.lines.single().unitPrice)
+        assertEquals("Без сахара",next.lines.single().comment)
+        assertEquals("d",next.lines.single().discountId)
+        assertTrue(next.lines.single().discountEdited)
+        assertEquals(CartEngine.reserved(old),CartEngine.reserved(next))
+        assertEquals(next,CartRevalidator.refresh(next,ps,graph))
+    }
     @Test fun previewPreservesIdentityQuantityAndMetadataWithoutChangingOriginal() {
         val old=cart().let {it.copy(lines=it.lines.map {line->line.copy(quantity="0.5")})}
         val next=products.map {it.copy(name="Новый чай",price="3",revision=2)}

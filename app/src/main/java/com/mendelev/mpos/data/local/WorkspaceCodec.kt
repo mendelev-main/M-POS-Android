@@ -27,11 +27,20 @@ object WorkspaceCodec {
     fun cartVersion(raw: String)=root(raw,setOf(1,2,3)).getInt("version")
     fun cart(cart: CurrentCart): String=JSONObject().put("version",3).put("sessionId",cart.sessionId).put("createdAt",cart.createdAt)
         .put("details",JSONObject().put("label",cart.details.label).put("type",cart.details.type).put("comment",cart.details.comment)
-            .put("address",cart.details.address).put("phone",cart.details.phone))
+            .put("address",cart.details.address).put("phone",cart.details.phone).also {d->
+                if(cart.details.customerName.isNotEmpty()) d.put("customerName",cart.details.customerName)
+                if(cart.details.deliveryEdited) d.put("deliveryEdited",true)
+                cart.details.deliveryTariff?.let {t->d.put("deliveryTariff",JSONObject().put("id",t.id).put("name",t.name).put("fee",t.fee).put("revision",t.revision))}
+            })
         .put("lines",objects(cart.lines.map { line ->
         JSONObject().put("id",line.id).put("productId",line.productId).put("name",line.name).put("basePrice",line.basePrice ?: JSONObject.NULL)
             .put("manual",line.manual ?: JSONObject.NULL).put("unitPrice",line.unitPrice).put("quantity",line.quantity).put("unit",line.unit)
-            .put("sellingBasis",line.sellingBasis).put("options",objects(line.options.map { JSONObject().put("id",it.id).put("name",it.name).put("quantity",it.quantity).put("priceDelta",it.priceDelta) }))
+            .put("sellingBasis",line.sellingBasis).also {j->
+                if(line.comment.isNotEmpty()) j.put("comment",line.comment)
+                if(line.discountEdited) j.put("discountEdited",true)
+                if(line.discountId.isNotEmpty()) j.put("discountId",line.discountId)
+                line.discount?.let {d->j.put("discount",JSONObject().put("type",d.type).put("value",d.value).put("name",d.name))}
+            }.put("options",objects(line.options.map { JSONObject().put("id",it.id).put("name",it.name).put("quantity",it.quantity).put("priceDelta",it.priceDelta) }))
             .put("requests",objects(line.requests.map { JSONObject().put("id",it.productId).put("quantity",CatalogRules.canonical(it.quantity)).put("unit",it.unit.name) }))
             .put("references",objects(line.references.toSortedMap().map { (id,rev) -> JSONObject().put("id",id).put("revision",rev) }))
     })).put("graph",objects(cart.graph.map { p ->
@@ -64,11 +73,20 @@ object WorkspaceCodec {
                     RecipeRequest(it.getString("id"),it.getString("quantity").toBigDecimal(),QuantityUnit.valueOf(it.getString("unit")))
                 },l.getJSONArray("references").list { it.getString("id") to it.getLong("revision") }.toMap(),if(j.getInt("version")<3) "stock-unit" else l.getString("sellingBasis").also {
                     require(it in setOf("stock-unit","recipe-batch"))
-                })
+                },if(l.has("comment")) l.getString("comment") else "",if(l.has("discountId")) l.getString("discountId") else "",
+                if(l.has("discount")) l.getJSONObject("discount").let {d->com.mendelev.mpos.domain.sale.SaleDiscount(d.getString("type"),d.getString("value"),d.getString("name"))} else null,
+                if(l.has("discountEdited")) l.getBoolean("discountEdited") else false).also {line->
+                    require(line.comment.length<=2000 && line.comment.codePointCount(0,line.comment.length)<=1000 && line.comment.none {it.isISOControl() && it!='\n' && it!='\t'})
+                    require(line.discountId.length<=100 && line.discountId.none {it.isISOControl()})
+                    if(line.discount!=null) com.mendelev.mpos.domain.sale.SaleMoney.quote(listOf(com.mendelev.mpos.domain.sale.SaleLineInput(line.id,line.unitPrice,line.quantity,line.discount)))
+                }
         },graph,sessionId=if(j.getInt("version")==1) "" else j.getString("sessionId").also {
             if(it.isBlank() || it.length>100) throw CatalogFailure("workspace","Не найден владелец заказа")
         },createdAt=if(j.getInt("version")==1) 0 else j.getLong("createdAt"),details=if(j.getInt("version")==1) OrderDetails() else j.getJSONObject("details").let {
-            OrderRules.details(OrderDetails(it.getString("label"),it.getString("type"),it.getString("comment"),it.getString("address"),it.getString("phone")))
+            OrderRules.details(OrderDetails(it.getString("label"),it.getString("type"),it.getString("comment"),it.getString("address"),it.getString("phone"),
+                if(it.has("customerName")) it.getString("customerName") else "",
+                if(it.has("deliveryTariff")) it.getJSONObject("deliveryTariff").let {t->com.mendelev.mpos.domain.sale.DeliveryCharge(t.getString("id"),t.getString("name"),t.get("fee").toString().toLongOrNull() ?: throw CatalogFailure("workspace","Некорректная сумма тарифа"),t.get("revision").toString().toLongOrNull() ?: throw CatalogFailure("workspace","Некорректная версия тарифа"))} else null,
+                if(it.has("deliveryEdited")) it.getBoolean("deliveryEdited") else false))
         })
     }
     fun parked(order: ParkedOrder): String=JSONObject().put("version",1).put("parkedAt",order.parkedAt).put("cart",JSONObject(cart(order.cart))).toString()

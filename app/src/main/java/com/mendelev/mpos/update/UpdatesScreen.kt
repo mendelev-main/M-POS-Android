@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -70,7 +71,18 @@ fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGal
     val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val locked=state.stage in setOf(UpdateStage.VERIFYING,UpdateStage.INSTALLER)
     LaunchedEffect(model) { model.openSettings() }
-    com.mendelev.mpos.feature.settings.SettingsHome({updatesOpen=true},onCatalog,onSuppliers,onInventory,onStock,onGallery,onBack,state.candidate!=null,onEmployees,onBackup)
+    val directory by produceState<com.mendelev.mpos.feature.settings.SettingsDirectory?>(null,context) {
+        value=kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val db=com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext)
+                com.mendelev.mpos.feature.settings.SettingsDirectory(
+                    com.mendelev.mpos.data.local.EmployeeRepository(db).snapshot().employees,
+                    com.mendelev.mpos.data.local.SupplierRepository(db).snapshot().suppliers)
+            } catch(e: kotlinx.coroutines.CancellationException) {throw e}
+            catch(_: Exception) {com.mendelev.mpos.feature.settings.SettingsDirectory(error="Не удалось загрузить справочники. Откройте раздел сотрудников или поставщиков для повторного чтения.")}
+        }
+    }
+    com.mendelev.mpos.feature.settings.SettingsHome({updatesOpen=true},onCatalog,onSuppliers,onInventory,onStock,onGallery,onBack,state.candidate!=null,onEmployees,onBackup,directory?.employees.orEmpty(),directory?.suppliers.orEmpty(),directory?.error)
     if(updatesOpen) com.mendelev.mpos.core.ui.MposDialog(stringResource(R.string.update_title),{updatesOpen=false},closable=!locked,maxWidth=820.dp) {
         Column(Modifier.heightIn(max=520.dp).verticalScroll(rememberScrollState()).testTag("updatesWindow").semantics {testTagsAsResourceId=true},verticalArrangement=Arrangement.spacedBy(16.dp)) {
             Text(if(administration.active) "Администрирование активно" else "Режим кассира",style=MaterialTheme.typography.bodySmall)

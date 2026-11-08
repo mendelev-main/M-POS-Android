@@ -6,7 +6,7 @@ import org.json.JSONObject
 /** Independent source-linked validation also runs on subsequent native backup restores. */
 internal object WebCandidateValidation {
     suspend fun initial(db: CatalogDatabase,source: WebBackupDocument) {
-        validate(db)
+        validate(db,source)
         require(db.workspace().productMetadataDocuments().associate {it.id to it.payload}==WebProductMetadataDocuments.encode(source))
         val catalog=WebCatalogMapping.map(source);val products=db.catalog().allProducts().associateBy {it.id}
         require(products.keys==catalog.products.map {it.id}.toSet())
@@ -22,9 +22,9 @@ internal object WebCandidateValidation {
         require(db.sales().history().isEmpty() && db.refunds().history().isEmpty() && db.catalog().movements().isEmpty())
     }
 
-    suspend fun validate(db: CatalogDatabase) {
+    suspend fun validate(db: CatalogDatabase, knownSource: WebBackupDocument?=null) {
         val rows=db.workspace().documents();val docs=rows.associate {it.id to it.payload}
-        val original=WebSourceDocuments.decode(docs)
+        val original=knownSource?.also {WebSourceDocuments.requireSource(docs,it)} ?: WebSourceDocuments.decode(docs)?.withoutPhotoPayloads()
         val evidence=WebImportedPaymentDocuments.decode(docs)
         WebProductMetadataDocuments.validate(docs,original)
         if(original==null) {
@@ -47,11 +47,11 @@ internal object WebCandidateValidation {
         require(deltas.keys().asSequence().toSet()==staff.shifts.map {it.id}.toSet())
         for(s in staff.shifts) {
             val actual=db.shifts().shift(s.id) ?: error("missing source shift")
-            require(actual.actorId==s.actorId && actual.actorName==s.actorName && actual.openedAt==s.openedAt && actual.openingCash==s.openingCash)
+            require(actual.actorId==(s.actorId ?: if(s.status=="closed") WebIdentity.mapped("employee","archived-shift:"+s.sourceId) else null) && actual.actorName==(s.actorName ?: if(s.status=="closed") "Неизвестный кассир Web" else null) && actual.openedAt==s.openedAt && actual.openingCash==s.openingCash)
             val expected=Math.subtractExact(cash.shifts.single {it.sourceShiftId==s.sourceId}.cashFromRecordedFacts!!,s.openingCash!!)
             require(deltas.get(s.id).toString()==expected.toString())
         }
-        val progress=SplitPaymentRepository(db).load()
+        val progress=SplitPaymentRepository(db).load(original)
         val receipts=db.sales().history()
         val bindings=WebRecipeBinding.bind(original).carts.associateBy {it.origin}
         // Imported cart references started at actual candidate revision 1. Later catalogue edits cannot rewrite them.
@@ -66,7 +66,7 @@ internal object WebCandidateValidation {
                 require(WorkspaceCodec.cart(docs.getValue("current"))==adopted.cart)
                 val d=progress!!.checkout.draft
                 require(d.discounts==adopted.discounts && d.delivery==adopted.delivery)
-                WebPaidProvenance.validate(db,progress)
+                WebPaidProvenance.validate(db,progress,original)
             } else {
                 require(progress?.importedOrigin!=r.origin)
                 val receipt=ReceiptCodec.decode(finished.single().payload)

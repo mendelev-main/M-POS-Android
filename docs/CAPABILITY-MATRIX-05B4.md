@@ -1,5 +1,7 @@
 # 05b.4 — матрица прав существующего приложения
 
+Уточнение владельца2026-11-08: раскладку разрешено менять без административной сессии. Предыдущие CI-evidence относятся к прежней матрице; новая граница проверяется LayoutCashierAccessTest. Доступ к каталогу, складу и остальным административным действиям не менялся.
+
 Статус: audit и35 direct denied variants ci-verified/API36: [CI41100246927](https://github.com/mendelev-main/M-POS-Android/actions/runs/41100246927)/f668fef.151JVM/236instrumentation/0failures/0skipped,16Python/lint/build, actual debugAPK1→2 passed. Не вводит новые группы прав. Источник/решения: [STAFF-ACCESS-05B](STAFF-ACCESS-05B.md). Будущие возможности не считаются готовыми.
 
 ## Текущие действия
@@ -11,7 +13,7 @@
 | Новая смена | Только выбранный действующий employee; admin из справочника исключён | ShiftRepository → EmployeeRepository.cashier в транзакции | EmployeeRepositoryTest |
 | Продажа/части оплаты/возврат, внесение/изъятие, закрытие | Только допустимая активная смена/кассир; admin login не нужен | Sale/Refund/Split/Shift/ShiftCash repository: actor/shift/revision/gate | Existing money/repository/upgrade fixtures, AdminAccessTest |
 | Товар/остаток/категория/порядок/удаление и product draft save/discard | Запрещено | CatalogRepository → adminTransaction | 35 direct variants + A/AR tests |
-| Home tiles, folder/layout save/delete/move/reset/reorder/step | Запрещено | WorkspaceRepository.home/layout → adminTransaction | 35 direct variants, native/read-only HOME UPDATE |
+| Home tiles, folder/layout save/delete/move/reset/reorder/step | Разрешено без входа в администрирование | WorkspaceRepository.home/layout → InstallationGate → Room transaction | LayoutCashierAccessTest: сохранение, replay, конфликт, rollback |
 | Сотрудник save/delete и смена роли | Запрещено; при входе активный кассир всё равно неизменяем | EmployeeRepository → adminTransaction + live active actor check | 35 direct variants + ED tests |
 | Поставщик save/delete | Запрещено | SupplierRepository → adminTransaction | 35 direct variants + supplier atomic tests |
 | Закупка draft save/clear/place; заказ edit/cancel | Запрещено | PurchaseDraft/PurchaseOrder → adminTransaction | 35 direct variants + purchase tests |

@@ -10,6 +10,10 @@ data class WebLayoutFacts(val categories: List<WebCategoryTile>,val home: List<W
 
 /** Exact Web five-column positions, one-level category folders; never project away stale references. */
 object WebLayoutMapping {
+    /** These fields survive in the immutable source; they do not affect executable positions. */
+    fun installationBlockers(facts: WebLayoutFacts): Set<String> = facts.blockers - setOf(
+        "homeMetadataNotMapped", "navigationMetadataNotMapped", "orphanCategoryAppearance")
+
     fun map(document: WebBackupDocument,catalog: WebCatalogFacts=WebCatalogMapping.map(document)): WebLayoutFacts {
         val layout=document.root.fields["layout"]?.let(WebValues::obj) ?: emptyMap()
         val products=catalog.products.associateBy {it.sourceId}
@@ -62,14 +66,15 @@ object WebLayoutMapping {
                 val sourceId=WebIdentity.source(p["id"])
                 if(folders.put(sourceId,WebIdentity.mapped("folder",CatalogRules.fingerprint(category.id,sourceId)))!=null) backupBad("layoutDuplicate")
             }
-            saved.forEach {p->val type=WebValues.text(p["type"]);val sid=WebIdentity.source(p["id"])
+            saved.forEach savedItem@ {p->val type=WebValues.text(p["type"]);val sid=WebIdentity.source(p["id"])
                 val parent=WebValues.text(p["parentId"])
                 when(type) {
                     "folder"->{if(parent.isNotEmpty()) backupBad("nestedFolder")
                         val folderName=try {CatalogRules.name(WebValues.text(p["name"]),80)} catch(_:CatalogFailure) {backupBad("folder")}
                         items.add(LayoutItem(type,folders.getValue(sid),category.id,name=folderName))}
-                    "product"->{val product=products[sid] ?: backupBad("layoutReference")
-                        if((product.categoryId ?: "")!=category.id || !placed.add(product.id)) backupBad("layoutReference")
+                    "product"->{val product=products[sid] ?: return@savedItem
+                        if((product.categoryId ?: "")!=category.id) return@savedItem
+                        if(!placed.add(product.id)) backupBad("layoutReference")
                         val folder=if(parent.isEmpty()) "" else folders[parent] ?: backupBad("folderReference")
                         items.add(LayoutItem(type,product.id,category.id,folder))}
                     else->backupBad("layout")

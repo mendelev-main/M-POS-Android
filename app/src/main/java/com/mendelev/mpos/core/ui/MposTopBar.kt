@@ -4,7 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.mendelev.mpos.core.ui.isMposDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -48,7 +48,7 @@ private val destinations = listOf(
 @Composable
 fun MposTopBar(navigation: MposTopNavigation, enabled: Boolean = true) {
     val allowed = enabled && !navigation.shiftPending
-    val navy = if (isSystemInDarkTheme()) Color(0xFF10131A) else Color(0xFF22273A)
+    val navy = if (isMposDarkTheme()) Color(0xFF10131A) else Color(0xFF22273A)
     BoxWithConstraints(Modifier.fillMaxWidth().background(navy).testTag("mposTopBar").semantics { testTagsAsResourceId=true }) {
         val compact = maxWidth <= 700.dp
         Row(
@@ -66,7 +66,6 @@ fun MposTopBar(navigation: MposTopNavigation, enabled: Boolean = true) {
                 if(navigation.inventoryReminder) TopItem("Инвентаризация","inventory",navigation,allowed,selected=navigation.route in setOf("inventory","inventoryWork","inventoryHistory"),compact=compact)
             }
             Spacer(Modifier.weight(1f))
-            if(navigation.adminActive) TopItem("Администрирование активно","settings",navigation,allowed,compact=compact,testId="topNav-administration")
             TopItem("События", "events", navigation, allowed, compact=compact, icon="bell", selected=false)
             val shiftLabel = when {
                 navigation.shiftLoading -> "Загрузка смены"

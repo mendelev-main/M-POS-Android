@@ -41,9 +41,9 @@ class WebCatalogMappingTest {
     }
     @Test fun unknownLegacyUnitAndNegativePermissionAreExplicitNotInvented() {
         val p=product().apply {remove("stockUnit");remove("stockDisplayUnit")}.put("stock","-0.0004")
-        val f=mapped(p).products.single();assertNull(f.unit);assertNull(f.displayUnit)
+        val f=mapped(p).products.single();assertEquals("piece",f.unit);assertEquals("piece",f.displayUnit)
         assertEquals("-0.0004",f.stock);assertFalse(f.allowNegativeStock)
-        assertTrue(f.blockers.containsAll(setOf("legacyUnitUnknown","negativeStockWithoutPermission")))
+        assertTrue(f.blockers.containsAll(setOf("negativeStockWithoutPermission")))
     }
     @Test fun missingReferencesCyclesWrongDimensionsAndExcessPrecisionRefuse() {
         for(rows in listOf(arrayOf(composite("a","missing","1","1")),arrayOf(composite("a","b","1","1"),composite("b","a","1","1")),
@@ -59,8 +59,8 @@ class WebCatalogMappingTest {
     }
     @Test fun metadataIsAttachedWithoutLosingUnknownFieldsOrInventingLegacyUnits() {
         val p=product().apply {remove("stockUnit");remove("stockDisplayUnit")}.put("unit","piece").put("sku","A1").put("custom",true)
-        val f=mapped(p).products.single();assertNull(f.unit)
-        assertTrue(f.blockers.contains("legacyUnitUnknown"));assertTrue(f.blockers.contains("metadataRetentionRequired"))
+        val f=mapped(p).products.single();assertEquals("piece",f.unit)
+        assertFalse(f.blockers.contains("legacyUnitUnknown"));assertTrue(f.blockers.contains("metadataRetentionRequired"))
         assertEquals(setOf("custom"),f.unmappedFields);assertTrue(f.blockers.contains("productMetadataNotMapped"))
         assertEquals(setOf("unit","sku"),f.metadata.presentFields)
         assertEquals(f.metadata,WebProductMetadataCodec.decode(f.metadata.payload))

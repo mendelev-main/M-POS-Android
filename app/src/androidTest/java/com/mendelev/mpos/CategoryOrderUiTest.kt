@@ -19,10 +19,10 @@ class CategoryOrderUiTest {
         val suffix=UUID.randomUUID().toString().take(6)
         val names=listOf("Первая $suffix","Вторая $suffix")
         for(name in names) {
-            compose.onNodeWithText("Создать категорию").performClick()
+            compose.onNodeWithText("+ Добавить категорию").performClick()
             compose.onNodeWithTag("categoryName").performTextInput(name)
-            compose.onNodeWithText("Сохранить категорию").performClick()
-            waitText("Создать категорию")
+            compose.onNodeWithText("Сохранить").performClick()
+            waitText("+ Добавить категорию")
         }
         lateinit var model: CatalogViewModel
         compose.runOnIdle { model=ViewModelProvider(compose.activity)[CatalogViewModel::class.java] }
@@ -30,13 +30,14 @@ class CategoryOrderUiTest {
         val before=model.state.value.categories
         val id=before.first { it.name==names.last() }.id
         val first=before.first { it.name==names.first() }.id
+        compose.onNodeWithTag("categoryRow:$id").performScrollTo().performTouchInput {longClick()}
         compose.onNodeWithTag("categoryUp:$id").performScrollTo().performClick()
         compose.waitUntil(20_000) {
             val categories=model.state.value.categories
             !model.state.value.busy && categories.indexOfFirst { it.id==id }<categories.indexOfFirst { it.id==first }
         }
         compose.activityRule.scenario.recreate()
-        waitText("Создать категорию")
+        waitText("+ Добавить категорию")
         assertTrue(model.state.value.categories.indexOfFirst { it.id==id }<model.state.value.categories.indexOfFirst { it.id==first })
         compose.onNodeWithContentDescription("Закрыть").performClick()
         waitText("Добавить товар")

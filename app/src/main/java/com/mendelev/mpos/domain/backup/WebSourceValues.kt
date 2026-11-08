@@ -28,13 +28,19 @@ internal object WebValues {
         catch(e:BackupFailure) {throw e} catch(_:NumberFormatException) {backupBad("number")}
     }
     fun number(value: BackupJson?,default: String?=null,signed: Boolean=false,scale: Int=12): String {
-        val n=decimal(value,default,signed)
+        val raw=decimal(value,default,signed)
+        val n=if(scale==12) raw.setScale(12,java.math.RoundingMode.HALF_UP).stripTrailingZeros() else raw
+        if(raw.signum()!=0 && n.signum()==0) backupBad("number")
         if(n.stripTrailingZeros().scale()>scale || n.abs()>BigDecimal("999999999."+"9".repeat(scale))) backupBad("number")
         return CatalogRules.canonical(n)
     }
     fun minor(value: BackupJson?,signed: Boolean=false): Long? {
         if(value==null || value===BackupJson.Nil) return null
-        return try {decimal(value,signed=signed).movePointRight(2).longValueExact()}
+        return try {decimal(value,signed=signed).let {raw->
+            val rounded=raw.setScale(2,java.math.RoundingMode.HALF_UP)
+            if((raw-rounded).abs()>BigDecimal("0.00000001")) backupBad("money")
+            rounded.movePointRight(2).longValueExact()
+        }}
         catch(e:BackupFailure) {throw e} catch(_:ArithmeticException) {backupBad("money")}
     }
     fun time(value: BackupJson?): Long? {

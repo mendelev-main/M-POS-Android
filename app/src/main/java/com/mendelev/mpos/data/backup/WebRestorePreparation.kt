@@ -31,7 +31,7 @@ class WebRestorePreparation(context: Context,private val recovery: NativeRecover
     }
     override suspend fun inspect(uri: String): WebRestorePreview {
         val p=permit();val coroutine=currentCoroutineContext()
-        val source=context.contentResolver.openInputStream(Uri.parse(uri))?.use {WebBackupReader.read(it)} ?: throw BackupFailure("read","Не удалось прочитать файл")
+        var source=context.contentResolver.openInputStream(Uri.parse(uri))?.use {WebBackupReader.read(it)} ?: throw BackupFailure("read","Не удалось прочитать файл")
         p.requireCurrent();coroutine.ensureActive()
         if(!root.isDirectory && !root.mkdirs())throw BackupFailure("storage","Не удалось подготовить копию")
         val token=UUID.randomUUID().toString();val dir=File(root,token)
@@ -42,18 +42,19 @@ class WebRestorePreparation(context: Context,private val recovery: NativeRecover
         val db=Room.databaseBuilder(context,CatalogDatabase::class.java,database).build()
         try {
             val photos=WebPhotoPreparation(context).prepare(source)
+            source=source.withoutPhotoPayloads()
             temporaryPhotos=photos.mediaRoot.parentFile
             WebCandidateDatabase(context,db).install(source,photos.files)
             WebCandidateValidation.initial(db,source)
             val snapshot=File(dir,"snapshot").apply {mkdir()}
             val files=NativeSnapshotDatabase.capture(db,ProductPhotoStore(photos.mediaRoot),snapshot)
             val validation=File(dir,"validation").apply {mkdir()}
-            NativeRestoreValidator.validate(context,files,validation)
+            NativeRestoreValidator.validate(context,files,validation,source)
             val archive=File(dir,"candidate.mposnative")
             NativeBackupArchive.write(archive,files) {p.requireCurrent();coroutine.ensureActive()}
             val verify=File(dir,"verify").apply {mkdir()}
             val reopened=archive.inputStream().use {NativeBackupArchive.read(it,verify) {p.requireCurrent();coroutine.ensureActive()}}
-            NativeRestoreValidator.validate(context,reopened,verify)
+            NativeRestoreValidator.validate(context,reopened,verify,source)
             p.requireCurrent();coroutine.ensureActive()
             val adjustments=WebCashReconciliation.compare(source).shifts.filter {it.sourceCompensationDifference!=null && it.sourceCompensationDifference!=0L}.map {WebCashAdjustment(it.sourceDisplayedCash!!,it.cashFromRecordedFacts!!)}
             val deferred=WebWarehouseHistory.map(source)

@@ -56,8 +56,13 @@ data class ConfigEntity(@PrimaryKey val id: Int = 1, val registerId: String, val
 @Entity(tableName = "workspace_documents")
 data class WorkspaceDocument(@PrimaryKey val id: String, val revision: Long, val payload: String)
 
+data class WorkspaceRevision(val id: String,val revision: Long)
+
 @Dao
 interface WorkspaceDao {
+    @Query("SELECT id, revision FROM workspace_documents ORDER BY id") fun observeRevisions(): Flow<List<WorkspaceRevision>>
+    @Query("SELECT * FROM workspace_documents WHERE id=:id") fun observeDocument(id: String): Flow<WorkspaceDocument?>
+    @Query("SELECT * FROM workspace_documents WHERE substr(id,1,length(:prefix))=:prefix ORDER BY id") suspend fun documentsByPrefix(prefix: String): List<WorkspaceDocument>
     @Query("SELECT * FROM workspace_documents ORDER BY id") fun observe(): Flow<List<WorkspaceDocument>>
     @Query("SELECT * FROM workspace_documents ORDER BY id") suspend fun documents(): List<WorkspaceDocument>
     @Query("SELECT * FROM workspace_documents WHERE id LIKE 'web-product-metadata:%' ORDER BY id") suspend fun productMetadataDocuments(): List<WorkspaceDocument>

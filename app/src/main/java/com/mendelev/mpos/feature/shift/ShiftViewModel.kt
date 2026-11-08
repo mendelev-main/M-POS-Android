@@ -10,11 +10,13 @@ import kotlinx.coroutines.flow.*
 import java.util.UUID
 
 data class CashForm(val type: String,val shiftId: String,val revision: Long,val actor: String,val available: Long,val amount: String="",val note: String="")
-data class ShiftUi(val loading: Boolean=true,val pending: Boolean=false,val fatal: Boolean=false,val snapshot: ShiftSnapshot?=null,val message: String?=null,val cashForm: CashForm?=null,val cashUnresolved: ShiftCashCommand?=null,val cashHistory: List<ShiftCashMovement> = emptyList(),val cashiers: List<com.mendelev.mpos.domain.staff.Employee> = emptyList(),val staffLoading: Boolean=true,val staffMessage: String?=null)
+data class ShiftUi(val loading: Boolean=true,val pending: Boolean=false,val fatal: Boolean=false,val snapshot: ShiftSnapshot?=null,val message: String?=null,val cashForm: CashForm?=null,val cashUnresolved: ShiftCashCommand?=null,val cashHistory: List<ShiftCashMovement> = emptyList(),val cashiers: List<com.mendelev.mpos.domain.staff.Employee> = emptyList(),val staffLoading: Boolean=true,val staffMessage: String?=null,val dashboard: ShiftDashboard?=null,val dashboardMessage: String?=null,val historyLoading: Boolean=false,val historyMessage: String?=null)
 class ShiftViewModel(private val repo: ShiftRepository,private val cash: ShiftCashAccess=repo.cashAccess()): ViewModel() {
     private val mutable=MutableStateFlow(ShiftUi());val state=mutable.asStateFlow()
     private var watcher: Job?=null
     private var watchGeneration=0L
+    private var historyGeneration=0L
+    private var historyJob: Job?=null
     init {watch()}
     private fun watch() {val generation=++watchGeneration;watcher?.cancel();watcher=viewModelScope.launch {
         try {
@@ -23,7 +25,33 @@ class ShiftViewModel(private val repo: ShiftRepository,private val cash: ShiftCa
         } catch(e:CancellationException) {throw e}
         catch(_:Exception) {currentCoroutineContext().ensureActive();if(generation==watchGeneration) mutable.update {it.copy(loading=false,fatal=true,message="Не удалось прочитать смену. Перезапустите приложение")}}
     }}
-    private fun publish(s: ShiftSnapshot,history: List<ShiftCashMovement>?=null) {mutable.update {if((it.snapshot?.revision ?: -1)>s.revision) it else it.copy(loading=false,snapshot=s,cashHistory=history ?: it.cashHistory)}}
+    private suspend fun publish(s: ShiftSnapshot,history: List<ShiftCashMovement>?=null) {
+        ++historyGeneration;historyJob?.cancel()
+        mutable.update {it.copy(historyLoading=false,historyMessage=null)}
+        val dashboard=try {withContext(Dispatchers.IO) {repo.dashboard()}} catch(e: CancellationException) {throw e} catch(_:Exception) {null}
+        mutable.update {if((it.snapshot?.revision ?: -1)>s.revision) it else it.copy(loading=false,snapshot=s,cashHistory=history ?: it.cashHistory,
+            dashboard=dashboard?.takeIf {d->d.snapshot.revision==s.revision},dashboardMessage=if(dashboard==null) "Не удалось прочитать итоги и историю смен. Повторите чтение." else null)}
+    }
+
+    fun loadMoreHistory() {
+        val ui=state.value;val base=ui.dashboard ?: return;val cursor=base.nextHistory ?: return
+        if(ui.loading || ui.pending || ui.fatal || ui.historyLoading) return
+        val generation=historyGeneration
+        mutable.update {it.copy(historyLoading=true,historyMessage=null)}
+        historyJob=viewModelScope.launch {
+            try {
+                val page=withContext(Dispatchers.IO) {repo.dashboard(cursor)}
+                if(generation==historyGeneration && state.value.dashboard?.nextHistory==cursor) {
+                    if(page.snapshot.revision==base.snapshot.revision) mutable.update {it.copy(
+                        dashboard=base.copy(summaries=(base.summaries+page.history).distinctBy {row->row.shift.id},nextHistory=page.nextHistory))}
+                    else mutable.update {it.copy(historyMessage="Смена изменилась. Обновите историю.")}
+                }
+            } catch(e:CancellationException) {throw e}
+            catch(_:Exception) {if(generation==historyGeneration) mutable.update {it.copy(historyMessage="Не удалось загрузить предыдущие смены. Повторите попытку.")}}
+            finally {if(generation==historyGeneration) mutable.update {it.copy(historyLoading=false)}}
+        }
+    }
+
     private var staffJob: Job?=null
     fun loadCashiers() {
         staffJob?.cancel()

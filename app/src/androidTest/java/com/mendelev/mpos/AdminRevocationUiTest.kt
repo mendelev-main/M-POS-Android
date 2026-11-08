@@ -47,7 +47,7 @@ class AdminRevocationUiTest {
             assertEquals("p",model.state.value.draft!!.id)
             compose.runOnIdle {model.discard()};compose.waitUntil(20_000) {!model.state.value.busy && model.state.value.draft==null}
             compose.onNodeWithText("Категории",useUnmergedTree=true).performClick()
-            compose.onNodeWithText("Создать категорию").performClick()
+            compose.onNodeWithText("+ Добавить категорию").performClick()
             compose.onNodeWithTag("categoryName").performTextInput("Не сохраняли")
             // No intermediate composition is required: generation, rather than just active=false, invalidates local state.
             runBlocking {Administration.session.logout();assertTrue(Administration.session.login("fixture-admin".toCharArray()))}

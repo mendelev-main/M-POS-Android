@@ -24,12 +24,13 @@ internal class WebCandidateDatabase(private val context: Context,private val db:
         val evidence=WebImportedPaymentEvidenceCodec.encode(source)
         val deferred=setOf("metadataRetentionRequired","productMetadataNotMapped","photoTranscodePending","externalPhotoNeedsExplicitSkip","compositeLegacyStockFields")
         catalog.products.forEach {p->if((p.blockers-deferred).isNotEmpty())fail("Товар не прошёл проверку: "+(p.blockers-deferred).sorted().joinToString())}
-        if(layout.blockers.isNotEmpty())fail("Раскладка не прошла проверку")
+        val layoutProblems=WebLayoutMapping.installationBlockers(layout)
+        if(layoutProblems.isNotEmpty())fail("Раскладка не прошла проверку: "+layoutProblems.sorted().joinToString())
         if(binding.shortages?.isNotEmpty()==true || binding.aggregateConsumption==null && binding.carts.isNotEmpty())fail("Не сошлись резервы открытых заказов")
         val resolved=setOf("operationalCartMappingPending","cashHistoryReconciliationPending","sourceQuoteNotPersisted","nativeCartEncodingPending","sourceRecipeAtExportOnly","shiftBindingInferred","nativePaidProvenancePending","unadoptedSourceEvidence")+deferred
         binding.carts.forEach {if((it.blockers-resolved).isNotEmpty())fail("Открытый заказ требует сверки: "+(it.blockers-resolved).sorted().joinToString())}
         if(cash.unassignedOrigins.isNotEmpty() || (cash.blockers-setOf("nativePaidProvenancePending")).isNotEmpty())fail("Не удалось связать оплаты со сменами")
-        cash.shifts.forEach {if((it.blockers-resolved-setOf("expectedCashNeedsHistory","sourceRefundCompensationDifference")).isNotEmpty())fail("Не сошлись кассовые факты смены: "+it.blockers.sorted().joinToString())}
+        cash.shifts.forEach {if((it.blockers-resolved-setOf("expectedCashNeedsHistory","sourceRefundCompensationDifference")-(if(staff.shifts.single {s->s.sourceId==it.sourceShiftId}.status=="closed") setOf("actorMissing","historicalActorNameUnknown","deliveryCashEvidenceIncomplete","deliveryMovementMismatch") else emptySet())).isNotEmpty())fail("Не сошлись кассовые факты смены: "+it.blockers.sorted().joinToString())}
         // Every raw section survives byte-for-byte; legacy facts have a separate validated archive.
         val retained=WebProductMetadataDocuments.encode(source)+WebSourceDocuments.encode(source)+WebLegacyHistoryDocuments.encode(WebLegacyHistoryArchiveCodec.encode(source))+WebImportedPaymentDocuments.encode(evidence)
         db.adminTransaction {
@@ -51,11 +52,7 @@ internal class WebCandidateDatabase(private val context: Context,private val db:
             db.workspace().put(WorkspaceDocument(WebOrderDefaults.KEY,1,WebOrderDefaults.encode(source)));wrote()
             for((id,payload) in retained) {db.workspace().put(WorkspaceDocument(id,1,payload));wrote()}
             db.workspace().put(WorkspaceDocument(EmployeeCodec.KEY,1,EmployeeCodec.encode(staff.employees)));wrote()
-            val suppliers=WebValues.rows(source.root.fields["suppliers"]).map {value->val fields=WebValues.obj(value)
-                val ids=WebValues.rows(fields["productIds"]).map {WebIdentity.mapped("product",WebIdentity.source(it))}.toSet()
-                if(ids.any {id->products.none {it.id==id && it.type=="simple"}})fail("Не найдены товары поставщика")
-                Supplier(WebIdentity.mapped("supplier",WebIdentity.source(fields["id"])),WebValues.text(fields["name"]),1,ids)
-            }
+            val suppliers=WebSupplierMapping.map(source,catalog)
             val supplierPayload=SupplierCodec.encode(suppliers);SupplierCodec.decode(supplierPayload)
             db.workspace().put(WorkspaceDocument(SupplierCodec.KEY,1,supplierPayload));wrote()
             val purchases=WebPendingPurchases.map(source,products,suppliers)
@@ -73,7 +70,7 @@ internal class WebCandidateDatabase(private val context: Context,private val db:
                 val actual=compared.cashFromRecordedFacts ?: fail("Нет подтверждённого остатка кассы")
                 val opening=s.openingCash ?: fail("Нет начального остатка")
                 val closed=s.status=="closed";val counted=if(closed)s.countedCash ?: fail("Нет пересчёта кассы") else null
-                db.shifts().insert(ShiftEntity(s.id,config.registerId,s.actorId ?: fail("Нет автора смены"),s.actorName ?: fail("Нет исторического имени кассира"),s.openedAt ?: fail("Нет даты смены"),"Europe/Minsk",opening,
+                db.shifts().insert(ShiftEntity(s.id,config.registerId,s.actorId ?: (if(closed) WebIdentity.mapped("employee","archived-shift:"+s.sourceId) else fail("Нет автора смены")),s.actorName ?: (if(closed) "Неизвестный кассир Web" else fail("Нет исторического имени кассира")),s.openedAt ?: fail("Нет даты смены"),"Europe/Minsk",opening,
                     s.sourcePreviousId?.let {WebIdentity.mapped("shift",it)},if(closed)s.closedAt ?: fail("Нет даты закрытия") else null,counted,if(closed)actual else null,if(closed)Math.subtractExact(counted!!,actual) else null,if(closed)null else 1));wrote()
                 cashRows.put(s.id,Math.subtractExact(actual,opening))
             }

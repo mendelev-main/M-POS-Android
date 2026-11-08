@@ -7,14 +7,22 @@ import org.junit.Test
 
 class OrderRulesTest {
     private fun reject(block: ()->Unit) {try {block();fail()} catch(_:CatalogFailure) {}}
-    @Test fun deliveryFieldsAreClearedOnTypeChangeAndTextIsValidated() {
+    @Test fun customerContactsSurviveTypeChangeAndTextIsValidated() {
         val delivery=OrderRules.details(OrderDetails("  Стол 1  ","delivery","Без сахара\nС собой","Тестовая 1","000"))
         assertEquals("Стол 1",delivery.label);assertEquals("000",delivery.phone)
         val changed=OrderRules.details(delivery.copy(type="takeaway"))
-        assertEquals("",changed.address);assertEquals("",changed.phone);assertEquals(delivery.comment,changed.comment)
+        assertEquals(delivery.address,changed.address);assertEquals("000",changed.phone);assertEquals(delivery.comment,changed.comment)
         reject {OrderRules.details(delivery.copy(label="x".repeat(81)))}
         reject {OrderRules.details(delivery.copy(phone="000\n123"))}
         reject {OrderRules.details(delivery.copy(type="unexpected"))}
+    }
+    @Test fun deliverySnapshotIsValidatedAndCustomerNameIsOptional() {
+        val tariff=com.mendelev.mpos.domain.sale.DeliveryCharge("city","По городу",500,1)
+        val d=OrderRules.details(OrderDetails(type="delivery",customerName=" Анна ",phone="123",deliveryTariff=tariff,deliveryEdited=true))
+        assertEquals("Анна",d.customerName)
+        reject {OrderRules.details(d.copy(type="here"))}
+        reject {OrderRules.details(d.copy(deliveryTariff=tariff.copy(fee=-1)))}
+        assertEquals("123",OrderRules.details(d.copy(type="here",deliveryTariff=null)).phone)
     }
     @Test fun labelsAreUniqueNfcAwareAndSortNaturally() {
         assertEquals("Стол 1 (3)",OrderRules.uniqueLabel("Стол 1",listOf(" стол 1 ","СТОЛ 1 (2)")))

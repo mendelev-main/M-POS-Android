@@ -46,20 +46,19 @@ class ParkedOrdersUiTest {
         compose.waitUntil(20_000) {model.state.value.snapshot?.cart?.lines?.singleOrNull()?.productId==productId}
         val ownerA=model.state.value.snapshot!!.cart.sessionId
         compose.onNodeWithTag("workspaceDetails").performClick()
+        compose.onNodeWithTag("orderType:delivery").performScrollTo().performClick()
+        compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.cart.details.type=="delivery"}
         compose.onNodeWithTag("orderLabel").performTextInput(labelA)
-        compose.onNode(hasText("На месте") and hasAnyAncestor(hasTestTag("orderType"))).performScrollTo().performClick()
-        compose.onNode(hasText("Доставка") and hasAnyAncestor(isPopup())).performClick()
-        compose.onNodeWithTag("orderComment").performScrollTo().performTextInput("Без сахара")
         compose.onNodeWithTag("orderAddress").performScrollTo().performTextInput("Тестовая 1")
         compose.onNodeWithTag("orderPhone").performScrollTo().performTextInput("000")
         hideKeyboard();screenshot("order-details")
         compose.onNodeWithTag("orderSubmit").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.cart.details.type=="delivery"}
-        compose.onNodeWithTag("workspacePark").performClick();compose.onNodeWithTag("orderSubmit").performClick()
+        compose.onNodeWithTag("workspacePark").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.parked.any {it.id==ownerA}}
         assertTrue(model.state.value.snapshot!!.cart.lines.isEmpty())
-        compose.onNodeWithTag("workspaceSearchToggle").performClick()
-        compose.onNodeWithTag("workspaceSearch").performTextInput(productName)
+        compose.onNodeWithTag("workspaceCategory:").performScrollTo().performClick()
+        compose.onNodeWithTag("workspaceGrid").performScrollToNode(hasTestTag("workspaceProduct:$productId"))
         compose.onNodeWithTag("workspaceProduct:$productId").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.cart.lines.size==1}
         val ownerB=model.state.value.snapshot!!.cart.sessionId
@@ -75,6 +74,19 @@ class ParkedOrdersUiTest {
         assertEquals("Тестовая 1",model.state.value.snapshot!!.cart.details.address)
         assertEquals("000",model.state.value.snapshot!!.cart.details.phone)
         assertEquals(ownerB,model.state.value.snapshot!!.parked.single().id)
+        compose.onNodeWithTag("orderLabel").assertDoesNotExist()
+        // Both orders have labels: switching preserves them without another naming dialog.
+        compose.onNodeWithTag("workspaceParked").performClick()
+        compose.onNodeWithTag("parkedOpen:$ownerB").performScrollTo().performClick()
+        compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.cart.sessionId==ownerB}
+        compose.onNodeWithTag("orderLabel").assertDoesNotExist()
+        assertEquals(labelB,model.state.value.snapshot!!.cart.details.label)
+        assertEquals(labelA,model.state.value.snapshot!!.parked.single().cart.details.label)
+        compose.onNodeWithTag("workspaceParked").performClick()
+        compose.onNodeWithTag("parkedOpen:$ownerA").performScrollTo().performClick()
+        compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.cart.sessionId==ownerA}
+        compose.onNodeWithTag("orderLabel").assertDoesNotExist()
+        assertEquals(labelB,model.state.value.snapshot!!.parked.single().cart.details.label)
         compose.onNodeWithTag("workspaceParked").performClick()
         compose.onNodeWithTag("parkedDelete:$ownerB").performScrollTo().performClick()
         compose.onNodeWithText("Отмена").performClick();assertEquals(1,model.state.value.snapshot!!.parked.size)
@@ -82,7 +94,7 @@ class ParkedOrdersUiTest {
         compose.onNodeWithText("Удалить заказ").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.parked.isEmpty()}
         compose.onNodeWithContentDescription("Закрыть отложенные чеки").performClick()
-        compose.onNodeWithTag("workspacePark").performClick();compose.onNodeWithTag("orderSubmit").performClick()
+        compose.onNodeWithTag("workspacePark").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.parked.size==1}
         compose.onNodeWithTag("workspaceProduct:$productId").assertIsEnabled().performClick()
         try {

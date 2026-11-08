@@ -17,6 +17,7 @@ class AdminUiTest {
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("topNav-settings").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("topNav-settings").performClick()
         compose.onNodeWithTag("adminControl").performScrollTo().performClick()
+        compose.onNodeWithTag("adminLogout").performClick()
         compose.waitUntil(10_000) {!Administration.session.state.value.active}
         compose.onNodeWithTag("adminControl").performClick()
         compose.onNodeWithTag("adminPassword").performTextInput("incorrect")
@@ -29,11 +30,12 @@ class AdminUiTest {
         compose.onNodeWithTag("adminLogin").performClick()
         compose.waitUntil(10_000) {Administration.session.state.value.active}
         compose.activityRule.scenario.recreate()
-        compose.onNodeWithTag("adminStatus").assertTextEquals("Администрирование активно")
+        compose.onNodeWithTag("adminStatus").assertDoesNotExist()
+        compose.onNodeWithTag("topNav-administration").assertDoesNotExist()
         screenshot("admin-session")
-        compose.onNodeWithTag("adminControl").performScrollTo().performClick()
+        compose.onNodeWithTag("adminLogout").performClick()
         compose.waitUntil(10_000) {!Administration.session.state.value.active}
-        compose.onNodeWithTag("adminStatus").assertTextEquals("Режим кассира")
+        compose.onNodeWithTag("adminStatus").assertDoesNotExist()
         assertEquals(before,runBlocking {ShiftRepository(db).snapshot()})
     }
     private fun screenshot(name: String) {

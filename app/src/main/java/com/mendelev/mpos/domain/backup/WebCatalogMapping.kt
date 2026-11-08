@@ -29,7 +29,7 @@ object WebCatalogMapping {
         val mappedIds=sourceIds.map {WebIdentity.mapped("product",it)}.toSet()
         val categories=linkedMapOf<String,WebCategory>()
         fun type(p: Map<String,BackupJson>): String=WebValues.text(p["type"]).also {if(it !in setOf("simple","composite")) backupBad("product")}
-        fun base(p: Map<String,BackupJson>): String?=unit(if(type(p)=="simple") WebValues.text(p["stockUnit"]) else WebValues.text(p["recipeUnit"]).ifEmpty {"piece"})
+        fun base(p: Map<String,BackupJson>): String?=unit(if(type(p)=="simple") WebValues.text(p["stockUnit"]).ifEmpty {"piece"} else WebValues.text(p["recipeUnit"]).ifEmpty {"piece"})
         fun yield(p: Map<String,BackupJson>): String=if(type(p)=="composite") WebValues.number(p["recipeYield"],"1").also {if(it.toBigDecimal().signum()<=0) backupBad("recipe")} else "1"
         fun physical(qty: String,child: Map<String,BackupJson>): String {
             val n=qty.toBigDecimal()*yield(child).toBigDecimal()
@@ -78,7 +78,7 @@ object WebCatalogMapping {
             val pack=p["purchasePackSize"]?.takeUnless {it===BackupJson.Nil}?.let {WebValues.number(it).also {q->if(q.toBigDecimal().signum()<=0) backupBad("pack")}}
             val convertedPack=pack?.let {q->if(u==null || content==null) {blockers.add("packUnitUnknown");q} else WebValues.number(BackupJson.Str(quantityUnit(content).convert(q.toBigDecimal(),quantityUnit(u)).toPlainString()))}
             val stock=if(kind=="simple") p["stock"]?.takeUnless {it===BackupJson.Nil}?.let {WebValues.number(it,signed=true)} else null
-            val cost=if(kind=="simple") p["cost"]?.takeUnless {it===BackupJson.Nil}?.let {WebValues.number(it)} else null
+            val cost=if(kind=="simple") p["cost"]?.takeUnless {it===BackupJson.Nil}?.let {CatalogRules.canonical(WebValues.decimal(it).setScale(2,java.math.RoundingMode.HALF_UP))} else null
             if(kind=="simple" && stock==null) blockers.add("stockUnknown")
             if(kind=="simple" && cost==null) blockers.add("costUnknown")
             val negative=WebValues.bool(p["allowNegativeStock"])

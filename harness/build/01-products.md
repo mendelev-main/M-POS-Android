@@ -1,5 +1,7 @@
 # Этап 01 — Товары
 
+2026-11-08: перенос Web-вкладки «Состав и остатки» — [контракт и проверки](../../docs/PRODUCT-STOCK-WEB.md). Простой: единицы, read-only сохранённая себестоимость, остатки/флаги, упаковка с единицей содержимого. Составной: выход, строки с количеством/единицей/стоимостью, встроенный поиск/категории, +ещё, авто/ручной выход и защита циклов. Новые UI-рецепты продаются целым рецептом; существующие модели и история сохраняются. Новые local metadata v2 включены в backup validation. Визуальная приёмка владельца pending.
+
 Статус: инкремент01a ci-verified с CI evidence в [CATALOG-01A.md](../../docs/CATALOG-01A.md); 01b domain/Room schema2/editor ci-verified API28/35, run40094842882; 01c ci-verified API28/35, run40098187895; device pending
 
 ## Объём
@@ -51,3 +53,5 @@
 
 
 P03 appearance: [цвет/обозначение/schema4](../../docs/CATEGORY-APPEARANCE.md) ci-verified API36/run40101394875/attempt2,26JVM/24instrumentation+2explicitUI/updateE2E; device отдельно.
+
+2026-11-08: локальный инкремент P01–P10/T01–T10 — [CATALOG-WEB-PARITY](../../docs/CATALOG-WEB-PARITY.md): таблица/поиск/фильтр/категории, редактируемые metadata, usage, picker, сохранение/отмена. Admin/ledger/revision/история сохранены; device/pixel pending.

@@ -10,6 +10,7 @@ import java.util.UUID
 
 class ShiftRepository(private val db: CatalogDatabase,private val clock: Clock=Clock.systemDefaultZone(),private val afterWrite: (() -> Unit)?=null) {
     private val dao=db.shifts()
+    suspend fun dashboard(before: ShiftHistoryCursor?=null)=db.shiftDashboard(before)
     fun employeeAccess(): EmployeeAccess=EmployeeRepository(db)
     fun cashAccess(): ShiftCashAccess=ShiftCashRepository(db,clock)
     suspend fun initialize() {CatalogRepository(db).initialize();db.withTransaction {dao.initialize(ShiftRegisterEntity())}}

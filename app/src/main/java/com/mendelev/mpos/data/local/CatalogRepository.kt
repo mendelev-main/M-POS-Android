@@ -5,20 +5,28 @@ import com.mendelev.mpos.domain.catalog.*
 import java.util.UUID
 import com.mendelev.mpos.data.media.ProductPhotoStore
 import org.json.JSONObject
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.distinctUntilChanged
 
-data class CatalogEditorSnapshot(val product: ProductEntity, val balance: BalanceEntity?, val components: List<RecipeComponentEntity>, val modifierGroups: List<ModifierGroupInput>)
+data class CatalogEditorSnapshot(val product: ProductEntity, val balance: BalanceEntity?, val components: List<RecipeComponentEntity>, val modifierGroups: List<ModifierGroupInput>,val details: ProductDetails=ProductDetails())
 
 class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhotoStore? = null, private val afterCategoryOrderWrite: (() -> Unit)? = null, private val afterCategoryWrite: (() -> Unit)? = null, private val afterProductWrite: (() -> Unit)? = null) {
     val dao = db.catalog()
     val products = dao.products()
     val categories = dao.categories()
     val components = dao.components()
+    val recipeBatchIds=db.workspace().observeRevisions().map {
+        val imported=db.workspace().document(WebCandidateDatabase.BASIS)?.let {doc->val a=JSONObject(doc.payload).getJSONArray("products");(0 until a.length()).map {a.getString(it)}.toSet()}.orEmpty()
+        val local=db.workspace().documentsByPrefix(ProductDetailsCodec.PREFIX).associate {d->d.id.removePrefix(ProductDetailsCodec.PREFIX) to ProductDetailsCodec.decode(d.payload,d.id.removePrefix(ProductDetailsCodec.PREFIX))}
+        (imported-local.filterValues {it.sellingBasis=="stock-unit"}.keys)+local.filterValues {it.sellingBasis=="recipe-batch"}.keys
+    }.distinctUntilChanged()
+    suspend fun usage(id: String)=db.productUsage(id)
     suspend fun editorSnapshot(id: String): CatalogEditorSnapshot = db.withTransaction {
         val product=dao.product(id) ?: throw CatalogFailure("conflict", "Товар больше не существует")
         val options=dao.modifierOptions(id)
         val groups=dao.modifierGroups(id).map { g -> ModifierGroupInput(g.id,g.name,g.minimum.toString(),g.maximum.toString(),
             options.filter { it.groupId==g.id }.map { ModifierOptionInput(it.id,it.productId,it.posName,it.quantity,it.priceDelta) }) }
-        CatalogEditorSnapshot(product,dao.balance(id),dao.recipe(id),groups)
+        CatalogEditorSnapshot(product,dao.balance(id),dao.recipe(id),groups,db.productDetails(id))
     }
     private fun requirePhoto(id: String?) {
         if(id!=null) (photos ?: throw CatalogFailure("photo","Хранилище фото недоступно")).requirePrepared(id)
@@ -53,7 +61,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
             val old = dao.product(input.id)
             if (old?.revision != input.expectedRevision) throw CatalogFailure("conflict", "Товар изменился. Перечитайте карточку перед сохранением")
             if (input.categoryId != null && dao.category(input.categoryId) == null) throw CatalogFailure("category", "Категория больше не существует")
-            if (old != null && (old.type != input.type || old.unit != input.unit))
+            if (old != null && (old.type != input.type || old.type=="simple" && old.unit != input.unit))
                 throw CatalogFailure("type", "Тип и базовая единица уже назначены. Создайте отдельный товар")
             val balance = dao.balance(input.id)
             if (old != null && input.stockEdited && balance?.revision != input.expectedStockRevision)
@@ -64,6 +72,8 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
                 if (n.scale() > 12 || n.precision() - n.scale() > 18) throw CatalogFailure("precision", "Количество вне допустимой точности склада")
             }
             val baseCost = CatalogRules.canonical(input.cost.toBigDecimal().divide(display.convert(java.math.BigDecimal.ONE, base)))
+            if(old?.type=="simple" && baseCost.toBigDecimal().compareTo(old.cost.toBigDecimal())!=0)
+                throw CatalogFailure("Себестоимость","Себестоимость изменяется при приёмке по средневзвешенной стоимости")
             if (baseCost.toBigDecimal().scale() > 12) throw CatalogFailure("precision", "Себестоимость вне допустимой точности")
             val product = ProductEntity(input.id, input.categoryId, input.name, CatalogRules.key(input.name), input.price, baseCost,
                 (old?.revision ?: 0) + 1, unit=input.unit, type=input.type, displayUnit=input.displayUnit,
@@ -71,6 +81,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
                 minimumStock=input.minimumStock?.let(::baseQuantity), purchaseLabel=input.purchaseLabel,
                 packSize=input.packSize?.let(::baseQuantity), recipeYield=input.recipeYield, photoId=input.photoId)
             if (old == null) dao.insertProduct(product) else dao.updateProduct(product)
+            input.details?.let {db.workspace().put(WorkspaceDocument(ProductDetailsCodec.PREFIX+input.id,product.revision,ProductDetailsCodec.encode(input.id,it)))}
             afterProductWrite?.invoke() // fault seam: rollback must be proved against the actual Room transaction.
             dao.clearRecipe(input.id)
             val nextComponents = input.components.mapIndexed { index, c ->
@@ -101,6 +112,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
                 val current=balance ?: error("Нет складского baseline")
                 dao.updateBalance(current.copy(revision=Math.addExact(current.revision,1)))
             }
+            WorkspaceRepository(db).refreshCatalogCarts()
             record(input.commandId, fp, input.id, if (old == null) "product.create" else "product.update")
             dao.clearDraft()
             input.id
@@ -174,6 +186,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
         if (dao.recipeUses(id) > 0) throw CatalogFailure("used", "Товар используется в рецептуре: сначала измените состав")
         if (db.sales().productUses(id)>0) throw CatalogFailure("used", "Товар есть в истории чеков: удалить нельзя")
         if (dao.movementCount(id) > 0) throw CatalogFailure("used", "Есть складская история: удалить товар нельзя")
-        dao.clearModifierOptions(id);dao.clearModifierGroups(id);dao.clearRecipe(id); dao.deleteBalance(id); dao.deleteProduct(id); if(draft?.optString("id")==id) dao.clearDraft(); record(commandId, fp, id, "product.delete")
+        dao.clearModifierOptions(id);dao.clearModifierGroups(id);dao.clearRecipe(id); dao.deleteBalance(id); dao.deleteProduct(id)
+        db.workspace().delete(ProductDetailsCodec.PREFIX+id); if(draft?.optString("id")==id) dao.clearDraft(); record(commandId, fp, id, "product.delete")
     }
 }

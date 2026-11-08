@@ -23,7 +23,7 @@ data class SplitProgress(val revision: Long,val checkout: SavedCheckout,val paid
 class SplitPaymentRepository(private val db: CatalogDatabase,private val afterWrite: (() -> Unit)?=null) {
     private val key="split-progress"
     private fun conflict(): Nothing=throw CatalogFailure("split","Раздельная оплата изменилась. Откройте сохранённый прогресс заново")
-    suspend fun load(): SplitProgress?=db.withTransaction {
+    suspend fun load(knownSource: com.mendelev.mpos.domain.backup.WebBackupDocument?=null): SplitProgress?=db.withTransaction {
         val doc=db.workspace().document(key) ?: return@withTransaction null
         val j=JSONObject(doc.payload)
         val version=j.getInt("version")
@@ -38,7 +38,7 @@ class SplitPaymentRepository(private val db: CatalogDatabase,private val afterWr
                 if(version==3) j.getJSONArray("importedParts").let {a->(0 until a.length()).associate {i->a.getJSONObject(i).let {it.getLong("id") to it.getInt("position")}}.also {require(it.size==a.length())}} else emptyMap())
         }
         SplitEditor.validate(progress.editable())
-        if(version==3) WebPaidProvenance.validate(db,progress)
+        if(version==3) WebPaidProvenance.validate(db,progress,knownSource)
         progress
     }
     suspend fun revision(): Long=db.withTransaction {db.workspace().document(key)?.revision ?: 0L}

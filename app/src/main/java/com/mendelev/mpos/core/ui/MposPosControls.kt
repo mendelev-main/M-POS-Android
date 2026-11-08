@@ -2,7 +2,7 @@ package com.mendelev.mpos.core.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.mendelev.mpos.core.ui.isMposDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -24,25 +24,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /** Explicit pinned Web POS variants; do not change generic editor/dialog controls. */
-enum class PosControl { Surface, Outline, Cash, Card, Delete, Close }
+enum class PosControl { Surface, Outline, Cash, Card, Delete, Close, Secondary }
 @Composable fun MposPosControl(label: String,onClick: ()->Unit,modifier: Modifier=Modifier,enabled: Boolean=true,
     kind: PosControl=PosControl.Surface,height: Dp=46.dp,radius: Dp=12.dp,fontSize: Float=14f,icon: String?=null,horizontalPadding: Dp=14.dp) {
     val c=MaterialTheme.colorScheme
     val background=when(kind) {
         PosControl.Cash->c.primary
-        PosControl.Card->if(isSystemInDarkTheme()) Color(0xFF10131A) else Color(0xFF22273A)
+        PosControl.Card->if(isMposDarkTheme()) Color(0xFF10131A) else Color(0xFF22273A)
         PosControl.Delete->c.errorContainer
-        PosControl.Close,PosControl.Outline->c.background
+        PosControl.Close,PosControl.Outline,PosControl.Secondary->c.background
         else->c.surface
     }
     val ink=when(kind) {PosControl.Cash->c.onPrimary;PosControl.Card->Color.White;PosControl.Delete->c.error;PosControl.Close->c.onSurfaceVariant;else->c.onSurface}
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
     Surface(onClick=onClick,enabled=enabled,modifier=modifier.heightIn(min=height),shape=RoundedCornerShape(radius),
         color=background,contentColor=ink.copy(alpha=if(enabled) 1f else .45f),
-        border=if(kind in listOf(PosControl.Cash,PosControl.Card,PosControl.Close)) null else BorderStroke(1.dp,if(kind==PosControl.Delete) c.error else c.outline)) {
+        border=if(kind in listOf(PosControl.Cash,PosControl.Card,PosControl.Close,PosControl.Secondary)) null else BorderStroke(1.dp,if(kind==PosControl.Delete) c.error else c.outline)) {
         Row(Modifier.padding(horizontal=if(label.isEmpty()) 0.dp else horizontalPadding),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.Center) {
             if(icon!=null) {MposPosIcon(icon,Modifier.size(if(kind==PosControl.Close) 22.dp else if(kind==PosControl.Delete) 18.dp else 20.dp));if(label.isNotEmpty()) Spacer(Modifier.width(8.dp))}
-            if(label.isNotEmpty()) Text(label,fontSize=fontSize.sp,fontWeight=if(kind==PosControl.Cash || kind==PosControl.Card || label=="Разделить") FontWeight.Bold else FontWeight.ExtraBold)
+            if(label.isNotEmpty()) Text(label,fontSize=fontSize.sp,fontWeight=if(kind==PosControl.Cash || kind==PosControl.Card || kind==PosControl.Secondary || label=="Разделить") FontWeight.Bold else FontWeight.ExtraBold)
         }
     }
     }
@@ -53,6 +53,10 @@ enum class PosControl { Surface, Outline, Cash, Card, Delete, Close }
     val ink=LocalContentColor.current
     val path=when(name) {
         "close"->"M6 6L18 18M18 6L6 18"
+        "admin"->"M12 3L20 6V12C20 17 15 20 12 22C9 20 4 17 4 12V6L12 3ZM8 12L11 15L16 9"
+        "sun"->"M16 12A4 4 0 1 1 8 12A4 4 0 1 1 16 12M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"
+        "moon"->"M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"
+        "refresh"->"M3 12A9 9 0 0 1 18.36 5.64L21 8M21 3V8H16M21 12A9 9 0 0 1 5.64 18.36L3 16M8 16H3V21"
         "delete"->"M4 7H20M9 7V4H15V7M6 7L7 20H17L18 7M10 11V16M14 11V16"
         "takeaway"->"M6 7H18L20 21H4L6 7ZM9 8V6A3 3 0 0 1 15 6V8"
         "delivery"->"M3 6H14V18H3ZM14 10H18L21 14V18H14M9 18A2 2 0 1 1 5 18A2 2 0 1 1 9 18M20 18A2 2 0 1 1 16 18A2 2 0 1 1 20 18"
@@ -61,6 +65,6 @@ enum class PosControl { Surface, Outline, Cash, Card, Delete, Close }
         else->"M4 5H20Q22 5 22 7V17Q22 19 20 19H4Q2 19 2 17V7Q2 5 4 5ZM15 12A3 3 0 1 1 9 12A3 3 0 1 1 15 12M6 9H6.01M18 15H18.01"
     }
     Canvas(modifier) {scale(size.width/24f,size.height/24f,pivot=androidx.compose.ui.geometry.Offset.Zero) {
-        drawPath(PathParser().parsePathString(path).toPath(),ink,style=Stroke(if(name=="close") 1.8f else 1.7f,cap=StrokeCap.Round,join=StrokeJoin.Round))
+        drawPath(PathParser().parsePathString(path).toPath(),ink,style=Stroke(if(name in setOf("close","sun","moon")) 1.8f else 1.7f,cap=StrokeCap.Round,join=StrokeJoin.Round))
     }}
 }

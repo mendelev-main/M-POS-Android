@@ -1,5 +1,5 @@
 {
-  "updated_on": "2026-11-07",
+  "updated_on": "2026-11-08",
   "blocker": "Run42372632697 исполнил300API tests:3fail (геометрия оплаты и merging метки возврата). Причины исправлены; локальные PaymentAppearanceTest/ReceiptHistoryAppearanceTest прошли API36 на Mac9,711s. Полный следующий CI/release pending; локальный RefundUiTest заблокирован существующей сменой в fixture setup. Полная pixel-приёмка не закрыта.",
   "windows": {
     "W01": {
@@ -85,6 +85,181 @@
       "api_verified": false,
       "pixel_verified": false,
       "remaining": "Локальный API36 прогон, парные PNG обеих тем, точные тени/типографика, длинная история и узкий экран"
+    },
+    "T02": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Локальный перенос списка/карточек/категорий/picker/подтверждений и metadata; онлайн09 TODO, device/API/парные снимки pending. docs/CATALOG-WEB-PARITY.md"
+    },
+    "T03": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Локальный перенос списка/карточек/категорий/picker/подтверждений и metadata; онлайн09 TODO, device/API/парные снимки pending. docs/CATALOG-WEB-PARITY.md"
+    },
+    "T04": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Локальный перенос списка/карточек/категорий/picker/подтверждений и metadata; онлайн09 TODO, device/API/парные снимки pending. docs/CATALOG-WEB-PARITY.md"
+    },
+    "K01": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Главная структура и справочники/тема подключены локально; inline-редакторы сотрудников/рейтинги и полная визуальная приёмка pending. docs/SETTINGS-CATALOGS.md"
+    },
+    "K03": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Главная структура и справочники/тема подключены локально; inline-редакторы сотрудников/рейтинги и полная визуальная приёмка pending. docs/SETTINGS-CATALOGS.md"
+    },
+    "K07": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Формы и хранение реализованы локально, API-тесты скомпилированы; устройство/парные снимки pending. docs/SETTINGS-CATALOGS.md"
+    },
+    "K08": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Формы и хранение реализованы локально, API-тесты скомпилированы; устройство/парные снимки pending. docs/SETTINGS-CATALOGS.md"
+    },
+    "K09": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Формы и хранение реализованы локально, API-тесты скомпилированы; устройство/парные снимки pending. docs/SETTINGS-CATALOGS.md"
+    },
+    "C04": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Окно/выбор типа/контакты/тарифы/итог перенесены локально; API-тесты и парные снимки pending. docs/ORDER-SETTINGS-WEB.md"
+    },
+    "C05": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Окно/выбор типа/контакты/тарифы/итог перенесены локально; API-тесты и парные снимки pending. docs/ORDER-SETTINGS-WEB.md"
+    },
+    "C01": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Окно/локальный черновик/скидки/комментарий/атомарный Save перенесены; API/device/парные снимки pending. docs/CART-ITEM-WEB.md"
+    },
+    "S01": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Экран/окна/история/отчёт реализованы локально; оборудование TODO, API/device/полная визуальная приёмка pending. docs/SHIFT-WEB.md"
+    },
+    "S02": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Экран/окна/история/отчёт реализованы локально; оборудование TODO, API/device/полная визуальная приёмка pending. docs/SHIFT-WEB.md"
+    },
+    "S03": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Экран/окна/история/отчёт реализованы локально; оборудование TODO, API/device/полная визуальная приёмка pending. docs/SHIFT-WEB.md"
+    },
+    "S04": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Экран/окна/история/отчёт реализованы локально; оборудование TODO, API/device/полная визуальная приёмка pending. docs/SHIFT-WEB.md"
+    },
+    "S05": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Экран/окна/история/отчёт реализованы локально; оборудование TODO, API/device/полная визуальная приёмка pending. docs/SHIFT-WEB.md"
+    },
+    "S06": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Экран/окна/история/отчёт реализованы локально; оборудование TODO, API/device/полная визуальная приёмка pending. docs/SHIFT-WEB.md"
+    },
+    "S07": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Экран/окна/история/отчёт реализованы локально; оборудование TODO, API/device/полная визуальная приёмка pending. docs/SHIFT-WEB.md"
+    },
+    "T01": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Локальный перенос списка/карточек/категорий/picker/подтверждений и metadata; онлайн09 TODO, device/API/парные снимки pending. docs/CATALOG-WEB-PARITY.md"
+    },
+    "T05": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Локальный перенос списка/карточек/категорий/picker/подтверждений и metadata; онлайн09 TODO, device/API/парные снимки pending. docs/CATALOG-WEB-PARITY.md"
+    },
+    "T06": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Локальный перенос списка/карточек/категорий/picker/подтверждений и metadata; онлайн09 TODO, device/API/парные снимки pending. docs/CATALOG-WEB-PARITY.md"
+    },
+    "T07": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Локальный перенос списка/карточек/категорий/picker/подтверждений и metadata; онлайн09 TODO, device/API/парные снимки pending. docs/CATALOG-WEB-PARITY.md"
+    },
+    "T08": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Локальный перенос списка/карточек/категорий/picker/подтверждений и metadata; онлайн09 TODO, device/API/парные снимки pending. docs/CATALOG-WEB-PARITY.md"
+    },
+    "T09": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Локальный перенос списка/карточек/категорий/picker/подтверждений и metadata; онлайн09 TODO, device/API/парные снимки pending. docs/CATALOG-WEB-PARITY.md"
+    },
+    "T10": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Локальный перенос списка/карточек/категорий/picker/подтверждений и metadata; онлайн09 TODO, device/API/парные снимки pending. docs/CATALOG-WEB-PARITY.md"
     }
   }
 }

@@ -2,7 +2,7 @@ package com.mendelev.mpos.feature.sale
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.mendelev.mpos.core.ui.isMposDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -117,6 +117,7 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
                         ReceiptMoneyRow("${line.name} × ${line.quantity.replace('.',',')}",net.net,"receiptLine:${line.id}")
                         if(net.discount>0) ReceiptMoneyRow("↳ Скидка",-net.discount,accent=true)
                         if(line.options.isNotEmpty()) Text("↳ "+line.options.joinToString(" · ") {it.name},Modifier.padding(start=10.dp,bottom=5.dp),fontSize=12.sp,lineHeight=18.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                        if(line.comment.isNotBlank()) Text("Комментарий: ${line.comment}",Modifier.padding(start=10.dp,bottom=5.dp),fontSize=12.sp,lineHeight=18.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     if(s.cart.details.comment.isNotBlank()) Text("Комментарий: ${s.cart.details.comment}",fontSize=12.sp,lineHeight=18.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     if(s.quote.discount>0) ReceiptMoneyRow("Скидки на товары",-s.quote.discount,accent=true)
@@ -153,7 +154,7 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
     }
 }
 @Composable private fun ReceiptAction(label: String,onClick: ()->Unit,enabled: Boolean,danger: Boolean,modifier: Modifier) {
-    val dark=isSystemInDarkTheme();val c=MaterialTheme.colorScheme
+    val dark=isMposDarkTheme();val c=MaterialTheme.colorScheme
     Surface(onClick=onClick,enabled=enabled,modifier=modifier.height(46.dp),shape=RoundedCornerShape(12.dp),
         color=if(danger) c.errorContainer else if(dark) Color(0xFF4A3B16) else Color(0xFFFFF0B8),
         border=BorderStroke(1.5.dp,if(danger) c.error else if(dark) Color(0xFF8D752B) else Color(0xFFE3B82F))) {

@@ -36,9 +36,9 @@ class WorkspaceScaleUiTest {
         val bitmap=InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot() ?: error("No screenshot")
         File(folder,"$name.png").outputStream().use {bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};bitmap.recycle()
     }
-    @Test fun largeCatalogSearchAndAddEvaluateOnlyRequestedTiles() {
-        val suffix=UUID.randomUUID().toString().take(6);val category="bench-$suffix";val target="bench-$suffix-1999"
-        val name="Нагрузка $suffix 1999";val db=CatalogDatabase.get(compose.activity.applicationContext);val repo=WorkspaceRepository(db)
+    @Test fun largeCatalogCategoryAndAddEvaluateOnlyVisibleTiles() {
+        val suffix=UUID.randomUUID().toString().take(6);val category="bench-$suffix";val target="bench-$suffix-0"
+        val name="Нагрузка $suffix 0000";val db=CatalogDatabase.get(compose.activity.applicationContext);val repo=WorkspaceRepository(db)
         runBlocking {
             repo.initialize();repo.cart(CartAction.Clear(repo.snapshot().cartRevision),"bench-clear-$suffix",repo.snapshot().cart.sessionId)
             CatalogRepository(db).saveCategory(category,null,"Нагрузка $suffix","bench-category-$suffix")
@@ -57,8 +57,7 @@ class WorkspaceScaleUiTest {
             compose.waitUntil(20_000) {model.state.value.snapshot?.products?.count {it.categoryId==category}==2000}
             val load=SystemClock.elapsedRealtime()-start
             val searchStart=SystemClock.elapsedRealtime()
-            compose.onNodeWithTag("workspaceSearchToggle").performClick()
-            compose.onNodeWithTag("workspaceSearch").performTextInput(name);hideKeyboard()
+            compose.onNodeWithTag("workspaceCategory:$category").performScrollTo().performClick()
             compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceProduct:$target").fetchSemanticsNodes().isNotEmpty()}
             val search=SystemClock.elapsedRealtime()-searchStart
             compose.waitUntil(20_000) {(model.state.value.availability?.evaluatedProducts ?: 0)>0}
@@ -69,9 +68,9 @@ class WorkspaceScaleUiTest {
             if(compose.onAllNodesWithTag("workspaceShowOrder").fetchSemanticsNodes().isNotEmpty()) compose.onNodeWithTag("workspaceShowOrder").performClick()
             compose.onNodeWithTag("workspaceTotal").assertTextEquals("2,00 BYN")
             assertTrue("Load exceeded CI responsiveness budget: $load",load<15_000)
-            assertTrue("Search exceeded CI responsiveness budget: $search",search<15_000)
+            assertTrue("Category navigation exceeded CI responsiveness budget: $search",search<15_000)
             assertTrue("Add exceeded CI responsiveness budget: $add",add<15_000)
-            val metrics=JSONObject().put("products",2000).put("loadMs",load).put("searchMs",search).put("addMs",add)
+            val metrics=JSONObject().put("products",2000).put("loadMs",load).put("categoryMs",search).put("addMs",add)
             File(compose.activity.filesDir,"qa").apply {mkdirs()}.resolve("performance.json").writeText(metrics.toString())
         } finally {
             runBlocking {
@@ -106,9 +105,8 @@ class WorkspaceScaleUiTest {
             compose.onNodeWithTag("workspaceTotal").assertTextEquals("2,00 BYN").assertIsDisplayed()
             compose.onNodeWithTag("workspaceLine:scale-line-$suffix").performClick()
             compose.onNodeWithTag("workspacePlus:scale-line-$suffix").performClick()
-            compose.waitUntil(20_000) {compose.onAllNodes(hasContentDescription("Закрыть") and isEnabled()).fetchSemanticsNodes().isNotEmpty() &&
-                runBlocking {repo.snapshot().cart.lines.singleOrNull()?.quantity=="2"}}
-            compose.onNodeWithContentDescription("Закрыть").performClick()
+            compose.onNodeWithTag("cartItemSave").performScrollTo().performClick()
+            compose.waitUntil(20_000) {runBlocking {repo.snapshot().cart.lines.singleOrNull()?.quantity=="2"}}
             compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("workspaceTotal") and hasText("4,00 BYN")).fetchSemanticsNodes().isNotEmpty()}
             compose.onNodeWithTag("workspaceTotal").assertTextEquals("4,00 BYN").assertIsDisplayed()
             compose.onNodeWithTag("workspaceParked").performScrollTo().assertIsDisplayed()

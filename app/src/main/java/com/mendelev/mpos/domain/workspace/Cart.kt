@@ -8,7 +8,7 @@ data class WorkspaceProduct(val id: String, val name: String, val categoryId: St
 data class ChosenOption(val id: String, val name: String, val quantity: String, val priceDelta: String)
 data class CartLine(val id: String, val productId: String, val name: String, val basePrice: String?,
     val manual: Boolean?, val unitPrice: String, val quantity: String, val unit: String,
-    val options: List<ChosenOption>, val requests: List<RecipeRequest>, val references: Map<String,Long>, val sellingBasis: String = "stock-unit") {
+    val options: List<ChosenOption>, val requests: List<RecipeRequest>, val references: Map<String,Long>, val sellingBasis: String = "stock-unit", val comment: String = "", val discountId: String = "", val discount: com.mendelev.mpos.domain.sale.SaleDiscount? = null, val discountEdited: Boolean = false) {
     fun key()=CatalogRules.fingerprint(productId,manual,basePrice,unitPrice,sellingBasis,
         CatalogRules.fingerprint(*options.sortedBy { it.id }.flatMap { listOf(it.id,it.quantity,it.priceDelta) }.toTypedArray()),
         CatalogRules.fingerprint(*references.toSortedMap().flatMap { (id,rev) -> listOf(id,rev.toString()) }.toTypedArray()))
@@ -19,6 +19,7 @@ sealed interface CartAction {
     data class Add(val productId: String, val expectedProductRevision: Long, val selected: Set<String>, val manualPrice: String?, val lineId: String): CartAction
     data class Step(val lineId: String, val delta: Int): CartAction
     data class SetQuantity(val lineId: String, val quantity: String, val expectedRevision: Long): CartAction
+    data class SetOptions(val lineId: String,val quantity: String,val comment: String,val discountId: String,val discount: com.mendelev.mpos.domain.sale.SaleDiscount?,val expectedRevision: Long): CartAction
     data class Remove(val lineId: String): CartAction
     data class SetDetails(val details: OrderDetails,val expectedRevision: Long): CartAction
     data class Clear(val expectedRevision: Long): CartAction
@@ -74,6 +75,19 @@ object CartEngine {
             is CartAction.Remove -> {
                 if(cart.lines.none { it.id==action.lineId }) throw CatalogFailure("conflict","Строка больше не существует")
                 return remaining(cart,cart.lines.filterNot { it.id==action.lineId })
+            }
+            is CartAction.SetOptions -> {
+                val line=cart.lines.find {it.id==action.lineId} ?: throw CatalogFailure("conflict","Строка больше не существует")
+                val qty=quantity(action.quantity)
+                val comment=action.comment.trim()
+                if(comment.codePointCount(0,comment.length)>1000 || comment.any {it.isISOControl() && it!='\n' && it!='\t'}) throw CatalogFailure("comment","Комментарий: до 1000 символов")
+                if(action.discount==null && action.discountId.isNotEmpty()) throw CatalogFailure("discount","Скидка больше не существует")
+                if(action.discountId.length>100 || action.discountId.any {it.isISOControl()}) throw CatalogFailure("discount","Некорректная скидка")
+                com.mendelev.mpos.domain.sale.SaleMoney.quote(listOf(com.mendelev.mpos.domain.sale.SaleLineInput(line.id,line.unitPrice,qty,action.discount)))
+                val result=cart.copy(lines=cart.lines.map {if(it.id==line.id) it.copy(quantity=qty,comment=comment,discountId=action.discountId,discount=action.discount,discountEdited=true) else it})
+                reserved(result)
+                if(qty.toBigDecimal()>line.quantity.toBigDecimal()) {requireFresh(cart,products);check(result,balances,products,reservations)}
+                return result
             }
             is CartAction.Step, is CartAction.SetQuantity -> {
                 val id=if(action is CartAction.Step) action.lineId else (action as CartAction.SetQuantity).lineId

@@ -17,7 +17,7 @@ import org.json.JSONObject
 
 /** Validates an independent copy. Never initializes, reprices, repairs or writes into the supplied snapshot. */
 internal object NativeRestoreValidator {
-    suspend fun validate(context: Context,files: NativeBackupFiles,directory: File) {
+    suspend fun validate(context: Context,files: NativeBackupFiles,directory: File, knownSource: WebBackupDocument?=null) {
         NativeSnapshotDatabase.validate(files)
         val candidateName=File(directory,"validate-${UUID.randomUUID()}.db").absolutePath
         val db=Room.databaseBuilder(context,CatalogDatabase::class.java,candidateName).build()
@@ -57,7 +57,7 @@ internal object NativeRestoreValidator {
                     target.setTransactionSuccessful()
                 } finally {target.endTransaction()}
             }
-            domain(db)
+            domain(db,knownSource)
         } catch(e:kotlinx.coroutines.CancellationException) {throw e}
         catch(_:Exception) {throw BackupFailure("restoreValidation","Копия не прошла проверку структуры и связей. Ничего не применено")}
         finally {db.close();context.deleteDatabase(candidateName)}
@@ -86,7 +86,7 @@ internal object NativeRestoreValidator {
         val lines=j.getJSONArray("lines");for(i in 0 until lines.length()) listOf("gross","discount","net").forEach {number(lines.getJSONObject(i),it)}
         val parts=j.getJSONArray("payments");for(i in 0 until parts.length()) {val p=parts.getJSONObject(i);number(p,"amount");number(p,"given",true);number(p,"change",true)}
     }
-    private suspend fun domain(db: CatalogDatabase) {
+    private suspend fun domain(db: CatalogDatabase, knownSource: WebBackupDocument?) {
         val c=db.catalog();val products=c.allProducts();val ids=products.map {it.id}.toSet();val balances=c.allBalances().associateBy {it.productId}
         val config=c.config();require(config!=null || products.isEmpty() && db.workspace().documents().isEmpty() && db.shifts().history().isEmpty())
         if(config==null) {for(t in NativeSnapshotDatabase.tables.filter {it!="room_master_table"}) db.openHelper.readableDatabase.query("SELECT COUNT(*) FROM "+t).use {require(it.moveToFirst() && it.getLong(0)==0L)};return}
@@ -105,23 +105,31 @@ internal object NativeRestoreValidator {
         for(m in c.movements()) {require(m.delta.toBigDecimal().scale()<=12 && m.commandId.isNotBlank());m.unit?.let(::quantityUnit)}
         c.draft()?.let {strict(it.payload);com.mendelev.mpos.feature.products.ProductDraft.parse(it.payload)}
         val docs=db.workspace().documents().associateBy {it.id}
-        val known=setOf("current","layout","home","orders","checkout","split-progress",EmployeeCodec.KEY,SupplierCodec.KEY,PurchaseDraftCodec.KEY,PurchaseOrderCodec.KEY,ReceivingCodec.KEY,PostedReceivingCodec.KEY,InventoryCodec.KEY,ShiftCashCodec.KEY)
+        val validationSource=knownSource ?: WebSourceDocuments.decode(docs.mapValues {it.value.payload})?.withoutPhotoPayloads()
+        val known=setOf("current","layout","home","orders","checkout","split-progress",SettingsCodec.KEY,EmployeeCodec.KEY,SupplierCodec.KEY,PurchaseDraftCodec.KEY,PurchaseOrderCodec.KEY,ReceivingCodec.KEY,PostedReceivingCodec.KEY,InventoryCodec.KEY,ShiftCashCodec.KEY)
         WebLegacyHistoryDocuments.decode(docs.mapValues {it.value.payload})
         WebImportedPaymentDocuments.decode(docs.mapValues {it.value.payload})
         // Evidence alone is insufficient: require original source, cash baseline and an active or completed native adoption.
-        WebCandidateValidation.validate(db)
+        WebCandidateValidation.validate(db,validationSource)
         for(d in docs.values) {
             currentCoroutineContext().ensureActive()
-            require(d.revision>=0 && (d.id in known || d.id.startsWith("parked:") || WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id) || WebSourceDocuments.owns(d.id) || WebProductMetadataDocuments.owns(d.id) || d.id in setOf(WebCandidateDatabase.BASELINE,WebCandidateDatabase.BASIS,WebOrderDefaults.KEY)))
+            require(d.revision>=0 && (d.id in known || ProductDetailsCodec.owns(d.id) || d.id.startsWith("parked:") || WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id) || WebSourceDocuments.owns(d.id) || WebProductMetadataDocuments.owns(d.id) || d.id in setOf(WebCandidateDatabase.BASELINE,WebCandidateDatabase.BASIS,WebOrderDefaults.KEY)))
             if(WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id) || WebProductMetadataDocuments.owns(d.id))require(d.revision==1L)
             // Part envelopes contain only integer version + escaped text. Fractional source facts are validated by the dedicated codec above.
             strict(d.payload)
         }
+        docs.values.filter {ProductDetailsCodec.owns(it.id)}.forEach {d->
+            val id=d.id.removePrefix(ProductDetailsCodec.PREFIX);val p=products.single {it.id==id};require(d.revision in 1..p.revision)
+            val details=ProductDetailsCodec.decode(d.payload,id)
+            require(p.type=="composite" || details.sellingBasis!="recipe-batch")
+            details.purchaseContentUnit?.let {quantityUnit(it).convert(BigDecimal.ONE,quantityUnit(p.unit))}
+        }
+        docs[SettingsCodec.KEY]?.let {SettingsCodec.decode(it.payload,it.revision)}
         docs[EmployeeCodec.KEY]?.let {EmployeeCodec.decode(it.payload)}
         val suppliers=docs[SupplierCodec.KEY]?.let {SupplierCodec.decode(it.payload)}.orEmpty()
         require(suppliers.all {s->s.productIds.all {it in ids}})
         docs[PurchaseDraftCodec.KEY]?.let {PurchaseDraftCodec.decode(it.payload)}
-        WebPendingPurchaseValidation.validate(db,docs[PurchaseOrderCodec.KEY]?.let {PurchaseOrderCodec.decode(it.payload)}.orEmpty())
+        WebPendingPurchaseValidation.validate(db,docs[PurchaseOrderCodec.KEY]?.let {PurchaseOrderCodec.decode(it.payload)}.orEmpty(),validationSource)
         docs[ReceivingCodec.KEY]?.let {ReceivingCodec.decode(it.payload)}
         docs[PostedReceivingCodec.KEY]?.let {PostedReceivingCodec.decode(it.payload)}
         docs[InventoryCodec.KEY]?.let {InventoryCodec.decode(it.payload)}
@@ -166,7 +174,7 @@ internal object NativeRestoreValidator {
             val saved=ReceiptCodec.decode(j.getJSONObject("receipt").toString());val actual=ReceiptCodec.decode(sale.payload)
             require(saved.copy(products=emptyList())==actual.copy(products=emptyList()))
         }
-        val progress=SplitPaymentRepository(db).load()
+        val progress=SplitPaymentRepository(db).load(validationSource)
         val checkout=CheckoutRepository(db).load()
         if(progress!=null) {
             require(checkout==progress.checkout);val d=progress.checkout.draft;val w=WorkspaceRepository(db).snapshot();val s=ShiftRepository(db).snapshot()

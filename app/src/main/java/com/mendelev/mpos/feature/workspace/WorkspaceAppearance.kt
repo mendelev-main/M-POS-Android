@@ -1,5 +1,6 @@
 package com.mendelev.mpos.feature.workspace
 
+import com.mendelev.mpos.core.ui.isMposDarkTheme
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,8 +23,8 @@ internal val LocalWorkspaceGeometry = staticCompositionLocalOf { WorkspaceGeomet
 internal enum class PosTone { Neutral, Info, Zone, Primary, Warning, Demand }
 
 @Composable internal fun PosAction(label: String, onClick: () -> Unit, modifier: Modifier=Modifier,
-    enabled: Boolean=true, tone: PosTone=PosTone.Neutral, footer: Boolean=false, meta: Boolean=false) {
-    val dark=isSystemInDarkTheme()
+    enabled: Boolean=true, tone: PosTone=PosTone.Neutral, footer: Boolean=false, meta: Boolean=false, retainingAppearance: Boolean=false) {
+    val dark=isMposDarkTheme()
     val colors=when(tone) {
         PosTone.Info -> Triple(if(dark) Color(0xFF26334A) else Color(0xFFE8F0FF),if(dark) Color(0xFFBFD5FF) else Color(0xFF31558F),if(dark) Color(0xFF3C506F) else Color(0xFFC7D7F2))
         PosTone.Demand -> Triple(if(dark) Color(0xFF26334A) else Color(0xFFE8F0FF),if(dark) Color(0xFFBFD5FF) else Color(0xFF31558F),Color(0xFF34C759).copy(alpha=.55f))
@@ -35,22 +36,22 @@ internal enum class PosTone { Neutral, Info, Zone, Primary, Warning, Demand }
     }
     val shape=RoundedCornerShape(if(meta || (footer && tone!=PosTone.Primary)) 12.dp else 16.dp)
     Box(modifier.heightIn(min=if(footer) 47.dp else if(meta) 40.dp else 44.dp).clip(shape)
-        .background(colors.first.copy(alpha=if(enabled) 1f else .4f)).border(1.dp,colors.third,shape)
+        .background(colors.first.copy(alpha=if(enabled || retainingAppearance) 1f else .4f)).border(1.dp,colors.third,shape)
         .clickable(enabled=enabled,role=Role.Button,onClick=onClick)
         .padding(horizontal=if(footer || meta) 12.dp else 15.dp,vertical=if(footer) 14.dp else if(meta) 10.dp else 11.dp),contentAlignment=if(meta) Alignment.CenterStart else Alignment.Center) {
-        Text(label,color=colors.second.copy(alpha=if(enabled) 1f else .45f),
+        Text(label,color=colors.second.copy(alpha=if(enabled || retainingAppearance) 1f else .45f),
             style=MaterialTheme.typography.bodyMedium.copy(fontSize=if(meta) 13.sp else if(footer || tone==PosTone.Zone) 14.5.sp else 14.sp,
                 lineHeight=if(footer) 19.sp else 20.sp,fontWeight=if(tone==PosTone.Zone) FontWeight.ExtraBold else FontWeight.Bold),
             maxLines=1,softWrap=false,overflow=TextOverflow.Ellipsis)
     }
 }
 
-@Composable internal fun PosIconButton(icon: String,label: String,onClick: ()->Unit,modifier: Modifier=Modifier,enabled: Boolean=true) {
+@Composable internal fun PosIconButton(icon: String,label: String,onClick: ()->Unit,modifier: Modifier=Modifier,enabled: Boolean=true, retainingAppearance: Boolean=false) {
     val shape=RoundedCornerShape(12.dp)
     Box(modifier.size(44.dp).clip(shape).background(MaterialTheme.colorScheme.surface)
         .border(1.dp,MaterialTheme.colorScheme.outline,shape)
         .clickable(enabled=enabled,role=Role.Button,onClick=onClick).semantics {contentDescription=label},contentAlignment=Alignment.Center) {
-        PosIcon(icon,MaterialTheme.colorScheme.onSurface.copy(alpha=if(enabled) 1f else .4f))
+        PosIcon(icon,MaterialTheme.colorScheme.onSurface.copy(alpha=if(enabled || retainingAppearance) 1f else .4f))
     }
 }
 @Composable internal fun PosIcon(icon: String,ink: Color) {
@@ -74,27 +75,26 @@ internal enum class PosTone { Neutral, Info, Zone, Primary, Warning, Demand }
 }
 
 @Composable internal fun WorkspaceToolbar(title: String,back: Boolean,editing: Boolean,pending: Boolean,parked: Int,
-    onBack: ()->Unit,onEdit: ()->Unit,onParked: ()->Unit,onSearch: ()->Unit,onSoon: (String)->Unit) {
+    onBack: ()->Unit,onEdit: ()->Unit,onParked: ()->Unit,onSoon: (String)->Unit) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
     Row(Modifier.horizontalScroll(rememberScrollState()).widthIn(min=maxWidth).testTag("workspaceToolbar"),
         verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-        if(back) PosAction("← Назад",onBack,enabled=!pending,tone=PosTone.Info,modifier=Modifier.testTag("workspaceBack"))
-        Surface(shape=RoundedCornerShape(16.dp),color=if(isSystemInDarkTheme()) Color(0xFF332B45) else Color(0xFFF0E9FF),
-            border=BorderStroke(1.dp,if(isSystemInDarkTheme()) Color(0xFF51436C) else Color(0xFFD7C8F5)),modifier=Modifier.testTag("workspaceZone")) {
+        if(back) PosAction("← Назад",onBack,enabled=!pending,tone=PosTone.Info,modifier=Modifier.testTag("workspaceBack"),retainingAppearance=pending)
+        Surface(shape=RoundedCornerShape(16.dp),color=if(isMposDarkTheme()) Color(0xFF332B45) else Color(0xFFF0E9FF),
+            border=BorderStroke(1.dp,if(isMposDarkTheme()) Color(0xFF51436C) else Color(0xFFD7C8F5)),modifier=Modifier.testTag("workspaceZone")) {
             Text(title,Modifier.padding(horizontal=16.dp,vertical=11.dp),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp,fontWeight=FontWeight.ExtraBold),
-                color=if(isSystemInDarkTheme()) Color(0xFFDCCBFF) else Color(0xFF5E4691),maxLines=1)
+                color=if(isMposDarkTheme()) Color(0xFFDCCBFF) else Color(0xFF5E4691),maxLines=1)
         }
-        PosIconButton("search","Поиск товара",onSearch,enabled=!pending,modifier=Modifier.testTag("workspaceSearchToggle"))
         Spacer(Modifier.weight(1f))
-        PosAction("Обычная загрузка",{onSoon("Управление загрузкой сайта")},enabled=!pending && !editing,tone=PosTone.Demand,modifier=Modifier.testTag("workspaceDemand"))
-        PosAction(if(editing) "Готово" else "Раскладка",onEdit,enabled=!pending,tone=PosTone.Info,modifier=Modifier.testTag("workspaceEdit"))
+        PosAction("Обычная загрузка",{onSoon("Управление загрузкой сайта")},enabled=!pending && !editing,tone=PosTone.Demand,modifier=Modifier.testTag("workspaceDemand"),retainingAppearance=pending && !editing)
+        PosAction(if(editing) "Готово" else "Раскладка",onEdit,enabled=!pending,tone=PosTone.Info,modifier=Modifier.testTag("workspaceEdit"),retainingAppearance=pending)
         // Source label and separate badge, one stable action for automation/accessibility.
         Box(Modifier.testTag("workspaceParked").heightIn(min=44.dp).clip(RoundedCornerShape(16.dp))
-            .background(if(isSystemInDarkTheme()) Color(0xFF26334A) else Color(0xFFE8F0FF))
-            .border(1.dp,if(isSystemInDarkTheme()) Color(0xFF3C506F) else Color(0xFFC7D7F2),RoundedCornerShape(16.dp))
+            .background(if(isMposDarkTheme()) Color(0xFF26334A) else Color(0xFFE8F0FF))
+            .border(1.dp,if(isMposDarkTheme()) Color(0xFF3C506F) else Color(0xFFC7D7F2),RoundedCornerShape(16.dp))
             .clickable(enabled=!pending && !editing,role=Role.Button,onClick=onParked).padding(horizontal=15.dp,vertical=11.dp)) {
             Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                Text("Отложенные",style=MaterialTheme.typography.labelLarge,color=if(isSystemInDarkTheme()) Color(0xFFBFD5FF) else Color(0xFF31558F))
+                Text("Отложенные",style=MaterialTheme.typography.labelLarge,color=if(isMposDarkTheme()) Color(0xFFBFD5FF) else Color(0xFF31558F))
                 if(parked>0) Box(Modifier.background(MaterialTheme.colorScheme.primary,RoundedCornerShape(100.dp)).padding(horizontal=8.dp,vertical=1.dp)) {
                     Text(parked.toString(),color=MaterialTheme.colorScheme.onPrimary,style=MaterialTheme.typography.labelMedium)
                 }

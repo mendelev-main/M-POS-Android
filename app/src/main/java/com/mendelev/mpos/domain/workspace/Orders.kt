@@ -5,7 +5,7 @@ import java.math.BigDecimal
 import java.text.Normalizer
 import java.util.Locale
 
-data class OrderDetails(val label: String = "", val type: String = "here", val comment: String = "", val address: String = "", val phone: String = "")
+data class OrderDetails(val label: String = "", val type: String = "here", val comment: String = "", val address: String = "", val phone: String = "", val customerName: String = "", val deliveryTariff: com.mendelev.mpos.domain.sale.DeliveryCharge? = null, val deliveryEdited: Boolean = false)
 data class ParkedOrder(val id: String, val revision: Long, val cart: CurrentCart, val parkedAt: Long)
 
 object OrderRules {
@@ -15,9 +15,12 @@ object OrderRules {
     }
     fun details(raw: OrderDetails): OrderDetails {
         if(raw.type !in listOf("here","takeaway","delivery")) throw CatalogFailure("orderDetails","Выберите тип заказа")
-        return raw.copy(label=text(raw.label,80,"Подпись"),comment=text(raw.comment,1000,"Комментарий",true),
-            address=if(raw.type=="delivery") text(raw.address,500,"Адрес") else "",
-            phone=if(raw.type=="delivery") text(raw.phone,40,"Телефон") else "")
+        raw.deliveryTariff?.let {
+            if(it.id.isBlank() || it.name.isBlank() || it.name.length>100 || it.fee !in 0..999999999L || it.revision<=0 || raw.type!="delivery") throw CatalogFailure("orderDetails","Проверьте тариф доставки")
+        }
+        return raw.copy(customerName=text(raw.customerName,100,"Имя клиента"),label=text(raw.label,80,"Подпись"),comment=text(raw.comment,1000,"Комментарий",true),
+            address=text(raw.address,500,"Адрес"),
+            phone=text(raw.phone,40,"Телефон"))
     }
     fun labelKey(value: String)=Normalizer.normalize(value.trim(),Normalizer.Form.NFC).lowercase(Locale.ROOT).replace(Regex("[\\p{Z}\\s]+")," ")
     fun uniqueLabel(raw: String, used: List<String>): String {

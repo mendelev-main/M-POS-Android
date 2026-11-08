@@ -14,19 +14,34 @@ data class WebBackupPreview(val version: Int,val bytes: Int,val sha256: String,v
     val imageCount: Int,val photoBytes: Long,val externalImages: Int,val inlineImages: Int,val openShifts: Int,val paymentDrafts: Int,
     val paidMinor: BigInteger,val unpaidMinor: BigInteger,val currentSessionPresent: Boolean,val deferredSections: List<String>,val unknownSections: Int)
 class WebBackupDocument internal constructor(val root: BackupJson.Obj,val images: Map<String,ByteArray>,val preview: WebBackupPreview,internal val original: ByteArray?=null) {
+    /** Only after photo staging: preserve validated identities and original ZIP, release decoded assets. */
+    internal fun withoutPhotoPayloads()=WebBackupDocument(root,images.mapValues {ByteArray(0)},preview,original)
     override fun toString()="WebBackupDocument(version=${preview.version}, bytes=${preview.bytes})"
 }
 object WebBackupReader {
     const val MAX_BYTES=32*1024*1024
+    const val MAX_SOURCE_BYTES=96*1024*1024
+    const val MAX_PHOTO_BYTES=64L*1024*1024
     private val arrays=listOf("products","employees","shifts","orders","parked","receivings","suppliers","purchaseOrders","discounts","hallTables","bookings","inventoryHistory","deliveryRates","receiptLabelTemplates","operationalOutbox","webEvents")
     private val objects=listOf("layout","inventoryConfig","currentOrderSession","company","posNavigation","printer","telegram","network","webOrderAcceptances")
     private val nullable=listOf("receivingDraft","inventoryDraft")
     private val core=setOf("products","employees","shifts","orders")
     fun read(input: InputStream): WebBackupDocument {
         val out=ByteArrayOutputStream();val buffer=ByteArray(8192)
-        while(true) {val n=input.read(buffer);if(n<0) break;if(n==0) {val b=input.read();if(b<0) break;if(out.size()==MAX_BYTES) backupBad("size");out.write(b)}
-            else {if(n>MAX_BYTES-out.size()) backupBad("size");out.write(buffer,0,n)}}
-        val bytes=out.toByteArray()
+        while(true) {val n=input.read(buffer);if(n<0) break;if(n==0) {val b=input.read();if(b<0) break;if(out.size()==MAX_SOURCE_BYTES) backupBad("size");out.write(b)}
+            else {if(n>MAX_SOURCE_BYTES-out.size()) backupBad("size");out.write(buffer,0,n)}}
+        return readBytes(out.toByteArray())
+    }
+    internal fun readBytes(bytes: ByteArray): WebBackupDocument {
+        if(bytes.size>MAX_SOURCE_BYTES) backupBad("size")
+        if(bytes.size>=4 && bytes[0]==0x50.toByte() && bytes[1]==0x4b.toByte()) {
+            val archive=WebBackupArchive.read(bytes)
+            return readJson(archive.json,archive.images,bytes)
+        }
+        return readJson(bytes,emptyMap(),bytes)
+    }
+    private fun readJson(bytes: ByteArray,archiveImages: Map<String,ByteArray>,original: ByteArray): WebBackupDocument {
+        if(bytes.size>MAX_BYTES) backupBad("size")
         val text=try {Charsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes)).toString().removePrefix("\uFEFF")} catch(_:Exception) {backupBad()}
         val root=BackupJsonParser(text).parse() as? BackupJson.Obj ?: backupBad()
         val f=root.fields
@@ -52,16 +67,20 @@ object WebBackupReader {
         if(full) {val rev=integer(f["operationalRevision"] ?: backupBad());if(rev.signum()<0 || rev>MAX_SAFE) backupBad()}
         val imageFields=when(val v=f["productImages"]) {null->emptyMap();is BackupJson.Obj->v.fields;else->backupBad("photo")}
         if(imageFields.size>5000) backupBad("limit")
-        var photoBytes=0L
-        val images=imageFields.mapValues {(_,v)->
+        var photoBytes=archiveImages.values.sumOf {it.size.toLong()}
+        if(photoBytes>MAX_PHOTO_BYTES) backupBad("photo")
+        val embeddedImages=imageFields.mapValues {(_,v)->
             val raw=(v as? BackupJson.Str)?.value ?: backupBad("photo")
             val clean=raw.filterNot {it in " \r\n\t"}
             if(clean.length>2_666_672) backupBad("photo")
             val decoded=try {Base64.getDecoder().decode(clean)} catch(_:Exception) {backupBad("photo")}
             if(decoded.isEmpty() || decoded.size>2_000_000) backupBad("photo")
-            photoBytes+=decoded.size;if(photoBytes>20*1024*1024) backupBad("photo")
+            photoBytes+=decoded.size;if(photoBytes>MAX_PHOTO_BYTES) backupBad("photo")
             decoded
         }
+        if(embeddedImages.keys.any {it in archiveImages}) backupBad("duplicate")
+        val images=archiveImages+embeddedImages
+        if(images.size>5000) backupBad("limit")
         if(f["imageCount"]!=null && integer(f.getValue("imageCount"))!=images.size.toBigInteger()) backupBad("photo")
         val allImages=images.toMutableMap()
         var external=0;var inlineCount=0
@@ -80,7 +99,7 @@ object WebBackupReader {
                         if(raw.length>2_666_672) backupBad("photo")
                         val bytes=try {Base64.getDecoder().decode(raw)} catch(_:Exception) {backupBad("photo")}
                         if(bytes.isEmpty() || bytes.size>2_000_000) backupBad("photo")
-                        photoBytes+=bytes.size;if(photoBytes>20*1024*1024) backupBad("photo")
+                        photoBytes+=bytes.size;if(photoBytes>MAX_PHOTO_BYTES) backupBad("photo")
                         if("inline:$index" in allImages) backupBad("photo")
                         allImages["inline:$index"]=bytes;inlineCount++
                     }
@@ -114,8 +133,8 @@ object WebBackupReader {
             listOf("network","telegram","printer","printerSettings","webOrderAcceptances","company","theme").filter {f[it]!=null}+
             if(sessions.any {s->obj(s).fields.keys.any {it.startsWith("loyalty") || it in setOf("webOrderId","webOrderStatus")}}) listOf("sessionIntegrations") else emptyList()
         val known=(arrays+objects+nullable+listOf("version","exportedAt","printerSettings","productImages","imageCount","theme","demandOverload","operationalRevision")).toSet()
-        val sha=MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") {"%02x".format(it)}
-        return WebBackupDocument(root,allImages.toMap(),WebBackupPreview(version,bytes.size,sha,rows.mapValues {it.value.size},allImages.size,photoBytes,external,inlineCount,open,drafts,paid,unpaid,f["currentOrderSession"] is BackupJson.Obj,deferred,f.keys.count {it !in known}),bytes)
+        val sha=MessageDigest.getInstance("SHA-256").digest(original).joinToString("") {"%02x".format(it)}
+        return WebBackupDocument(root,allImages.toMap(),WebBackupPreview(version,original.size,sha,rows.mapValues {it.value.size},allImages.size,photoBytes,external,inlineCount,open,drafts,paid,unpaid,f["currentOrderSession"] is BackupJson.Obj,deferred,f.keys.count {it !in known}),original)
     }
     private val MAX_SAFE=BigInteger("9007199254740991")
     private fun obj(value: BackupJson)=value as? BackupJson.Obj ?: backupBad()

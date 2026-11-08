@@ -5,9 +5,9 @@ import com.mendelev.mpos.domain.warehouse.*
 
 /** Compare the bootstrap (or first native edit snapshot) with the retained source. */
 internal object WebPendingPurchaseValidation {
-    suspend fun validate(db: CatalogDatabase,orders: List<PurchaseOrder>) {
+    suspend fun validate(db: CatalogDatabase,orders: List<PurchaseOrder>,knownSource: WebBackupDocument?=null) {
         val docs=db.workspace().documents().associate {it.id to it.payload}
-        val source=WebSourceDocuments.decode(docs)
+        val source=knownSource?.also {WebSourceDocuments.requireSource(docs,it)} ?: WebSourceDocuments.decode(docs)
         if(source==null) {require(orders.none {it.importedOrigin!=null});return}
         val catalog=WebCatalogMapping.map(source)
         val products=catalog.products.map {p->ProductEntity(p.id,p.categoryId,p.name,p.name,p.price,p.cost ?: "0",1,unit=p.unit ?: error("unit"),type=p.type)}

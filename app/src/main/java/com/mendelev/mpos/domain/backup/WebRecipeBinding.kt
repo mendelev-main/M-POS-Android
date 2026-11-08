@@ -15,6 +15,9 @@ data class WebRecipeBindingResult(val sourceSha256: String,val carts: List<WebBo
 
 /** Read-only adapter. No CartEngine.Add/repricing, guessed stock/cost/revisions or financial writes. */
 object WebRecipeBinding {
+    /** Source JS arithmetic and native scale12 may differ only by the established import tolerance. */
+    fun sourceConsumptionMatches(source: Map<String,String>?, native: Map<String,String>): Boolean =
+        source!=null && same(source.mapValues {it.value.toBigDecimal()},native.mapValues {it.value.toBigDecimal()})
     fun bind(document: WebBackupDocument): WebRecipeBindingResult {
         val catalog=WebCatalogMapping.map(document);val byId=catalog.products.associateBy {it.id}
         val sourceIds=catalog.products.associateBy {it.sourceId}
@@ -109,7 +112,10 @@ object WebRecipeBinding {
             }
             val sourceComplete=lines.isNotEmpty() && lines.all {it.requestsPerSoldUnit!=null}
             val expected=if(sourceComplete)strings(exact(roots)) else null
-            val consumption=if(complete)merge(lines.map {it.nativeConsumption!!}) else null
+            // Workspace reserves the whole cart at once; rounding each line first can differ at scale12.
+            val consumption=if(complete)strings(RecipeCalculator(allGraph.values.toList()).consumption(
+                lines.flatMap {line->line.requestsPerSoldUnit!!.map {it.copy(quantity=it.quantity*line.source.quantity!!.toBigDecimal())}}
+            )) else null
             val cost=if(lines.isNotEmpty() && lines.all {it.costMinor!=null})try {lines.fold(0L) {a,l->Math.addExact(a,l.costMinor!!)}} catch(_:ArithmeticException) {b.add("recipeCalculationOverflow");null} else null
             if(!sourceComplete || !complete)b.add("recipeBindingIncomplete")
             WebBoundRecipeCart(op.origin,op.location,op,lines,if(complete)allGraph.values.toList() else null,expected,consumption,cost,b.toSet())
@@ -126,7 +132,7 @@ object WebRecipeBinding {
         if(!shortages.isNullOrEmpty())allBlockers.add("stockShortageIncludingParked")
         return WebRecipeBindingResult(document.preview.sha256,carts,total,shortages,allBlockers.toSet())
     }
-    private fun same(a: Map<String,BigDecimal>,b: Map<String,BigDecimal>)=a.keys==b.keys && a.all {(id,v)->v.compareTo(b.getValue(id))==0}
+    private fun same(a: Map<String,BigDecimal>,b: Map<String,BigDecimal>)=a.keys==b.keys && a.all {(id,v)->(v-b.getValue(id)).abs()<=BigDecimal("0.000000001")}
     private fun strings(values: Map<String,BigDecimal>)=values.mapValues {CatalogRules.canonical(it.value)}
     private fun merge(values: List<Map<String,String>>): Map<String,String> {
         val sums=linkedMapOf<String,BigDecimal>();values.forEach {it.forEach {(id,q)->sums[id]=(sums[id] ?: BigDecimal.ZERO)+q.toBigDecimal()}};return strings(sums)

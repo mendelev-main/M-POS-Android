@@ -45,7 +45,7 @@ internal object WebCartAdoption {
         val quote=SaleMoney.quote(lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity,discounts[it.id])},type,delivery)
         if(quote.total!=op.comparedTotal || op.savedTotal!=null && quote.total!=op.savedTotal)fail()
         val actual=RecipeCalculator(graph).consumption(CartEngine.requests(cart)).mapValues {CatalogRules.canonical(it.value)}
-        if(actual!=bound.nativeConsumption || actual!=bound.exactSourceConsumption)fail()
+        if(actual!=bound.nativeConsumption || !WebRecipeBinding.sourceConsumptionMatches(bound.exactSourceConsumption,actual))fail()
         return WebAdoptedCart(cart,discounts,delivery,quote)
     }
     private fun fail(): Nothing=throw BackupFailure("webCartAdoption","Открытый заказ не прошёл сверку цены, единиц и рецептуры. Рабочие данные не изменены")

@@ -4,11 +4,11 @@ import com.mendelev.mpos.domain.backup.*
 
 /** Imported confirmations refer to immutable source positions, never fabricated native operation results. */
 internal object WebPaidProvenance {
-    suspend fun validate(db: CatalogDatabase,p: SplitProgress) {
+    suspend fun validate(db: CatalogDatabase,p: SplitProgress,knownSource: WebBackupDocument?=null) {
         val rows=db.workspace().documents()
         val documents=rows.associate {it.id to it.payload}
         val evidence=WebImportedPaymentDocuments.decode(documents) ?: invalid()
-        val original=WebSourceDocuments.decode(documents) ?: invalid()
+        val original=knownSource?.also {WebSourceDocuments.requireSource(documents,it)} ?: WebSourceDocuments.decode(documents) ?: invalid()
         WebImportedPaymentEvidenceCodec.requireSource(evidence,original)
         val source=evidence.records.singleOrNull {it.origin==p.importedOrigin} ?: invalid()
         val d=p.checkout.draft

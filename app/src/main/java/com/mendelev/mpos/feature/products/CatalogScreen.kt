@@ -54,14 +54,15 @@ import java.util.UUID
     var categorySymbol by rememberSaveable(administration.generation) { mutableStateOf("") }
     var categoryRevision by rememberSaveable(administration.generation) { mutableStateOf<Long?>(null) }
     var categoryCommand by rememberSaveable(administration.generation) { mutableStateOf("") }
+    var nextProduct by rememberSaveable(administration.generation) {mutableStateOf<String?>(null)}
     var confirmDiscard by rememberSaveable(administration.generation) { mutableStateOf(false) }
     var confirmDelete by rememberSaveable(administration.generation) { mutableStateOf(false) }
     var deleteCategory by rememberSaveable(administration.generation) { mutableStateOf(false) }
-    fun closeEditor() { if(!state.busy) { if(state.draft?.dirty == true) confirmDiscard=true else model.discard() } }
+    fun closeEditor() { nextProduct=null;if(!state.busy) { if(state.draft?.dirty == true) confirmDiscard=true else model.discard() } }
     BackHandler(enabled=state.draft!=null) { closeEditor() }
     val d = state.draft.takeIf {administration.active}
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        MposAppBar(subtitle="Локальный владелец", navigationEnabled=d==null && !state.busy) {
+        if(d==null) MposAppBar(subtitle="Локальный владелец", navigationEnabled=d==null && !state.busy) {
             if(d==null) {
                 MposNavigationAction("Рабочая зона",onWorkspace)
                 MposNavigationAction("Смена",onShift)
@@ -73,147 +74,64 @@ import java.util.UUID
         else if(state.fatal) Column(Modifier.padding(24.dp), verticalArrangement=Arrangement.spacedBy(16.dp)) {
             MposNotice(state.message ?: "Каталог недоступен", true); MposButton("Повторить", model::retryOpen)
         } else if(d!=null) {
-            Row(Modifier.fillMaxWidth().padding(20.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                MposButton("Назад", { closeEditor() }, enabled=!state.busy && administration.active, style=ActionStyle.Secondary)
-                Column(Modifier.weight(1f)) {
-                    Text(if(d.expectedRevision==null) "Новый товар" else "Карточка товара", style=MaterialTheme.typography.titleLarge)
-                    Text("${if(d.type=="simple") "Простой" else "Составной"} товар · BYN · ${unitLabel(d.displayUnit)}", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                MposButton("Сохранить", model::save, busy=state.busy, modifier=Modifier.testTag("saveProduct"))
-            }
-            BoxWithConstraints(Modifier.fillMaxSize()) {
-                val wide = maxWidth > 840.dp
-                Row(Modifier.fillMaxSize().padding(horizontal=24.dp), horizontalArrangement=Arrangement.spacedBy(22.dp)) {
-                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom=32.dp), verticalArrangement=Arrangement.spacedBy(16.dp)) {
-                        if(state.message!=null) MposNotice(state.message!!, state.error)
-                        if(state.field=="conflict") MposButton("Перечитать карточку", model::reloadProduct, enabled=!state.busy && administration.active, style=ActionStyle.Secondary)
-                        Surface(shape=RoundedCornerShape(20.dp), border=BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
-                            Column(Modifier.padding(24.dp), verticalArrangement=Arrangement.spacedBy(16.dp)) {
-                                Text("Основное", style=MaterialTheme.typography.titleMedium)
-                                MposField(d.name, { v -> model.change { it.copy(name=v) } }, "Название", Modifier.testTag("productName"), !state.busy,
-                                    error=state.message.takeIf { state.field=="name" })
-                                Text("Категория", style=MaterialTheme.typography.labelMedium)
-                                Row(Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                                    MposButton(state.categories.find { it.id==d.categoryId }?.name ?: "Без категории", { categories=true }, enabled=!state.busy && administration.active, style=ActionStyle.Secondary)
-                                    if(d.categoryId!=null) MposButton("Убрать", { model.change { it.copy(categoryId=null) } }, enabled=!state.busy && administration.active, style=ActionStyle.Secondary)
-                                }
-                                MposField(d.price, { v -> model.change { it.copy(price=v) } }, "Цена продажи, BYN за ${unitLabel(d.unit)}", Modifier.testTag("productPrice"), !state.busy, true,
-                                    state.message.takeIf { state.field=="Цена" })
-                                ProductConfiguration(model,state,d)
-                                HorizontalDivider()
-                                ProductModifierEditor(model,state,d)
-                                HorizontalDivider()
-                                ProductPhotoEditor(model,d,!state.busy) { photoSession=d.sessionId;photoPicker.launch("image/*") }
-                            }
-                        }
-                        if(d.expectedRevision!=null) MposButton("Удалить товар", { confirmDelete=true }, enabled=!state.busy && administration.active, style=ActionStyle.Danger)
-                    }
-                    if(wide) Surface(Modifier.width(220.dp), shape=RoundedCornerShape(16.dp), color=MaterialTheme.colorScheme.primaryContainer) {
-                        Column(Modifier.padding(24.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                            Text("Цена продажи", style=MaterialTheme.typography.labelMedium)
-                            Text("${d.price} BYN", style=MaterialTheme.typography.titleLarge)
-                            Text(if(d.price.trim() in listOf("0","0,00","0.00")) "Ручная цена при добавлении в заказ" else "Цена за ${unitLabel(d.unit)}", style=MaterialTheme.typography.bodySmall)
-                            Text("Сохранение выполняется локально", style=MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                }
+            ProductEditorScreen(model,state,d,{closeEditor()},{confirmDelete=true},onOpenProduct={id->
+                nextProduct=id
+                if(d.dirty) confirmDiscard=true else model.discardAndContinue {state.products.find {it.product.id==id}?.let {model.edit(it)};nextProduct=null}
+            }) {
+                photoSession=d.sessionId;photoPicker.launch("image/*")
             }
         } else {
-            Column(Modifier.padding(horizontal=24.dp,vertical=20.dp), verticalArrangement=Arrangement.spacedBy(16.dp)) {
-                Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                    Text("Товары", Modifier.weight(1f), style=MaterialTheme.typography.titleLarge)
-                    MposButton("Категории", { categories=true }, style=ActionStyle.Secondary)
-                    MposButton(if(state.hasSavedDraft) "Открыть сохранённый черновик" else "Добавить товар", { model.edit() },enabled=administration.active)
-                    if(!administration.active) Text("Для изменения каталога войдите в администрирование через Настройки")
-                }
-                if(state.message!=null) MposNotice(state.message!!, state.error)
-                MposField(search, { search=it }, "Поиск по названию или категории")
-                if(filter!=null) MposButton("Все категории", { filter=null }, style=ActionStyle.Secondary)
-                val q = CatalogRules.key(search)
-                val rows = state.products.filter { (filter==null || it.product.categoryId==filter) &&
-                    (q.isEmpty() || CatalogRules.key(it.product.name+" "+(it.categoryName ?: "Без категории")).contains(q)) }
-                if(rows.isEmpty()) MposNotice(if(state.products.isEmpty()) "Пока нет товаров. Создайте первый товар." else "По запросу ничего не найдено")
-                LazyColumn(verticalArrangement=Arrangement.spacedBy(8.dp), modifier=Modifier.weight(1f).testTag("catalogProducts").semantics { testTagsAsResourceId=true }) {
-                    items(rows,key={ it.product.id }) { row ->
-                        Surface(Modifier.fillMaxWidth().testTag("catalogProduct:${row.product.id}").clickable(enabled=administration.active) { model.edit(row) }, shape=RoundedCornerShape(16.dp), border=BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
-                            Row(Modifier.padding(18.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(16.dp)) {
-                                ProductPhoto(row.product.photoId,model.photos,Modifier.size(56.dp))
-                                Column(Modifier.weight(1f)) {
-                                    Text(row.product.name, fontWeight=FontWeight.Bold)
-                                    Text(row.categoryName ?: "Без категории", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                                Text(if(row.product.type=="composite") "По составу" else if(row.product.noStockTracking) "Без учёта" else
-                                    "${CatalogRules.canonical(quantityUnit(row.product.unit).convert(row.quantity.toBigDecimal(),quantityUnit(row.product.displayUnit)))} ${unitLabel(row.product.displayUnit)}", style=MaterialTheme.typography.bodyMedium)
-                                Text("${row.product.price} BYN", fontWeight=FontWeight.Bold)
-                            }
-                        }
-                    }
-                }
-            }
+            CatalogPage(state,search,{search=it},filter,{filter=it},administration.active,{categories=true},{model.edit()},{model.edit(it)})
         }
     }
-    if(categories && categoryId==null) MposDialog("Категории", { categories=false }, !state.busy) {
-        if(state.error && state.message!=null) MposNotice(state.message!!,true)
-        LazyColumn(Modifier.heightIn(max=300.dp).testTag("categoryList"), verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            itemsIndexed(state.categories,key={_,c -> c.id}) { index,c ->
-                Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    MposCategoryBadge(c.color,c.symbol)
-                    Text(c.name, Modifier.weight(1f).clickable(enabled=!state.busy && administration.active) {
-                        if(d!=null) model.change { it.copy(categoryId=c.id) } else filter=c.id
-                        categories=false
-                    }.padding(vertical=16.dp))
-                    MposButton("Изменить", { categoryId=c.id;categoryName=c.name;categoryColor=c.color;categorySymbol=c.symbol;categoryRevision=c.revision;categoryCommand=UUID.randomUUID().toString() }, enabled=!state.busy && administration.active, style=ActionStyle.Secondary,modifier=Modifier.testTag("categoryEdit:${c.id}"))
-                }
-                Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    MposButton("Выше",{model.moveCategory(c.id,-1)},enabled=!state.busy && administration.active && index>0,style=ActionStyle.Secondary,
-                        modifier=Modifier.testTag("categoryUp:${c.id}"))
-                    MposButton("Ниже",{model.moveCategory(c.id,1)},enabled=!state.busy && administration.active && index<state.categories.lastIndex,style=ActionStyle.Secondary,
-                        modifier=Modifier.testTag("categoryDown:${c.id}"))
-                }
-                HorizontalDivider()
-                }
-            }
-        }
-        if(state.categories.isEmpty()) Text("Категорий пока нет")
-        MposButton("Создать категорию", { categoryId=UUID.randomUUID().toString();categoryRevision=null;categoryName="";categoryColor=CategoryAppearance.DEFAULT_COLOR;categorySymbol="";categoryCommand=UUID.randomUUID().toString() },enabled=administration.active && !state.busy)
+    fun openCategory(c: CategoryEntity?) {
+        categoryId=c?.id ?: UUID.randomUUID().toString();categoryRevision=c?.revision;categoryName=c?.name.orEmpty();categoryColor=c?.color ?: CategoryAppearance.DEFAULT_COLOR;categorySymbol=c?.symbol.orEmpty();categoryCommand=UUID.randomUUID().toString();model.dismissMessage()
     }
-    if(administration.active && categoryId!=null) MposDialog(if(categoryRevision==null) "Новая категория" else "Изменить категорию", { categoryId=null }, !state.busy) {
+    if(categories && categoryId==null) CategoryListWindow(state.categories,state.products.groupingBy {it.product.categoryId}.eachCount(),!state.busy,administration.active,state.message.takeIf {state.error},
+        {categories=false},{openCategory(null)},{openCategory(it)},{openCategory(it);deleteCategory=true},{id,direction->model.moveCategory(id,direction)})
+    if(administration.active && categoryId!=null && !deleteCategory) MposWebModal(if(categoryRevision==null) "Новая категория" else "Изменить категорию", { categoryId=null }, !state.busy) {
         if(state.error && state.message!=null) MposNotice(state.message!!, true)
         Column(Modifier.heightIn(max=380.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            MposField(categoryName, { categoryName=it;categoryCommand=UUID.randomUUID().toString(); model.dismissMessage() }, "Название категории", Modifier.testTag("categoryName"), !state.busy)
-            MposField(categorySymbol, { categorySymbol=it;categoryCommand=UUID.randomUUID().toString(); model.dismissMessage() }, "Обозначение на плитке (до 3 символов)", Modifier.testTag("categorySymbol"), !state.busy)
+            MposWebField(categoryName,{categoryName=it;categoryCommand=UUID.randomUUID().toString();model.dismissMessage()},"Название категории","categoryName",!state.busy,placeholder="Например, Напитки")
+            MposWebField(categorySymbol,{categorySymbol=it;categoryCommand=UUID.randomUUID().toString();model.dismissMessage()},"Обозначение на плитке","categorySymbol",!state.busy,placeholder="До 3 символов: ☕ / К / КФ")
             Text("Например: ☕, К или КФ. Пустое обозначение допустимо.",style=MaterialTheme.typography.bodySmall)
             Text("Цвет категории",style=MaterialTheme.typography.titleSmall)
             MposColorPicker(CategoryAppearance.palette,categoryColor,{
                 categoryColor=it;categoryCommand=UUID.randomUUID().toString();model.dismissMessage()
             },enabled=!state.busy && administration.active)
-            Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                MposCategoryBadge(categoryColor,Regex("\\X").findAll(categorySymbol.take(256)).take(3).joinToString("") { it.value })
-                Text(categoryName.ifBlank { "Предпросмотр категории" })
+            listOf("Онлайн меню" to "Показывать категорию в меню для просмотра.","Онлайн заказ" to "Разрешить товары категории для онлайн-заказа.").forEach {(title,note)->
+                Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                    Column(Modifier.weight(1f)) {Text(title,fontWeight=FontWeight.Bold);Text(note,style=MaterialTheme.typography.bodySmall);Text("Будет подключено на этапе 09",style=MaterialTheme.typography.labelSmall)}
+                    Switch(false,null,enabled=false)
+                }
             }
+            if(categoryRevision!=null) Text("При переименовании категория изменится у всех товаров, которые к ней относятся.",style=MaterialTheme.typography.bodySmall)
         }
-        Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-            MposButton("Отмена", { categoryId=null;model.dismissMessage() }, enabled=!state.busy && administration.active, style=ActionStyle.Secondary)
-            MposButton("Сохранить категорию", { model.categorySave(categoryId!!,categoryRevision,categoryName,categoryCommand,categoryColor,categorySymbol) { categoryId=null } }, busy=state.busy)
+        MposWebActions({categoryId=null;model.dismissMessage()},"Сохранить",{model.categorySave(categoryId!!,categoryRevision,categoryName,categoryCommand,categoryColor,categorySymbol) {categoryId=null}},!state.busy,tag="categorySave")
+        if(categoryRevision!=null) TextButton({deleteCategory=true},enabled=!state.busy,modifier=Modifier.testTag("categoryEditorDelete")) {Text("Удалить категорию",color=MaterialTheme.colorScheme.error)}
+    }
+    if(administration.active && confirmDiscard) MposWebModal("Сохранить изменения?", { confirmDiscard=false }) {
+        Text("В карточке есть несохранённые изменения.")
+        MposPosControl("Сохранить и продолжить",{confirmDiscard=false;val target=nextProduct;model.saveAndContinue {target?.let {id->state.products.find {it.product.id==id}?.let {model.edit(it)}};nextProduct=null}},Modifier.fillMaxWidth(),!state.busy,PosControl.Cash)
+        MposPosControl("Не сохранять",{confirmDiscard=false;val target=nextProduct;model.discardAndContinue {target?.let {id->state.products.find {it.product.id==id}?.let {model.edit(it)}};nextProduct=null}},Modifier.fillMaxWidth(),!state.busy,PosControl.Secondary)
+        MposPosControl("Остаться в карточке",{confirmDiscard=false},Modifier.fillMaxWidth(),!state.busy,PosControl.Outline)
+    }
+    if(administration.active && confirmDelete) MposWebModal("Удаление товара",{confirmDelete=false},!state.busy) {
+        Text("Удалить «${d?.name.orEmpty()}»?")
+        Row(Modifier.fillMaxWidth().padding(top=18.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+            MposPosControl("Отмена",{confirmDelete=false},Modifier.weight(1f),!state.busy,PosControl.Secondary)
+            MposPosControl("Удалить",{confirmDelete=false;model.deleteProduct()},Modifier.weight(1f),!state.busy,PosControl.Delete)
         }
-        if(categoryRevision!=null) MposButton("Удалить категорию", { deleteCategory=true }, enabled=!state.busy && administration.active, style=ActionStyle.Danger)
     }
-    if(administration.active && confirmDiscard) MposDialog("Несохранённые изменения", { confirmDiscard=false }) {
-        Text("Отбросить изменения карточки?")
-        MposButton("Продолжить редактирование", { confirmDiscard=false }, style=ActionStyle.Secondary)
-        MposButton("Отбросить", { confirmDiscard=false; model.discard() }, style=ActionStyle.Danger)
-    }
-    if(administration.active && confirmDelete) MposDialog("Удаление товара", { confirmDelete=false }) {
-        Text("Удалить товар без складской истории?")
-        MposButton("Удалить", { confirmDelete=false;model.deleteProduct() }, style=ActionStyle.Danger)
-    }
-    if(administration.active && deleteCategory) MposDialog("Удаление категории", { deleteCategory=false }) {
-        Text("Удалить пустую категорию? Категория с товарами будет сохранена.")
-        MposButton("Удалить", {
-            deleteCategory=false
-            state.categories.find { it.id==categoryId }?.let { model.categoryDelete(it) { categoryId=null } }
-        }, style=ActionStyle.Danger)
+    if(administration.active && deleteCategory) MposWebModal("Удаление категории",{deleteCategory=false;categoryId=null},!state.busy) {
+        Text("Удалить «$categoryName»?")
+        Row(Modifier.fillMaxWidth().padding(top=18.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+            MposPosControl("Отмена",{deleteCategory=false;categoryId=null},Modifier.weight(1f),!state.busy,PosControl.Secondary)
+            MposPosControl("Удалить",{
+                deleteCategory=false
+                state.categories.find {it.id==categoryId}?.let {model.categoryDelete(it) {categoryId=null}}
+            },Modifier.weight(1f),!state.busy,PosControl.Delete)
+        }
     }
 }
 

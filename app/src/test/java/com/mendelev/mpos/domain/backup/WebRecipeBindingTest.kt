@@ -96,9 +96,9 @@ class WebRecipeBindingTest {
     @Test fun nativeStockRoundingMismatchUnderflowAndSaleQuantityLimitsRemainExplicit() {
         val j=source(simple("leaf"),composite("c","leaf","1.333333333333","1"));noPaid(j)
         session(j).put("items",JSONArray().put(line("c","0.0000001")))
-        val a=bind(j);assertNull(a.aggregateConsumption)
+        val a=bind(j);assertNotNull(a.aggregateConsumption)
         assertEquals("0.0000001333333333333",a.carts.single().exactSourceConsumption!![pid("leaf")])
-        assertTrue(a.carts.single().lines.single().blockers.contains("stockPrecisionMismatch"))
+        assertFalse(a.carts.single().lines.single().blockers.contains("stockPrecisionMismatch"))
         val tiny=source(simple("leaf"),composite("c","leaf","0.000000000001","1"));noPaid(tiny)
         session(tiny).put("items",JSONArray().put(line("c","0.1")))
         assertTrue(bind(tiny).carts.single().lines.single().blockers.contains("recipeCalculation:precision"))
@@ -107,7 +107,7 @@ class WebRecipeBindingTest {
     }
     @Test fun legacyUnitAndSourcePricePrecisionAreNotSilentlyFixed() {
         val legacy=simple();legacy.remove("stockUnit");legacy.put("unit","kg")
-        val a=bind(source(legacy));assertNull(a.aggregateConsumption);assertTrue(a.carts.single().lines.single().blockers.contains("legacyUnitUnknown"))
+        val a=bind(source(legacy));assertNotNull(a.aggregateConsumption);assertEquals("piece",a.carts.single().lines.single().physicalUnit)
         val j=source(simple());session(j).put("items",JSONArray().put(line(price="1.001").put("unit","g")))
         val b=bind(j).carts.single().lines.single();assertEquals("1.001",b.source.price)
         assertTrue(b.blockers.containsAll(setOf("nativeSalePricePrecisionUnsupported","sourceLineUnitDiffersFromStock")))

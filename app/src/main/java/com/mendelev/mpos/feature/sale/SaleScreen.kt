@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter
 private fun money(value: Long)=ShiftRules.money(value)
 private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(value))
 @Composable fun SaleScreen(model: SaleViewModel,history: Boolean,onBack: ()->Unit,onHistory: ()->Unit,onShift: ()->Unit,refundModel: RefundViewModel) {
+    val presets by com.mendelev.mpos.feature.settings.settingsCatalogModel().state.collectAsStateWithLifecycle()
     val ui by model.state.collectAsStateWithLifecycle()
     val refund by refundModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(history) {model.refresh();refundModel.refresh()}
@@ -58,7 +59,6 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
             LaunchedEffect(chosen,ui.selected?.first?.id,ui.history) {
                 if(chosen.isNotEmpty() && ui.selected?.first?.id!=chosen) model.select(chosen)
             }
-            if((ui.work?.archivedWebReceipts ?: 0)>0) MposNotice("Чеки из Web (${ui.work!!.archivedWebReceipts}) сохранены в исходном архиве. Список и возвраты работают с native-чеками.")
             ReceiptHistoryPage(ui.history,ui.receiptTypes,ui.receiptMethods,chosen,ui.selected?.takeIf {it.first.id==chosen},refund.history,!locked,
                 ui.shift?.active!=null && !refund.blocked && ui.split?.paid.isNullOrEmpty(),
                 {id->picked=id;model.select(id)},
@@ -86,7 +86,6 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
                 {options=true},notice={
                     if(work.cart.lines.isEmpty()) Text("Заказ пуст. Добавьте товары в рабочей зоне",Modifier.testTag("checkoutEmpty"))
                     if(ui.shift?.active==null) {MposNotice("Откройте смену перед оплатой",true);MposButton("Перейти к смене",onShift,enabled=enabled,style=ActionStyle.Secondary)}
-                    if(work.cart.lines.any {CartEngine.stale(it,work.products)}) MposNotice("Каталог изменился. Вернитесь в рабочую зону и пересчитайте заказ",true)
                 },resolve=if(ui.unresolved!=null) {{MposButton("Проверить результат оплаты",model::commit,Modifier.fillMaxWidth().testTag("saleResolve"),busy=ui.pending)}} else null)
             if(options) MposDialog("Параметры оплаты",{if(!ui.pending) options=false},!ui.pending,wide=true) {
                 val work=ui.work!!;val f=ui.form;val enabled=!locked
@@ -98,7 +97,6 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
                         Text("Карта учитывается вручную. Банковский терминал не подключён.",style=MaterialTheme.typography.bodySmall)
                         if(work.cart.lines.isEmpty()) Text("Заказ пуст. Добавьте товары в рабочей зоне",Modifier.testTag("checkoutEmpty"))
                         if(ui.shift?.active==null) {MposNotice("Откройте смену перед оплатой",true);MposButton("Перейти к смене",onShift,enabled=enabled,style=ActionStyle.Secondary)}
-                        if(work.cart.lines.any {CartEngine.stale(it,work.products)}) MposNotice("Каталог изменился. Вернитесь в рабочую зону и пересчитайте заказ",true)
                         if(ui.draft!=null) Text("Подготовленная оплата сохранена. Перед проведением проверьте итог заново.",Modifier.testTag("checkoutRestored"),style=MaterialTheme.typography.bodySmall)
                     }
                     items(work.cart.lines,key={it.id}) {line->
@@ -107,12 +105,21 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
                             Text(line.name,style=MaterialTheme.typography.titleMedium)
                             Text("${line.unitPrice} BYN × ${line.quantity}")
                             if(line.options.isNotEmpty()) Text(line.options.joinToString {it.name})
+                            val discounts=presets.catalog.rows(com.mendelev.mpos.domain.settings.SettingKind.DISCOUNT)
+                            if(discounts.isNotEmpty()) MposSelect("Шаблон скидки",discounts.find {it.name==discount.name && it.type==discount.type && it.value==discount.value}?.id.orEmpty(),listOf("" to "Своя скидка / без скидки")+discounts.map {it.id to it.name},{id->
+                                val preset=discounts.find {it.id==id}
+                                model.edit {it.copy(discounts=it.discounts+(line.id to if(preset==null) DiscountField() else DiscountField(preset.type,preset.value,preset.name)))}
+                            },enabled,Modifier.testTag("discountPreset:${line.id}"))
                             MposSelect("Скидка строки",discount.type,listOf("none" to "Без скидки","percent" to "Процент","fixed" to "BYN за единицу"),{type->model.edit {it.copy(discounts=it.discounts+(line.id to discount.copy(type=type)))}},enabled)
                             if(discount.type!="none") MposField(discount.value,{value->model.edit {it.copy(discounts=it.discounts+(line.id to discount.copy(value=value)))}},if(discount.type=="percent") "Скидка, %" else "Скидка на единицу, BYN",Modifier.testTag("discount:${line.id}"),enabled,numeric=true)
                         }}
                     }
                     if(work.cart.details.type=="delivery") item {
                         Text("Доставка",style=MaterialTheme.typography.titleMedium)
+                        val tariffs=presets.catalog.rows(com.mendelev.mpos.domain.settings.SettingKind.DELIVERY)
+                        if(tariffs.isNotEmpty()) MposSelect("Тариф доставки",tariffs.find {it.name==f.tariff && it.value==f.fee}?.id.orEmpty(),listOf("" to "Своя стоимость")+tariffs.map {it.id to "${it.name} — ${it.value} BYN"},{id->
+                            tariffs.find {it.id==id}?.let {rate->model.edit {it.copy(tariff=rate.name,fee=rate.value)}}
+                        },enabled,Modifier.testTag("deliveryPreset"))
                         MposField(f.tariff,{v->model.edit {it.copy(tariff=v)}},"Название тарифа",Modifier.testTag("deliveryName"),enabled)
                         MposField(f.fee,{v->model.edit {it.copy(fee=v)}},"Стоимость доставки, BYN (0 — бесплатно)",Modifier.testTag("deliveryFee"),enabled,numeric=true)
                         Text("Стоимость доставки сразу выдаётся из наличной кассы, в том числе при оплате картой.",style=MaterialTheme.typography.bodySmall)

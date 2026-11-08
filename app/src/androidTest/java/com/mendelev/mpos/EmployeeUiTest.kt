@@ -47,10 +47,10 @@ class EmployeeUiTest {
             compose.runOnIdle {route.value="shift"}
             compose.waitUntil(20_000) {!shift.state.value.staffLoading && shift.state.value.cashiers.any {it.id==anna.id}}
             compose.onNodeWithTag("shiftOpen").performScrollTo().performClick()
-            compose.onNodeWithTag("shiftEmployee:${anna.id}").assertIsSelected();shot("employee-shift-select")
+            compose.onNodeWithTag("shiftEmployeeSelection").assertTextContains(anna.name,substring=true);shot("employee-shift-select")
             compose.onNodeWithTag("shiftConfirm").performClick()
             compose.waitUntil(20_000) {!shift.state.value.pending && shift.state.value.snapshot?.active?.actorId==anna.id}
-            compose.onNodeWithTag("shiftCashier").assertTextEquals("Иванова Анна")
+            compose.onNodeWithTag("shiftCashier").assertTextContains("Иванова Анна",substring=true)
             compose.runOnIdle {route.value="staff"}
             compose.waitUntil(20_000) {!staff.state.value.pending && staff.state.value.snapshot?.activeActorId==anna.id}
             compose.onNodeWithTag("employee:${anna.id}").assertIsNotEnabled()

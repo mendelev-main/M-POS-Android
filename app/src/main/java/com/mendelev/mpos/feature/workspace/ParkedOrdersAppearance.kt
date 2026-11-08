@@ -3,7 +3,7 @@ package com.mendelev.mpos.feature.workspace
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.mendelev.mpos.core.ui.isMposDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -68,7 +68,6 @@ import java.util.Locale
                                             Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(3.dp)) {
                                                 Text(order.cart.details.label.ifBlank {"Без подписи"},fontSize=14.sp,lineHeight=19.6.sp,fontWeight=FontWeight.Bold)
                                                 Text(SimpleDateFormat("dd.MM, HH:mm",Locale.forLanguageTag("ru")).format(Date(order.cart.createdAt.takeIf {it>0} ?: order.parkedAt)),fontSize=11.sp,lineHeight=16.5.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                                                if(stale(order)) Text("Требуется проверка: каталог изменился",fontSize=11.sp,color=MaterialTheme.colorScheme.error)
                                             }
                                             if(compact) Column(Modifier.width(96.dp),horizontalAlignment=Alignment.End,verticalArrangement=Arrangement.spacedBy(4.dp)) {ParkedTotal(order);ParkedType(order.cart.details.type)}
                                             else {Box(Modifier.width(110.dp)) {ParkedType(order.cart.details.type)};Box(Modifier.width(104.dp),contentAlignment=Alignment.CenterEnd) {ParkedTotal(order)}}
@@ -91,10 +90,10 @@ import java.util.Locale
     }
 }
 @Composable private fun ParkedTotal(order: ParkedOrder) {
-    Text("${CartEngine.total(order.cart).setScale(2,java.math.RoundingMode.HALF_UP).toPlainString().replace('.',',')} BYN",fontSize=16.sp,fontWeight=FontWeight.ExtraBold)
+    Text(com.mendelev.mpos.domain.shift.ShiftRules.money(orderSettingsTotal(order.cart,emptyMap(),order.cart.details.deliveryTariff)),fontSize=16.sp,fontWeight=FontWeight.ExtraBold)
 }
 @Composable private fun ParkedType(type: String) {
-    val dark=isSystemInDarkTheme()
+    val dark=isMposDarkTheme()
     val palette=when(type) {
         "takeaway"->if(dark) listOf(0xFF3A3022,0xFFE9C989,0xFF5A4A30) else listOf(0xFFFFF4E9,0xFF8A5A17,0xFFF5DCB8)
         "delivery"->if(dark) listOf(0xFF26334A,0xFFBFD5FF,0xFF3C506F) else listOf(0xFFE8F0FF,0xFF31558F,0xFFC7D7F2)

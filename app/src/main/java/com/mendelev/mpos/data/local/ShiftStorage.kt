@@ -19,6 +19,10 @@ data class ShiftRegisterEntity(@PrimaryKey val id: Int=1,val revision: Long=0,va
     @Query("SELECT * FROM shifts WHERE id=:id") suspend fun shift(id: String): ShiftEntity?
     @Query("SELECT * FROM shifts WHERE activeSlot IS NOT NULL") suspend fun active(): List<ShiftEntity>
     @Query("SELECT * FROM shifts ORDER BY openedAt DESC,id") suspend fun history(): List<ShiftEntity>
+    @Query("SELECT * FROM shifts WHERE closedAt IS NOT NULL AND (:beforeTime IS NULL OR closedAt<:beforeTime OR (closedAt=:beforeTime AND id<:beforeId)) ORDER BY closedAt DESC,id DESC LIMIT :limit")
+    suspend fun historyPage(beforeTime: Long?,beforeId: String?,limit: Int): List<ShiftEntity>
+    @Query("SELECT id, openedAt, sourceShiftId FROM shifts")
+    suspend fun sequence(): List<com.mendelev.mpos.domain.shift.ShiftSequence>
     @Insert suspend fun insert(shift: ShiftEntity)
     @Update suspend fun update(shift: ShiftEntity)
     @Insert(onConflict=OnConflictStrategy.IGNORE) suspend fun initialize(value: ShiftRegisterEntity)

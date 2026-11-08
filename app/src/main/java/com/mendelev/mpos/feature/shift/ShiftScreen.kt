@@ -3,124 +3,94 @@ package com.mendelev.mpos.feature.shift
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mendelev.mpos.core.access.Administration
 import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.domain.shift.ShiftRules
-import com.mendelev.mpos.domain.shift.ShiftCashRules
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalLayoutApi::class)
-@Composable fun ShiftScreen(model: ShiftViewModel,onCatalog: () -> Unit,onWorkspace: () -> Unit,onSettings: () -> Unit) {
+@Composable fun ShiftScreen(model: ShiftViewModel,onCatalog: ()->Unit,onWorkspace: ()->Unit,onSettings: ()->Unit) {
     val ui by model.state.collectAsStateWithLifecycle();val s=ui.snapshot
+    val admin by Administration.session.state.collectAsStateWithLifecycle()
     LaunchedEffect(model) {model.loadCashiers()}
     var dialog by rememberSaveable {mutableStateOf<String?>(null)}
+    var report by rememberSaveable {mutableStateOf<String?>(null)}
+    var planned by rememberSaveable {mutableStateOf<String?>(null)}
     var revision by rememberSaveable {mutableStateOf(0L)};var previous by rememberSaveable {mutableStateOf<String?>(null)}
     var actor by rememberSaveable {mutableStateOf("")};var token by rememberSaveable {mutableStateOf("")}
     var expected by rememberSaveable {mutableStateOf(0L)};var counted by rememberSaveable {mutableStateOf("")}
+    fun open() {if(s!=null) {revision=s.revision;previous=s.last?.id;actor=ui.cashiers.singleOrNull()?.id ?: "";expected=s.carry;dialog="open";model.dismiss()}}
+    fun close() {if(s?.active!=null) {revision=s.revision;previous=s.active!!.id;actor=s.active!!.actorId;token=ShiftRules.token(s);expected=s.currentCash;counted=java.math.BigDecimal.valueOf(expected,2).toPlainString();dialog="close";model.dismiss()}}
+    val navigationEnabled=!ui.pending && dialog==null && report==null && planned==null && ui.cashForm==null && ui.cashUnresolved==null
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        MposAppBar("M-POS · Смена", navigationEnabled=!ui.pending && dialog==null && ui.cashForm==null && ui.cashUnresolved==null) {
+        MposAppBar("M-POS · Смена",navigationEnabled=navigationEnabled) {
             MposNavigationAction("Товары",onCatalog);MposNavigationAction("Рабочая зона",onWorkspace);MposNavigationAction("Настройки",onSettings)
         }
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-            Text("Смена",style=MaterialTheme.typography.headlineMedium)
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(start=26.dp,end=26.dp,top=22.dp,bottom=40.dp)) {
+            Text("Кассовая смена",Modifier.padding(bottom=18.dp),fontSize=21.sp,lineHeight=28.sp,fontWeight=FontWeight.ExtraBold)
             if(ui.loading) CircularProgressIndicator()
             else if(ui.fatal || s==null) {
                 MposNotice(ui.message ?: "Смена недоступна",true)
                 if(ui.cashUnresolved==null && ui.cashForm==null) MposButton("Повторить чтение",model::refresh,enabled=!ui.pending)
-            }
-            else {
-                if(ui.message!=null && dialog==null) MposNotice(ui.message!!,true)
-                Text(s.last?.actorName ?: "Кассир не выбран",Modifier.testTag("shiftCashier"),style=MaterialTheme.typography.titleMedium)
-                Text("Касса: ${s.registerId}",style=MaterialTheme.typography.bodySmall)
-                Surface(shape=MaterialTheme.shapes.large,color=MaterialTheme.colorScheme.surface,modifier=Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                        val active=s.active;val last=s.last
-                        Text(if(active!=null) "Смена открыта" else "Смена закрыта",Modifier.testTag("shiftStatus"),style=MaterialTheme.typography.titleLarge)
-                        if(last!=null) {
-                            Text("Смена: ${last.id}",Modifier.testTag("shiftId"),style=MaterialTheme.typography.bodySmall)
-                            Text("Открыта: ${date(last.openedAt,last.zoneId)}")
-                            Text("Наличные при открытии: ${ShiftRules.money(last.openingCash)}")
-                            if(active!=null) Text("Сейчас в кассе: ${ShiftRules.money(s.currentCash)}")
-                            if(!last.isOpen) {
-                                Text("Закрыта: ${date(last.closedAt!!,last.zoneId)}")
-                                Text("Ожидалось: ${ShiftRules.money(last.expectedCash!!)}")
-                                Text("Пересчитано: ${ShiftRules.money(last.countedCash!!)}",Modifier.testTag("shiftCountedSummary"))
-                                Text("Расхождение: ${ShiftRules.money(last.difference!!)}",Modifier.testTag("shiftDifferenceSummary"))
-                            }
-                        }
-                        if(active==null) {
-                            Text("Наличные следующей смены: ${ShiftRules.money(s.carry)}",Modifier.testTag("shiftCarry"))
-                            Text(if(last==null) "Первая смена начинается с 0 BYN" else "Сумма перенесена с прошлой смены. Проверьте наличные в кассе.",style=MaterialTheme.typography.bodySmall)
-                            MposButton("Открыть смену",{revision=s.revision;previous=last?.id;actor=ui.cashiers.singleOrNull()?.id ?: "";expected=s.carry;dialog="open";model.dismiss()},Modifier.testTag("shiftOpen"),busy=ui.pending,enabled=!ui.staffLoading && ui.staffMessage==null && ui.cashiers.isNotEmpty())
-                            if(ui.staffMessage!=null) {MposNotice(ui.staffMessage!!,true);MposButton("Повторить чтение сотрудников",model::loadCashiers)}
-                            if(!ui.staffLoading && ui.staffMessage==null && ui.cashiers.isEmpty()) {
-                                Text("Перед новой сменой создайте сотрудника в настройках. Администратор кассовые смены не открывает.")
-                                MposButton("Настройки сотрудников",onSettings,Modifier.testTag("shiftSetupEmployees"),style=ActionStyle.Secondary)
-                            }
-                        } else MposButton("Закрыть смену",{revision=s.revision;previous=active.id;actor=active.actorId;token=ShiftRules.token(s);expected=s.currentCash;counted=java.math.BigDecimal.valueOf(expected,2).toPlainString();dialog="close";model.dismiss()},Modifier.testTag("shiftClose"),busy=ui.pending,style=ActionStyle.Secondary)
+            } else {
+                if(ui.message!=null && dialog==null && ui.cashForm==null) MposNotice(ui.message!!,true)
+                if(ui.dashboardMessage!=null) {MposNotice(ui.dashboardMessage!!,true);MposButton("Повторить чтение",model::refresh,enabled=navigationEnabled)}
+                val data=ui.dashboard
+                if(data!=null) ShiftOverview(data,!ui.pending && ui.cashForm==null && ui.cashUnresolved==null,
+                    !ui.staffLoading && ui.staffMessage==null && ui.cashiers.isNotEmpty(),admin.active,::open,::close,
+                    {model.cashOpen("deposit")},{model.cashOpen("withdrawal")},{planned="Кассовый ящик"},{report=it},
+                    historyLoading=ui.historyLoading,historyMessage=ui.historyMessage,onMore=model::loadMoreHistory)
+                else if(ui.dashboardMessage==null) Text("Загрузка итогов смены…")
+                if(s.active==null) {
+                    ui.staffMessage?.let {MposNotice(it,true);MposButton("Повторить чтение сотрудников",model::loadCashiers)}
+                    if(!ui.staffLoading && ui.staffMessage==null && ui.cashiers.isEmpty()) {
+                        Text("Перед новой сменой создайте сотрудника в настройках. Администратор кассовые смены не открывает.",Modifier.padding(top=16.dp),fontSize=13.sp)
+                        MposButton("Настройки сотрудников",onSettings,Modifier.testTag("shiftSetupEmployees"),style=ActionStyle.Secondary)
                     }
                 }
-                if(s.active!=null) FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                    MposButton("Внести наличные",{model.cashOpen("deposit")},enabled=!ui.pending && ui.cashForm==null && ui.cashUnresolved==null,modifier=Modifier.testTag("shiftDeposit"))
-                    MposButton("Изъять наличные",{model.cashOpen("withdrawal")},enabled=!ui.pending && ui.cashForm==null && ui.cashUnresolved==null,style=ActionStyle.Secondary,modifier=Modifier.testTag("shiftWithdraw"))
-                }
-                if(ui.cashHistory.isNotEmpty()) {
-                    Text("Ручные движения наличных",style=MaterialTheme.typography.titleMedium)
-                    ui.cashHistory.forEach {m->
-                        Text("${if(m.command.type=="deposit") "Внесено" else "Изъято"}: ${ShiftRules.money(m.command.amount)} · ${date(m.at,s.last!!.zoneId)}${if(m.command.note.isBlank()) "" else " · ${m.command.note}"}",Modifier.testTag("shiftCash:${m.id}"))
-                    }
-                }
-                Text("Оплаты и возвраты учитываются в текущей кассовой смене.",style=MaterialTheme.typography.bodySmall)
             }
         }
     }
     val cashForm=ui.cashForm
-    if(cashForm!=null) MposDialog(if(cashForm.type=="deposit") "Внести наличные" else "Изъять наличные",model::cashClose,!ui.pending && ui.cashUnresolved==null) {
-        if(ui.message!=null) MposNotice(ui.message!!,true)
-        Text("В кассе при открытии операции: ${ShiftRules.money(cashForm.available)}")
-        MposField(cashForm.amount,{model.cashEdit(amount=it)},"Сумма, BYN",Modifier.testTag("shiftCashAmount"),enabled=!ui.pending && ui.cashUnresolved==null,numeric=true)
-        MposField(cashForm.note,{model.cashEdit(note=it)},"Комментарий (необязательно)",Modifier.testTag("shiftCashNote"),enabled=!ui.pending && ui.cashUnresolved==null)
-        val after=runCatching {ShiftCashRules.after(cashForm.available,cashForm.type,ShiftCashRules.amount(cashForm.amount))}.getOrNull()
-        if(after!=null) Text("После операции: ${ShiftRules.money(after)}",Modifier.testTag("shiftCashPreview"))
-        if(ui.cashUnresolved!=null) MposButton("Проверить результат",model::cashRetry,enabled=!ui.pending,modifier=Modifier.testTag("shiftCashRetry"))
-        else MposButton(if(cashForm.type=="deposit") "Внести" else "Изъять",model::cashSave,enabled=!ui.pending && !ui.fatal,modifier=Modifier.testTag("shiftCashSave"))
-    }
-    if(dialog!=null) MposDialog(if(dialog=="open") "Открыть смену" else "Закрыть смену",{dialog=null;model.dismiss()},!ui.pending) {
-        if(ui.message!=null) MposNotice(ui.message!!,true)
-        if(dialog=="open") {
-            Text("Выберите кассира",style=MaterialTheme.typography.titleMedium)
-            androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max=220.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                items(ui.cashiers.size) {index->val employee=ui.cashiers[index]
-                    Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
-                        RadioButton(actor==employee.id,{actor=employee.id},enabled=!ui.pending,modifier=Modifier.testTag("shiftEmployee:${employee.id}"))
-                        Text(employee.name,Modifier.weight(1f))
-                    }
-                }
-            }
-        } else Text(s?.active?.actorName ?: s?.last?.actorName ?: "Кассир")
-        Text((if(dialog=="open") "Наличные при открытии: " else "Ожидается в кассе: ")+ShiftRules.money(expected))
-        if(dialog=="close") {
-            MposField(counted,{counted=it},"Фактически пересчитано",modifier=Modifier.testTag("shiftCounted"),numeric=true,enabled=!ui.pending)
-            val value=runCatching {ShiftRules.cash(counted)}.getOrNull()
-            if(value!=null) Text("Расхождение: ${ShiftRules.money(value-expected)}",Modifier.testTag("shiftDifferencePreview"))
-        } else Text(if(previous==null) "Первая смена" else "Перенос из смены $previous",style=MaterialTheme.typography.bodySmall)
-        FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            MposButton("Отмена",{dialog=null;model.dismiss()},enabled=!ui.pending,style=ActionStyle.Secondary)
-            MposButton(if(dialog=="open") "Открыть" else "Подтвердить закрытие",{
-                if(dialog=="open") model.open(revision,previous,actor) {dialog=null}
-                else model.close(previous!!,revision,token,counted,actor) {dialog=null}
-            },Modifier.testTag("shiftConfirm"),busy=ui.pending,enabled=dialog!="open" || ui.cashiers.any {it.id==actor})
+    if(cashForm!=null) {
+        val editable=!ui.pending && ui.cashUnresolved==null
+        MposWebModal(if(cashForm.type=="deposit") "Внести наличные" else "Изъять наличные",model::cashClose,editable) {
+            MposWebField(cashForm.amount,{model.cashEdit(amount=it)},"Сумма","shiftCashAmount",editable,true,"0,00")
+            MposWebField(cashForm.note,{model.cashEdit(note=it)},"Комментарий","shiftCashNote",editable,placeholder="Необязательно")
+            ui.message?.let {MposNotice(it,true)}
+            if(ui.cashUnresolved!=null) MposPosControl("Проверить результат",model::cashRetry,Modifier.fillMaxWidth().testTag("shiftCashRetry"),enabled=!ui.pending,kind=PosControl.Cash)
+            else MposWebActions(model::cashClose,if(cashForm.type=="deposit") "Внести" else "Изъять",model::cashSave,!ui.pending,saveEnabled=!ui.fatal,tag="shiftCashSave")
         }
     }
+    if(dialog!=null) MposWebModal(if(dialog=="open") "Открыть смену" else "Закрыть смену",{dialog=null;model.dismiss()},!ui.pending) {
+        if(dialog=="open") {
+            MposWebSelect("Сотрудник",actor,listOf("" to "Выберите сотрудника")+ui.cashiers.map {it.id to it.name},{actor=it},!ui.pending,"shiftEmployeeSelection")
+            MposWebLabel("Наличные при открытии смены")
+            Text(ShiftRules.money(expected),Modifier.testTag("shiftCarry"),fontSize=26.sp,lineHeight=35.sp,fontWeight=FontWeight.ExtraBold)
+            Spacer(Modifier.height(8.dp))
+            MposWebWarningNote("Проверьте наличные в кассе. Сумма перенесена с прошлой смены")
+        } else {
+            MposWebLabel("Ожидается в кассе (наличные)")
+            Text(ShiftRules.money(expected),Modifier.padding(bottom=14.dp),fontSize=20.sp,lineHeight=27.sp,fontWeight=FontWeight.ExtraBold)
+            MposWebField(counted,{counted=it},"Фактически пересчитано","shiftCounted",!ui.pending,true)
+        }
+        ui.message?.let {MposNotice(it,true)}
+        MposWebActions({dialog=null;model.dismiss()},if(dialog=="open") "Открыть" else "Закрыть смену",{
+            if(dialog=="open") model.open(revision,previous,actor) {dialog=null}
+            else model.close(previous!!,revision,token,counted,actor) {dialog=null}
+        },!ui.pending,saveEnabled=dialog!="open" || ui.cashiers.any {it.id==actor},tag="shiftConfirm")
+    }
+    val reportRow=ui.dashboard?.summaries?.find {it.shift.id==report && !it.shift.isOpen}
+    if(reportRow!=null) ShiftReportWindow(reportRow,{report=null},{planned="Печать отчёта"})
+    if(planned!=null) MposWebModal(planned!!,{planned=null}) {
+        Text(if(planned=="Кассовый ящик") "Управление кассовым ящиком пока не подключено. Будет реализовано на этапе оборудования." else "Печать отчёта пока не подключена. Будет реализована на этапе оборудования.")
+        Spacer(Modifier.height(18.dp));MposPosControl("Понятно",{planned=null},Modifier.fillMaxWidth(),kind=PosControl.Cash)
+    }
 }
-private fun date(value: Long,zone: String): String=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.of(zone)).format(Instant.ofEpochMilli(value))

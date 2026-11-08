@@ -34,7 +34,7 @@ data class ProductInput(
     val noStockTracking: Boolean = false, val allowNegativeStock: Boolean = false,
     val minimumStock: String? = null, val purchaseLabel: String = "", val packSize: String? = null,
     val recipeYield: String = "1", val components: List<IngredientInput> = emptyList(),
-    val modifierGroups: List<ModifierGroupInput> = emptyList(), val photoId: String? = null,
+    val modifierGroups: List<ModifierGroupInput> = emptyList(), val photoId: String? = null, val details: ProductDetails? = null,
 ) {
     fun validated(): ProductInput {
         if (type !in listOf("simple", "composite")) throw CatalogFailure("type", "Выберите тип товара")
@@ -63,9 +63,16 @@ data class ProductInput(
                 throw CatalogFailure("recipe", "Задайте положительный выход и состав")
         } else if (components.isNotEmpty()) throw CatalogFailure("recipe", "Простой товар не может иметь состав")
         if(photoId != null && !Regex("[0-9a-f-]{36}\\.jpg").matches(photoId)) throw CatalogFailure("photo", "Некорректная ссылка на фото")
-        return normalized.copy(modifierGroups=ModifierRules.validate(id,modifierGroups))
+        details?.purchaseContentUnit?.let {quantityUnit(it).convert(BigDecimal.ONE,base)}
+        if(type=="simple" && details?.sellingBasis=="recipe-batch") throw CatalogFailure("basis","Продажа рецептом доступна составному товару")
+        return normalized.copy(details=details?.validated(),modifierGroups=ModifierRules.validate(id,modifierGroups))
     }
     fun fingerprint(): String {
+        if(details!=null) {
+            val old=CatalogRules.fingerprint("product.details.v1",copy(details=null).fingerprint(),details.sku,details.note,details.symbol)
+            return if(details.sellingBasis==null && details.recipeYieldManual==null && details.purchaseContentUnit==null) old else
+                CatalogRules.fingerprint("product.details.v2",old,details.sellingBasis,details.recipeYieldManual,details.purchaseContentUnit)
+        }
         if(photoId==null && modifierGroups.isEmpty()) return configurationFingerprint()
         val parts=modifierGroups.flatMap { g -> listOf(g.id,g.name,g.minimum,g.maximum,g.options.size.toString()) +
             g.options.flatMap { listOf(it.id,it.productId,it.posName,it.quantity,it.priceDelta) } }

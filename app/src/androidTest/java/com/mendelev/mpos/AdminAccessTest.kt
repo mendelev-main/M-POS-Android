@@ -26,7 +26,7 @@ class AdminAccessTest {
             assertEquals("Новое",db.catalog().category("one")!!.name)
         } finally {db.close()}
     }
-    @Test fun warehouseAndLayoutDeniedWhileCashierCanContinueCashOperations()=runBlocking {
+    @Test fun warehouseDeniedWhileCashierCanContinueCashOperations()=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext,CatalogDatabase::class.java).build()
         try {
             val workspace=WorkspaceRepository(db);workspace.initialize()
@@ -43,7 +43,6 @@ class AdminAccessTest {
                 com.mendelev.mpos.domain.warehouse.SupplierAction.Save("supplier",null,"Поставщик",emptySet())))}
             denied {inventory.commit(com.mendelev.mpos.domain.warehouse.InventoryCommand("denied-inventory",owner,stock.revision,
                 com.mendelev.mpos.domain.warehouse.InventoryAction.Start("draft","adhoc")))}
-            denied {workspace.home(com.mendelev.mpos.domain.workspace.HomeAction.Reset,workspace.snapshot().homeRevision,"denied-layout")}
             assertEquals(documents,db.workspace().documents())
             val before=shifts.snapshot();shifts.open("cashier-open",before.revision,null,owner)
             val opened=shifts.snapshot()

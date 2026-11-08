@@ -57,6 +57,7 @@ class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
     }
     fun add(p: WorkspaceProduct, selected: Set<String> = emptySet(), manual: String? = null, expectedOwner: String? = null, done: () -> Unit = {}) =
         cart(CartAction.Add(p.id,p.revision,selected.toSet(),manual,UUID.randomUUID().toString()),expectedOwner,done)
+    fun options(action: CartAction.SetOptions,owner: String,done: ()->Unit)=cart(action,owner,done)
     fun step(id: String,delta: Int,owner: String? = null) = cart(CartAction.Step(id,delta),owner)
     fun remove(id: String,owner: String? = null) = cart(CartAction.Remove(id),owner)
     fun quantity(id: String,value: String,revision: Long,owner: String? = null,done: () -> Unit) = cart(CartAction.SetQuantity(id,value,revision),owner,done)
@@ -82,13 +83,10 @@ class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
         val command=UUID.randomUUID().toString()
         enqueue {repo.deleteParked(id,revision,command);withContext(Dispatchers.Main) {done()} }
     }
-    private fun adminPermit()=try {com.mendelev.mpos.core.access.AdminForms(viewModelScope).permit()} catch(e:CatalogFailure) {mutable.update {it.copy(message=e.message)};null}
     fun home(action: HomeAction,revision: Long,done: () -> Unit = {}) {
-        val permit=adminPermit() ?: return
-        val command=UUID.randomUUID().toString();enqueue {permit.write {repo.home(action,revision,command)};withContext(Dispatchers.Main) {done()}}
+        val command=UUID.randomUUID().toString();enqueue {repo.home(action,revision,command);withContext(Dispatchers.Main) {done()}}
     }
     fun layout(action: LayoutAction,revision: Long,done: () -> Unit = {}) {
-        val permit=adminPermit() ?: return
-        val command=UUID.randomUUID().toString();enqueue { permit.write {repo.layout(action,revision,command)};withContext(Dispatchers.Main) { done() } }
+        val command=UUID.randomUUID().toString();enqueue {repo.layout(action,revision,command);withContext(Dispatchers.Main) { done() } }
     }
 }

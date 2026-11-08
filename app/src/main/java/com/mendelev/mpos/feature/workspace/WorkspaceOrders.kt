@@ -9,6 +9,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mendelev.mpos.domain.settings.SettingKind
 import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.data.local.WorkspaceSnapshot
 import com.mendelev.mpos.domain.workspace.*
@@ -32,11 +34,8 @@ import com.mendelev.mpos.domain.workspace.*
     var requestHasLines by rememberSaveable {mutableStateOf(false)}
     val busy=ui.pending>0
     if(mode==null) return
+    val presets by com.mendelev.mpos.feature.settings.settingsCatalogModel().state.collectAsStateWithLifecycle()
     var label by rememberSaveable(mode) {mutableStateOf(s.cart.details.label)}
-    var type by rememberSaveable(mode) {mutableStateOf(s.cart.details.type)}
-    var comment by rememberSaveable(mode) {mutableStateOf(s.cart.details.comment)}
-    var address by rememberSaveable(mode) {mutableStateOf(s.cart.details.address)}
-    var phone by rememberSaveable(mode) {mutableStateOf(s.cart.details.phone)}
     val revision=rememberSaveable(mode) {s.cartRevision}
     val owner=rememberSaveable(mode) {s.cart.sessionId}
     fun close() {onMode(null);model.dismiss()}
@@ -45,11 +44,19 @@ import com.mendelev.mpos.domain.workspace.*
         requestRevision=s.cartRevision;requestOwner=s.cart.sessionId;requestHasLines=s.cart.lines.isNotEmpty()
         if(delete) onMode("delete")
         else if(s.cart.lines.isEmpty() && s.cart.details==OrderDetails()) model.resume(order.id,order.revision,s.cartRevision,s.cart.sessionId) {close()}
+        else if(s.cart.lines.isNotEmpty() && s.cart.details.label.isNotBlank())
+            model.resume(order.id,order.revision,s.cartRevision,s.cart.sessionId,s.cart.details.label) {close()}
         else onMode("resume")
     }
     if(mode=="list") {
         ParkedOrdersWindow(s.parked,busy,ui.message,{order->order.cart.lines.any {CartEngine.stale(it,s.products)}},
             {close()},{choose(it,false)},{choose(it,true)})
+        return
+    }
+    if(mode=="details") {
+        OrderSettingsWindow(s.cart.details,s.sourceDelivery,presets.catalog.rows(SettingKind.DELIVERY),presets.catalog.revision,
+            runCatching {orderSettingsTotal(s.cart,s.sourceDiscounts,s.sourceDelivery)}.getOrNull(),busy,ui.message,s.cart.sessionId,s.cartRevision,{close()},
+            {next,done->model.details(next,s.cartRevision,s.cart.sessionId,done)})
         return
     }
     MposDialog(when(mode) {"details" -> "Параметры заказа";"park" -> "Отложить заказ";"resume" -> "Открыть отложенный заказ?";"delete" -> "Удалить отложенный заказ?";else -> "Отложенные заказы"},
@@ -78,23 +85,18 @@ import com.mendelev.mpos.domain.workspace.*
             }
             else -> {
                 Column(Modifier.heightIn(max=350.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                    MposField(label,{label=it;model.dismiss()},"Подпись заказа",Modifier.testTag("orderLabel"),!busy)
-                    if(mode=="details") {
-                        MposSelect("Тип заказа",type,listOf("here" to "На месте","takeaway" to "С собой","delivery" to "Доставка"),{
-                            type=it;if(type!="delivery") {address="";phone=""};model.dismiss()
-                        },!busy,Modifier.testTag("orderType"))
-                        MposField(comment,{comment=it;model.dismiss()},"Комментарий",Modifier.testTag("orderComment"),!busy,singleLine=false)
-                        if(type=="delivery") {
-                            MposField(address,{address=it;model.dismiss()},"Адрес доставки",Modifier.testTag("orderAddress"),!busy)
-                            MposField(phone,{phone=it;model.dismiss()},"Телефон доставки",Modifier.testTag("orderPhone"),!busy)
+                    if(mode=="park") FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                        presets.catalog.rows(SettingKind.RECEIPT_LABEL).forEach {template->
+                            MposButton(template.name,{label=OrderRules.uniqueLabel(template.name,s.parked.map {it.cart.details.label});model.dismiss()},enabled=!busy,style=ActionStyle.Secondary,modifier=Modifier.testTag("receiptTemplate:${template.id}"))
                         }
-                    } else Text("Заказ сохранится в отложенных, а текущая корзина станет пустой")
+                    }
+                    MposField(label,{label=it;model.dismiss()},"Подпись заказа",Modifier.testTag("orderLabel"),!busy)
+                    Text("Заказ сохранится в отложенных, а текущая корзина станет пустой")
                 }
                 Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
                     MposButton("Отмена",{close()},enabled=!busy,style=ActionStyle.Secondary)
-                    MposButton(if(mode=="details") "Сохранить параметры" else "Отложить заказ",{
-                        if(mode=="details") model.details(OrderDetails(label,type,comment,address,phone),revision,owner) {close()}
-                        else model.park(label,revision,owner) {close()}
+                    MposButton("Отложить заказ",{
+                        model.park(label,revision,owner) {close()}
                     },busy=busy,modifier=Modifier.testTag("orderSubmit"))
                 }
             }

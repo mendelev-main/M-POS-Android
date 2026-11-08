@@ -8,9 +8,8 @@ data class CartRevalidation(val before: CurrentCart, val after: CurrentCart,
 
 /** Preview is pure. Confirmation recomputes it inside the same transaction as the write. */
 object CartRevalidator {
-    fun preview(cart: CurrentCart, products: List<WorkspaceProduct>, graph: List<RecipeProduct>,
-        balances: Map<String,BigDecimal>, otherReservations: Map<String,BigDecimal>): CartRevalidation {
-        if(cart.lines.isEmpty()) throw CatalogFailure("empty","Заказ пуст")
+    /** Refresh unpaid snapshots without posting stock or payment movements. */
+    fun refresh(cart: CurrentCart, products: List<WorkspaceProduct>, graph: List<RecipeProduct>): CurrentCart {
         val lines=cart.lines.map { old ->
             val p=products.find {it.id==old.productId} ?: throw CatalogFailure("reference","Товар ${old.name} больше не существует")
             if(p.unit!=old.unit || p.sellingBasis!=old.sellingBasis) throw CatalogFailure("unit","Изменилась единица товара ${old.name}. Удалите позицию и добавьте заново")
@@ -19,10 +18,15 @@ object CartRevalidator {
                 old.basePrice
             } else null
             CartEngine.configure(CartAction.Add(p.id,p.revision,old.options.map {it.id}.toSet(),manual,old.id),products,graph)
-                .copy(quantity=old.quantity)
+                .copy(quantity=old.quantity,comment=old.comment,discountId=old.discountId,discount=old.discount,discountEdited=old.discountEdited)
         }
         val needed=lines.flatMap {it.references.keys}.toSet()
-        val next=cart.copy(lines=lines,graph=graph.filter {it.id in needed})
+        return cart.copy(lines=lines,graph=graph.filter {it.id in needed})
+    }
+    fun preview(cart: CurrentCart, products: List<WorkspaceProduct>, graph: List<RecipeProduct>,
+        balances: Map<String,BigDecimal>, otherReservations: Map<String,BigDecimal>): CartRevalidation {
+        if(cart.lines.isEmpty()) throw CatalogFailure("empty","Заказ пуст")
+        val next=refresh(cart,products,graph)
         fun composition(value: CurrentCart)=RecipeCalculator(value.graph.map {
             if(it is RecipeProduct.Simple) it.copy(noStockTracking=false) else it
         }).consumption(CartEngine.requests(value))

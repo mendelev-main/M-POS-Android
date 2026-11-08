@@ -29,25 +29,47 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
             if(work.document("layout")==null) work.put(WorkspaceDocument("layout",0,WorkspaceCodec.layout(emptyList())))
             if(work.document("home")==null) work.put(WorkspaceDocument("home",0,WorkspaceCodec.home(HomeLayout())))
             if(work.document("orders")==null) {
-                if(work.documents().any {it.id.startsWith("parked:")}) throw CatalogFailure("workspace","Не найден журнал отложенных заказов")
+                if(work.documentsByPrefix("parked:").isNotEmpty()) throw CatalogFailure("workspace","Не найден журнал отложенных заказов")
                 work.put(WorkspaceDocument("orders",0,"{\"version\":1}"))
             }
+            refreshCatalogCarts()
         }
     }
+    /** Called inside the catalogue transaction; paid split snapshots remain immutable. */
+    suspend fun refreshCatalogCarts() = db.withTransaction {
+        if(work.document("current")==null || work.document("orders")==null) return@withTransaction
+        val state=snapshot()
+        fun refreshed(cart: CurrentCart)=if(cart.lines.any {CartEngine.stale(it,state.products)})
+            CartRevalidator.refresh(cart,state.products,state.graph) else cart
+        if(SplitPaymentRepository(db).load()==null) {
+            val next=refreshed(state.cart)
+            if(next!=state.cart) work.put(WorkspaceDocument("current",state.cartRevision+1,WorkspaceCodec.cart(next)))
+        }
+        var changed=false
+        state.parked.forEach {order->
+            val next=refreshed(order.cart)
+            if(next!=order.cart) {
+                work.put(WorkspaceDocument("parked:${order.id}",order.revision+1,WorkspaceCodec.parked(order.copy(cart=next))))
+                changed=true
+            }
+        }
+        if(changed) advanceOrders(state)
+    }
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun observe(): Flow<WorkspaceSnapshot> = combine(dao.products(),dao.categories(),work.observe()) { _,_,_ -> Unit }.mapLatest { snapshot() }
+    fun observe(): Flow<WorkspaceSnapshot> = combine(dao.products(),dao.categories(),work.observeRevisions()) { _,_,_ -> Unit }.mapLatest { snapshot() }
     suspend fun snapshot(): WorkspaceSnapshot = db.withTransaction {
         val entities=dao.allProducts().sortedWith(compareBy<ProductEntity> { it.name }.thenBy { it.id })
         val groups=dao.allModifierGroups().groupBy {it.ownerId};val options=dao.allModifierOptions().groupBy {it.ownerId to it.groupId}
         val batchIds=work.document(WebCandidateDatabase.BASIS)?.let {org.json.JSONObject(it.payload).getJSONArray("products").let {a->(0 until a.length()).map {a.getString(it)}.toSet()}}.orEmpty()
         val metadataRows=work.productMetadataDocuments()
+        val localMetadata=work.documentsByPrefix(ProductDetailsCodec.PREFIX).associate {it.id.removePrefix(ProductDetailsCodec.PREFIX) to ProductDetailsCodec.decode(it.payload,it.id.removePrefix(ProductDetailsCodec.PREFIX))}
         val sourceMetadata=if(metadataRows.isNotEmpty()) metadataRows.associate {it.id.removePrefix(com.mendelev.mpos.domain.backup.WebProductMetadataDocuments.PREFIX) to com.mendelev.mpos.domain.backup.WebProductMetadataDocuments.read(it.payload,it.id.removePrefix(com.mendelev.mpos.domain.backup.WebProductMetadataDocuments.PREFIX))}
             else if(entities.isNotEmpty() && work.document(com.mendelev.mpos.domain.backup.WebSourceDocuments.KEY)!=null) {
                 com.mendelev.mpos.domain.backup.WebSourceDocuments.decode(work.documents().associate {it.id to it.payload})?.let {source->com.mendelev.mpos.domain.backup.WebCatalogMapping.map(source).products.associate {it.id to it.metadata}}.orEmpty()
             } else emptyMap()
         val products=entities.map { p -> WorkspaceProduct(p.id,p.name,p.categoryId ?: "",p.price,p.revision,p.unit,
             groups[p.id].orEmpty().map { g -> ModifierGroupInput(g.id,g.name,g.minimum.toString(),g.maximum.toString(),
-                options[p.id to g.id].orEmpty().map { ModifierOptionInput(it.id,it.productId,it.posName,it.quantity,it.priceDelta) }) },p.photoId,if(p.type=="composite" && p.id in batchIds) "recipe-batch" else "stock-unit",sourceMetadata[p.id]?.tileSymbol.orEmpty()) }
+                options[p.id to g.id].orEmpty().map { ModifierOptionInput(it.id,it.productId,it.posName,it.quantity,it.priceDelta) }) },p.photoId,localMetadata[p.id]?.sellingBasis ?: if(p.type=="composite" && p.id in batchIds) "recipe-batch" else "stock-unit",localMetadata[p.id]?.symbol ?: sourceMetadata[p.id]?.tileSymbol.orEmpty()) }
         val categories=dao.categorySnapshot()
         val cart=work.document("current") ?: error("Рабочая зона не открыта")
         val layout=work.document("layout") ?: error("Раскладка не открыта")
@@ -55,7 +77,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         WorkspaceCodec.registry(book.payload)
         val current=WorkspaceCodec.cart(cart.payload)
         if(current.sessionId.isBlank()) throw CatalogFailure("workspace","Требуется обновление формата заказа")
-        val parked=work.documents().filter {it.id.startsWith("parked:")}.map {WorkspaceCodec.parked(it.id,it.revision,it.payload)}
+        val parked=work.documentsByPrefix("parked:").map {WorkspaceCodec.parked(it.id,it.revision,it.payload)}
             .sortedWith {a,b -> OrderRules.compareLabels(a.cart.details.label,b.cart.details.label).takeIf {it!=0} ?: b.parkedAt.compareTo(a.parkedAt)}
         val owners=listOf(current.sessionId)+parked.map {it.id}
         if(owners.distinct().size!=owners.size) throw CatalogFailure("orderOwner","Заказ имеет двух владельцев")
@@ -64,7 +86,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         val imported=sourceDefaults?.let {WebOrderDefaults.read(it.payload,current.sessionId)}
         WorkspaceSnapshot(products,categories,recipeSnapshot(entities,dao.allComponents()),dao.allBalances().associate { it.productId to it.quantity.toBigDecimal() },
             current,cart.revision,
-            LayoutEngine.project(WorkspaceCodec.layout(layout.payload),products,categories.map { it.id }.toSet()+""),layout.revision,parked,book.revision,HomeEngine.project(WorkspaceCodec.home(home.payload),products,categories.map {it.id}),home.revision,SaleRepository(db).unacknowledged(),imported?.discounts.orEmpty().filterKeys {id->current.lines.any {it.id==id}},imported?.delivery?.takeIf {current.details.type=="delivery"},sourceDefaults?.let {WebOrderDefaults.historyCount(it.payload)} ?: 0)
+            LayoutEngine.project(WorkspaceCodec.layout(layout.payload),products,categories.map { it.id }.toSet()+""),layout.revision,parked,book.revision,HomeEngine.project(WorkspaceCodec.home(home.payload),products,categories.map {it.id}),home.revision,SaleRepository(db).unacknowledged(),imported?.discounts.orEmpty().filterKeys {id->current.lines.any {it.id==id && !it.discountEdited}} + current.lines.mapNotNull {line->line.discount?.let {line.id to it}}.toMap(),(if(current.details.deliveryEdited) current.details.deliveryTariff else current.details.deliveryTariff ?: imported?.delivery)?.takeIf {current.details.type=="delivery"},sourceDefaults?.let {WebOrderDefaults.historyCount(it.payload)} ?: 0)
     }
     private suspend fun repeat(commandId: String, fp: String, legacyFp: String? = null): Boolean {
         val old=dao.result(commandId) ?: return false
@@ -90,16 +112,18 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
             is CartAction.Add -> listOf("add",action.productId,action.expectedProductRevision.toString(),CatalogRules.fingerprint(*action.selected.sorted().toTypedArray()),action.manualPrice,action.lineId)
             is CartAction.Step -> listOf("step",action.lineId,action.delta.toString())
             is CartAction.SetQuantity -> listOf("quantity",action.lineId,action.quantity,action.expectedRevision.toString())
+            is CartAction.SetOptions -> listOf("line.options.v1",action.lineId,action.quantity,action.comment,action.discountId,action.discount?.let {CatalogRules.fingerprint(it.type,it.value,it.name)},action.expectedRevision.toString())
             is CartAction.Remove -> listOf("remove",action.lineId)
             is CartAction.Clear -> listOf("clear",action.expectedRevision.toString())
-            is CartAction.SetDetails -> listOf("details",action.expectedRevision.toString(),action.details.label,action.details.type,action.details.comment,action.details.address,action.details.phone)
+            is CartAction.SetDetails -> listOf("details",action.expectedRevision.toString(),action.details.label,action.details.type,action.details.comment,action.details.address,action.details.phone) + if(action.details.customerName.isNotEmpty() || action.details.deliveryEdited || action.details.deliveryTariff!=null)
+                listOf("details.extra.v1",action.details.customerName,action.details.deliveryEdited.toString(),action.details.deliveryTariff?.let {CatalogRules.fingerprint(it.id,it.name,it.fee,it.revision)}) else emptyList()
         }
         val legacy=CatalogRules.fingerprint("workspace.current",*intent.toTypedArray())
         val fp=CatalogRules.fingerprint("workspace.current.session",expectedSessionId,*intent.toTypedArray())
         if(repeat(commandId,fp,legacy)) return@withTransaction
         SplitPaymentRepository(db).requireNone()
         val state=snapshot()
-        val expected=when(action) { is CartAction.SetQuantity -> action.expectedRevision;is CartAction.Clear -> action.expectedRevision;is CartAction.SetDetails -> action.expectedRevision;else -> null }
+        val expected=when(action) { is CartAction.SetQuantity -> action.expectedRevision;is CartAction.Clear -> action.expectedRevision;is CartAction.SetDetails -> action.expectedRevision;is CartAction.SetOptions -> action.expectedRevision;else -> null }
         requireCurrent(state,expected,expectedSessionId)
         val candidate=CartEngine.apply(state.cart,action,state.products,state.graph,state.balances,OrderReservations.total(state.parked.map {it.cart}))
         val next=if(action is CartAction.Clear || state.cart.lines.isNotEmpty() && candidate.lines.isEmpty()) emptyCart()
@@ -154,7 +178,9 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         work.delete("parked:$id");afterWrite?.invoke()
         advanceOrders(state);record("deleteParked",id,commandId,fp)
     }
-    suspend fun home(action: HomeAction,expectedRevision: Long,commandId: String) = db.adminTransaction {
+    private suspend fun <T> layoutTransaction(block: suspend ()->T): T =
+        com.mendelev.mpos.core.operations.InstallationGate.write {db.withTransaction {block()}}
+    suspend fun home(action: HomeAction,expectedRevision: Long,commandId: String) = layoutTransaction {
         val intent=when(action) {
             is HomeAction.Add->listOf("add",action.type,action.id)
             is HomeAction.Move->listOf("move",action.type,action.id,action.slot.toString())
@@ -162,13 +188,13 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
             is HomeAction.Reset->listOf("reset")
         }
         val fp=CatalogRules.fingerprint("workspace.home",expectedRevision,*intent.toTypedArray())
-        if(repeat(commandId,fp)) return@adminTransaction
+        if(repeat(commandId,fp)) return@layoutTransaction
         val state=snapshot()
         if(state.homeRevision!=expectedRevision) throw CatalogFailure("conflict","Главный экран изменился. Повторите по обновлённой раскладке")
         val next=HomeEngine.apply(state.home,state.products,state.categories.map {it.id},action)
         write("home",WorkspaceCodec.home(next),state.homeRevision,commandId,fp)
     }
-    suspend fun layout(action: LayoutAction, expectedRevision: Long, commandId: String) = db.adminTransaction {
+    suspend fun layout(action: LayoutAction, expectedRevision: Long, commandId: String) = layoutTransaction {
         val intent=when(action) {
             is LayoutAction.SaveFolder -> listOf("folder",action.id,action.categoryId,action.name)
             is LayoutAction.DeleteFolder -> listOf("deleteFolder",action.id)
@@ -178,7 +204,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
             is LayoutAction.Step -> listOf("step",action.type,action.id,action.delta.toString())
         }
         val fp=CatalogRules.fingerprint("workspace.layout",expectedRevision,*intent.toTypedArray())
-        if(repeat(commandId,fp)) return@adminTransaction
+        if(repeat(commandId,fp)) return@layoutTransaction
         val state=snapshot()
         if(state.layoutRevision!=expectedRevision) throw CatalogFailure("conflict","Раскладка изменилась. Повторите по обновлённому экрану")
         val next=LayoutEngine.apply(state.layout,state.products,state.categories.map { it.id }.toSet()+"",action)

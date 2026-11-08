@@ -12,6 +12,25 @@ import org.junit.Test
 
 class RevalidationRepositoryTest {
     private fun preview(s: WorkspaceSnapshot)=CartRevalidator.preview(s.cart,s.products,s.graph,s.balances,OrderReservations.total(s.parked.map {it.cart}))
+    @Test fun catalogueSaveRefreshesCurrentAndParkedAtomicallyAndRepeatDoesNotRefreshTwice() = runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext<Context>(),CatalogDatabase::class.java).build()
+        try {
+            val c=CatalogRepository(db);val r=WorkspaceRepository(db);r.initialize()
+            val p=ProductInput("p",null,"Чай",null,"2","1","10",null,true,"create")
+            c.saveProduct(p);var s=r.snapshot()
+            r.cart(CartAction.Add("p",1,emptySet(),null,"a"),"add-a",s.cart.sessionId)
+            s=r.snapshot();r.park(s.cartRevision,s.cart.sessionId,"Первый","park")
+            s=r.snapshot();r.cart(CartAction.Add("p",1,emptySet(),null,"b"),"add-b",s.cart.sessionId)
+            val before=r.snapshot();val change=p.copy(expectedRevision=1,stockEdited=false,price="3",commandId="change")
+            try {CatalogRepository(db,afterProductWrite={throw IllegalStateException("disk")}).saveProduct(change);fail()} catch(_:IllegalStateException) {}
+            assertEquals(before,r.snapshot())
+            c.saveProduct(change);val after=r.snapshot()
+            assertEquals("3",after.cart.lines.single().unitPrice)
+            assertEquals("3",after.parked.single().cart.lines.single().unitPrice)
+            assertEquals("10",db.catalog().balance("p")!!.quantity)
+            c.saveProduct(change);assertEquals(after,r.snapshot())
+        } finally {db.close()}
+    }
     @Test fun confirmIsAtomicRejectsChangedPreviewAndReplaysAfterOwnerChanged() = runBlocking {
         val db=Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext<Context>(),CatalogDatabase::class.java).build()
         try {
@@ -25,7 +44,7 @@ class RevalidationRepositoryTest {
             assertEquals(original,repo.snapshot());assertNull(db.catalog().result("fault"))
             catalog.saveProduct(input.copy(expectedRevision=2,stockEdited=false,price="4",commandId="price-again"))
             try {repo.revalidate(s.cartRevision,s.cart.sessionId,plan.token,"stale");fail()} catch(_:CatalogFailure) {}
-            assertEquals(original.cart,repo.snapshot().cart)
+            assertEquals("4",repo.snapshot().cart.lines.single().unitPrice)
             s=repo.snapshot();val token=preview(s).token
             repo.revalidate(s.cartRevision,s.cart.sessionId,token,"confirm")
             assertEquals("4",repo.snapshot().cart.lines.single().unitPrice)

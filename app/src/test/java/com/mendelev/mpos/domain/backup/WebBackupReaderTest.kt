@@ -65,7 +65,7 @@ class WebBackupReaderTest {
             override fun read(b: ByteArray,off: Int,len: Int): Int {b.fill(32,off,off+len);count+=len;return len}
         }
         assertEquals("size",assertThrows(BackupFailure::class.java) {WebBackupReader.read(stream)}.kind)
-        assertTrue(count<=WebBackupReader.MAX_BYTES+8192)
+        assertTrue(count<=WebBackupReader.MAX_SOURCE_BYTES+8192)
         bad("[".repeat(66)+"0"+"]".repeat(66));bad("{\"version\":1e10000}")
     }
 }

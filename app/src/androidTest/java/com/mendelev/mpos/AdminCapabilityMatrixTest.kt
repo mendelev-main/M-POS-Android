@@ -39,10 +39,6 @@ class AdminCapabilityMatrixTest {
             check("catalog.product.delete") {catalog.deleteProduct(p.id,p.revision,"denied-product-delete")}
             check("catalog.draft.save") {catalog.saveDraft(DraftEntity(payload="{}"))}
             check("catalog.draft.discard") {catalog.discardDraft()}
-            for((i,a) in listOf(HomeAction.Add("product",p.id),HomeAction.Move("product",p.id,8),HomeAction.Remove("product",p.id),HomeAction.Reset).withIndex())
-                check("home.$i") {workspace.home(a,workspace.snapshot().homeRevision,"denied-home-$i")}
-            for((i,a) in listOf(LayoutAction.SaveFolder("folder","category","Папка"),LayoutAction.DeleteFolder("folder"),LayoutAction.MoveProduct(p.id,"folder"),LayoutAction.ResetProduct(p.id),LayoutAction.Reorder("product",p.id,0),LayoutAction.Step("product",p.id,1)).withIndex())
-                check("layout.$i") {workspace.layout(a,workspace.snapshot().layoutRevision,"denied-layout-$i")}
             for((i,a) in listOf(EmployeeAction.Save("cashier",1,"Другое","","admin"),EmployeeAction.Delete("cashier",1)).withIndex())
                 check("employee.$i") {employees.commit(EmployeeCommand("denied-employee-$i",seed.owner,a))}
             for((i,a) in listOf(SupplierAction.Save(seed.order.source.supplierId,1,"Другое",setOf(p.id)),SupplierAction.Delete(seed.order.source.supplierId,1)).withIndex())

@@ -23,11 +23,12 @@ class WorkspaceAppearanceTest {
         val empty=WorkspaceSnapshot(emptyList(),emptyList(),emptyList(),emptyMap(),CurrentCart(),0,emptyList(),0)
         compose.setContent {MposTheme {
             Column(Modifier.width(880.dp).height(650.dp)) {
-                WorkspaceToolbar("Рабочая зона",false,false,false,0,{}, {}, {}, {}, {soon=it})
+                WorkspaceToolbar("Рабочая зона",false,false,false,0,{}, {}, {}, {soon=it})
                 WorkspaceCartPanel(empty,0,Modifier.width(380.dp).weight(1f),{writes++},{_,_->writes++},{writes++},{writes++},{writes++},{writes++},{writes++},{writes++},{soon=it},false)
             }
             if(soon!=null) MposDialog("Скоро будет подключено",{soon=null}) {androidx.compose.material3.Text(soon!!)}
         }}
+        compose.onNodeWithTag("workspaceSearchToggle").assertDoesNotExist()
         compose.onNodeWithTag("workspaceCartPanel").assertWidthIsEqualTo(380.dp)
         compose.onNodeWithTag("workspaceCheckout").assertIsNotEnabled()
         compose.onNodeWithTag("workspaceCustomer").performClick()
@@ -37,4 +38,21 @@ class WorkspaceAppearanceTest {
         compose.onNodeWithText("Скоро будет подключено").assertIsDisplayed()
         assertEquals(0,writes)
     }
+    @Test fun pendingWriteDoesNotMoveOrderFooterAndKeepsPaymentBlocked() {
+        var pending by mutableStateOf(0)
+        var payments=0
+        val empty=WorkspaceSnapshot(emptyList(),emptyList(),emptyList(),emptyMap(),CurrentCart(),0,emptyList(),0)
+        compose.setContent {MposTheme {
+            WorkspaceCartPanel(empty,pending,Modifier.width(380.dp).height(650.dp),{},{_,_->},{},{},{},{},{},{payments++},{},true)
+        }}
+        val total=compose.onNodeWithTag("workspaceTotal").fetchSemanticsNode().boundsInRoot
+        val checkout=compose.onNodeWithTag("workspaceCheckout").fetchSemanticsNode().boundsInRoot
+        compose.runOnIdle {pending=1}
+        compose.onNodeWithText("Сохраняем…").assertDoesNotExist()
+        assertEquals(total,compose.onNodeWithTag("workspaceTotal").fetchSemanticsNode().boundsInRoot)
+        assertEquals(checkout,compose.onNodeWithTag("workspaceCheckout").fetchSemanticsNode().boundsInRoot)
+        compose.onNodeWithTag("workspaceCheckout").assertIsNotEnabled().performClick()
+        assertEquals(0,payments)
+    }
+
 }
