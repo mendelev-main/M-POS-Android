@@ -345,7 +345,7 @@ def main():
             if not production:
                 if any(n.get("resource-id")=="updatesBack" for n in ui_nodes()):
                     wait_text("^К настройкам$",click=True,preferred_resource_id="updatesBack")
-                wait_text("^Назад$", click=True)
+                wait_text("^Товары$", click=True, preferred_resource_id="settingsCatalog")
                 scroll_catalog_to_product(expected_product, expected_stock="8 шт")
                 wait_text("^8 шт$")
                 (reports / "updated-catalog.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
