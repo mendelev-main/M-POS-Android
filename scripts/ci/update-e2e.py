@@ -368,12 +368,12 @@ def main():
                 (reports / "updated-home.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("HOME UPDATE PASSED: custom product tile and slot8 survived package replacement", flush=True)
                 wait_navigation("shift")
-                wait_text("^Смена открыта$")
-                wait_text(re.escape(expected_shift))
-                wait_text("^Наличные при открытии: 140,00 BYN$")
+                wait_text("Кассовая смена №", preferred_resource_id="shiftStatus")
                 (reports / "updated-shift.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("SHIFT UPDATE PASSED: active shift identity and opening140 BYN survived package replacement", flush=True)
                 adb("install", "-r", str(test_apk))
+                current_shift = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.CurrentShiftUpdateTest", "-e", "verifyCurrentShift", "true", PACKAGE + ".test/com.mendelev.mpos.MposTestRunner", timeout=60)
+                assert "OK (1 test)" in current_shift and "FAILURES" not in current_shift, current_shift[-4000:]
                 financial = adb("shell", "am", "instrument", "-w", "-e", "class", "com.mendelev.mpos.SaleUpgradeTest,com.mendelev.mpos.SplitUpgradeTest,com.mendelev.mpos.RefundUpgradeTest,com.mendelev.mpos.SupplierUpgradeTest,com.mendelev.mpos.PurchaseUpgradeTest,com.mendelev.mpos.PurchaseOrderUpgradeTest,com.mendelev.mpos.PurchaseOrderMutationUpgradeTest,com.mendelev.mpos.ReceivingUpgradeTest,com.mendelev.mpos.ReceivingPostingUpgradeTest,com.mendelev.mpos.StandaloneReceivingUpgradeTest,com.mendelev.mpos.InventoryUpgradeTest,com.mendelev.mpos.InventoryCountUpgradeTest,com.mendelev.mpos.InventoryClosingUpgradeTest,com.mendelev.mpos.StockDocumentUpgradeTest,com.mendelev.mpos.ShiftCashUpgradeTest,com.mendelev.mpos.EmployeeUpgradeTest",
                                 "-e", "saleUpgradeMode", "verify", PACKAGE + ".test/com.mendelev.mpos.MposTestRunner", timeout=60)
                 assert "OK (16 tests)" in financial and "FAILURES" not in financial, financial[-4000:]
