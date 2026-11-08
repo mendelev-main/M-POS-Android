@@ -123,6 +123,6 @@ class WorkspaceUiTest {
         screenshot("workspace-home")
         assertPlatformHomeDescription("$homeName · Место 8")
 
-        compose.onNodeWithTag("topNav-settings").performClick();compose.onNodeWithText("Товары").performClick();waitText("Добавить товар")
+        compose.onNodeWithTag("topNav-settings").performClick();compose.onNodeWithTag("settingsCatalog").performClick();waitText("Добавить товар")
     }
 }

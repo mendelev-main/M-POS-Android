@@ -17,7 +17,7 @@ import java.util.UUID
 class RevalidationUiTest {
     @get:Rule val compose=createAndroidComposeRule<MainActivity>()
     @Before fun prepare() {CatalogUiTestSupport.prepare(compose)}
-    @Test fun reviewCancelRecreateAndConfirmKeepOrderUntilCommit() {
+    @Test fun catalogChangeAutomaticallyRefreshesOrderAndSurvivesRecreation() {
         val id="revalidate-${UUID.randomUUID()}";val line="line-$id"
         val repo=WorkspaceRepository(CatalogDatabase.get(compose.activity.applicationContext))
         runBlocking {
@@ -32,16 +32,15 @@ class RevalidationUiTest {
         lateinit var model: WorkspaceViewModel
         compose.runOnIdle {model=ViewModelProvider(compose.activity)[WorkspaceViewModel::class.java]}
         compose.waitUntil(20_000) {model.state.value.snapshot?.cart?.lines?.singleOrNull()?.id==line}
-        compose.onNodeWithTag("workspaceRevalidate").performClick()
-        compose.onNodeWithTag("revalidationTotal").assertTextEquals("Сумма: 2 → 3 BYN")
-        compose.onNodeWithText("Отмена").performClick()
-        assertEquals("2",runBlocking {repo.snapshot()}.cart.lines.single().unitPrice)
-        compose.onNodeWithTag("workspaceRevalidate").performClick()
-        compose.activityRule.scenario.recreate()
-        compose.waitUntil(20_000) {compose.onAllNodesWithTag("revalidationConfirm").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithTag("revalidationTotal").assertTextEquals("Сумма: 2 → 3 BYN")
-        compose.onNodeWithTag("revalidationConfirm").performClick()
-        compose.waitUntil(20_000) {runBlocking {repo.snapshot()}.cart.lines.single().unitPrice=="3"}
+        compose.waitUntil(20_000) {model.state.value.snapshot?.cart?.lines?.singleOrNull()?.unitPrice=="3"}
         compose.onNodeWithTag("workspaceRevalidate").assertDoesNotExist()
+        val before=runBlocking {repo.snapshot()}
+        assertFalse(CartEngine.stale(before.cart.lines.single(),before.products))
+        assertEquals("3",before.cart.lines.single().unitPrice)
+        compose.activityRule.scenario.recreate()
+        compose.waitUntil(20_000) {model.state.value.snapshot?.cart?.lines?.singleOrNull()?.unitPrice=="3"}
+        compose.onNodeWithTag("workspaceRevalidate").assertDoesNotExist()
+        assertEquals(before,runBlocking {repo.snapshot()})
+        assertEquals("10",runBlocking {CatalogDatabase.get(compose.activity.applicationContext).catalog().balance(id)!!.quantity})
     }
 }

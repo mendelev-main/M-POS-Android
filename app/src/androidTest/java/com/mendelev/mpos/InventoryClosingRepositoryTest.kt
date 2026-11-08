@@ -46,12 +46,12 @@ class InventoryClosingRepositoryTest {
             try {
                 prepare(db,fixed);val r=InventoryRepository(db,clock=november,generation="new-process")
                 val p=db.catalog().product("p-closing")!!;val b=db.catalog().balance(p.id)!!
-                CatalogRepository(db).saveProduct(com.mendelev.mpos.domain.catalog.ProductInput(p.id,p.revision,p.name,p.categoryId,p.price,"9","1",b.revision,true,"later-stock",unit=p.unit))
+                CatalogRepository(db).saveProduct(com.mendelev.mpos.domain.catalog.ProductInput(p.id,p.revision,p.name,p.categoryId,p.price,p.cost,"1",b.revision,true,"later-stock",unit=p.unit))
                 val before=db.catalog().balance(p.id);val movements=db.catalog().movementCount(p.id)
                 if(!fixed) assertTrue(runCatching {r.commit(close(r))}.isFailure)
                 r.commit(close(r,true));val s=r.snapshot();assertNull(s.document.config.lastCompleted);assertTrue(InventoryRules.due(s.document.config,LocalDate.parse("2026-11-01")))
                 val h=s.document.history.single();assertTrue(h.cancelled);assertEquals(if(fixed) 1700L else 0L,h.lossMinor);assertEquals("1.5",h.draft.counts.single().raw)
-                assertEquals(before,db.catalog().balance(p.id));assertEquals(movements,db.catalog().movementCount(p.id));assertEquals("9",db.catalog().product(p.id)!!.cost)
+                assertEquals(before,db.catalog().balance(p.id));assertEquals(movements,db.catalog().movementCount(p.id));assertEquals(p.cost,db.catalog().product(p.id)!!.cost)
                 InventoryRepository(db).requireProductUnused("unrelated")
                 assertTrue(runCatching {InventoryRepository(db).requireProductUnused(p.id)}.isFailure)
             } finally {db.close()}

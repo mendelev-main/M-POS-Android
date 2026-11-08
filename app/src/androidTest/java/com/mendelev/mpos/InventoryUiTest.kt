@@ -25,6 +25,7 @@ class InventoryUiTest {
         val p=runBlocking {standaloneInvoice(db,"inv-$key")}.lines.single().product.id
         val before=runBlocking {Triple(db.catalog().product(p),db.catalog().balance(p),db.catalog().movementCount(p))}
         compose.onNodeWithTag("topNav-settings").performScrollTo().performClick()
+        compose.onNodeWithTag("adminControl").performClick()
         compose.onNodeWithTag("settingsInventory").performScrollTo().performClick()
         lateinit var vm: InventoryViewModel
         compose.runOnIdle {vm=ViewModelProvider(compose.activity)[InventoryViewModel::class.java]}
@@ -36,6 +37,7 @@ class InventoryUiTest {
         compose.onNode(hasAnyAncestor(isPopup()) and hasText("Ежеквартально")).performClick()
         compose.onNodeWithTag("inventoryStart").assertIsNotEnabled()
         compose.onNodeWithTag("inventoryBack").performClick();compose.onNodeWithTag("inventoryDiscard").performClick()
+        compose.onNodeWithTag("adminControl").performClick()
         compose.onNodeWithTag("settingsInventory").performScrollTo().performClick()
         compose.waitUntil(20_000) {!vm.state.value.pending && !vm.state.value.blocked}
         compose.onNodeWithTag("inventoryStart").performClick();compose.onNodeWithTag("inventoryStartConfirm").performClick()

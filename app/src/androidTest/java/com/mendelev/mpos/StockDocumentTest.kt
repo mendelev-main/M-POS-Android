@@ -13,7 +13,7 @@ class StockDocumentTest {
         val db=Room.inMemoryDatabaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext,CatalogDatabase::class.java).build()
         try {
             stockDocumentFixture(db);val p=db.catalog().product("p-stock-doc")!!
-            CatalogRepository(db).saveProduct(ProductInput(p.id,p.revision,"Новое имя",p.categoryId,"99","9","0.0004",null,false,"rename",unit=p.unit))
+            CatalogRepository(db).saveProduct(ProductInput(p.id,p.revision,"Новое имя",p.categoryId,"99",p.cost,"0.0004",null,false,"rename",unit=p.unit))
             val before=db.workspace().documents();val balance=db.catalog().balance(p.id);val movements=db.catalog().stockHistory(p.id)
             val reader=StockDocumentReader(db)
             val docs=movements.filter {it.reason!=null}.associate {it.source to reader.read(it.id)}

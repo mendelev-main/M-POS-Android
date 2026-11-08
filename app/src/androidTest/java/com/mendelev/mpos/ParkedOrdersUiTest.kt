@@ -108,6 +108,6 @@ class ParkedOrdersUiTest {
         assertEquals(labelA,model.state.value.snapshot!!.parked.single().cart.details.label)
         File(compose.activity.filesDir,"qa/parkedLabel.txt").writeText(labelA)
         compose.onNodeWithContentDescription("Закрыть отложенные чеки").performClick()
-        compose.onNodeWithTag("topNav-settings").performClick();compose.onNodeWithText("Товары").performClick();waitText("Добавить товар")
+        compose.onNodeWithTag("topNav-settings").performClick();compose.onNodeWithTag("settingsCatalog").performClick();waitText("Добавить товар")
     }
 }

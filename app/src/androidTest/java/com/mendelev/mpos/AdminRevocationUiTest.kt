@@ -32,7 +32,7 @@ class AdminRevocationUiTest {
             compose.waitUntil(20_000) {!model.state.value.loading && model.state.value.products.isNotEmpty()}
             compose.onNodeWithTag("catalogProduct:p").performClick()
             compose.waitUntil(20_000) {!model.state.value.busy && model.state.value.draft!=null}
-            compose.onNodeWithText("Удалить товар").performScrollTo().performClick()
+            compose.onNodeWithText("Удалить товар").performClick()
             compose.onNodeWithText("Удаление товара").assertExists()
             runBlocking {Administration.session.logout()}
             compose.waitUntil(20_000) {model.state.value.draft==null}
@@ -42,7 +42,7 @@ class AdminRevocationUiTest {
             runBlocking {assertTrue(Administration.session.login("fixture-admin".toCharArray()))}
             compose.onNodeWithTag("productName").assertDoesNotExist()
             compose.onNodeWithText("Удаление товара").assertDoesNotExist()
-            compose.onNodeWithText("Открыть сохранённый черновик").performClick()
+            compose.onNodeWithTag("catalogProduct:p").performClick()
             compose.waitUntil(20_000) {!model.state.value.busy && model.state.value.draft!=null}
             assertEquals("p",model.state.value.draft!!.id)
             compose.runOnIdle {model.discard()};compose.waitUntil(20_000) {!model.state.value.busy && model.state.value.draft==null}

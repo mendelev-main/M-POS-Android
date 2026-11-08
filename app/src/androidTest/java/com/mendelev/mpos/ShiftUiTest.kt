@@ -29,9 +29,13 @@ class ShiftUiTest {
         lateinit var model: ShiftViewModel
         compose.runOnIdle {model=ViewModelProvider(compose.activity)[ShiftViewModel::class.java]}
         compose.waitUntil(20_000) {!model.state.value.loading && model.state.value.snapshot?.active==null}
-        compose.onNodeWithTag("shiftOpen").performClick();compose.onNodeWithTag("shiftConfirm").performClick()
+        compose.waitUntil(20_000) {!model.state.value.staffLoading && model.state.value.cashiers.isNotEmpty()}
+        compose.onNodeWithTag("shiftOpen").performScrollTo().performClick()
+        compose.onNodeWithTag("shiftEmployeeSelection").performClick()
+        compose.onNode(hasAnyAncestor(isPopup()) and hasText(model.state.value.cashiers.first().name)).performScrollTo().performClick()
+        compose.onNodeWithTag("shiftConfirm").performScrollTo().performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.snapshot?.active!=null}
-        compose.onNodeWithTag("shiftClose").performClick()
+        compose.onNodeWithTag("shiftClose").performScrollTo().performClick()
         compose.onNodeWithTag("shiftCounted").performTextReplacement("-1")
         hideKeyboard();compose.onNodeWithTag("shiftConfirm").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.message!=null}
@@ -43,7 +47,11 @@ class ShiftUiTest {
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.snapshot?.last?.countedCash==14000L}
         compose.onNodeWithTag("shiftHistory:${model.state.value.snapshot!!.last!!.id}").performScrollTo().assertIsDisplayed()
         screenshot("shift-closed")
-        compose.onNodeWithTag("shiftOpen").performClick();compose.onNodeWithTag("shiftConfirm").performClick()
+        compose.waitUntil(20_000) {!model.state.value.staffLoading && model.state.value.cashiers.isNotEmpty()}
+        compose.onNodeWithTag("shiftOpen").performScrollTo().performClick()
+        compose.onNodeWithTag("shiftEmployeeSelection").performClick()
+        compose.onNode(hasAnyAncestor(isPopup()) and hasText(model.state.value.cashiers.first().name)).performScrollTo().performClick()
+        compose.onNodeWithTag("shiftConfirm").performScrollTo().performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.snapshot?.active?.openingCash==14000L}
         compose.activityRule.scenario.recreate();compose.onNodeWithTag("shiftStatus").assertTextContains("Кассовая смена №",substring=true)
         assertEquals(documents,runBlocking {CatalogDatabase.get(compose.activity.applicationContext).workspace().documents()})

@@ -42,9 +42,11 @@ class WorkspaceRepositoryTest {
             reject {repo.layout(LayoutAction.SaveFolder("g","c","Другая"),0,"stale-layout")}
             val product=db.catalog().product("tea")!!
             CatalogRepository(db).saveProduct(input().copy(expectedRevision=product.revision,stockEdited=false,name="Переименован",commandId="rename"))
-            val changed=repo.snapshot();assertTrue(CartEngine.stale(changed.cart.lines.single(),changed.products))
-            assertEquals("tea",changed.cart.lines.single().name)
-            reject {repo.applyCart(CartAction.Step("line",1),"stale-increase")}
+            val changed=repo.snapshot();assertFalse(CartEngine.stale(changed.cart.lines.single(),changed.products))
+            assertEquals("Переименован",changed.cart.lines.single().name)
+            repo.applyCart(CartAction.Step("line",1),"fresh-increase")
+            assertEquals("2",repo.snapshot().cart.lines.single().quantity)
+            repo.applyCart(CartAction.Step("line",-1),"remove-first")
             repo.applyCart(CartAction.Step("line",-1),"remove")
             assertTrue(repo.snapshot().cart.lines.isEmpty())
         } finally {db.close();context.deleteDatabase(name)}

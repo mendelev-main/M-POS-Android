@@ -30,6 +30,7 @@ class AdminUiTest {
         compose.onNodeWithTag("adminLogin").performClick()
         compose.waitUntil(10_000) {Administration.session.state.value.active}
         compose.activityRule.scenario.recreate()
+        compose.onNodeWithTag("adminControl").performClick()
         compose.onNodeWithTag("adminStatus").assertDoesNotExist()
         compose.onNodeWithTag("topNav-administration").assertDoesNotExist()
         screenshot("admin-session")

@@ -89,13 +89,13 @@ class InventoryCountRepositoryTest {
             reject {repo.commit(c)};assertEquals("11",db.catalog().balance(p.id)!!.quantity);assertEquals(2,db.catalog().movementCount(p.id))
         } finally {db.close()}
     }
-    @Test fun costOnlyEditIsAllowedButTrackingOffAndOnRequiresRecount(): Unit=runBlocking {
+    @Test fun costOnlyEditIsRejectedAndTrackingOffAndOnRequiresRecount(): Unit=runBlocking {
         val db=memory()
         try {
             val (repo,c)=prepare(db,"3");val p=db.catalog().product("p-count")!!
             val edit=ProductInput(p.id,p.revision,p.name,p.categoryId,p.price,"7","10",null,false,"cost-only",unit=p.unit)
-            CatalogRepository(db).saveProduct(edit);assertEquals(1L,db.catalog().balance(p.id)!!.revision)
-            repo.commit(c);assertEquals("7",repo.snapshot().document.draft!!.counts.single().fixed!!.product.cost);assertEquals("7",db.catalog().product(p.id)!!.cost)
+            reject {CatalogRepository(db).saveProduct(edit)};assertEquals(1L,db.catalog().balance(p.id)!!.revision)
+            repo.commit(c);assertEquals(p.cost,repo.snapshot().document.draft!!.counts.single().fixed!!.product.cost);assertEquals(p.cost,db.catalog().product(p.id)!!.cost)
         } finally {db.close()}
         val other=memory()
         try {

@@ -39,7 +39,7 @@ class CategoryOrderUiTest {
         compose.activityRule.scenario.recreate()
         waitText("+ Добавить категорию")
         assertTrue(model.state.value.categories.indexOfFirst { it.id==id }<model.state.value.categories.indexOfFirst { it.id==first })
-        compose.onNodeWithContentDescription("Закрыть").performClick()
+        compose.onNodeWithText("Закрыть").performClick()
         waitText("Добавить товар")
     }
 }

@@ -27,7 +27,7 @@ class OrderSettingsWindowTest {
         compose.onNodeWithTag("orderLabel").performTextInput("Не сохранено")
         compose.onNodeWithTag("orderType:delivery").performScrollTo().performClick()
         assertEquals("delivery",details.type)
-        compose.onNodeWithTag("orderLabel").assertTextEquals("")
+        compose.onNodeWithTag("orderLabel").assert(SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.EditableText,androidx.compose.ui.text.AnnotatedString("")))
         compose.onNodeWithTag("orderTariff:city").performScrollTo().performClick()
         assertEquals(DeliveryCharge("city","По городу",500,1),details.deliveryTariff)
         compose.onNodeWithTag("orderTotal").performScrollTo().assertTextEquals("5,00 BYN")

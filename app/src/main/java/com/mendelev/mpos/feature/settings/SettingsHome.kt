@@ -68,7 +68,7 @@ internal data class SettingsDirectory(val employees: List<Employee> = emptyList(
             theme.error?.let {MposNotice(it,true)}
             if(entry==null) dictionaries.error?.let {MposNotice(it,true)}
             if(updateAvailable) Text("Доступно обновление — откройте «Обновления»",Modifier.padding(bottom=10.dp),color=MaterialTheme.colorScheme.primary)
-            SettingsMainAction("Товары",{onCatalog?.invoke()},enabled=onCatalog!=null)
+            SettingsMainAction("Товары",{onCatalog?.invoke()},Modifier.testTag("settingsCatalog"),enabled=onCatalog!=null)
             Spacer(Modifier.height(10.dp))
             SettingsMainAction("Резервная копия",{onBackup?.invoke() ?: run {planned="Резервная копия"}},Modifier.testTag("settingsBackup"))
             Spacer(Modifier.height(16.dp))
