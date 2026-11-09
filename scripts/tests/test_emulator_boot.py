@@ -55,6 +55,9 @@ class BootReadinessTests(unittest.TestCase):
                     self.assertEqual('swiftshader',launch[launch.index('-gpu')+1])
                     self.assertEqual('-Vulkan',launch[launch.index('-feature')+1])
                     self.assertIn('-no-snapshot',launch)
+                    values=dict(line.split('=',1) for line in (Path(tmp)/'mpos-ci-avd/mpos-ci-api36.avd/config.ini').read_text().splitlines() if '=' in line)
+                    self.assertGreaterEqual(int(values['hw.cpu.ncore']),1)
+                    self.assertLessEqual(int(values['hw.cpu.ncore']),2)
                     module.wait_ready.assert_called_once()
                     module.assert_ready.assert_called_once()
                     import os

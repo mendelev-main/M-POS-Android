@@ -1,5 +1,9 @@
 # Журнал проверок
 
+## 2026-11-09 — CPU cold boot CI
+
+Run42623072897 attempts1/2: JVM/lint SUCCESS; Android остановлен до установки APK: SystemUI failed to complete startup, CPU pressure в boot log. Попытки не выполняли тесты приложения. Runtime AVD изменён с4 на максимум2guest CPU (не выше host count), оставляя ресурс GLES/host. API36/viewport/3072MB RAM/ANR guard неизменны. Регрессия launcher проверяет CPU bound в записанном config; требуется новый чистый запуск для подтверждения гипотезы.
+
 ## 2026-11-09 — оставшиеся сценарии закупки послеdb41177
 
 Run42621362846: harness/JVM/lint/debug build SUCCESS, Android347/350 passed. Остальные3 дошли до старого прямого purchaseSave: действие теперь внутри меню. Добавлен stable tag purchaseDraftMenu, тесты открывают меню перед сохранением; формирование заказа проверяется без удалённого confirm шага, discard — через действующий BackHandler. Проверки quantity/pack/versions/cancel/independent draft/stock сохранены. Административный клавиатурный тест на API36 прошёл, совместимость реального AnyDesk отдельно pending.

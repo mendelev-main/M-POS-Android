@@ -69,7 +69,11 @@ def start():
     config=home/(AVD+'.avd/config.ini')
     spec=importlib.util.spec_from_file_location('mpos_avd',ROOT/'scripts/ci/configure-emulator.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
     module.configure(config)
-    with config.open('a') as f:f.write('hw.cpu.ncore=4\nhw.ramSize=3072M\nhw.keyboard=yes\n')
+    # A four-vCPU guest competes with its GLES renderer and host during cold boot.
+    # Leave CPU capacity for the host; keep the exact same API and tablet viewport.
+    cores=max(1,min(2,os.cpu_count() or 1))
+    with config.open('a') as f:f.write(f'hw.cpu.ncore={cores}\nhw.ramSize=3072M\nhw.keyboard=yes\n')
+    print(f'CI emulator: {cores} guest CPUs, host logical CPUs={os.cpu_count()}',flush=True)
     REPORTS.mkdir(parents=True,exist_ok=True)
     with (REPORTS/'emulator-process.log').open('w') as log:
         # `software` may select ANGLE/Vulkan (lavapipe) on hosted runners.
