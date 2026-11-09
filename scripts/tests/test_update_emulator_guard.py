@@ -8,6 +8,13 @@ spec.loader.exec_module(module)
 
 
 class EmulatorGuardTests(unittest.TestCase):
+    def test_installed_version_accepts_current_and_legacy_ui_but_not_candidate_or_prefix(self):
+        from unittest.mock import patch
+        import re
+        for label, expected in [("Текущая версия: 0.1.2.1", True), ("Установлена версия 0.1.2.1 · код 1201", True), ("Доступная версия: 0.1.2.1", False), ("Текущая версия: 0.1.2.10", False), ("Текущая версия: 0X1X2X1", False)]:
+            with self.subTest(label=label), patch.object(module, "wait_text", side_effect=lambda pattern: bool(re.search(pattern, label))):
+                self.assertEqual(expected, module.wait_installed_version("0.1.2.1"))
+
     def test_updater_timestamp_uses_persisted_preferences_and_requires_positive_value(self):
         from unittest.mock import patch
         with patch.object(module, "adb", side_effect=["emulator-5554", '<map><long name="lastChecked" value="1234" /></map>']) as adb:

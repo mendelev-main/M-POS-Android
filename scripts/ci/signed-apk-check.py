@@ -86,10 +86,10 @@ def main():
         if d.adb('shell','cat',marker).strip()!='mpos-ci-signed-preserved':raise RuntimeError('Release update lost private data marker')
         if d.adb('shell','stat','-c','%u','/data/user/0/com.mendelev.mpos').strip()!=uid:raise RuntimeError('Release update changed the app UID')
     d.launch(fixture=False)
-    d.wait_text('Установлена версия '+re.escape(candidate['versionName']))
+    d.wait_installed_version(candidate['versionName'])
     # Force a fresh process, so a successful replacement cannot hide a cold-start failure.
     d.adb('shell','am','force-stop',d.PACKAGE);d.launch(fixture=False)
-    d.wait_text('Установлена версия '+re.escape(candidate['versionName']))
+    d.wait_installed_version(candidate['versionName'])
     reports=ROOT/'app/build/reports/signed-install';reports.mkdir(parents=True,exist_ok=True)
     screenshot=subprocess.check_output(['adb','exec-out','screencap','-p'],timeout=20)
     if not screenshot.startswith(b'\x89PNG'):raise RuntimeError('Invalid signed-install screenshot')

@@ -108,6 +108,11 @@ def wait_navigation(route, timeout=75, click=True):
     return wait_text(legacy[route], timeout=timeout, click=click, preferred_resource_id="topNav-"+route)
 
 
+def wait_installed_version(version):
+    # Require the installed version, never an available candidate or a version prefix.
+    return wait_text(r"^(?:Текущая версия: |Установлена версия )" + re.escape(version) + r"(?: · код \d+)?$")
+
+
 def scroll_catalog_to_product(name, expected_stock=None):
     """A new seed can push the preserved row below the fold; absence must still fail."""
     pattern = "^" + re.escape(name) + "$"
@@ -351,7 +356,7 @@ def main():
             if not production:
                 assert "preserved-before-update" in adb("shell", "run-as", PACKAGE, "cat", "files/updater-e2e-sentinel")
             launch(fixture=False)
-            wait_text("Текущая версия: " + re.escape(manifest["versionName"]))
+            wait_installed_version(manifest["versionName"])
             wait_text("Приложение успешно обновлено")
             if production:
                 assert update_checked_at(production) == checked
