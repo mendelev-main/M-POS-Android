@@ -64,6 +64,7 @@ class SaleUiTest {
         assertEquals(200L,model.state.value.quote!!.total)
         assertEquals(300L,model.state.value.payment!!.parts.single().change)
         compose.onNodeWithTag("paymentChange").assertTextEquals("3,00 BYN")
+        shot("sale-preview")
         val command=model.state.value.preview!!.draft.commandId
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview==null && model.state.value.draft!=null}

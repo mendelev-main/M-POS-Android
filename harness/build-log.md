@@ -1,5 +1,9 @@
 # Журнал проверок
 
+## 2026-11-09 — восстановление обязательного screenshot evidence оплаты
+
+Run42629776786: harness/JVM/lint/build,350Android и28UIseed прошли. В update-e2e обязательная коллекция screenshot остановилась на отсутствующем sale-preview.png: снимок был удалён при адаптации SaleUiTest к immediate cash payment. Возвращён shot("sale-preview") после проверки cash change3BYN и до recreate; обязательность артефакта сохранена. Install update ещё не достигнут; real AnyDesk отдельно pending.
+
 ## 2026-11-09 — полный Android suite и seed обновления
 
 Run42626920160: harness/JVM/lint/build и350/350Android passed. В28UIseed перед APK update27passed; ShiftUiTest после recreate искал shiftStatus только в merged tree, runner сообщил наличие узла в unmerged. Тест теперь ждёт закрытия confirm перед recreate и активного текста статуса после него, затем проверяет исходный unmerged узел. Ожидание20s прежнее; проверки открытия140BYN, cash ledger, current/parked документов и обязательный update gate сохранены. Реальная установка обновления ещё не достигнута в этом запуске.
