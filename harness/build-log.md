@@ -1,5 +1,9 @@
 # Журнал проверок
 
+## 2026-11-09 — оставшиеся сценарии закупки послеdb41177
+
+Run42621362846: harness/JVM/lint/debug build SUCCESS, Android347/350 passed. Остальные3 дошли до старого прямого purchaseSave: действие теперь внутри меню. Добавлен stable tag purchaseDraftMenu, тесты открывают меню перед сохранением; формирование заказа проверяется без удалённого confirm шага, discard — через действующий BackHandler. Проверки quantity/pack/versions/cancel/independent draft/stock сохранены. Административный клавиатурный тест на API36 прошёл, совместимость реального AnyDesk отдельно pending.
+
 ## 2026-11-09 — исправление gates после607a100
 
 Run42618296211: harness прошёл; lint остановлен SuspiciousIndentation в UpdatesScreen и StateFlowValueCalledInComposition в NetworkSettingsScreen. API36:12 UI failures из350; отчёты показывают старые шаги (modal admin close/reentry, removed gallery, moved analytics, layout menu, modifier label, keypad вместо editable quantity, cash immediate commit, enabled open-shift action).

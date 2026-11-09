@@ -45,10 +45,10 @@ class PurchaseOrderUiTest {
         compose.onNode(hasAnyAncestor(hasTestTag("purchaseContent:$id")) and hasClickAction()).performClick()
         compose.onNode(hasAnyAncestor(isPopup()) and hasText("мл")).performClick()
         compose.onNodeWithTag("purchaseExpected:$id").assertTextEquals("На склад поступит: 12 л")
+        compose.onNodeWithTag("purchaseDraftMenu").performClick()
         compose.onNodeWithTag("purchaseSave").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty && model.state.value.snapshot?.draft!=null}
         compose.onNodeWithTag("purchasePlace").performClick()
-        compose.onNodeWithTag("purchasePlaceConfirm").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.lastPlacedId!=null && model.state.value.snapshot!!.orders.any {it.id==model.state.value.lastPlacedId}}
         val orderId=model.state.value.lastPlacedId!!
         compose.onNodeWithTag("purchaseOrderStatus").assertTextContains("Ожидается приёмка",substring=true)

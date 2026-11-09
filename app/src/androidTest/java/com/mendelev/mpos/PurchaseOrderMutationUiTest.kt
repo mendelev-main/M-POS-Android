@@ -45,14 +45,14 @@ class PurchaseOrderMutationUiTest {
         compose.onNode(hasAnyAncestor(hasTestTag("purchaseContent:$id")) and hasClickAction()).performClick()
         compose.onNode(hasAnyAncestor(isPopup()) and hasText("мл")).performClick()
         compose.onNodeWithTag("purchaseExpected:$id").assertTextEquals("На склад поступит: 12 л")
+        compose.onNodeWithTag("purchaseDraftMenu").performClick()
         compose.onNodeWithTag("purchaseSave").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty && model.state.value.snapshot?.draft!=null}
         compose.onNodeWithTag("purchasePlace").performClick()
-        compose.onNodeWithTag("purchasePlaceConfirm").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.lastPlacedId!=null && model.state.value.snapshot!!.orders.any {it.id==model.state.value.lastPlacedId}}
         val orderId=model.state.value.lastPlacedId!!
         compose.onNodeWithContentDescription("Закрыть").performClick()
-        compose.onNodeWithTag("purchaseNew").performClick()
+        compose.onNodeWithTag("purchaseHistory").performClick()
         compose.onNode(hasAnyAncestor(hasTestTag("purchaseSupplier")) and hasClickAction()).performClick()
         compose.onNode(hasAnyAncestor(isPopup()) and hasText(name)).performClick()
         PurchaseKeypadTestSupport.enter(compose,"purchaseQty:$id","5");hideKeyboard()
@@ -83,9 +83,10 @@ class PurchaseOrderMutationUiTest {
         compose.onNodeWithContentDescription("Закрыть").performClick()
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("purchaseOrder:$orderId").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithTag("purchaseOrder:$orderId").assertTextContains("Отменён",substring=true)
+        compose.onNode(hasText("Отменён") and hasAnyAncestor(hasTestTag("purchaseOrder:$orderId")),useUnmergedTree=true).assertExists()
         compose.onNodeWithTag("purchaseHistory").performClick()
         compose.onNode(hasText("5") and hasAnyAncestor(hasTestTag("purchaseQty:$id")),useUnmergedTree=true).assertExists()
+        compose.onNodeWithTag("purchaseDraftMenu").performClick()
         compose.onNodeWithTag("purchaseSave").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty && model.state.value.snapshot?.draft!=null}
         val after=runBlocking {db.catalog().product(id)!! to db.catalog().balance(id)!!}

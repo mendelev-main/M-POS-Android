@@ -101,7 +101,7 @@ import com.mendelev.mpos.domain.warehouse.*
                     Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                         PurchaseAction("Сформировать заказ",model::saveAndPlace,Modifier.weight(1f).testTag("purchasePlace"),editable && form.lines.isNotEmpty())
                         Box {
-                            PurchaseAction("⋯",{draftMenu=true},Modifier.width(54.dp),editable,ActionStyle.Outline)
+                            PurchaseAction("⋯",{draftMenu=true},Modifier.width(54.dp).testTag("purchaseDraftMenu"),editable,ActionStyle.Outline)
                             DropdownMenu(draftMenu,{draftMenu=false}) {
                                 DropdownMenuItem(text={Text("Сохранить черновик")},onClick={draftMenu=false;model.save()},modifier=Modifier.testTag("purchaseSave"))
                                 DropdownMenuItem(text={Text("Обновить ссылки")},onClick={draftMenu=false;model.revalidate()},modifier=Modifier.testTag("purchaseRevalidate"))

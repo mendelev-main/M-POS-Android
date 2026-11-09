@@ -45,14 +45,16 @@ class PurchaseUiTest {
         compose.onNode(hasAnyAncestor(hasTestTag("purchaseContent:$id")) and hasClickAction()).performClick()
         compose.onNode(hasAnyAncestor(isPopup()) and hasText("мл")).performClick()
         compose.onNodeWithTag("purchaseExpected:$id").assertTextEquals("На склад поступит: 12 л")
+        compose.onNodeWithTag("purchaseDraftMenu").performClick()
         compose.onNodeWithTag("purchaseSave").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty && model.state.value.snapshot?.draft!=null}
         PurchaseKeypadTestSupport.enter(compose,"purchaseQty:$id","25");hideKeyboard()
-        compose.onNodeWithTag("purchaseReload").performClick()
+        compose.runOnIdle {compose.activity.onBackPressedDispatcher.onBackPressed()}
         compose.onNodeWithText("Продолжить редактирование").performClick()
         compose.onNode(hasText("25") and hasAnyAncestor(hasTestTag("purchaseQty:$id")),useUnmergedTree=true).assertExists()
-        compose.onNodeWithTag("purchaseReload").performClick();compose.onNodeWithText("Закрыть без сохранения").performClick()
+        compose.runOnIdle {compose.activity.onBackPressedDispatcher.onBackPressed()};compose.onNodeWithText("Закрыть без сохранения").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty}
+        compose.onNodeWithTag("topNav-purchaseOrders").performClick()
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("purchaseQty:$id").fetchSemanticsNodes().isNotEmpty()}
         compose.onNode(hasText("24") and hasAnyAncestor(hasTestTag("purchaseQty:$id")),useUnmergedTree=true).assertExists()
@@ -62,8 +64,10 @@ class PurchaseUiTest {
         check(automation.rootInActiveWindow?.packageName?.toString()==BuildConfig.APPLICATION_ID)
         val bitmap=checkNotNull(automation.takeScreenshot());val file=File(compose.activity.filesDir,"qa/purchase-draft.png");file.parentFile!!.mkdirs()
         file.outputStream().use {bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};bitmap.recycle()
-        compose.onNodeWithText("Сформировать заказ").performClick();compose.onNodeWithText("Сформировать заказ?").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Закрыть").performClick()
+        PurchaseKeypadTestSupport.enter(compose,"purchaseQty:$id","25")
+        compose.runOnIdle {compose.activity.onBackPressedDispatcher.onBackPressed()}
+        compose.onNodeWithText("Закрыть без сохранения?").assertIsDisplayed()
+        compose.onNodeWithText("Продолжить редактирование").performClick()
         assertEquals(before,runBlocking {db.catalog().product(id)!! to db.catalog().balance(id)!!})
     }
 }
