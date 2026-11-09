@@ -31,7 +31,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-private fun receiptDate(value: Long)=DateTimeFormatter.ofPattern("dd.MM, HH:mm").withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(value))
+internal fun receiptDate(value: Long)=DateTimeFormatter.ofPattern("dd.MM, HH:mm").withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(value))
 internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snapshot.payment.parts.map {it.method}.distinct()) {
     listOf("cash")->"Наличные"
     listOf("card")->"Карта"
@@ -142,7 +142,7 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
         }
     }
 }
-@Composable private fun ReceiptMoneyRow(label: String,amount: Long,tag: String?=null,accent: Boolean=false,small: Boolean=false) {
+@Composable internal fun ReceiptMoneyRow(label: String,amount: Long,tag: String?=null,accent: Boolean=false,small: Boolean=false) {
     Row(Modifier.fillMaxWidth().padding(vertical=5.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
         Text(label,Modifier.weight(1f).then(if(tag!=null) Modifier.testTag(tag) else Modifier),fontSize=if(small || accent) 12.sp else 13.5.sp,lineHeight=18.5.sp,color=if(accent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
         Text(ShiftRules.money(amount),fontSize=if(small || accent) 12.sp else 13.5.sp,lineHeight=18.5.sp,color=if(accent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)

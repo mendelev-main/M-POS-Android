@@ -56,7 +56,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         if(changed) advanceOrders(state)
     }
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun observe(): Flow<WorkspaceSnapshot> = combine(dao.products(),dao.categories(),work.observeRevisions()) { _,_,_ -> Unit }.mapLatest { snapshot() }
+    fun observe(): Flow<WorkspaceSnapshot> = combine(dao.products(),dao.categories(),work.observeRevisions().distinctUntilChanged()) { _,_,_ -> Unit }.mapLatest { snapshot() }
     suspend fun snapshot(): WorkspaceSnapshot = db.withTransaction {
         val entities=dao.allProducts().sortedWith(compareBy<ProductEntity> { it.name }.thenBy { it.id })
         val groups=dao.allModifierGroups().groupBy {it.ownerId};val options=dao.allModifierOptions().groupBy {it.ownerId to it.groupId}
@@ -65,7 +65,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         val localMetadata=work.documentsByPrefix(ProductDetailsCodec.PREFIX).associate {it.id.removePrefix(ProductDetailsCodec.PREFIX) to ProductDetailsCodec.decode(it.payload,it.id.removePrefix(ProductDetailsCodec.PREFIX))}
         val sourceMetadata=if(metadataRows.isNotEmpty()) metadataRows.associate {it.id.removePrefix(com.mendelev.mpos.domain.backup.WebProductMetadataDocuments.PREFIX) to com.mendelev.mpos.domain.backup.WebProductMetadataDocuments.read(it.payload,it.id.removePrefix(com.mendelev.mpos.domain.backup.WebProductMetadataDocuments.PREFIX))}
             else if(entities.isNotEmpty() && work.document(com.mendelev.mpos.domain.backup.WebSourceDocuments.KEY)!=null) {
-                com.mendelev.mpos.domain.backup.WebSourceDocuments.decode(work.documents().associate {it.id to it.payload})?.let {source->com.mendelev.mpos.domain.backup.WebCatalogMapping.map(source).products.associate {it.id to it.metadata}}.orEmpty()
+                com.mendelev.mpos.domain.backup.WebSourceDocuments.decode(work.documentsByPrefix(com.mendelev.mpos.domain.backup.WebSourceDocuments.KEY).associate {it.id to it.payload})?.let {source->com.mendelev.mpos.domain.backup.WebCatalogMapping.map(source).products.associate {it.id to it.metadata}}.orEmpty()
             } else emptyMap()
         val products=entities.map { p -> WorkspaceProduct(p.id,p.name,p.categoryId ?: "",p.price,p.revision,p.unit,
             groups[p.id].orEmpty().map { g -> ModifierGroupInput(g.id,g.name,g.minimum.toString(),g.maximum.toString(),
@@ -126,6 +126,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         val expected=when(action) { is CartAction.SetQuantity -> action.expectedRevision;is CartAction.Clear -> action.expectedRevision;is CartAction.SetDetails -> action.expectedRevision;is CartAction.SetOptions -> action.expectedRevision;else -> null }
         requireCurrent(state,expected,expectedSessionId)
         val candidate=CartEngine.apply(state.cart,action,state.products,state.graph,state.balances,OrderReservations.total(state.parked.map {it.cart}))
+        if(candidate.lines.isEmpty() && state.cart.lines.isNotEmpty()) OnlineOrderRepository(db).requireLocalRemovalAllowed(state.cart.sessionId)
         val next=if(action is CartAction.Clear || state.cart.lines.isNotEmpty() && candidate.lines.isEmpty()) emptyCart()
             else candidate.copy(createdAt=if(state.cart.lines.isEmpty() && candidate.lines.isNotEmpty()) System.currentTimeMillis() else candidate.createdAt)
         write("current",WorkspaceCodec.cart(next),state.cartRevision,commandId,fp)
@@ -152,6 +153,26 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         put(WorkspaceDocument("current",state.cartRevision+1,WorkspaceCodec.cart(emptyCart())))
         advanceOrders(state);record("park",order.id,commandId,fp)
     }
+    suspend fun transfer(id: String,targetRevision: Long,currentRevision: Long,owner: String,commandId: String) = db.withTransaction {
+        val fp=CatalogRules.fingerprint("workspace.transfer.v1",id,targetRevision,currentRevision,owner)
+        if(repeat(commandId,fp)) return@withTransaction
+        SplitPaymentRepository(db).requireNone()
+        val state=snapshot();requireCurrent(state,currentRevision,owner)
+        val target=state.parked.singleOrNull {it.id==id && it.revision==targetRevision} ?: throw CatalogFailure("conflict","Выбранный чек изменился")
+        if(state.cart.lines.isEmpty()) throw CatalogFailure("empty","В текущем заказе нет товаров")
+        OnlineOrderRepository(db).requireLocalRemovalAllowed(state.cart.sessionId)
+        OnlineOrderRepository(db).requireLocalRemovalAllowed(target.cart.sessionId)
+        val comment=listOf(target.cart.details.comment,state.cart.details.comment).filter {it.isNotBlank()}.distinct().joinToString("\n")
+        val defaults=work.document(WebOrderDefaults.KEY)?.let {WebOrderDefaults.read(it.payload,target.cart.sessionId)}
+        val targetLines=target.cart.lines.map {line->line.copy(discount=line.discount ?: defaults?.discounts?.get(line.id)?.takeUnless {line.discountEdited})}
+        val lines=targetLines+state.cart.lines.map {line->line.copy(discount=line.discount ?: state.sourceDiscounts[line.id])}
+        val combined=target.cart.copy(lines=lines.map {it.copy(id=UUID.randomUUID().toString())},details=OrderRules.details(target.cart.details.copy(comment=comment,deliveryTariff=target.cart.details.deliveryTariff ?: defaults?.delivery?.takeUnless {target.cart.details.deliveryEdited})))
+        val next=CartRevalidator.refresh(combined,state.products,state.graph)
+        val other=state.parked.filterNot {it.id==id}.map {it.cart}
+        if(RecipeCalculator(state.graph).shortages(CartEngine.requests(next),state.balances,OrderReservations.total(other)).isNotEmpty()) throw CatalogFailure("stock","Недостаточно остатка для объединённого чека")
+        put(WorkspaceDocument("current",state.cartRevision+1,WorkspaceCodec.cart(next)))
+        work.delete("parked:$id");advanceOrders(state);record("transfer",id,commandId,fp)
+    }
     suspend fun resume(id: String, parkedRevision: Long, currentRevision: Long, expectedSessionId: String,
         commandId: String, parkCurrentLabel: String? = null, replaceEmptyDetails: Boolean = false) = db.withTransaction {
         val fp=CatalogRules.fingerprint("workspace.resume",id,parkedRevision,currentRevision,expectedSessionId,parkCurrentLabel,replaceEmptyDetails)
@@ -171,6 +192,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         advanceOrders(state);record("resume",id,commandId,fp)
     }
     suspend fun deleteParked(id: String, expectedRevision: Long, commandId: String) = db.withTransaction {
+        OnlineOrderRepository(db).requireLocalRemovalAllowed(id)
         val fp=CatalogRules.fingerprint("workspace.deleteParked",id,expectedRevision)
         if(repeat(commandId,fp)) return@withTransaction
         val state=snapshot()

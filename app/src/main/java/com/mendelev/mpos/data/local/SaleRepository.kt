@@ -77,6 +77,7 @@ class SaleRepository(private val db: CatalogDatabase,private val clock: Clock=Cl
         val shiftState=shiftRepo.snapshot()
         if(d.actorId!=shift.actorId) throw CatalogFailure("owner","Недопустимый оператор продажи")
         val work=WorkspaceRepository(db).snapshot();val cart=work.cart
+        OnlineOrderRepository(db).requirePayable(cart.sessionId)
         if(cart.sessionId!=d.sessionId || work.cartRevision!=d.cartRevision || cart.lines.isEmpty()) conflict()
         if(cart.lines.any {CartEngine.stale(it,work.products)}) conflict()
         if(d.discounts.keys.any {id->cart.lines.none {it.id==id}}) conflict()
@@ -100,6 +101,7 @@ class SaleRepository(private val db: CatalogDatabase,private val clock: Clock=Cl
         val id=UUID.randomUUID().toString()
         db.sales().insert(ReceiptEntity(id,d.commandId,cart.sessionId,shift.id,number,now,quote.total,payment.cash,payment.card,payment.deliveryCashOut,
             ReceiptCodec.encode(cart,d,quote,payment,consumption,metadata)));wrote()
+        if(OnlineOrderRepository(db).markPaid(cart.sessionId)) wrote()
         productIds.forEach {db.sales().reference(ReceiptProductEntity(id,it));wrote()}
         consumption.toSortedMap().forEach {(productId,qty)->
             val balance=db.catalog().balance(productId) ?: throw CatalogFailure("stock","Не найден остаток ингредиента")

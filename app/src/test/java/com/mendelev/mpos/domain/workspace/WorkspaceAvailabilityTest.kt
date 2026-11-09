@@ -57,9 +57,15 @@ class WorkspaceAvailabilityTest {
         val cart=CartEngine.apply(CurrentCart(sessionId="a"),CartAction.Add("p",1,emptySet(),null,"line"),ps,graph,stock)
         val index=WorkspaceAvailability(ps,graph,cart,stock,listOf(cart.copy(sessionId="b")))
         assertEquals("2",index.physicalStockLabel("p"))
+        assertEquals("0",index.availableStockLabel("p"))
+        assertEquals("1",WorkspaceAvailability(ps,graph,cart,stock,emptyList()).availableStockLabel("p"))
+        assertEquals("2",WorkspaceAvailability(ps,graph,CurrentCart(),stock,emptyList()).availableStockLabel("p"))
         assertEquals(0,index.evaluatedProducts)
         assertEquals(ProductAvailability.SHORTAGE,index.status("p"))
         assertEquals("2",index.physicalStockLabel("p"))
+        assertEquals("0",index.availableStockLabel("p"))
+        assertEquals("1",WorkspaceAvailability(ps,graph,cart,stock,emptyList()).availableStockLabel("p"))
+        assertEquals("2",WorkspaceAvailability(ps,graph,CurrentCart(),stock,emptyList()).availableStockLabel("p"))
         assertEquals("—",index.physicalStockLabel("missing"))
     }
 }

@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -27,14 +28,23 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
 
 @Composable internal fun WorkspaceCartPanel(s: WorkspaceSnapshot,pending: Int,modifier: Modifier,onQuantity: (String)->Unit,
     onStep: (String,Int)->Unit,onRemove: (String)->Unit,onClear: ()->Unit,onDetails: ()->Unit,onPark: ()->Unit,
-    onRevalidate: ()->Unit,onCheckout: ()->Unit,onSoon: (String)->Unit,shiftOpen: Boolean,onOptions: (CartAction.SetOptions,String,()->Unit)->Unit={_,_,_->},error: String?=null,discounts: List<com.mendelev.mpos.domain.settings.SettingEntry> = emptyList()) {
+    onRevalidate: ()->Unit,onCheckout: ()->Unit,onSoon: (String)->Unit,shiftOpen: Boolean,onTransfer: ()->Unit={},onOptions: (CartAction.SetOptions,String,()->Unit)->Unit={_,_,_->},error: String?=null,discounts: List<com.mendelev.mpos.domain.settings.SettingEntry> = emptyList(),onlineHeader: @Composable ()->Unit={}) {
     var selectedRevision by rememberSaveable {mutableStateOf(0L)}
     var selectedOwner by rememberSaveable {mutableStateOf("")}
+    var previousQuantities by remember(s.cart.sessionId) {mutableStateOf(s.cart.lines.associate {it.id to it.quantity.toBigDecimal()})}
+    var highlightTokens by remember(s.cart.sessionId) {mutableStateOf(emptyMap<String,Long>())}
+    LaunchedEffect(s.cartRevision,s.cart.sessionId) {
+        val next=s.cart.lines.associate {it.id to it.quantity.toBigDecimal()}
+        val changed=next.filter {(id,quantity)->quantity>(previousQuantities[id] ?: BigDecimal.ZERO)}.keys
+        highlightTokens=highlightTokens.filterKeys {it in next}+changed.associateWith {s.cartRevision}
+        previousQuantities=next
+    }
     var more by remember {mutableStateOf(false)}
     var selected by rememberSaveable {mutableStateOf<String?>(null)}
     LaunchedEffect(s.cart.sessionId) {if(selectedOwner!=s.cart.sessionId) selected=null}
     Surface(modifier.testTag("workspaceCartPanel"),shape=RoundedCornerShape(22.dp),color=MaterialTheme.colorScheme.surface) {
         Column {
+            onlineHeader()
             Row(Modifier.fillMaxWidth().padding(start=20.dp,end=20.dp,top=18.dp,bottom=10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 val count=s.cart.lines.fold(BigDecimal.ZERO) {n,l->n+l.quantity.toBigDecimal()}
                 val muted=MaterialTheme.colorScheme.onSurfaceVariant
@@ -45,14 +55,10 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
                 PosIconButton("customer","Выбрать клиента",{onSoon("Клиент заказа")},enabled=pending==0,modifier=Modifier.testTag("workspaceCustomer"),retainingAppearance=pending>0)
                 Box {
                     PosIconButton("more","Действия с чеком",{more=true},enabled=pending==0,modifier=Modifier.testTag("workspaceMore"),retainingAppearance=pending>0)
-                    DropdownMenu(more,{more=false},modifier=Modifier.width(240.dp)) {
-                        DropdownMenuItem(text={Text("Очистить чек")},leadingIcon={PosIcon("trash",MaterialTheme.colorScheme.onSurface)},
-                            onClick={more=false;onClear()},enabled=pending==0 && (s.cart.lines.isNotEmpty() || s.cart.details!=OrderDetails()),modifier=Modifier.testTag("workspaceClear"))
-                        DropdownMenuItem(text={Text("Печатать счёт")},leadingIcon={PosIcon("bill",MaterialTheme.colorScheme.onSurface)},
-                            onClick={more=false;onSoon("Печать счёта")},enabled=pending==0 && s.cart.lines.isNotEmpty(),modifier=Modifier.testTag("workspacePrintBill"))
-                        DropdownMenuItem(text={Text("Печатать заказ")},leadingIcon={PosIcon("printer",MaterialTheme.colorScheme.onSurface)},
-                            onClick={more=false;onSoon("Печать заказа")},enabled=pending==0 && s.cart.lines.isNotEmpty(),modifier=Modifier.testTag("workspacePrintKitchen"))
-                    }
+                    CartActionsMenu(more,{more=false},pending==0 && s.cart.lines.isNotEmpty(),
+                        pending==0 && (s.cart.lines.isNotEmpty() || s.cart.details!=OrderDetails()),
+                        {more=false;onTransfer()},{more=false;onClear()},
+                        {more=false;onSoon("Печать счёта")},{more=false;onSoon("Печать заказа")})
                 }
             }
             Box(Modifier.padding(start=12.dp,end=12.dp,bottom=2.dp)) {
@@ -62,8 +68,14 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
             if(s.cart.details.comment.isNotBlank()) Text(s.cart.details.comment,Modifier.padding(horizontal=18.dp,vertical=6.dp),style=MaterialTheme.typography.bodySmall)
             LazyColumn(Modifier.weight(1f).padding(horizontal=14.dp).testTag("workspaceCart")) {
                 items(s.cart.lines,key={it.id}) {line ->
+                    val flash=remember {androidx.compose.animation.core.Animatable(0f)}
+                    val token=highlightTokens[line.id]
+                    LaunchedEffect(token) {if(token!=null) {flash.snapTo(1f);flash.animateTo(0f,androidx.compose.animation.core.tween(620,easing=androidx.compose.animation.core.CubicBezierEasing(.2f,.8f,.2f,1f)))}}
+                    val tint=if(isMposDarkTheme()) androidx.compose.ui.graphics.Color(0xFF244B32) else androidx.compose.ui.graphics.Color(0xFFCFF3D8)
+                    val rowColor=androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.surface,tint,flash.value)
+
                     CartRowSwipe(pending==0,{onRemove(line.id)}) {
-                    Column(Modifier.fillMaxWidth().testTag("workspaceLine:${line.id}").semantics {customActions=listOf(CustomAccessibilityAction("Удалить позицию") {if(pending==0) {onRemove(line.id);true} else false})}.clickable(enabled=pending==0) {selectedRevision=s.cartRevision;selectedOwner=s.cart.sessionId;selected=line.id}.padding(horizontal=6.dp,vertical=9.dp)) {
+                    Column(Modifier.fillMaxWidth().background(rowColor,RoundedCornerShape(8.dp)).testTag("workspaceLine:${line.id}").semantics {customActions=listOf(CustomAccessibilityAction("Удалить позицию") {if(pending==0) {onRemove(line.id);true} else false})}.clickable(enabled=pending==0) {selectedRevision=s.cartRevision;selectedOwner=s.cart.sessionId;selected=line.id}.padding(horizontal=6.dp,vertical=9.dp)) {
                         Row(horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.Top,modifier=Modifier.padding(bottom=3.dp)) {
                             Text(line.name,Modifier.weight(1f).alignByBaseline(),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.sp,lineHeight=18.9.sp))
                             Text(runCatching {com.mendelev.mpos.domain.shift.ShiftRules.money(com.mendelev.mpos.domain.sale.SaleMoney.quote(listOf(com.mendelev.mpos.domain.sale.SaleLineInput(line.id,line.unitPrice,line.quantity,s.sourceDiscounts[line.id]))).total)}.getOrDefault("—"),modifier=Modifier.alignByBaseline(),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp,fontWeight=FontWeight.ExtraBold))
@@ -96,8 +108,8 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
                 val parkWidth=maxWidth*.34f
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                     PosAction("Отложить",onPark,Modifier.width(parkWidth).testTag("workspacePark"),enabled=pending==0 && s.cart.lines.isNotEmpty(),footer=true,retainingAppearance=pending>0 && s.cart.lines.isNotEmpty())
-                    PosAction(if(s.completedReceiptId!=null) "Чек сохранён" else "Оплатить",onCheckout,Modifier.weight(1f).testTag("workspaceCheckout"),
-                        enabled=pending==0 && (s.completedReceiptId!=null || (s.cart.lines.isNotEmpty() && shiftOpen)),tone=PosTone.Primary,footer=true,retainingAppearance=pending>0 && (s.completedReceiptId!=null || (s.cart.lines.isNotEmpty() && shiftOpen)))
+                    PosAction(if(shiftOpen) "Оплатить" else "Открыть смену",onCheckout,Modifier.weight(1f).testTag("workspaceCheckout"),
+                        enabled=pending==0 && (!shiftOpen || s.cart.lines.isNotEmpty()),tone=PosTone.Primary,footer=true,retainingAppearance=pending>0 && (s.cart.lines.isNotEmpty() && shiftOpen))
                 }
                 }
             }
@@ -111,15 +123,44 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable private fun CartRowSwipe(enabled: Boolean,onDelete: ()->Unit,content: @Composable ()->Unit) {
-    var requested by remember {mutableStateOf(false)}
-    LaunchedEffect(enabled) {if(enabled) requested=false}
-    val state=rememberSwipeToDismissBoxState(confirmValueChange={value->
-        if(value==SwipeToDismissBoxValue.EndToStart && enabled && !requested) {requested=true;onDelete()}
-        false // Keep the row until the durable command succeeds.
-    })
+    val latestDelete by rememberUpdatedState(onDelete)
+    val state=rememberSwipeToDismissBoxState()
+    LaunchedEffect(state.currentValue) {
+        if(state.currentValue==SwipeToDismissBoxValue.EndToStart) {
+            if(enabled) latestDelete()
+            state.reset()
+        }
+    }
     SwipeToDismissBox(state,enableDismissFromStartToEnd=false,enableDismissFromEndToStart=enabled,backgroundContent={
         if(state.dismissDirection==SwipeToDismissBoxValue.EndToStart) Surface(Modifier.fillMaxSize(),color=MaterialTheme.colorScheme.errorContainer) {
             Box(Modifier.padding(16.dp),contentAlignment=Alignment.CenterEnd) {Text("Удалить",color=MaterialTheme.colorScheme.error)}
         }
     }) {Surface(color=MaterialTheme.colorScheme.surface) {content()}}
+}
+
+@Composable private fun CartActionsMenu(open: Boolean,onDismiss: ()->Unit,enabled: Boolean,clearEnabled: Boolean,
+    onTransfer: ()->Unit,onClear: ()->Unit,onBill: ()->Unit,onKitchen: ()->Unit) {
+    if(!open) return
+    val offset=with(androidx.compose.ui.platform.LocalDensity.current) {52.dp.roundToPx()}
+    androidx.compose.ui.window.Popup(alignment=Alignment.TopEnd,offset=androidx.compose.ui.unit.IntOffset(0,offset),onDismissRequest=onDismiss,
+        properties=androidx.compose.ui.window.PopupProperties(focusable=true)) {
+        Surface(Modifier.width(240.dp).testTag("cartActionsMenu"),shape=RoundedCornerShape(16.dp),
+            color=MaterialTheme.colorScheme.surface,border=BorderStroke(1.dp,MaterialTheme.colorScheme.outline),shadowElevation=12.dp) {
+            Column(Modifier.padding(6.dp)) {
+                @Composable fun item(label: String,icon: String,tag: String,active: Boolean,action: ()->Unit) {
+                    val ink=MaterialTheme.colorScheme.onSurface.copy(alpha=if(active) 1f else .4f)
+                    Row(Modifier.fillMaxWidth().heightIn(min=46.dp).testTag(tag)
+                        .then(Modifier.clip(RoundedCornerShape(10.dp))).clickable(enabled=active,role=androidx.compose.ui.semantics.Role.Button,onClick=action)
+                        .padding(12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                        PosIcon(icon,ink)
+                        Text(label,color=ink,fontSize=14.5.sp,lineHeight=20.3.sp,fontWeight=FontWeight.SemiBold,maxLines=1)
+                    }
+                }
+                item("Объединить чеки","merge","workspaceTransfer",enabled,onTransfer)
+                item("Очистить чек","trash","workspaceClear",clearEnabled,onClear)
+                item("Печатать счёт","bill","workspacePrintBill",enabled,onBill)
+                item("Печатать заказ","printer","workspacePrintKitchen",enabled,onKitchen)
+            }
+        }
+    }
 }

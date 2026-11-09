@@ -55,3 +55,7 @@ Android Studio Rabbit1/2026.2.1 находится в `/Applications/Android Stu
 2026-10-27 локальный D8 обнаружил `MainActivityKt 2.dex` рядом с `MainActivityKt.dex`; также появились дубликаты XML/HTML с суффиксом `2`. Это конфликт производных файлов в каталоге сборки, не две реализации класса в Kotlin. Только локальный `app/build` перенесён в `/private/tmp/mpos-native-build-*/app` и заменён symlink; исходники/SDK/AVD/данные приложения не переносились. Удалены15 дубликатов только внутри генерируемого build. Последующая сборка прошла. Gitignore исключает и обычный каталог, и symlink `app/build`.
 
 `/private/tmp` — временный cache: если macOS его очистит и ссылка `app/build` станет нерабочей, удалить только нерабочую ссылку и повторить сборку (Gradle создаст производный каталог заново). Не удалять исходники, SDK/AVD или базу приложения ради ошибки D8. Эта локальная настройка не переносится на CI; CI использует чистый workspace.
+
+
+### Локальный каталог результатов
+Если в Documents появляются копии generated-файлов с суффиксами `2.kt`/`3.kt`, можно задать в ignored `local.properties` свойство `mpos.buildRoot=/Users/Aleksandr/Library/Caches/M-POS-Android/build`. После Sync результаты app находятся в `<mpos.buildRoot>/app`, в том числе `outputs/apk/debug/app-debug.apk`. Android Studio использует этот путь через Gradle. Скрипты с жёстким `app/build` требуют соответствующего пути; CI без свойства использует прежний каталог.

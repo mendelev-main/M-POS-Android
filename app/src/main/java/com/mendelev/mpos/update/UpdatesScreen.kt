@@ -82,32 +82,12 @@ fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGal
             catch(_: Exception) {com.mendelev.mpos.feature.settings.SettingsDirectory(error="Не удалось загрузить справочники. Откройте раздел сотрудников или поставщиков для повторного чтения.")}
         }
     }
-    com.mendelev.mpos.feature.settings.SettingsHome({updatesOpen=true},onCatalog,onSuppliers,onInventory,onStock,onGallery,onBack,state.candidate!=null,onEmployees,onBackup,directory?.employees.orEmpty(),directory?.suppliers.orEmpty(),directory?.error)
-    if(updatesOpen) com.mendelev.mpos.core.ui.MposDialog(stringResource(R.string.update_title),{updatesOpen=false},closable=!locked,maxWidth=820.dp) {
+    com.mendelev.mpos.feature.settings.SettingsHome({updatesOpen=true;model.openUpdateWindow()},onCatalog,onSuppliers,onInventory,onStock,onGallery,onBack,state.candidate!=null,onEmployees,onBackup,directory?.employees.orEmpty(),directory?.suppliers.orEmpty(),directory?.error)
+    if(updatesOpen) com.mendelev.mpos.core.ui.MposDialog(stringResource(R.string.update_title),{updatesOpen=false},closable=!locked,maxWidth=520.dp) {
         Column(Modifier.heightIn(max=520.dp).verticalScroll(rememberScrollState()).testTag("updatesWindow").semantics {testTagsAsResourceId=true},verticalArrangement=Arrangement.spacedBy(16.dp)) {
-            Text(if(administration.active) "Администрирование активно" else "Режим кассира",style=MaterialTheme.typography.bodySmall)
-                Text(stringResource(R.string.update_installed, model.repository.installedName, model.repository.installedCode))
-                Text(stringResource(R.string.update_channel))
-                if (state.lastChecked > 0) Text(stringResource(R.string.update_last_checked,
-                    DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(state.lastChecked))),
-                    style = MaterialTheme.typography.bodySmall)
-                Text(stringResource(when (state.stage) {
-                    UpdateStage.RESTORING -> R.string.update_restoring
-                    UpdateStage.IDLE -> R.string.update_idle
-                    UpdateStage.CHECKING -> R.string.update_checking
-                    UpdateStage.CURRENT -> R.string.update_current
-                    UpdateStage.AVAILABLE -> R.string.update_available
-                    UpdateStage.DOWNLOADING -> R.string.update_downloading
-                    UpdateStage.READY -> R.string.update_ready
-                    UpdateStage.VERIFYING -> R.string.update_verifying
-                    UpdateStage.INSTALLER -> R.string.update_installer
-                    UpdateStage.ERROR -> R.string.update_error
-                }), style = MaterialTheme.typography.titleMedium)
-                state.candidate?.let { candidate ->
-                    Text(stringResource(R.string.update_candidate, candidate.versionName,
-                        "%.1f".format(candidate.apkBytes / (1024.0 * 1024))))
-                    if (candidate.notes.isNotBlank()) Text(candidate.notes)
-                }
+            Text("Текущая версия: ${model.repository.installedName}")
+            state.candidate?.let {Text("Доступная версия: ${it.versionName}")}
+            if(state.stage==UpdateStage.CURRENT) Text("Установлена последняя версия")
                 if (state.stage == UpdateStage.DOWNLOADING) {
                     LinearProgressIndicator(progress = { state.progress / 100f }, modifier = Modifier.fillMaxWidth())
                     Text(stringResource(R.string.update_percent, state.progress))
@@ -138,12 +118,12 @@ fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGal
                         } else if (state.candidate != null) {
                             MposButton(stringResource(R.string.update_download), model::download)
                         }
-                        MposButton(stringResource(R.string.update_check), model::check, style = ActionStyle.Secondary)
+
                     }
                 }
 
-            Text(stringResource(R.string.update_explanation),style=MaterialTheme.typography.bodySmall)
-            MposButton("К настройкам",{updatesOpen=false},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("updatesBack"))
+
+
         }
     }
 }

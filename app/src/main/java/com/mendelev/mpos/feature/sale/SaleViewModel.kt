@@ -16,7 +16,7 @@ data class DiscountField(val type: String="none",val value: String="",val name: 
 data class PartField(val method: String="cash",val amount: String="",val given: String="")
 data class SaleForm(val mode: String="cash",val given: String="",val parts: List<PartField> = emptyList(),
     val discounts: Map<String,DiscountField> = emptyMap(),val tariff: String="",val fee: String="")
-data class SaleUi(val loading: Boolean=true,val pending: Boolean=false,val fatal: Boolean=false,val message: String?=null,
+data class SaleUi(val loading: Boolean=true,val autoCommitting: Boolean=false,val pending: Boolean=false,val fatal: Boolean=false,val message: String?=null,
     val work: WorkspaceSnapshot?=null,val shift: ShiftSnapshot?=null,val draft: SavedCheckout?=null,val draftRevision: Long=0,
     val receiptTypes: Map<String,String> = emptyMap(),val receiptMethods: Map<String,String> = emptyMap(),val form: SaleForm=SaleForm(),val preview: SavedCheckout?=null,val quote: SaleQuote?=null,val payment: SalePayment?=null,
     val completed: Pair<ReceiptEntity,ReceiptSnapshot>?=null,val history: List<ReceiptEntity> = emptyList(),val selected: Pair<ReceiptEntity,ReceiptSnapshot>?=null,
@@ -148,10 +148,12 @@ class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
         return SaleMoney.quote(cart.lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity,discounts[it.id])},cart.details.type,delivery)
     }
     fun estimate(): SaleQuote?=runCatching {quote(state.value)}.getOrNull()
-    fun prepare() {
+    fun prepare()=prepare(false)
+    fun prepare(autoCommit: Boolean) {
         val ui=state.value;if(ui.loading || ui.pending || ui.fatal || ui.unresolved!=null || ui.completed!=null || ui.split!=null) return
         mutable.update {it.copy(pending=true,message=null)}
         viewModelScope.launch {
+            var preparedSuccessfully=false
             try {
                 val prepared=withContext(Dispatchers.IO) {
                     val w=ui.work!!;val s=ui.shift!!;val active=s.active ?: throw CatalogFailure("shift","Откройте смену перед оплатой")
@@ -168,10 +170,12 @@ class SaleViewModel(private val db: CatalogDatabase): ViewModel() {
                         f.discounts.filterKeys {id->w.cart.lines.any {it.id==id}}.filterValues {it.type!="none"}.mapValues {SaleDiscount(it.value.type,it.value.value,it.value.name)},q.delivery,parts)
                     Triple(checkout.save(ui.draftRevision,d),q,p)
                 }
-                mutable.update {it.copy(draft=prepared.first,draftRevision=prepared.first.revision,preview=prepared.first,quote=prepared.second,payment=prepared.third)}
+                mutable.update {it.copy(draft=prepared.first,draftRevision=prepared.first.revision,preview=prepared.first,autoCommitting=autoCommit,quote=prepared.second,payment=prepared.third)}
+                preparedSuccessfully=true
             } catch(e:CancellationException) {throw e}
             catch(e:Exception) {error(e,"Не удалось сохранить подготовленную оплату. Повторите проверку")}
             finally {mutable.update {it.copy(pending=false)}}
+            if(autoCommit && preparedSuccessfully) commit()
         }
     }
     private fun error(e: Exception,fallback: String) {mutable.update {it.copy(message=if(e is CatalogFailure || e is IllegalStateException || e is IllegalArgumentException) e.message ?: fallback else fallback)}}

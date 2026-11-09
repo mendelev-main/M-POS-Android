@@ -16,7 +16,7 @@
 | 06 | Клиенты, согласия, лояльность | — | TODO: отложено владельцем2026-10-31, не реализуем |
 | 07 | Backup/import, фото, проверяемые миграции и восстановление | реализованные01–05 | in progress:07.1 WP01–WP06 inspection/preview ci-verified/API36/run41407482232; 07.2 NX01–NX06 native export/inspection ci-verified/API36/run41415093355; 07.3a RA01–RA06 protection/preparation ci-verified/API36/run41421510948; 07.3b AC01–AC06 native activation implemented/validation pending; Web conversion next |
 | 08 | Принтер/ящик, PDF/XLSX, Telegram, настройки устройства | 05, 07 | planned |
-| 09 | Backend/сайт, HTTPS/SSE, online orders/menu/availability, конфигурация | — | TODO: отложено владельцем2026-10-31, не реализуем |
+| 09 | Backend/сайт, HTTPS/SSE, online orders/menu/availability, конфигурация | — | in progress09.11: отдельный backend+БД каждой организации, онлайн-заказы включены; N01.CFG/N02.INBOX/N03.ACCEPT/N03.READY/N04.PUB local implemented; N05/N06 и device/staging pending — docs/BACKEND-09.md |
 
 06 и09 перенесены владельцем в [TODO](docs/PRODUCT-TODO.md), не блокируют07/08. Активная очередь:05c/05d→07→08.
 

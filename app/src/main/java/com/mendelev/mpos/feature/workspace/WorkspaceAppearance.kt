@@ -58,6 +58,7 @@ internal enum class PosTone { Neutral, Info, Zone, Primary, Warning, Demand }
     val data=when(icon) {
         "customer" -> "M4 21v-2a8 8 0 0 1 16 0v2M16 8a4 4 0 1 1-8 0a4 4 0 1 1 8 0"
         "search" -> "M16 10a6 6 0 1 1-12 0a6 6 0 1 1 12 0M15 15l6 6"
+        "merge" -> "M4 5h4l6 7h6M4 19h4l6-7M17 9l3 3-3 3"
         "trash" -> "M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"
         "printer" -> "M7 8V3h10v5M7 17H4V8h16v9h-3M7 14h10v7H7zM17 11h.01"
         "bill" -> "M6 3h12v18l-3-2-3 2-3-2-3 2V3ZM9 7h6M9 11h6M9 15h3"
@@ -75,41 +76,42 @@ internal enum class PosTone { Neutral, Info, Zone, Primary, Warning, Demand }
 }
 
 @Composable internal fun WorkspaceToolbar(title: String,back: Boolean,editing: Boolean,pending: Boolean,parked: Int,
-    onBack: ()->Unit,onEdit: ()->Unit,onParked: ()->Unit,onSoon: (String)->Unit) {
+    onBack: ()->Unit,onEdit: ()->Unit,onParked: ()->Unit,onSoon: (String)->Unit,onLayoutAction: (String)->Unit={},overloaded: Boolean=false) {
+    var menu by remember {mutableStateOf(false)}
+    LaunchedEffect(editing) {if(!editing) menu=false}
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-    Row(Modifier.horizontalScroll(rememberScrollState()).widthIn(min=maxWidth).testTag("workspaceToolbar"),
-        verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-        if(back) PosAction("← Назад",onBack,enabled=!pending,tone=PosTone.Info,modifier=Modifier.testTag("workspaceBack"),retainingAppearance=pending)
-        Surface(shape=RoundedCornerShape(16.dp),color=if(isMposDarkTheme()) Color(0xFF332B45) else Color(0xFFF0E9FF),
-            border=BorderStroke(1.dp,if(isMposDarkTheme()) Color(0xFF51436C) else Color(0xFFD7C8F5)),modifier=Modifier.testTag("workspaceZone")) {
-            Text(title,Modifier.padding(horizontal=16.dp,vertical=11.dp),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp,fontWeight=FontWeight.ExtraBold),
-                color=if(isMposDarkTheme()) Color(0xFFDCCBFF) else Color(0xFF5E4691),maxLines=1)
-        }
+    Row(Modifier.horizontalScroll(rememberScrollState()).widthIn(min=maxWidth).testTag("workspaceToolbar"),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+        val size=Modifier.height(48.dp)
+        if(back) PosAction("Назад",onBack,size.testTag("workspaceBack"),!pending,PosTone.Info,retainingAppearance=pending)
+        PosAction(title,{},size.testTag("workspaceZone"),tone=PosTone.Zone)
         Spacer(Modifier.weight(1f))
-        PosAction("Обычная загрузка",{onSoon("Управление загрузкой сайта")},enabled=!pending && !editing,tone=PosTone.Demand,modifier=Modifier.testTag("workspaceDemand"),retainingAppearance=pending && !editing)
-        PosAction(if(editing) "Готово" else "Раскладка",onEdit,enabled=!pending,tone=PosTone.Info,modifier=Modifier.testTag("workspaceEdit"),retainingAppearance=pending)
-        // Source label and separate badge, one stable action for automation/accessibility.
-        Box(Modifier.testTag("workspaceParked").heightIn(min=44.dp).clip(RoundedCornerShape(16.dp))
-            .background(if(isMposDarkTheme()) Color(0xFF26334A) else Color(0xFFE8F0FF))
-            .border(1.dp,if(isMposDarkTheme()) Color(0xFF3C506F) else Color(0xFFC7D7F2),RoundedCornerShape(16.dp))
-            .clickable(enabled=!pending && !editing,role=Role.Button,onClick=onParked).padding(horizontal=15.dp,vertical=11.dp)) {
-            Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                Text("Отложенные",style=MaterialTheme.typography.labelLarge,color=if(isMposDarkTheme()) Color(0xFFBFD5FF) else Color(0xFF31558F))
-                if(parked>0) Box(Modifier.background(MaterialTheme.colorScheme.primary,RoundedCornerShape(100.dp)).padding(horizontal=8.dp,vertical=1.dp)) {
-                    Text(parked.toString(),color=MaterialTheme.colorScheme.onPrimary,style=MaterialTheme.typography.labelMedium)
+        PosAction(if(overloaded) "Повышенная загрузка" else "Обычная загрузка",{onSoon("Управление загрузкой сайта")},size.testTag("workspaceDemand"),!pending && !editing,PosTone.Demand,retainingAppearance=pending && !editing)
+        PosAction(if(editing) "Готово" else "Раскладка",onEdit,size.testTag("workspaceEdit"),!pending,PosTone.Info,retainingAppearance=pending)
+        if(editing) Box {
+            PosAction("⋯",{menu=true},size.testTag("workspaceLayoutMenu"),!pending,PosTone.Info)
+            DropdownMenu(menu,{menu=false}) {
+                listOf("add" to "Добавить на рабочую зону","folder" to "Создать папку","categories" to "Открыть категорию","reset" to "Сбросить раскладку").forEach {(action,label)->
+                    DropdownMenuItem(text={Text(label)},onClick={menu=false;onLayoutAction(action)},enabled=!pending,modifier=Modifier.testTag("layoutMenu:$action"))
+                }
+            }
+        }
+        Surface(onClick=onParked,enabled=!pending && !editing,modifier=size.testTag("workspaceParked"),shape=RoundedCornerShape(16.dp),color=if(isMposDarkTheme()) Color(0xFF26334A) else Color(0xFFE8F0FF)) {
+            Row(Modifier.padding(horizontal=15.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                Text("Отложенные",style=MaterialTheme.typography.labelLarge)
+                if(parked>0) Surface(shape=RoundedCornerShape(100.dp),color=Color(0xFF34C759),contentColor=Color.White) {
+                    Box(Modifier.defaultMinSize(minWidth=24.dp,minHeight=24.dp).padding(horizontal=5.dp),contentAlignment=Alignment.Center) {Text(parked.toString(),style=MaterialTheme.typography.labelMedium)}
                 }
             }
         }
     }
     }
 }
-
 @Composable internal fun WorkspaceTileFooter(index: com.mendelev.mpos.domain.workspace.WorkspaceAvailability?,product: com.mendelev.mpos.domain.workspace.WorkspaceProduct) {
-    var stock by remember(index,product.id) {mutableStateOf("…")}
-    var availability by remember(index,product.id) {mutableStateOf<com.mendelev.mpos.domain.workspace.ProductAvailability?>(null)}
+    var stock by remember(product.id) {mutableStateOf("…")}
+    var availability by remember(product.id) {mutableStateOf<com.mendelev.mpos.domain.workspace.ProductAvailability?>(null)}
     LaunchedEffect(index,product.id) {
         val projection=kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-            (index?.physicalStockLabel(product.id) ?: "—") to index?.status(product.id)
+            (index?.availableStockLabel(product.id) ?: "—") to index?.status(product.id)
         }
         stock=projection.first;availability=projection.second
     }

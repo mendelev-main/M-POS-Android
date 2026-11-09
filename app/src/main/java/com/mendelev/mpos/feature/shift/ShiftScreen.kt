@@ -18,6 +18,13 @@ import com.mendelev.mpos.domain.shift.ShiftRules
 
 @Composable fun ShiftScreen(model: ShiftViewModel,onCatalog: ()->Unit,onWorkspace: ()->Unit,onSettings: ()->Unit) {
     val ui by model.state.collectAsStateWithLifecycle();val s=ui.snapshot
+    val printerContext=androidx.compose.ui.platform.LocalContext.current
+    val printer=remember {com.mendelev.mpos.print.PrintRuntime.get(printerContext)}
+    val printStatus by printer.status.collectAsStateWithLifecycle()
+    val telegram=remember {com.mendelev.mpos.telegram.TelegramRuntime.get(printerContext)}
+    val telegramStatus by telegram.status.collectAsStateWithLifecycle()
+    var printReport by rememberSaveable {mutableStateOf<String?>(null)}
+    LaunchedEffect(ui.committedCashId) {ui.committedCashId?.let {printer.drawer("cash:$it",automatic=true)}}
     val admin by Administration.session.state.collectAsStateWithLifecycle()
     LaunchedEffect(model) {model.loadCashiers()}
     var dialog by rememberSaveable {mutableStateOf<String?>(null)}
@@ -27,7 +34,7 @@ import com.mendelev.mpos.domain.shift.ShiftRules
     var actor by rememberSaveable {mutableStateOf("")};var token by rememberSaveable {mutableStateOf("")}
     var expected by rememberSaveable {mutableStateOf(0L)};var counted by rememberSaveable {mutableStateOf("")}
     fun open() {if(s!=null) {revision=s.revision;previous=s.last?.id;actor=ui.cashiers.singleOrNull()?.id ?: "";expected=s.carry;dialog="open";model.dismiss()}}
-    fun close() {if(s?.active!=null) {revision=s.revision;previous=s.active!!.id;actor=s.active!!.actorId;token=ShiftRules.token(s);expected=s.currentCash;counted=java.math.BigDecimal.valueOf(expected,2).toPlainString();dialog="close";model.dismiss()}}
+    fun close() {if(s?.active!=null) {revision=s.revision;previous=s.active!!.id;actor=s.active!!.actorId;token=ShiftRules.token(s);expected=s.currentCash;counted=java.math.BigDecimal.valueOf(expected,2).toPlainString();printer.drawer("shift-count:${java.util.UUID.randomUUID()}",automatic=true);dialog="close";model.dismiss()}}
     val navigationEnabled=!ui.pending && dialog==null && report==null && planned==null && ui.cashForm==null && ui.cashUnresolved==null
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
         MposAppBar("M-POS · Смена",navigationEnabled=navigationEnabled) {
@@ -35,6 +42,7 @@ import com.mendelev.mpos.domain.shift.ShiftRules
         }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(start=26.dp,end=26.dp,top=22.dp,bottom=40.dp)) {
             Text("Кассовая смена",Modifier.padding(bottom=18.dp),fontSize=21.sp,lineHeight=28.sp,fontWeight=FontWeight.ExtraBold)
+            telegramStatus?.let {Text("Telegram: $it",Modifier.padding(bottom=12.dp),style=MaterialTheme.typography.bodySmall)}
             if(ui.loading) CircularProgressIndicator()
             else if(ui.fatal || s==null) {
                 MposNotice(ui.message ?: "Смена недоступна",true)
@@ -45,7 +53,7 @@ import com.mendelev.mpos.domain.shift.ShiftRules
                 val data=ui.dashboard
                 if(data!=null) ShiftOverview(data,!ui.pending && ui.cashForm==null && ui.cashUnresolved==null,
                     !ui.staffLoading && ui.staffMessage==null && ui.cashiers.isNotEmpty(),admin.active,::open,::close,
-                    {model.cashOpen("deposit")},{model.cashOpen("withdrawal")},{planned="Кассовый ящик"},{report=it},
+                    {model.cashOpen("deposit")},{model.cashOpen("withdrawal")},{printer.clearStatus();printer.drawer();planned="Кассовый ящик"},{report=it},
                     historyLoading=ui.historyLoading,historyMessage=ui.historyMessage,onMore=model::loadMoreHistory)
                 else if(ui.dashboardMessage==null) Text("Загрузка итогов смены…")
                 if(s.active==null) {
@@ -83,14 +91,15 @@ import com.mendelev.mpos.domain.shift.ShiftRules
         }
         ui.message?.let {MposNotice(it,true)}
         MposWebActions({dialog=null;model.dismiss()},if(dialog=="open") "Открыть" else "Закрыть смену",{
-            if(dialog=="open") model.open(revision,previous,actor) {dialog=null}
-            else model.close(previous!!,revision,token,counted,actor) {dialog=null}
+            if(dialog=="open") model.open(revision,previous,actor) {dialog=null;model.state.value.snapshot?.last?.id?.let {printer.shiftCommitted(it,false);com.mendelev.mpos.telegram.TelegramRuntime.get(printerContext).shiftCommitted(it,false)}}
+            else model.close(previous!!,revision,token,counted,actor) {dialog=null;previous?.let {printer.shiftCommitted(it,true);com.mendelev.mpos.telegram.TelegramRuntime.get(printerContext).shiftCommitted(it,true)}}
         },!ui.pending,saveEnabled=dialog!="open" || ui.cashiers.any {it.id==actor},tag="shiftConfirm")
     }
     val reportRow=ui.dashboard?.summaries?.find {it.shift.id==report && !it.shift.isOpen}
-    if(reportRow!=null) ShiftReportWindow(reportRow,{report=null},{planned="Печать отчёта"})
+    if(reportRow!=null) ShiftReportWindow(reportRow,{report=null},{printReport=reportRow.shift.id})
+    ui.dashboard?.summaries?.find {it.shift.id==printReport}?.let {com.mendelev.mpos.print.PrintWindow(com.mendelev.mpos.print.PrintDocuments.shift(it)) {printReport=null}}
     if(planned!=null) MposWebModal(planned!!,{planned=null}) {
-        Text(if(planned=="Кассовый ящик") "Управление кассовым ящиком пока не подключено. Будет реализовано на этапе оборудования." else "Печать отчёта пока не подключена. Будет реализована на этапе оборудования.")
+        Text(printStatus ?: "Отправка команды ящика…")
         Spacer(Modifier.height(18.dp));MposPosControl("Понятно",{planned=null},Modifier.fillMaxWidth(),kind=PosControl.Cash)
     }
 }

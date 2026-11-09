@@ -116,13 +116,13 @@ private fun displayCash(raw: String)=runCatching {ShiftRules.money(ShiftRules.ca
                     PaymentLabel("К оплате",13f)
                     Text(quote?.total?.let(ShiftRules::money) ?: "—",Modifier.padding(top=4.dp,bottom=18.dp).height(with(LocalDensity.current) {35.2.sp.toDp()}).testTag("paymentTotal"),fontSize=32.sp,lineHeight=35.2.sp,fontWeight=FontWeight.ExtraBold,overflow=TextOverflow.Visible,style=LocalTextStyle.current.copy(platformStyle=PlatformTextStyle(includeFontPadding=false),lineHeightStyle=LineHeightStyle(LineHeightStyle.Alignment.Center,LineHeightStyle.Trim.None)))
                 }
-                MposPosControl("Разделить",onSplit,Modifier.widthIn(min=120.dp).testTag("paymentSplit"),enabled && canPay,PosControl.Outline,height=49.dp,radius=16.dp,fontSize=14.5f)
+                MposPosControl("Разделить",onSplit,Modifier.widthIn(min=120.dp).testTag("paymentSplit"),enabled && canPay,PosControl.Outline,height=49.dp,radius=16.dp,fontSize=14.5f,retainingAppearance=canPay)
             }
             PaymentLabel("Сумма")
             Spacer(Modifier.height(6.dp))
             }
             Surface(onClick=openKeypad,enabled=enabled,modifier=Modifier.fillMaxWidth().heightIn(min=58.dp).testTag("cashGiven"),shape=RoundedCornerShape(14.dp),border=BorderStroke(1.dp,MaterialTheme.colorScheme.outline)) {
-                Box(Modifier.padding(horizontal=14.dp),contentAlignment=Alignment.CenterEnd) {Text(displayCash(given),fontSize=28.sp,letterSpacing=.2.sp,lineHeight=38.5.sp,fontWeight=FontWeight.ExtraBold)}
+                Box(Modifier.padding(horizontal=14.dp),contentAlignment=Alignment.CenterEnd) {Text(displayCash(given),fontSize=28.sp,letterSpacing=.2.sp,lineHeight=38.5.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.onSurface)}
             }
             Spacer(Modifier.height(if(keypad) 26.dp else 24.dp))
             if(keypad) BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -134,7 +134,7 @@ private fun displayCash(raw: String)=runCatching {ShiftRules.money(ShiftRules.ca
                         keys.filter {it!="0span"}.forEach {key->
                             if(key=="empty") Spacer(Modifier.weight(1f))
                             else MposPosControl(if(key=="backspace") "⌫" else key,{onGiven(cashKey(given,key))},(if(row==3 && key==",") Modifier.width(singleKey) else Modifier.weight(1f)).testTag("paymentKey:$key"),enabled,
-                                if(key=="," || key=="backspace") PosControl.Outline else PosControl.Surface,fontSize=if(key=="," || key=="backspace") 14f else 19f)
+                                if(key=="," || key=="backspace") PosControl.Outline else PosControl.Surface,fontSize=if(key=="," || key=="backspace") 14f else 19f,retainingAppearance=true)
                         }
                     }
                 }
@@ -142,21 +142,20 @@ private fun displayCash(raw: String)=runCatching {ShiftRules.money(ShiftRules.ca
             } else cashQuickAmounts(total).chunked(3).forEachIndexed {row,values->
                 if(row>0) Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    values.forEach {amount->MposPosControl(ShiftRules.money(amount),{onGiven(BigDecimal.valueOf(amount,2).toPlainString())},Modifier.weight(1f).testTag("paymentQuick:$amount"),enabled)}
+                    values.forEach {amount->MposPosControl(ShiftRules.money(amount),{onGiven(BigDecimal.valueOf(amount,2).toPlainString())},Modifier.weight(1f).testTag("paymentQuick:$amount"),enabled,retainingAppearance=true)}
                     repeat(3-values.size) {Spacer(Modifier.weight(1f))}
                 }
             }
             Spacer(Modifier.height(14.dp));PaymentLabel("Сдача");Spacer(Modifier.height(6.dp))
             val tender=runCatching {ShiftRules.cash(given.ifBlank {"0"}.trimEnd(',','.'))}.getOrDefault(0)
             Text(ShiftRules.money((tender-total).coerceAtLeast(0)),Modifier.testTag("paymentChange"),fontSize=21.sp,lineHeight=29.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.primary)
-            if(restored) Text("Подготовленная оплата сохранена. Перед проведением проверьте итог заново.",Modifier.padding(top=12.dp).testTag("checkoutRestored"),style=MaterialTheme.typography.bodySmall)
             if(message!=null) {Spacer(Modifier.height(12.dp));MposNotice(message,true)}
             notice()
         }
         Spacer(Modifier.height(14.dp))
         if(resolve!=null) resolve() else Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-            MposPosControl("Оплата картой",{onPay("card")},Modifier.weight(1f).testTag("salePrepareCard"),enabled && canPay,PosControl.Card,52.dp,16.dp,14.5f,"card")
-            MposPosControl("Оплатить",{onPay("cash")},Modifier.weight(1f).testTag("salePrepare"),enabled && canPay,PosControl.Cash,52.dp,16.dp,14.5f,"cash")
+            MposPosControl("Оплата картой",{onPay("card")},Modifier.weight(1f).testTag("salePrepareCard"),enabled && canPay,PosControl.Card,52.dp,16.dp,14.5f,"card",retainingAppearance=canPay)
+            MposPosControl("Оплатить",{onPay("cash")},Modifier.weight(1f).testTag("salePrepare"),enabled && canPay,PosControl.Cash,52.dp,16.dp,14.5f,"cash",retainingAppearance=canPay)
         }
     }
 }

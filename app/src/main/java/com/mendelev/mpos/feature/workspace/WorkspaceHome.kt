@@ -31,10 +31,15 @@ import com.mendelev.mpos.domain.workspace.*
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable internal fun WorkspaceHome(s: WorkspaceSnapshot,ui: WorkspaceUi,editing: Boolean,model: WorkspaceViewModel,photos: ProductPhotoStore,
-    modifier: Modifier,onCategory: (String)->Unit,onProduct: (WorkspaceProduct)->Unit) {
+    modifier: Modifier,onCategory: (String)->Unit,onProduct: (WorkspaceProduct)->Unit,requestedAction: String?=null,onActionConsumed: ()->Unit={}) {
     var dialog by rememberSaveable {mutableStateOf<String?>(null)}
     var type by rememberSaveable {mutableStateOf("")};var id by rememberSaveable {mutableStateOf("")}
     var slot by rememberSaveable {mutableStateOf("")};var revision by rememberSaveable {mutableStateOf(0L)}
+    LaunchedEffect(requestedAction) {
+        if(requestedAction!=null && editing) {
+            revision=s.homeRevision;dialog=requestedAction;model.dismiss();onActionConsumed()
+        }
+    }
     val busy=ui.pending>0
     val state=rememberLazyGridState()
     val tiles=s.home.tiles.associateBy {it.slot}
@@ -84,11 +89,6 @@ import com.mendelev.mpos.domain.workspace.*
                 }
             }
             if(!editing && tiles.isEmpty()) Text("Нет плиток. Добавьте их в режиме раскладки или откройте все категории")
-        }
-        if(editing) FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            PosAction("＋ Изменить содержимое",{revision=s.homeRevision;dialog="add";model.dismiss()},enabled=!busy,tone=PosTone.Primary,modifier=Modifier.testTag("homeAdd"))
-            PosAction("Все категории",{dialog="categories"},enabled=!busy,tone=PosTone.Info)
-            PosAction("Сбросить",{revision=s.homeRevision;dialog="reset";model.dismiss()},enabled=!busy)
         }
     }
 

@@ -1180,3 +1180,145 @@ Run42483121164 job128739152163: bootstrap/boot и connected suite324/324 passed,
 
 ## 2026-11-08 — список скриншотов update E2E
 Run42485504598:325 Android tests passed; update seed дошёл до сбора PNG. Скрипт ожидал settings-planned, которого SettingsVisualUiTest больше не создаёт; актуальный файл settings-template-editor. Список исправлен; ошибка PNG теперь включает имя и диагностический префикс. Python29/preflight/diff-check passed. Полная проверка выполняется новым CI после согласованного push.
+
+
+## Настройки — равные карточки и компактное обновление
+По запросу владельца: равные колонки с независимой высотой, без описаний/текстовых действий и role badge; карандаши48dp только admin. Refresh окрашен красным при candidate, уведомление убрано. Update modal520dp: текущая/доступная версии, прогресс, отмена, установка и необходимые ошибки/разрешения. Kotlin compile passed до финальной правки подписи телефона; diff-check passed. Визуальная приёмка и адресные UI тесты pending. E2E селекторы обновлены под новый текст версии и проверку закрытой admin session через пароль вместо удалённого статуса. Полный CI не запускался; изменения локальные.
+
+
+## Плитки: доступный остаток и стабильная подпись
+Вместо physicalStockLabel footer использует availableStockLabel: из balances вычитается recipe consumption current + parked reservations. Warehouse ledger не меняется. Состояние footer remember связано с productId, а не новым availability index; предыдущая подпись сохраняется во время фонового пересчёта. Регрессия проверяет2→1→0 с current/parked и восстановление2 без резервов. Адресный WorkspaceAvailabilityTest и compile Kotlin passed (BUILD SUCCESSFUL). Визуальная проверка мерцания владельцем pending. Изменения локальные без push.
+
+
+## Настройки / отложить / оплата — дополнительные правки владельца
+Карточки размещены в двух независимых равных колонках без пустоты под короткой карточкой; Components удалён. Аналитика перенесена из topbar в admin panel. Refresh запускает check при открытии окна, кнопки Проверить и К настройкам убраны. Park modal680dp, общие кнопки52dp/radius16, пояснение убрано; checkout всегда Оплатить и доступен для непустой корзины. Web payment.js confirmPaymentScreen: наличные после prepare/валидации автоматически commit; карта — терминал/сумма/Отмена/Оплата прошла. Existing split confirmation сохранён. Добавлен isolated cash ViewModel regression на автопроведение, кассу и защиту повтора. compileDebugKotlin и compileDebugAndroidTestKotlin passed. Тесты не запускались, визуальная/платёжная приёмка pending. Старые навигационные UI сценарии/полный E2E после удаления controls требуют отдельного прогона перед публикацией. Локально, без push.
+
+
+## Итог оплаты — модальное окно Web
+Источник pinned payment.js receiptBodyHtml/showPaymentReceipt/finishPaymentFlow. Вместо отдельного экрана Продажа сохранена — MposWebModal Чек оплачен с подписью/метаданными/строками/скидками/доставкой/платежами/внесено/сдачей/итогом. Использованы общие ReceiptMoneyRow и формат даты истории. Действия Печать/Готово, системное закрытие также вызывает finish/acknowledge. Оба способа и split используют один completed result. Печать пока не интегрирована: явное пояснение вместо имитации отправки. Kotlin compilation passed; SaleUiTest assertion обновлён под новый итог и наличие title/print, не запускался. Визуальная приёмка pending; локально, без push.
+
+
+## Верхняя строка раскладки
+Нижние Изменить содержимое/Все категории/Сбросить удалены. Только при editing показано dropdown меню ⋯ рядом с Готово: add, folder, categories, reset; действия используют прежние home/layout команды и подтверждение reset. Создание папки перенесено из отдельной кнопки; без открытой категории используется Без категории. Панель128×48dp едина для Назад/названия/нагрузки/раскладки/меню/отложенных, Назад без стрелки. WorkspaceUiTest переход создания папки обновлён, не запускался. Kotlin compilation passed; diff-check passed; визуальная приёмка pending. Локально без commit/push.
+
+
+## Корзина — подсветка / swipe / объединение чеков
+Товарные плитки home/category/folder подсвечены зелёным по наличию productId в current cart; категории не окрашиваются. Swipe использует завершённое EndToStart и актуальный callback через rememberUpdatedState, без отклоняющего confirmValueChange; удаление через прежний durable Remove, ошибки остаются сообщением корзины.
+
+Актуальный Web parked-orders.js: openMoveCurrentOrderModal/confirmMoveCurrentOrderChoice/moveCurrentOrderIntoParked. В меню добавлено Объединить чеки, выбор target и подтверждение. Repository.transfer проверяет обе revision/session, блокирует split, переносит все линии с новыми ID, оставляет target details/delivery, объединяет комментарии, материализует импортированные скидки и target delivery defaults, refresh recipes и shortages. Запись current/delete parked/registry/audit/result в одной Room transaction; ledger не меняется. Добавлена in-memory регрессия на afterWrite rollback, successful replay и stale source. Kotlin main+androidTest compile passed; тест не запускался, визуальная проверка swipe/цвета/модальных окон pending. Локально без push.
+
+
+## Уточнение размеров toolbar
+По исправлению владельца: одинаковой остаётся только высота48dp, ширина по тексту и общим отступам PosAction. Spacer отделяет левую зону/Назад от правой группы Загрузка/Раскладка/⋯/Отложенные. При нехватке ширины сохраняется горизонтальная прокрутка. Diff-check passed; визуальная проверка владельцем pending; локально без push.
+
+
+## Проверка ошибки Android Studio isMposDarkTheme
+Владелец сообщил unresolved reference WorkspaceAppearance.kt:3. Функция присутствует в core/ui/MposThemePreference.kt. Обычный assembleDebug passed47s. После clean промежуточная остановка validateSigningDebug из-за sandbox write к ~/.android; доступ предоставлен к существующему debug key. Полная пересборка Kotlin/Java/dex/package assembleDebug passed1m19s. Ошибка symbol не воспроизведена; вероятны устаревшие incremental outputs, точная причина Studio не доказана. Исходная функция/импорт не менялись.
+
+
+## Уточнение подсветки заказа и badge отложенных
+Владелец уточнил: подсветка в current cart, не на product tiles. Постоянный green inOrder убран из home/category/folder и shared tile. Footer доступности сохранён. По pinned Web cart-composition addConfiguredCartItem и CSS cartItemHighlight(.62s) добавлена временная заливка строки CFF3D8/light,244B32/dark с затуханием620ms; повтор при qty increase, без вспышки при initial load/session change. Отложенные снова имеют отдельный зелёный badge34C759 вместо скобок, высота панели48dp сохранена. compileDebugKotlin passed; diff-check passed. Визуальная приёмка pending; локально без push.
+
+
+## Долгая Studio compileDebugKotlin — дубли generated Room
+Прочитан журнал Kotlin daemon19:22: Room *_Impl.kt присутствовали вместе с *_Impl 2.kt и *_Impl 3.kt в app/build/generated/ksp/debug/kotlin; compiler reported redeclaration/val reassignment. Источник появления копий не доказан. Старый generated/ksp удалён, исходники не тронуты. Добавлен optional mpos.buildRoot из ignored local.properties; локально /Users/Aleksandr/Library/Caches/M-POS-Android/build, модули app/root. Без свойства CI сохраняет app/build. Новый assembleDebug:40 tasks executed, BUILD SUCCESSFUL52s,6 Room generated files без копий. APK теперь Library/Caches/M-POS-Android/build/app/outputs/apk/debug/app-debug.apk. Для Studio Sync project необходим; не запускать два билдера одновременно. Локально, без push.
+
+
+## Стабильная оплата и Web выбор модификаторов
+Источники мерцания по коду: completed заменял PaymentPage отдельной веткой и включал другой appbar; cash auto prepare выставлял видимый preview перед commit; card preview/result создавались разными Dialog call sites. PaymentPage сохранён позади результата, шапка не переключается при loading/completed. cash autoCommitting скрывает промежуточный confirmation; card/result используют один MposDialog с обновляемым содержимым. Кнопки cash/card сохраняют вид текста при pending, блокировка действий остаётся.
+Модификаторы по pinned cart-composition.js openModifierSelection/toggleModifierChoice и CSS modifier-choice-grid:2/3 колонки, option name/price delta, selected background/border, max1 replacement/deselect и ограничение maxN, общий итог/Отмена/Добавить. Min/max/стоимость/остаток валидируются прежней командой add. Manual price input сохранён.
+assembleDebug BUILD SUCCESSFUL46s в Library/Caches; diff-check passed. Визуальные переходы на эмуляторе/планшете ещё требуют приёмки владельца; отсутствие мерцания не объявляется доказанным одной сборкой. Локально без push.
+
+
+## Цифры оплаты — цвет pending и подсказка draft
+Убрана смена ink alpha клавиатуры/быстрых сумм при enabled=false во время prepare/commit: retainingAppearance=true сохраняет цвет при сохранении блокировки. Внесённая сумма имеет явный onSurface color. Удалено сообщение Подготовленная оплата сохранена из PaymentBox и параметров оплаты, чтобы изменение наличия draft не увеличивало высоту содержимого. assembleDebug passed46s; diff-check passed. Визуальная проверка владельцем pending, без push.
+
+
+## Модификаторы — компактная ошибка и отступы
+В config modal MposNotice заменён небольшой строкой13sp/18sp возле footer с tag modifierSelectionError; общая подсказка выбора удалена. Итог получил top12/bottom4dp, перед кнопками20dp; кнопки в full-width Row с gap12dp. Обязательность группы и durable add неизменны. compileDebugKotlin passed38s, diff-check passed. Визуальная приёмка pending; локально без push.
+
+
+## Меню ⋯ текущего заказа — оформление Web
+Сверены актуальные Web cart-presentation.js и CSS cart-more-menu в pos.html через GitHub read API. Native DropdownMenu заменён компактным anchored Popup: отступ от кнопки8dp (44+8), surface/radius16/border1/shadow12, padding6; строки min46/padding12/radius10/gap10/font14.5sp semibold, disabled alpha.4. Добавлена merge SVG иконка из Web; сохранены четыре действия/порядок/callbacks и tags. Вне меню/Back закрывает popup. compileDebugKotlin passed40s; diff-check passed. Визуальная приёмка pending; без push.
+
+## 2026-11-08 — Заказы: интерфейс Web
+Локально: кнопки История/Новый заказ, строки и статусы, адаптивная форма, цифровая клавиатура, формирование с сохранением, системное Поделиться. Чеклист: docs/PURCHASE-UI-CHECKLIST.md. Добавлен instrumented-тест актуального ввода и повторного нажатия. Компиляция Kotlin и Android-тестов проверяется отдельно от исполнения тестов; визуальная приёмка владельцем ещё не проведена. Push не выполнялся.
+Проверка: compileDebugKotlin compileDebugAndroidTestKotlin — BUILD SUCCESSFUL; git diff --check — без ошибок. Новый instrumented-тест скомпилирован, на устройстве не запускался.
+
+## 2026-11-08 — Настройки: добавление и поставщики
+Заголовки блоков используют графический плюс вместо карандаша; крестики удаления и shared close получили рамки. Поставщики создаются/редактируются в модальном окне поверх настроек: название, поиск, сортировка по-русски, галочки простых товаров, сохранение/отмена/удаление. Repository и guards не изменялись. Источник: pinned suppliers.js и CSS supplier-product-list. SupplierUiTest адаптирован к прямому открытию формы без страницы supplierNew и проверяет сохранение настроек под модальным окном. Device/визуальное подтверждение pending; push не выполнялся.
+Проверки: compileDebugKotlin compileDebugAndroidTestKotlin — BUILD SUCCESSFUL (1m5s); git diff --check — без ошибок. Начальные попытки ограничивались sandbox socket/temp permissions; после предоставления доступа компиляция прошла. Instrumented-тест не исполнялся.
+
+## 2026-11-08 — Полноэкранная панель администратора
+Настройки: кнопки Товары/Резервная копия используют radius22 как блоки; shared add зелёный, close/delete красные (включая стандартную кнопку закрытия). Панель — отдельное полноэкранное содержимое настроек с верхней навигацией, системным Back/Назад без выхода из сессии, адаптивной сеткой из шести карточек и большой кнопкой закрытия сессии. Источник визуала: pinned android-admin.js, карточки min116/padding20/icon46/gap16/grid2→1 при760; добавлена Аналитика. Лояльность/сеть/реквизиты остаются обозначенными TODO; бизнес-реализация не расширялась. SettingsVisualUiTest проверяет полноэкранную панель, Аналитику, кнопку logout и возврат в настройки. Исполнение на устройстве и визуальное подтверждение pending; push не выполнялся.
+Проверки: compileDebugKotlin compileDebugAndroidTestKotlin — BUILD SUCCESSFUL; git diff --check — без ошибок. Instrumented-тест обновлён и скомпилирован, не запускался.
+
+## 2026-11-08 — Сотрудники и строки настроек
+Сотрудники создаются/редактируются в модальном окне поверх настроек по pinned employees.js: ФИО, телефон, переключатель администратора, сохранение/отмена; guards открытой смены и удаления сохранены. Все строки справочников настроек открывают редактирование по нажатию при активном admin; отдельные карандаши убраны. Плюс добавляет, красный крестик удаляет. Жёсткие разделители заменены единым вариантом settings row: radius12, отступ сверху8, горизонталь14/вертикаль12, мягкий onSurface фон3.5% для обеих тем. Supplier/employee modal targets сохраняются при recreation. SettingsVisualUiTest дополнен открытием employee modal без employeeList и отменой. Device-проверка pending; без push.
+Проверки: compileDebugKotlin compileDebugAndroidTestKotlin — BUILD SUCCESSFUL; git diff --check — без ошибок. UI-тест скомпилирован, на устройстве не исполнялся.
+
+## 2026-11-08 — Интерфейс сетевых конфигураций
+Использован mpos-phase. Добавлен полноэкранный native NetworkSettingsScreen из admin card, четыре блока как renderNetworkScreen pinned pos.html; отдельные модальные макеты backend/Telegram/notifications, список принтеров и базовый редактор. Область задачи — UI, этап09 и фактические08-интеграции остаются TODO. Никаких сетевых команд/печати/сохранения токенов: неподключённые действия disabled и подписаны. Детали/ограничения: docs/NETWORK-UI.md. SettingsVisualUiTest расширен навигацией и запретом сохранения макета. Визуальная/device-приёмка pending. Push не выполнялся.
+Проверки: после исправления Compose scope maxWidth — compileDebugKotlin compileDebugAndroidTestKotlin BUILD SUCCESSFUL (57s); git diff --check без ошибок. Instrumented-тест скомпилирован, не исполнялся.
+
+## 2026-11-08 — Локальная конфигурация принтеров
+Использованы mpos-phase/mpos-domain. Удалён блок уведомлений; плюс/крестик словарей настроек выровнены по правой оси. Вместо полной страницы — модальный редактор принтера, список в карточке, edit/delete. Device-local AtomicFile, revision и admin generation guards, отказ чтения не подменяется пустым списком. Поля Web-конфигурации и IPv4/HEX/copies validation; печать/подключение/backup transport остаются TODO. Подробности: docs/NETWORK-UI.md. Добавлены JVM validation, instrumented persistence/reopen/stale/auth/corruption, UI invalid-IP/cancel. Без push и device-приёмки.
+Проверки: compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.PrinterConfigurationTest — BUILD SUCCESSFUL (1m10s); 2 JVM теста, 0 ошибок/пропусков. git diff --check — чисто. Persistence/UI instrumented-тесты скомпилированы, не запускались.
+
+## 2026-11-09 — LAN печать и Web-сценарии
+mpos-phase/mpos-domain. Реализован print package: typed historical documents, Web geometry renderer/raster58/80 + CP866 option, TCP9100 transport5s/15s, sequential per IP, AtomicFile claims and kitchen quantity journal. Настройки: categories checkboxes, единственный drawer printer, connection/test/preview; test сохраняет config до отправки. SaleScreen auto после saved receipt, history/manual print; workspace bill/kitchen, park/switch delta; shift report/auto close, manual/open/count/cash/refund drawer. Детали/ограничения PRINTING-08.md;06/09/Telegram и printer backup TODO. На физические адреса запросы/печать агентом не выполнялись, схемы Room/финансовые commit не менялись. D01–D03 implemented subset, D05/device pending. Без push.
+Проверки09.11: compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.PrintingTest --tests com.mendelev.mpos.PrinterConfigurationTest — BUILD SUCCESSFUL57s, 11JVM/0fail/0skip. Harness preflight passed; git diff --check чисто. Instrumented rendering/persistence/UI скомпилированы, на устройстве не запускались. После этого узкая правка: кухня текущего заказа не требует выбранного денежного тарифа доставки (у кухни нет сумм); повторяется только compileDebugKotlin. Физическая печать/реальные TCP подключения не выполнялись.
+Финальная compileDebugKotlin после правки кухни — BUILD SUCCESSFUL33s.
+
+## 2026-11-09 — Telegram: смены и отчёты
+mpos-phase/mpos-domain. Владелец уточнил: сейчас только смены/отчёты, backend/онлайн/owner commands позже; будущие настройки через URL и ключ без фиксированной организации. Добавлены Web-модальное окно/валидация/show-hide, encrypted AES-GCM AndroidKeystore AtomicFile, admin generation/revision. Прямые HTTPS sendMessage/sendPhoto/sendDocument, тема/HTML, safe errors/no redirects/no connection retry, post-commit shift open/close, Web PNG шаблон с exact money, monthly PDF previous calendar month с native warehouse history/current-cost warnings. Durable sending/sent/unknown/HTTP429 retryAfter; manual report recovery в настройках. Startup/login/hourly monthly checks требуют admin, не являются background service. Config/device keys в backup не включены; backend-запросов и getUpdates нет.
+
+Проверки: compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.TelegramTest --tests com.mendelev.mpos.TelegramHttpTest — BUILD SUCCESSFUL1m1s. 10JVM/0fail/0skip; HTTP только loopback MockWebServer. Добавлены instrumented Keystore/persistence/corruption, PNG/PDF/journal и UI empty-token-refusal; скомпилированы, на планшете не запускались. Реальных Telegram-сообщений/запросов к backend не было. См. docs/TELEGRAM-08.md. Без push.
+Завершение локальной проверки: harness preflight passed, git diff --check без ошибок.
+
+## 2026-11-09 — Автоматическая коммерческая аналитика владельцу
+Реализован docs/OWNER-ANALYTICS-TELEGRAM.md (mpos-phase/mpos-domain). Новые ownerShiftStats/ownerMonthlyStats bool defaultfalse, encrypted codec v1 compatibility, UI switches/validation/private destination. Native reader и pure rules: точные sales/refunds/net/profit, количества раздельно по единицам, исторические категории/имена, почасовые продажи, previous shift/month comparisons, bounded read queries и cutoff каждой закрытой смены. Canvas PNG1080 в стиле пользовательского PDF, все товары/категории на продолжениях, предпросмотры без токена/сети, manual resend. Ошибка рабочей группы не подавляет владельца; page/kind/month/closing/recipient keys не дублируют отправки. В последний день месяца две разные смены создают два отчёта.
+
+Первый и повторный адресные прогоны: compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.OwnerAnalyticsTest --tests com.mendelev.mpos.TelegramTest --tests com.mendelev.mpos.TelegramHttpTest — BUILD SUCCESSFUL; 17 JVM/0fail/0skip. Instrumented OwnerAnalyticsIntegrationTest (два месячных среза200/600, immutable names/categories, no DB writes, actual Canvas colors/sizes/pages) и UI переключатели скомпилированы, на устройстве не запускались. После узкой правки доступности preview без токена повторяется только Kotlin/Android-test compile. Реальные сообщения в Telegram не отправлялись; визуальная/device приёмка pending. Без commit/push.
+Финальная compileDebugKotlin compileDebugAndroidTestKotlin после правки preview — BUILD SUCCESSFUL36s. Harness preflight passed; git diff --check чисто. Изображения в реальном приложении не принимались и реальные сообщения не отправлялись.
+
+## 2026-11-09 — Страницы аналитики одной отправкой
+По запросу владельца per-page delivery заменён whole-report job:1PNG — фото,2–10PNG — sendMediaGroup с одной подписью и attach:// refs, >10 — один PDF. Лимит подтверждён официальным Telegram Bot API. PDF использует общий векторный Canvas layout без накопления растров всех страниц. Старые page markers блокируют неявный дубль при переходе на bundle:v2; manual resend явный. Новые unit/fake HTTP проверки one request/order/caption/1–10–11/pages/unknown whole-bundle suppression; Android PDF fixture добавлен. Без реальных отправок и push. Проверки в процессе.
+Итог: compileDebugKotlin compileDebugAndroidTestKotlin и адресный testDebugUnitTest (TelegramHttpTest/OwnerAnalyticsTest/TelegramTest) — BUILD SUCCESSFUL1m1s, 20JVM/0fail/0skip. Harness preflight passed, git diff --check чисто. Android render/PDF test скомпилирован, на устройстве не запускался; реальных Telegram отправок не было.
+
+## 2026-11-09 — Минималистичная аналитика и подпись смены
+По правкам владельца: подпись «Смена: дата / №», открыта/закрыта/сотрудник, без коммерческого заголовка/счётчика страниц; для месяца отдельная строка месяца. Метаданные из закрытой смены, локальная сохранённая zone, тот же numbering алгоритм истории. Изображение: только4KPI (выручка/прибыль/чеки/денежные возвраты), категории/позиции в процентах и BYN. Убраны часы/сравнения/количества/инсайты/расширенная сводка; предыдущие периоды больше не загружаются. Доли до0,1%, сумма100%; refund-only позиции скрыты из продаж. Альбом/PDF/claims сохранены. Caption и fractional-share regressions добавлены; metadata numbering assertions добавлены в Android read-only test. Документация обновлена. Локально, без push/реальных Telegram отправок.
+Итог: compileDebugKotlin compileDebugAndroidTestKotlin и адресные OwnerAnalyticsTest/TelegramHttpTest/TelegramTest — BUILD SUCCESSFUL57s; 22JVM/0fail/0skip. Harness preflight passed; git diff --check чисто. Android render/read-only tests compiled only; визуальная/device приёмка pending.
+
+## 2026-11-09 — Закрытая смена и модуль принтеров
+По прямой правке владельца удалён баннер закрытой смены из рабочей зоны. Нижняя кнопка: закрытая смена → Открыть смену/onShift (в том числе пустой заказ), открытая → Оплатить/onCheckout; pending блокирует действие. Принтеры: общий зелёный + в заголовке, общие строки настроек с редактированием, без команды ящика/подзаголовка/нижней кнопки подключения. Drawer в смене не менялся. Добавлен сценарий переключения кнопки и блокировки при записи в WorkspaceAppearanceTest; SettingsVisualUiTest проверяет доступность плюса и отсутствие удалённых элементов. Локально, без push и аппаратных команд.
+Проверка: compileDebugKotlin compileDebugAndroidTestKotlin — BUILD SUCCESSFUL. UI-регрессии скомпилированы, на эмуляторе не запускались; визуальная приёмка pending. git diff --check без ошибок.
+
+## 2026-11-09 — Подпись владельцу и спокойный PDF
+Номер смены без даты, эмодзи, фамилия с инициалами; прежние инициалы сохраняются, лишние пробелы нормализуются, HTML escaping выполняется после сокращения. Добавлены регрессии ФИО/инициалов/одного имени/пустого имени и обновлён caption assertion. Аналитика PNG/PDF без чередования фонов/полос долей; складской PDF без зебры/тяжёлых рамок/чёрных заголовков. Реальные Telegram отправки не выполнялись.
+Проверки: первая попытка KSP остановилась ExceptionInInitializerError при ограниченном доступе к temp; после выдачи доступа повтор compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.OwnerAnalyticsTest — BUILD SUCCESSFUL (1m15s), 10 тестов / 0 ошибок. Android-тесты только скомпилированы. PDF/изображения на устройстве не просматривались, Telegram не отправлялся. git diff --check чисто.
+
+## 2026-11-09 — Номер смены и инициалы в рабочей группе
+Открытие и закрытие: заголовок Смена №N открыта/закрыта; строка сотрудника использует то же сокращение/HTML escaping, что отчёт владельцу. Номер открытия из общей sequence/ShiftDashboardRules, закрытия из summary.number через TelegramReports.id. Подпись PNG закрытия делегирует TelegramMessages.closed, ручной повтор также получает новый формат. Регрессии открытие/закрытие/escaping в TelegramTest, проверка подписи вложения в TelegramPersistenceTest. Проверки compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.TelegramTest --tests com.mendelev.mpos.OwnerAnalyticsTest — BUILD SUCCESSFUL1m8s, 18 тестов/0 ошибок. Instrumented test compiled only; реальная отправка не выполнялась. git diff --check чисто. Изменения локально, без push.
+
+## 2026-11-09 — Пример картинки рабочей группы
+Добавлена изолированная preview fixture TelegramPersistenceTest.exportGroupShiftReceiptPreview: демонстрационный отчёт №87, без чтения/изменения кассовой базы и без Telegram transport. assembleDebugAndroidTest BUILD SUCCESSFUL32s; адресный instrumentation на emulator-5554 OK(1test). PNG сформирован штатным MPosShiftReceiptImage и экспортирован в outputs/group-shift-receipt-preview.png. Данные/суммы демонстрационные.
+
+## 2026-11-09 — 09 backend и онлайн-заказы (локально, main, база 8d59528)
+Владелец возобновил09: отдельные deployment+БД, онлайн-заказы сейчас, лояльность позже. Подтверждены сохранение цены сайта и исключение обязательных модификаторов. После пояснения расхождения API выбран вариант2: backend не менять, ETA только локально, ready через существующий PATCH status. Изучены pinned Web1682c883 и backend b8b6ba589b052da202dbc07e25b18ec302518cf6 через GitHub connector; production backend не вызывался.
+
+Реализация: editable encrypted configuration (URL/name/key/routes/timeout), отдельные save/read-only diagnostics; preview/manual publication меню+фото+тарифов+availability; durable tariff publicationId и optimistic version; bounded SSE/header auth/foreground cancellation/reconnect/sleep; encrypted deduplicated inbox с общим cross-instance lock; modal events поверх workspace; atomic parked+accept intent; quote-price preservation/codec/revalidation; ready/cancel queue и блокировка неподтверждённой оплаты; paid marker атомарно с receipt, settlement партиями100; heartbeat/demand, backoff pending операций; target+dataset binding и явный rebind после restore. ProductDetails v3 активирует описание/online-флаги, legacy readers/fingerprints сохранены; второй неработающий набор backend-полей убран из Telegram. Завершённые online docs не загружаются в рабочую зону; per-session lookups и prefix ranges используют индекс, ACK не вызывает лишнего cart refresh. Документация/паритет/план обновлены: docs/BACKEND-09.md и harness/context/09-site.md.
+
+Проверки:
+- assembleDebug assembleDebugAndroidTest + testDebugUnitTest с BackendTest, OrderEventsTest, OnlinePriceTest, RevalidationTest, CatalogPresentationTest, ProductStockRulesTest — BUILD SUCCESSFUL1m18s, 28JVM/0fail/0error.
+- После последних UI-key/backoff правок: assembleDebug assembleDebugAndroidTest — BUILD SUCCESSFUL36s.
+- Harness preflight passed; git diff --check чисто.
+- Новые/расширенные instrumented tests скомпилированы: BackendSettingsStoreTest, BackendPublicationTest, OnlineOrderRepositoryTest, OrderInboxTest, ProductDetailsStoreTest, SettingsVisualUiTest. Они НЕ запускались: ADB без устройств; headless попытка старта M_POS_API36 завершилась exit132 до появления устройства. Это не доказательство прохождения Room/Keystore/instrumented/визуальной приёмки.
+- Реальные заказы/публикации/Telegram/печать/серверный деплой не выполнялись; код backend не менялся. APK и отчёты — в local buildRoot /Users/Aleksandr/Library/Caches/M-POS-Android/build/app. Push/commit не выполнялись.
+
+Осталось: device/staging N05/N06, migration walkthrough и отказы после restart/restore на Android16; category-online editor, перенос сетевого контекста уже принятых Web-заказов и merge online receipts — TODO. Один активный принимающий POS на backend; ограничения текущего API зафиксированы, не заявлять полную live parity.
+
+## 2026-11-09 — Утверждение отправки накопленного пакета
+Владелец прямо поручил отправить изменения в main. origin/main проверена fetch: совпадает с базой8d59528, конфликтов нет. В пакет входят накопленные локальные UI/печать/Telegram/owner analytics/backend+online orders, тесты и документация. Последние Android debug+instrumented APK собраны; 28 адресных JVM прошли. Android device/staging остаются pending (эмулятор не запустился, exit132). Preflight и diff-check прошли; Python tooling suite прошёл перед отправкой. Публикация APK будет выполнена только штатным GitHub pipeline после всех gates; локальная готовность не заменяет их.
+
+Перед push найдена и исправлена регрессия updater: нажатие иконки сбрасывало READY/первую квитанцию после установки. openUpdateWindow сохраняет эти состояния, обычное открытие запускает проверку. CI e2e теперь ждёт реальную кнопку установки вместо удалённых stage-подписей и сверяет lastChecked из durable SharedPreferences (для release только root disposable CI emulator). Защита от tampering/Cancel/версия PackageManager/admin-password/данные сохранена. Проверки: compileDebugKotlin + UpdateWindowPolicyTest — BUILD SUCCESSFUL50s, 2JVM/0fail; Python tooling31/0fail, включая prefs proof и root/device guard. Реальный emulator e2e остаётся за CI.

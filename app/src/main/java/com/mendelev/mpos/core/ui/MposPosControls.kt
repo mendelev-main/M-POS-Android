@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 /** Explicit pinned Web POS variants; do not change generic editor/dialog controls. */
 enum class PosControl { Surface, Outline, Cash, Card, Delete, Close, Secondary }
 @Composable fun MposPosControl(label: String,onClick: ()->Unit,modifier: Modifier=Modifier,enabled: Boolean=true,
-    kind: PosControl=PosControl.Surface,height: Dp=46.dp,radius: Dp=12.dp,fontSize: Float=14f,icon: String?=null,horizontalPadding: Dp=14.dp) {
+    kind: PosControl=PosControl.Surface,height: Dp=46.dp,radius: Dp=12.dp,fontSize: Float=14f,icon: String?=null,horizontalPadding: Dp=14.dp,retainingAppearance: Boolean=false) {
     val c=MaterialTheme.colorScheme
     val background=when(kind) {
         PosControl.Cash->c.primary
@@ -38,8 +38,8 @@ enum class PosControl { Surface, Outline, Cash, Card, Delete, Close, Secondary }
     val ink=when(kind) {PosControl.Cash->c.onPrimary;PosControl.Card->Color.White;PosControl.Delete->c.error;PosControl.Close->c.onSurfaceVariant;else->c.onSurface}
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
     Surface(onClick=onClick,enabled=enabled,modifier=modifier.heightIn(min=height),shape=RoundedCornerShape(radius),
-        color=background,contentColor=ink.copy(alpha=if(enabled) 1f else .45f),
-        border=if(kind in listOf(PosControl.Cash,PosControl.Card,PosControl.Close,PosControl.Secondary)) null else BorderStroke(1.dp,if(kind==PosControl.Delete) c.error else c.outline)) {
+        color=background,contentColor=ink.copy(alpha=if(enabled || retainingAppearance) 1f else .45f),
+        border=if(kind in listOf(PosControl.Cash,PosControl.Card,PosControl.Secondary)) null else BorderStroke(1.dp,if(kind==PosControl.Delete) c.error else c.outline)) {
         Row(Modifier.padding(horizontal=if(label.isEmpty()) 0.dp else horizontalPadding),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.Center) {
             if(icon!=null) {MposPosIcon(icon,Modifier.size(if(kind==PosControl.Close) 22.dp else if(kind==PosControl.Delete) 18.dp else 20.dp));if(label.isNotEmpty()) Spacer(Modifier.width(8.dp))}
             if(label.isNotEmpty()) Text(label,fontSize=fontSize.sp,fontWeight=if(kind==PosControl.Cash || kind==PosControl.Card || kind==PosControl.Secondary || label=="Разделить") FontWeight.Bold else FontWeight.ExtraBold)
@@ -50,8 +50,17 @@ enum class PosControl { Surface, Outline, Cash, Card, Delete, Close, Secondary }
 
 /** Paths are copied from pinned pos.html / parked-orders.js, in a 24×24 viewport. */
 @Composable fun MposPosIcon(name: String,modifier: Modifier=Modifier) {
-    val ink=LocalContentColor.current
+    val ink=when(name) {"close","delete"->MaterialTheme.colorScheme.error;"add"->MaterialTheme.colorScheme.primary;else->LocalContentColor.current}
     val path=when(name) {
+        "loyalty"->"M20 8V20H4V8M2 8H22M12 8V20M12 8H7A3 3 0 1 1 10 5L12 8ZM12 8H17A3 3 0 1 0 14 5L12 8Z"
+        "network"->"M8 2H16V8H8ZM2 16H10V22H2ZM14 16H22V22H14ZM12 8V12M6 16V12H18V16"
+        "company"->"M4 22V4L12 2V22M12 8H20V22M2 22H22M7 7H9M7 11H9M7 15H9M16 12H17M16 16H17"
+        "inventory"->"M5 4H19V22H5ZM9 2H15V6H9ZM8 12L10 14L15 9M8 18H16"
+        "warehouse"->"M3 9L12 3L21 9V21H3ZM7 21V12H17V21M7 16H17M7 19H17"
+        "analytics"->"M3 3V21H22M7 17V12M12 17V8M17 17V5"
+        "next"->"M9 6L15 12L9 18"
+        "add"->"M12 5V19M5 12H19"
+        "edit"->"M16 3L21 8L8 21H3V16L16 3ZM13 6L18 11"
         "close"->"M6 6L18 18M18 6L6 18"
         "admin"->"M12 3L20 6V12C20 17 15 20 12 22C9 20 4 17 4 12V6L12 3ZM8 12L11 15L16 9"
         "sun"->"M16 12A4 4 0 1 1 8 12A4 4 0 1 1 16 12M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"

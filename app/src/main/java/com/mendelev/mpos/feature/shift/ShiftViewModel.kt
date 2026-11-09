@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.*
 import java.util.UUID
 
 data class CashForm(val type: String,val shiftId: String,val revision: Long,val actor: String,val available: Long,val amount: String="",val note: String="")
-data class ShiftUi(val loading: Boolean=true,val pending: Boolean=false,val fatal: Boolean=false,val snapshot: ShiftSnapshot?=null,val message: String?=null,val cashForm: CashForm?=null,val cashUnresolved: ShiftCashCommand?=null,val cashHistory: List<ShiftCashMovement> = emptyList(),val cashiers: List<com.mendelev.mpos.domain.staff.Employee> = emptyList(),val staffLoading: Boolean=true,val staffMessage: String?=null,val dashboard: ShiftDashboard?=null,val dashboardMessage: String?=null,val historyLoading: Boolean=false,val historyMessage: String?=null)
+data class ShiftUi(val loading: Boolean=true,val pending: Boolean=false,val fatal: Boolean=false,val snapshot: ShiftSnapshot?=null,val message: String?=null,val cashForm: CashForm?=null,val cashUnresolved: ShiftCashCommand?=null,val cashHistory: List<ShiftCashMovement> = emptyList(),val cashiers: List<com.mendelev.mpos.domain.staff.Employee> = emptyList(),val staffLoading: Boolean=true,val staffMessage: String?=null,val dashboard: ShiftDashboard?=null,val dashboardMessage: String?=null,val historyLoading: Boolean=false,val historyMessage: String?=null,val committedCashId: String?=null)
 class ShiftViewModel(private val repo: ShiftRepository,private val cash: ShiftCashAccess=repo.cashAccess()): ViewModel() {
     private val mutable=MutableStateFlow(ShiftUi());val state=mutable.asStateFlow()
     private var watcher: Job?=null
@@ -113,7 +113,7 @@ class ShiftViewModel(private val repo: ShiftRepository,private val cash: ShiftCa
         }
     }
     private suspend fun cashSaved() {
-        mutable.update {it.copy(cashForm=null,cashUnresolved=null,message="Операция с наличными сохранена")}
+        mutable.update {it.copy(cashForm=null,committedCashId=it.cashUnresolved?.commandId,cashUnresolved=null,message="Операция с наличными сохранена")}
         try {val s=withContext(Dispatchers.IO) {repo.snapshot()};val h=withContext(Dispatchers.IO) {s.last?.id?.let {cash.history(it)}.orEmpty()};publish(s,h);mutable.update {it.copy(fatal=false)};if(watcher?.isActive!=true) watch()}
         catch(e:CancellationException) {throw e}
         catch(_:Exception) {mutable.update {it.copy(fatal=true,message="Операция сохранена. Повторите чтение смены")}}

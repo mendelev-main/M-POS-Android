@@ -1,5 +1,6 @@
 package com.mendelev.mpos.core.ui
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import com.mendelev.mpos.core.ui.isMposDarkTheme
@@ -76,8 +77,8 @@ enum class ActionStyle { Primary, Secondary, Outline, Danger }
 
 @Composable fun MposCloseButton(onClose: () -> Unit, enabled: Boolean = true) {
     IconButton(onClick=onClose, enabled=enabled, modifier=Modifier.size(48.dp).semantics { contentDescription = "Закрыть" }) {
-        Box(Modifier.size(44.dp).background(MaterialTheme.colorScheme.background, RoundedCornerShape(12.dp)), contentAlignment=Alignment.Center) {
-            val color = MaterialTheme.colorScheme.onSurfaceVariant
+        Box(Modifier.size(44.dp).background(MaterialTheme.colorScheme.background, RoundedCornerShape(12.dp)).border(1.dp,MaterialTheme.colorScheme.outline,RoundedCornerShape(12.dp)), contentAlignment=Alignment.Center) {
+            val color = MaterialTheme.colorScheme.error
             Canvas(Modifier.size(22.dp)) {
                 drawLine(color, Offset(4.dp.toPx(),4.dp.toPx()), Offset(size.width-4.dp.toPx(),size.height-4.dp.toPx()), 2.dp.toPx(), StrokeCap.Round)
                 drawLine(color, Offset(size.width-4.dp.toPx(),4.dp.toPx()), Offset(4.dp.toPx(),size.height-4.dp.toPx()), 2.dp.toPx(), StrokeCap.Round)

@@ -52,6 +52,7 @@ class SplitPaymentRepository(private val db: CatalogDatabase,private val afterWr
         val p=load() ?: return
         val doc=db.workspace().document("current") ?: conflict()
         val cart=WorkspaceCodec.cart(doc.payload)
+        OnlineOrderRepository(db).requirePayable(cart.sessionId)
         if(cart.sessionId!=p.checkout.draft.sessionId || doc.revision!=p.checkout.draft.cartRevision) conflict()
         if(cart.lines.any {it.productId==id || id in it.references} || cart.graph.any {it.id==id})
             throw CatalogFailure("split","Товар участвует в частично оплачиваемом заказе. Сначала завершите оплату")
@@ -87,6 +88,7 @@ class SplitPaymentRepository(private val db: CatalogDatabase,private val afterWr
         val now=System.currentTimeMillis()
         if(now<shift.active!!.openedAt) throw CatalogFailure("clock","Время подтверждения раньше открытия смены")
         val work=WorkspaceRepository(db).snapshot();val cart=work.cart
+        OnlineOrderRepository(db).requirePayable(cart.sessionId)
         if(cart.sessionId!=d.sessionId || work.cartRevision!=d.cartRevision || cart.lines.any {CartEngine.stale(it,work.products)}) conflict()
         if(d.discounts.keys.any {id->cart.lines.none {it.id==id}}) conflict()
         val quote=SaleMoney.quote(cart.lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity,d.discounts[it.id])},cart.details.type,d.delivery)

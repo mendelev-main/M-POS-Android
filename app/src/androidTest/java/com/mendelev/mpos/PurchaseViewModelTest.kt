@@ -36,6 +36,20 @@ class PurchaseViewModelTest {
         @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=PurchaseViewModel(fake) as T
     })[PurchaseViewModel::class.java]
     private fun edit(vm: PurchaseViewModel) {vm.supplier("s");vm.line("p") {it.copy(quantity="24",packSize="500",contentUnit="ml")}}
+    @Test fun formAndPlaceSavesLatestInputAndIgnoresRepeatedTap(): Unit=runBlocking {
+        val store=ViewModelStore();val f=Fake()
+        try {
+            val vm=withContext(Dispatchers.Main) {model(store,f)};ready(vm)
+            f.barrier=CompletableDeferred()
+            withContext(Dispatchers.Main) {edit(vm);vm.saveAndPlace();vm.saveAndPlace()}
+            f.barrier!!.complete(Unit)
+            val result=withTimeout(20_000) {vm.state.first {!it.pending && it.lastPlacedId!=null}}
+            assertEquals(2,f.calls)
+            assertEquals("24",result.snapshot!!.orders.single().source.lines.single().quantity)
+            assertNull(result.form)
+        } finally {withContext(Dispatchers.Main) {store.clear()}}
+    }
+
     @Test fun unknownResultLocksInputAndRecoversSameCommand(): Unit=runBlocking {
         val store=ViewModelStore();val f=Fake()
         try {

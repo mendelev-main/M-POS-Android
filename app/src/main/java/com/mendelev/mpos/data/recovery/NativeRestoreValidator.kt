@@ -113,10 +113,17 @@ internal object NativeRestoreValidator {
         WebCandidateValidation.validate(db,validationSource)
         for(d in docs.values) {
             currentCoroutineContext().ensureActive()
-            require(d.revision>=0 && (d.id in known || ProductDetailsCodec.owns(d.id) || d.id.startsWith("parked:") || WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id) || WebSourceDocuments.owns(d.id) || WebProductMetadataDocuments.owns(d.id) || d.id in setOf(WebCandidateDatabase.BASELINE,WebCandidateDatabase.BASIS,WebOrderDefaults.KEY)))
+            require(d.revision>=0 && (d.id in known || OnlineOrderCodec.owns(d.id) || ProductDetailsCodec.owns(d.id) || d.id.startsWith("parked:") || WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id) || WebSourceDocuments.owns(d.id) || WebProductMetadataDocuments.owns(d.id) || d.id in setOf(WebCandidateDatabase.BASELINE,WebCandidateDatabase.BASIS,WebOrderDefaults.KEY)))
             if(WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id) || WebProductMetadataDocuments.owns(d.id))require(d.revision==1L)
             // Part envelopes contain only integer version + escaped text. Fractional source facts are validated by the dedicated codec above.
             strict(d.payload)
+        }
+        docs.values.filter {OnlineOrderCodec.owns(it.id)}.forEach {d->
+            val row=OnlineOrderCodec.decode(d.payload).single()
+            require(d.id==OnlineOrderCodec.PREFIX+row.sessionId && row.sessionId==OnlineOrderCodec.session(row.target,row.orderId))
+            val receipt=db.sales().session(row.sessionId)
+            if(row.paid) require(receipt!=null)
+            require(row.cancelled || receipt!=null || docs["parked:${row.sessionId}"]!=null || docs["current"]?.let {WorkspaceCodec.cart(it.payload).sessionId==row.sessionId}==true)
         }
         docs.values.filter {ProductDetailsCodec.owns(it.id)}.forEach {d->
             val id=d.id.removePrefix(ProductDetailsCodec.PREFIX);val p=products.single {it.id==id};require(d.revision in 1..p.revision)

@@ -30,13 +30,28 @@ class WorkspaceAppearanceTest {
         }}
         compose.onNodeWithTag("workspaceSearchToggle").assertDoesNotExist()
         compose.onNodeWithTag("workspaceCartPanel").assertWidthIsEqualTo(380.dp)
-        compose.onNodeWithTag("workspaceCheckout").assertIsNotEnabled()
+        compose.onNodeWithTag("workspaceCheckout").assertIsEnabled().assertTextContains("Открыть смену")
         compose.onNodeWithTag("workspaceCustomer").performClick()
         compose.onNodeWithText("Скоро будет подключено").assertIsDisplayed()
         compose.onNodeWithContentDescription("Закрыть").performClick()
         compose.onNodeWithTag("workspaceDemand").performClick()
         compose.onNodeWithText("Скоро будет подключено").assertIsDisplayed()
         assertEquals(0,writes)
+    }
+    @Test fun closedShiftActionWorksWithEmptyCartAndPaymentWaitsForItems() {
+        var shiftOpen by mutableStateOf(false)
+        var pending by mutableStateOf(0)
+        var opens=0
+        val empty=WorkspaceSnapshot(emptyList(),emptyList(),emptyList(),emptyMap(),CurrentCart(),0,emptyList(),0)
+        compose.setContent {MposTheme {
+            WorkspaceCartPanel(empty,pending,Modifier.width(380.dp).height(650.dp),{},{_,_->},{},{},{},{},{},{opens++},{},shiftOpen)
+        }}
+        compose.onNodeWithTag("workspaceCheckout").assertTextContains("Открыть смену").assertIsEnabled().performClick()
+        assertEquals(1,opens)
+        compose.runOnIdle {pending=1}
+        compose.onNodeWithTag("workspaceCheckout").assertIsNotEnabled()
+        compose.runOnIdle {pending=0;shiftOpen=true}
+        compose.onNodeWithTag("workspaceCheckout").assertTextContains("Оплатить").assertIsNotEnabled()
     }
     @Test fun pendingWriteDoesNotMoveOrderFooterAndKeepsPaymentBlocked() {
         var pending by mutableStateOf(0)

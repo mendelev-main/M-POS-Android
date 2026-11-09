@@ -39,10 +39,11 @@ class SupplierUiTest {
         compose.onNodeWithTag("topNav-settings").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("settingsSuppliers").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("settingsSuppliers").performClick()
-        compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("supplierNew") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("supplierName").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("settingsHeader").assertExists()
+        compose.onNodeWithTag("supplierNew").assertDoesNotExist()
         lateinit var model: SupplierViewModel
         compose.runOnIdle {model=ViewModelProvider(compose.activity)[SupplierViewModel::class.java]}
-        compose.onNodeWithTag("supplierNew").performClick()
         compose.onNodeWithTag("supplierSave").performScrollTo().performClick()
         compose.onNodeWithText("Введите название от 1 до 200 символов").assertExists()
         compose.onNodeWithTag("supplierName").performScrollTo().performTextInput(name)
@@ -69,7 +70,7 @@ class SupplierUiTest {
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.form==null && model.state.value.snapshot!!.suppliers.none {it.id==id}}
         assertEquals(before,runBlocking {db.catalog().product(product)!! to db.catalog().balance(product)!!})
         // Leave a live supplier for the update UI evidence, without changing workspace/home fixtures.
-        compose.onNodeWithTag("supplierNew").performClick()
+        compose.onNodeWithTag("settingsSuppliers").performScrollTo().performClick()
         compose.onNodeWithTag("supplierName").performScrollTo().performTextInput("Поставка $key")
         compose.onNodeWithTag("supplierSearch").performScrollTo().performTextInput(productName)
         compose.onNodeWithTag("supplierProduct:$product").performClick();hideKeyboard()

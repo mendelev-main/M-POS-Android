@@ -8,10 +8,13 @@ data class WorkspaceProduct(val id: String, val name: String, val categoryId: St
 data class ChosenOption(val id: String, val name: String, val quantity: String, val priceDelta: String)
 data class CartLine(val id: String, val productId: String, val name: String, val basePrice: String?,
     val manual: Boolean?, val unitPrice: String, val quantity: String, val unit: String,
-    val options: List<ChosenOption>, val requests: List<RecipeRequest>, val references: Map<String,Long>, val sellingBasis: String = "stock-unit", val comment: String = "", val discountId: String = "", val discount: com.mendelev.mpos.domain.sale.SaleDiscount? = null, val discountEdited: Boolean = false) {
-    fun key()=CatalogRules.fingerprint(productId,manual,basePrice,unitPrice,sellingBasis,
+    val options: List<ChosenOption>, val requests: List<RecipeRequest>, val references: Map<String,Long>, val sellingBasis: String = "stock-unit", val comment: String = "", val discountId: String = "", val discount: com.mendelev.mpos.domain.sale.SaleDiscount? = null, val discountEdited: Boolean = false, val quotedPrice: String? = null) {
+    fun key(): String {
+        val regular=CatalogRules.fingerprint(productId,manual,basePrice,unitPrice,sellingBasis,
         CatalogRules.fingerprint(*options.sortedBy { it.id }.flatMap { listOf(it.id,it.quantity,it.priceDelta) }.toTypedArray()),
         CatalogRules.fingerprint(*references.toSortedMap().flatMap { (id,rev) -> listOf(id,rev.toString()) }.toTypedArray()))
+        return if(quotedPrice==null) regular else CatalogRules.fingerprint(regular,"online-price",quotedPrice)
+    }
 }
 data class CurrentCart(val lines: List<CartLine> = emptyList(), val graph: List<RecipeProduct> = emptyList(),
     val sessionId: String = "", val createdAt: Long = 0, val details: OrderDetails = OrderDetails())
@@ -25,6 +28,15 @@ sealed interface CartAction {
     data class Clear(val expectedRevision: Long): CartAction
 }
 object CartEngine {
+    /** Website protocol has no modifier selections. Keep the accepted price while refreshing recipe revisions. */
+    fun quoted(productId: String,price: String,lineId: String,products: List<WorkspaceProduct>,graph: List<RecipeProduct>): CartLine {
+        val amount=CatalogRules.decimal(price,2,"Цена онлайн-заказа")
+        val p=products.singleOrNull {it.id==productId} ?: throw CatalogFailure("reference","Товар онлайн-заказа не найден")
+        if(p.groups.any {it.minimum.toInt()>0}) throw CatalogFailure("modifiers","Сайт не передал обязательные модификаторы товара ${p.name}")
+        val projected=products.map {if(it.id==p.id) it.copy(price=if(amount.toBigDecimal().signum()==0) "0.01" else amount) else it}
+        return configure(CartAction.Add(p.id,p.revision,emptySet(),null,lineId),projected,graph)
+            .copy(basePrice=amount,unitPrice=amount,quotedPrice=amount)
+    }
     fun stale(line: CartLine, products: List<WorkspaceProduct>) = line.references.any { (id,rev) -> products.find { it.id==id }?.revision!=rev }
     fun requests(cart: CurrentCart)=cart.lines.flatMap { line -> line.requests.map { it.copy(quantity=it.quantity*line.quantity.toBigDecimal()) } }
     fun reserved(cart: CurrentCart): Map<String,BigDecimal> = if(cart.lines.isEmpty()) emptyMap() else RecipeCalculator(cart.graph).consumption(requests(cart))

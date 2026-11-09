@@ -165,6 +165,25 @@ def require_emulator(serial):
         raise UnsafeDeviceError("This destructive acceptance test may only use a disposable Android Emulator, never a physical tablet")
 
 
+def update_checked_at(production=False):
+    """Read durable updater state; the minimal dialog deliberately omits this timestamp."""
+    require_emulator(adb("get-serialno").strip())
+    if production:
+        if os.environ.get("GITHUB_ACTIONS") != "true" or os.environ.get("CI") != "true":
+            raise UnsafeDeviceError("Release preference inspection is only allowed in the disposable CI emulator")
+        adb("root")
+        adb("wait-for-device")
+        if adb("shell", "id", "-u").strip() != "0":
+            raise UnsafeDeviceError("Disposable release emulator root is required")
+        raw = adb("shell", "cat", f"/data/user/0/{PACKAGE}/shared_prefs/updates.xml")
+    else:
+        raw = adb("shell", "run-as", PACKAGE, "cat", "shared_prefs/updates.xml")
+    values = ET.fromstring(raw)
+    checked = values.find("long[@name='lastChecked']")
+    assert checked is not None and int(checked.get("value", "0")) > 0, "Persisted update check timestamp is missing"
+    return int(checked.get("value"))
+
+
 def request_installation():
     wait_text("^Установить обновление$", click=True)
     # Production builds must exercise Android's first-time unknown-source permission UI.
@@ -300,14 +319,14 @@ def main():
                 adb("shell", "run-as", PACKAGE, "mkdir", "-p", "files")
                 adb("shell", "run-as", PACKAGE, "sh", "-c", "'echo preserved-before-update > files/updater-e2e-sentinel'")
             launch(fixture=not production)
-            wait_text("Доступна новая версия")
+            wait_text("Доступна новая версия|Доступная версия:")
             wait_text("^Скачать обновление$", click=True)
-            wait_text("Обновление готово к установке")
+            wait_text("^Установить обновление$")
             # Process restart must recover the verified download without fetching it again.
             adb("shell", "am", "force-stop", PACKAGE)
             launch(fixture=not production)
-            wait_text("Обновление готово к установке")
-            checked = wait_text("^Последняя проверка:")
+            wait_text("^Установить обновление$")
+            checked = update_checked_at(production)
             # Tampering with a ready APK must be detected immediately before granting installer access.
             if not production:
                 adb("shell", "run-as", PACKAGE, "sh", "-c", "'echo corrupted > files/updates/candidate.apk'")
@@ -315,7 +334,7 @@ def main():
                 wait_text("Размер APK не совпадает")
                 assert f"versionCode={base_code} " in adb("shell", "dumpsys", "package", PACKAGE)
                 wait_text("^Скачать обновление$", click=True)
-                wait_text("Обновление готово к установке")
+                wait_text("^Установить обновление$")
             request_installation()
             wait_text("^(Cancel|Отмена)$", click=True)
             wait_text("Установка не завершена")
@@ -332,19 +351,20 @@ def main():
             if not production:
                 assert "preserved-before-update" in adb("shell", "run-as", PACKAGE, "cat", "files/updater-e2e-sentinel")
             launch(fixture=False)
-            wait_text("Установлена версия " + re.escape(manifest["versionName"]))
+            wait_text("Текущая версия: " + re.escape(manifest["versionName"]))
             wait_text("Приложение успешно обновлено")
-            if not production:
-                wait_text("^Режим кассира$")
-                print("ADMIN SESSION UPDATE PASSED: new process starts without administrative access", flush=True)
             if production:
-                assert wait_text("^Последняя проверка:") == checked
+                assert update_checked_at(production) == checked
             reports = ROOT / "app/build/reports/update-e2e"
             reports.mkdir(parents=True, exist_ok=True)
             (reports / "updated-settings.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20).stdout)
             if not production:
-                if any(n.get("resource-id")=="updatesBack" for n in ui_nodes()):
-                    wait_text("^К настройкам$",click=True,preferred_resource_id="updatesBack")
+                if any(n.get("resource-id")=="updatesWindow" for n in ui_nodes()):
+                    wait_text("^Закрыть$",click=True)
+                wait_text("(?!)", click=True, preferred_resource_id="adminControl")
+                wait_text("(?!)", preferred_resource_id="adminPassword")
+                wait_text("^Закрыть$", click=True)
+                print("ADMIN SESSION UPDATE PASSED: password required after process restart", flush=True)
                 wait_text("^Товары$", click=True, preferred_resource_id="settingsCatalog")
                 scroll_catalog_to_product(expected_product, expected_stock="8 шт")
                 wait_text("^8 шт$")

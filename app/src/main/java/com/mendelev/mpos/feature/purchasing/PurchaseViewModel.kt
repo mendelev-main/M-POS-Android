@@ -158,6 +158,15 @@ class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
         viewModelScope.launch {try {readOrders()} finally {update {it.copy(pending=false)}}}
     }
     fun dismissPlaced() {if(!state.value.pending) update {it.copy(lastPlacedId=null)}}
+    private val placeAfterSave=mutableSetOf<String>()
+    fun saveAndPlace() {
+        if(!editable()) return
+        if(!state.value.dirty && state.value.snapshot?.draft!=null) {place();return}
+        val ui=state.value;val d=ui.form ?: return;val s=ui.snapshot ?: return
+        try {PurchaseDraftRules.validateReferences(d,s.suppliers,s.products)} catch(e:CatalogFailure) {update {it.copy(message=e.message)};return}
+        val c=PurchaseCommand(UUID.randomUUID().toString(),s.ownerId,s.revision,PurchaseAction.Save(d))
+        placeAfterSave.add(c.commandId);submit(c)
+    }
     fun place() {
         if(!editable()) return
         val ui=state.value;val s=ui.snapshot ?: return;val d=ui.form ?: return
@@ -187,6 +196,7 @@ class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
                 } catch(e2:CancellationException) {throw e2}
                 catch(_:Exception) {update {it.copy(blocked=true,unresolved=c,message="Результат неизвестен. Проверьте ту же команду перед новым действием")}}
             } finally {update {it.copy(pending=false)}}
+            if(placeAfterSave.remove(c.commandId) && !state.value.blocked && state.value.unresolved==null && !state.value.dirty && state.value.snapshot?.draft!=null) place()
         }
     }
     private suspend fun saved(c: PurchaseCommand) {

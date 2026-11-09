@@ -70,8 +70,10 @@ data class ProductInput(
     fun fingerprint(): String {
         if(details!=null) {
             val old=CatalogRules.fingerprint("product.details.v1",copy(details=null).fingerprint(),details.sku,details.note,details.symbol)
-            return if(details.sellingBasis==null && details.recipeYieldManual==null && details.purchaseContentUnit==null) old else
+            val existing=if(details.sellingBasis==null && details.recipeYieldManual==null && details.purchaseContentUnit==null) old else
                 CatalogRules.fingerprint("product.details.v2",old,details.sellingBasis,details.recipeYieldManual,details.purchaseContentUnit)
+            return if(details.description==null && details.onlineOrder==null && details.onlineMenu==null) existing else
+                CatalogRules.fingerprint("product.details.v3",existing,details.description,details.onlineOrder,details.onlineMenu)
         }
         if(photoId==null && modifierGroups.isEmpty()) return configurationFingerprint()
         val parts=modifierGroups.flatMap { g -> listOf(g.id,g.name,g.minimum,g.maximum,g.options.size.toString()) +

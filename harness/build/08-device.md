@@ -37,3 +37,12 @@ Bluetooth/USB и production рассылка без задачи.
 ## Локальный инкремент настроек 2026-11-07
 
 По отдельному запросу владельца ST01–ST05 implemented: ручная тема, скидки, доставка и шаблоны чеков; контракт и ограничения — [SETTINGS-CATALOGS](../../docs/SETTINGS-CATALOGS.md). Не означает реализации оборудования D01–D05. Device/визуальная приёмка pending.
+
+
+2026-11-09: D01–D03 printer subset implemented локально: ../../docs/PRINTING-08.md. D04 и D05 не закрыты; весь этап08 не считается завершённым. UI/физические образцы принимает владелец, remote push не выполнялся.
+
+
+2026-11-09: D04 implemented локально в согласованном scope Telegram смен/отчётов, ../../docs/TELEGRAM-08.md. 10 JVM(fake/loopback) passed; Kotlin/instrumented compile passed. Device и реальная доставка pending. Владелец отдельно отложил backend/online/owner commands; URL/ключи — параметры будущего подключения организаций. D05/прочие08-интеграции не считаются закрытыми.
+
+
+2026-11-09: D04 owner analytics extension implemented локально: ../../docs/OWNER-ANALYTICS-TELEGRAM.md. Сменная/месячная статистика, PNG по пользовательскому PDF; каждый last-day close имеет отдельный snapshot/job. 17 JVM/fake HTTP passed; native render/read-only integration tests compiled only. Весь08/D05 physical acceptance pending, push не выполнялся.

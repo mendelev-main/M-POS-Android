@@ -30,6 +30,18 @@ class WorkspaceAvailability(products: List<WorkspaceProduct>,graph: List<RecipeP
             }
         }.getOrDefault("—")
     }
+    private val availableStock by lazy {
+        val used=calculator.consumption(requests)
+        (stock.keys+used.keys+reserved.keys).associateWith { id ->
+            (stock[id] ?: BigDecimal.ZERO)-(used[id] ?: BigDecimal.ZERO)-(reserved[id] ?: BigDecimal.ZERO)
+        }
+    }
+    fun availableStockLabel(id: String): String = runCatching {
+        val recipe=recipeById.getValue(id)
+        if(recipe is RecipeProduct.Simple) {
+            if(recipe.noStockTracking) "∞" else CatalogRules.canonical(availableStock[id] ?: BigDecimal.ZERO).replace('.',',')
+        } else calculator.physicalPortions(RecipeRequest(id,BigDecimal.ONE,recipe.unit),availableStock)?.toPlainString() ?: "∞"
+    }.getOrDefault("—")
     fun status(id: String): ProductAvailability {
         val p=byId[id] ?: return ProductAvailability.INVALID
         return cache.computeIfAbsent(id) {

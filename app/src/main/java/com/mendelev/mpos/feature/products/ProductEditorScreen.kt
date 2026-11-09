@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,6 +38,7 @@ internal fun productEditorCost(d: ProductDraft,state: CatalogUi): BigDecimal {
 private fun displayPrice(value: BigDecimal?)=value?.setScale(2,RoundingMode.HALF_UP)?.toPlainString()?.replace('.',',')?.plus(" BYN") ?: "—"
 
 @Composable internal fun ProductEditorScreen(model: CatalogViewModel,state: CatalogUi,d: ProductDraft,onBack: ()->Unit,onDelete: ()->Unit,onOpenProduct: (String)->Unit={},onPhoto: ()->Unit) {
+    val enabled=!state.busy
     var section by rememberSaveable(d.sessionId) {mutableStateOf("main")}
     LaunchedEffect(d.sessionId,section) {if(section=="usage" && d.expectedRevision!=null) model.loadUsage()}
     ProductEditorFrame(d.name,d.type,d.dirty,d.expectedRevision!=null,state.busy,section,{section=it},onBack,model::save,onDelete,
@@ -74,12 +76,19 @@ private fun displayPrice(value: BigDecimal?)=value?.setScale(2,RoundingMode.HALF
             }
             "web"->{
                 ProductSectionHeading("Онлайн")
-                listOf("Онлайн заказ" to "Товар доступен для добавления в заказ на сайте.","Онлайн меню" to "Товар отображается в меню для просмотра.").forEach {(title,note)->
-                    Text(title,fontWeight=FontWeight.Bold);ProductEditorNote(note);ProductEditorNote("Будет подключено",Modifier.padding(top=8.dp,bottom=20.dp));HorizontalDivider()
+                val details=d.details ?: ProductDetails()
+                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
+                    Text("Онлайн заказ",Modifier.weight(1f),fontWeight=FontWeight.Bold)
+                    Switch(details.onlineOrder ?: true,{v->model.change {it.copy(details=(it.details ?: ProductDetails()).copy(onlineOrder=v))}},enabled=enabled)
                 }
+                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
+                    Text("Онлайн меню",Modifier.weight(1f),fontWeight=FontWeight.Bold)
+                    Switch(details.onlineMenu ?: true,{v->model.change {it.copy(details=(it.details ?: ProductDetails()).copy(onlineMenu=v))}},enabled=enabled)
+                }
+                if(d.modifierGroups.any {it.minimum.toIntOrNull()?.let {n->n>0}==true}) ProductEditorNote("Товар с обязательными модификаторами пока не публикуется на сайте.")
                 Spacer(Modifier.height(20.dp))
-                ProductEditorField("",{},"Описание для онлайн-платформы",enabled=false,singleLine=false,placeholder="Будет подключено на этапе онлайн-меню")
-                ProductEditorNote("Сайт и синхронизация отложены в TODO.",Modifier.padding(top=12.dp))
+                ProductEditorField(details.description.orEmpty(),{v->model.change {it.copy(details=(it.details ?: ProductDetails()).copy(description=v))}},"Описание для онлайн-платформы",enabled=enabled,singleLine=false)
+                ProductEditorNote("Изменения отправляются на сайт кнопкой «Синхронизировать» в сетевых настройках.",Modifier.padding(top=12.dp))
             }
         }
     }

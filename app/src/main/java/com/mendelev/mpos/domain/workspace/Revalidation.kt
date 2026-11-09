@@ -13,6 +13,8 @@ object CartRevalidator {
         val lines=cart.lines.map { old ->
             val p=products.find {it.id==old.productId} ?: throw CatalogFailure("reference","Товар ${old.name} больше не существует")
             if(p.unit!=old.unit || p.sellingBasis!=old.sellingBasis) throw CatalogFailure("unit","Изменилась единица товара ${old.name}. Удалите позицию и добавьте заново")
+            if(old.quotedPrice!=null) return@map CartEngine.quoted(p.id,old.quotedPrice,old.id,products,graph)
+                .copy(name=old.name,quantity=old.quantity,comment=old.comment,discountId=old.discountId,discount=old.discount,discountEdited=old.discountEdited)
             val manual=if(p.price.toBigDecimal().signum()==0) {
                 if(old.manual!=true) throw CatalogFailure("price","Для ${p.name} теперь требуется ручная цена. Добавьте позицию заново")
                 old.basePrice

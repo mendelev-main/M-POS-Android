@@ -13,6 +13,7 @@ import java.util.UUID
 data class WorkspaceUi(val loading: Boolean = true, val fatal: Boolean = false, val pending: Int = 0,
     val snapshot: WorkspaceSnapshot? = null, val message: String? = null, val availability: WorkspaceAvailability? = null)
 class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
+    var onParked: ((String)->Unit)?=null
     private val mutable=MutableStateFlow(WorkspaceUi());val state=mutable.asStateFlow()
     private val commands=Channel<suspend () -> Unit>(Channel.UNLIMITED)
     init {
@@ -59,6 +60,10 @@ class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
         cart(CartAction.Add(p.id,p.revision,selected.toSet(),manual,UUID.randomUUID().toString()),expectedOwner,done)
     fun options(action: CartAction.SetOptions,owner: String,done: ()->Unit)=cart(action,owner,done)
     fun step(id: String,delta: Int,owner: String? = null) = cart(CartAction.Step(id,delta),owner)
+    fun transfer(id: String,targetRevision: Long,currentRevision: Long,owner: String,done: ()->Unit) {
+        val command=UUID.randomUUID().toString()
+        enqueue {repo.transfer(id,targetRevision,currentRevision,owner,command);withContext(Dispatchers.Main) {done()}}
+    }
     fun remove(id: String,owner: String? = null) = cart(CartAction.Remove(id),owner)
     fun quantity(id: String,value: String,revision: Long,owner: String? = null,done: () -> Unit) = cart(CartAction.SetQuantity(id,value,revision),owner,done)
     fun clear(revision: Long,owner: String? = null) = cart(CartAction.Clear(revision),owner)
@@ -72,12 +77,12 @@ class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
     }
     fun park(label: String,revision: Long,owner: String,done: () -> Unit) {
         val command=UUID.randomUUID().toString()
-        enqueue {repo.park(revision,owner,label,command);withContext(Dispatchers.Main) {done()} }
+        enqueue {repo.park(revision,owner,label,command);withContext(Dispatchers.Main) {onParked?.invoke(owner);done()} }
     }
     fun resume(id: String,parkedRevision: Long,currentRevision: Long,owner: String,label: String? = null,
         replaceEmptyDetails: Boolean = false,done: () -> Unit) {
         val command=UUID.randomUUID().toString()
-        enqueue {repo.resume(id,parkedRevision,currentRevision,owner,command,label,replaceEmptyDetails);withContext(Dispatchers.Main) {done()} }
+        enqueue {repo.resume(id,parkedRevision,currentRevision,owner,command,label,replaceEmptyDetails);withContext(Dispatchers.Main) {if(label!=null) onParked?.invoke(owner);done()} }
     }
     fun deleteParked(id: String,revision: Long,done: () -> Unit) {
         val command=UUID.randomUUID().toString()

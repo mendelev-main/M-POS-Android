@@ -15,6 +15,28 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class SaleViewModelTest {
+    @Test fun cashButtonCommitsOnceWithoutConfirmationDialog(): Unit=runBlocking {
+        val context=InstrumentationRegistry.getInstrumentation().targetContext
+        val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build();val store=ViewModelStore()
+        try {
+            val catalog=CatalogRepository(db);catalog.initialize()
+            catalog.saveProduct(ProductInput("p",null,"Товар",null,"20","1","10",null,true,"create"))
+            val work=WorkspaceRepository(db);work.initialize()
+            val shifts=ShiftRepository(db);shifts.initializeCashierFixture();shifts.open("open",0,null,shifts.snapshot().ownerId)
+            work.cart(CartAction.Add("p",1,emptySet(),null,"line"),"add",work.snapshot().cart.sessionId)
+            val model=withContext(Dispatchers.Main) {ViewModelProvider(store,object: ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=SaleViewModel(db) as T
+            })[SaleViewModel::class.java]}
+            withTimeout(20_000) {model.state.first {!it.loading && !it.pending}}
+            withContext(Dispatchers.Main) {model.edit {it.copy(mode="cash",given="50")};model.prepare(autoCommit=true)}
+            withTimeout(20_000) {model.state.first {it.completed!=null && !it.pending}}
+            assertEquals("9",db.catalog().balance("p")!!.quantity)
+            assertEquals(2000L,shifts.snapshot().currentCash)
+            withContext(Dispatchers.Main) {model.prepare(autoCommit=true)}
+            assertEquals("9",db.catalog().balance("p")!!.quantity)
+        } finally {withContext(Dispatchers.Main) {store.clear()};db.close()}
+    }
+
     @Test fun cardDeliveryCashAdmissionWriteFailureRetryAndMixedDiscountMapping(): Unit=runBlocking {
         val context=InstrumentationRegistry.getInstrumentation().targetContext
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build();val store=ViewModelStore()

@@ -28,12 +28,16 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
 @Composable fun SaleScreen(model: SaleViewModel,history: Boolean,onBack: ()->Unit,onHistory: ()->Unit,onShift: ()->Unit,refundModel: RefundViewModel) {
     val presets by com.mendelev.mpos.feature.settings.settingsCatalogModel().state.collectAsStateWithLifecycle()
     val ui by model.state.collectAsStateWithLifecycle()
+    val printerContext=androidx.compose.ui.platform.LocalContext.current
+    val printer=remember {com.mendelev.mpos.print.PrintRuntime.get(printerContext)}
+    val printStatus by printer.status.collectAsStateWithLifecycle()
+    LaunchedEffect(ui.completed?.first?.id) {ui.completed?.let {printer.autoSale(it)}}
     val refund by refundModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(history) {model.refresh();refundModel.refresh()}
-    LaunchedEffect(refund.result?.id) {if(refund.result!=null) model.refresh()}
+    LaunchedEffect(refund.result?.id) {refund.result?.let {if(it.cash>0) printer.drawer("refund:${it.id}",automatic=true);model.refresh()}}
     val locked=ui.pending || refund.pending || refund.unresolved!=null || ui.unresolved!=null || ui.splitUncertain || (ui.split?.paid?.isNotEmpty()==true && ui.completed==null)
-    BackHandler {if(!ui.pending) {if(refund.review!=null || refund.result!=null) refundModel.dismiss() else if(!history && ui.selected!=null && refund.unresolved==null && !refund.pending) model.closeDetails() else if(ui.partPreview!=null) model.dismissPart() else if(ui.preview!=null) model.dismissPreview() else if(!locked) onBack()}}
-    val webPayment=!history && !ui.loading && !ui.fatal && ui.completed==null && ui.split==null
+    BackHandler {if(!ui.pending) {if(refund.review!=null || refund.result!=null) refundModel.dismiss() else if(!history && ui.selected!=null && refund.unresolved==null && !refund.pending) model.closeDetails() else if(ui.partPreview!=null) model.dismissPart() else if(ui.preview!=null) model.dismissPreview() else if(!history && ui.completed!=null) model.finish(onBack) else if(!locked) onBack()}}
+    val webPayment=!history && !ui.fatal && ui.split==null
     var options by androidx.compose.runtime.saveable.rememberSaveable {mutableStateOf(false)}
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
         if(!webPayment) {
@@ -64,17 +68,7 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
                 {id->picked=id;model.select(id)},
                 {ui.selected?.takeIf {it.first.id==chosen}?.let {refundModel.prepare(it.first.id,ui.shift!!.active!!.actorId)}},
                 {printNotice=true},ui.message)
-            if(printNotice) MposDialog("Печать чека",{printNotice=false}) {
-                Text("Печать чеков будет подключена на этапе интеграции принтера.")
-                MposButton("Понятно",{printNotice=false},style=ActionStyle.Secondary)
-            }
-        } else if(ui.completed!=null) {
-            Column(Modifier.fillMaxSize().padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                Text("Продажа сохранена",Modifier.testTag("saleSuccess"),style=MaterialTheme.typography.headlineSmall)
-                if(ui.message!=null) MposNotice(ui.message!!,true)
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {ReceiptBody(ui.completed!!)}
-                MposButton("Готово",{model.finish(onBack)},Modifier.fillMaxWidth().testTag("saleDone"),busy=ui.pending)
-            }
+            if(printNotice) ui.selected?.let {com.mendelev.mpos.print.ReceiptPrintWindow(it) {printNotice=false}}
         } else if(ui.split!=null) {
             SplitCheckout(ui,model)
         } else {
@@ -82,7 +76,7 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
             PaymentPage(work.cart,model.estimate(),ui.form.given,enabled,work.cart.lines.isNotEmpty() && ui.shift?.active!=null,
                 ui.message,ui.draft!=null,{value->model.edit {it.copy(given=value)}},onBack,
                 {model.equal(2);model.startSplit()},
-                {method->model.edit {it.copy(mode=method,given=it.given.ifBlank {"0"}.trimEnd(',','.'))};model.prepare()},
+                {method->model.edit {it.copy(mode=method,given=it.given.ifBlank {"0"}.trimEnd(',','.'))};model.prepare(autoCommit=method=="cash")},
                 {options=true},notice={
                     if(work.cart.lines.isEmpty()) Text("Заказ пуст. Добавьте товары в рабочей зоне",Modifier.testTag("checkoutEmpty"))
                     if(ui.shift?.active==null) {MposNotice("Откройте смену перед оплатой",true);MposButton("Перейти к смене",onShift,enabled=enabled,style=ActionStyle.Secondary)}
@@ -97,7 +91,6 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
                         Text("Карта учитывается вручную. Банковский терминал не подключён.",style=MaterialTheme.typography.bodySmall)
                         if(work.cart.lines.isEmpty()) Text("Заказ пуст. Добавьте товары в рабочей зоне",Modifier.testTag("checkoutEmpty"))
                         if(ui.shift?.active==null) {MposNotice("Откройте смену перед оплатой",true);MposButton("Перейти к смене",onShift,enabled=enabled,style=ActionStyle.Secondary)}
-                        if(ui.draft!=null) Text("Подготовленная оплата сохранена. Перед проведением проверьте итог заново.",Modifier.testTag("checkoutRestored"),style=MaterialTheme.typography.bodySmall)
                     }
                     items(work.cart.lines,key={it.id}) {line->
                         val discount=f.discounts[line.id] ?: DiscountField()
@@ -155,7 +148,29 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
 
         }
     }
-    if(ui.preview!=null && !history) MposDialog("Подтверждение оплаты",model::dismissPreview,!ui.pending,wide=true) {
+    var printing by remember {mutableStateOf(false)}
+    val paid=ui.completed
+    if(!history && (paid!=null || ui.preview!=null && ui.form.mode=="card")) MposDialog(if(paid!=null) "Чек оплачен" else "Оплата картой",{if(paid!=null) model.finish(onBack) else model.dismissPreview()},!ui.pending,maxWidth=560.dp) {
+        if(paid!=null) {
+            Column(Modifier.heightIn(max=480.dp).verticalScroll(rememberScrollState()).testTag("saleSuccess")) {ReceiptBody(paid)}
+            ui.message?.let {MposNotice(it,true)}
+            printStatus?.let {Text(it,style=MaterialTheme.typography.bodySmall)}
+            Row(Modifier.fillMaxWidth().padding(top=16.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                MposPosControl("Печать",{printing=true},Modifier.weight(1f).testTag("receiptPrint"),!ui.pending,PosControl.Secondary,height=48.dp,radius=16.dp)
+                MposPosControl("Готово",{model.finish(onBack)},Modifier.weight(1f).testTag("saleDone"),!ui.pending,PosControl.Cash,height=48.dp,radius=16.dp)
+            }
+        } else {
+            Text("Проведите оплату на терминале",style=MaterialTheme.typography.bodyLarge)
+            Text(money(ui.quote!!.total),Modifier.fillMaxWidth().padding(vertical=24.dp).testTag("salePreviewTotal"),style=MaterialTheme.typography.displaySmall,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
+            ui.message?.let {MposNotice(it,true)}
+            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                MposPosControl("Отмена",model::dismissPreview,Modifier.weight(1f),!ui.pending,PosControl.Secondary,height=52.dp,radius=16.dp)
+                MposPosControl("Оплата прошла",model::commit,Modifier.weight(1f).testTag("saleConfirm"),!ui.pending,PosControl.Card,height=52.dp,radius=16.dp)
+            }
+        }
+    }
+    if(printing && paid!=null) com.mendelev.mpos.print.ReceiptPrintWindow(paid) {printing=false}
+    if(ui.preview!=null && !history && ui.form.mode!="card" && !ui.autoCommitting) MposDialog("Подтверждение оплаты",model::dismissPreview,!ui.pending,wide=true) {
         val q=ui.quote!!;val p=ui.payment!!
         Column(Modifier.heightIn(max=400.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Text("Итого: ${money(q.total)}",Modifier.testTag("salePreviewTotal"),style=MaterialTheme.typography.titleLarge)
@@ -261,27 +276,32 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
 }
 @Composable private fun ReceiptBody(value: Pair<ReceiptEntity,ReceiptSnapshot>) {
     val (r,s)=value
-    Column(verticalArrangement=Arrangement.spacedBy(10.dp)) {
-        Text("Чек №${r.number}",style=MaterialTheme.typography.titleLarge)
-        Text(date(r.createdAt));Text("Смена: ${r.shiftId}",style=MaterialTheme.typography.bodySmall)
-        Text(OrderRules.typeLabel(s.cart.details.type))
-        if(s.cart.details.label.isNotBlank()) Text(s.cart.details.label)
-        if(s.cart.details.comment.isNotBlank()) Text(s.cart.details.comment)
-        if(s.cart.details.type=="delivery") {
-            if(s.cart.details.address.isNotBlank()) Text(s.cart.details.address)
-            if(s.cart.details.phone.isNotBlank()) Text(s.cart.details.phone)
-        }
+    Column(verticalArrangement=Arrangement.spacedBy(6.dp)) {
+        if(s.cart.details.label.isNotBlank()) Text(s.cart.details.label,style=MaterialTheme.typography.titleLarge)
+        Text("${receiptDate(r.createdAt)} · ${receiptPaymentLabel(s)} · ${OrderRules.typeLabel(s.cart.details.type)}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        val customer=listOf(s.cart.details.customerName,s.cart.details.phone,s.cart.details.address).filter {it.isNotBlank()}
+        if(customer.isNotEmpty()) Text(customer.joinToString(" · "),style=MaterialTheme.typography.bodySmall)
         s.cart.lines.forEach {line->
-            Text(line.name,Modifier.testTag("receiptLine:${line.id}"),style=MaterialTheme.typography.titleMedium)
-            Text("${line.unitPrice} BYN × ${line.quantity}")
-            if(line.options.isNotEmpty()) Text(line.options.joinToString {it.name})
-            val net=s.quote.lines.first {it.id==line.id};Text("Сумма строки: ${money(net.net)} · Скидка: ${money(net.discount)}")
+            val net=s.quote.lines.first {it.id==line.id}
+            ReceiptMoneyRow("${line.name} × ${line.quantity.replace('.',',')}",net.net,"receiptLine:${line.id}")
+            if(net.discount>0) ReceiptMoneyRow("↳ Скидка",-net.discount,accent=true)
+            if(line.options.isNotEmpty()) Text("↳ "+line.options.joinToString(" · ") {it.name},style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            if(line.comment.isNotBlank()) Text("Комментарий: ${line.comment}",style=MaterialTheme.typography.bodySmall)
         }
-        Text("Итого: ${money(s.quote.total)}",Modifier.testTag("receiptTotal"),style=MaterialTheme.typography.titleLarge)
-        s.quote.delivery?.let {Text("Доставка: ${it.name} · ${money(it.fee)}")}
-        s.payment.parts.forEach {p->
-            Text("${if(p.method=="cash") "Наличные" else "Карта"}: ${money(p.amount)}")
-            if(p.given!=null) Text("Получено: ${money(p.given)} · Сдача: ${money(p.change!!)}")
+        if(s.quote.discount>0) ReceiptMoneyRow("Скидки на товары",-s.quote.discount,accent=true)
+        s.quote.delivery?.let {ReceiptMoneyRow("Доставка",it.fee)}
+        Text("Платежи",Modifier.padding(top=10.dp),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        s.payment.parts.forEachIndexed {i,p->
+            ReceiptMoneyRow("Платёж ${i+1} · ${if(p.method=="cash") "Наличные" else "Карта"}",p.amount)
+            if(p.given!=null) {
+                ReceiptMoneyRow("Наличные · внесено",p.given!!,small=true)
+                ReceiptMoneyRow("Сдача",p.change!!,small=true)
+            }
+        }
+        HorizontalDivider(Modifier.padding(top=8.dp))
+        Row(Modifier.fillMaxWidth().padding(top=10.dp),horizontalArrangement=Arrangement.SpaceBetween) {
+            Text("Итого",style=MaterialTheme.typography.titleMedium)
+            Text(money(r.total),Modifier.testTag("receiptTotal"),style=MaterialTheme.typography.titleMedium)
         }
     }
 }

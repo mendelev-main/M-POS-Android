@@ -423,3 +423,16 @@ Rounding follow-up acceptance: [CI40519616659](https://github.com/mendelev-main/
 2026-11-07 S01–S07 implemented-partial локально: визуальный перенос смены/окон/истории/отчёта, read-only агрегация текущих событий и явный импортированный остаток. docs/SHIFT-WEB.md. API/device/pixel и оборудование pending, без публикации.
 
 2026-11-08: P01–P10/T01–T10 implemented-partial локально — список и категории по Web, NFC/ё-поиск, metadata/usage/picker/несохранённые изменения. Native историю/остатки и guards не ослабляли; online09 TODO. docs/CATALOG-WEB-PARITY.md. API/device/pixel pending, без commit/push/release.
+
+
+2026-11-09: D01–D03 printer subset implemented локально — LAN ESC/POS, saved configuration/test/preview, receipt/bill/kitchen/shift layout, post-commit auto/manual dispatch, per-job durable at-most-once claim, exact kitchen delta, cash/role drawer. Контракт и ограничения: [PRINTING-08.md](PRINTING-08.md). Физическое совпадение D05 и device-run pending, D04/Telegram и06/09 остаются TODO. Наличие кода/компиляции не является физической приёмкой.
+
+
+2026-11-09: D04 Telegram subset implemented/local10JVM verified — [TELEGRAM-08.md](TELEGRAM-08.md): settings/secure persistence, direct text/photo/document transport, shift events/monthly PDF, safe failure/retry policy. Instrumented/UI compilation passed; device/real delivery pending. По уточнению владельца backend, онлайн-заказы, команды владельца отложены,09 TODO. Реальная отправка агентом не выполнялась.
+
+
+2026-11-09: D04.OWN01–OWN07 implemented как новая согласованная владельцем функция, не заявляется существующей Web-паритетной функцией: [OWNER-ANALYTICS-TELEGRAM.md](OWNER-ANALYTICS-TELEGRAM.md). Переключатели/codec, исторические факты/сравнения, private routing/month-last-day per closing, exact money/quantities, PNG/pagination/preview, delivery guards и tests. 17 targeted JVM passed; Kotlin/instrumented compile passed; device, визуал и real delivery pending.
+
+2026-11-09: N01.CFG implemented локально — editable encrypted backend config, отдельное сохранение/GET diagnostics/header SSE probe. N01 целиком и N02–N06 ещё не закрыты: [BACKEND-09.md](BACKEND-09.md). Никаких production HTTP/публикаций.
+
+2026-11-09: N02.INBOX/N03.ACCEPT/N03.READY/N04.PUB local implemented: SSE+encrypted inbox, modal events, local-first ACK/ready/cancel, preserved website quote, paid settlement, manual menu/photo/tariff publish, online product metadata. N01/N05/N06 целиком остаются in progress: инструментальные и staging/device проверки pending, точные ограничения в BACKEND-09.md. Backend не изменён.

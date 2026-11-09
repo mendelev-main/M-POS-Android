@@ -30,10 +30,12 @@ class UpdateViewModel(val repository: UpdateRepository) : ViewModel() {
     val state = mutableState.asStateFlow()
     private var operation: Job? = null
     private var firstOpen = true
+    private var completedReceiptOnOpen = false
 
     init {
         operation = viewModelScope.launch {
             val completed = repository.completedUpdate()
+            completedReceiptOnOpen = completed
             val restored = repository.restore()
             mutableState.value = UpdateUiState(
                 stage = if (restored == null) UpdateStage.IDLE else UpdateStage.READY,
@@ -54,6 +56,12 @@ class UpdateViewModel(val repository: UpdateRepository) : ViewModel() {
     fun check() {
         if (state.value.busy) return
         operation = viewModelScope.launch { checkNow() }
+    }
+
+    fun openUpdateWindow() {
+        val preserveReceipt=completedReceiptOnOpen
+        completedReceiptOnOpen=false
+        if(shouldCheckOnOpen(state.value.stage,preserveReceipt)) check()
     }
 
     private suspend fun checkNow() {
@@ -123,3 +131,6 @@ class UpdateViewModel(val repository: UpdateRepository) : ViewModel() {
         mutableState.update { it.copy(stage = UpdateStage.ERROR, message = message) }
     }
 }
+
+/** Opening the window must not discard a verified download or the first post-install receipt. */
+internal fun shouldCheckOnOpen(stage: UpdateStage,completedReceipt: Boolean)=!completedReceipt && stage in setOf(UpdateStage.IDLE,UpdateStage.CURRENT,UpdateStage.AVAILABLE,UpdateStage.ERROR)

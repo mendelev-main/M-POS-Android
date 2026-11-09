@@ -63,6 +63,7 @@ class CheckoutRepository(private val db: CatalogDatabase,private val afterWrite:
         if(db.catalog().result(draft.commandId)!=null) conflict()
         val current=db.workspace().document("current") ?: conflict()
         val cart=WorkspaceCodec.cart(current.payload)
+        OnlineOrderRepository(db).requirePayable(cart.sessionId)
         if(current.revision!=draft.cartRevision || cart.sessionId!=draft.sessionId || cart.lines.isEmpty()) conflict()
         val state=ShiftRepository(db).snapshot()
         if(state.active?.actorId!=draft.actorId || state.active?.id!=draft.shiftId || state.revision!=draft.shiftRevision) conflict()

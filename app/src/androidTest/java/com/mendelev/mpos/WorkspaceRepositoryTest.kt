@@ -23,6 +23,27 @@ class WorkspaceRepositoryTest {
     private suspend fun WorkspaceRepository.applyCart(action: CartAction,command: String)=cart(action,command,snapshot().cart.sessionId)
     private fun add(id: String="line")=CartAction.Add("tea",1,emptySet(),null,id)
     private suspend fun reject(block: suspend () -> Unit) {try {block();fail("Expected rejection")} catch(_:CatalogFailure) {}}
+    @Test fun transferIsAtomicReplaysOnceAndKeepsTargetDetailsWithoutStockWrites() = runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
+        try {
+            seed(db);val repo=WorkspaceRepository(db)
+            repo.applyCart(add("target-line"),"target-add")
+            var state=repo.snapshot();repo.park(state.cartRevision,state.cart.sessionId,"Целевой чек","park")
+            repo.applyCart(add("source-line"),"source-add");state=repo.snapshot()
+            val target=state.parked.single()
+            val failed=WorkspaceRepository(db,afterWrite={throw java.io.IOException("fault")})
+            try {failed.transfer(target.id,target.revision,state.cartRevision,state.cart.sessionId,"move");fail()} catch(_:java.io.IOException) {}
+            assertEquals(state,repo.snapshot());assertNull(db.catalog().result("move"))
+            repo.transfer(target.id,target.revision,state.cartRevision,state.cart.sessionId,"move")
+            val after=repo.snapshot()
+            assertEquals("Целевой чек",after.cart.details.label);assertTrue(after.parked.isEmpty())
+            assertEquals(2,after.cart.lines.size);assertEquals(2,after.cart.lines.map {it.id}.distinct().size)
+            assertEquals("20",db.catalog().balance("tea")!!.quantity);assertEquals(1,db.catalog().movementCount("tea"))
+            repo.transfer(target.id,target.revision,state.cartRevision,state.cart.sessionId,"move")
+            assertEquals(after,repo.snapshot())
+            reject {repo.transfer(target.id,target.revision,state.cartRevision,state.cart.sessionId,"stale")}
+        } finally {db.close()}
+    }
     @Test fun cartAndLayoutReopenReplayAndDoNotWriteStock() = runBlocking {
         val name="workspace-${UUID.randomUUID()}.db"
         fun open()=Room.databaseBuilder(context,CatalogDatabase::class.java,name).build()

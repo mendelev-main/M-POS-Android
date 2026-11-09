@@ -16,6 +16,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -32,7 +36,9 @@ import com.mendelev.mpos.domain.warehouse.*
     val locked=ui.pending || ui.unresolved!=null || ui.orderUnresolved!=null
     val editable=!locked && !ui.blocked && ui.canEdit
     var expanded by rememberSaveable(administration.generation) {mutableStateOf(false)}
+    var draftMenu by remember {mutableStateOf(false)}
     var history by rememberSaveable {mutableStateOf(false)}
+    val context=LocalContext.current
     val clipboard=LocalClipboardManager.current
     var dialog by rememberSaveable(administration.generation) {mutableStateOf<String?>(null)}
     LaunchedEffect(model,administration.generation) {model.refresh()}
@@ -43,29 +49,35 @@ import com.mendelev.mpos.domain.warehouse.*
     Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
         MposAppBar("Заказы поставщикам",navigationEnabled=!locked && !ui.dirty && dialog==null && ui.editing==null) {}
         Column(Modifier.weight(1f).padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                MposButton("Назад",::back,enabled=!locked,style=ActionStyle.Secondary)
-                MposButton(if(history) "Вернуться к черновику" else "История",{history=!history},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseHistory"))
-                MposButton("Новый заказ",{expanded=if(history) true else !expanded;history=false},enabled=!locked && !ui.blocked && ui.canEdit,modifier=Modifier.testTag("purchaseNew"))
-                MposButton("Перечитать",{if(history || ui.orderReloadNeeded) model.refreshOrders() else if(ui.dirty) dialog="reload" else model.refresh()},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseReload"))
+            Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                PurchaseAction("История",{history=!history},Modifier.fillMaxWidth().testTag("purchaseHistory"),!locked,ActionStyle.Outline)
+                PurchaseAction("Новый заказ",{expanded=!expanded},Modifier.fillMaxWidth().testTag("purchaseNew"),!locked && !ui.blocked && ui.canEdit)
             }
-            Text("Заказы поставщикам",style=MaterialTheme.typography.titleLarge)
-            if(!administration.active) MposNotice("Изменения доступны после входа в администрирование. Историю можно просматривать.")
+            if(ui.blocked) PurchaseAction("Перечитать",model::refresh,Modifier.testTag("purchaseReload"),!locked,ActionStyle.Secondary)
             if(ui.message!=null) MposNotice(ui.message!!,ui.blocked || ui.unresolved!=null)
             if(ui.pending) LinearProgressIndicator(Modifier.fillMaxWidth())
-            if(ui.orderUnresolved!=null && ui.editing==null) MposButton("Проверить результат",model::retryOrder,enabled=!ui.pending,modifier=Modifier.testTag("purchaseOrderRetry"))
-            if(ui.unresolved!=null) MposButton("Проверить результат",model::retry,enabled=!ui.pending,modifier=Modifier.testTag("purchaseRetry"))
+            if(ui.orderUnresolved!=null && ui.editing==null) PurchaseAction("Проверить результат",model::retryOrder,enabled=!ui.pending,modifier=Modifier.testTag("purchaseOrderRetry"))
+            if(ui.unresolved!=null) PurchaseAction("Проверить результат",model::retry,enabled=!ui.pending,modifier=Modifier.testTag("purchaseRetry"))
             if(history && snapshot!=null) {
-                Text("История закупок",style=MaterialTheme.typography.titleMedium)
                 LazyColumn(Modifier.weight(1f).testTag("purchaseHistoryList"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                     if(snapshot.orders.isEmpty()) item {Text("Заказов пока нет")}
                     items(snapshot.orders,key={it.id}) {o->
-                        MposButton("${o.source.supplierName} · ${purchaseDate(o.createdAt)} · ${o.source.lines.size} позиций · ${purchaseOrderStatus(o)}",
-                            {dialog="order:${o.id}"},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.fillMaxWidth().testTag("purchaseOrder:${o.id}"))
+                        Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                            Surface(onClick={dialog="order:${o.id}"},enabled=!locked,modifier=Modifier.weight(1f).testTag("purchaseOrder:${o.id}"),shape=androidx.compose.foundation.shape.RoundedCornerShape(14.dp),color=MaterialTheme.colorScheme.surface) {
+                                Row(Modifier.fillMaxWidth().heightIn(min=88.dp).padding(horizontal=20.dp,vertical=14.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(14.dp)) {
+                                    Column(Modifier.weight(1f)) {
+                                        Text(o.source.supplierName,fontSize=15.sp,fontWeight=FontWeight.Bold)
+                                        Text("${purchaseDate(o.createdAt)} · ${o.source.lines.size} позиций",Modifier.padding(top=7.dp),fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Surface(shape=androidx.compose.foundation.shape.RoundedCornerShape(100.dp),color=if(o.status=="pending") MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primaryContainer) {Text(purchaseOrderStatus(o),Modifier.padding(horizontal=10.dp,vertical=6.dp),fontSize=12.sp)}
+                                }
+                            }
+                            if(o.status=="pending" && ui.canEdit) MposPosControl("",{model.openEdit(o)},Modifier.size(46.dp).testTag("purchaseHistoryEdit:${o.id}"),!locked,PosControl.Outline,height=46.dp,radius=13.dp,icon="edit")
+                        }
                     }
                 }
             }
-            if(!history && expanded && snapshot!=null) {
+            if(expanded && snapshot!=null) {
                 MposSelect("Поставщик",form?.supplierId ?: "",(if(form==null) listOf("" to "Выберите поставщика") else emptyList())+snapshot.suppliers.map {it.id to it.name},model::supplier,
                     enabled=!locked && !ui.blocked && ui.canEdit && form?.lines.orEmpty().isEmpty(),modifier=Modifier.testTag("purchaseSupplier"))
                 if(form!=null) {
@@ -73,45 +85,31 @@ import com.mendelev.mpos.domain.warehouse.*
                     val available=snapshot.products.filter {it.id in supplier?.productIds.orEmpty()}
                     val missing=form.lines.filter {l->available.none {it.id==l.productId}}
                     if(supplier?.revision!=form.supplierRevision) Text("Поставщик изменился. Обновите ссылки; ввод останется прежним.",color=MaterialTheme.colorScheme.error)
-                    Text(if(ui.dirty) "Есть несохранённые изменения" else "Сохранённый черновик",style=MaterialTheme.typography.bodySmall,modifier=Modifier.testTag("purchaseDraftState"))
                     LazyColumn(Modifier.weight(1f).testTag("purchaseLines"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                         items(available,key={it.id}) {p->
                             val line=form.lines.find {it.productId==p.id} ?: p.blankLine()
-                            Surface(shape=MaterialTheme.shapes.large) {
-                                Column(Modifier.fillMaxWidth().padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                                    Text(line.productName,style=MaterialTheme.typography.titleMedium)
-                                    if(line.productRevision!=p.revision) Text("Карточка товара изменилась. Обновите ссылки.",color=MaterialTheme.colorScheme.error,style=MaterialTheme.typography.bodySmall)
-                                    Text("Остаток: ${p.stock.replace('.',',')} ${unitLabel(p.unit)}",style=MaterialTheme.typography.bodySmall)
-                                    FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                                        MposField(line.quantity,{v->model.line(p.id) {it.copy(quantity=v)}},"Количество",Modifier.width(170.dp).testTag("purchaseQty:${p.id}"),editable,numeric=true)
-                                        MposSelect("Единица заказа",line.unit,units(p.unit)+PurchaseDraftRules.packs.map {it to purchaseUnitLabel(it)},
-                                            {v->model.line(p.id) {it.copy(unit=v)}},editable,Modifier.width(190.dp).testTag("purchaseUnit:${p.id}"))
-                                        if(line.unit in PurchaseDraftRules.packs) {
-                                            MposField(line.packSize,{v->model.line(p.id) {it.copy(packSize=v)}},"В единице",Modifier.width(170.dp).testTag("purchasePack:${p.id}"),editable,numeric=true)
-                                            MposSelect("Единица внутри",line.contentUnit,units(p.unit),{v->model.line(p.id) {it.copy(contentUnit=v)}},editable,
-                                                Modifier.width(190.dp).testTag("purchaseContent:${p.id}"))
-                                        }
-                                    }
-                                    Text(expectation(line),style=MaterialTheme.typography.bodySmall,modifier=Modifier.testTag("purchaseExpected:${p.id}"))
-                                    if(form.lines.any {it.productId==p.id}) MposButton("Убрать строку",{model.remove(p.id)},enabled=!locked,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseRemove:${p.id}"))
-                                }
-                            }
+                            PurchaseRequestRow(p,line,editable) {next->if(line.quantity.isNotBlank() && next.quantity.isBlank()) model.remove(p.id) else model.line(p.id) {next}}
                         }
                         items(missing,key={"missing:${it.productId}"}) {l->
                             Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
                                 Text("${l.productName}: товар недоступен у поставщика. Введено ${l.quantity} ${purchaseUnitLabel(l.unit)}")
-                                MposButton("Убрать строку",{model.remove(l.productId)},enabled=!locked,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseRemove:${l.productId}"))
+                                PurchaseAction("Убрать строку",{model.remove(l.productId)},enabled=!locked,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseRemove:${l.productId}"))
                             }
                         }
                         if(available.isEmpty() && missing.isEmpty()) item {Text("Закрепите простые товары за поставщиком в Настройках → Поставщики")}
                     }
-                    FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                        MposButton("Сохранить черновик",model::save,enabled=!locked && !ui.blocked && ui.canEdit,modifier=Modifier.testTag("purchaseSave"))
-                        MposButton("Обновить ссылки",model::revalidate,enabled=!locked && !ui.blocked && ui.canEdit,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseRevalidate"))
-                        MposButton("Удалить черновик",{dialog="clear"},enabled=!locked && !ui.blocked && ui.canEdit,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseClear"))
-                        MposButton("Сформировать заказ",{dialog="place"},enabled=editable && !ui.dirty && snapshot.draft!=null,modifier=Modifier.testTag("purchasePlace"))
+                    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                        PurchaseAction("Сформировать заказ",model::saveAndPlace,Modifier.weight(1f).testTag("purchasePlace"),editable && form.lines.isNotEmpty())
+                        Box {
+                            PurchaseAction("⋯",{draftMenu=true},Modifier.width(54.dp),editable,ActionStyle.Outline)
+                            DropdownMenu(draftMenu,{draftMenu=false}) {
+                                DropdownMenuItem(text={Text("Сохранить черновик")},onClick={draftMenu=false;model.save()},modifier=Modifier.testTag("purchaseSave"))
+                                DropdownMenuItem(text={Text("Обновить ссылки")},onClick={draftMenu=false;model.revalidate()},modifier=Modifier.testTag("purchaseRevalidate"))
+                                DropdownMenuItem(text={Text("Удалить черновик")},onClick={draftMenu=false;dialog="clear"},modifier=Modifier.testTag("purchaseClear"))
+                            }
+                        }
                     }
-                } else Text("Выберите поставщика. Остатки при сохранении черновика не меняются.")
+                } else Text("Выберите поставщика.")
             }
         }
     }
@@ -122,9 +120,10 @@ import com.mendelev.mpos.domain.warehouse.*
         when {
             orderDialog -> if(order==null) {
                 Text(ui.message ?: "Перечитайте историю, чтобы открыть карточку заказа")
-                MposButton("Перечитать историю",model::refreshOrders,enabled=!locked,modifier=Modifier.testTag("purchaseOrderReload"))
+                PurchaseAction("Перечитать историю",model::refreshOrders,enabled=!locked,modifier=Modifier.testTag("purchaseOrderReload"))
             } else {
-                Text("${purchaseDate(order.createdAt)} · ${purchaseOrderStatus(order)} · Версия ${order.requestVersion}",modifier=Modifier.testTag("purchaseOrderStatus"))
+                Text(order.source.supplierName,style=MaterialTheme.typography.titleMedium)
+                Text("${purchaseDate(order.createdAt)} · ${purchaseOrderStatus(order)}",modifier=Modifier.testTag("purchaseOrderStatus"))
                 order.importedOrigin?.let {Text("Из Web: исходная версия ${it.requestVersion ?: "не сохранена"}. Версии native считаются отдельно",style=MaterialTheme.typography.bodySmall)}
                 Column(Modifier.weight(1f,fill=false).heightIn(max=450.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                     SelectionContainer {Text(PurchaseOrderRules.text(order),modifier=Modifier.testTag("purchaseOrderText"))}
@@ -136,32 +135,37 @@ import com.mendelev.mpos.domain.warehouse.*
                     }
                 }
                 FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                    MposButton("Копировать текст",{clipboard.setText(AnnotatedString(PurchaseOrderRules.text(order)))},modifier=Modifier.testTag("purchaseCopy"))
-                    MposButton("Приёмка",{dialog=null;model.dismissPlaced();onReceive(order.id)},enabled=editable && !ui.dirty && order.status=="pending",style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseReceiving"))
+                    PurchaseAction("Поделиться",{
+                        val intent=android.content.Intent(android.content.Intent.ACTION_SEND).apply {type="text/plain";putExtra(android.content.Intent.EXTRA_SUBJECT,"Заказ поставщику — ${order.source.supplierName}");putExtra(android.content.Intent.EXTRA_TEXT,PurchaseOrderRules.text(order))}
+                        context.startActivity(android.content.Intent.createChooser(intent,"Поделиться заказом"))
+                    },style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseShare"))
+                    PurchaseAction("Готово",{dialog=null;model.dismissPlaced()},style=ActionStyle.Primary,modifier=Modifier.testTag("purchaseDone"))
+                    PurchaseAction("Скопировать текст",{clipboard.setText(AnnotatedString(PurchaseOrderRules.text(order)))},modifier=Modifier.testTag("purchaseCopy"))
+                    PurchaseAction("Приёмка",{dialog=null;model.dismissPlaced();onReceive(order.id)},enabled=editable && !ui.dirty && order.status=="pending",style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseReceiving"))
                     if(order.status=="pending") {
-                        MposButton("Изменить заказ",{dialog=null;model.openEdit(order)},enabled=editable,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseEditOpen"))
-                        MposButton("Отменить заказ",{model.dismissPlaced();dialog="cancel:${order.id}"},enabled=editable,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseCancelOpen"))
+                        PurchaseAction("Изменить заказ",{dialog=null;model.openEdit(order)},enabled=editable,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseEditOpen"))
+                        PurchaseAction("Отменить заказ",{model.dismissPlaced();dialog="cancel:${order.id}"},enabled=editable,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseCancelOpen"))
                     }
                 }
             }
             dialog?.startsWith("cancel:")==true -> {
                 Text("Заказ останется в истории со статусом «Отменён». Остатки и себестоимость не изменятся; отмена не отправляет сообщение поставщику.")
                 val target=snapshot?.orders?.find {it.id==dialog?.substringAfter("cancel:")}
-                MposButton("Отменить заказ",{if(target!=null) {dialog=null;model.cancelOrder(target)}},enabled=editable && target!=null,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseCancelConfirm"))
+                PurchaseAction("Отменить заказ",{if(target!=null) {dialog=null;model.cancelOrder(target)}},enabled=editable && target!=null,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseCancelConfirm"))
             }
             dialog=="soon" -> Text("Приёмка будет подключена в следующей части. Отправка поставщику пока не выполняется.")
             dialog=="place" -> {
                 Text("Будет создан заказ со статусом «Ожидается приёмка». Сохранённый черновик очистится, единицы закупки запомнятся в карточках товаров. Остатки и себестоимость не изменятся.")
-                MposButton("Сформировать",{dialog=null;model.place()},enabled=editable,modifier=Modifier.testTag("purchasePlaceConfirm"))
+                PurchaseAction("Сформировать",{dialog=null;model.place()},enabled=editable,modifier=Modifier.testTag("purchasePlaceConfirm"))
             }
             dialog=="clear" -> {
                 Text("Сохранённый черновик и текущие изменения будут удалены. Остатки и себестоимость не изменятся.")
-                MposButton("Удалить",{dialog=null;model.clear()},enabled=!locked,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseClearConfirm"))
+                PurchaseAction("Удалить",{dialog=null;model.clear()},enabled=!locked,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseClearConfirm"))
             }
             else -> {
                 Text("Несохранённые изменения будут потеряны. Сохранённый черновик останется.")
-                MposButton("Продолжить редактирование",{dialog=null},style=ActionStyle.Secondary)
-                MposButton("Закрыть без сохранения",{val action=dialog;dialog=null;model.discard();if(action=="back") onBack() else model.refresh()},style=ActionStyle.Danger)
+                PurchaseAction("Продолжить редактирование",{dialog=null},style=ActionStyle.Secondary)
+                PurchaseAction("Закрыть без сохранения",{val action=dialog;dialog=null;model.discard();if(action=="back") onBack() else model.refresh()},style=ActionStyle.Danger)
             }
         }
     }

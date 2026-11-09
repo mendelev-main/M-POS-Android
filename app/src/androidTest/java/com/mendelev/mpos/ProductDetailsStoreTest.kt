@@ -10,6 +10,20 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ProductDetailsStoreTest {
+    @Test fun onlineFieldsAreDurableAndCommandCannotReplayDifferentPublicationFlags(): Unit=runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext,CatalogDatabase::class.java).build()
+        try {
+            val repo=CatalogRepository(db);repo.initialize()
+            val details=ProductDetails(description="Описание сайта",onlineOrder=false,onlineMenu=true)
+            val input=ProductInput("online",null,"Товар",null,"2","1","0",null,true,"online-create",details=details)
+            repo.saveProduct(input)
+            assertEquals(details,repo.editorSnapshot("online").details)
+            try {repo.saveProduct(input.copy(details=details.copy(onlineOrder=true)));fail()} catch(_:CatalogFailure) {}
+            repo.saveProduct(input.copy(expectedRevision=1,commandId="legacy-update",stockEdited=false,details=null))
+            assertEquals(details,repo.editorSnapshot("online").details)
+            assertEquals(details,ProductDraft.parse(ProductDraft(id="online",details=details).json()).details)
+        } finally {db.close()}
+    }
     @Test fun detailsAreAtomicRetainedAcrossOldCallersAndRestoredIntoDraft(): Unit=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext,CatalogDatabase::class.java).build()
         try {

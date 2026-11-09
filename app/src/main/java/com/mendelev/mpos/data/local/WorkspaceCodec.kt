@@ -36,6 +36,7 @@ object WorkspaceCodec {
         JSONObject().put("id",line.id).put("productId",line.productId).put("name",line.name).put("basePrice",line.basePrice ?: JSONObject.NULL)
             .put("manual",line.manual ?: JSONObject.NULL).put("unitPrice",line.unitPrice).put("quantity",line.quantity).put("unit",line.unit)
             .put("sellingBasis",line.sellingBasis).also {j->
+                line.quotedPrice?.let {j.put("quotedPrice",it)}
                 if(line.comment.isNotEmpty()) j.put("comment",line.comment)
                 if(line.discountEdited) j.put("discountEdited",true)
                 if(line.discountId.isNotEmpty()) j.put("discountId",line.discountId)
@@ -75,7 +76,8 @@ object WorkspaceCodec {
                     require(it in setOf("stock-unit","recipe-batch"))
                 },if(l.has("comment")) l.getString("comment") else "",if(l.has("discountId")) l.getString("discountId") else "",
                 if(l.has("discount")) l.getJSONObject("discount").let {d->com.mendelev.mpos.domain.sale.SaleDiscount(d.getString("type"),d.getString("value"),d.getString("name"))} else null,
-                if(l.has("discountEdited")) l.getBoolean("discountEdited") else false).also {line->
+                if(l.has("discountEdited")) l.getBoolean("discountEdited") else false,
+                if(l.has("quotedPrice")) CatalogRules.decimal(l.getString("quotedPrice"),2,"Цена онлайн-заказа") else null).also {line->
                     require(line.comment.length<=2000 && line.comment.codePointCount(0,line.comment.length)<=1000 && line.comment.none {it.isISOControl() && it!='\n' && it!='\t'})
                     require(line.discountId.length<=100 && line.discountId.none {it.isISOControl()})
                     if(line.discount!=null) com.mendelev.mpos.domain.sale.SaleMoney.quote(listOf(com.mendelev.mpos.domain.sale.SaleLineInput(line.id,line.unitPrice,line.quantity,line.discount)))

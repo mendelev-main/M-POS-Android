@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -70,6 +71,12 @@ class MainActivity : ComponentActivity() {
 fun FoundationScreen(fixtureUrl: String? = null) {
     var route by rememberSaveable { mutableStateOf("catalog") }
     val context = LocalContext.current
+    val backend=androidx.compose.runtime.remember {com.mendelev.mpos.backend.BackendRuntime.get(context)}
+    val lifecycle=androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    androidx.compose.runtime.LaunchedEffect(lifecycle) {
+        lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {backend.foreground()}
+    }
+    val onlineOrders by backend.orders.collectAsStateWithLifecycle()
     val preferences = context.getSharedPreferences("debugUpdateFixture", MODE_PRIVATE)
     val fixture = if (BuildConfig.DEBUG) fixtureUrl ?: preferences.getString("url", null) else null
     if (BuildConfig.DEBUG && fixtureUrl != null) preferences.edit().putString("url", fixtureUrl).apply()
@@ -91,7 +98,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
     val admin by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val navigation = MposTopNavigation(route, shiftUi.snapshot?.active != null,
         shiftUi.loading, shiftUi.fatal, shiftUi.pending || shiftUi.cashForm!=null || shiftUi.cashUnresolved!=null, shiftUi.snapshot?.active?.actorName ?: "Кассир не выбран",
-        adminActive=admin.active,
+        adminActive=admin.active,eventsCount=onlineOrders.size,
         inventoryReminder=!inventoryUi.blocked && inventoryUi.snapshot?.document?.let {it.draft!=null || com.mendelev.mpos.domain.warehouse.InventoryRules.due(it.config,calendarDay)}==true) {
             route=if(it=="inventory" && inventoryUi.snapshot?.document?.draft!=null) "inventoryWork" else it
         }
@@ -156,7 +163,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                         })
                         com.mendelev.mpos.feature.sale.SaleScreen(model,route=="history",{route="workspace"},{route="history"},{route="shift"},refunds)
                     }
-                    "workspace" -> {
+                    "workspace","events" -> {
                         val model: com.mendelev.mpos.feature.workspace.WorkspaceViewModel = viewModel(factory = object : ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T =
@@ -165,6 +172,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                         })
                         val photos=androidx.compose.runtime.remember(context) { com.mendelev.mpos.data.media.ProductPhotoStore(context.applicationContext.filesDir) }
                         com.mendelev.mpos.feature.workspace.WorkspaceScreen(model,photos,{route="catalog"},{route="settings"},{route="shift"},{route="checkout"},{route="history"})
+                        if(route=="events") com.mendelev.mpos.feature.workspace.OnlineOrdersScreen {route="workspace"}
                     }
                     "gallery" -> com.mendelev.mpos.feature.products.ComponentGallery { route = "catalog" }
                     "purchaseOrders" -> {
@@ -194,7 +202,6 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                         })
                         com.mendelev.mpos.feature.report.ReportScreen(model,{route="settings"},{route="workspace"})
                     }
-                    "events" -> PlannedModuleScreen(route)
                     else -> {
                         val model: com.mendelev.mpos.feature.products.CatalogViewModel = viewModel(factory = object : ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST")

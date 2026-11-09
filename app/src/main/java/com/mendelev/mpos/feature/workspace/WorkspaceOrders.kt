@@ -1,6 +1,8 @@
 package com.mendelev.mpos.feature.workspace
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -48,6 +50,30 @@ import com.mendelev.mpos.domain.workspace.*
             model.resume(order.id,order.revision,s.cartRevision,s.cart.sessionId,s.cart.details.label) {close()}
         else onMode("resume")
     }
+    if(mode=="transfer") {
+        MposDialog("Объединить чеки",{close()},!busy,maxWidth=680.dp) {
+            Text("Выберите отложенный чек. Текущие товары добавятся к нему, и объединённый чек откроется в рабочей зоне.")
+            ui.message?.let {MposNotice(it,true)}
+            LazyColumn(Modifier.heightIn(max=420.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                if(s.parked.isEmpty()) item {Text("Нет отложенных чеков")}
+                items(s.parked.sortedBy {it.cart.details.label}) {order->
+                    MposPosControl(order.cart.details.label,{target=order.id;targetRevision=order.revision;targetLabel=order.cart.details.label;requestRevision=s.cartRevision;requestOwner=s.cart.sessionId;onMode("transferConfirm")},Modifier.fillMaxWidth().testTag("transferTarget:${order.id}"),!busy,PosControl.Surface,height=64.dp,radius=16.dp)
+                }
+            }
+        }
+        return
+    }
+    if(mode=="transferConfirm") {
+        MposDialog("Переместить и открыть чек?",{onMode("transfer")},!busy,maxWidth=600.dp) {
+            Text("Товары текущего заказа будут добавлены в «$targetLabel». Название, клиент и доставка сохранятся от выбранного чека.")
+            ui.message?.let {MposNotice(it,true)}
+            Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                MposPosControl("Назад",{onMode("transfer")},Modifier.weight(1f),!busy,PosControl.Secondary)
+                MposPosControl("Переместить и открыть",{model.transfer(target,targetRevision,requestRevision,requestOwner) {close()}},Modifier.weight(1f).testTag("transferConfirm"),!busy,PosControl.Cash)
+            }
+        }
+        return
+    }
     if(mode=="list") {
         ParkedOrdersWindow(s.parked,busy,ui.message,{order->order.cart.lines.any {CartEngine.stale(it,s.products)}},
             {close()},{choose(it,false)},{choose(it,true)})
@@ -60,7 +86,7 @@ import com.mendelev.mpos.domain.workspace.*
         return
     }
     MposDialog(when(mode) {"details" -> "Параметры заказа";"park" -> "Отложить заказ";"resume" -> "Открыть отложенный заказ?";"delete" -> "Удалить отложенный заказ?";else -> "Отложенные заказы"},
-        {if(!busy) close()},!busy) {
+        {if(!busy) close()},!busy,maxWidth=680.dp) {
         if(ui.message!=null) MposNotice(ui.message!!,true)
         when(mode) {
             "delete" -> {
@@ -78,9 +104,9 @@ import com.mendelev.mpos.domain.workspace.*
                 } else Text("Введённые параметры пустого текущего заказа будут заменены параметрами выбранного заказа")
                 Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
                     MposButton("Отмена",{onMode("list");model.dismiss()},enabled=!busy,style=ActionStyle.Secondary)
-                    MposButton(if(requestHasLines) "Отложить и открыть" else "Открыть заказ",{
+                    MposPosControl(if(requestHasLines) "Отложить и открыть" else "Открыть заказ",{
                         model.resume(target,targetRevision,requestRevision,requestOwner,label.takeIf {requestHasLines},!requestHasLines) {close()}
-                    },busy=busy,modifier=Modifier.testTag("orderSubmit"))
+                    },Modifier.weight(1f).testTag("orderSubmit"),!busy,PosControl.Cash,height=52.dp,radius=16.dp)
                 }
             }
             else -> {
@@ -91,13 +117,13 @@ import com.mendelev.mpos.domain.workspace.*
                         }
                     }
                     MposField(label,{label=it;model.dismiss()},"Подпись заказа",Modifier.testTag("orderLabel"),!busy)
-                    Text("Заказ сохранится в отложенных, а текущая корзина станет пустой")
+
                 }
                 Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                    MposButton("Отмена",{close()},enabled=!busy,style=ActionStyle.Secondary)
-                    MposButton("Отложить заказ",{
+                    MposPosControl("Отмена",{close()},Modifier.weight(1f),!busy,PosControl.Secondary,height=52.dp,radius=16.dp)
+                    MposPosControl("Отложить заказ",{
                         model.park(label,revision,owner) {close()}
-                    },busy=busy,modifier=Modifier.testTag("orderSubmit"))
+                    },Modifier.weight(1f).testTag("orderSubmit"),!busy,PosControl.Cash,height=52.dp,radius=16.dp)
                 }
             }
         }

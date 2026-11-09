@@ -8,6 +8,26 @@ spec.loader.exec_module(module)
 
 
 class EmulatorGuardTests(unittest.TestCase):
+    def test_updater_timestamp_uses_persisted_preferences_and_requires_positive_value(self):
+        from unittest.mock import patch
+        with patch.object(module, "adb", side_effect=["emulator-5554", '<map><long name="lastChecked" value="1234" /></map>']) as adb:
+            self.assertEqual(1234, module.update_checked_at())
+        self.assertEqual(("shell", "run-as", module.PACKAGE, "cat", "shared_prefs/updates.xml"), adb.call_args.args)
+        with patch.object(module, "adb", side_effect=["emulator-5554", "<map />"]):
+            with self.assertRaises(AssertionError):
+                module.update_checked_at()
+
+    def test_release_preference_probe_cannot_root_a_physical_or_non_ci_device(self):
+        from unittest.mock import patch
+        with patch.object(module, "adb", return_value="physical-device") as adb:
+            with self.assertRaises(module.UnsafeDeviceError):
+                module.update_checked_at(True)
+        self.assertEqual(1, adb.call_count)
+        with patch.dict(module.os.environ, {"CI": "false", "GITHUB_ACTIONS": "false"}), patch.object(module, "adb", return_value="emulator-5554") as adb:
+            with self.assertRaises(module.UnsafeDeviceError):
+                module.update_checked_at(True)
+        self.assertEqual(1, adb.call_count)
+
     def test_destructive_upgrade_test_rejects_physical_and_ambiguous_devices(self):
         module.require_emulator("emulator-5554")
         for serial in ["R58N123456", "192.168.1.50:5555", "", "unknown", "emulator-5554\nR58N123456"]:

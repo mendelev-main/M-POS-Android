@@ -70,7 +70,7 @@ class SaleUiTest {
         assertEquals(command,model.state.value.preview!!.draft.commandId)
         compose.onNodeWithTag("saleConfirm").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.completed!=null}
-        compose.onNodeWithTag("saleSuccess").assertExists();compose.onNodeWithTag("receiptTotal").assertTextEquals("Итого: 2,00 BYN");shot("sale-receipt")
+        compose.onNodeWithTag("saleSuccess").assertExists();compose.onNodeWithText("Чек оплачен").assertIsDisplayed();compose.onNodeWithTag("receiptPrint").assertExists();compose.onNodeWithTag("receiptTotal").assertTextEquals("2,00 BYN");shot("sale-receipt")
         val receipt=model.state.value.completed!!
         assertEquals("9",runBlocking {db.catalog().balance(id)!!.quantity});assertEquals(opening+200,runBlocking {ShiftRepository(db).snapshot().currentCash})
         // Cold-model recovery uses the committed tombstone, not an in-memory success flag.

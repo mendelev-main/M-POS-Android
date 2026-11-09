@@ -1,0 +1,39 @@
+package com.mendelev.mpos
+
+import androidx.test.platform.app.InstrumentationRegistry
+import com.mendelev.mpos.backend.OrderInbox
+import com.mendelev.mpos.telegram.TelegramSecretCipher
+import kotlinx.coroutines.*
+import org.json.JSONObject
+import org.junit.Assert.*
+import org.junit.Test
+import java.io.File
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
+
+class OrderInboxTest {
+    private fun file()=File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir,"inbox-${UUID.randomUUID()}.json")
+    private fun row(id: String)=JSONObject().put("id",id).put("status","new").put("created_at","2026-11-09T10:00:00Z")
+    private val cipher=object: TelegramSecretCipher {override fun encrypt(bytes: ByteArray)=bytes;override fun decrypt(bytes: ByteArray)=bytes}
+    @Test fun parallelInstancesDoNotLoseOrdersOrCorruptAtomicFile()=runBlocking {
+        val file=file()
+        try {
+            val a=OrderInbox(file,cipher);val b=OrderInbox(file,cipher)
+            coroutineScope {repeat(20) {i->launch(Dispatchers.IO) {(if(i%2==0) a else b).merge(listOf(row("order-$i")),emptySet())}}}
+            assertEquals(20,a.read().size)
+            assertEquals(19,b.merge(emptyList(),setOf("order-1")).size)
+        } finally {file.delete()}
+    }
+    @Test fun duplicateSnapshotsDoNotRewriteAndCorruptInboxCannotBeOverwritten() {
+        val file=file();val writes=AtomicInteger()
+        val counting=object: TelegramSecretCipher {override fun encrypt(bytes: ByteArray): ByteArray {writes.incrementAndGet();return bytes};override fun decrypt(bytes: ByteArray)=bytes}
+        try {
+            OrderInbox(file,counting).merge(listOf(row("1")),emptySet())
+            OrderInbox(file,counting).merge(listOf(row("1")),emptySet())
+            assertEquals(1,writes.get())
+            file.writeText("corrupted")
+            try {OrderInbox(file,counting).merge(listOf(row("2")),emptySet());fail()} catch(_:Exception) {}
+            assertEquals("corrupted",file.readText())
+        } finally {file.delete()}
+    }
+}

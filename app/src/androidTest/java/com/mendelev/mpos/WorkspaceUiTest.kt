@@ -65,7 +65,8 @@ class WorkspaceUiTest {
         compose.onNodeWithTag("workspaceGrid").performScrollToIndex(index)
         compose.onNodeWithTag("workspaceCategory:$category").performClick()
         compose.onNodeWithTag("workspaceEdit").performClick()
-        compose.onNodeWithText("Создать папку").performClick()
+        compose.onNodeWithTag("workspaceLayoutMenu").performClick()
+        compose.onNodeWithTag("layoutMenu:folder").performClick()
         compose.onNodeWithTag("workspaceFolderName").performTextInput(folderName)
         compose.onNodeWithText("Сохранить папку").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.layout.any {it.type=="folder" && it.name==folderName}}

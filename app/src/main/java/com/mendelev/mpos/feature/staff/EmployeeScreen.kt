@@ -19,7 +19,7 @@ import com.mendelev.mpos.core.ui.*
 
 /** Name, optional phone and administrator switch follow the pinned Web employee modal. */
 @OptIn(ExperimentalLayoutApi::class)
-@Composable fun EmployeeScreen(model: EmployeeViewModel,onBack: ()->Unit) {
+@Composable fun EmployeeScreen(model: EmployeeViewModel,embedded: Boolean=false,onBack: ()->Unit) {
     val ui by model.state.collectAsStateWithLifecycle()
     val admin by Administration.session.state.collectAsStateWithLifecycle()
     val locked=ui.pending || ui.unresolved!=null
@@ -27,7 +27,7 @@ import com.mendelev.mpos.core.ui.*
     LaunchedEffect(model,admin.generation) {model.refresh()}
     val close={if(form?.discarding==true) model.change {it.copy(discarding=false)} else if(form?.deleting==true) model.change {it.copy(deleting=false)} else model.dismiss()}
     BackHandler {if(!locked) {if(form!=null && admin.active) close() else onBack()}}
-    Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
+    if(!embedded) Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
         MposAppBar("Сотрудники",navigationEnabled=!locked && form==null) {}
         Column(Modifier.padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -56,6 +56,10 @@ import com.mendelev.mpos.core.ui.*
             }
         }
     }
+    if(embedded && form==null && ui.blocked && !ui.pending) MposDialog("Сотрудники",onBack) {
+        MposNotice(ui.message ?: "Не удалось прочитать сотрудников",true)
+        MposButton("Повторить чтение",model::refresh)
+    }
     if(form!=null && admin.active) MposDialog(if(form.discarding) "Закрыть без сохранения?" else if(form.deleting) "Удалить сотрудника?" else if(form.revision==null) "Новый сотрудник" else "Сотрудник",close,!locked,maxWidth=700.dp) {
         Column(Modifier.heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(16.dp)) {
             if(ui.message!=null) MposNotice(ui.message!!,true)
@@ -68,8 +72,8 @@ import com.mendelev.mpos.core.ui.*
                 MposButton("Отмена",{model.change {it.copy(deleting=false)}},enabled=!locked,style=ActionStyle.Secondary)
                 MposButton("Удалить",model::save,enabled=!locked,style=ActionStyle.Danger,modifier=Modifier.testTag("employeeDeleteConfirm"))
             } else {
-                MposField(form.name,{value->model.change {it.copy(name=value)}},"ФИО",Modifier.testTag("employeeName"),!locked)
-                MposField(form.phone,{value->model.change {it.copy(phone=value)}},"Номер телефона (необязательно)",Modifier.testTag("employeePhone"),!locked)
+                MposWebField(form.name,{value->model.change {it.copy(name=value)}},"ФИО","employeeName",!locked,placeholder="Иванов Иван Иванович")
+                MposWebField(form.phone,{value->model.change {it.copy(phone=value)}},"Номер телефона","employeePhone",!locked,placeholder="+375 XX XXX-XX-XX")
                 Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {Text("Администратор");Text("Управляет приложением через отдельный вход. Кассовые смены не открывает.",style=MaterialTheme.typography.bodySmall)}
                     Switch(form.role=="admin",{value->model.change {it.copy(role=if(value) "admin" else "employee")}},enabled=!locked,modifier=Modifier.testTag("employeeAdmin"))

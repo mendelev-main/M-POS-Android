@@ -1,6 +1,8 @@
 package com.mendelev.mpos.feature.suppliers
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -20,7 +22,7 @@ import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.domain.catalog.CatalogRules
 
 /** Pinned suppliers.js modal: name + searchable checklist of simple products. */
-@Composable fun SupplierScreen(model: SupplierViewModel,onBack: ()->Unit) {
+@Composable fun SupplierScreen(model: SupplierViewModel,embedded: Boolean=false,onBack: ()->Unit) {
     val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val ui by model.state.collectAsStateWithLifecycle()
     val locked=ui.pending || ui.unresolved!=null
@@ -29,7 +31,7 @@ import com.mendelev.mpos.domain.catalog.CatalogRules
     LaunchedEffect(model,administration.generation) {model.refresh()}
     val close={if(form?.discarding==true) model.change {it.copy(discarding=false)} else if(form?.deleting==true) model.change {it.copy(deleting=false)} else model.dismiss()}
     BackHandler {if(!locked) {if(form!=null) close() else onBack()}}
-    Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
+    if(!embedded) Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
         MposAppBar("Поставщики",navigationEnabled=!locked && form==null) {}
         Column(Modifier.padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -54,6 +56,10 @@ import com.mendelev.mpos.domain.catalog.CatalogRules
             }
         }
     }
+    if(embedded && form==null && ui.blocked && !ui.pending) MposDialog("Поставщики",onBack) {
+        MposNotice(ui.message ?: "Не удалось прочитать поставщиков",true)
+        MposButton("Повторить чтение",model::refresh)
+    }
     if(form!=null) MposDialog(if(form.discarding) "Закрыть без сохранения?" else if(form.deleting) "Удалить поставщика?" else if(form.revision==null) "Новый поставщик" else "Товары поставщика",close,!locked,wide=true,maxWidth=700.dp) {
         Column(Modifier.weight(1f,fill=false).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(16.dp)) {
         if(ui.message!=null) MposNotice(ui.message!!,true)
@@ -66,17 +72,17 @@ import com.mendelev.mpos.domain.catalog.CatalogRules
             MposButton("Отмена",{model.change {it.copy(deleting=false)}},enabled=!locked,style=ActionStyle.Secondary)
             MposButton("Удалить",model::save,enabled=!locked,style=ActionStyle.Danger,modifier=Modifier.testTag("supplierDeleteConfirm"))
         } else {
-            MposField(form.name,{value->model.change {it.copy(name=value)}},"Название поставщика",Modifier.testTag("supplierName"),!locked)
+            MposWebField(form.name,{value->model.change {it.copy(name=value)}},"Название поставщика","supplierName",!locked,placeholder="Например, ООО Поставщик")
             Text("Товары на поставщике",style=MaterialTheme.typography.titleMedium)
             Text("Выберите товары, которые обычно закупаются у этого поставщика. В приёмке они будут показываться первыми.",style=MaterialTheme.typography.bodySmall)
-            MposField(query,{query=it},"Поиск товара или категории",Modifier.testTag("supplierSearch"),!locked)
-            val products=ui.snapshot?.products.orEmpty().filter {CatalogRules.key(it.name+" "+it.category).contains(CatalogRules.key(query))}
-            LazyColumn(Modifier.heightIn(max=260.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
+            MposWebField(query,{query=it},"","supplierSearch",!locked,placeholder="Поиск товара или категории")
+            val products=ui.snapshot?.products.orEmpty().filter {CatalogRules.key(it.name+" "+it.category).contains(CatalogRules.key(query))}.sortedWith(compareBy(java.text.Collator.getInstance(java.util.Locale.forLanguageTag("ru"))) {it.name})
+            LazyColumn(Modifier.border(1.dp,MaterialTheme.colorScheme.outline,RoundedCornerShape(12.dp)).padding(6.dp).heightIn(max=360.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                 items(products,key={it.id}) {p->
                     val toggle={model.change {f->f.copy(productIds=if(p.id in f.productIds) f.productIds-p.id else f.productIds+p.id)}}
                     Row(Modifier.fillMaxWidth().clickable(enabled=!locked,onClick=toggle).padding(8.dp),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                         Checkbox(p.id in form.productIds,{toggle()},enabled=!locked,modifier=Modifier.testTag("supplierProduct:${p.id}"))
-                        Column(Modifier.weight(1f)) {Text(p.name);Text(p.category,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+                        Text(p.name,Modifier.weight(1f));Text(p.category.ifBlank {"Без категории"},style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 if(products.isEmpty()) item {Text(if(ui.snapshot?.products?.isEmpty()==true) "Сначала создайте простые товары" else "Товары не найдены")}
