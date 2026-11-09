@@ -53,7 +53,12 @@ class ShiftUiTest {
         compose.onNode(hasAnyAncestor(isPopup()) and hasText(model.state.value.cashiers.first().name)).performScrollTo().performClick()
         compose.onNodeWithTag("shiftConfirm").performScrollTo().performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.snapshot?.active?.openingCash==14000L}
-        compose.activityRule.scenario.recreate();compose.onNodeWithTag("shiftStatus").assertTextContains("Кассовая смена №",substring=true)
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("shiftConfirm").fetchSemanticsNodes().isEmpty()}
+        compose.activityRule.scenario.recreate()
+        compose.waitUntil(20_000) {
+            compose.onAllNodes(hasTestTag("shiftStatus") and hasText("Кассовая смена №",substring=true),useUnmergedTree=true).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("shiftStatus",useUnmergedTree=true).assertTextContains("Кассовая смена №",substring=true)
         assertEquals(documents,runBlocking {CatalogDatabase.get(compose.activity.applicationContext).workspace().documents()})
         val qa=File(compose.activity.filesDir,"qa").apply {mkdirs()};qa.resolve("shiftId.txt").writeText(model.state.value.snapshot!!.active!!.id)
         screenshot("shift-open")

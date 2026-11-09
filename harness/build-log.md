@@ -1,5 +1,9 @@
 # Журнал проверок
 
+## 2026-11-09 — полный Android suite и seed обновления
+
+Run42626920160: harness/JVM/lint/build и350/350Android passed. В28UIseed перед APK update27passed; ShiftUiTest после recreate искал shiftStatus только в merged tree, runner сообщил наличие узла в unmerged. Тест теперь ждёт закрытия confirm перед recreate и активного текста статуса после него, затем проверяет исходный unmerged узел. Ожидание20s прежнее; проверки открытия140BYN, cash ledger, current/parked документов и обязательный update gate сохранены. Реальная установка обновления ещё не достигнута в этом запуске.
+
 ## 2026-11-09 — последний селектор версии закупки
 
 Run42624758616: AVD2CPU прошёл clean boot, harness/JVM/lint SUCCESS; Android349/350 passed. PurchaseOrderMutationUiTest проверял «Версия 2» в status label, тогда как действующий текст заявки содержит «Версия заявки: 2». Assertion перенесён в purchaseOrderText; версия2 уже подтверждена моделью до UI assertion. Остальные проверки сценария сохранены.
