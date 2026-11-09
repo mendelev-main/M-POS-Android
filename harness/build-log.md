@@ -1,5 +1,16 @@
 # Журнал проверок
 
+## 2026-11-09 — уточнение маски пароля
+
+По владельцу удалено раскрытие пароля; PasswordVisualTransformation всегда маскирует немедленно. AdminKeyboardInputTest изменён: hardware Shift/буквы/цифры/Backspace, отсутствие «Показать», password semantics и exact synthetic verifier input. compileDebugKotlin + compileDebugAndroidTestKotlin — BUILD SUCCESSFUL,1m8s; тест compile-only, AnyDesk не воспроизведён и не заявлен исправленным. Хэш/пароль неизменны; без commit/push. Предыдущие записи о reveal отменены этим уточнением.
+
+## 2026-11-09 — локально, удалённая клавиатура и проверка backend
+
+- N01.CFG: connection probe соответствует Web GET /health; SSE проверяет ключ отдельно, ошибка401/403 содержит HTTP-код. Скриншот пользователя подтверждает отказ доступа в старой совмещённой проверке, но конкретный ответ state/SSE на его deployment пока не получен. Production-запросы, публикация каталога и серверные изменения не выполнялись.
+- Admin input: отключена autocorrect для password, добавлено временное раскрытие ввода. Пароль/verifier неизменны. Причина расхождения AnyDesk/экранной клавиатуры пока не воспроизведена; не считать исправление подтверждённым.
+- Gradle8.13/JDK17: compileDebugKotlin + compileDebugAndroidTestKotlin + testDebugUnitTest --tests com.mendelev.mpos.BackendTest --tests com.mendelev.mpos.core.access.AdminSessionTest — BUILD SUCCESSFUL, 1m1s; 8+5 JVM, 0 failures/errors/skipped. AdminKeyboardInputTest (synthetic Shift/цифры/Backspace/reveal/login) compile-only; connected тест не запускался на пользовательском эмуляторе.
+- Новые правки локальные, без commit/push. После Run владелец проверяет SSE и раскрытый ввод AnyDesk, не присылая пароль/ключ.
+
 ## 2026-10-23 — этап 00, подготовка
 
 Исходный Web срез: `1682c88334e6fb13586ce4b530157c59ca062e43`. Созданы планы 00–09, источники/инварианты, repo-local skills, native Compose bootstrap, harness и Actions. Новый независимый сертификат закреплён публичным fingerprint; private bundle хранится вне Git.

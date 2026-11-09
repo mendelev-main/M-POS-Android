@@ -1,5 +1,9 @@
 # Карта функционального переноса
 
+2026-11-09 уточнение admin input: раскрытие пароля удалено по владельцу. Всегда немедленная маска точками; регрессия проверяет masked hardware input → исходные символы verifier. Реальный AnyDesk по-прежнему pending; прежняя запись о reveal ниже описывает отменённый вариант.
+
+2026-11-09 локально: N01.CFG connection probe приведён к Web /health; SSE проверяет доступ отдельно,401/403 отображаются явно. BackendTest8/AdminSessionTest5 JVM passed; production/device проверка pending. Admin password reveal и запрет autocorrect implemented, hardware-key тест compile-only; совместимость AnyDesk pending, verifier неизменен. Evidence: harness/build-log.md, harness/context/08-admin-keyboard.md.
+
 Подробные требования: [функциональная спецификация](FUNCTIONAL-SPEC.md), [сценарии 01/02](CATALOG-WORKSPACE-SPEC.md), [операции 03–08](OPERATIONS-SPEC.md), [настройки/сайт](SETTINGS-SITE-SPEC.md).
 
 Сквозные системные case IDs SYS/RES/ACC уточняют существующие acceptance: [SYSTEM-ACCEPTANCE.md](SYSTEM-ACCEPTANCE.md). Их описание не повышает статус этапов.

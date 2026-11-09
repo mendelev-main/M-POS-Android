@@ -32,8 +32,6 @@ class BackendHttp(private val client: OkHttpClient=OkHttpClient()) {
     }
     fun check(s: BackendSettings) {
         if(json(s,s.healthPath).opt("ok")!=true) throw BackendFailure("Backend не подтвердил готовность")
-        val state=json(s,s.statePath)
-        if(state.opt("available") !is Boolean || state.opt("fresh") !is Boolean || !state.has("state")) throw BackendFailure("Backend вернул неподдерживаемый ответ состояния")
     }
     /** Read-only probe: never accepts or creates an online order. Header auth is supported by the server. */
     fun checkEvents(input: BackendSettings) {
@@ -44,7 +42,7 @@ class BackendHttp(private val client: OkHttpClient=OkHttpClient()) {
         }} catch(e:BackendFailure) {throw e} catch(_:Exception) {throw BackendFailure("Канал заказов не ответил. Проверьте адрес и ключ устройства")}
     }
     private fun responseFailure(code: Int)=BackendFailure(when(code) {
-        401,403->"Backend отклонил ключ устройства. Для нового устройства сначала нужна ручная синхронизация каталога; для тарифов проверьте источник на сервере"
+        401,403->"HTTP $code: backend не разрешил доступ. Проверьте ключ устройства и адрес сервера. Успешная проверка связи не подтверждает доступ к заказам"
         404->"Маршрут отсутствует на backend. Проверьте пути API"
         409->"Данные на сервере изменились. Проверьте состояние перед повторной публикацией"
         429->"Backend ограничил запросы. Повторите позже"

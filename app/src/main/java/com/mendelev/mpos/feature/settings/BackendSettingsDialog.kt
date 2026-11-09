@@ -40,7 +40,7 @@ import kotlinx.coroutines.*
         val expected=saved ?: return
         busy=true;error=null;status="Проверяем подключение…"
         scope.launch {try {withContext(Dispatchers.IO) {val current=access.current(expected);val http=BackendHttp();http.check(current);if(events) {access.current(expected);http.checkEvents(current)}}
-            status=if(events) "Канал заказов работает. Заказы не создавались" else "Backend подключён, ключ устройства принят";onStatus(status!!)}
+            status=if(events) "Канал заказов работает. Заказы не создавались" else "Связь с backend работает. Для проверки ключа проверьте канал заказов";onStatus(status!!)}
             catch(e:Exception) {status=null;error=if(e is BackendFailure || e is IllegalStateException) e.message else "Не удалось проверить подключение";onStatus(error!!)} finally {busy=false}}
     }
     MposDialog("Меню и backend",onClose,closable=!busy,maxWidth=720.dp) {

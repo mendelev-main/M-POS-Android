@@ -28,7 +28,7 @@ class BackendTest {
         val invalid=listOf(settings.copy(url="http://example.org"),settings.copy(url="https://u:p@example.org"),settings.copy(url="https://example.org?a=b"),settings.copy(url="https://example.org/#fragment"),settings.copy(eventsPath="//foreign.example.org/events"),settings.copy(menuPath="/../menu"),settings.copy(menuPath="/%2e%2e/menu"),settings.copy(deviceKey="bad\r\nkey"),settings.copy(timeoutSeconds=0))
         invalid.forEach {try {it.validated();fail("Accepted invalid configuration")} catch(_:IllegalArgumentException) {}}
     }
-    @Test fun checksRealHealthAndAuthenticatedStateWithConfiguredBasePrefix() {
+    @Test fun connectionMatchesWebHealthOnlyWithConfiguredBasePrefix() {
         val calls=mutableListOf<String>()
         val http=BackendHttp(client {request->
             assertEquals("fixture-device-key",request.header("X-Device-Key"))
@@ -37,11 +37,12 @@ class BackendTest {
             200 to if(request.url.encodedPath.endsWith("health")) "{\"ok\":true}" else "{\"available\":false,\"fresh\":false,\"state\":null,\"reason\":\"missing\"}"
         })
         http.check(settings)
-        assertEquals(listOf("/pos/health","/pos/api/operational/state"),calls)
+        assertEquals(listOf("/pos/health"),calls)
     }
     @Test fun rejectedKeyCannotBecomeSuccessfulOrLeakServerBody() {
         val http=BackendHttp(client {r->if(r.url.encodedPath.endsWith("health")) 200 to "{\"ok\":true}" else 401 to "secret from server: fixture-device-key"})
-        try {http.check(settings);fail()} catch(e:BackendFailure) {assertEquals(401,e.status);assertFalse(e.message!!.contains(settings.deviceKey))}
+        http.check(settings)
+        try {http.checkEvents(settings);fail()} catch(e:BackendFailure) {assertEquals(401,e.status);assertFalse(e.message!!.contains(settings.deviceKey))}
     }
     @Test fun rejectsMalformedAndOversizedResponses() {
         listOf("[]","bad-json","x".repeat(1_048_577)).forEach {raw->

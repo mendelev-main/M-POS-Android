@@ -107,7 +107,7 @@ enum class ActionStyle { Primary, Secondary, Outline, Danger }
     OutlinedTextField(value=value, onValueChange=onChange, label={ Text(label) }, enabled=enabled,
         modifier=modifier.fillMaxWidth().heightIn(min=48.dp), shape=RoundedCornerShape(10.dp), singleLine=singleLine, minLines=if(singleLine) 1 else 3, maxLines=if(singleLine) 1 else 5,
         isError=error!=null, supportingText=if(error!=null) {{ Text(error) }} else null,
-        keyboardOptions=androidx.compose.foundation.text.KeyboardOptions(keyboardType=if(password) androidx.compose.ui.text.input.KeyboardType.Password else if(numeric) androidx.compose.ui.text.input.KeyboardType.Decimal else androidx.compose.ui.text.input.KeyboardType.Text),
+        keyboardOptions=androidx.compose.foundation.text.KeyboardOptions(autoCorrectEnabled=if(password) false else null, capitalization=androidx.compose.ui.text.input.KeyboardCapitalization.None, keyboardType=if(password) androidx.compose.ui.text.input.KeyboardType.Password else if(numeric) androidx.compose.ui.text.input.KeyboardType.Decimal else androidx.compose.ui.text.input.KeyboardType.Text),
         visualTransformation=if(password) androidx.compose.ui.text.input.PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
         colors=OutlinedTextFieldDefaults.colors(unfocusedBorderColor=MaterialTheme.colorScheme.outline))
 }
