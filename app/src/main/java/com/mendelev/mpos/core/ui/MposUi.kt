@@ -21,6 +21,7 @@ import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -91,7 +92,7 @@ enum class ActionStyle { Primary, Secondary, Outline, Danger }
     Dialog(onDismissRequest={ if(closable) onClose() }, properties=androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth=!(wide || maxWidth!=null))) {
         MposDialogStatusBar()
         Surface(shape=RoundedCornerShape(22.dp), color=MaterialTheme.colorScheme.surface) {
-            Column(Modifier.widthIn(max=maxWidth ?: if(wide) 900.dp else 460.dp).then(if(wide || maxWidth!=null) Modifier.fillMaxWidth() else Modifier).padding(28.dp), verticalArrangement=Arrangement.spacedBy(16.dp)) {
+            Column(Modifier.semantics {testTagsAsResourceId=true}.widthIn(max=maxWidth ?: if(wide) 900.dp else 460.dp).then(if(wide || maxWidth!=null) Modifier.fillMaxWidth() else Modifier).padding(28.dp), verticalArrangement=Arrangement.spacedBy(16.dp)) {
                 Row(verticalAlignment=Alignment.CenterVertically) {
                     Text(title, Modifier.weight(1f), style=MaterialTheme.typography.titleMedium)
                     MposCloseButton(onClose, closable)

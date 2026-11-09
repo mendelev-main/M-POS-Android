@@ -1,5 +1,9 @@
 # Журнал проверок
 
+## 2026-11-09 — внешняя семантика admin dialog после actual update
+
+Run42632654976:350Android/28UIseed/2visual passed; реальная APK1→2 замена успешна, corruption/cancel/retry и success receipt прошли. После замены окно пароля открывается, но window.xml не содержит resource-id adminPassword: MposDialog не включал testTagsAsResourceId в своём отдельном Compose root. Shared dialog теперь экспортирует существующие tags аналогично MposWebModal. AdminKeyboardInputTest дополнен чтением настоящего AccessibilityNodeInfo: adminPassword должен иметь ID и isPassword=true. Содержимое пароля не выводится/не раскрывается, verifier прежний. Следующий run должен пройти дальнейшие preservation checks/signing/release.
+
 ## 2026-11-09 — восстановление обязательного screenshot evidence оплаты
 
 Run42629776786: harness/JVM/lint/build,350Android и28UIseed прошли. В update-e2e обязательная коллекция screenshot остановилась на отсутствующем sale-preview.png: снимок был удалён при адаптации SaleUiTest к immediate cash payment. Возвращён shot("sale-preview") после проверки cash change3BYN и до recreate; обязательность артефакта сохранена. Install update ещё не достигнут; real AnyDesk отдельно pending.

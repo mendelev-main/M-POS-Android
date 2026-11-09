@@ -24,6 +24,14 @@ class AdminKeyboardInputTest {
         try {
             compose.setContent { MposTheme { AdminControl() } }
             compose.onNodeWithTag("adminControl").performClick()
+            fun exportedPassword(node: android.view.accessibility.AccessibilityNodeInfo?): Boolean {
+                if(node==null) return false
+                if(node.viewIdResourceName=="adminPassword") return node.isPassword
+                return (0 until node.childCount).any {exportedPassword(node.getChild(it))}
+            }
+            compose.waitUntil(10_000) {
+                exportedPassword(androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation.rootInActiveWindow)
+            }
             compose.onNodeWithTag("adminPassword").performClick().performKeyInput {
                 keyDown(Key.ShiftLeft); pressKey(Key.A); keyUp(Key.ShiftLeft)
                 pressKey(Key.B); pressKey(Key.Zero); pressKey(Key.Backspace); pressKey(Key.Nine)
