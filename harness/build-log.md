@@ -1,5 +1,9 @@
 # Журнал проверок
 
+## 2026-11-09 — последний селектор версии закупки
+
+Run42624758616: AVD2CPU прошёл clean boot, harness/JVM/lint SUCCESS; Android349/350 passed. PurchaseOrderMutationUiTest проверял «Версия 2» в status label, тогда как действующий текст заявки содержит «Версия заявки: 2». Assertion перенесён в purchaseOrderText; версия2 уже подтверждена моделью до UI assertion. Остальные проверки сценария сохранены.
+
 ## 2026-11-09 — CPU cold boot CI
 
 Run42623072897 attempts1/2: JVM/lint SUCCESS; Android остановлен до установки APK: SystemUI failed to complete startup, CPU pressure в boot log. Попытки не выполняли тесты приложения. Runtime AVD изменён с4 на максимум2guest CPU (не выше host count), оставляя ресурс GLES/host. API36/viewport/3072MB RAM/ANR guard неизменны. Регрессия launcher проверяет CPU bound в записанном config; требуется новый чистый запуск для подтверждения гипотезы.

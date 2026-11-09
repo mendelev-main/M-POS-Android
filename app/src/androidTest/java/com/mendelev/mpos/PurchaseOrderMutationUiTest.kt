@@ -69,7 +69,7 @@ class PurchaseOrderMutationUiTest {
         shot("purchase-order-edit")
         compose.onNodeWithTag("purchaseEditSave").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.editing==null && model.state.value.snapshot!!.orders.any {it.id==orderId && it.requestVersion==2L}}
-        compose.onNodeWithTag("purchaseOrderStatus").assertTextContains("Версия 2",substring=true)
+        compose.onNodeWithTag("purchaseOrderText").assertTextContains("Версия заявки: 2",substring=true)
         compose.onNodeWithTag("purchaseOrderText").assertTextContains("12 бутылка × 500 мл",substring=true)
         compose.onNodeWithText("Предыдущая версия 1",substring=true).assertExists()
         assertTrue(model.state.value.dirty);assertEquals("5",model.state.value.form!!.lines.single().quantity)
