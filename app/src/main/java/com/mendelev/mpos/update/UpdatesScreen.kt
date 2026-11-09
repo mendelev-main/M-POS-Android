@@ -88,39 +88,39 @@ fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGal
             Text("Текущая версия: ${model.repository.installedName}")
             state.candidate?.let {Text("Доступная версия: ${it.versionName}")}
             if(state.stage==UpdateStage.CURRENT) Text("Установлена последняя версия")
-                if (state.stage == UpdateStage.DOWNLOADING) {
-                    LinearProgressIndicator(progress = { state.progress / 100f }, modifier = Modifier.fillMaxWidth())
-                    Text(stringResource(R.string.update_percent, state.progress))
-                    MposButton(stringResource(R.string.update_cancel), model::cancelDownload, style = ActionStyle.Secondary)
-                } else if (state.stage in setOf(UpdateStage.CHECKING, UpdateStage.RESTORING, UpdateStage.VERIFYING)) {
-                    CircularProgressIndicator()
-                }
-                state.message?.let { Text(it, color = if (state.stage == UpdateStage.ERROR)
-                    MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant) }
-                if (!state.busy) {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
-                        if (state.stage == UpdateStage.READY) {
-                            MposButton(stringResource(R.string.update_install), onClick = {
-                                if (!context.packageManager.canRequestPackageInstalls()) {
-                                    try { permission.launch(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}"))) }
-                                    catch (_: ActivityNotFoundException) { model.installerClosed(context.getString(R.string.update_settings_unavailable)) }
-                                } else scope.launch {
-                                    val intent = model.prepareInstallation() ?: return@launch
-                                    if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-                                        model.installerClosed(context.getString(R.string.update_return_to_install))
-                                        return@launch
-                                    }
-                                    try { installer.launch(intent) }
-                                    catch (_: ActivityNotFoundException) { model.installerClosed(context.getString(R.string.update_installer_unavailable)) }
-                                    catch (_: SecurityException) { model.installerClosed(context.getString(R.string.update_permission_required)) }
+            if (state.stage == UpdateStage.DOWNLOADING) {
+                LinearProgressIndicator(progress = { state.progress / 100f }, modifier = Modifier.fillMaxWidth())
+                Text(stringResource(R.string.update_percent, state.progress))
+                MposButton(stringResource(R.string.update_cancel), model::cancelDownload, style = ActionStyle.Secondary)
+            } else if (state.stage in setOf(UpdateStage.CHECKING, UpdateStage.RESTORING, UpdateStage.VERIFYING)) {
+                CircularProgressIndicator()
+            }
+            state.message?.let { Text(it, color = if (state.stage == UpdateStage.ERROR)
+                MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant) }
+            if (!state.busy) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                    if (state.stage == UpdateStage.READY) {
+                        MposButton(stringResource(R.string.update_install), onClick = {
+                            if (!context.packageManager.canRequestPackageInstalls()) {
+                                try { permission.launch(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}"))) }
+                                catch (_: ActivityNotFoundException) { model.installerClosed(context.getString(R.string.update_settings_unavailable)) }
+                            } else scope.launch {
+                                val intent = model.prepareInstallation() ?: return@launch
+                                if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                                    model.installerClosed(context.getString(R.string.update_return_to_install))
+                                    return@launch
                                 }
-                            })
-                        } else if (state.candidate != null) {
-                            MposButton(stringResource(R.string.update_download), model::download)
-                        }
-
+                                try { installer.launch(intent) }
+                                catch (_: ActivityNotFoundException) { model.installerClosed(context.getString(R.string.update_installer_unavailable)) }
+                                catch (_: SecurityException) { model.installerClosed(context.getString(R.string.update_permission_required)) }
+                            }
+                        })
+                    } else if (state.candidate != null) {
+                        MposButton(stringResource(R.string.update_download), model::download)
                     }
+
                 }
+            }
 
 
 

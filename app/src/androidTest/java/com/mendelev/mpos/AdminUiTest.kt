@@ -29,8 +29,9 @@ class AdminUiTest {
         compose.onNodeWithTag("adminPassword").performTextInput("fixture-admin")
         compose.onNodeWithTag("adminLogin").performClick()
         compose.waitUntil(10_000) {Administration.session.state.value.active}
+        compose.waitUntil(10_000) {compose.onAllNodesWithTag("adminPanelScreen").fetchSemanticsNodes().isNotEmpty()}
         compose.activityRule.scenario.recreate()
-        compose.onNodeWithTag("adminControl").performClick()
+        compose.onNodeWithTag("adminPanelScreen").assertExists()
         compose.onNodeWithTag("adminStatus").assertDoesNotExist()
         compose.onNodeWithTag("topNav-administration").assertDoesNotExist()
         screenshot("admin-session")

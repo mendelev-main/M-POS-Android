@@ -1,5 +1,13 @@
 # Журнал проверок
 
+## 2026-11-09 — исправление gates после607a100
+
+Run42618296211: harness прошёл; lint остановлен SuspiciousIndentation в UpdatesScreen и StateFlowValueCalledInComposition в NetworkSettingsScreen. API36:12 UI failures из350; отчёты показывают старые шаги (modal admin close/reentry, removed gallery, moved analytics, layout menu, modifier label, keypad вместо editable quantity, cash immediate commit, enabled open-shift action).
+
+Исправлены отступы updater и reactive сбор admin session в network composition. UI-тесты переведены на актуальные действия с сохранением проверок navigation/recreation, qty/pack totals, stock/cash и durable checkout/receipt. Добавлен общий драйвер закупочной клавиатуры; skips/timeout/gates не изменены.
+
+Локально Gradle8.13/JDK17 testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest — SUCCESS (финальный запуск1m51s),395JVM/0failures/errors/skipped; lint0errors;32Python/preflight/diff passed. Первоначальный compile test выявил неверное обращение к SavedCheckout.commandId; исправлено на draft.commandId до финальной проверки. API36 suite/update/recovery/signing/release проверяются следующим CI run; реальный AnyDesk остаётся отдельной приёмкой.
+
 ## 2026-11-09 — уточнение маски пароля
 
 По владельцу удалено раскрытие пароля; PasswordVisualTransformation всегда маскирует немедленно. AdminKeyboardInputTest изменён: hardware Shift/буквы/цифры/Backspace, отсутствие «Показать», password semantics и exact synthetic verifier input. compileDebugKotlin + compileDebugAndroidTestKotlin — BUILD SUCCESSFUL,1m8s; тест compile-only, AnyDesk не воспроизведён и не заявлен исправленным. Хэш/пароль неизменны; без commit/push. Предыдущие записи о reveal отменены этим уточнением.

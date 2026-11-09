@@ -25,7 +25,7 @@ class AdminHeaderControlTest {
         compose.waitUntil {Administration.session.state.value.active}
         compose.onNodeWithTag("adminPassword").assertDoesNotExist()
         compose.onNodeWithTag("adminLogout").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Закрыть").performClick()
+        compose.onNodeWithText("Назад").performScrollTo().performClick()
         assertTrue(Administration.session.state.value.active)
         compose.onNodeWithTag("adminStatus").assertDoesNotExist()
         compose.onNodeWithTag("adminControl").assertContentDescriptionEquals("Панель администратора").assertIsSelected()

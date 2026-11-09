@@ -40,8 +40,8 @@ class PurchaseOrderMutationUiTest {
         compose.onNodeWithTag("purchaseNew").performClick()
         compose.onNode(hasAnyAncestor(hasTestTag("purchaseSupplier")) and hasClickAction()).performClick()
         compose.onNode(hasAnyAncestor(isPopup()) and hasText(name)).performClick()
-        compose.onNodeWithTag("purchaseQty:$id").performTextInput("24")
-        compose.onNodeWithTag("purchasePack:$id").performTextReplacement("500");hideKeyboard()
+        PurchaseKeypadTestSupport.enter(compose,"purchaseQty:$id","24")
+        PurchaseKeypadTestSupport.enter(compose,"purchasePack:$id","500");hideKeyboard()
         compose.onNode(hasAnyAncestor(hasTestTag("purchaseContent:$id")) and hasClickAction()).performClick()
         compose.onNode(hasAnyAncestor(isPopup()) and hasText("мл")).performClick()
         compose.onNodeWithTag("purchaseExpected:$id").assertTextEquals("На склад поступит: 12 л")
@@ -55,17 +55,17 @@ class PurchaseOrderMutationUiTest {
         compose.onNodeWithTag("purchaseNew").performClick()
         compose.onNode(hasAnyAncestor(hasTestTag("purchaseSupplier")) and hasClickAction()).performClick()
         compose.onNode(hasAnyAncestor(isPopup()) and hasText(name)).performClick()
-        compose.onNodeWithTag("purchaseQty:$id").performTextInput("5");hideKeyboard()
+        PurchaseKeypadTestSupport.enter(compose,"purchaseQty:$id","5");hideKeyboard()
         compose.onNodeWithTag("purchaseHistory").performClick()
         compose.onNodeWithTag("purchaseOrder:$orderId").performScrollTo().performClick()
         compose.onNodeWithTag("purchaseEditOpen").performClick()
-        compose.onNodeWithTag("purchaseEditQty:$id").performScrollTo().performTextReplacement("12");hideKeyboard()
+        PurchaseKeypadTestSupport.enter(compose,"purchaseEditQty:$id","12");hideKeyboard()
         compose.onNodeWithContentDescription("Закрыть").performClick()
         compose.onNodeWithText("Продолжить редактирование").performClick()
-        compose.onNodeWithTag("purchaseEditQty:$id").assertTextContains("12")
+        compose.onNode(hasText("12") and hasAnyAncestor(hasTestTag("purchaseEditQty:$id")),useUnmergedTree=true).assertExists()
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("purchaseEditQty:$id").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithTag("purchaseEditQty:$id").assertTextContains("12")
+        compose.onNode(hasText("12") and hasAnyAncestor(hasTestTag("purchaseEditQty:$id")),useUnmergedTree=true).assertExists()
         shot("purchase-order-edit")
         compose.onNodeWithTag("purchaseEditSave").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.editing==null && model.state.value.snapshot!!.orders.any {it.id==orderId && it.requestVersion==2L}}
@@ -85,7 +85,7 @@ class PurchaseOrderMutationUiTest {
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("purchaseOrder:$orderId").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("purchaseOrder:$orderId").assertTextContains("Отменён",substring=true)
         compose.onNodeWithTag("purchaseHistory").performClick()
-        compose.onNodeWithTag("purchaseQty:$id").assertTextContains("5")
+        compose.onNode(hasText("5") and hasAnyAncestor(hasTestTag("purchaseQty:$id")),useUnmergedTree=true).assertExists()
         compose.onNodeWithTag("purchaseSave").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty && model.state.value.snapshot?.draft!=null}
         val after=runBlocking {db.catalog().product(id)!! to db.catalog().balance(id)!!}

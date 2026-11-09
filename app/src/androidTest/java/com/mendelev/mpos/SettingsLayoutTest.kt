@@ -18,11 +18,11 @@ import org.junit.Assert.*
 class SettingsLayoutTest {
     @get:Rule val compose=createComposeRule()
     @Test fun narrowLargeTextKeepsInformationAndWarehouseRoutesReachable() {
-        var updates=0;var suppliers=0;var employees=0
+        var updates=0
         compose.setContent {val d=LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(d.density,1.5f)) {
                 MposTheme {Box(Modifier.width(520.dp)) {
-                    SettingsHome({updates++},{},{suppliers++},{},{},null,{},false,onEmployees={employees++})
+                    SettingsHome({updates++},{},{},{},{},null,{},false)
                 }}
             }
         }
@@ -34,8 +34,14 @@ class SettingsLayoutTest {
         assertTrue(panel.right<=updatesBounds.left && updatesBounds.right<=themeBounds.left)
         compose.onNodeWithTag("settingsUpdatesInfo").performScrollTo().assertIsDisplayed().performClick()
         compose.onNodeWithTag("settingsEmployees").performScrollTo().assertIsDisplayed().performClick()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("employeeName").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("employeeName").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Закрыть").performClick()
         compose.onNodeWithTag("settingsSuppliers").performScrollTo().assertIsDisplayed().performClick()
-        assertEquals(1,updates);assertEquals(1,employees);assertEquals(1,suppliers)
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("supplierName").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("supplierName").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Закрыть").performClick()
+        assertEquals(1,updates)
         compose.onNodeWithTag("settingsBackup").performScrollTo().performClick()
         compose.onNodeWithTag("settingsPlannedNotice").assertIsDisplayed()
     }

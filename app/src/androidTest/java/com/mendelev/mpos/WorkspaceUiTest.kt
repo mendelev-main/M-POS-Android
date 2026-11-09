@@ -82,7 +82,7 @@ class WorkspaceUiTest {
         compose.onNodeWithTag("workspaceConfigurationTotal").assertTextEquals("Итого: 2,5 BYN")
         compose.onNodeWithText("Добавить в заказ").performClick()
         waitText("Проверьте выбор группы: Молоко")
-        compose.onNodeWithContentDescription("Молоко (0,5 BYN)").performClick()
+        compose.onNodeWithTag("modifierChoice:milk-option").performClick()
         compose.runOnIdle {(compose.activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager)
             .hideSoftInputFromWindow(compose.activity.window.decorView.windowToken,0)}
         compose.onNodeWithTag("workspaceConfigurationTotal").assertTextEquals("Итого: 3 BYN")

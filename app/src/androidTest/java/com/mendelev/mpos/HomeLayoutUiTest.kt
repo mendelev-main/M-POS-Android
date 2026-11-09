@@ -48,7 +48,8 @@ class HomeLayoutUiTest {
             compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceHomeProduct:$p").fetchSemanticsNodes().isNotEmpty()}
             compose.onNodeWithText("Место 8").assertExists()
             assertEquals(3,state().home.tiles.single {it.id==a}.slot)
-            compose.onNodeWithText("Все категории").performClick()
+            compose.onNodeWithTag("workspaceLayoutMenu").performClick()
+            compose.onNodeWithTag("layoutMenu:categories").performClick()
             compose.onNodeWithTag("homeChoice:category:$a").performScrollTo().performClick()
             compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceProduct:$p").fetchSemanticsNodes().isNotEmpty()}
             val categoryGrid=compose.onNodeWithTag("workspaceGrid").fetchSemanticsNode().boundsInRoot

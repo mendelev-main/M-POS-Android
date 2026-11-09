@@ -57,18 +57,18 @@ class SaleUiTest {
         assertNull(model.state.value.preview);assertEquals("10",runBlocking {db.catalog().balance(id)!!.quantity})
         compose.onNodeWithTag("paymentKey:backspace").performClick()
         compose.onNodeWithTag("paymentKey:5").performClick()
-        compose.onNodeWithTag("salePrepare").performClick()
+        // Persist a prepared cash payment without committing, then recreate the process owner.
+        // The current cash button commits immediately; the durable draft contract still applies.
+        compose.runOnIdle {model.prepare()}
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview!=null}
-        compose.onNodeWithTag("salePreviewTotal").assertTextEquals("Итого: 2,00 BYN")
-        compose.onNodeWithTag("saleChange:0").assertTextEquals("Сдача 1: 3,00 BYN");shot("sale-preview")
+        assertEquals(200L,model.state.value.quote!!.total)
+        assertEquals(300L,model.state.value.payment!!.parts.single().change)
+        compose.onNodeWithTag("paymentChange").assertTextEquals("3,00 BYN")
         val command=model.state.value.preview!!.draft.commandId
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview==null && model.state.value.draft!=null}
-        compose.onNodeWithTag("checkoutRestored").assertExists()
+        assertEquals(command,model.state.value.draft!!.draft.commandId)
         compose.onNodeWithTag("salePrepare").performClick()
-        compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview!=null}
-        assertEquals(command,model.state.value.preview!!.draft.commandId)
-        compose.onNodeWithTag("saleConfirm").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.completed!=null}
         compose.onNodeWithTag("saleSuccess").assertExists();compose.onNodeWithText("Чек оплачен").assertIsDisplayed();compose.onNodeWithTag("receiptPrint").assertExists();compose.onNodeWithTag("receiptTotal").assertTextEquals("2,00 BYN");shot("sale-receipt")
         val receipt=model.state.value.completed!!
@@ -77,10 +77,6 @@ class SaleUiTest {
         assertEquals(receipt.first.id,runBlocking {SaleRepository(db).unacknowledged()})
         compose.activityRule.scenario.recreate();compose.waitUntil(20_000) {!model.state.value.pending}
         compose.onNodeWithTag("saleSuccess").assertExists()
-        compose.onNodeWithText("Назад").performClick()
-        compose.waitUntil(20_000) {compose.onAllNodesWithText("Чек сохранён").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithTag("workspaceCheckout").assertIsEnabled().performClick()
-        compose.waitUntil(20_000) {!model.state.value.pending && compose.onAllNodesWithTag("saleSuccess").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("saleDone").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceCheckout").fetchSemanticsNodes().isNotEmpty()}
         assertNull(runBlocking {SaleRepository(db).unacknowledged()})

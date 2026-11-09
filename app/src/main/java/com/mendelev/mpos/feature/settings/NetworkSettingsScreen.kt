@@ -32,7 +32,8 @@ import kotlinx.coroutines.*
     val context=androidx.compose.ui.platform.LocalContext.current
     val printRuntime=remember {com.mendelev.mpos.print.PrintRuntime.get(context)}
     val printStatus by printRuntime.status.collectAsState()
-    val generation=Administration.session.state.value.generation
+    val adminSession by Administration.session.state.collectAsState()
+    val generation=adminSession.generation
     val telegramRuntime=remember {com.mendelev.mpos.telegram.TelegramRuntime.get(context)}
     var telegramSettings by remember {mutableStateOf<com.mendelev.mpos.telegram.TelegramSettings?>(null)}
     var telegramReadError by remember {mutableStateOf(false)}

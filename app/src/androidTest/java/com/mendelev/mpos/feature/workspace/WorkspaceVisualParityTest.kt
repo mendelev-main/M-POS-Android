@@ -30,7 +30,7 @@ class WorkspaceVisualParityTest {
         }
         compose.onNodeWithTag("workspaceCartPanel").assertWidthIsEqualTo(380.dp)
         val park=compose.onNodeWithTag("workspacePark");val pay=compose.onNodeWithTag("workspaceCheckout")
-        park.assertHeightIsEqualTo(47.dp).assertIsNotEnabled();pay.assertHeightIsEqualTo(47.dp).assertIsNotEnabled()
+        park.assertHeightIsEqualTo(47.dp).assertIsNotEnabled();pay.assertHeightIsEqualTo(47.dp).assertIsEnabled().assertTextContains("Открыть смену")
         val p=park.getUnclippedBoundsInRoot();val c=pay.getUnclippedBoundsInRoot()
         // W02-light.json: park121.03px (34% of356), pay226.97px; tolerate device rounding only.
         assertEquals(121.04f,(p.right-p.left).value,.75f)
