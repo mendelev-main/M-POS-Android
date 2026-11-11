@@ -1639,3 +1639,12 @@ Failure reports were downloaded and read; no gates or financial assertions remov
 Prepared local synchronization/navigation fixes in those three test files only;
 new push requires owner approval under mpos-release. Local emulator is not running,
 so behavioral verification awaits the existing unchanged full API36 pipeline.
+
+2026-11-11 — owner approved UI fixture fixes; pushbd04777/run43018913730.
+All400 instrumentation tests passed, including inventory/split/navigation; JVM,
+lint/debug and earlier upgrade seed batches passed. Debug-upgrade driver then
+rejected successful `OK (3 tests)` for PaymentAppearanceTest(1)+ParkedAppearanceTest(2)
+because its old assertion expected2. Continuing the owner's instruction to fix
+tests and finish release: expected exact count updated to3, FAILURES guard retained.
+32 release-tooling Python tests, harness preflight and git diff --check passed.
+No application behavior/signing/workflow gates changed; release remains pending.
