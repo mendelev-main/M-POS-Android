@@ -1655,3 +1655,10 @@ rendered enabled state, then searched for supplierDelete without waiting for the
 editor. Add waits for enabled supplier row, matching form ID, ready editor and
 visible enabled delete action. Creation/rename/delete/stock invariants retained.
 This continues the owner's instruction to fix tests and finish publication.
+
+2026-11-11 — run43023035883/cbf77bc: JVM/lint/debug passed;398/400 UI tests
+passed. Missing inventoryRecordStatus / receivingPostedTitle were immediate
+assertions after opening/recreating historical dialogs. Both fixtures now wait
+for the corresponding dialog semantics before the unchanged status/invoice
+assertions; database stock/cost/idempotency assertions stay unchanged.
+compileDebugAndroidTestKotlin passed locally; continuing agreed test stabilization.

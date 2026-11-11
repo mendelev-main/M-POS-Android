@@ -89,9 +89,11 @@ class InventoryUiTest {
         compose.onNodeWithTag("settingsInventory").performScrollTo().performClick()
         compose.onNodeWithTag("inventorySettingsList").performScrollToNode(hasTestTag("inventoryRecord:$id"))
         compose.onNodeWithTag("inventoryRecord:$id").performClick()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("inventoryRecordStatus").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("inventoryRecordStatus").assertIsDisplayed().assertTextContains("Завершена",substring=true)
         compose.onNodeWithTag("inventoryLoss").assertTextContains("18,00 BYN",substring=true);shot("inventory-completed")
         compose.activityRule.scenario.recreate()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("inventoryRecordStatus").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("inventoryRecordStatus").assertTextContains("Завершена",substring=true)
         compose.onNodeWithContentDescription("Закрыть").performClick()
         startInventory(vm)
@@ -104,6 +106,7 @@ class InventoryUiTest {
         compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.document?.history?.size==2 && vm.state.value.snapshot?.document?.draft==null}
         compose.onNodeWithTag("inventorySettingsList").performScrollToNode(hasTestTag("inventoryRecord:$cancelledId"))
         compose.onNodeWithTag("inventoryRecord:$cancelledId").performClick()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("inventoryRecordStatus").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("inventoryRecordStatus").assertIsDisplayed().assertTextContains("Отменена",substring=true);shot("inventory-cancelled")
         assertEquals(balanceBeforeCancel,runBlocking {db.catalog().balance(p)});assertEquals(3,runBlocking {db.catalog().movementCount(p)})
     }

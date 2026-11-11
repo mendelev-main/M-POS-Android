@@ -43,9 +43,11 @@ class ReceivingPostingUiTest {
         compose.waitUntil(20_000) {!posting.state.value.pending && posting.state.value.committed!=null && model.state.value.form==null && !model.state.value.pending}
         compose.onNodeWithTag("receivingHistory").performClick()
         compose.onNodeWithTag("receivingPosted:${posting.state.value.committed}").performScrollTo().performClick()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("receivingPostedTitle").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("receivingPostedTitle").assertTextContains("TTN-$key",substring=true)
         shot("receiving-posted")
         compose.activityRule.scenario.recreate()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("receivingPostedTitle").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("receivingPostedTitle").assertTextContains("TTN-$key",substring=true)
         val row=runBlocking {ReceivingPostingRepository(db).history().single {it.draft.order!!.id==seed.order.id}}
         assertTrue(row.overageConfirmed);assertEquals("22",runBlocking {db.catalog().balance(id)!!.quantity});assertEquals("3.09",runBlocking {db.catalog().product(id)!!.cost})
