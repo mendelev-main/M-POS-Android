@@ -74,9 +74,10 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
     var revalidationOpen by rememberSaveable { mutableStateOf(false) }
     var ordersDialog by rememberSaveable { mutableStateOf<String?>(null) }
     var clearRevision by rememberSaveable { mutableStateOf<Long?>(null) }
+    var noteProductId by rememberSaveable {mutableStateOf<String?>(null)}
     var homeMenuAction by remember {mutableStateOf<String?>(null)}
     val busy=ui.pending>0
-    val modal=comingSoon!=null || revalidationOpen || configId!=null || manageId!=null || quantityId!=null || clearRevision!=null || ordersDialog!=null
+    val modal=noteProductId!=null || comingSoon!=null || revalidationOpen || configId!=null || manageId!=null || quantityId!=null || clearRevision!=null || ordersDialog!=null
     // Lazy item callbacks can outlive a composition; always target the current persisted owner.
     val currentSnapshot by rememberUpdatedState(s)
     fun configure(p: WorkspaceProduct) {
@@ -127,9 +128,9 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                                 } else {category=null;search="";homeMenuAction=action}
                             },overloaded=overloaded)
                         if(ui.message!=null && !modal && folder==null) MposNotice(ui.message!!,true)
-                        if(category==null && search.isBlank()) WorkspaceHome(s,ui,editing,model,photos,Modifier.weight(1f),{category=it;search=""},{configure(it)},homeMenuAction,{homeMenuAction=null})
+                        if(category==null && search.isBlank()) WorkspaceHome(s,ui,editing,model,photos,Modifier.weight(1f),{category=it;search=""},{configure(it)},homeMenuAction,{homeMenuAction=null},onProductNote={noteProductId=it.id})
                         else WorkspaceGrid(s,category,null,search,editing,photos,Modifier.weight(1f),ui.pending<100,
-                            {category=it;search=""},{folder=it.id},{configure(it)},{manage(it)},availabilityIndex=ui.availability,onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
+                            {category=it;search=""},{folder=it.id},{configure(it)},{manage(it)},availabilityIndex=ui.availability,onProductNote={noteProductId=it.id},onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
                     }
                     }
                 }
@@ -183,16 +184,21 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
             {revalidationOpen=false;model.dismiss()},{token -> model.revalidate(revalidationRevision,revalidationOwner,token) {revalidationOpen=false}})
         WorkspaceOrdersDialogs(ordersDialog,{ordersDialog=it},s,ui,model)
         val folderItem=s.layout.find { it.type=="folder" && it.id==folder }
-        if(folderItem!=null && !modal) {
+        if(folderItem!=null && (!modal || noteProductId!=null)) {
             val count=s.layout.count {it.type=="product" && it.folderId==folderItem.id}
             WorkspaceFolderWindow(folderItem,count,busy,{folder=null}) {columns,rowHeight,gridHeight->
                 Column {
                     if(ui.message!=null) Text(ui.message!!,color=MaterialTheme.colorScheme.error,style=MaterialTheme.typography.bodySmall)
                     WorkspaceGrid(s,folderItem.categoryId,folderItem.id,"",editing,photos,Modifier.heightIn(max=gridHeight.dp),ui.pending<100,
-                        {},{},{configure(it)},{manage(it)},availabilityIndex=ui.availability,folderColumns=columns,
+                        {},{},{configure(it)},{manage(it)},availabilityIndex=ui.availability,onProductNote={noteProductId=it.id},folderColumns=columns,
                         onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)},folderTileHeight=rowHeight)
                 }
             }
+        }
+        noteProductId?.let {id->
+            val noted=s.products.find {it.id==id}
+            if(noted!=null) WorkspaceProductNoteWindow(noted.id,noted.name,onClose={noteProductId=null})
+            else LaunchedEffect(id) {noteProductId=null}
         }
         val product=s.products.find { it.id==configId }
         if(configId!=null) MposWebModal(product?.name ?: "Товар недоступен",{configId=null;model.dismiss()},!busy,wide=true) {
@@ -305,7 +311,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
 
 @Composable private fun WorkspaceGrid(s: WorkspaceSnapshot,category: String?,folder: String?,search: String,editing: Boolean,
     photos: ProductPhotoStore,modifier: Modifier,enabled: Boolean,onCategory: (String)->Unit,onFolder: (LayoutItem)->Unit,
-    onProduct: (WorkspaceProduct)->Unit,onManage: (LayoutItem)->Unit,availabilityIndex: WorkspaceAvailability? = null,folderColumns: Int? = null,onReorder: ((LayoutItem,Int)->Unit)? = null,folderTileHeight: Int=144) {
+    onProduct: (WorkspaceProduct)->Unit,onManage: (LayoutItem)->Unit,availabilityIndex: WorkspaceAvailability? = null,folderColumns: Int? = null,onReorder: ((LayoutItem,Int)->Unit)? = null,folderTileHeight: Int=144,onProductNote: (WorkspaceProduct)->Unit={}) {
     val query=CatalogRules.key(search)
     val products=remember(s.products) {s.products.associateBy {it.id}}
     // Category/folder order is already an immutable snapshot; do not blank the grid between drag updates.
@@ -347,7 +353,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                 if(tile.type=="folder") {
                     WorkspaceFolderTile(tile,editing,enabled,Modifier.height(tileHeight).testTag("workspaceFolder:"+tile.id).then(highlight),{onManage(tile)},{onFolder(tile)})
                 } else products[tile.id]?.let { p ->
-                    MposWorkspaceTile({onProduct(p)},Modifier.height(tileHeight).testTag("workspaceProduct:${p.id}").then(highlight),enabled,symbol=p.symbol,compact=folder!=null,editing=editing) {
+                    MposWorkspaceTile({onProduct(p)},Modifier.height(tileHeight).testTag("workspaceProduct:${p.id}").then(highlight),enabled,symbol=p.symbol,compact=folder!=null,editing=editing,onLongClick=if(!editing) {{onProductNote(p)}} else null) {
                         Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                             Text(p.name,Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=if(folder!=null || editing) 13.5.sp else 14.5.sp,lineHeight=if(folder!=null || editing) 16.2.sp else 18.125.sp),maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         }

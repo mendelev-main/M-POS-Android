@@ -41,3 +41,9 @@ flowchart LR
 `workflow_dispatch` на main без publish_release только проверяет/собирает candidate. Для ручного повторного выпуска — publish_release=true. verify_upgrade_from задаёт более ранний baseline для этапа5; пустое значение выбирает latest stable. Для обычного push main публикация автоматическая. Optional PR checks остаются доступными, но PR/develop не являются обязательным рабочим маршрутом. Web-атлас снимается отдельным ручным режимом Android PR workflow с visual_reference=true на main, без APK/release.
 
 Очередь GitHub ограничена100 ожидающими прогонами. Основание: [документация concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency). Это не обещание выпуска при упавших тестах; ошибка любого gate сохраняет прежний stable.
+
+## Решение владельца2026-11-11: ручная проверка интерфейса
+
+UI/Compose автотесты удалены из androidTest вместе с ui-test dependencies; новые не добавляются. Удалены UI-driven debug update и native restore E2E из release pipeline. Старые результаты этих этапов — исторические evidence. Функциональные data/Room/ViewModel тесты без Compose остаются, интерфейс принимает владелец вручную.
+
+Текущий DAG main: параллельно1harness/Python,2JVM+lint+debug,3API36 Room/данные →4sign/package/cert →5signed install/upgrade/process/UID/private-marker (без навигации/экранных подписей) →6release/stable. Не отключать эти оставшиеся проверки ради релиза. Старые scripts/ci/update-e2e.py/native-restore-e2e.py не вызываются CI; часть helper/unit fixtures исторические. Полное сохранение кассовых сценариев после UI-управляемого обновления этим упрощённым smoke не заявляется: он подтверждает совместимость пакета/подписи и сохранность sandbox marker; бизнес-инварианты отдельно проверяют JVM/Room/migration tests.

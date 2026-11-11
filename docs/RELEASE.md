@@ -43,3 +43,5 @@ python3 scripts/install-signing-secrets.py --source /absolute/private/path/crede
 
 
 Новые APK с24.10.2026: minSdk36 по [ANDROID-SUPPORT.md](ANDROID-SUPPORT.md). config/android-release.json задаёт minimum для update.json; harness сверяет Gradle, release.py verify-apk сверяет aapt sdkVersion. Подпись/version/package gates сохранены. CI runtime теперь API36, workflow identity/run counter прежние.
+
+11.11.2026: по прямому решению владельца Compose/UI suite и UI-driven debug upgrade/recovery сценарии удалены из CI. Штатный DAG и обновлённый объём проверок — [DEVELOPMENT-WORKFLOW](DEVELOPMENT-WORKFLOW.md). Signed install подтверждает version/package/cert/process/UID/private marker без чтения экранных подписей/перехода в настройки; UI принимается вручную.

@@ -1,0 +1,6 @@
+# Решение владельца11.11.2026: UI вручную
+Явная команда: убрать UI-тесты как медленные и зависящие от старого интерфейса, отправить правки в main. По этой команде удалены67Compose/UI source files (включая helpers) и зависимости ui-test-junit4/ui-test-manifest. Прежние закоммиченные версии доступны в Git history. Оставшиеся113Android source files + вынесенный NativeRecoveryFixture — data/Room/ViewModel/fixtures без Compose UI test imports.
+
+Pipeline3 запускает connectedDebugAndroidTest только для оставшихся data tests; UI-driven debug update и native-restore E2E steps удалены. Signed install smoke сохранён: ADB install/upgrade, pinned cert, точная dumpsys version, am start status + resumed activity/stable PID, UID/private sentinel. Не читает UI-дерево и не зависит от названий/кнопок настроек; новая проверка covered Python mocks. Screenshot assertion удалён, cold-start log сохранён.
+
+Не объявляем пройденным старый финансовый UI upgrade E2E после его удаления. UI/визуальная приёмка теперь только владельцем. Финансовые/складские/backup transaction tests и package identity gates не ослаблялись. Пересмотр явно разрешён владельцем, не самостоятельный обход упавшего gate. Действующее правило внесено в AGENTS/skills/workflow, чтобы новые агенты не добавляли UI-тесты обратно.

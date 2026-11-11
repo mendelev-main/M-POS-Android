@@ -1724,3 +1724,21 @@ compileDebugAndroidTestKotlin SUCCESS1m15s; harness preflight/git diff --check p
 SettingsDirectoryRow/settingsRowModifier: background + outline1dp/radius16 как у истории чеков, gap8/padding14×12; общий вид записей сотрудников/поставщиков/справочников/принтеров. Накопленный пакет локальных задач включён в согласованную владельцем отправку: печать/receipt menus/возврат и20-row paging, адаптивная сетка, startup workspace, top navigation/admin root, owner contacts/future portal docs, loyalty profile/progress/focus.
 
 Последняя проверка testDebugUnitTest адресно PrintingTest/ReceiptPagingTest/WorkspaceViewportTest/ManagementContactsCodecTest/CustomerProgramProgressTest:19passed/0failures/0errors/0skips. compileDebugAndroidTestKotlin SUCCESS1m18s, preflight/staged diff-check passed. Проверка типовых secret patterns staged diff — без совпадений; workflows/signing identity не менялись. Device UI/физическая печать не запускались. По прямой команде владельца push main; remote CI/release проверяет владелец, завершения не ждём.
+
+## 2026-11-11 — заметка товара по удержанию2секунды
+
+Новая native возможность W/P по прямому запросу: shared tile combinedClickable с локальным longPressTimeout2000ms, callbacks на home/category/folder products, отключено в edit/drag режиме. Обычный тап прежний, long hold не вызывает add/configure после отпускания. Shared read-only dialog460dp с названием и многострочной внутренней заметкой, пустым/ошибочным состоянием и retry; local IO productDetails resolver, без добавления заметок в чек/сайт/печать. Parent folder остаётся открытой под заметкой.
+
+compileDebugAndroidTestKotlin SUCCESS57s, preflight/diff-check passed. WorkspaceProductNoteTest4 (1900/2100ms,нет add после hold,cancel,editing,текст/пусто) добавлен и скомпилирован, runtime/device пока не запускался по локальному workflow владельца. Контекст11-workspace-product-note. Без commit/push.
+
+## 2026-11-11 — общий modal X / отложенные / заметка
+
+MposCloseButton теперь использует образец Parked MposPosControl Close44/radius12/border1/red icon22. Применён default/Web modal headers, online/folder/profile/admin customer custom headers; старые48dp Canvas/локальные размеры заменены. Отложенные: header X и delete40 центрированы в общей44dp action column с одинаковым card inset; прежние card/window heights сохранены. Note dialog — только X, текстовый footer Close удалён по уточнению владельца.
+
+compileDebugAndroidTestKotlin SUCCESS1m4s; после добавления общего regression ModalCloseButtonTest финальная компиляция SUCCESS28s. Обновлены ParkedAppearanceTest (ось X/delete), note empty/text close и folder UI tags. preflight/diff-check passed. Новые Android tests скомпилированы, runtime не запускался; device визуальная приёмка владельцем pending. Контекст11-modal-close-standard. Без commit/push.
+
+## 2026-11-11 — UI вручную / отправка в main
+
+Прямая команда владельца удалить UI tests и отправить текущие правки. Удалены67Compose/UI source files и ui-test dependencies; shared recovery fixture вынесена в NativeRecoveryFixture, BackupViewModelTest сохранён. CI: data/Room instrumentation вместоCompose, debug UI upgrade/recovery E2E steps удалены. Signed APK install/upgrade gate сохраняет pinned cert/package/version/UID/private-marker/cold start черезADB process/activity state, без экранных подписей/навигации. Python tests покрывают точную installed version, отказ activity start и смерть процесса. AGENTS/skills/workflow закрепляют manual UI, новые UI tests не добавляются. В пакет также входят ранее выполненные2s product-note и единый modal close/alignment; runtime UI принимает владелец.
+
+Полные локальные testDebugUnitTest471pass/0fail/0error/0skip;36Python tests passed. lintDebug и assembleDebug/assembleDebugAndroidTest SUCCESS49s, data APK компилируется без Compose tests. Первый прогон выявил fixture из удалённого UI файла, она восстановлена как data-only helper, финальный повтор успешен. Preflight/visual-progress/diff-check/shell syntax passed. Локальный старый actionlint не знает прежний concurrency.queue:max; совместимая проверка с исключением только этой неизменённой строки прошла, сам workflow queue не меняли. Signed/data emulator runtime локально не запускался; CI/release completion проверяет владелец, не ждём.

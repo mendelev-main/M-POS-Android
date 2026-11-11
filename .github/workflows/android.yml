@@ -63,7 +63,7 @@ jobs:
           retention-days: 14
 
   emulator:
-    name: '3 · Android 16: UI, данные и обновление'
+    name: '3 · Android 16: Room и данные'
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     env:
@@ -75,12 +75,8 @@ jobs:
           emulator: 'true'
       - name: Boot API36 and wait for a focused window
         run: python3 scripts/ci/emulator.py start
-      - name: '3.1 · Room и Compose: Android-тесты'
+      - name: '3.1 · Room и бизнес-логика: Android-тесты'
         run: bash scripts/ci/android-emulator-checks.sh suite
-      - name: '3.2 · Обновление debug APK с сохранением данных'
-        run: python3 scripts/ci/update-e2e.py
-      - name: '3.3 · Восстановление данных после перезапуска процесса'
-        run: python3 scripts/ci/native-restore-e2e.py
       - name: Stop disposable emulator and collect diagnostics
         if: always()
         run: python3 scripts/ci/emulator.py stop
@@ -88,12 +84,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: android-ui-reports-api-36
+          name: android-data-reports-api-36
           path: |
             app/build/reports/androidTests/
             app/build/reports/emulator-diagnostics/
-            app/build/reports/update-e2e/
-            app/build/reports/native-restore-e2e/
           if-no-files-found: warn
           retention-days: 14
 

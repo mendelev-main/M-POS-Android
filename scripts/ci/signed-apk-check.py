@@ -50,6 +50,30 @@ def baseline(folder,requested):
     subprocess.run(['gh','release','download',requested,'--repo',REPO,'--pattern','mpos-native.apk','--pattern','update.json','--dir',str(folder)],check=True)
     return requested
 
+def launch_signed(d):
+    """Package/process smoke only; never navigate settings or inspect UI text."""
+    output=d.adb('shell','am','start','-W','-n',d.PACKAGE+'/com.mendelev.mpos.MainActivity',timeout=30)
+    if not re.search(r'Status:\s*ok\b',output) or 'Error:' in output:
+        raise RuntimeError('Signed APK activity failed to start: '+output[-1000:])
+    deadline=time.monotonic()+15
+    while time.monotonic()<deadline:
+        pid=d.adb('shell','pidof',d.PACKAGE,check=False).strip()
+        activity=d.adb('shell','dumpsys','activity','activities')
+        if pid and re.search(r'(?:mResumedActivity|topResumedActivity)[^\n]*'+re.escape(d.PACKAGE)+r'/',activity):
+            time.sleep(1)
+            if d.adb('shell','pidof',d.PACKAGE,check=False).strip()!=pid:
+                raise RuntimeError('Signed APK process died immediately after startup')
+            return output
+        time.sleep(.5)
+    raise RuntimeError('Signed APK did not become the resumed application')
+
+def verify_installed_version(d,candidate):
+    package=d.adb('shell','dumpsys','package',d.PACKAGE)
+    code=re.search(r'\bversionCode=(\d+)\b',package)
+    name=re.search(r'^\s*versionName=([^\r\n]+)',package,re.MULTILINE)
+    if not code or int(code.group(1))!=candidate['versionCode'] or not name or name.group(1).strip()!=candidate['versionName']:
+        raise RuntimeError('Installed package version differs from the verified candidate')
+
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--assets',type=Path,required=True);args=parser.parse_args()
     if os.environ.get('GITHUB_ACTIONS')!='true' or os.environ.get('CI')!='true':raise RuntimeError('Signed install smoke is CI-emulator-only')
@@ -75,7 +99,7 @@ def main():
     marker='/data/user/0/com.mendelev.mpos/files/ci-signed-update-sentinel'
     uid=None
     if tag:
-        d.adb('install',str(base_folder/'mpos-native.apk'));d.launch(fixture=False)
+        d.adb('install',str(base_folder/'mpos-native.apk'));launch_signed(d)
         uid=d.adb('shell','stat','-c','%u','/data/user/0/com.mendelev.mpos').strip()
         if not uid.isdecimal():raise RuntimeError('Invalid native app UID')
         d.adb('shell',"printf '%s' mpos-ci-signed-preserved > "+marker)
@@ -85,15 +109,13 @@ def main():
     if tag:
         if d.adb('shell','cat',marker).strip()!='mpos-ci-signed-preserved':raise RuntimeError('Release update lost private data marker')
         if d.adb('shell','stat','-c','%u','/data/user/0/com.mendelev.mpos').strip()!=uid:raise RuntimeError('Release update changed the app UID')
-    d.launch(fixture=False)
-    d.wait_installed_version(candidate['versionName'])
+    launch_signed(d)
+    verify_installed_version(d,candidate)
     # Force a fresh process, so a successful replacement cannot hide a cold-start failure.
-    d.adb('shell','am','force-stop',d.PACKAGE);d.launch(fixture=False)
-    d.wait_installed_version(candidate['versionName'])
+    d.adb('shell','am','force-stop',d.PACKAGE);cold_start=launch_signed(d)
+    verify_installed_version(d,candidate)
     reports=ROOT/'app/build/reports/signed-install';reports.mkdir(parents=True,exist_ok=True)
-    screenshot=subprocess.check_output(['adb','exec-out','screencap','-p'],timeout=20)
-    if not screenshot.startswith(b'\x89PNG'):raise RuntimeError('Invalid signed-install screenshot')
-    (reports/'signed-settings.png').write_bytes(screenshot)
+    (reports/'cold-start.txt').write_text(cold_start)
     result={'commit':candidate['commit'],'versionName':candidate['versionName'],'versionCode':candidate['versionCode'],'baseline':tag,'privateMarkerPreserved':bool(tag),'coldStart':True,'published':False}
     (reports/'result.json').write_text(json.dumps(result,indent=2)+'\n')
     print('SIGNED APK INSTALL PASSED: '+candidate['versionName']+'; '+('previous signed release replaced, UID/private marker retained' if tag else 'first signed installation')+'; cold start passed; not yet published',flush=True)

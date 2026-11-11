@@ -31,7 +31,7 @@ import com.mendelev.mpos.domain.workspace.*
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable internal fun WorkspaceHome(s: WorkspaceSnapshot,ui: WorkspaceUi,editing: Boolean,model: WorkspaceViewModel,photos: ProductPhotoStore,
-    modifier: Modifier,onCategory: (String)->Unit,onProduct: (WorkspaceProduct)->Unit,requestedAction: String?=null,onActionConsumed: ()->Unit={}) {
+    modifier: Modifier,onCategory: (String)->Unit,onProduct: (WorkspaceProduct)->Unit,requestedAction: String?=null,onActionConsumed: ()->Unit={},onProductNote: (WorkspaceProduct)->Unit={}) {
     var dialog by rememberSaveable {mutableStateOf<String?>(null)}
     var type by rememberSaveable {mutableStateOf("")};var id by rememberSaveable {mutableStateOf("")}
     var slot by rememberSaveable {mutableStateOf("")};var revision by rememberSaveable {mutableStateOf(0L)}
@@ -75,7 +75,7 @@ import com.mendelev.mpos.domain.workspace.*
                         MposWorkspaceTile({if(editing) manage(tile) else if(tile.type=="category") onCategory(tile.id) else s.products.find {it.id==tile.id}?.let(onProduct)},
                             Modifier.height(rowHeight).testTag(tag).semantics {contentDescription="${title(tile)} · Место ${tile.slot+1}"}.then(highlight),if(editing) !busy else ui.pending<100,
                             categoryColor=if(tile.type=="category") s.categories.find {it.id==tile.id}?.color else null,
-                            symbol=if(tile.type=="category") s.categories.find {it.id==tile.id}?.symbol else s.products.find {it.id==tile.id}?.symbol,editing=editing) {
+                            symbol=if(tile.type=="category") s.categories.find {it.id==tile.id}?.symbol else s.products.find {it.id==tile.id}?.symbol,editing=editing,onLongClick=if(!editing && tile.type=="product") { {s.products.find {it.id==tile.id}?.let(onProductNote)} } else null) {
                             Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                                 Text(title(tile),Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=if(editing) 13.5.sp else 14.5.sp,lineHeight=if(editing) 16.2.sp else 18.125.sp),maxLines=2,overflow=TextOverflow.Ellipsis)
                                 if(tile.type=="category") Text("›",style=MaterialTheme.typography.titleSmall.copy(fontSize=20.sp,lineHeight=14.sp),color=MaterialTheme.colorScheme.onSurfaceVariant)

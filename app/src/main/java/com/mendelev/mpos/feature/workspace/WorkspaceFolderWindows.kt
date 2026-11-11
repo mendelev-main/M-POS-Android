@@ -85,7 +85,7 @@ import com.mendelev.mpos.domain.workspace.*
             Column(Modifier.padding(18.dp)) {
                 Row(Modifier.fillMaxWidth().padding(bottom=12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                     Text(item.name,Modifier.weight(1f),fontSize=20.sp,lineHeight=24.sp,fontWeight=FontWeight.Bold,maxLines=2,overflow=TextOverflow.Ellipsis)
-                    MposPosControl("Закрыть",onClose,enabled=!busy,kind=PosControl.Secondary,height=44.dp,radius=10.dp,horizontalPadding=12.dp)
+                    MposCloseButton(onClose,!busy,Modifier.testTag("workspaceFolderClose"),description="Закрыть папку")
                 }
                 content(columns,rowHeight,gridHeight)
             }

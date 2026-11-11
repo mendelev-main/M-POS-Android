@@ -27,7 +27,8 @@ import com.mendelev.mpos.domain.workspace.CurrentCart
     val locked=busy || loading
     val telegram=Regex("[A-Za-z][A-Za-z0-9_]{3,31}").matches(profile.customer.username.removePrefix("@"))
     MposDialog("",onClose,closable=!locked,maxWidth=560.dp,header={
-        CustomerProfileHeading(profile.customer,telegram && !locked,onTelegram)
+        Box(Modifier.weight(1f).padding(end=12.dp)) {CustomerProfileHeading(profile.customer,telegram && !locked,onTelegram)}
+        MposCloseButton(onClose,!locked,Modifier.align(Alignment.Top))
     }) {
         Column(Modifier.weight(1f,fill=false).fillMaxWidth().verticalScroll(rememberScrollState()).testTag("loyaltyCustomerWindow"),verticalArrangement=Arrangement.spacedBy(10.dp)) {
             when {

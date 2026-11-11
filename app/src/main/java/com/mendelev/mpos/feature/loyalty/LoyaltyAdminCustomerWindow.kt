@@ -73,7 +73,7 @@ import java.util.UUID
        Column {
         Row(Modifier.fillMaxWidth().padding(horizontal=24.dp,vertical=16.dp),verticalAlignment=Alignment.CenterVertically) {
             Text("Карточка клиента",Modifier.weight(1f),fontSize=20.sp,fontWeight=FontWeight.Bold)
-            MposButton("Назад",onClose,enabled=!loading,style=ActionStyle.Secondary)
+            MposCloseButton(onClose,!loading)
         }
         Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).testTag("loyaltyAdminCustomerWindow"),verticalArrangement=Arrangement.spacedBy(20.dp)) {
             if(loading) LinearProgressIndicator(Modifier.fillMaxWidth())

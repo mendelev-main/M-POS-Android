@@ -76,16 +76,10 @@ enum class ActionStyle { Primary, Secondary, Outline, Danger }
     }
 }
 
-@Composable fun MposCloseButton(onClose: () -> Unit, enabled: Boolean = true) {
-    IconButton(onClick=onClose, enabled=enabled, modifier=Modifier.size(48.dp).semantics { contentDescription = "Закрыть" }) {
-        Box(Modifier.size(44.dp).background(MaterialTheme.colorScheme.background, RoundedCornerShape(12.dp)).border(1.dp,MaterialTheme.colorScheme.outline,RoundedCornerShape(12.dp)), contentAlignment=Alignment.Center) {
-            val color = MaterialTheme.colorScheme.error
-            Canvas(Modifier.size(22.dp)) {
-                drawLine(color, Offset(4.dp.toPx(),4.dp.toPx()), Offset(size.width-4.dp.toPx(),size.height-4.dp.toPx()), 2.dp.toPx(), StrokeCap.Round)
-                drawLine(color, Offset(size.width-4.dp.toPx(),4.dp.toPx()), Offset(4.dp.toPx(),size.height-4.dp.toPx()), 2.dp.toPx(), StrokeCap.Round)
-            }
-        }
-    }
+/** Canonical modal close: the parked-order control, 44×44, radius12, border1, red cross22. */
+@Composable fun MposCloseButton(onClose: () -> Unit, enabled: Boolean = true,modifier: Modifier=Modifier,description: String="Закрыть") {
+    MposPosControl("",onClose,modifier.size(44.dp).semantics {contentDescription=description},enabled,
+        PosControl.Close,height=44.dp,radius=12.dp,icon="close")
 }
 
 @Composable fun MposDialog(title: String, onClose: () -> Unit, closable: Boolean = true, wide: Boolean = false, maxWidth: androidx.compose.ui.unit.Dp? = null, header: (@Composable RowScope.()->Unit)? = null, contentPadding: androidx.compose.ui.unit.Dp = 28.dp, spacing: androidx.compose.ui.unit.Dp = 16.dp, content: @Composable ColumnScope.() -> Unit) {

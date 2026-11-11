@@ -1,11 +1,18 @@
 package com.mendelev.mpos.core.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import com.mendelev.mpos.core.ui.isMposDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.ViewConfiguration
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
@@ -14,6 +21,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
@@ -21,7 +29,7 @@ import androidx.compose.ui.unit.*
 /** Pinned pos.html .pcard; bounded row height is owned by its home/category/folder grid. */
 @Composable fun MposWorkspaceTile(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true,
     categoryColor: String?=null, symbol: String?=null, compact: Boolean=false, editing: Boolean=false,
-    content: @Composable ColumnScope.() -> Unit) {
+    onLongClick: (() -> Unit)?=null,content: @Composable ColumnScope.() -> Unit) {
     val category=categoryColor?.let {Color(android.graphics.Color.parseColor(it))}
     val dark=isMposDarkTheme()
     val outlinedCategory=category!=null && dark
@@ -30,10 +38,19 @@ import androidx.compose.ui.unit.*
     val dashed=editing && !outlinedCategory
     val symbolSize=if(compact || editing) 32.sp else 46.sp
     val contentPadding=(if(editing) 8.dp else if(compact) 10.dp else 14.dp)+borderWidth
-    Surface(onClick=onClick,enabled=enabled,shape=RoundedCornerShape(if(compact) 14.dp else 16.dp),
+    val longAction=onLongClick?.takeUnless {editing}
+    val original=LocalViewConfiguration.current
+    val noteConfiguration=remember(original) {object: ViewConfiguration by original {
+        override val longPressTimeoutMillis: Long=WORKSPACE_NOTE_HOLD_MS
+    }}
+    CompositionLocalProvider(LocalViewConfiguration provides if(longAction!=null) noteConfiguration else original) {
+    val interaction=if(longAction!=null) Modifier.combinedClickable(enabled=enabled,role=Role.Button,
+        onLongClickLabel="Внутренняя заметка",onLongClick=longAction,onClick=onClick)
+        else Modifier.clickable(enabled=enabled,role=Role.Button,onClick=onClick)
+    Surface(shape=RoundedCornerShape(if(compact) 14.dp else 16.dp),
         color=if(category!=null && !dark) category else MaterialTheme.colorScheme.surface,
         border=if(dashed) null else BorderStroke(borderWidth,borderColor),
-        modifier=modifier.alpha(if(enabled) 1f else .42f).fillMaxWidth().heightIn(min=if(compact) 120.dp else 128.dp),shadowElevation=1.dp) {
+        modifier=modifier.alpha(if(enabled) 1f else .42f).fillMaxWidth().heightIn(min=if(compact) 120.dp else 128.dp).clip(RoundedCornerShape(if(compact) 14.dp else 16.dp)).then(interaction),shadowElevation=1.dp) {
         Box(Modifier.drawWithContent {
             drawContent()
             if(dashed) {
@@ -47,4 +64,7 @@ import androidx.compose.ui.unit.*
             Column(Modifier.fillMaxSize().padding(contentPadding),verticalArrangement=Arrangement.spacedBy(if(editing) 4.dp else if(compact) 6.dp else 10.dp),content=content)
         }
     }
+    }
 }
+
+internal const val WORKSPACE_NOTE_HOLD_MS=2000L

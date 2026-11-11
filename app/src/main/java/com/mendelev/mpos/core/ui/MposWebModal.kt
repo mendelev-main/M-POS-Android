@@ -30,7 +30,10 @@ import androidx.compose.ui.window.DialogProperties
         MposDialogStatusBar()
         Surface(Modifier.padding(20.dp).widthIn(max=if(wide) 560.dp else 460.dp).fillMaxWidth().heightIn(max=(LocalConfiguration.current.screenHeightDp*.92f).dp).semantics {testTagsAsResourceId=true},shape=RoundedCornerShape(22.dp),color=MaterialTheme.colorScheme.surface) {
             Column(Modifier.verticalScroll(rememberScrollState()).padding(28.dp)) {
-                Text(title,Modifier.padding(bottom=16.dp),fontSize=18.sp,lineHeight=24.sp,fontWeight=FontWeight.ExtraBold)
+                Row(Modifier.fillMaxWidth().padding(bottom=16.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                    Text(title,Modifier.weight(1f),fontSize=18.sp,lineHeight=24.sp,fontWeight=FontWeight.ExtraBold)
+                    MposCloseButton(onClose,enabled)
+                }
                 content()
             }
         }

@@ -54,10 +54,11 @@ import java.util.Locale
             val compact=maxWidth<=600.dp
             val maximumHeight=(maxHeight+40.dp)*.92f
             Surface(Modifier.heightIn(max=maximumHeight).pointerInput(Unit) {detectTapGestures {}}.widthIn(max=820.dp).fillMaxWidth().align(Alignment.Center).testTag("parkedWindow"),shape=RoundedCornerShape(22.dp)) {
+                val actionInset=if(compact) 11.dp else 13.dp // Row border1 + horizontal10/12.
                 Column(Modifier.padding(if(compact) 18.dp else 24.dp)) {
-                    Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(16.dp)) {
+                    Row(Modifier.fillMaxWidth().padding(end=actionInset),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(16.dp)) {
                         Text("Отложенные чеки",Modifier.weight(1f),fontSize=if(compact) 19.sp else 22.sp,fontWeight=FontWeight.ExtraBold)
-                        MposPosControl("",onClose,Modifier.size(44.dp).semantics {contentDescription="Закрыть отложенные чеки"},!busy,PosControl.Close,44.dp,icon="close")
+                        MposCloseButton(onClose,!busy,Modifier.testTag("parkedClose"),description="Закрыть отложенные чеки")
                     }
                     Spacer(Modifier.height(18.dp))
                     if(message!=null) {MposNotice(message,true);Spacer(Modifier.height(12.dp))}
@@ -81,7 +82,9 @@ import java.util.Locale
                                             }
                                         }
                                     }
+                                    Box(Modifier.width(44.dp),contentAlignment=Alignment.Center) {
                                     MposPosControl("",{onDelete(order)},Modifier.size(40.dp).testTag("parkedDelete:${order.id}").semantics {contentDescription="Удалить отложенный заказ"},!busy,PosControl.Delete,40.dp,10.dp,icon="delete")
+                                    }
                                 }
                             }
                         }

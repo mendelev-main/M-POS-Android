@@ -69,7 +69,7 @@ private fun onlineDate(order: JSONObject)=runCatching {
                     onlineText(order,"phone").takeIf {it.isNotBlank()}?.let {Text(it,fontSize=14.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)}
                 }
             }
-            MposPosControl("",onBack,Modifier.size(44.dp).semantics {contentDescription="Закрыть заказ с сайта"},!busy,PosControl.Close,44.dp,16.dp,icon="close")
+            MposCloseButton(onBack,!busy,description="Закрыть заказ с сайта")
         }
     }) {
         HorizontalDivider()

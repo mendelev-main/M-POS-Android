@@ -92,7 +92,7 @@ class BackupViewModelTest {
     }
     @Test fun latePreparedCopyNeedsExplicitInventoryReadInNewSession()=runBlocking {
         val store=ViewModelStore();val entered=CompletableDeferred<Unit>();val release=CompletableDeferred<Unit>()
-        val prepared=recoveryUiFixture()
+        val prepared=recoveryFixture()
         val recovery=object: NativeRecoveryAccess {
             override suspend fun prepare(uri: String): PreparedNativeRestore {withContext(NonCancellable) {entered.complete(Unit);release.await()};return prepared}
             override suspend fun inventory()=NativeRecoveryInventory(listOf(prepared.protection),listOf(prepared),0)
@@ -110,7 +110,7 @@ class BackupViewModelTest {
     }
 
     @Test fun oldApplyConfirmationCannotBorrowNewLogin()=runBlocking {
-        val store=ViewModelStore();var calls=0;val prepared=recoveryUiFixture()
+        val store=ViewModelStore();var calls=0;val prepared=recoveryFixture()
         val recovery=object: NativeRecoveryAccess {
             override val activationEnabled=true
             override suspend fun prepare(uri: String)=prepared
@@ -126,7 +126,7 @@ class BackupViewModelTest {
         } finally {withContext(Dispatchers.Main) {store.clear()}}
     }
     @Test fun activationFailureDoesNotClaimReplacementOrLeakExceptionPayload()=runBlocking {
-        val store=ViewModelStore();val prepared=recoveryUiFixture()
+        val store=ViewModelStore();val prepared=recoveryFixture()
         val recovery=object: NativeRecoveryAccess {
             override val activationEnabled=true
             override suspend fun prepare(uri: String)=prepared
