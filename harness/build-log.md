@@ -1628,3 +1628,14 @@ Gradle 8.13/JDK17/API36, testDebugUnitTest --tests LoyaltyReceiptPriceTest
 ~/Library/Application Support/kotlin/daemon; Gradle's normal fallback compilation
 completed successfully. Log: ../work/android-loyalty-price-tests.log.
 No device execution, payment, Telegram or production sync; no push/release yet.
+
+2026-11-11 — authorized push24fb2e7, Android run43016222457 failed before signing.
+Harness/JVM/lint/debug build passed. API36 instrumentation:6 failures/400; first
+repeated blocker InventoryUiTest line97 (history LazyColumn kept its old scroll,
+start button not composed), plus SplitSaleUiTest line70 (retained ready model
+before recreated split UI), TopNavigationUiTest line43 (settings restores opened
+admin panel), then three workspace failures from the unfinished split fixture.
+Failure reports were downloaded and read; no gates or financial assertions removed.
+Prepared local synchronization/navigation fixes in those three test files only;
+new push requires owner approval under mpos-release. Local emulator is not running,
+so behavioral verification awaits the existing unchanged full API36 pipeline.

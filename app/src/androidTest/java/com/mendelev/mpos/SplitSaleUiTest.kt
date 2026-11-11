@@ -65,7 +65,13 @@ class SplitSaleUiTest {
         assertEquals("10",runBlocking {db.catalog().balance(id)!!.quantity});assertEquals(opening,runBlocking {ShiftRepository(db).snapshot().currentCash})
         scroll("splitPay:1");compose.onNodeWithTag("splitPay:1").assertIsNotEnabled()
         compose.onNodeWithText("Назад").assertIsEnabled()
-        compose.activityRule.scenario.recreate();ready()
+        compose.activityRule.scenario.recreate()
+        // The retained model can still expose its old ready state before the new
+        // composition calls open(). Wait for the recreated split page as well.
+        compose.waitUntil(20_000) {
+            !model.state.value.loading && !model.state.value.pending &&
+                compose.onAllNodes(hasTestTag("splitIncrease") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+        }
         assertEquals(setOf(0),model.state.value.split!!.paid)
         compose.onNodeWithTag("splitIncrease").performClick();ready()
         compose.onNodeWithTag("splitParts").performScrollToIndex(0)

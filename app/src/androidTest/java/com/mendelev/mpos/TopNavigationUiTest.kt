@@ -8,6 +8,17 @@ import org.junit.Test
 /** Navigation acceptance without adding products, opening shifts or issuing financial commands. */
 class TopNavigationUiTest {
     @get:Rule val compose=createAndroidComposeRule<MainActivity>()
+    private fun openAdminPanel() {
+        compose.waitUntil(20_000) {
+            compose.onAllNodesWithTag("adminPanelScreen").fetchSemanticsNodes().isNotEmpty() ||
+                compose.onAllNodes(hasTestTag("adminControl") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+        }
+        // Returning from a settings module may restore the already opened panel.
+        if(compose.onAllNodesWithTag("adminPanelScreen").fetchSemanticsNodes().isEmpty())
+            compose.onNodeWithTag("adminControl").performClick()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("adminPanelScreen").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("adminPanelScreen").assertIsDisplayed()
+    }
     @Test fun allSourceTabsReachTheirRouteAndSurviveRecreation() {
         compose.waitUntil(20_000) {compose.onAllNodesWithText("Добавить товар").fetchSemanticsNodes().isNotEmpty()}
         // The external APK-upgrade driver must target this control independently of employee names.
@@ -40,14 +51,14 @@ class TopNavigationUiTest {
         compose.onNodeWithTag("topNav-history").assertIsSelected()
         compose.onNodeWithTag("topNav-settings").performScrollTo().performClick()
         compose.onNodeWithTag("topNav-bookings").assertDoesNotExist()
-        compose.onNodeWithTag("adminControl").performClick()
+        openAdminPanel()
         compose.onNodeWithTag("topNav-analytics").assertDoesNotExist()
         compose.onNodeWithTag("settingsAnalytics").performScrollTo().performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("reportNet").fetchSemanticsNodes().isNotEmpty()}
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("reportNet").assertExists()
         compose.onNodeWithTag("topNav-settings").performScrollTo().performClick()
-        compose.onNodeWithTag("adminControl").performClick()
+        openAdminPanel()
         compose.onNodeWithTag("settingsStock").performScrollTo().performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("stockSearch").fetchSemanticsNodes().isNotEmpty()}
         compose.activityRule.scenario.recreate()

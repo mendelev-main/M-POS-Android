@@ -115,7 +115,13 @@ class InventoryUiTest {
             compose.waitUntil(20_000) {
                 val ui=model.state.value
                 !ui.pending && !ui.blocked && ui.canEdit && !ui.dirty &&
-                    compose.onAllNodes(hasTestTag("inventoryStart") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+                    compose.onAllNodesWithTag("inventorySettingsList").fetchSemanticsNodes().isNotEmpty()
+            }
+            // Closing the history detail restores the LazyColumn at the old record.
+            // Materialize the start card before waiting for its enabled semantics.
+            compose.onNodeWithTag("inventorySettingsList").performScrollToNode(hasTestTag("inventoryStart"))
+            compose.waitUntil(20_000) {
+                compose.onAllNodes(hasTestTag("inventoryStart") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
             }
         } catch(e: androidx.compose.ui.test.ComposeTimeoutException) {
             val ui=model.state.value
