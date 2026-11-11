@@ -30,7 +30,7 @@ class BackendPublicationTest {
             val input=ProductInput("p",null,"Кофе",null,"10","3","0",null,true,"create",details=details)
             catalog.saveProduct(input)
             WorkspaceRepository(db).initialize()
-            val settings=BackendSettings(url="https://fixture.example.org",deviceKey="fixture",datasetId="fixture")
+            val settings=BackendSettings(url="https://fixture.example.org",deviceKey="fixture-key",datasetId="fixture")
             val sent=mutableListOf<JSONObject>()
             val client=OkHttpClient.Builder().addInterceptor {chain->
                 val request=chain.request();assertEquals(settings.availabilityPath,request.url.encodedPath)

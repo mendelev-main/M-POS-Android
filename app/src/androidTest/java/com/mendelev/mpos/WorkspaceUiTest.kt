@@ -104,7 +104,7 @@ class WorkspaceUiTest {
         compose.onNodeWithTag("workspaceFolder:$folder").performClick()
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("workspaceFolderGrid").assertExists();screenshot("workspace-folder")
-        compose.onNodeWithContentDescription("Закрыть").performClick()
+        compose.onNodeWithText("Закрыть").performClick()
         compose.onNodeWithTag("workspaceTotal").assertTextEquals("15,00 BYN")
         screenshot("workspace")
         File(compose.activity.filesDir,"qa/workspaceLineName.txt").writeText(name)

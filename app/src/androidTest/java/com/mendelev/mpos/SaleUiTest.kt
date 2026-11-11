@@ -76,7 +76,7 @@ class SaleUiTest {
         assertEquals("9",runBlocking {db.catalog().balance(id)!!.quantity});assertEquals(opening+200,runBlocking {ShiftRepository(db).snapshot().currentCash})
         // Cold-model recovery uses the committed tombstone, not an in-memory success flag.
         assertEquals(receipt.first.id,runBlocking {SaleRepository(db).unacknowledged()})
-        compose.activityRule.scenario.recreate();compose.waitUntil(20_000) {!model.state.value.pending}
+        compose.activityRule.scenario.recreate();compose.waitUntil(20_000) {!model.state.value.pending && compose.onAllNodesWithTag("saleDone").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("saleSuccess",useUnmergedTree=true).assertExists()
         compose.onNodeWithTag("saleDone").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceCheckout").fetchSemanticsNodes().isNotEmpty()}

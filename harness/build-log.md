@@ -1608,3 +1608,11 @@ Main8ec686a pushed, run https://github.com/mendelev-main/M-POS-Android/actions/r
 compileDebugAndroidTestKotlin passed26s после первого пакета test corrections; финальная компиляция ниже/перед push. Full API36 повтор обязателен; релиз остаётся pending.
 
 2026-11-11 CI fixture fixes final: compileDebugAndroidTestKotlin SUCCESS26s; harness preflight/diff-check passed. Правки только Android tests + evidence, application logic/CI gates не менялись. Повторный полный release pipeline после push pending.
+
+## 2026-11-11 — CI42980991042 / remaining four Android fixture corrections
+
+Fad17a5 run https://github.com/mendelev-main/M-POS-Android/actions/runs/42980991042:396/400 API36 passed; prior authorization/17-failure cases largely passed, four remaining. No signing/publication.
+
+BackendPublicationTest reached HTTP after Workspace initialize and exposed invalid seven-character synthetic deviceKey; use fixture-key matching the existing8..512 validation. InventoryUiTest stale recount now clears then types the same raw quantity: replacing identical TextField value atomically did not trigger onValueChange, leaving the intentionally stale count; no stock/generation check removed. SaleUiTest awaits saleDone composition after Activity recreation instead of only retained VM.pending=false. WorkspaceUiTest closes the second folder window by its actual text button, as for the first. Assertions for committed receipts, exact0.0004/−8.9996 stock delta and restore remain unchanged. All changes test-only; current stable stays unchanged pending full gates.
+
+2026-11-11 remaining four fixtures: compileDebugAndroidTestKotlin SUCCESS25s; preflight/diff-check passed. Source changes test-only; fixed same-value text entry uses two explicit UI actions. Next full400 API36 run remains required before signing/release.

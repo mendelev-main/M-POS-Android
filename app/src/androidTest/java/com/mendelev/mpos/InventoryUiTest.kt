@@ -63,7 +63,8 @@ class InventoryUiTest {
         compose.onNodeWithTag("inventoryActual:$p").assertTextContains("0,0004")
         assertEquals("9",runBlocking {db.catalog().balance(p)!!.quantity})
         shot("inventory-stale")
-        compose.onNodeWithTag("inventoryActual:$p").performTextReplacement("0,0004");hideKeyboard()
+        compose.onNodeWithTag("inventoryActual:$p").performTextClearance()
+        compose.onNodeWithTag("inventoryActual:$p").performTextInput("0,0004");hideKeyboard()
         compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.inlineInputs.isEmpty()}
         compose.onNodeWithTag("inventoryFix:$p").performScrollTo().performClick()
         compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.document?.draft?.counts?.singleOrNull()?.fixed!=null}
