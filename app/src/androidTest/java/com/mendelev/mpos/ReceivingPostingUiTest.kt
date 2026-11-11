@@ -35,7 +35,7 @@ class ReceivingPostingUiTest {
         compose.onNodeWithTag("receivingTotal:$id").performScrollTo().performTextInput("48");hideKeyboard()
         compose.onNodeWithTag("receivingMore").assertDoesNotExist()
         compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.saving && !model.state.value.dirty}
-        compose.onNodeWithTag("receivingPreview").performScrollTo().performClick();compose.waitUntil(20_000) {model.state.value.preview!=null && !model.state.value.pending}
+        compose.onNodeWithTag("receivingPreview").assertIsDisplayed().performClick();compose.waitUntil(20_000) {model.state.value.preview!=null && !model.state.value.pending}
         compose.onNodeWithTag("receivingPostConfirm").assertIsNotEnabled()
         compose.onNodeWithTag("receivingOverage").performClick();compose.onNodeWithTag("receivingPostConfirm").assertIsEnabled()
         shot("receiving-post-confirm")

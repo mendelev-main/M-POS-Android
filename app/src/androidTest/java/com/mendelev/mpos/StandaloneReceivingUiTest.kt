@@ -49,7 +49,7 @@ class StandaloneReceivingUiTest {
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("receivingQty:$p").fetchSemanticsNodes().isNotEmpty() && !model.state.value.pending}
         compose.onNodeWithTag("receivingQty:$p").assertTextContains("1.5");compose.onNodeWithTag("receivingPrice:$p").assertTextContains("2.35")
         shot("standalone-draft")
-        compose.onNodeWithTag("receivingPreview").performScrollTo().performClick();compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview!=null}
+        compose.onNodeWithTag("receivingPreview").assertIsDisplayed().performClick();compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview!=null}
         assertFalse(model.state.value.preview!!.hasOverage);assertNull(model.state.value.preview!!.lines.single().expected)
         compose.onNodeWithTag("receivingOverage").assertDoesNotExist()
         compose.onNodeWithTag("receivingPostConfirm").performClick()
@@ -57,7 +57,7 @@ class StandaloneReceivingUiTest {
         compose.onNodeWithTag("receivingHistory").performClick()
         compose.onNodeWithTag("receivingPosted:${posting.state.value.committed}").performScrollTo().performClick()
         compose.onNodeWithTag("receivingPostedTitle").assertTextContains("TTN-$key",substring=true)
-        compose.onNodeWithText("Приход проведён без заказа").assertIsDisplayed();shot("standalone-posted")
+        compose.onNodeWithText("Итого: 3.53 BYN").assertIsDisplayed();shot("standalone-posted")
         val after=runBlocking {db.workspace().document(PurchaseOrderCodec.KEY) to db.workspace().document(PurchaseDraftCodec.KEY)}
         assertEquals(before,after);assertEquals("11.5",runBlocking {db.catalog().balance(p)!!.quantity});assertEquals("2.05",runBlocking {db.catalog().product(p)!!.cost});assertEquals(2,runBlocking {db.catalog().movementCount(p)})
         val record=runBlocking {ReceivingPostingRepository(db).history().single {it.draft.invoiceNumber=="TTN-$key"}}

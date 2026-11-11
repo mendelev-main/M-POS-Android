@@ -75,7 +75,7 @@ class RefundUiTest {
         compose.waitUntil(20_000) {model.state.value.review!=null && !model.state.value.pending}
         compose.onNodeWithTag("refundConfirm").performClick()
         compose.waitUntil(20_000) {model.state.value.result!=null && !model.state.value.pending}
-        compose.onNodeWithTag("refundSuccess").assertExists();shot("refund-result")
+        compose.onNodeWithTag("refundSavedTotal").assertTextEquals(com.mendelev.mpos.domain.shift.ShiftRules.money(model.state.value.result!!.total));shot("refund-result")
         assertEquals("10",runBlocking {db.catalog().balance(product)!!.quantity})
         assertEquals(opening,runBlocking {ShiftRepository(db).snapshot().currentCash})
         assertEquals(receipt,runBlocking {db.sales().receipt(receipt.id)})
@@ -84,7 +84,7 @@ class RefundUiTest {
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("receiptHistory").fetchSemanticsNodes().isNotEmpty() && !model.state.value.pending}
         compose.onNodeWithTag("receiptHistory").performScrollToNode(hasTestTag("receipt:${receipt.commandId}"))
-        compose.onNodeWithTag("returned:${receipt.id}").assertExists()
+        compose.onNodeWithTag("returned:${receipt.id}",useUnmergedTree=true).assertExists()
         compose.onNodeWithTag("receipt:${receipt.commandId}").performClick()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("receiptDetails").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("refundPrepare").assertDoesNotExist();shot("refund-returned-receipt")

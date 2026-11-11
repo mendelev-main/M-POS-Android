@@ -42,7 +42,7 @@ class PurchasePanelsTest {
         compose.setContent {MposTheme {
             PurchaseOrderWindow(order,true,false,{closes++},{edits++},{copies++},{shares++},{},{})
         }}
-        compose.onNodeWithTag("purchaseOrderText").assertTextContains("24 бутылка × 500 мл")
+        compose.onNodeWithTag("purchaseOrderText").assertTextContains("24 бутылка × 500 мл",substring=true)
         compose.onNodeWithTag("purchaseCopy").performClick();assertEquals(1,copies)
         compose.onNodeWithTag("purchaseShare").performClick();assertEquals(1,shares)
         compose.onNodeWithTag("purchaseEditOpen").performClick();assertEquals(1,edits)

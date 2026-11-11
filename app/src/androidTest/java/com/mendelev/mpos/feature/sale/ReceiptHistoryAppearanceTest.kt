@@ -39,8 +39,8 @@ class ReceiptHistoryAppearanceTest {
         }
         val left=compose.onNodeWithTag("receiptsListPanel").getUnclippedBoundsInRoot()
         val right=compose.onNodeWithTag("receiptDetailPanel").getUnclippedBoundsInRoot()
-        val type=compose.onNodeWithTag("parkedType:here").getUnclippedBoundsInRoot()
-        val method=compose.onNodeWithTag("receiptPayment:Наличные").getUnclippedBoundsInRoot()
+        val type=compose.onNodeWithTag("parkedType:here",useUnmergedTree=true).getUnclippedBoundsInRoot()
+        val method=compose.onNodeWithTag("receiptPayment:Наличные",useUnmergedTree=true).getUnclippedBoundsInRoot()
         assertEquals((type.bottom-type.top).value,(method.bottom-method.top).value,1f)
         assertEquals(type.bottom.value,method.bottom.value,1f)
         assertTrue(method.left>=type.right)
@@ -57,7 +57,7 @@ class ReceiptHistoryAppearanceTest {
         compose.runOnIdle {allowed.value=false}
         compose.onNodeWithTag("refundPrepare").assertIsNotEnabled();compose.onNodeWithTag("receipt:cmd").assertIsNotEnabled()
         compose.runOnIdle {allowed.value=true;dark.value=true;isReturned.value=true}
-        compose.onNodeWithTag("receiptChangePayment").assertDoesNotExist();compose.onNodeWithTag("returned:id").assertExists();compose.onNodeWithTag("refundPrepare").assertDoesNotExist()
+        compose.onNodeWithTag("receiptChangePayment").assertDoesNotExist();compose.onNodeWithTag("returned:id",useUnmergedTree=true).assertExists();compose.onNodeWithTag("refundPrepare").assertDoesNotExist()
         compose.runOnIdle {empty.value=true}
         compose.onNodeWithText("Чеков пока нет — они появятся здесь после первой оплаты.").assertExists()
         compose.onNodeWithText("Выберите чек слева.").assertExists()

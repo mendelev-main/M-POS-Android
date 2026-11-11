@@ -43,7 +43,7 @@ class InventoryUiTest {
         val id=vm.state.value.snapshot!!.document.draft!!.id
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {!vm.state.value.pending && !vm.state.value.blocked && compose.onAllNodesWithTag("inventoryActive").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithTag("inventoryActive").performScrollTo().assertTextContains("Зафиксировано: 0 из 1")
+        compose.onNodeWithTag("inventoryActive").assertIsDisplayed().assertTextContains("Зафиксировано: 0 из 1")
         compose.onNodeWithTag("inventoryPause").assertExists()
         assertEquals(id,vm.state.value.snapshot!!.document.draft!!.id)
         assertEquals(before,runBlocking {Triple(db.catalog().product(p),db.catalog().balance(p),db.catalog().movementCount(p))})

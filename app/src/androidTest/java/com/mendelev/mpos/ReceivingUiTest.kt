@@ -47,7 +47,7 @@ class ReceivingUiTest {
         compose.onNodeWithTag("receivingTotal:$id").assertTextContains("40")
         compose.onNodeWithTag("receivingInvoice").assertTextContains("TTN-$key")
         shot("receiving-draft")
-        compose.onNodeWithTag("receivingPreview").performScrollTo().performClick()
+        compose.onNodeWithTag("receivingPreview").assertIsDisplayed().performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview!=null}
         compose.onNodeWithTag("receivingPreviewTotal").assertTextContains("40.00 BYN",substring=true)
         compose.onNodeWithTag("receivingPreviewLine:$id").assertTextContains("10 → 20",substring=true)

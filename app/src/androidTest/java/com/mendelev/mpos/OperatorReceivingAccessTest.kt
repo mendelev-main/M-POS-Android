@@ -19,12 +19,14 @@ class OperatorReceivingAccessTest {
             val seed=seedReceiving(db,"operator-orders")
             Administration.session.logout()
             val repo=PurchaseDraftRepository(db);val state=repo.snapshot()
-            val draft=seed.order.source.copy(id="employee-draft")
+            val draft=PurchaseDraftRules.revalidate(seed.order.source.copy(id="employee-draft"),state.suppliers,state.products)
             repo.commit(PurchaseCommand("employee-save",state.ownerId,state.revision,PurchaseAction.Save(draft)))
             val command=PurchaseCommand("employee-place",state.ownerId,repo.snapshot().revision,PurchaseAction.Place("employee-order",draft))
             assertEquals("employee-order",repo.commit(command));assertEquals("employee-order",repo.commit(command))
             val order=repo.snapshot().orders.single {it.id=="employee-order"}
-            PurchaseOrderRepository(db).commit(PurchaseOrderCommand("employee-edit",state.ownerId,order.id,order.revision,PurchaseOrderAction.Edit(draft.copy(lines=draft.lines.map {it.copy(quantity="12")}))))
+            val current=repo.snapshot()
+            val updated=PurchaseDraftRules.revalidate(draft.copy(lines=draft.lines.map {it.copy(quantity="12")}),current.suppliers,current.products)
+            PurchaseOrderRepository(db).commit(PurchaseOrderCommand("employee-edit",state.ownerId,order.id,order.revision,PurchaseOrderAction.Edit(updated)))
             val changed=repo.snapshot().orders.single {it.id==order.id};assertEquals(2L,changed.requestVersion)
             try {PurchaseOrderRepository(db).commit(PurchaseOrderCommand("employee-cancel",state.ownerId,changed.id,changed.revision,PurchaseOrderAction.Cancel));fail()} catch(e:CatalogFailure) {assertEquals("access",e.kind)}
             try {SupplierRepository(db).commit(SupplierCommand("employee-supplier",state.ownerId,SupplierAction.Delete(draft.supplierId,1)));fail()} catch(e:CatalogFailure) {assertEquals("access",e.kind)}

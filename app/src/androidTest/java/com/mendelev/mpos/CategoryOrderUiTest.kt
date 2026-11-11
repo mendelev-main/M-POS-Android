@@ -1,6 +1,7 @@
 package com.mendelev.mpos
 
 import androidx.compose.ui.test.*
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
 import com.mendelev.mpos.feature.products.CatalogViewModel
@@ -30,8 +31,8 @@ class CategoryOrderUiTest {
         val before=model.state.value.categories
         val id=before.first { it.name==names.last() }.id
         val first=before.first { it.name==names.first() }.id
-        compose.onNodeWithTag("categoryRow:$id").performScrollTo().performTouchInput {longClick()}
-        compose.onNodeWithTag("categoryUp:$id").performScrollTo().performClick()
+        compose.onNodeWithTag("categoryRow:$id").performScrollTo().performTouchInput {longClick(Offset(10f,center.y))}
+        compose.onNodeWithTag("categoryUp:$id").assertIsDisplayed().performClick()
         compose.waitUntil(20_000) {
             val categories=model.state.value.categories
             !model.state.value.busy && categories.indexOfFirst { it.id==id }<categories.indexOfFirst { it.id==first }

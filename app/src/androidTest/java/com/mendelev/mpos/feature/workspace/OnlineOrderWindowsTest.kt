@@ -75,7 +75,7 @@ class OnlineOrderWindowsTest {
     @Test fun eventCountIsSeparateBadgeAndVanishesAtZero() {
         var count by mutableIntStateOf(3)
         compose.setContent {MposTheme {MposTopBar(MposTopNavigation("workspace",false,eventsCount=count,navigate={}))}}
-        compose.onNodeWithTag("topNav-eventsCount",useUnmergedTree=true).assertTextEquals("3")
+        compose.onNodeWithTag("topNav-eventsCount",useUnmergedTree=true).onChild().assertTextEquals("3")
         compose.onNodeWithText("События (3)").assertDoesNotExist()
         compose.runOnIdle {count=0}
         compose.onNodeWithTag("topNav-eventsCount",useUnmergedTree=true).assertDoesNotExist()

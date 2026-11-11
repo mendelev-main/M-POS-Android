@@ -58,7 +58,7 @@ class AdminFormViewModelTest {
             }
             waitFor {!receiving.state.value.pending && receiving.state.value.form!=null && !counts.state.value.pending && counts.state.value.countForm!=null}
             withContext(Dispatchers.Main) {receiving.change {it.copy(invoiceNumber="Не сохраняли")};counts.countRaw("3")}
-            waitFor {!purchase.state.value.saving && !purchase.state.value.dirty}
+            waitFor {!purchase.state.value.saving && !purchase.state.value.dirty && !receiving.state.value.saving && !receiving.state.value.dirty}
             val documents=db.workspace().documents();val savedProduct=db.catalog().draft();val balance=db.catalog().balance("p")
             relogin()
             waitFor {products.state.value.draft==null && staff.state.value.form==null && counts.state.value.countForm==null && !counts.state.value.canEdit}

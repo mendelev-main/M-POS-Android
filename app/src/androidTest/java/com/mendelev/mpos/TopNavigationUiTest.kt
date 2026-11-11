@@ -21,8 +21,7 @@ class TopNavigationUiTest {
         }
         for(route in listOf("purchaseOrders","receiving","events")) {
             compose.onNodeWithTag("topNav-$route").performScrollTo().performClick()
-            if(route=="events") compose.onNodeWithTag("topNav-$route").assertIsNotSelected()
-            else compose.onNodeWithTag("topNav-$route").assertIsSelected()
+            compose.onNodeWithTag("topNav-$route").assertIsSelected()
             if(route=="purchaseOrders") compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("purchaseNew") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
             else if(route=="receiving") compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("receivingNew") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
             else {

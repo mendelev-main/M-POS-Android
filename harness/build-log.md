@@ -1598,3 +1598,13 @@ Gradle8.13/JDK17/API36/in-process :app:compileDebugKotlin :app:compileDebugAndro
 Перед публикацией исправлены устаревшие UI/test expectations: supplier save теперь operational, delete admin; unknown-result admin revocation regression проверяется на EmployeeViewModel; supplier input сохраняется при logout. WorkspaceUiTest использует новые stable tags для folder Save и placement, без неоднозначного текста за modal. Политики доступа/финансовые gates не ослаблялись.
 
 Push main должен запустить штатные параллельные checks/emulator, затем sign → signed installation verification → Release/update.json. CI/runtime исход для нового commit на момент записи pending; итоговый run/release URL сообщается владельцу без рекурсивного docs-only release. На пользовательском планшете тесты/restore не запускались.
+
+## 2026-11-11 — CI42978113923 / Android fixture corrections
+
+Main8ec686a pushed, run https://github.com/mendelev-main/M-POS-Android/actions/runs/42978113923: harness и JVM/lint/debug passed; Android383/400 pass,17 failures; signing/release skipped. Отчёт изучен, публикация не объявлялась успешной.
+
+Исправления по наблюдаемым traces, без выключения тестов/gates: protected admin concurrency теперь EmployeeRepository (Supplier save по правилу владельца operational); receiving auto-save дождаться durable state до snapshot; availability fake seed initialize Workspace; Purchase references обновляются перед новым заказом/редактированием после Place, stale guard не ослаблен. UI selectors используют актуальные controls/explicit text matching, unmerged descendants карточек/бейджа, fixed headers без несуществующей scroll action; category long press попадает в название, не в переключатель. Refund success сверяет сохранённую сумму вместо удалённого banner tag, standalone receiving сверяет сумму внутри record modal вместо баннера позади него. Financial amounts/stock/outcome/replay assertions сохранены. Remote evidence в Library/Caches/M-POS-Android/release-ci/42978113923.
+
+compileDebugAndroidTestKotlin passed26s после первого пакета test corrections; финальная компиляция ниже/перед push. Full API36 повтор обязателен; релиз остаётся pending.
+
+2026-11-11 CI fixture fixes final: compileDebugAndroidTestKotlin SUCCESS26s; harness preflight/diff-check passed. Правки только Android tests + evidence, application logic/CI gates не менялись. Повторный полный release pipeline после push pending.

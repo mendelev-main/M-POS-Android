@@ -90,7 +90,7 @@ class WorkspaceUiTest {
         compose.onNodeWithText("Добавить в заказ").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.cart.lines.size==1}
         compose.onNodeWithTag("workspaceFolderGrid").assertExists()
-        compose.onNodeWithContentDescription("Закрыть").performClick()
+        compose.onNodeWithText("Закрыть").performClick()
         val line=model.state.value.snapshot!!.cart.lines.single().id
         compose.onNodeWithTag("workspaceLine:$line").performClick()
         repeat(4) {compose.onNodeWithTag("workspacePlus:$line").performClick()}
