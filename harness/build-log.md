@@ -1670,3 +1670,10 @@ and the fixture never generated that image. Capture the real pre-fix inline
 screen as inventory-fix-ready.png and require that exact PNG in the collector.
 The image signature gate and all stock/fix assertions remain. Local compilation,
 32 Python tests, harness preflight and diff check passed; release pending.
+
+2026-11-11 — run43027647382/be94165: all400 UI tests passed; debug APK replacement
+succeeded, product/stock8 and current cart/total15 were preserved. Upgrade driver
+still expected the old `3,00 BYN / шт · ×5` label, but WorkspaceCartPanel renders
+`3,00 BYN · ×5`. Update the exact expected label, retaining unit price3 and qty5,
+current product/total15 and all subsequent restoration checks.32 Python tests and
+harness preflight passed. No application code or release gates changed.

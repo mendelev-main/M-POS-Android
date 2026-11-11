@@ -378,7 +378,7 @@ def main():
                 wait_navigation("workspace")
                 wait_text(r"(?:^|\n)" + re.escape(expected_workspace_line) + r"(?:$|\n)")
                 wait_text("^15,00 BYN$")
-                wait_text(r"(?:^|\n)3,00 BYN / шт · ×5(?:$|\n)")
+                wait_text(r"(?:^|\n)3,00 BYN · ×5(?:$|\n)")
                 (reports / "updated-workspace.png").write_bytes(subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True, timeout=20, check=True).stdout)
                 print("WORKSPACE UPDATE PASSED: current cart configuration, quantity=5 and total=15 survived package replacement", flush=True)
                 wait_text("^Отложенные$", click=True, preferred_resource_id="workspaceParked")
