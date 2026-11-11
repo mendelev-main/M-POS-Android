@@ -60,11 +60,30 @@ class SupplierUiTest {
         assertEquals(setOf(product),model.state.value.snapshot!!.suppliers.single {it.id==id}.productIds)
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("supplier:$id") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
+        compose.waitUntil(20_000) {
+            !model.state.value.pending && model.state.value.form==null &&
+                compose.onAllNodes(hasTestTag("supplier:$id") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+        }
         compose.onNodeWithTag("supplier:$id").performScrollTo().performClick()
+        compose.waitUntil(20_000) {
+            !model.state.value.pending && model.state.value.form?.id==id &&
+                compose.onAllNodesWithTag("supplierName").fetchSemanticsNodes().isNotEmpty()
+        }
         compose.onNodeWithTag("supplierName").performScrollTo().performTextReplacement("$name новый");hideKeyboard()
         compose.onNodeWithTag("supplierSave").performScrollTo().performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.form==null && model.state.value.snapshot!!.suppliers.any {it.id==id && it.name=="$name новый"}}
+        compose.waitUntil(20_000) {
+            !model.state.value.pending && model.state.value.form==null &&
+                compose.onAllNodes(hasTestTag("supplier:$id") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+        }
         compose.onNodeWithTag("supplier:$id").performScrollTo().performClick()
+        compose.waitUntil(20_000) {
+            !model.state.value.pending && model.state.value.form?.id==id &&
+                compose.onAllNodesWithTag("supplierName").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.waitUntil(20_000) {
+            compose.onAllNodes(hasTestTag("supplierDelete") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+        }
         compose.onNodeWithTag("supplierDelete").performScrollTo().performClick()
         compose.onNodeWithTag("supplierDeleteConfirm").performScrollTo().performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.form==null && model.state.value.snapshot!!.suppliers.none {it.id==id}}

@@ -1648,3 +1648,10 @@ because its old assertion expected2. Continuing the owner's instruction to fix
 tests and finish release: expected exact count updated to3, FAILURES guard retained.
 32 release-tooling Python tests, harness preflight and git diff --check passed.
 No application behavior/signing/workflow gates changed; release remains pending.
+
+2026-11-11 — run43020988169/7672edd: harness/JVM/lint/debug passed;399/400
+instrumentation passed. SupplierUiTest clicked a just-renamed list row before its
+rendered enabled state, then searched for supplierDelete without waiting for the
+editor. Add waits for enabled supplier row, matching form ID, ready editor and
+visible enabled delete action. Creation/rename/delete/stock invariants retained.
+This continues the owner's instruction to fix tests and finish publication.
