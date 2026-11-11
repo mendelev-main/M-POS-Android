@@ -1662,3 +1662,11 @@ assertions after opening/recreating historical dialogs. Both fixtures now wait
 for the corresponding dialog semantics before the unchanged status/invoice
 assertions; database stock/cost/idempotency assertions stay unchanged.
 compileDebugAndroidTestKotlin passed locally; continuing agreed test stabilization.
+
+2026-11-11 — run43025355885/732160e: all400 Android tests and the current
+3-test visual batch passed. Debug-upgrade collection stopped on obsolete
+inventory-fix-confirm.png: InventoryWork fixes inline and has no such confirmation,
+and the fixture never generated that image. Capture the real pre-fix inline
+screen as inventory-fix-ready.png and require that exact PNG in the collector.
+The image signature gate and all stock/fix assertions remain. Local compilation,
+32 Python tests, harness preflight and diff check passed; release pending.

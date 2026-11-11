@@ -66,7 +66,9 @@ class InventoryUiTest {
         compose.onNodeWithTag("inventoryActual:$p").performTextClearance()
         compose.onNodeWithTag("inventoryActual:$p").performTextInput("0,0004");hideKeyboard()
         compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.inlineInputs.isEmpty()}
-        compose.onNodeWithTag("inventoryFix:$p").performScrollTo().performClick()
+        compose.onNodeWithTag("inventoryFix:$p").performScrollTo().assertIsEnabled()
+        shot("inventory-fix-ready")
+        compose.onNodeWithTag("inventoryFix:$p").performClick()
         compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.document?.draft?.counts?.singleOrNull()?.fixed!=null}
         compose.onNodeWithTag("inventoryFixed:$p").performScrollTo().assertTextContains("0.0004",substring=true)
         compose.onNodeWithTag("inventoryActual:$p").assertDoesNotExist()
