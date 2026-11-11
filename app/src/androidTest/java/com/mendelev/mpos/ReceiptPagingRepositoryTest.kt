@@ -9,7 +9,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ReceiptPagingRepositoryTest {
-    @Test fun sqliteLimitReturnsFiftyAtATimeForMixedImportedAndNativeRows()=runBlocking {
+    @Test fun sqliteLimitReturnsTwentyAtATimeForMixedImportedAndNativeRows()=runBlocking {
         val context=InstrumentationRegistry.getInstrumentation().targetContext
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         try {
@@ -24,12 +24,12 @@ class ReceiptPagingRepositoryTest {
             do {
                 val page=ReceiptHistoryPaging(db).page(no,wo)
                 val ids=page.native.map {it.id}+page.web.map {it.id}
-                assertTrue(ids.size<=50);assertTrue(ids.none {it in seen});seen+=ids
+                assertTrue(ids.size<=20);assertTrue(ids.none {it in seen});seen+=ids
                 no=page.nativeOffset;wo=page.webOffset;pages++
             } while(page.more)
-            assertEquals(157,seen.size);assertEquals(4,pages)
-            assertEquals(51,db.sales().historyPage(51,0).size)
-            assertEquals(51,db.workspace().prefixPage(WebReceiptIndex.PREFIX,51,0).size)
+            assertEquals(157,seen.size);assertEquals(8,pages)
+            assertEquals(21,db.sales().historyPage(21,0).size)
+            assertEquals(21,db.workspace().prefixPage(WebReceiptIndex.PREFIX,21,0).size)
         } finally {db.close()}
     }
 }

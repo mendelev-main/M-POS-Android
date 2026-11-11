@@ -94,7 +94,7 @@ private fun saleNavigationLocked(ui: SaleUi,refund: RefundUi)=ui.pending || refu
                 {id->picked=id;model.select(id)},
                 {ui.selected?.takeIf {it.first.id==chosen}?.let {refundModel.prepare(it.first.id,ui.shift!!.active!!.actorId)}},
                 {printNotice=true},ui.message,web=ui.webHistory,more=ui.historyMore,loadingMore=ui.historyLoading,onMore=model::moreHistory,onChangePayment=model::editReceiptPayment)
-            if(printNotice) ui.selected?.let {com.mendelev.mpos.print.ReceiptPrintWindow(it) {printNotice=false}}
+            if(printNotice) ui.selected?.let {com.mendelev.mpos.print.ReceiptPrintMenu(it) {printNotice=false}}
         } else if(ui.split!=null) {
             SplitPaymentPage(ui,model)
         } else {
@@ -237,15 +237,22 @@ private fun saleNavigationLocked(ui: SaleUi,refund: RefundUi)=ui.pending || refu
     }
     refund.review?.let {submission->MposDialog("Возврат товара",refundModel::dismiss,!refund.pending,maxWidth=560.dp) {
         val p=submission.preview.amounts
-        Text("Будет выполнен полный возврат чека. Все товары вернутся на склад.",style=MaterialTheme.typography.bodyMedium)
         Text(ui.selected?.let {"Чек №"+it.first.number+" · "+receiptDate(it.first.createdAt)} ?: "Чек",color=MaterialTheme.colorScheme.onSurfaceVariant)
-        Text("К возврату",color=MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(money(p.total),Modifier.testTag("refundPreviewTotal"),style=MaterialTheme.typography.headlineLarge)
-        ReceiptMoneyRow("Наличными",p.cash,amountTag="refundPreviewCash")
-        if(p.card>0) ReceiptMoneyRow("Через терминал",p.card,amountTag="refundPreviewCard")
-        if(p.deliveryCashCredit>0) ReceiptMoneyRow("Возврат расхода на доставку в кассу",p.deliveryCashCredit,amountTag="refundPreviewDeliveryCredit")
-        if(p.deliveryCashCredit>0) Text("Отменяется оплата курьеру: "+money(p.deliveryCashCredit)+". Верните эти наличные в кассу.",style=MaterialTheme.typography.bodySmall)
-        if(p.card>0) Text("Карточную часть верните через банковский терминал.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        Surface(Modifier.fillMaxWidth(),shape=androidx.compose.foundation.shape.RoundedCornerShape(16.dp),color=MaterialTheme.colorScheme.background) {
+            Column(Modifier.padding(18.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+                Text("К возврату",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(money(p.total),Modifier.testTag("refundPreviewTotal"),style=MaterialTheme.typography.headlineLarge,fontWeight=androidx.compose.ui.text.font.FontWeight.Bold)
+                Spacer(Modifier.height(4.dp))
+                ReceiptMoneyRow("Наличными",p.cash,amountTag="refundPreviewCash")
+                if(p.card>0) ReceiptMoneyRow("На карту",p.card,amountTag="refundPreviewCard")
+                if(p.deliveryCashCredit>0) ReceiptMoneyRow("Возврат оплаты курьеру в кассу",p.deliveryCashCredit,amountTag="refundPreviewDeliveryCredit")
+            }
+        }
+        Column(Modifier.fillMaxWidth().padding(vertical=8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+            Text("Полный возврат. Товары вернутся на остатки.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            if(p.deliveryCashCredit>0) Text("Отменяется оплата курьеру: "+money(p.deliveryCashCredit)+". Верните эти наличные в кассу.",style=MaterialTheme.typography.bodySmall)
+            if(p.card>0) Text("Возврат на карту выполните через банковский терминал.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         refund.message?.let {Text(it,color=MaterialTheme.colorScheme.error)}
         Row(Modifier.fillMaxWidth().padding(top=8.dp),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
             MposPosControl("Отмена",refundModel::dismiss,Modifier.weight(1f),!refund.pending,PosControl.Secondary,48.dp,16.dp)

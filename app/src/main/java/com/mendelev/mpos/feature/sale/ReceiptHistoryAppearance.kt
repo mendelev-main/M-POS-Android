@@ -31,7 +31,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-internal fun receiptDate(value: Long)=DateTimeFormatter.ofPattern("dd.MM, HH:mm").withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(value))
+internal fun receiptDate(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm").withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(value))
 internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snapshot.payment.parts.map {it.method}.distinct()) {
     listOf("cash")->"Наличные"
     listOf("card")->"Карта"
@@ -47,8 +47,7 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
             val narrow=maxWidth<=900.dp
             val small=maxWidth<=600.dp
             val listMax=maxHeight*.34f
-            Column(Modifier.fillMaxSize().padding(start=if(small) 12.dp else 26.dp,end=if(small) 12.dp else 26.dp,top=if(small) 12.dp else 22.dp,bottom=if(small) 12.dp else 40.dp)) {
-                Text("Чеки",Modifier.padding(bottom=18.dp),fontSize=21.sp,lineHeight=29.sp,fontWeight=FontWeight.ExtraBold)
+            Column(Modifier.fillMaxSize().padding(start=if(small) 12.dp else 26.dp,end=if(small) 12.dp else 26.dp,top=12.dp,bottom=0.dp)) {
                 if(narrow) Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(16.dp)) {
                     ReceiptList(receipts,types,methods,selectedId,returns,enabled,onSelect,Modifier.fillMaxWidth().heightIn(max=listMax),web,more,loadingMore,onMore)
                     if(web[selectedId]!=null) WebReceiptDetail(web.getValue(selectedId),Modifier.fillMaxWidth().weight(1f)) else ReceiptDetail(detail,returns,enabled,canRefund,onRefund,onPrint,onChangePayment,error,{onSelect(selectedId)},Modifier.fillMaxWidth().weight(1f))
@@ -61,7 +60,7 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
     }
 }
 @Composable private fun ReceiptList(receipts: List<ReceiptEntity>,types: Map<String,String>,methods: Map<String,String>,selectedId: String,returns: List<RefundEntity>,enabled: Boolean,onSelect: (String)->Unit,modifier: Modifier,web: Map<String,WebReceiptRecord>,more: Boolean,loadingMore: Boolean,onMore: ()->Unit) {
-    Surface(modifier.testTag("receiptsListPanel"),shape=RoundedCornerShape(22.dp),shadowElevation=1.dp) {
+    Surface(modifier.testTag("receiptsListPanel"),shape=RoundedCornerShape(topStart=22.dp,topEnd=22.dp),shadowElevation=1.dp) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start=18.dp,end=18.dp,top=18.dp,bottom=14.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                 Text("История чеков",Modifier.weight(1f),fontSize=16.sp,lineHeight=20.8.sp,fontWeight=FontWeight.ExtraBold)
@@ -81,7 +80,7 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
                             }
                             Text("${if(web[r.id]!=null && r.createdAt==0L) "Дата не указана" else receiptDate(r.createdAt)}",fontSize=12.5.sp,lineHeight=17.5.sp,color=c.onSurfaceVariant)
                             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-                                if(returned) ReturnSticker(Modifier.testTag("returned:${r.id}"))
+                                if(returned) ReturnSticker(Modifier.width(128.dp).height(23.dp).testTag("returned:${r.id}"))
                                 Spacer(Modifier.weight(1f))
                                 types[r.id]?.let {com.mendelev.mpos.feature.workspace.ParkedType(it,compact=true)}
                                 ReceiptPaymentSticker(methods[r.id] ?: "—")
@@ -90,7 +89,7 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
                     }
                 }
                 if(more) item {
-                    MposButton("Показать следующие 50",onMore,Modifier.fillMaxWidth().testTag("receiptsLoadMore"),enabled=enabled && !loadingMore,busy=loadingMore,style=ActionStyle.Secondary)
+                    MposButton("Показать следующие 20",onMore,Modifier.fillMaxWidth().testTag("receiptsLoadMore"),enabled=enabled && !loadingMore,busy=loadingMore,style=ActionStyle.Secondary)
                 }
             }
         }
@@ -98,20 +97,20 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
 }
 @Composable private fun ReceiptDetail(detail: Pair<ReceiptEntity,ReceiptSnapshot>?,returns: List<RefundEntity>,enabled: Boolean,canRefund: Boolean,
     onRefund: ()->Unit,onPrint: ()->Unit,onChangePayment: ()->Unit,error: String?,retry: ()->Unit,modifier: Modifier) {
-    Surface(modifier.testTag("receiptDetailPanel"),shape=RoundedCornerShape(22.dp),shadowElevation=1.dp) {
+    Surface(modifier.testTag("receiptDetailPanel"),shape=RoundedCornerShape(topStart=22.dp,topEnd=22.dp),shadowElevation=1.dp) {
         Column(Modifier.padding(20.dp)) {
             if(detail==null) {
                 Text(error ?: "Выберите чек слева.",Modifier.fillMaxWidth().padding(vertical=30.dp),fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
                 if(error!=null) MposButton("Повторить открытие чека",retry,enabled=enabled,style=ActionStyle.Secondary)
             } else {
                 val (r,s)=detail;val returned=returns.firstOrNull {it.receiptId==r.id}
-                Text("Чек №${r.number}",Modifier.padding(bottom=14.dp),fontSize=20.sp,lineHeight=27.sp,fontWeight=FontWeight.ExtraBold)
+                Row(Modifier.fillMaxWidth().padding(bottom=14.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.Top) {
+                    Text("Чек №${r.number}",Modifier.weight(1f),fontSize=20.sp,lineHeight=27.sp,fontWeight=FontWeight.ExtraBold)
+                    if(returned!=null) ReceiptReturnStatus(returned.createdAt)
+                }
                 val scroll=rememberScrollState()
                 LaunchedEffect(r.id) {scroll.scrollTo(0)}
                 Column(Modifier.weight(1f).fillMaxWidth().padding(end=4.dp).verticalScroll(scroll).testTag("receiptDetails")) {
-                    if(returned!=null) Surface(color=MaterialTheme.colorScheme.errorContainer,shape=RoundedCornerShape(12.dp)) {
-                        Text("Возврат · ${receiptDate(returned.createdAt)}",Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=10.dp),color=MaterialTheme.colorScheme.error,fontWeight=FontWeight.ExtraBold)
-                    }
                     if(s.cart.details.label.isNotBlank()) Text(s.cart.details.label,Modifier.padding(bottom=5.dp),fontSize=18.sp,lineHeight=24.3.sp,fontWeight=FontWeight.ExtraBold)
                     Text("${receiptDate(r.createdAt)} · ${receiptPaymentLabel(s)} · ${OrderRules.typeLabel(s.cart.details.type)}",Modifier.padding(bottom=10.dp),fontSize=12.5.sp,lineHeight=18.125.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     if(s.cart.details.address.isNotBlank() || s.cart.details.phone.isNotBlank()) Text(listOf(s.cart.details.phone,s.cart.details.address).filter {it.isNotBlank()}.joinToString(" · "),fontSize=12.5.sp)
@@ -148,8 +147,7 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
                 Row(Modifier.fillMaxWidth().padding(top=18.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
                     ReceiptAction("Печать",onPrint,enabled,false,Modifier.weight(1f).testTag("receiptPrint"))
                     if(returned==null && s.payment.parts.size==1) ReceiptAction("Изменить оплату",onChangePayment,enabled,false,Modifier.weight(1f).testTag("receiptChangePayment"),payment=true)
-                    if(returned!=null) ReturnSticker(Modifier.weight(1f).heightIn(min=46.dp))
-                    else ReceiptAction("Вернуть",onRefund,enabled && canRefund,true,Modifier.weight(1f).testTag("refundPrepare"))
+                    if(returned==null) ReceiptAction("Вернуть",onRefund,enabled && canRefund,true,Modifier.weight(1f).testTag("refundPrepare"))
                 }
             }
         }
@@ -161,9 +159,9 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
         Text(ShiftRules.money(amount),if(amountTag!=null) Modifier.testTag(amountTag) else Modifier,fontSize=if(small || accent) 12.sp else 13.5.sp,lineHeight=18.5.sp,color=if(accent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
     }
 }
-@Composable private fun ReturnSticker(modifier: Modifier=Modifier) {
+@Composable internal fun ReturnSticker(modifier: Modifier=Modifier) {
     Surface(modifier.semantics(mergeDescendants=true) {},shape=RoundedCornerShape(100.dp),color=MaterialTheme.colorScheme.errorContainer,border=BorderStroke(1.dp,MaterialTheme.colorScheme.error)) {
-        Box(Modifier.padding(horizontal=10.dp,vertical=5.dp),contentAlignment=Alignment.Center) {Text("Возврат",fontSize=11.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.error)}
+        Box(Modifier.padding(horizontal=7.dp),contentAlignment=Alignment.Center) {Text("Возврат",fontSize=10.sp,fontWeight=FontWeight.ExtraBold,color=MaterialTheme.colorScheme.error)}
     }
 }
 @Composable private fun ReceiptAction(label: String,onClick: ()->Unit,enabled: Boolean,danger: Boolean,modifier: Modifier,payment: Boolean=false) {
@@ -181,10 +179,20 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
     val bg=if(card) {if(dark) 0xFF372C4A else 0xFFF0E8FF} else {if(dark) 0xFF1D4638 else 0xFFE3F6E8}
     val fg=if(card) {if(dark) 0xFFD9BEFF else 0xFF7040A0} else {if(dark) 0xFF8FE0BE else 0xFF26733A}
     val border=if(card) {if(dark) 0xFF61477F else 0xFFD9C5F2} else {if(dark) 0xFF43C38D else 0xFFC9EBCF}
-    Surface(Modifier.width(128.dp).testTag("receiptPayment:$method"),shape=RoundedCornerShape(8.dp),color=Color(bg),contentColor=Color(fg),border=BorderStroke(1.dp,Color(border))) {
+    Surface(Modifier.width(128.dp).testTag("receiptPayment:$method"),shape=RoundedCornerShape(100.dp),color=Color(bg),contentColor=Color(fg),border=BorderStroke(1.dp,Color(border))) {
         Row(Modifier.height(23.dp).padding(horizontal=7.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.Center) {
             MposPosIcon(if(card) "card" else "cash",Modifier.size(12.dp));Spacer(Modifier.width(5.dp))
             Text(method,fontSize=10.sp,lineHeight=13.sp,fontWeight=FontWeight.Bold,maxLines=1)
         }
+    }
+}
+
+
+@Composable internal fun ReceiptReturnStatus(at: Long) {
+    val date=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(at))
+    Surface(Modifier.testTag("receiptReturnStatus"),shape=RoundedCornerShape(100.dp),
+        color=MaterialTheme.colorScheme.errorContainer,contentColor=MaterialTheme.colorScheme.error,
+        border=BorderStroke(1.dp,MaterialTheme.colorScheme.error)) {
+        Text("Возврат · $date",Modifier.padding(horizontal=12.dp,vertical=5.dp),fontSize=10.sp,lineHeight=13.sp,fontWeight=FontWeight.Bold,maxLines=1)
     }
 }

@@ -10,6 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,26 +43,25 @@ import com.mendelev.mpos.domain.workspace.CurrentCart
                     val available=program.rewards>0
                     val selected=program.id in profile.selected
                     val applied=if(selected) runCatching {LoyaltyRules.allocation(cart.copy(loyalty=profile),cart.lines.mapNotNull {l->l.discount?.let {l.id to it}}.toMap()).gifts.any {it.programId==program.id}}.getOrDefault(false) else false
-                    Surface(Modifier.fillMaxWidth().testTag("customerProgram:${program.id}"),shape=RoundedCornerShape(14.dp),border=BorderStroke(1.dp,MaterialTheme.colorScheme.outline),color=MaterialTheme.colorScheme.background) {
-                        Column(Modifier.padding(14.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                    val ink=if(available) MaterialTheme.colorScheme.primary else if(isMposDarkTheme()) Color(0xFFE9A94F) else Color(0xFFB76315)
+                    Surface(Modifier.fillMaxWidth().testTag("customerProgram:${program.id}"),shape=RoundedCornerShape(16.dp),
+                        border=BorderStroke(1.dp,ink.copy(alpha=.5f)),color=ink.copy(alpha=.08f)) {
+                        Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                                Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
-                                    Text(program.name,fontSize=14.sp,fontWeight=FontWeight.Bold)
-                                    Text(if(available) "Накопление продолжится после использования подарка" else "Прогресс: ${program.progress} из ${program.required}",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                                Column(horizontalAlignment=Alignment.End) {
-                                    Text("Подарок:",fontSize=11.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text(if(available) "доступен" else "нет",fontSize=20.sp,fontWeight=FontWeight.Bold)
-                                }
+                                Text(program.name,Modifier.weight(1f),fontSize=15.sp,fontWeight=FontWeight.Bold)
+                                Text(if(available) "Подарок доступен" else "Накопление",fontSize=12.sp,fontWeight=FontWeight.Bold,color=ink)
                             }
+                            LinearProgressIndicator(progress={loyaltyProgramProgress(program)},
+                                modifier=Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(100.dp)).testTag("customerProgramProgress:${program.id}"),
+                                color=ink,trackColor=ink.copy(alpha=.16f))
+                            Text(if(available) "Доступно подарков: ${program.rewards}" else "${program.progress.replace('.',',')} из ${program.required}",
+                                fontSize=13.sp,color=ink,fontWeight=FontWeight.SemiBold)
                             if(available) {
-                                Surface(onClick={onGift(program.id,!selected)},enabled=!locked,shape=RoundedCornerShape(11.dp),border=BorderStroke(1.dp,MaterialTheme.colorScheme.outline),color=MaterialTheme.colorScheme.surface,modifier=Modifier.fillMaxWidth().testTag("loyaltyGift:${program.id}")) {
-                                    Row(Modifier.heightIn(min=48.dp).padding(horizontal=12.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                                        Checkbox(selected,null,enabled=!locked,modifier=Modifier.size(22.dp))
-                                        Text("Использовать подарок в этом заказе",fontSize=14.sp,fontWeight=FontWeight.Bold)
-                                    }
-                                }
-                                Text(when {selected && applied->"Подарок применён к этому заказу.";selected->"Подарок ещё не применён. Добавьте в заказ товар, участвующий в акции.";else->"Отметьте подарок, чтобы использовать его в этом заказе."},fontSize=13.sp,lineHeight=19.5.sp,color=if(selected && applied) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,fontWeight=if(selected && applied) FontWeight.Bold else FontWeight.Normal)
+                                MposButton(if(selected) "Не использовать" else "Использовать",{onGift(program.id,!selected)},
+                                    Modifier.fillMaxWidth().testTag("loyaltyGift:${program.id}"),enabled=!locked,
+                                    style=if(selected) ActionStyle.Secondary else ActionStyle.Primary)
+                                if(selected) Text(if(applied) "Подарок применён к этому заказу." else "Добавьте в заказ товар, участвующий в акции.",
+                                    fontSize=12.sp,lineHeight=18.sp,color=ink)
                             }
                         }
                     }
@@ -104,4 +105,13 @@ import com.mendelev.mpos.domain.workspace.CurrentCart
             action?.invoke(this)
         }
     }
+}
+
+
+// Presentation only: the gift entitlement still comes from the verified profile.
+internal fun loyaltyProgramProgress(program: LoyaltyProgram): Float {
+    if(program.rewards>0) return 1f
+    if(program.required<=0) return 0f
+    return (program.progress.toBigDecimalOrNull() ?: java.math.BigDecimal.ZERO)
+        .divide(java.math.BigDecimal(program.required),6,java.math.RoundingMode.HALF_UP).toFloat().coerceIn(0f,1f)
 }

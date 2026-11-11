@@ -53,7 +53,7 @@ class PrintRuntime private constructor(private val context: Context) {
         val name=raw?.let {org.json.JSONObject(it).optString("establishmentName").trim()}.orEmpty()
         return document.copy(label=name)
     }
-    fun print(document: PrintDocument,p: PrinterConfiguration,key: String="manual:${UUID.randomUUID()}") {
+    fun print(document: PrintDocument,p: PrinterConfiguration,key: String="manual:${UUID.randomUUID()}",feedback: Boolean=false) {
         pending.update {it+1}
         scope.launch {try {
             val config=p.validated()
@@ -65,8 +65,9 @@ class PrintRuntime private constructor(private val context: Context) {
                 val prepared=prepare(document)
                 val result=dispatcher.dispatch(key,config.ip) {ReceiptRenderer.encode(prepared,config)}
                 mutable.value=if(result.duplicate) previousStatus else "${config.name}: ${result.message}"
+                if(feedback && !result.duplicate) notifyUser("${config.name}: ${result.message}")
             }
-        } catch(_:CancellationException) {throw CancellationException()} catch(e:Exception) {mutable.value=e.message ?: "Не удалось подготовить печать"} finally {pending.update {it-1}}}
+        } catch(_:CancellationException) {throw CancellationException()} catch(e:Exception) {mutable.value=e.message ?: "Не удалось подготовить печать";if(feedback) notifyUser(mutable.value!!)} finally {pending.update {it-1}}}
     }
     fun autoSale(value: Pair<ReceiptEntity,ReceiptSnapshot>) {
         scope.launch {try {
@@ -86,6 +87,24 @@ class PrintRuntime private constructor(private val context: Context) {
             }
             if(PrinterRouting.opensDrawer(doc)) drawer("sale:${value.first.id}",automatic=true)
         } catch(e:Exception) {mutable.value="Автопечать: ${e.message ?: "не удалось прочитать настройки"}"}}
+    }
+    /** Web manual action fans out to every eligible printer, independent of auto-print switches. */
+    fun manualAll(document: PrintDocument) {
+        scope.launch {
+            try {
+                val jobs=PrinterRouting.manualJobs(document,configurations())
+                if(jobs.isEmpty()) {
+                    notifyUser(if(document.kind==PrintKind.KITCHEN) "Нет принтера заказов для этих категорий" else "Принтер для чеков не настроен")
+                    return@launch
+                }
+                jobs.forEach {printer->print(document,printer,feedback=true)}
+            } catch(e:Exception) {notifyUser(e.message ?: "Не удалось подготовить печать")}
+        }
+    }
+    private fun notifyUser(message: String) {
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            android.widget.Toast.makeText(context,message,android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
     fun manual(document: PrintDocument,p: PrinterConfiguration) {
         if(pending.value>0) return

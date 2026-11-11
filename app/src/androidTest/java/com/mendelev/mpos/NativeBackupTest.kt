@@ -30,6 +30,7 @@ class NativeBackupTest {
         c.saveProduct(ProductInput("p",null,"Заказ","c","100","1","10.0004",null,true,"product",photoId=photo))
         val draftPhoto=photos.prepare {bytes.inputStream()}
         c.saveDraft(DraftEntity(payload=com.mendelev.mpos.feature.products.ProductDraft(name="private-fixture",photoId=draftPhoto,dirty=true).json()))
+        ManagementContactsRepository(db).save(ManagementContacts(owner=ManagementContact("owner","+375291234567","owner@example.com","12345")),Administration.session.state.value.generation)
         val w=WorkspaceRepository(db);w.initialize();w.cart(CartAction.Add("p",1,emptySet(),null,"line"),"add",w.snapshot().cart.sessionId)
         val s=ShiftRepository(db);s.initializeCashierFixture();val before=s.snapshot();s.open("open",0,null,before.ownerId)
         val active=s.snapshot();val initialCart=w.snapshot()

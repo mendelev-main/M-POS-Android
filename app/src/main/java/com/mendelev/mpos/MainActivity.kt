@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun FoundationScreen(fixtureUrl: String? = null) {
-    var route by rememberSaveable { mutableStateOf("catalog") }
+    var route by rememberSaveable { mutableStateOf("workspace") }
     val context = LocalContext.current
     val backend=androidx.compose.runtime.remember {com.mendelev.mpos.backend.BackendRuntime.get(context)}
     val lifecycle=androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
@@ -80,7 +80,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
     val preferences = context.getSharedPreferences("debugUpdateFixture", MODE_PRIVATE)
     val fixture = if (BuildConfig.DEBUG) fixtureUrl ?: preferences.getString("url", null) else null
     if (BuildConfig.DEBUG && fixtureUrl != null) preferences.edit().putString("url", fixtureUrl).apply()
-    BackHandler(enabled = route != "catalog") { route = "catalog" }
+    BackHandler(enabled = route != "workspace") { route = "workspace" }
     val shiftModel: com.mendelev.mpos.feature.shift.ShiftViewModel = viewModel(factory=object: ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.shift.ShiftViewModel(
@@ -96,10 +96,12 @@ fun FoundationScreen(fixtureUrl: String? = null) {
     var receivingOrder by rememberSaveable { mutableStateOf<String?>(null) }
     val shiftUi by shiftModel.state.collectAsStateWithLifecycle()
     val admin by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
+    var navigationRequest by rememberSaveable {mutableStateOf(0L)}
     val navigation = MposTopNavigation(route, shiftUi.snapshot?.active != null,
         shiftUi.loading, shiftUi.fatal, shiftUi.pending || shiftUi.cashForm!=null || shiftUi.cashUnresolved!=null, shiftUi.snapshot?.active?.actorName ?: "Кассир не выбран",
         adminActive=admin.active,eventsCount=onlineOrders.size,
         inventoryReminder=!inventoryUi.blocked && inventoryUi.snapshot?.document?.let {it.draft!=null || com.mendelev.mpos.domain.warehouse.InventoryRules.due(it.config,calendarDay)}==true) {
+            if(it in setOf("workspace","settings","settingsAdmin")) navigationRequest++
             route=if(it=="inventory" && inventoryUi.snapshot?.document?.draft!=null) "inventoryWork" else it
         }
     com.mendelev.mpos.core.ui.MposTheme {
@@ -112,7 +114,9 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                             override fun <T : ViewModel> create(modelClass: Class<T>): T =
                                 UpdateViewModel(UpdateRepository(context.applicationContext, fixture)) as T
                         })
+                        androidx.compose.runtime.key(route,navigationRequest) {
                         UpdatesScreen(model, initialAdminPanel=route=="settingsAdmin", onCatalog={route="catalog"}, onGallery={route="gallery"},onSuppliers={route="suppliers"},onInventory={route="inventory"},onStock={route="stock"},onEmployees={route="employees"},onBackup={route="backup"}) { route = "catalog" }
+                        }
                     }
                     "backup" -> {
                         val model: com.mendelev.mpos.feature.backup.BackupViewModel = viewModel(factory=object: ViewModelProvider.Factory {
@@ -171,7 +175,9 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                                     com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
                         })
                         val photos=androidx.compose.runtime.remember(context) { com.mendelev.mpos.data.media.ProductPhotoStore(context.applicationContext.filesDir) }
+                        androidx.compose.runtime.key(navigationRequest) {
                         com.mendelev.mpos.feature.workspace.WorkspaceScreen(model,photos,{route="catalog"},{route="settings"},{route="shift"},{route="checkout"},{route="history"})
+                        }
                         if(route=="events") com.mendelev.mpos.feature.workspace.OnlineOrdersScreen {route="workspace"}
                     }
                     "gallery" -> com.mendelev.mpos.feature.products.ComponentGallery { route = "catalog" }

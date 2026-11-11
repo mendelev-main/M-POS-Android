@@ -23,6 +23,12 @@ object PrinterRouting {
         it.enabled && if(kind==PrintKind.KITCHEN) it.printOrders && (!automatic || it.autoKitchen)
         else it.printReceipts && (!automatic || it.autoReceipt || kind==PrintKind.SHIFT)
     }
+    fun manualJobs(document: PrintDocument,printers: List<PrinterConfiguration>): List<PrinterConfiguration> =
+        targets(document.kind,printers).filter {p->
+            p.ip.isNotBlank() && (document.kind!=PrintKind.KITCHEN || document.items.any {
+                p.categories.isBlank() || it.category in p.categories.lines().map(String::trim)
+            })
+        }.flatMap {p->List(p.copies.toInt()) {p}}
     fun opensDrawer(document: PrintDocument)=document.kind==PrintKind.RECEIPT && document.payments.any {it.method=="cash" && it.amount>0}
 }
 

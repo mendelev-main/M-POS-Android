@@ -67,7 +67,7 @@ import java.util.UUID
     val d = state.draft.takeIf {administration.active}
     Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        if(d==null) MposAppBar(subtitle="Локальный владелец", navigationEnabled=d==null && !state.busy) {
+        MposAppBar(subtitle="Локальный владелец", navigationEnabled=!state.busy) {
             if(d==null) {
                 MposNavigationAction("Рабочая зона",onWorkspace)
                 MposNavigationAction("Смена",onShift)

@@ -23,14 +23,26 @@ class CustomerProfileWindowTest {
         compose.onNodeWithTag("customerProfileHeading").assertExists()
         compose.onNodeWithText("Тестовый клиент").assertExists()
         compose.onNodeWithText("375290000000").assertExists()
-        compose.onNodeWithText("Подарок:").assertExists()
-        compose.onNodeWithText("доступен").assertExists()
+        compose.onNodeWithText("Доступно подарков: 1").assertExists()
+        compose.onNodeWithText("Подарок доступен").assertExists()
+        compose.onNodeWithTag("customerProgramProgress:program").assertExists()
+        compose.onNodeWithText("Использовать").assertExists()
         compose.onNodeWithTag("customerTelegram").assertIsNotEnabled()
         compose.onNodeWithText("Обновить профиль").assertDoesNotExist()
         compose.onNodeWithTag("loyaltyGift:program").performClick()
         compose.onNodeWithText("Подарок применён к этому заказу.").assertExists()
         compose.onNodeWithTag("customerDone").performClick()
         assertEquals(setOf("program"),saved!!.selected)
+    }
+    @Test fun accumulatingProgramShowsProgressWithoutOfferingAnUnavailableGift() {
+        val accumulating=profile.copy(programs=profile.programs.map {it.copy(progress="2.5",rewards=0)})
+        compose.setContent {MposTheme {
+            CustomerProfileWindow(accumulating,cart,false,false,null,{},{},{},{},{},{},{_,_->fail("Unavailable gift")},{})
+        }}
+        compose.onNodeWithText("Накопление").assertExists()
+        compose.onNodeWithText("2,5 из 5").assertExists()
+        compose.onNodeWithTag("customerProgramProgress:program").assertExists()
+        compose.onNodeWithTag("loyaltyGift:program").assertDoesNotExist()
     }
     @Test fun loadErrorKeepsIdentityAndOffersRetryWithoutShowingFalseZeroBalance() {
         var retries=0

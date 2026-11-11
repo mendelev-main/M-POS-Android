@@ -107,7 +107,7 @@ internal object NativeRestoreValidator {
         c.draft()?.let {strict(it.payload);com.mendelev.mpos.feature.products.ProductDraft.parse(it.payload)}
         val docs=db.workspace().documents().associateBy {it.id}
         val validationSource=knownSource ?: WebSourceDocuments.decode(docs.mapValues {it.value.payload})?.withoutPhotoPayloads()
-        val known=setOf("current","layout","home","orders","checkout","split-progress",SettingsCodec.KEY,EmployeeCodec.KEY,SupplierCodec.KEY,PurchaseDraftCodec.KEY,PurchaseOrderCodec.KEY,ReceivingCodec.KEY,PostedReceivingCodec.KEY,InventoryCodec.KEY,ShiftCashCodec.KEY,WebSettingsMapping.DEVICE,WebSettingsMapping.COMPANY)
+        val known=setOf(ManagementContactsCodec.KEY,"current","layout","home","orders","checkout","split-progress",SettingsCodec.KEY,EmployeeCodec.KEY,SupplierCodec.KEY,PurchaseDraftCodec.KEY,PurchaseOrderCodec.KEY,ReceivingCodec.KEY,PostedReceivingCodec.KEY,InventoryCodec.KEY,ShiftCashCodec.KEY,WebSettingsMapping.DEVICE,WebSettingsMapping.COMPANY)
         WebLegacyHistoryDocuments.decode(docs.mapValues {it.value.payload})
         WebImportedPaymentDocuments.decode(docs.mapValues {it.value.payload})
         // Evidence alone is insufficient: require original source, cash baseline and an active or completed native adoption.
@@ -139,6 +139,7 @@ internal object NativeRestoreValidator {
         docs.values.filter {it.id.startsWith(WebReceiptIndex.PREFIX)}.forEach(WebReceiptIndex::validate)
         docs[WebSettingsMapping.DEVICE]?.let {WebSettingsMapping.validate(it.payload)}
         docs[WebSettingsMapping.COMPANY]?.let {require(org.json.JSONObject(it.payload).toString().length<=50000)}
+        docs[ManagementContactsCodec.KEY]?.let {ManagementContactsCodec.decode(it.payload,it.revision)}
         docs[SettingsCodec.KEY]?.let {SettingsCodec.decode(it.payload,it.revision)}
         docs[EmployeeCodec.KEY]?.let {EmployeeCodec.decode(it.payload)}
         val suppliers=docs[SupplierCodec.KEY]?.let {SupplierCodec.decode(it.payload)}.orEmpty()

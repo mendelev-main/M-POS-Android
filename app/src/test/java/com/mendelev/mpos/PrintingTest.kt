@@ -11,6 +11,24 @@ class PrintingTest {
         override fun claim(key: String): Boolean {if(fail) error("disk");if(key in values) return false;values[key]="sending";return true}
         override fun finish(key: String,status: String) {values[key]=status}
     }
+    @Test fun manualClickPrintsAllConfiguredCopiesEvenWithAutoPrintOff() {
+        val a=PrinterConfiguration(id="a",name="Касса",ip="192.168.1.10",copies="2",autoReceipt=false)
+        val b=a.copy(id="b",copies="1")
+        val ignored=a.copy(id="off",enabled=false)
+        val missing=a.copy(id="missing",ip="")
+        val jobs=PrinterRouting.manualJobs(PrintDocument("bill",PrintKind.BILL,0),listOf(a,b,ignored,missing))
+        assertEquals(listOf("a","a","b"),jobs.map {it.id})
+        assertTrue(PrinterRouting.targets(PrintKind.BILL,listOf(a,b),automatic=true).isEmpty())
+    }
+    @Test fun manualKitchenPrintSkipsUnrelatedCategoriesAndReceiptOnlyPrinters() {
+        val bar=PrinterConfiguration(id="bar",name="Бар",ip="192.168.1.10",printOrders=true,autoKitchen=false,categories="Бар",copies="2")
+        val food=bar.copy(id="food",categories="Кухня")
+        val receipt=bar.copy(id="receipt",printOrders=false)
+        val doc=PrintDocument("k",PrintKind.KITCHEN,0,items=listOf(PrintItem("Кофе","1","5",500,category="Бар")))
+        assertEquals(listOf("bar","bar"),PrinterRouting.manualJobs(doc,listOf(bar,food,receipt)).map {it.id})
+        assertTrue(PrinterRouting.manualJobs(doc.copy(items=emptyList()),listOf(bar)).isEmpty())
+    }
+
     @Test fun uncertainSendNeverRetriesSameJobAndManualReprintHasNewKey() {
         val claims=Claims();var sends=0
         val dispatcher=PrintDispatcher(claims,PrintTransport {_,_->sends++;error("lost connection")})

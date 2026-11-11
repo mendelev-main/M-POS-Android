@@ -49,12 +49,7 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
     Surface(modifier.testTag("workspaceCartPanel"),shape=RoundedCornerShape(22.dp),color=MaterialTheme.colorScheme.surface) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start=20.dp,end=20.dp,top=18.dp,bottom=10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                val count=s.cart.lines.fold(BigDecimal.ZERO) {n,l->n+l.quantity.toBigDecimal()}
-                val muted=MaterialTheme.colorScheme.onSurfaceVariant
-                Text(androidx.compose.ui.text.buildAnnotatedString {
-                    withStyle(androidx.compose.ui.text.SpanStyle(fontSize=17.sp,fontWeight=FontWeight.ExtraBold)) {append("Текущий заказ")}
-                    withStyle(androidx.compose.ui.text.SpanStyle(fontSize=13.sp,fontWeight=FontWeight.Medium,color=muted)) {append(" — ${CatalogRules.canonical(count)} поз.")}
-                },Modifier.weight(1f),style=MaterialTheme.typography.titleMedium.copy(lineHeight=23.8.sp))
+                Text("Текущий заказ",Modifier.weight(1f),style=MaterialTheme.typography.titleMedium.copy(fontSize=17.sp,fontWeight=FontWeight.ExtraBold,lineHeight=23.8.sp))
                 PosIconButton("customer",if(s.cart.loyalty!=null) "Изменить клиента заказа" else "Выбрать клиента",{onSoon("Клиент заказа")},enabled=pending==0,modifier=Modifier.testTag("workspaceCustomer"),retainingAppearance=pending>0,selected=s.cart.loyalty!=null)
                 Box {
                     PosIconButton("more","Действия с чеком",{more=true},enabled=pending==0,modifier=Modifier.testTag("workspaceMore"),retainingAppearance=pending>0)

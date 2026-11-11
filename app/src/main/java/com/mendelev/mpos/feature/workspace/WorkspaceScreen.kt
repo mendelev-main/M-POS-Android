@@ -161,7 +161,10 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
     if(comingSoon in listOf("Печать счёта","Печать заказа") && s!=null) {
         val quote=if(comingSoon=="Печать заказа") com.mendelev.mpos.domain.sale.SaleQuote(s.cart.lines.map {com.mendelev.mpos.domain.sale.SaleLineMoney(it.id,0,0,0)},0,0,0,null,0) else runCatching {com.mendelev.mpos.domain.loyalty.LoyaltyRules.quote(s.cart,s.sourceDiscounts,s.sourceDelivery)}.getOrNull()
         if(quote!=null) com.mendelev.mpos.print.PrintWindow(com.mendelev.mpos.print.PrintDocuments.cart(s.cart,quote,if(comingSoon=="Печать заказа") com.mendelev.mpos.print.PrintKind.KITCHEN else com.mendelev.mpos.print.PrintKind.BILL,navigation?.shiftName ?: "Сотрудник",s.products.associate {p->p.id to (s.categories.find {it.id==p.categoryId}?.name ?: "")})) {comingSoon=null}
-        else MposDialog("Печать",{comingSoon=null}) {Text("Проверьте состав заказа и тариф доставки перед печатью")}
+        else LaunchedEffect(comingSoon) {
+            android.widget.Toast.makeText(printerContext,"Проверьте состав заказа и тариф доставки перед печатью",android.widget.Toast.LENGTH_SHORT).show()
+            comingSoon=null
+        }
     } else if(comingSoon=="Клиент заказа" && s!=null) com.mendelev.mpos.feature.loyalty.CustomerWindow(s.cart,busy,ui.message,{comingSoon=null},persist={selection->
         val current=model.state.value.snapshot ?: error("Рабочая зона недоступна")
         check(current.cart.sessionId==s.cart.sessionId) {"Текущий заказ изменился"}
@@ -322,10 +325,16 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
     val drag=workspaceDrag(gridState,editing && enabled && query.isEmpty() && category!=null && onReorder!=null,s.layoutRevision,"$category/$folder/${tiles.map {it.type to it.id}}") {from,to->
         tiles.getOrNull(from)?.let {onReorder?.invoke(it,to.coerceIn(0,tiles.lastIndex))}
     }
-    LazyVerticalGrid(if(folderColumns==null) GridCells.Fixed(LocalWorkspaceGeometry.current.columns) else GridCells.Fixed(folderColumns),modifier.then(drag.modifier).testTag(if(folder==null) "workspaceGrid" else "workspaceFolderGrid"),state=gridState,
+    BoxWithConstraints(modifier) {
+    val density=LocalDensity.current
+    val geometry=LocalWorkspaceGeometry.current
+    val tileHeight=if(folder!=null) folderTileHeight.dp else with(density) {
+        workspaceRowHeightPx(maxHeight.toPx(),geometry.homeRows,4.dp.toPx(),12.dp.toPx()).toDp()
+    }
+    LazyVerticalGrid(if(folderColumns==null) GridCells.Fixed(LocalWorkspaceGeometry.current.columns) else GridCells.Fixed(folderColumns),Modifier.fillMaxSize().then(drag.modifier).testTag(if(folder==null) "workspaceGrid" else "workspaceFolderGrid"),state=gridState,
         contentPadding=PaddingValues(4.dp),horizontalArrangement=Arrangement.spacedBy(if(folder==null)12.dp else 10.dp),verticalArrangement=Arrangement.spacedBy(if(folder==null)12.dp else 10.dp)) {
         if(category==null && query.isEmpty()) {
-            items(s.categories,key={"category:${it.id}"}) { c -> MposWorkspaceTile({onCategory(c.id)},Modifier.height(144.dp).testTag("workspaceCategory:${c.id}"),categoryColor=c.color,symbol=c.symbol) {
+            items(s.categories,key={"category:${it.id}"}) { c -> MposWorkspaceTile({onCategory(c.id)},Modifier.height(tileHeight).testTag("workspaceCategory:${c.id}"),categoryColor=c.color,symbol=c.symbol) {
                 Text(c.name+"  ›",style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp),maxLines=2)
                 Spacer(Modifier.weight(1f));Text("Категория",style=MaterialTheme.typography.bodySmall.copy(fontSize=11.5.sp))
             } }
@@ -336,9 +345,9 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
             items(tiles,key={"${it.type}:${it.id}"}) { tile ->
                 val highlight=if(drag.target==tiles.indexOf(tile)) Modifier.border(2.dp,MaterialTheme.colorScheme.primary,MaterialTheme.shapes.large) else Modifier
                 if(tile.type=="folder") {
-                    WorkspaceFolderTile(tile,editing,enabled,Modifier.height(144.dp).testTag("workspaceFolder:"+tile.id).then(highlight),{onManage(tile)},{onFolder(tile)})
+                    WorkspaceFolderTile(tile,editing,enabled,Modifier.height(tileHeight).testTag("workspaceFolder:"+tile.id).then(highlight),{onManage(tile)},{onFolder(tile)})
                 } else products[tile.id]?.let { p ->
-                    MposWorkspaceTile({onProduct(p)},Modifier.height((if(folder==null)144 else folderTileHeight).dp).testTag("workspaceProduct:${p.id}").then(highlight),enabled,symbol=p.symbol,compact=folder!=null,editing=editing) {
+                    MposWorkspaceTile({onProduct(p)},Modifier.height(tileHeight).testTag("workspaceProduct:${p.id}").then(highlight),enabled,symbol=p.symbol,compact=folder!=null,editing=editing) {
                         Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                             Text(p.name,Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=if(folder!=null || editing) 13.5.sp else 14.5.sp,lineHeight=if(folder!=null || editing) 16.2.sp else 18.125.sp),maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         }
@@ -350,5 +359,6 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
             }
             if(folder==null && tiles.isEmpty()) item(span={GridItemSpan(maxLineSpan)}) { Text(if(projection==null) "Ищем товары…" else if(query.isEmpty()) "Здесь пока нет товаров" else "Ничего не найдено") }
         }
+    }
     }
 }

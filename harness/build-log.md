@@ -1677,3 +1677,50 @@ still expected the old `3,00 BYN / шт · ×5` label, but WorkspaceCartPanel re
 `3,00 BYN · ×5`. Update the exact expected label, retaining unit price3 and qty5,
 current product/total15 and all subsequent restoration checks.32 Python tests and
 harness preflight passed. No application code or release gates changed.
+
+## 2026-11-11 — локальная печать / viewport / receipt badges
+
+W06/W07/D01/D02/R01: сверены локальный pin и текущие Web files через GitHub (blob IDs в harness/context/11-print-workspace-receipt-ui.md). Ручная печать счёта/заказа/чека без preview modal, fan-out всех configured printers/copies, category filter кухни, без изменения renderer/денег/ящика. Сетка использует доступную высоту и физическое округление вниз; до20плиток без лишнего editing ряда, более20 мест не обрезаются. Receipt badges pill geometry128×23dp, return слева.
+
+Проверки: PrintingTest11 и WorkspaceViewportTest2 —13 JVM tests passed,0 failures; compileDebugAndroidTestKotlin passed26s; harness preflight и git diff --check passed. Первый запуск проверки был заблокирован sandbox local socket, после network grant повтор выполнен; недостающий testTag import нового badge regression исправлен до успешной компиляции. Последнее уточнение home columns не зависит от fontScale, финальный compileDebugKotlin SUCCESS37s. Эмулятор/принтер/production API не запускались. Device/pixel/бумажный образец pending у владельца; commit/push не выполнялись.
+
+## 2026-11-11 — admin indicator / выбор документа / оформление возврата\n\nПо уточнению владельца в верхнем меню runtime adminActive показывает зелёный shield; в истории print открывает выбор receipt/kitchen (новое правило вместо прежней прямой печати именно в history). Kitchen использует исторический PrintDocument с kind=KITCHEN, renderer скрывает суммы, manual routing учитывает категории/копии. Возврат — компактный status/date header sticker, footer только print, confirmation amount/method summary вместо ряда разрозненных текстов. Финансовые use cases/возврат курьерского расхода/terminal instructions сохранены. UI регрессии: AdminTopIndicatorTest, ReceiptPrintChoiceTest, дополнение ReceiptHistoryAppearanceTest (status над телом, только одна footer action, печать после возврата). Проверки компиляции ниже; device acceptance у владельца. Без commit/push.\n
+Проверки текущего пакета: compileDebugAndroidTestKotlin SUCCESS1m1s (включая main Kotlin и новые UI регрессии); harness preflight и git diff --check passed. UI tests скомпилированы, не запускались на пользовательском эмуляторе. При первой компиляции обнаружена несовместимость trailing lambda после добавления PrintKind; сигнатура исправлена (onClose последний), финальная компиляция успешна.
+
+## 2026-11-11 — Управление / Online / панели чеков
+
+R01: даты содержат год, метка возврата в одну строку с capsule radius100; нижний padding страницы0, панели только с верхними radius22 до нижнего края. NetworkCard status fillMaxWidth для Online/Telegram, переименование backend карточки и диалога в Online.
+
+Добавлен management.contacts.v1: постоянный owner и добавляемые UUID администраторов, телефон/почта/Telegram ID, формы edit/save. Административная транзакция + InstallationGate, revision и generation guards, атомарная запись; контакты не являются правами входа или настройками отправки. NativeRestoreValidator whitelist+codec для нового документа, NativeBackupTest расширен seed контактов, чтобы регрессия не ломала уже существующую native-копию. Контекст11-management-contacts, mpos-phase/mpos-domain.
+
+Проверки: ManagementContactsCodecTest2 passed/0 failures, compileDebugAndroidTestKotlin SUCCESS1m27s до финального дополнения backup validator/fixture; текущая финальная компиляция отдельно ниже. Новые ManagementContactsRepositoryTest — durable read, stale revision, rollback, logout/relogin; расширены receipt layout/status assertions и native backup roundtrip fixture. Room/UI tests скомпилированы, не запускались на пользовательском эмуляторе. harness preflight/diff-check passed. Без commit/push.
+
+Финальный compileDebugAndroidTestKotlin SUCCESS1m8s, включая management repository/UI, NativeRestoreValidator и новые/расширенные Android tests. Успех компиляции не означает прохождение Room/UI/backup runtime тестов; запуск на устройстве остаётся pending.
+
+## 2026-11-11 — история по20чеков
+
+Удалён внешний заголовок «Чеки», верхний gutter12dp. ReceiptHistoryPaging.PAGE_SIZE=20, SQL native/Web limit21 для lookahead, кнопка «Показать следующие20». ReceiptPagingTest:258записей из двух источников проходят13страниц без потерь/повторов; ровно20/пустая история без phantom page. JVM2tests passed, compileDebugAndroidTestKotlin passed (обновлён Room fixture157записей/8страниц). git diff --check passed. Room/UI runtime не запускались, работа локально без commit/push.
+
+## 2026-11-11 — текущий клиент / профиль / акции
+
+Header без счётчика позиций. Phone suffix placeholder скрывается по focus, введённый текст сохраняется. Выбор/создание клиента без enrollment: API select → await persistLatest → профиль вместо закрытия; неудачная durable attach остаётся в search. Orange progress / green available reward / явная кнопка use-toggle; право на награду и checkout расчёты не менялись. Контекст11-customer-profile-progress, LO01–LO03.
+
+CustomerProgramProgressTest2 JVM passed/0 failures; compileDebugAndroidTestKotlin SUCCESS1m14s, включая focus regression, available/unavailable program UI и fake HTTP selection success/persistence failure tests. harness preflight и git diff --check passed. Android UI execution/device визуальная приёмка pending; реальные API/клиенты/Telegram не вызывались. Без commit/push.
+
+## 2026-11-11 — глобальные переходы / страница руководителя
+
+Topbar shield открывает settingsAdmin, gear settings; reselect root обрабатывается navigationRequest/key для settings/workspace, включая выход из network/management и возврат workspace к корню раскладки. Cart/feature VM не удаляются. Верхнее меню показано в карточке товара, inventory dirty config не блокирует обычный переход; pending financial/transaction guards сохранены. Управление — общий AdminModuleCard с равной шириной ячеек; отдельный screen Руководитель, owner fields доступны сразу, плюс администратора и единое сохранение (прежний repository/revision/generation/ключ сохраняются). Future portal plan: docs/OWNER-PORTAL-PLAN.md, server/site TODO.
+
+compileDebugAndroidTestKotlin SUCCESS1m10s, включая обновлённый AdminTopIndicatorTest и globalIconsOpenRootsInsteadOfRememberedSettingsSubpage regression. harness preflight/diff-check passed. UI/Room runtime не запускались, device приёмка владельцем pending. Работа локально без commit/push.
+
+## 2026-11-11 — запуск в рабочей зоне / нижний край товаров
+
+Fresh route workspace вместо catalog, общий back fallback workspace; rememberSaveable восстанавливает текущий экран при recreation. Каталог: bottom padding0, fill weight1, table surface только с верхними углами22dp, удалена подсказка о входе в администрирование. Права/сохранение каталога не менялись. Каталожные UI fixtures явно заходят через settingsCatalog (общий helper + самостоятельные receiving/purchase/supplier/inventory cases), production default не подменяется. StartupWorkspaceTest добавлен, CatalogAppearanceTest проверяет совпадение нижнего края viewport/panel и отсутствие подсказки у кассира.
+
+compileDebugAndroidTestKotlin SUCCESS1m15s; harness preflight/git diff --check passed. UI tests только скомпилированы; device execution у владельца pending. Контекст11-startup-catalog-edge. Без commit/push.
+
+## 2026-11-11 — согласованный пакет в main / контур записей настроек
+
+SettingsDirectoryRow/settingsRowModifier: background + outline1dp/radius16 как у истории чеков, gap8/padding14×12; общий вид записей сотрудников/поставщиков/справочников/принтеров. Накопленный пакет локальных задач включён в согласованную владельцем отправку: печать/receipt menus/возврат и20-row paging, адаптивная сетка, startup workspace, top navigation/admin root, owner contacts/future portal docs, loyalty profile/progress/focus.
+
+Последняя проверка testDebugUnitTest адресно PrintingTest/ReceiptPagingTest/WorkspaceViewportTest/ManagementContactsCodecTest/CustomerProgramProgressTest:19passed/0failures/0errors/0skips. compileDebugAndroidTestKotlin SUCCESS1m18s, preflight/staged diff-check passed. Проверка типовых secret patterns staged diff — без совпадений; workflows/signing identity не менялись. Device UI/физическая печать не запускались. По прямой команде владельца push main; remote CI/release проверяет владелец, завершения не ждём.

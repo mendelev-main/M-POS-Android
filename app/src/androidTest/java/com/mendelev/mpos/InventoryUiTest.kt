@@ -17,6 +17,7 @@ import java.io.File
 class InventoryUiTest {
     @get:Rule val compose=createAndroidComposeRule<MainActivity>()
     @Test fun selectStartCountStaleRecountFixAndRecreatePreserveExactHistory() {
+        CatalogUiTestSupport.openCatalog(compose)
         lateinit var catalog: CatalogViewModel
         compose.runOnIdle {catalog=ViewModelProvider(compose.activity)[CatalogViewModel::class.java]}
         compose.waitUntil(20_000) {!catalog.state.value.loading && !catalog.state.value.busy}

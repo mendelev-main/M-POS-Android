@@ -107,7 +107,7 @@ import java.util.Locale
         "delivery"->if(dark) listOf(0xFF26334A,0xFFBFD5FF,0xFF3C506F) else listOf(0xFFE8F0FF,0xFF31558F,0xFFC7D7F2)
         else->if(dark) listOf(0xFF1D4638,0xFF8FE0BE,0xFF43C38D) else listOf(0xFFE3F6E8,0xFF26733A,0xFFC9EBCF)
     }
-    Surface(modifier=Modifier.width(if(compact)128.dp else 110.dp).testTag("parkedType:$type"),shape=RoundedCornerShape(8.dp),color=Color(palette[0]),contentColor=Color(palette[1]),border=BorderStroke(1.dp,Color(palette[2]))) {
+    Surface(modifier=Modifier.width(if(compact)128.dp else 110.dp).testTag("parkedType:$type"),shape=RoundedCornerShape(if(compact) 100.dp else 8.dp),color=Color(palette[0]),contentColor=Color(palette[1]),border=BorderStroke(1.dp,Color(palette[2]))) {
         Row(Modifier.height(if(compact) 23.dp else 28.dp).padding(horizontal=if(compact) 7.dp else 9.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.Center) {
             MposPosIcon(type,Modifier.size(if(compact) 12.dp else 13.dp));Spacer(Modifier.width(5.dp));Text(OrderRules.typeLabel(type),fontSize=if(compact) 10.sp else 11.sp,lineHeight=if(compact) 13.sp else 14.3.sp,fontWeight=FontWeight.Bold,maxLines=1)
         }

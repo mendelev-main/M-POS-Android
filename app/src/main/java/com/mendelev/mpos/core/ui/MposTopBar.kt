@@ -76,6 +76,15 @@ fun MposTopBar(navigation: MposTopNavigation, enabled: Boolean = true) {
                 else -> "Открыть смену"
             }
             TopItem(shiftLabel, "shift", navigation, allowed, compact=compact, shift=true, selected=navigation.route=="shift")
+            if(navigation.adminActive) Box(
+                Modifier.size(44.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .border(2.dp,MaterialTheme.colorScheme.primary,androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+                    .clickable(enabled=allowed,role=Role.Button) {navigation.navigate("settingsAdmin")}
+                    .semantics {contentDescription="Панель администратора";stateDescription="Сессия администратора активна"}
+                    .testTag("topNav-adminActive"),contentAlignment=Alignment.Center) {
+                MposPosIcon("admin",Modifier.size(22.dp),tint=MaterialTheme.colorScheme.primary)
+            }
             Box(Modifier.size(44.dp).clip(CircleShape)
                 .background(if(navigation.route=="settings") Color.White.copy(alpha=.14f) else Color.Transparent)
                 .clickable(enabled=allowed, role=Role.Button) { navigation.navigate("settings") }

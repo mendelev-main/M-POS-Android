@@ -20,6 +20,9 @@ class CustomerEntryWindowsTest {
                 {query=CustomerEntryRules.suffix(it)},{selected=it.id},{creates++},{})
         }}
         compose.onNodeWithText("+375 XX XXX").assertExists()
+        compose.onNodeWithText("1234").assertExists()
+        compose.onNodeWithTag("customerSearch").performClick()
+        compose.onNodeWithText("1234").assertDoesNotExist()
         compose.onNodeWithTag("customerSearch").performTextInput("1234")
         compose.onNodeWithText("Поиск…").assertExists()
         compose.onNodeWithTag("customerSearch").performTextReplacement("+375291234567")

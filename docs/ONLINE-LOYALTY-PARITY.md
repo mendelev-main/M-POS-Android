@@ -105,3 +105,5 @@ Native immutable items теперь включает unitPrice; бесплатн
 количества и очередь повторов сохранены. Старые outbox body не переписываются.
 7 адресных JVM tests и компиляция instrumentation пройдены локально; публикация,
 установка и физическая приёмка pending. См. harness/context/06-customers.md.
+
+11.11.2026, уточнение владельца LO01–LO03: поиск→durable attach→профиль без закрытия;1234 скрывается при фокусе; header без счётчика позиций; orange/green program progress и явная кнопка «Использовать». Право на подарок/согласия/checkout guards прежние. [Контекст и тесты](../harness/context/11-customer-profile-progress.md). implemented locally, UI device pending.

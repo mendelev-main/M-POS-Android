@@ -45,6 +45,9 @@ class ReceiptHistoryAppearanceTest {
         assertEquals(type.bottom.value,method.bottom.value,1f)
         assertTrue(method.left>=type.right)
 
+        val page=compose.onNodeWithTag("receiptsPage").getUnclippedBoundsInRoot()
+        assertEquals(page.bottom.value,right.bottom.value,1f)
+        assertEquals(page.bottom.value,left.bottom.value,1f)
         assertEquals(26f,left.left.value,1f);assertEquals(16f,(right.left-left.right).value,1f)
         assertEquals(.82f/1.18f,(left.right-left.left).value/(right.right-right.left).value,.01f)
         compose.onNodeWithTag("receipt:cmd").assertIsSelected().performClick();assertEquals("id",picked)
@@ -58,6 +61,13 @@ class ReceiptHistoryAppearanceTest {
         compose.onNodeWithTag("refundPrepare").assertIsNotEnabled();compose.onNodeWithTag("receipt:cmd").assertIsNotEnabled()
         compose.runOnIdle {allowed.value=true;dark.value=true;isReturned.value=true}
         compose.onNodeWithTag("receiptChangePayment").assertDoesNotExist();compose.onNodeWithTag("returned:id",useUnmergedTree=true).assertExists();compose.onNodeWithTag("refundPrepare").assertDoesNotExist()
+        compose.onNodeWithTag("receiptReturnStatus",useUnmergedTree=true).assertIsDisplayed()
+        compose.onNodeWithText("Возврат · "+java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(java.time.ZoneId.systemDefault()).format(java.time.Instant.ofEpochMilli(returned.createdAt)),useUnmergedTree=true).assertExists()
+        val status=compose.onNodeWithTag("receiptReturnStatus",useUnmergedTree=true).getUnclippedBoundsInRoot()
+        val body=compose.onNodeWithTag("receiptDetails").getUnclippedBoundsInRoot()
+        assertTrue("Return sticker is in the header, not a banner inside the receipt",status.bottom<=body.top)
+        compose.onAllNodes(hasClickAction() and hasAnyAncestor(hasTestTag("receiptDetailPanel"))).assertCountEquals(1)
+        compose.onNodeWithTag("receiptPrint").performClick();assertEquals(2,print)
         compose.runOnIdle {empty.value=true}
         compose.onNodeWithText("Чеков пока нет — они появятся здесь после первой оплаты.").assertExists()
         compose.onNodeWithText("Выберите чек слева.").assertExists()

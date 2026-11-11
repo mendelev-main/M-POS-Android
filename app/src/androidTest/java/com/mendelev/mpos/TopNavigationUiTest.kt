@@ -19,7 +19,32 @@ class TopNavigationUiTest {
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("adminPanelScreen").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("adminPanelScreen").assertIsDisplayed()
     }
+    @Test fun globalIconsOpenRootsInsteadOfRememberedSettingsSubpage() {
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("topNav-settings").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("topNav-adminActive").performScrollTo().performClick()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("adminPanelScreen").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("settingsManagement").performScrollTo().performClick()
+        compose.onNodeWithTag("managementScreen").assertExists()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("managementPhone").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("managementEmail").assertExists()
+        compose.onNodeWithTag("managementTelegram").assertExists()
+        compose.onNodeWithTag("topNav-settings").performScrollTo().performClick()
+        compose.onNodeWithTag("settingsHeader").assertExists()
+        compose.onNodeWithTag("managementScreen").assertDoesNotExist()
+        compose.onNodeWithTag("topNav-adminActive").performScrollTo().performClick()
+        compose.onNodeWithTag("settingsNetwork").performScrollTo().performClick()
+        compose.onNodeWithTag("networkSettingsScreen").assertExists()
+        // Same underlying settings route must still reset the nested screen.
+        compose.onNodeWithTag("topNav-settings").performScrollTo().performClick()
+        compose.onNodeWithTag("settingsHeader").assertExists()
+        compose.onNodeWithTag("networkSettingsScreen").assertDoesNotExist()
+        compose.onNodeWithTag("topNav-adminActive").performScrollTo().performClick()
+        compose.onNodeWithTag("topNav-workspace").performScrollTo().performClick()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("workspaceCheckout").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("topNav-workspace").assertIsSelected()
+    }
     @Test fun allSourceTabsReachTheirRouteAndSurviveRecreation() {
+        CatalogUiTestSupport.openCatalog(compose)
         compose.waitUntil(20_000) {compose.onAllNodesWithText("Добавить товар").fetchSemanticsNodes().isNotEmpty()}
         // The external APK-upgrade driver must target this control independently of employee names.
         compose.waitUntil(10_000) {
@@ -68,7 +93,7 @@ class TopNavigationUiTest {
         compose.waitUntil(20_000) {compose.onAllNodesWithText("Добавить товар").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithText("Добавить товар").performClick()
         CatalogUiTestSupport.waitEditor(compose)
-        compose.onNodeWithTag("topNav-workspace").assertDoesNotExist()
+        compose.onNodeWithTag("topNav-workspace").assertExists()
         compose.onNodeWithTag("productEditorBack").performClick()
         compose.onNodeWithTag("topNav-shift").performScrollTo().performClick()
         compose.onNodeWithTag("shiftStatus").assertExists()

@@ -52,7 +52,7 @@ private fun catalogMoney(value: BigDecimal?)=value?.setScale(2,RoundingMode.HALF
     val selected=filter.takeIf {id->categories.any {"category:"+(it.first ?: "")==id}}
     val visible=remember(sorted,selected,search) {sorted.filter {(selected==null || it.product.categoryId.orEmpty()==selected.removePrefix("category:")) && CatalogPresentationRules.matches(it.product.name,it.categoryName ?: "Без категории",search)}}
     val numbers=remember(state.products,state.components,state.recipeBatchIds) {CatalogNumbers(state.products,state.components,state.recipeBatchIds)}
-    Column(modifier.fillMaxSize().padding(start=26.dp,end=26.dp,top=22.dp,bottom=40.dp)) {
+    Column(modifier.fillMaxSize().padding(start=26.dp,end=26.dp,top=22.dp,bottom=0.dp)) {
         BoxWithConstraints(Modifier.fillMaxWidth().padding(bottom=14.dp)) {
             val narrow=maxWidth<=768.dp
             @Composable fun title(modifier: Modifier=Modifier) {Row(modifier,verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(7.dp)) {
@@ -93,8 +93,7 @@ private fun catalogMoney(value: BigDecimal?)=value?.setScale(2,RoundingMode.HALF
         }
         if(state.hasSavedDraft) Text("Есть сохранённый черновик. Кнопка «Добавить товар» откроет его.",Modifier.padding(bottom=12.dp),fontSize=12.sp,color=c.onSurfaceVariant)
         if(state.error && state.message!=null) MposNotice(state.message,true)
-        if(!admin) Text("Для изменения каталога войдите в администрирование через Настройки",Modifier.padding(bottom=12.dp),fontSize=12.sp,color=c.onSurfaceVariant)
-        Surface(Modifier.fillMaxWidth().weight(1f,fill=false),shape=RoundedCornerShape(22.dp),shadowElevation=1.dp,color=c.surface) {
+        Surface(Modifier.fillMaxWidth().weight(1f).testTag("catalogTablePanel"),shape=RoundedCornerShape(topStart=22.dp,topEnd=22.dp),shadowElevation=1.dp,color=c.surface) {
             BoxWithConstraints(Modifier.padding(20.dp)) {
                 val mobile=maxWidth<=728.dp
                 val compact=maxWidth<=958.dp

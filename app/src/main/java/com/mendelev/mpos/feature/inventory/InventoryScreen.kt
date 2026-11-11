@@ -62,7 +62,7 @@ private fun money(minor: Long?)=minor?.let(com.mendelev.mpos.domain.shift.ShiftR
     }
     val s=ui.snapshot;val form=ui.form ?: s?.document?.config;val draft=s?.document?.draft
     Column(Modifier.fillMaxSize().safeDrawingPadding().testTag("inventoryScreen")) {
-        MposAppBar("Инвентаризация",navigationEnabled=!locked && !ui.dirty) {}
+        MposAppBar("Инвентаризация",navigationEnabled=!locked) {}
         Column(Modifier.padding(22.dp).weight(1f),verticalArrangement=Arrangement.spacedBy(16.dp)) {
             FlowRow(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 if(!work) MposPosControl("Назад",close,Modifier.testTag("inventoryBack"),!locked,height=44.dp)

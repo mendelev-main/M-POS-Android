@@ -18,6 +18,7 @@ class ReceivingPostingUiTest {
     @get:Rule val compose=createAndroidComposeRule<MainActivity>()
     private fun hideKeyboard() {compose.runOnIdle {(compose.activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).hideSoftInputFromWindow(compose.activity.window.decorView.windowToken,0)}}
     @Test fun overageRequiresExplicitApprovalThenPostsOnceAndShowsHistoricalInvoice() {
+        CatalogUiTestSupport.openCatalog(compose)
         lateinit var catalog: CatalogViewModel
         compose.runOnIdle {catalog=ViewModelProvider(compose.activity)[CatalogViewModel::class.java]}
         compose.waitUntil(20_000) {!catalog.state.value.loading && !catalog.state.value.busy}

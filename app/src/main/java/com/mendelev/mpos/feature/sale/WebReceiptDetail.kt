@@ -18,7 +18,7 @@ import org.json.JSONObject
     val r=record.raw
     fun date(value: Long)=if(value<=0) "Дата не указана" else java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(java.time.ZoneId.systemDefault()).format(java.time.Instant.ofEpochMilli(value))
     fun money(v: Any?)=v?.toString()?.toBigDecimalOrNull()?.setScale(2,java.math.RoundingMode.HALF_UP)?.toPlainString()?.plus(" BYN") ?: "—"
-    Surface(modifier,shape=RoundedCornerShape(22.dp)) {
+    Surface(modifier,shape=RoundedCornerShape(topStart=22.dp,topEnd=22.dp)) {
         Column(Modifier.padding(20.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(14.dp)) {
             Text(record.label,fontSize=20.sp,fontWeight=FontWeight.ExtraBold)
             Text(date(record.time),color=MaterialTheme.colorScheme.onSurfaceVariant)

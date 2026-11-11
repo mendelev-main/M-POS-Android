@@ -41,16 +41,17 @@ internal object WebReceiptIndex {
 internal data class ReceiptHistoryPageResult(val native: List<ReceiptEntity>,val web: List<WebReceiptRecord>,val nativeOffset: Int,val webOffset: Int,val more: Boolean)
 internal class ReceiptHistoryPaging(private val db: CatalogDatabase) {
     suspend fun page(nativeOffset: Int=0,webOffset: Int=0): ReceiptHistoryPageResult {
-        val n=db.sales().historyPage(51,nativeOffset)
-        val w=db.workspace().prefixPage(WebReceiptIndex.PREFIX,51,webOffset).map {WebReceiptRecord(it.id,it.payload)}
+        val n=db.sales().historyPage(PAGE_SIZE+1,nativeOffset)
+        val w=db.workspace().prefixPage(WebReceiptIndex.PREFIX,PAGE_SIZE+1,webOffset).map {WebReceiptRecord(it.id,it.payload)}
         return combine(n,w,nativeOffset,webOffset)
     }
     companion object {
+        const val PAGE_SIZE=20
         fun combine(n: List<ReceiptEntity>,w: List<WebReceiptRecord>,nativeOffset: Int,webOffset: Int): ReceiptHistoryPageResult {
         val candidates=(n.map {Triple(it.createdAt,it.id,false)}+w.map {Triple(it.time,it.id,true)})
-            .sortedWith(compareByDescending<Triple<Long,String,Boolean>> {it.first}.thenBy {it.second}).take(50)
+            .sortedWith(compareByDescending<Triple<Long,String,Boolean>> {it.first}.thenBy {it.second}).take(PAGE_SIZE)
         val ids=candidates.map {it.second}.toSet();val nr=n.filter {it.id in ids};val wr=w.filter {it.id in ids}
-        return ReceiptHistoryPageResult(nr,wr,nativeOffset+nr.size,webOffset+wr.size,n.size+w.size>50)
+        return ReceiptHistoryPageResult(nr,wr,nativeOffset+nr.size,webOffset+wr.size,n.size+w.size>PAGE_SIZE)
         }
 
     }

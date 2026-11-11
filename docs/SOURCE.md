@@ -33,3 +33,5 @@
 10.11.2026: по запросу владельца для вкладки заказов поставщикам использованы purchase-orders.js/pos.html того же Web05db2b7. Область, native отличия и критерии: [PURCHASE-UI-PARITY.md](PURCHASE-UI-PARITY.md).
 
 10.11.2026: receiving-ui.js/receiving-drafts.js/receiving.js из Web05db2b7 исследованы для переноса приёмки и operational permissions. Решение владельца о доступе сотрудников имеет приоритет над прежней native admin matrix; контракт RECEIVING-UI-PARITY.md.
+
+11.11.2026: для D01/D02/W06/W07/R01 проверены текущие Web network-printer.js, cart-presentation.js/printCurrentReceipt, receipts.js/printReceipt и pos.html/product-grid через GitHub. Blob IDs и решения по адаптации — [контекст](../harness/context/11-print-workspace-receipt-ui.md). Ручная печать без preview, fan-out/copies; уменьшение строк ниже128dp — явное уточнение владельца для native, а не свойство старого Web edit CSS.

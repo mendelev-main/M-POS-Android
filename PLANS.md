@@ -223,3 +223,5 @@ Policy2 acceptance: [CI40519616659](https://github.com/mendelev-main/M-POS-Andro
 
 
 2026-11-04:07.4d.3b.1 FC01–FC03 local evidence: scripts/local-android.sh build assembleDebugAndroidTest -Pkotlin.incremental=false SUCCESS1m22s;294JVM/0fail/0error/0skip, lintDebug/assembleDebug/assembleDebugAndroidTest,16Python/preflight/git diff --check passed. Existing evidence suite expanded to10 tests for snapshot/legacy/tamper compatibility. This is immutable codec/snapshot support; new Room/instrumentation execution not claimed (test APK compiled). Full CI41695440918/291JVM/288API36 remains prior evidence, not current v2 API verification. Nonempty unadopted-profile activation guard remains; no native confirmation/receipt/stock effects or release. Remaining executable adoption/versioned native cart and mixed imported/native progress07.4d.3b.2/3c, full dataset07.4e/UI07.5/resilience07.6/tablet07.7.06/09 TODO,M17 excluded.
+
+11.11.2026: страница Руководитель/контакты в Управлении реализована локально; будущий web кабинет участников акций и базы клиентов — отдельный TODO по [OWNER-PORTAL-PLAN](docs/OWNER-PORTAL-PLAN.md). Сервер и сайт пока без изменений.

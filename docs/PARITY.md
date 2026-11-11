@@ -489,3 +489,13 @@ Rounding follow-up acceptance: [CI40519616659](https://github.com/mendelev-main/
 
 
 2026-11-10 W04/W06 folder entry refinement: Open на плитке в режиме раскладки, внутри folder modal без карандаша; editing сохраняется. FolderOpenActionTest compiled-only, device verification pending. docs/FOLDERS-HISTORY-UI.md.
+
+2026-11-11 локально W06/W07, D01/D02, R01: ручная печать счёта/чека/кухни без preview modal, все configured printers/copies; viewport-fit20 tiles и единая capsule geometry receipt badges. Контекст [11-print-workspace-receipt-ui](../harness/context/11-print-workspace-receipt-ui.md). implemented; device/реальная печать/pixel verification pending.
+
+2026-11-11 уточнение владельца R01/D01: в истории «Печать» открывает выбор receipt/kitchen, затем direct routing; админ-сессия обозначается зелёным shield в topbar; возвращённый чек — header sticker с датой/временем, footer только print; refund confirmation layout обновлён без денежной логики. implemented, device pending; контекст11-print-workspace-receipt-ui.
+
+2026-11-11 H/settings/R01: Management contacts owner/admin directory implemented локально (админ-транзакция/revision/generation, без назначения ролей), Online rename/full-width network status, полная дата и панели истории до нижнего края. Native validator принимает и проверяет management.contacts.v1; backup roundtrip fixture расширен. Контекст [11-management-contacts](../harness/context/11-management-contacts.md); device и новые Room tests execution pending.
+
+2026-11-11 W/LO01–LO03: header текущего заказа без счётчика, фокус скрывает пример телефона, выбор клиента сохраняется перед переходом в профиль; программа orange/green progress с кнопкой использования подарка. [Контекст](../harness/context/11-customer-profile-progress.md); implemented, device pending.
+
+2026-11-11 H/settings: Управление перенесено в стандартную карточку панели, страница Руководитель с contact fields; shield/settings/M POS routes reset nested UI root. План будущего кабинета — [OWNER-PORTAL-PLAN](OWNER-PORTAL-PLAN.md), server/site TODO. UI regression added, device pending.

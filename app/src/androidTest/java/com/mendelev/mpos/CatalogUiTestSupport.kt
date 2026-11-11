@@ -1,17 +1,26 @@
 package com.mendelev.mpos
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.*
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.mendelev.mpos.feature.products.CatalogViewModel
 
 /** A failed preceding UI test must not supply its unfinished editor to another test. */
 object CatalogUiTestSupport {
+    fun openCatalog(compose: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>,MainActivity>) {
+        if(compose.onAllNodesWithTag("catalogSearch").fetchSemanticsNodes().isNotEmpty() ||
+            compose.onAllNodesWithTag("productEditor").fetchSemanticsNodes().isNotEmpty()) return
+        compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("topNav-settings") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("topNav-settings").performScrollTo().performClick()
+        compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("settingsCatalog") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("settingsCatalog").performScrollTo().performClick()
+    }
     fun waitEditor(compose: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>,MainActivity>) {
         compose.waitUntil(20_000) { compose.onAllNodesWithTag("productEditor").fetchSemanticsNodes().isNotEmpty() }
     }
     fun prepare(compose: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>,MainActivity>) {
+        openCatalog(compose)
         lateinit var model: CatalogViewModel
         compose.runOnIdle { model=ViewModelProvider(compose.activity)[CatalogViewModel::class.java] }
         compose.waitUntil(20_000) { !model.state.value.loading && !model.state.value.busy }

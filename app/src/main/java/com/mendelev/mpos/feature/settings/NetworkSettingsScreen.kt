@@ -77,7 +77,7 @@ import kotlinx.coroutines.*
             if(readFailed) MposButton("Повторить чтение",{load()},enabled=!busy)
             BoxWithConstraints(Modifier.fillMaxWidth()) {
                 val cards: List<@Composable (Modifier)->Unit> = listOf(
-                    {m->NetworkCard("Меню и backend","Подключение и ручная передача каталога",if(backendStatus=="Подключение не проверено") backendLiveStatus else backendStatus,m,pending=false) {
+                    {m->NetworkCard("Online","Подключение и ручная передача каталога",if(backendStatus=="Подключение не проверено") backendLiveStatus else backendStatus,m,pending=false) {
                         MposButton("Синхронизировать",{syncDialog=true},Modifier.weight(1f).testTag("backendSync"),enabled=!backendBusy)
                         MposButton("Настроить",{dialog="backend"},Modifier.weight(1f).testTag("networkBackend"),enabled=!backendBusy,style=ActionStyle.Outline)
                     }},
@@ -121,7 +121,7 @@ import kotlinx.coroutines.*
                 headerAction?.invoke()
             }
             if(subtitle.isNotBlank()) Text(subtitle,fontSize=12.5.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-            if(status.isNotBlank()) Surface(shape=RoundedCornerShape(12.dp),color=MaterialTheme.colorScheme.background) {
+            if(status.isNotBlank()) Surface(Modifier.fillMaxWidth(),shape=RoundedCornerShape(12.dp),color=MaterialTheme.colorScheme.background) {
                 Text("●  $status",Modifier.padding(12.dp),fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
             body()

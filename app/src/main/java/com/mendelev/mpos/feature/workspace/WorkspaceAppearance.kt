@@ -129,3 +129,8 @@ internal enum class PosTone { Neutral, Info, Zone, Primary, Warning, Demand }
             }})
     }
 }
+
+
+// Floor at physical pixels so row rounding cannot create a one-pixel scroll range.
+internal fun workspaceRowHeightPx(height: Float,rows: Int,padding: Float,gap: Float): Float =
+    kotlin.math.floor(((height-2*padding-gap*(rows-1))/rows).coerceAtLeast(1f))

@@ -26,6 +26,7 @@ class SupplierUiTest {
         file.outputStream().use {bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};bitmap.recycle()
     }
     @Test fun createLinkRecreateRenameDeleteAndKeepStockUnchanged() {
+        CatalogUiTestSupport.openCatalog(compose)
         lateinit var catalog: CatalogViewModel
         compose.runOnIdle {catalog=ViewModelProvider(compose.activity)[CatalogViewModel::class.java]}
         compose.waitUntil(20_000) {!catalog.state.value.loading && !catalog.state.value.busy}

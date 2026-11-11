@@ -22,8 +22,8 @@ import kotlinx.coroutines.*
 import org.json.JSONObject
 import java.util.UUID
 
-@Composable internal fun CustomerWindow(cart: CurrentCart,busy: Boolean,externalError: String?,onClose: ()->Unit,persist: (suspend (LoyaltySelection)->Unit)?=null,onSave: (LoyaltySelection?)->Unit) {
-    val context=LocalContext.current;val api=remember {LoyaltyServices.api(context)};val scope=rememberCoroutineScope()
+@Composable internal fun CustomerWindow(cart: CurrentCart,busy: Boolean,externalError: String?,onClose: ()->Unit,persist: (suspend (LoyaltySelection)->Unit)?=null,client: com.mendelev.mpos.backend.LoyaltyApi?=null,onSave: (LoyaltySelection?)->Unit) {
+    val context=LocalContext.current;val api=remember(context,client) {client ?: LoyaltyServices.api(context)};val scope=rememberCoroutineScope()
     var profile by remember(cart.sessionId) {mutableStateOf(cart.loyalty)}
     var mode by remember(cart.sessionId) {mutableStateOf(if(cart.loyalty==null) "search" else "profile")}
     var query by remember {mutableStateOf("")};var rows by remember {mutableStateOf(emptyList<LoyaltyCustomer>())}
@@ -77,7 +77,11 @@ import java.util.UUID
     if(mode=="search") {
         CustomerPickerWindow(query,rows,searching,locked,searchError ?: error ?: externalError,
             onQuery={query=CustomerEntryRules.suffix(it);error=null},
-            onSelect={customer->action {saveLatest(api.select(customer))}},
+            onSelect={customer->action {
+                val next=api.select(customer)
+                persistLatest?.invoke(next)
+                profile=next;mode="profile"
+            }},
             onCreate={mode="create";createdCustomer=null;name="";phone="";enrollAfterCreate=false;error=null},onClose=onClose)
         return
     }
@@ -87,7 +91,7 @@ import java.util.UUID
             onBack={mode="search";query="";error=null},onClose=onClose,onCreate={action {
                 val customer=createdCustomer ?: api.create(name,phone).also {createdCustomer=it}
                 profile=api.select(customer)
-                if(!enrollAfterCreate) saveLatest(profile)
+                if(!enrollAfterCreate) {persistLatest?.invoke(profile!!);mode="profile"}
                 else {
                     persistLatest?.invoke(profile!!)
                     mode="profile"

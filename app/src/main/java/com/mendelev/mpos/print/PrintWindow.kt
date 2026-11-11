@@ -16,18 +16,30 @@ import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.data.local.PrinterConfiguration
 import kotlinx.coroutines.*
 
-@Composable fun ReceiptPrintWindow(value: Pair<com.mendelev.mpos.data.local.ReceiptEntity,com.mendelev.mpos.data.local.ReceiptSnapshot>,onClose: ()->Unit) {
+@Composable fun ReceiptPrintWindow(value: Pair<com.mendelev.mpos.data.local.ReceiptEntity,com.mendelev.mpos.data.local.ReceiptSnapshot>,kind: PrintKind=PrintKind.RECEIPT,onClose: ()->Unit) {
     val context=LocalContext.current
-    var document by remember(value.first.id) {mutableStateOf<PrintDocument?>(null)}
+    var document by remember(value.first.id,kind) {mutableStateOf<PrintDocument?>(null)}
     var error by remember {mutableStateOf<String?>(null)}
-    LaunchedEffect(value.first.id) {
-        try {document=withContext(Dispatchers.IO) {val db=com.mendelev.mpos.data.local.CatalogDatabase.get(context);val employee=db.shifts().shift(value.first.shiftId)?.actorName ?: "Сотрудник";PrintDocuments.receipt(value,employee,com.mendelev.mpos.data.local.LoyaltyOutbox(db).read(value.first.id))}}
+    LaunchedEffect(value.first.id,kind) {
+        try {document=withContext(Dispatchers.IO) {val db=com.mendelev.mpos.data.local.CatalogDatabase.get(context);val employee=db.shifts().shift(value.first.shiftId)?.actorName ?: "Сотрудник";PrintDocuments.receipt(value,employee,com.mendelev.mpos.data.local.LoyaltyOutbox(db).read(value.first.id)).copy(kind=kind)}}
         catch(e:Exception) {error=e.message ?: "Не удалось открыть чек"}
     }
-    document?.let {PrintWindow(it,onClose)} ?: MposDialog("Печать чека",onClose) {if(error!=null) Text(error!!,color=MaterialTheme.colorScheme.error) else LinearProgressIndicator(Modifier.fillMaxWidth())}
+    document?.let {PrintWindow(it,onClose)}
+    LaunchedEffect(error) {error?.let {android.widget.Toast.makeText(context,it,android.widget.Toast.LENGTH_SHORT).show();onClose()}}
 }
 
+/** A click is one explicit print request; never display an intermediate modal. */
 @Composable fun PrintWindow(document: PrintDocument,onClose: ()->Unit) {
+    if(document.kind==PrintKind.SHIFT) {PrintPreviewWindow(document,onClose);return}
+    val context=LocalContext.current
+    val close by rememberUpdatedState(onClose)
+    LaunchedEffect(document) {
+        PrintRuntime.get(context).manualAll(document)
+        close()
+    }
+}
+
+@Composable private fun PrintPreviewWindow(document: PrintDocument,onClose: ()->Unit) {
     val context=LocalContext.current;val runtime=remember {PrintRuntime.get(context)}
     val status by runtime.status.collectAsStateWithLifecycle()
     val pending by runtime.pendingJobs.collectAsStateWithLifecycle()
@@ -64,6 +76,25 @@ import kotlinx.coroutines.*
         Row(Modifier.fillMaxWidth().padding(top=16.dp),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
             MposPosControl("Закрыть",onClose,Modifier.weight(1f),kind=PosControl.Secondary,height=48.dp,radius=16.dp)
             MposPosControl("Распечатать",{printer?.let {runtime.manual(document,it)}},Modifier.weight(1f).testTag("printSend"),enabled=printer!=null && bitmap!=null && pending==0,kind=PosControl.Cash,height=48.dp,radius=16.dp)
+        }
+    }
+}
+
+
+/** History has an explicit document choice; each button enqueues one manual request. */
+@Composable fun ReceiptPrintMenu(value: Pair<com.mendelev.mpos.data.local.ReceiptEntity,com.mendelev.mpos.data.local.ReceiptSnapshot>,onClose: ()->Unit) {
+    var kind by remember(value.first.id) {mutableStateOf<PrintKind?>(null)}
+    if(kind==null) ReceiptPrintChoice(onClose) {kind=it}
+    else ReceiptPrintWindow(value,kind!!,onClose)
+}
+
+@Composable internal fun ReceiptPrintChoice(onClose: ()->Unit,onChoose: (PrintKind)->Unit) {
+    MposDialog("Печать",onClose,maxWidth=460.dp) {
+        Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+            MposPosControl("Печатать чек",{onChoose(PrintKind.RECEIPT)},Modifier.fillMaxWidth().testTag("receiptPrintReceipt"),
+                kind=PosControl.Cash,height=52.dp,radius=16.dp,icon="bill")
+            MposPosControl("Печатать заказ",{onChoose(PrintKind.KITCHEN)},Modifier.fillMaxWidth().testTag("receiptPrintKitchen"),
+                kind=PosControl.Secondary,height=52.dp,radius=16.dp,icon="printer")
         }
     }
 }

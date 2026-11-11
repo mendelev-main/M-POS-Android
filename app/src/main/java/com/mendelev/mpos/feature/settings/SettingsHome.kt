@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -68,6 +69,7 @@ internal data class SettingsDirectory(val employees: List<Employee> = emptyList(
     var network by rememberSaveable {mutableStateOf(false)}
     var loyalty by rememberSaveable {mutableStateOf(false)}
     var panel by rememberSaveable(admin.generation) {mutableStateOf(initialAdminPanel)}
+    var management by rememberSaveable(admin.generation) {mutableStateOf(false)}
     var company by rememberSaveable(admin.generation) {mutableStateOf(false)}
     var planned by rememberSaveable {mutableStateOf<String?>(null)}
     var entry by remember {mutableStateOf<SettingEntry?>(null)}
@@ -82,6 +84,7 @@ internal data class SettingsDirectory(val employees: List<Employee> = emptyList(
     if(company && admin.active) CompanySettingsWindow(admin.generation) {company=false}
     if(loyalty && admin.active) {com.mendelev.mpos.feature.loyalty.LoyaltyAdminScreen({loyalty=false;panel=true});return}
     if(network && admin.active) {NetworkSettingsScreen {network=false};return}
+    if(management && admin.active) {ManagementContactsScreen(admin.generation) {management=false};return}
     if(!(panel && admin.active)) Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
         if(LocalMposTopNavigation.current!=null) MposAppBar {}
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(start=26.dp,end=26.dp,top=22.dp,bottom=40.dp)) {
@@ -165,12 +168,13 @@ internal data class SettingsDirectory(val employees: List<Employee> = emptyList(
                     AdminModule("company","Реквизиты организации","Название заведения, юридическое лицо, адрес и адрес доставки.") {company=true},
                     AdminModule("inventory","Инвентаризация","График пересчёта, список товаров, проведение и история.","settingsInventory") {panel=false;onInventory?.invoke()},
                     AdminModule("warehouse","Складской учёт","Остатки, движение товаров, поставщики и складские отчёты.","settingsStock") {panel=false;onStock?.invoke()},
-                    AdminModule("analytics","Аналитика","Продажи, возвраты, прибыль и отчёты.","settingsAnalytics") {panel=false;navigation?.navigate?.invoke("analytics")}
+                    AdminModule("analytics","Аналитика","Продажи, возвраты, прибыль и отчёты.","settingsAnalytics") {panel=false;navigation?.navigate?.invoke("analytics")},
+                    AdminModule("admin","Управление","Контакты руководителя и администраторов.","settingsManagement") {management=true}
                 )
                 BoxWithConstraints(Modifier.fillMaxWidth().widthIn(max=1080.dp)) {
                     val columns=if(maxWidth>760.dp) 2 else 1
                     Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                        modules.chunked(columns).forEach {row->Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {row.forEach {module->AdminModuleCard(module,Modifier.weight(1f))}}}
+                        modules.chunked(columns).forEach {row->Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {row.forEach {module->AdminModuleCard(module,Modifier.weight(1f))};repeat(columns-row.size) {Spacer(Modifier.weight(1f))}}}
                     }
                 }
                 MposButton("Закрыть сессию администрирования",{panel=false;accessModel.logout()},Modifier.fillMaxWidth().heightIn(min=64.dp).testTag("adminLogout"),style=ActionStyle.Danger)
@@ -222,8 +226,9 @@ internal data class SettingsDirectory(val employees: List<Employee> = emptyList(
     }
 }
 @Composable private fun settingsRowModifier(modifier: Modifier=Modifier,onClick: (() -> Unit)?): Modifier = modifier
-    .fillMaxWidth().padding(top=8.dp).clip(RoundedCornerShape(12.dp))
-    .background(MaterialTheme.colorScheme.onSurface.copy(alpha=.035f))
+    .fillMaxWidth().padding(top=8.dp).clip(RoundedCornerShape(16.dp))
+    .background(MaterialTheme.colorScheme.background)
+    .border(1.dp,MaterialTheme.colorScheme.outline,RoundedCornerShape(16.dp))
     .clickable(enabled=onClick!=null) {onClick?.invoke()}.padding(horizontal=14.dp,vertical=12.dp)
 
 @Composable private fun SettingsDictionaryCard(kind: SettingKind,ui: SettingsCatalogUi,admin: Boolean,onEdit: (SettingEntry)->Unit) {

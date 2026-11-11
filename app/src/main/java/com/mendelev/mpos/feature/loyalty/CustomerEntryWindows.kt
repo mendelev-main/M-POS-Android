@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
@@ -91,6 +92,7 @@ import com.mendelev.mpos.domain.loyalty.*
 
 /** Android Web adapter uses 56px pill fields and a non-editable country prefix. */
 @Composable private fun CustomerPhoneField(value: String,onChange: (String)->Unit,label: String,prefix: String,placeholder: String,tag: String,enabled: Boolean,suffix: Boolean) {
+    var focused by remember {mutableStateOf(false)}
     Column(verticalArrangement=Arrangement.spacedBy(7.dp)) {
         Text(label,fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
         Surface(Modifier.fillMaxWidth().height(56.dp),shape=RoundedCornerShape(999.dp),border=BorderStroke(1.5.dp,MaterialTheme.colorScheme.outline),color=MaterialTheme.colorScheme.background) {
@@ -99,11 +101,11 @@ import com.mendelev.mpos.domain.loyalty.*
                     Text(prefix,Modifier.padding(horizontal=14.dp),fontSize=16.sp,fontWeight=FontWeight.Bold)
                     VerticalDivider(Modifier.fillMaxHeight(),color=MaterialTheme.colorScheme.outline)
                 }
-                BasicTextField(value,onChange,Modifier.weight(1f).padding(horizontal=12.dp).testTag(tag).semantics {contentDescription=label},
+                BasicTextField(value,onChange,Modifier.weight(1f).onFocusChanged {focused=it.isFocused}.padding(horizontal=12.dp).testTag(tag).semantics {contentDescription=label},
                     enabled=enabled,singleLine=true,cursorBrush=SolidColor(MaterialTheme.colorScheme.primary),
                     textStyle=TextStyle(color=MaterialTheme.colorScheme.onSurface,fontSize=20.sp,fontFamily=MaterialTheme.typography.bodyLarge.fontFamily,textAlign=if(suffix) TextAlign.Center else TextAlign.Start,letterSpacing=if(suffix) 2.sp else 0.sp),
                     keyboardOptions=KeyboardOptions(autoCorrectEnabled=false,keyboardType=if(prefix.isNotEmpty()) KeyboardType.Phone else KeyboardType.Text,imeAction=if(suffix) ImeAction.Search else ImeAction.Next),
-                    decorationBox={inner->Box {if(value.isEmpty()) Text(placeholder,fontSize=20.sp,color=MaterialTheme.colorScheme.onSurfaceVariant);inner()}})
+                    decorationBox={inner->Box {if(value.isEmpty() && !focused) Text(placeholder,fontSize=20.sp,color=MaterialTheme.colorScheme.onSurfaceVariant);inner()}})
             }
         }
     }

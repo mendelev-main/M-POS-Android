@@ -52,11 +52,11 @@ import com.mendelev.mpos.domain.workspace.*
     Column(modifier,verticalArrangement=Arrangement.spacedBy(10.dp)) {
         BoxWithConstraints(Modifier.weight(1f)) {
             val geometry=LocalWorkspaceGeometry.current
-            val scale=LocalDensity.current.fontScale
-            val columns=if(scale<=1.1f) geometry.columns else ((maxWidth/(144*scale).dp).toInt()).coerceIn(1,geometry.columns)
-            val rowHeight=((maxHeight-8.dp-12.dp*(geometry.homeRows-1))/geometry.homeRows).coerceAtLeast(128.dp)
+            val columns=geometry.columns
+            val density=LocalDensity.current
+            val rowHeight=with(density) {workspaceRowHeightPx(maxHeight.toPx(),geometry.homeRows,4.dp.toPx(),12.dp.toPx()).toDp()}
             val last=tiles.keys.maxOrNull() ?: -1
-            val count=if(editing) (((last/columns+2)*columns).coerceAtLeast(20)).coerceAtMost(HomeEngine.MAX_SLOTS) else last+1
+            val count=if(editing) (((last/columns+1)*columns).coerceAtLeast(columns*geometry.homeRows)).coerceAtMost(HomeEngine.MAX_SLOTS) else last+1
             val dots=if(editing) Modifier.drawBehind {
                 val step=18.dp.toPx();var y=0f
                 while(y<size.height) {var x=0f;while(x<size.width) {drawCircle(Color(0xFF767C8C).copy(alpha=.2f),1.dp.toPx(),Offset(x,y));x+=step};y+=step}
