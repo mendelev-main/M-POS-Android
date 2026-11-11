@@ -45,16 +45,15 @@ class PurchaseOrderUiTest {
         compose.onNode(hasAnyAncestor(hasTestTag("purchaseContent:$id")) and hasClickAction()).performClick()
         compose.onNode(hasAnyAncestor(isPopup()) and hasText("мл")).performClick()
         compose.onNodeWithTag("purchaseExpected:$id").assertTextEquals("На склад поступит: 12 л")
-        compose.onNodeWithTag("purchaseDraftMenu").performClick()
-        compose.onNodeWithTag("purchaseSave").performClick()
-        compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty && model.state.value.snapshot?.draft!=null}
-        compose.onNodeWithTag("purchasePlace").performClick()
+        compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.saving && !model.state.value.dirty && model.state.value.snapshot?.draft!=null}
+        compose.onNodeWithTag("purchasePlace").performScrollTo().performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.lastPlacedId!=null && model.state.value.snapshot!!.orders.any {it.id==model.state.value.lastPlacedId}}
         val orderId=model.state.value.lastPlacedId!!
         compose.onNodeWithTag("purchaseOrderStatus").assertTextContains("Ожидается приёмка",substring=true)
         compose.onNodeWithTag("purchaseOrderText").assertTextContains("24 бутылка × 500 мл",substring=true)
         shot("purchase-order")
         compose.onNodeWithContentDescription("Закрыть").performClick()
+        compose.onNodeWithTag("purchaseHistory").performClick()
         compose.onNodeWithTag("purchaseOrder:$orderId").assertExists()
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("purchaseOrder:$orderId").fetchSemanticsNodes().isNotEmpty()}
@@ -77,15 +76,18 @@ class PurchaseOrderUiTest {
                 @Suppress("UNCHECKED_CAST") override fun <T: androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.receiving.ReceivingPostingViewModel(delayed) as T
             })[com.mendelev.mpos.feature.receiving.ReceivingPostingViewModel::class.java]
         }
-        compose.onNode(hasAnyAncestor(isDialog()) and hasText("Приёмка")).performClick()
+        compose.onNodeWithTag("purchaseOrderMore").performClick()
+        compose.onNodeWithTag("purchaseReceiving").performClick()
         lateinit var receiving: com.mendelev.mpos.feature.receiving.ReceivingViewModel
         compose.runOnIdle {receiving=ViewModelProvider(compose.activity)[com.mendelev.mpos.feature.receiving.ReceivingViewModel::class.java]}
         compose.waitUntil(20_000) {receiving.state.value.snapshot!=null && !receiving.state.value.pending}
         compose.waitForIdle()
         compose.runOnIdle {assertNull(receiving.state.value.form)}
         historyReady.complete(Unit)
-        compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("receivingSave") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithTag("receivingBack").performClick()
+        compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("receivingClose") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("receivingClose").performClick()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("topNav-purchaseOrders").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("topNav-purchaseOrders").performClick()
         compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("purchaseNew") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
         val after=runBlocking {db.catalog().product(id)!! to db.catalog().balance(id)!!}
         assertEquals(before.first.copy(revision=2,packSize="0.5"),after.first);assertEquals(before.second,after.second)

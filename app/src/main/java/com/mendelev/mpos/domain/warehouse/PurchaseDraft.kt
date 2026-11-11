@@ -11,6 +11,8 @@ data class PurchaseLine(val productId: String,val productRevision: Long,val prod
     val quantity: String,val unit: String,val packSize: String="",val contentUnit: String=stockUnit)
 data class PurchaseDraft(val id: String,val supplierId: String,val supplierRevision: Long,val supplierName: String,val lines: List<PurchaseLine>)
 sealed interface PurchaseAction {
+    /** Raw, bounded operator input. Economic validation belongs to Save/Place. */
+    data class Working(val draft: PurchaseDraft?): PurchaseAction
     data class Save(val draft: PurchaseDraft): PurchaseAction
     data class Place(val orderId: String,val draft: PurchaseDraft): PurchaseAction
     data object Clear: PurchaseAction
@@ -20,12 +22,13 @@ data class PurchaseCommand(val commandId: String,val actorId: String,val revisio
         PurchaseDraftRules.id(commandId);PurchaseDraftRules.id(actorId)
         if(revision<0) throw CatalogFailure("purchase","Некорректная версия черновика")
         if(action is PurchaseAction.Save) PurchaseDraftRules.validate(action.draft)
+        if(action is PurchaseAction.Working) action.draft?.let(PurchaseDraftRules::validateWorking)
         if(action is PurchaseAction.Place) {PurchaseDraftRules.id(action.orderId);PurchaseOrderRules.create(action.orderId,action.draft,0)}
     }
     fun fingerprint(): String {
         validate()
-        val d=when(action) {is PurchaseAction.Save->action.draft;is PurchaseAction.Place->action.draft;PurchaseAction.Clear->null}
-        val parts=mutableListOf<Any?>("purchase.draft.v1",actorId,revision,if(action is PurchaseAction.Place) "place" else if(d==null) "clear" else "save")
+        val d=when(action) {is PurchaseAction.Save->action.draft;is PurchaseAction.Place->action.draft;is PurchaseAction.Working->action.draft;PurchaseAction.Clear->null}
+        val parts=mutableListOf<Any?>("purchase.draft.v1",actorId,revision,if(action is PurchaseAction.Working) "working" else if(action is PurchaseAction.Place) "place" else if(d==null) "clear" else "save")
         if(action is PurchaseAction.Place) parts.add(action.orderId)
         if(d!=null) {
             parts.addAll(listOf(d.id,d.supplierId,d.supplierRevision,d.supplierName))
@@ -35,6 +38,20 @@ data class PurchaseCommand(val commandId: String,val actorId: String,val revisio
     }
 }
 object PurchaseDraftRules {
+    fun validateWorking(d: PurchaseDraft) {
+        id(d.id);id(d.supplierId)
+        require(d.supplierRevision>0 && CatalogRules.name(d.supplierName)==d.supplierName)
+        require(d.lines.size<=500 && d.lines.map {it.productId}.distinct().size==d.lines.size)
+        d.lines.forEach {l->
+            id(l.productId);require(l.productRevision>0 && CatalogRules.name(l.productName)==l.productName)
+            quantityUnit(l.stockUnit);quantityUnit(l.contentUnit)
+            require(l.unit in packs || runCatching {quantityUnit(l.unit)}.isSuccess)
+            require(l.quantity.length<=64 && l.packSize.length<=64 && (l.quantity+l.packSize).none {it.isISOControl()})
+        }
+    }
+    fun hasRequestedLines(d: PurchaseDraft)=d.lines.any {l->
+        l.quantity.isNotBlank() && runCatching {number(l.quantity)?.signum()!=0}.getOrDefault(true)
+    }
     val packs=setOf("pack","box","bottle")
     fun id(value: String) {if(value.isBlank() || value.length>200) throw CatalogFailure("purchase","Некорректный идентификатор закупки")}
     fun number(raw: String): BigDecimal? {

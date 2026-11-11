@@ -25,9 +25,24 @@ class ReceivingViewModelTest {
         }
     }
     private fun model(store: ViewModelStore,f: Fake)=ViewModelProvider(store,object: ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=ReceivingViewModel(f) as T
+        @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=ReceivingViewModel(f,autoSaveEnabled=false) as T
     })[ReceivingViewModel::class.java]
     private suspend fun ready(vm: ReceivingViewModel)=withTimeout(20_000) {vm.state.first {!it.pending}}
+    @Test fun operatorNextSavesBeforePreviewAndSaveExitPreservesInvoice(): Unit=runBlocking {
+        val store=ViewModelStore();val f=Fake()
+        try {
+            com.mendelev.mpos.core.access.Administration.session.logout()
+            val vm=withContext(Dispatchers.Main) {model(store,f)};ready(vm)
+            assertTrue(vm.state.value.canEdit)
+            withContext(Dispatchers.Main) {vm.open("o")};ready(vm)
+            withContext(Dispatchers.Main) {vm.line("p") {it.copy(total="40")};vm.next()}
+            withTimeout(20_000) {vm.state.first {it.preview!=null && !it.pending}}
+            assertFalse(vm.state.value.dirty);assertEquals("40",vm.state.value.saved!!.lines.single().total)
+            withContext(Dispatchers.Main) {vm.dismissPreview();vm.change {it.copy(invoiceNumber="сотрудник")};vm.saveAndExit()}
+            withTimeout(20_000) {vm.state.first {it.form==null && !it.pending}}
+            assertEquals("сотрудник",f.s.records.single().draft!!.invoiceNumber)
+        } finally {withContext(Dispatchers.Main) {store.clear()}}
+    }
     @Test fun openingIsDurableAndLostSaveReplyLocksSameCommandUntilRecovery(): Unit=runBlocking {
         val store=ViewModelStore();val f=Fake()
         try {

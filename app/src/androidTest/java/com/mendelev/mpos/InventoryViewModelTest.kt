@@ -19,7 +19,7 @@ class InventoryViewModelTest {
         override suspend fun outcome(c: InventoryCommand): String? {if(unknown) error("outcome");return results[c.commandId]}
         override suspend fun commit(c: InventoryCommand): String {
             calls++
-            s=s.copy(revision=s.revision+1,document=when(val a=c.action) {is InventoryAction.Configure->s.document.copy(config=a.config);is InventoryAction.Start->s.document.copy(draft=InventoryDraft(a.id,a.type,1,s.today,listOf(p)));is InventoryAction.Count->s.document.copy(draft=s.document.draft!!.copy(counts=s.document.draft!!.counts.filterNot {it.product.id==a.product.id}+InventoryCount(a.product,a.raw,a.generation)));is InventoryAction.Fix->error("not used");is InventoryAction.Finish->{val d=s.document.draft!!;s.document.copy(draft=null,history=s.document.history+InventoryRecord(d,a.cancelled,1,s.today,c.actorId,c.commandId,InventoryClosingRules.summary(d).lossMinor))}})
+            s=s.copy(revision=s.revision+1,document=when(val a=c.action) {is InventoryAction.Configure->s.document.copy(config=a.config);is InventoryAction.Start->s.document.copy(draft=InventoryDraft(a.id,a.type,1,s.today,listOf(p)));is InventoryAction.Count->s.document.copy(draft=s.document.draft!!.copy(counts=s.document.draft!!.counts.filterNot {it.product.id==a.product.id}+InventoryCount(a.product,a.raw,a.generation)));is InventoryAction.Fix,is InventoryAction.Correct->error("not used");is InventoryAction.Finish->{val d=s.document.draft!!;s.document.copy(draft=null,history=s.document.history+InventoryRecord(d,a.cancelled,1,s.today,c.actorId,c.commandId,InventoryClosingRules.summary(d).lossMinor))}})
             val id=s.document.draft?.id ?: InventoryCodec.KEY;results[c.commandId]=id
             if(lose) {unknown=true;error("reply")};return id
         }
@@ -136,6 +136,24 @@ class InventoryViewModelTest {
             assertEquals("d",done.closedId);assertNull(done.unresolved);assertTrue(done.blocked);assertEquals(1,f.calls)
             f.readFail=false;withContext(Dispatchers.Main) {vm.refresh()};assertNull(ready(vm).snapshot!!.document.draft);assertEquals(1,f.calls)
         } finally {withContext(Dispatchers.Main) {store.clear()}}
+    }
+
+    @Test fun inlineAutosaveKeepsLatestInputWhileEarlierWriteIsReadingAndFlushesBeforeLeaving(): Unit=runBlocking {
+        val store=ViewModelStore();val f=Fake()
+        try {
+            f.s=f.s.copy(document=InventoryDocument(config=InventoryConfig(true,"monthly",setOf("p")),draft=InventoryDraft("draft","adhoc",1,f.s.today,listOf(f.p))))
+            val vm=withContext(Dispatchers.Main) {model(store,f)};ready(vm)
+            val gate=CompletableDeferred<Unit>();f.readGate=gate
+            withContext(Dispatchers.Main) {vm.inlineRaw("p","1")}
+            withTimeout(5000) {while(f.calls==0) delay(20)}
+            var left=false
+            withContext(Dispatchers.Main) {vm.inlineRaw("p","1,5");vm.flushInline {left=true}}
+            gate.complete(Unit)
+            withTimeout(5000) {while(!left) delay(20)}
+            assertEquals("1,5",vm.state.value.snapshot!!.document.draft!!.counts.single().raw)
+            assertTrue(vm.state.value.inlineInputs.isEmpty());assertEquals(2,f.calls)
+            assertNull(vm.state.value.snapshot!!.document.draft!!.counts.single().fixed)
+        } finally {f.readGate?.complete(Unit);withContext(Dispatchers.Main) {store.clear()}}
     }
 
 }

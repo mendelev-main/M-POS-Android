@@ -92,7 +92,7 @@ private fun catalogMoney(value: BigDecimal?)=value?.setScale(2,RoundingMode.HALF
             }
         }
         if(state.hasSavedDraft) Text("Есть сохранённый черновик. Кнопка «Добавить товар» откроет его.",Modifier.padding(bottom=12.dp),fontSize=12.sp,color=c.onSurfaceVariant)
-        if(state.message!=null) MposNotice(state.message,state.error)
+        if(state.error && state.message!=null) MposNotice(state.message,true)
         if(!admin) Text("Для изменения каталога войдите в администрирование через Настройки",Modifier.padding(bottom=12.dp),fontSize=12.sp,color=c.onSurfaceVariant)
         Surface(Modifier.fillMaxWidth().weight(1f,fill=false),shape=RoundedCornerShape(22.dp),shadowElevation=1.dp,color=c.surface) {
             BoxWithConstraints(Modifier.padding(20.dp)) {

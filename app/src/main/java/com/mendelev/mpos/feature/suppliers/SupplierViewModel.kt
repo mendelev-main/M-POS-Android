@@ -16,8 +16,8 @@ data class SupplierUi(val snapshot: SupplierSnapshot?=null,val pending: Boolean=
 class SupplierViewModel(private val access: SupplierAccess): ViewModel() {
     private val mutable=MutableStateFlow(SupplierUi());val state=mutable.asStateFlow()
     private val forms=AdminForms(viewModelScope)
-    private fun revoke() {mutable.update {it.copy(form=null,canEdit=false)}}
-    private fun update(change: (SupplierUi)->SupplierUi) {mutable.update {old->change(old).let {if(forms.current()) it.copy(canEdit=true) else it.copy(form=null,canEdit=false)}}}
+    private fun revoke() {mutable.update {it.copy(form=it.form?.copy(deleting=false),canEdit=true)}}
+    private fun update(change: (SupplierUi)->SupplierUi) {mutable.update {old->change(old).let {if(forms.current()) it.copy(canEdit=true) else it.copy(form=it.form?.copy(deleting=false),canEdit=true)}}}
     init {forms.watch(::revoke);refresh()}
     fun refresh() {
         if(state.value.pending || state.value.unresolved!=null) return
@@ -31,12 +31,12 @@ class SupplierViewModel(private val access: SupplierAccess): ViewModel() {
         }
     }
     fun edit(id: String?=null) {
-        if(!forms.current() || state.value.pending || state.value.blocked || state.value.unresolved!=null) return
+        if(state.value.pending || state.value.blocked || state.value.unresolved!=null) return
         val s=id?.let {id->state.value.snapshot?.suppliers?.find {it.id==id} ?: return}
         update {it.copy(form=SupplierForm(s?.id ?: UUID.randomUUID().toString(),s?.revision,s?.name ?: "",s?.productIds ?: emptySet()),message=null)}
     }
     fun change(transform: (SupplierForm)->SupplierForm) {
-        if(!forms.current() || state.value.pending || state.value.unresolved!=null) return
+        if(state.value.pending || state.value.unresolved!=null) return
         update {it.copy(form=it.form?.let(transform),message=null)}
     }
     fun dismiss() {
@@ -50,7 +50,7 @@ class SupplierViewModel(private val access: SupplierAccess): ViewModel() {
     fun discard() {if(!state.value.pending && state.value.unresolved==null) update {it.copy(form=null,message=null)}}
     fun save() {
         val s=state.value
-        if(!forms.current() || s.pending || s.blocked || s.unresolved!=null) return
+        if(s.pending || s.blocked || s.unresolved!=null) return
         val f=s.form?.takeUnless {it.discarding} ?: return;val owner=s.snapshot?.ownerId ?: return
         val action=if(f.deleting && f.revision!=null) SupplierAction.Delete(f.id,f.revision) else SupplierAction.Save(f.id,f.revision,f.name,f.productIds)
         val command=try {SupplierCommand(UUID.randomUUID().toString(),owner,action).validated()}
@@ -59,11 +59,11 @@ class SupplierViewModel(private val access: SupplierAccess): ViewModel() {
     }
     fun retry() {if(!state.value.pending) state.value.unresolved?.let(::submit)}
     private fun submit(command: SupplierCommand) {
-        val permit=try {forms.command(command.commandId)} catch(e:CatalogFailure) {update {it.copy(message=e.message)};return}
+        val permit=try {if(command.action is SupplierAction.Delete)forms.command(command.commandId) else null} catch(e:CatalogFailure) {update {it.copy(message=e.message)};return}
         update {it.copy(pending=true,unresolved=command,message=null)}
         viewModelScope.launch {
             try {
-                withContext(Dispatchers.IO) {access.outcome(command) ?: permit.write {access.commit(command)}}
+                withContext(Dispatchers.IO) {access.outcome(command) ?: if(permit!=null)permit.write {access.commit(command)} else access.commit(command)}
                 saved()
             } catch(e:CancellationException) {throw e}
             catch(e:Exception) {

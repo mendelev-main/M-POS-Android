@@ -67,11 +67,12 @@ object WebCatalogMapping {
             val modifiers=try {ModifierRules.validate(id,groups,mappedIds)} catch(_:CatalogFailure) {backupBad("modifier")}
             val local=WebValues.text(p["localImageId"]).takeIf {it.isNotEmpty()}
             val image=WebValues.text(p["image"])
-            val photo=local ?: "inline:$index".takeIf {image.startsWith("data:")}
-            if(photo!=null && photo !in document.images) backupBad("missingPhoto")
+            val externalUrl=image.takeIf {it.isNotEmpty() && !it.startsWith("data:")} ?: WebValues.text(p["imageUrl"]).takeIf {it.isNotEmpty()}
+            val photo=local ?: "inline:$index".takeIf {image.startsWith("data:")} ?: "external:$index".takeIf {externalUrl!=null}
+            if(photo!=null && !photo.startsWith("external:") && photo !in document.images) backupBad("missingPhoto")
             if(photo!=null) blockers.add("photoTranscodePending")
-            val external=photo==null && (image.isNotEmpty() || WebValues.text(p["imageUrl"]).isNotEmpty())
-            if(external) blockers.add("externalPhotoNeedsExplicitSkip")
+            val external=photo?.startsWith("external:")==true
+            if(external) blockers.add("externalPhotoDownloadPending")
             val purchase=WebValues.text(p["purchaseUnit"]).takeIf {it.isNotEmpty()}
             if(purchase!=null && purchase !in setOf("pack","box","bottle")) {unit(purchase);compatible(u,purchase)}
             val content=unit(WebValues.text(p["purchaseContentUnit"]).ifEmpty {u ?: ""});compatible(u,content)

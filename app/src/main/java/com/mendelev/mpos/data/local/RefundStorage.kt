@@ -19,6 +19,8 @@ data class RefundEntity(@PrimaryKey val id: String,val receiptId: String,val com
     @Query("SELECT * FROM refunds WHERE shiftId=:id ORDER BY createdAt,id") suspend fun inShift(id: String): List<RefundEntity>
     @Query("SELECT * FROM refunds WHERE shiftId IN (:ids) ORDER BY createdAt,id") suspend fun inShifts(ids: List<String>): List<RefundEntity>
     @Query("SELECT * FROM refunds WHERE createdAt>=:start AND createdAt<=:cutoff ORDER BY createdAt,id") suspend fun analyticsRange(start: Long,cutoff: Long): List<RefundEntity>
+    @Query("SELECT * FROM refunds WHERE receiptId IN (:ids)") suspend fun forReceipts(ids: List<String>): List<RefundEntity>
+    @Query("SELECT * FROM refunds ORDER BY createdAt DESC,id DESC LIMIT :limit") suspend fun recent(limit: Int): List<RefundEntity>
     @Query("SELECT * FROM refunds ORDER BY createdAt DESC,id DESC") suspend fun history(): List<RefundEntity>
     @Query("SELECT * FROM refunds ORDER BY createdAt DESC,id DESC") fun observe(): Flow<List<RefundEntity>>
 }

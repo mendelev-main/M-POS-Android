@@ -24,22 +24,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /** Explicit pinned Web POS variants; do not change generic editor/dialog controls. */
-enum class PosControl { Surface, Outline, Cash, Card, Delete, Close, Secondary }
+enum class PosControl { Surface, Outline, Cash, Card, Delete, Close, Secondary, Receiving, Warning }
 @Composable fun MposPosControl(label: String,onClick: ()->Unit,modifier: Modifier=Modifier,enabled: Boolean=true,
     kind: PosControl=PosControl.Surface,height: Dp=46.dp,radius: Dp=12.dp,fontSize: Float=14f,icon: String?=null,horizontalPadding: Dp=14.dp,retainingAppearance: Boolean=false) {
     val c=MaterialTheme.colorScheme
     val background=when(kind) {
+        PosControl.Warning->if(isMposDarkTheme()) Color(0xFF3A3022) else Color(0xFFFFF4E9)
+        PosControl.Receiving->if(isMposDarkTheme()) Color(0xFF695015) else Color(0xFFFFE08A)
         PosControl.Cash->c.primary
         PosControl.Card->if(isMposDarkTheme()) Color(0xFF10131A) else Color(0xFF22273A)
         PosControl.Delete->c.errorContainer
         PosControl.Close,PosControl.Outline,PosControl.Secondary->c.background
         else->c.surface
     }
-    val ink=when(kind) {PosControl.Cash->c.onPrimary;PosControl.Card->Color.White;PosControl.Delete->c.error;PosControl.Close->c.onSurfaceVariant;else->c.onSurface}
+    val ink=when(kind) {PosControl.Warning->if(isMposDarkTheme()) Color(0xFFE9C989) else Color(0xFF8A5A17);PosControl.Receiving->if(isMposDarkTheme()) Color(0xFFFFE9AA) else Color(0xFF6B5200);PosControl.Cash->c.onPrimary;PosControl.Card->Color.White;PosControl.Delete->c.error;PosControl.Close->c.onSurfaceVariant;else->c.onSurface}
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
     Surface(onClick=onClick,enabled=enabled,modifier=modifier.heightIn(min=height),shape=RoundedCornerShape(radius),
         color=background,contentColor=ink.copy(alpha=if(enabled || retainingAppearance) 1f else .45f),
-        border=if(kind in listOf(PosControl.Cash,PosControl.Card,PosControl.Secondary)) null else BorderStroke(1.dp,if(kind==PosControl.Delete) c.error else c.outline)) {
+        border=if(kind in listOf(PosControl.Cash,PosControl.Card,PosControl.Secondary)) null else BorderStroke(1.dp,if(kind==PosControl.Warning) {if(isMposDarkTheme()) Color(0xFF5A4A30) else Color(0xFFF5DCB8)} else if(kind==PosControl.Receiving) {if(isMposDarkTheme()) Color(0xFFAA8434) else Color(0xFFE4BE45)} else if(kind==PosControl.Delete) c.error else c.outline)) {
         Row(Modifier.padding(horizontal=if(label.isEmpty()) 0.dp else horizontalPadding),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.Center) {
             if(icon!=null) {MposPosIcon(icon,Modifier.size(if(kind==PosControl.Close) 22.dp else if(kind==PosControl.Delete) 18.dp else 20.dp));if(label.isNotEmpty()) Spacer(Modifier.width(8.dp))}
             if(label.isNotEmpty()) Text(label,fontSize=fontSize.sp,fontWeight=if(kind==PosControl.Cash || kind==PosControl.Card || kind==PosControl.Secondary || label=="Разделить") FontWeight.Bold else FontWeight.ExtraBold)
@@ -49,9 +51,10 @@ enum class PosControl { Surface, Outline, Cash, Card, Delete, Close, Secondary }
 }
 
 /** Paths are copied from pinned pos.html / parked-orders.js, in a 24×24 viewport. */
-@Composable fun MposPosIcon(name: String,modifier: Modifier=Modifier) {
-    val ink=when(name) {"close","delete"->MaterialTheme.colorScheme.error;"add"->MaterialTheme.colorScheme.primary;else->LocalContentColor.current}
+@Composable fun MposPosIcon(name: String,modifier: Modifier=Modifier,tint: Color?=null) {
+    val ink=tint ?: when(name) {"close","delete"->MaterialTheme.colorScheme.error;"add"->MaterialTheme.colorScheme.primary;else->LocalContentColor.current}
     val path=when(name) {
+        "history"->"M21 12A9 9 0 1 1 3 12A9 9 0 1 1 21 12ZM12 7V12L15 14"
         "loyalty"->"M20 8V20H4V8M2 8H22M12 8V20M12 8H7A3 3 0 1 1 10 5L12 8ZM12 8H17A3 3 0 1 0 14 5L12 8Z"
         "network"->"M8 2H16V8H8ZM2 16H10V22H2ZM14 16H22V22H14ZM12 8V12M6 16V12H18V16"
         "company"->"M4 22V4L12 2V22M12 8H20V22M2 22H22M7 7H9M7 11H9M7 15H9M16 12H17M16 16H17"

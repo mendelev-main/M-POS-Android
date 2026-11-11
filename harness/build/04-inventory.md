@@ -1,5 +1,7 @@
 # Этап 04 — Склад
 
+Локальное уточнение10.11: employee operational access + receiving Web UI, [RV01–RV07](../../docs/RECEIVING-UI-PARITY.md). Это не новая ci/device verification прежнего этапа.
+
 Статус: ci-verified в согласованном scope04a.1–04c.2/I01–I04; физическая приёмка pending, отложенные функции перечислены в docs/PHASE-04-REVIEW.md.
 
 ## Объём
@@ -85,3 +87,8 @@ Rounding follow-up acceptance: [CI40519616659](https://github.com/mendelev-main/
 04c.2 SD01–SD05 ci-verified/API36: [FullCI40829976103](https://github.com/mendelev-main/M-POS-Android/actions/runs/40829976103)/55b042f SUCCESS first completed final-head attempt.133JVM/203instrumentation/0failures/0skipped,13Python/harness/lint/debugAPK/testAPK;2workspace-scale/17UIseed/14upgrade fixtures and actual debugAPK1→2. STOCK DOCUMENT UPDATE PASSED: real sale/refund/receiving/closed inventory links resolve historical snapshots after update without writes. Inclusive local periods/presets/DST23/25h/invalid/future ranges, unchanged current balance, reader source/product/delta/command/time checks, historical names after catalog rename, missing/corrupt/forged refusal, same-link retry, modal close/history context passed. Shared stock-history/document screenshots inspected: readable, no overlap (synthetic UI fixture; root route separately covered). Existing financial/catalog/workspace/shift/warehouse upgrade assertions retained and passed. Preliminary40829712930 intentionally cancelled before final unit labels, not evidence. No local user DB seed; Room schema8, stable/main/signing unchanged. M17 remains excluded. Physical tablet/dark/150% pending. Whole04 in progress; next checkpoint: audit remaining warehouse queries/reporting before05.
 
 2026-10-29: checkpoint сверки — ../../docs/PHASE-04-REVIEW.md; следующие программные блоки05, физическая приёмка не заявляется.
+
+
+10.11 — RV03/RV04 implemented locally: topbar/жёлтый receiving-resume/без overflow, автоматический рабочий черновик и fresh preview. Кодек4 с чтением1–3; строгая валидация проведения сохранена. Подробности docs/RECEIVING-UI-PARITY.md, результаты harness/build-log.md; device acceptance pending.
+
+10.11.2026 IV01–07 implemented locally, BG01 badge follow-up: [INVENTORY-UI-PARITY](../../docs/INVENTORY-UI-PARITY.md). UI перенос по Web05db, inline autosave/fix/summary/correction. InventoryCodec4, SQL schema прежняя; old records читаются. Проверки и ручная приёмка отдельно.

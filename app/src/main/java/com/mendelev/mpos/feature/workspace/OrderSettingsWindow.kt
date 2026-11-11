@@ -31,7 +31,7 @@ import com.mendelev.mpos.domain.workspace.*
 
 internal fun orderSettingsTotal(cart: CurrentCart,discounts: Map<String,SaleDiscount>,delivery: DeliveryCharge?): Long {
     val effective=discounts.filterKeys {id->cart.lines.none {it.id==id && it.discountEdited}}+cart.lines.mapNotNull {line->line.discount?.let {line.id to it}}.toMap()
-    val goods=if(cart.lines.isEmpty()) 0L else SaleMoney.quote(cart.lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity,effective[it.id])}).total
+    val goods=if(cart.lines.isEmpty()) 0L else com.mendelev.mpos.domain.loyalty.LoyaltyRules.quote(cart.copy(details=cart.details.copy(type="here")),effective).total
     return Math.addExact(goods,if(cart.details.type=="delivery") delivery?.fee ?: 0L else 0L)
 }
 

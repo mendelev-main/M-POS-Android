@@ -21,6 +21,13 @@ class SettingsRulesTest {
         assertEquals(1800L,SaleMoney.quote(listOf(SaleLineInput("line","10","2",SaleDiscount(fixed.type,fixed.value,fixed.name)))).total)
         listOf("0","-1","100.01").forEach {v->refuses {SettingsRules.validate(row.copy(value=v))}}
     }
+    @Test fun existingDiscountCannotBeOverwrittenAsOperatorDictionaryEntry() {
+        val discount=SettingEntry("protected",SettingKind.DISCOUNT,"Акция","percent","10")
+        val catalog=SettingsRules.save(SettingsCatalog(),discount)
+        refuses {SettingsRules.save(catalog,SettingEntry("protected",SettingKind.DELIVERY,"Доставка",value="5"))}
+        refuses {SettingsRules.save(catalog,SettingEntry("protected",SettingKind.RECEIPT_LABEL,"Подпись"))}
+        assertEquals(listOf(discount),catalog.entries)
+    }
     @Test fun templatesRejectNormalizedDuplicatesAndSuggestUnusedLabel() {
         val first=SettingEntry("one",SettingKind.RECEIPT_LABEL,"Стол 1")
         val c=SettingsRules.save(SettingsCatalog(),first)

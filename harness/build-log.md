@@ -1367,3 +1367,234 @@ mpos-phase/mpos-domain. Владелец уточнил: сейчас тольк
 Перед push найдена и исправлена регрессия updater: нажатие иконки сбрасывало READY/первую квитанцию после установки. openUpdateWindow сохраняет эти состояния, обычное открытие запускает проверку. CI e2e теперь ждёт реальную кнопку установки вместо удалённых stage-подписей и сверяет lastChecked из durable SharedPreferences (для release только root disposable CI emulator). Защита от tampering/Cancel/версия PackageManager/admin-password/данные сохранена. Проверки: compileDebugKotlin + UpdateWindowPolicyTest — BUILD SUCCESSFUL50s, 2JVM/0fail; Python tooling31/0fail, включая prefs proof и root/device guard. Реальный emulator e2e остаётся за CI.
 
 2026-11-09: после push da14ff0 синхронизирован signed-install smoke: оба cold-start шага используют общий wait_installed_version, который принимает текущую/legacy подпись установленной версии, но отвергает доступную версию, похожие значения и совпадение по префиксу. 32 Python tests passed; preflight/diff-check passed. Сертификат/UID/private-marker/package verification не изменены.
+
+##2026-11-09 — текущие события/лояльность Web, только локально
+
+Владелец подтвердил, что прежний release зелёный; его pipeline больше не проверяли. Backend не редактировали, не деплоили и не выполняли реальные запросы заказов/Telegram/печати. Источник этой итерации Web05db2b7d06e857e7dbeb1870f7fab8eaff125d26, отдельно от прежнего reference остальных модулей.
+
+ON01–ON04/LO01–LO04 реализованы локально; contract/docs/ручной checklist: docs/ONLINE-LOYALTY-PARITY.md. События badge/list/detail, ETA POSTaccept, ready POSTready, ready в parked/current и server cancellation. Клиент/consent/программы/корректировки/подарок/перепроверка, атомарные intents продаж/возвратов, scoped replay/backoff, история/печать и native restore validator. Перенесена source-коррекция маскированных краёв для удалённого ввода пароля; без reveal и без изменения verifier.
+
+Проверки:
+- compileDebugKotlin + compileDebugAndroidTestKotlin + testDebugUnitTest с BackendTest, LoyaltyApiTest, LoyaltyRulesTest, AdminSessionTest, RemotePasswordInputTest + lintDebug: BUILD SUCCESSFUL;26JVM,0failures/0errors/0skipped; lint0errors (81warnings/12hints), Android fixtures компилируются.
+- Первый запуск LoyaltyApiTest выявил слишком короткий fixture-key (7символов, конфигурация требует8); исправлен только синтетический fixture, повторные3 API-теста прошли. Production validation не ослаблялась.
+- Новые LoyaltyOutboxTest3 и OnlineOrderWindowsTest2 пока compile-only, запуск не заявлен. Пользовательская база/приложение не очищались/не переустанавливались; полный connected suite на пользовательском эмуляторе не запускали. Изолированный runner/одноразовое устройство нужны для Room исполнения без фоновых эффектов существующего app runner.
+- Preflight и git diff --check прошли; compile-only не является device/live/pixel parity.
+- Финальные правки lifecycle/fallback: admin ViewModel привязан к generation; новый вход получает новую модель. При недоступном/сменившемся подключении доступен явный выход из лояльности для обычной продажи, без автоматического платежа. compileDebugKotlin повторно SUCCESS на итоговом коде.
+
+Push/commit/release не выполнялись. Owner acceptance: events/order details/parked ready/Telegram ETA/ready/payment, программа/клиент/подарок/refund/restart/restore/AnyDesk — pending.
+
+
+##2026-11-09 — ON04: положение готовности и текущий веб-заказ
+
+Владелец подтвердил получение/принятие сайта и попадание в Отложенные. По Web05db2b7 cart-presentation.js удалён избыточный native header статуса/ETA/отмены; «Заказ готов» перенесён после итога перед checkout. Подтверждённая готовность скрывает current action. Отмена остаётся доступна через удаление онлайн-заказа из Отложенных с server confirmation.
+
+По уточнению владельца ready в parked — компактная зелёная метка перед типом заказа, размеры/скругление как у типа, фиксированные колонки типа/суммы сохранены. OnlineOrderWindowsTest дополнен2regressions: высота/положение и отдельный click без открытия чека; current footer между total/checkout и исчезновение после ready.
+
+Начальные compile попытки: Room SQLite temp dir недоступен в sandbox (выдан точный write grant), затем исправлена ошибка вызова нового composable callback. Итоговая compileDebugKotlin/compileDebugAndroidTestKotlin — BUILD SUCCESSFUL; git diff --check чисто. Новые Android UI tests пока compile-only, фактический запуск/визуальная приёмка владельцем pending. Реальные заказы/сервер/Telegram не затрагивались, push/commit не выполнялись.
+
+
+##2026-11-09 — LO02: профиль клиента и выбранная иконка
+
+По запросу владельца перенесён внешний вид customer-profile-modal из Web05db2b7:560dp, аватар/имя/телефон/Telegram, summary cards вместо progress bars, states loading/error/consent, footer сменить/готово и отдельное удаление. Telegram без username отключён и остаётся видимым. Сетевая загрузка/consent/проверка оплаты остаются в прежних use cases. Shared MposDialog custom heading optional, default остальных окон не изменён.
+
+PosIconButton selected variant: зелёные primary border/ink и primaryContainer background, semantics selected. Workspace связывает его с прикреплённым клиентом, в т.ч. с сайта, без зависимости от участия/баланса.
+
+compileDebugKotlin + compileDebugAndroidTestKotlin — BUILD SUCCESSFUL1m8s; git diff --check чисто. Добавлены2 pure-profile fixture tests (header/Telegram/gift/save, error/retry) и1workspace selected add/remove, все compile-only, запуск UI/visual parity не заявлен. JVM/domain suite не повторяли: расчёты/хранение/протокол не менялись; нет реальных backend/Telegram запросов, печати, переустановок и пользовательских данных в fixtures. Push/commit не выполнялись. Ручная приёмка через Android Studio владельцем pending.
+
+
+##2026-11-10 — POV01–POV05, вкладка заказов поставщикам по Web
+
+Источник по запросу текущего Web: purchase-orders.js/pos.html05db2b7. Контракт: docs/PURCHASE-UI-PARITY.md. Перенесены supply-stack accordion placement/scroll, history440/radius14/status/edit, supplier field48 и card формы, positive-only UI enable create, detail heading/text/copy/share/done. History не переключается автоматически после создания. Native durable draft/retry/admin guard/приёмка/отмена сохранены в отдельных меню. UI-текст экспорта отделён от immutable audit snapshot; технические UUID/version/provenance не отправляются поставщику. Пустой supplier option сбрасывает пустой draft form, заполненная заявка не теряется.
+
+Добавлены PurchasePanelsTest2 (независимые panels/положение/open-edit actions, карточка copy/share/done), PurchasePresentationTest1 (исторические units/names/localdate без internal fields), PurchaseViewModelTest regression пустой/заполненный supplier. Старые UI flows обновлены на explicit history и overflow receiving/cancel; проверки сохранённых версий/количеств остаются model assertions вместо технических надписей.
+
+Проверено: compileDebugKotlin + compileDebugAndroidTestKotlin +13адресных JVM (PurchasePresentationTest/PurchaseDraftRulesTest/PurchaseOrderRulesTest/PurchaseOrderMutationRulesTest) — BUILD SUCCESSFUL1m6s,0failures/0errors/0skipped. До добавления новыхfixtures initial compile также SUCCESS1m8s. Preflight и diff-check passed. Android fixtures compile-only: на пользовательском устройстве не выполнялись.
+
+После этих проверок добавлена source-компоновка редактора (supplier/date + Отмена/Сохранить) и возврат к карточке после отмены; финальная compileDebugKotlin/compileDebugAndroidTestKotlin SUCCESS57s и повтор compileDebugKotlin на итоговом коде SUCCESS36s. Остатки/себестоимость/денежные правила/schema/backend не менялись, реальные сообщения/заказы/печать не запускались; данные приложения не очищались. Pixel/device acceptance владельцем pending. Push/commit не выполнялись.
+
+
+##2026-11-10 — RV01–RV07: сотрудники/заказы/приёмка
+
+Владелец исправил правило: заказы создают сотрудники, не только admin. Проверены Web05db2b7 receiving-ui.js/receiving-drafts.js/receiving.js/purchase-orders.js. По Web операционные edit pending и invoice/post также не требуют admin-session. Контракт: docs/RECEIVING-UI-PARITY.md; обновлены access matrix и context. Доступ исправлен в UI, ViewModels и узких repository transactions. Cancel остаётся adminTransaction; Catalog/Supplier/Employee/Inventory API не ослаблялись. Install owner identity и transaction/revision/idempotency/stock-cost/split-lock guards сохранены.
+
+Перенесены ReceivingHome history/new/pending cards, inline standalone и fullscreen linked invoice, supplier/metadata/qty/unit/pack/amount, footer total/Далее, save-before-preview и save-before-exit, single confirmation/explicit overage, исторический receiving detail/status. Ошибка сохранения не скрывает standalone форму; устаревший закрытый заказ можно покинуть без незаконного save. Native retry/rebase/clear/price-per-unit оставлены в отдельных элементах. Старые admin-logout tests скорректированы: закрываются только административные формы, operational purchase/receiving ввод остаётся.
+
+Добавлены OperatorReceivingAccessTest2 (locked-admin create/edit vs deny cancel/supplier; posting rollback/replay/stock/cost), ReceivingAppearanceTest2, ReceivingPresentationTest1, operator ViewModel regressions для save-before-preview/exit и создания заказа. Существующие receiving UI tests переведены на новые точки входа; economic/history/replay assertions сохранены.
+
+Проверки:
+- Initial compileDebugKotlin/compileDebugAndroidTestKotlin SUCCESS1m10s.
+- Compile +31адресный JVM (ReceivingPresentationTest, ReceivingRulesTest, ReceivingPriceRulesTest, StandaloneReceivingRulesTest, ReceivingPostContractTest, PurchaseOrderRulesTest, PurchaseDraftRulesTest, PurchaseOrderMutationRulesTest) + lintDebug — SUCCESS2m16s;31/0failures/0errors/0skipped; lint0errors,81warnings/12hints.
+- Final navigation/stale/failed-save layout guard compileDebugKotlin/compileDebugAndroidTestKotlin SUCCESS58s.
+- Preflight и git diff --check passed.
+- Android Room/UI fixtures compile-only; реального исполнения/visual/device acceptance не заявлено. Полный connected suite на пользовательской базе не запускался. Production backend/Telegram/печать/поставки не использовались, пользовательские данные не очищались.
+
+Локально в main, без commit/push/release. Owner walkthrough без admin: создать → принять → сохранить позже → продолжить → Далее → подтвердить; затем standalone/0/under/over/restart — pending.
+
+
+##2026-11-10 — PA01–PA06: свободная навигация и автоматический заказ
+
+Владелец отклонил native dirty-navigation lock и draft menu: ввод должен сохраняться сам, вид/кнопки как Web. Контракт docs/PURCHASE-AUTOSAVE.md. Пересмотрены purchase-orders.js05db2b7 и CSS keypad. Новый заказ не блокирует navbar/Back по dirty, нет discard dialog и меню ⋯ формы. Supplier/qty/unit/pack изменения сохраняет background queue, не переключая foreground pending/не заменяя более новый form. Перед Place автоматически актуализируются refs; mutex и исходные command IDs предотвращают stale/duplicate writes. Partial raw поля codec2/working:true, legacy codec1 strict; Place validation/stock/cost/schema/owner guards сохранены.
+
+Проверки:
+- Initial compileDebugKotlin/compileDebugAndroidTestKotlin SUCCESS1m7s.
+- Compile +16 адресных JVM (PurchaseAutosaveTest4 + PurchaseDraftRulesTest/PurchaseOrderRulesTest/PurchaseOrderMutationRulesTest) SUCCESS1m26s.
+- Итоговый тот же набор + lintDebug SUCCESS3m43s:16tests,0failures/0errors/0skipped; lint0errors,82warnings/12hints.
+- PurchaseAutosaveTest исполняет настоящий ViewModel/codec на JVM: slow write+latest wins, Place во время записи без resurrection/duplicate, lost ACK original ID перед latest input, supplier reset/partial codec и strict Place rejection. Test-only coroutines-test1.10.2 подключён для Main dispatcher; production dependency graph не менялся.
+- Добавлен PurchaseWorkingRepositoryTest: собственная файловая Room DB reopen/raw invalid-pack persistence/replay/no stock write; compile-only. UI-test обновлён на actual tab switch/Activity recreation/no menu; UI/Room исполнение владельцем/на disposable device pending. Legacy explicit command tests инжектируют manual mode; runtime/default и новые concurrency fixtures — automatic mode.
+- Preflight и git diff --check passed.
+
+UI pixel parity не заявлена без сравнения владельца. Реальные сообщения/поставки/backend/печать и пользовательские данные не затрагивались. Локальный main, без commit/push/release.
+
+## 2026-11-10 — LO03 административная карточка клиента и корректировка
+
+Локальная main, без commit/push/release и изменений backend. Источники Web05db2b7: loyalty.js shared customer-card/inline editor, Android customer layout; административный серверный verifier проверяет Web proof отдельно от device key. Конкретный production403 не воспроизводился записью клиентских данных.
+
+- Добавлены consentVersion, проверка активного участия/изменения/причины500, CAS target и явное снятие подарка.
+- BackendFailure сохраняет безопасный известный code; admin403 отделён от key/URL, raw error не отображается. После admin denial можно ввести Web credential в скрытое поле только в памяти, native admin session остаётся обязательной. Никакого legacy fallback/смены native пароля.
+- Первая адресная compile/JVM проверка прошла55s. После расширения layout обнаружена ошибка implicit BoxWithConstraints.maxWidth в Row; исправлена явным sidebarWidth.
+- Финальная команда с ANDROID_HOME/ANDROID_SDK_ROOT=../android-local/sdk, JAVA_HOME=/opt/homebrew/opt/openjdk@17, GRADLE_USER_HOME=../android-local/gradle: Gradle8.13 --no-daemon -Pkotlin.compiler.execution.strategy=in-process -Dorg.gradle.vfs.watch=false compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.LoyaltyApiTest --tests com.mendelev.mpos.BackendTest — SUCCESS47s. XML: BackendTest10 + LoyaltyApiTest6, failures0; проверены согласие/CAS/target/gift removal/отказ после logout/отдельный Web proof/invalid no-write/безопасные admin403 и stale codes.
+- Добавлены2 UI fixtures LoyaltyAdminCustomerWindowTest: inline edit requires changed count+reason, gift removal explicit, ledger failure leaves profile. Только скомпилированы, на пользовательском эмуляторе не исполнялись; реальная база/накопления/Telegram не затрагивались.
+- Harness preflight и git diff --check passed. UI pixel parity и production save подтверждает владелец через Android Studio.
+
+## 2026-11-10 — RV03/RV04 приёмка: topbar, yellow controls, autosave
+
+Локальная main, без commit/push/release. Web05db2b7 receiving-ui.js/receiving-drafts.js/pos.html; верхнее меню при открытом документе и жёлтый стиль для обеих кнопок — уточнения владельца. Overflow и discard/save/reload UI удалены; денежная политика и единственная транзакция подтверждения прихода сохранены.
+
+ReceivingCodec4/working flag читает1–3, старые fingerprints для обычных drafts прежние. Raw date/quantity/pack сохраняются в фоне; строгие preview/post отказывают незавершённой накладной. ViewModel mutex/current input/original command replay, flush-before-exit, fresh rebase+flush-before-preview. Автосохранение не включает foreground pending/linear progress и не блокирует topnav/ввод.
+
+Проверки:
+- Первая попытка Gradle не стартовала из-за запрещённого локального сокета. После сетевого разрешения KSP не инициализировался в системной temp директории; JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/Users/Aleksandr/Library/Caches/M-POS-Android/tmp устранил ограничение без изменения проекта.
+- Gradle8.13, JDK17, ANDROID_HOME/ANDROID_SDK_ROOT=../android-local/sdk, GRADLE_USER_HOME=../android-local/gradle, --no-daemon -Pkotlin.compiler.execution.strategy=in-process -Dorg.gradle.vfs.watch=false compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.ReceivingAutosaveTest --tests 'com.mendelev.mpos.domain.warehouse.*Receiving*' --tests com.mendelev.mpos.ReceivingPresentationTest — SUCCESS1m04s; после удаления неиспользуемых menu callbacks и добавления Room fixture тот же набор SUCCESS1m13s.
+- Итог XML25tests,0failures/0errors/0skipped. В том числе5 ReceivingAutosaveTest на настоящем ViewModel: partial input/exit/reopen, slow IO/latest wins, lost ACK, Next/fresh stock baseline, save failure/no false close.
+- UI fixtures обновлены под autosave/no overflow/topbar/recreation. ReceivingWorkingRepositoryTest: собственный Room файл/reopen/replay/no stock/no invalid post. Android fixtures скомпилированы, исполнение на пользовательском эмуляторе не запускалось.
+- Harness preflight/git diff --check passed. Реальные база/приход/печать/backend/Telegram не затрагивались. Pixel parity и device execution принимает владелец в Android Studio.
+
+## 2026-11-10 — ON02 окно заказа события / ON06 admin silent soft delete
+
+Локальная main без commit/push/release. Использованы project phase/domain harness и pinned Web05db2b7 web-orders.js/pos.html. Текущий M-Pos-Backend/server.js также прочитан через GitHub read-only: PATCH /api/orders/:id/status обновляет SQL, без direct Telegram/notify; DELETE отсутствует. Backend не редактировали, production API не вызывали.
+
+Результат:940dp shared modal с zero padding variant/custom heading/type badge/переносом контактов, section layout и fixed actions. Admin-only delete без ETA: use-case session/generation + target/dataset/new/not locally accepted; validated cancelled ACK перед encrypted inbox2 tombstone/return to events. Не создаёт native чек или notification/print effects. Tombstones переживают restart/late SSE; поздний local accept удалённого ID отклоняется. Server record сохраняется cancelled (soft delete). Existing server API без CAS; live deployed behavior/внешние triggers не верифицировались мутациями.
+
+Проверки:
+- Gradle8.13/JDK17, ANDROID_HOME/ANDROID_SDK_ROOT=../android-local/sdk, GRADLE_USER_HOME=../android-local/gradle, JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/Users/Aleksandr/Library/Caches/M-POS-Android/tmp.
+- --no-daemon -Pkotlin.compiler.execution.strategy=in-process -Dorg.gradle.vfs.watch=false compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.OnlineOrderDeletionTest --tests com.mendelev.mpos.InboxSnapshotTest --tests com.mendelev.mpos.BackendTest SUCCESS1m07s. После переноса контактов/адаптивных columns compileDebugKotlin compileDebugAndroidTestKotlin SUCCESS39s. После late-accept guard итоговый исходный адресный набор SUCCESS1m06s.
+- XML16tests: OnlineOrderDeletionTest4, InboxSnapshotTest2, BackendTest10;0failures/0errors/0skipped. Proof: PATCH-only/status body/device header; expired/locked admin no request; failed/wrong ACK no local removal/no fallback; retained other orders/legacy inbox/durable remove+late event; accept/ready прежние.
+- Добавленные UI/admin visibility/busy/delete-without-ETA и AtomicFile reopen fixtures скомпилированы, на пользовательском устройстве не исполнялись.
+- Harness preflight/git diff --check passed. Реальные заказы/база/Telegram/печать не затрагивались; визуальная/live приёмка владельцем в Android Studio pending.
+
+## 2026-11-10 — LO02 picker/create customer Web parity
+
+Локальная main без commit/push/release. Применён phase/domain harness, источники Web05db2b7 loyalty.js openCustomerPicker/selectCustomer/openCreateCustomer + android-customer-input.js и pos.html. Backend не меняли; production customers/consent/Telegram API не вызывались.
+
+Результат: pure CustomerPickerWindow560 / CustomerCreateWindow460, fixed +375 pill56, suffix/paste normalization, result cards/avatars/select, optional explicit enrollment. Search не блокирует ввод, stale/cancelled results отбрасываются. Selection closes entry; profile outage допускает identity без gift/membership, endpoint change отклоняется. Create ID сохраняется в открытом окне, live loading gate препятствует двойному POST до recomposition; duplicate phone409 показывает возврат к поиску. Create+enroll durable attach до consent через serialized workspace command; consent cancel не очищает клиента. Staff/consent checks сохранены, gift toggle сразу сохраняет selection. Existing profile dialog retained.
+
+Проверки:
+- Gradle8.13/JDK17, ANDROID_HOME/ANDROID_SDK_ROOT=../android-local/sdk, GRADLE_USER_HOME=../android-local/gradle, JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/Users/Aleksandr/Library/Caches/M-POS-Android/tmp.
+- --no-daemon -Pkotlin.compiler.execution.strategy=in-process -Dorg.gradle.vfs.watch=false compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.CustomerEntryRulesTest --tests com.mendelev.mpos.LoyaltyApiTest --tests com.mendelev.mpos.LoyaltyRulesTest SUCCESS1m10s.
+- XML15tests: CustomerEntryRulesTest2/LoyaltyApiTest8/LoyaltyRulesTest5,0failures/0errors/0skipped. Canonical BY create body/no implicit consent; incomplete/foreign phone no request; suffix filtering; selected identity on503/no false rewards; endpoint switch refusal;409 duplicate classification; existing gift/CAS/consent tests preserved.
+- После усиления live click guard и согласования460dp consent окна compileDebugKotlin SUCCESS35s.
+- CustomerEntryWindowsTest2 UI fixtures: picker prefix/paste/edit during search/select/add; creation prefix/enrollment/busy. Только скомпилированы, UI и Room application tests на пользовательском эмуляторе не запускались.
+- Harness preflight/git diff --check passed. Реальных клиентов не создавали, user DB/consent/оплаты не меняли. Pixel/live acceptance владельцем в Android Studio pending.
+
+## 2026-11-10 — расширение восстановления Web
+Локальная main без commit/push. Контракт: docs/WEB-RESTORE-FULL-PLAN.md; WB-FULL01–03 implemented, device acceptance pending. Изолированный кандидат получает settings catalogs, company/device envelope, неизменяемый индекс paid/refunded Web receipts, shift display projections; photos HTTPS bounded preparation; native SQL history50. Никаких повторных продаж/возвратов или внешних отправок. Device settings roll-forward до рабочего UI; native capture сохраняет текущие правки настроек.
+
+Gradle8.13/JDK17; local SDK/Gradle cache; JAVA_TOOL_OPTIONS temporary directory в Library/Caches/M-POS-Android/tmp. --no-daemon -Pkotlin.compiler.execution.strategy=in-process -Dorg.gradle.vfs.watch=false compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.domain.backup.* --tests com.mendelev.mpos.ReceiptPagingTest --tests com.mendelev.mpos.BackendTest --tests com.mendelev.mpos.PrintingTest --tests com.mendelev.mpos.domain.settings.SettingsRulesTest: SUCCESS47s,164tests/0failures/0errors/0skipped. Тест выявил отсутствующие identity kinds discount/receiptLabel/printer; исправлены. Проверены settings/overrides, immutable receipt index, pagination258mixed receipts without gaps/duplicates; существующие backup/backend/printing rules.
+
+Android fixtures WebFullRestoreTest и ReceiptPagingRepositoryTest только скомпилированы: own Room fixtures для rollback/photo/archive roundtrip/shift/history и реальных SQL pages. На пользовательском эмуляторе не исполнялись. Startup device apply и pixel/UI ручная приёмка pending. Старые Web-чеки read-only: повторная печать/новый возврат/native analytics отдельно. Harness preflight и git diff --check passed.
+
+## 2026-11-10 — SP01–04/ST01/RB01
+Локальная main, без commit/push. docs/SPLIT-PAYMENT-UI.md: Web split workspace с исходным чеком, inline amount keypad, cash tender/change/denominations и card confirmation, идемпотентный final commit без дополнительного review; paid rows immutable/restart recovery retained. Settings удаление перенесено в редактор. Receipt type badges shared with parked, рядом payment badge.
+
+Gradle8.13/JDK17/local SDK+cache/JAVA_TOOL_OPTIONS tmpdir; --no-daemon -Pkotlin.compiler.execution.strategy=in-process -Dorg.gradle.vfs.watch=false compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.domain.sale.SplitEditorTest --tests com.mendelev.mpos.feature.sale.PaymentInputTest --tests com.mendelev.mpos.domain.settings.SettingsRulesTest: SUCCESS40s (повтор после исправления DpRect assertion в UI fixture). JVM14tests,0failures/0errors/0skipped; последний прогон UP-TO-DATE для неизменённых JVM inputs. Main и Android fixtures скомпилированы. SplitSaleUiTest обновлён под cash tender/insufficient/paid freeze/restart/count/mixed final; receipt fixture проверяет высоту/нижний край/порядок badges. Fixtures на устройстве не запускались; visual/pixel/manual acceptance pending. Harness preflight и git diff --check passed. Никаких production sales/print/Telegram/backend операций.
+
+## 2026-11-10 — IV01–07/BG01: инвентаризация Web и метки
+
+Локальная main без commit/push. Применены mpos-phase/domain. Актуальные inventory.js/pos.html/android-inventory.js05db2b7 прочитаны GitHub connector; исходник1682 не имел correction/header actions. Контракт docs/INVENTORY-UI-PARITY.md. Settings schedule/products/history50, inline count autosave serialized queue/flush, direct fix, summary/cancel, correction preserving subsequent movements; исходная фиксация immutable, corrections append-only. InventoryCodec4 с legacy1–3 read, SQL schema прежняя; stock document reader поддерживает correction movement. Native административные права/precision/HALF_UP/historical cost policy retained.
+
+Gradle8.13/JDK17/local SDK/cache, JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/Users/Aleksandr/Library/Caches/M-POS-Android/tmp; --no-daemon -Pkotlin.compiler.execution.strategy=in-process -Dorg.gradle.vfs.watch=false compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.domain.warehouse.Inventory*: SUCCESS42s. XML18tests/0failures/0errors/0skipped (InventoryRules5/Count6/Closing5/Presentation2). Calendar windows/next period, exact count/stale identity, correction10→11 with later−2 gives current9, second correction baseline, immutable original and codec roundtrip, tampered stockAfter refusal, existing per-line loss policy.
+
+Android fixtures только скомпилированы: InventoryCorrectionRepositoryTest (all5write faults/no partial stock+replay/stale/roundtrip), InventoryViewModelTest latest inline during blocked read+flush-before-leave, adapted InventoryUiTest and AdminRevocationUiTest, ParkedAppearanceTest equal110×28 and receipt compact badge assertions. Не запускались на пользовательском эмуляторе; это не evidence Room/device/pixel passing. Никаких production stock writes, payments, backup activation, printing, Telegram/API side effects. Harness preflight/git diff --check passed. Final compileDebugKotlin/compileDebugAndroidTestKotlin после последней правки autosave guard: SUCCESS47s (Android fixtures UP-TO-DATE, main перекомпилирован). Визуальная приёмка владельцем pending.
+
+## 2026-11-10 — CT01–05 checkout transitions/split rollback/cart
+
+Локальная main без commit/push. mpos-phase/domain workflow и docs/CHECKOUT-TRANSITIONS.md. Диагностировано: retained SaleViewModel отрисовывался до LaunchedEffect refresh; finish очищал только completed, оставляя split/form; disabled MposPosControl приглушал текст на каждом split command; readState читал history50 при каждом edit. EntryReady/explicit open loading и fresh state before finish navigation; retainingAppearance с прежними event guards; financial-only read для partial edits. Пользователь разрешил отмену всего native split после оплаты части: atomic split/checkout tombstones+result+audit, existing confirmed part records immutable. Cart/stock/cash/receipts unchanged, physical terminal refund не выполняется. ImportedOrigin cancel намеренно запрещён до отдельного provenance-aware сценария.
+
+Cart: price ×qty без recipe label, trash icon/red swipe, scroll to confirmed added/increased line via LazyListState; deletion/quantity reduction не вызывают scroll-to-bottom.
+
+Gradle8.13/JDK17/local SDK+cache/JAVA_TOOL_OPTIONS tmpdir: --no-daemon -Pkotlin.compiler.execution.strategy=in-process -Dorg.gradle.vfs.watch=false compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.domain.sale.* --tests com.mendelev.mpos.feature.sale.PaymentInputTest SUCCESS1m46s. XML16tests/0failures/0errors/0skipped. После добавления последних Android regressions compileDebugAndroidTestKotlin SUCCESS33s. Main не менялся между этими командами. Harness preflight/git diff --check passed.
+
+Новые/обновлённые Android fixtures только скомпилированы: SplitPaymentRepositoryTest cancel rollback at each4write/replay/cart+stock+cash unchanged/old commit refusal/new checkout; SaleViewModelTest finish/fresh open/new cart; WorkspaceVisualParityTest long cart/add21/autoscroll/no recipe caption/swipe removes; SplitSaleUiTest Back enabled updated. Connected/device/runtime frame checks не запускались на пользовательском планшете. Реальных оплат/печати/Telegram/backup activation не выполняли. Плавность и визуальная приёмка владельцем pending.
+
+## 2026-11-10 — RPC01–05 / IV08 / RV08 / ON07
+
+Локальная main без commit/push. Контракт docs/RECEIPT-PAYMENT-CORRECTION.md, phase/domain workflow. Текущий Web main receipts.js/pos.html/receiving-ui.js/web-orders.js получен GitHub read connector, blob SHA закреплены в контракте; reference config не менялся.
+
+Native receipt cash↔card correction: source/current shift cashier, closed/other admin authorization; returned/split refusal, baseline CAS, stable command+outcome, atomic receipt/register/result/audit and closed expectedCash/difference. Original ReceiptCodec1 JSON immutable inside ReceiptCodec2, nullable unknown given/change, original checkout/quote/goods/cost/stock preserved; effective payment consumed by UI/print/reports/refund after proof validation. Native restore verifies original sums and correction command result linkage. No terminal/stock/loyalty/print/Telegram side effects; restored Web historical receipts remain read-only. Native nonnegative-cash guard retained. Print/refund/correction modals use shared compact controls.
+
+IV08: Warning semantic token matches Web warning palette; inventory nav/pause yellow, all header controls44dp/radius16, separate category cards. RV08: pending receiving cards single column/radius16/padding20/gap18; accept green, resume yellow48dp. ON07: Web event frame/section colours/comment red/ready48dp selected semantics/custom divider; admin delete shares footer, retains existing generation/target/accepted guard and silent status route; no backend change or real delete.
+
+Gradle8.13/JDK17/local SDK/cache/JAVA_TOOL_OPTIONS tmpdir; --no-daemon -Pkotlin.compiler.execution.strategy=in-process -Dorg.gradle.vfs.watch=false compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.ReceiptPaymentCorrectionTest --tests com.mendelev.mpos.domain.refund.* --tests com.mendelev.mpos.domain.sale.* --tests com.mendelev.mpos.OnlineOrderDeletionTest --tests com.mendelev.mpos.BackendTest --tests com.mendelev.mpos.ReceivingPresentationTest SUCCESS27s (JVM inputs/results UP-TO-DATE after unchanged successful run; XML43tests/0failures/0errors/0skipped). Final compileDebugKotlin/compileDebugAndroidTestKotlin after removing unused constraints wrapper SUCCESS40s. Earlier failures were implementation/test compile issues (refund confirm callback name, warning border scope, ReceivingDraft fixture required lines); исправлены, gates не ослаблялись.
+
+JVM evidence: correction roundtrip/back-and-forth/original immutable/no invented tender/proof tampering; existing sale/split/refund/historical restock; silent DELETE protocol actually PATCH status only, stale admin/target/ACK rejection via fake interceptor; backend health/streaming guards; receiving discrepancy. Android fixtures COMPILE ONLY: ReceiptPaymentCorrectionRepositoryTest all4write faults/replay/no duplicate sale/no stock effect/closed role and summary/effective refund; ReceiptHistoryAppearanceTest change action and hidden returned; InventoryCategoryLayoutTest separate categories/header heights; ReceivingAppearanceTest one column/accept vs resume styles/heights/callback; OnlineOrderWindowsTest selected ready/delete admin/busy/common48. RefundUiTest updated for compact amounts, existing injected SQL failure assertions retained.
+
+No connected/device/pixel runtime verification on user tablet. No production data mutation, payments, printing, Telegram, source backend changes or backup activation. Harness preflight/git diff --check passed. Owner Android Studio acceptance pending.
+
+## 2026-11-10 — PCE01–05 product card polish
+
+Локальная main, без commit/push. Применены mpos-phase/domain; source product-editor/product-configuration current Web blobs и acceptance в docs/PRODUCT-CARD-POLISH.md. Back no arrow; type moved from left nav to summary, Маржа label (formula unchanged), photo buttons Row. Compact modifier groups/2-row options/framed deletion/picker; new group min1 matches source, persisted groups unchanged. Shared ProductEditorSwitch for online and two first stock policies; no change to persistence/stock/cost math.
+
+Gradle8.13/JDK17/local SDK/cache/JAVA_TOOL_OPTIONS tmpdir; --no-daemon -Pkotlin.compiler.execution.strategy=in-process -Dorg.gradle.vfs.watch=false compileDebugKotlin compileDebugAndroidTestKotlin testDebugUnitTest --tests com.mendelev.mpos.domain.catalog.ModifierRulesTest --tests com.mendelev.mpos.feature.products.ProductStockRulesTest SUCCESS31s, XML10tests/0failures/0errors/0skipped. Initial main compile SUCCESS36s. Android ProductCardLayoutTest3 и обновлённый CatalogExtrasUiTest скомпилированы, не исполнялись на пользовательском планшете; новый UI не объявлен pixel/device verified. Fixtures проверяют расположение summary/photo/switch, draft-only flags и raw modifier qty0.0004, picker/add/delete; existing persistence guards retained.
+
+Harness preflight и git diff --check passed. Пользовательская DB/фото/остатки не менялись, внешние публикации/печать/оплаты не выполнялись. Owner Android Studio visual acceptance pending.
+
+## 2026-11-10 — печать/категории/верхнее меню, локальный main
+
+Контракт: docs/PRINT-CATEGORIES-TOPBAR-PARITY.md; P02/T02/UI01/D01/D02 implemented, D05/device pending. Без commit/push/production API/реальной печати. Исправлены gap/margins/split/cash/shift/company/loyalty и raster LF; каналы категорий сохраняются атомарно, участвуют в публикации/backup validation; подсветка44 с шириной по тексту.
+
+Финальный Gradle8.13/OpenJDK17, SDK36, in-process Kotlin:
+:app:compileDebugAndroidTestKotlin :app:testDebugUnitTest --tests com.mendelev.mpos.ReceiptWebParityTest --tests com.mendelev.mpos.CategoryChannelsCodecTest --tests com.mendelev.mpos.PrintingTest --tests com.mendelev.mpos.PrinterConfigurationTest
+BUILD SUCCESSFUL in1m12s; compileDebugKotlin также успешен как зависимость.17JVM/0fail: oracle5, codec1, printing9, config2. Лог .local-print-category-check.log; XML в Library/Caches/M-POS-Android/build/app/test-results/testDebugUnitTest. В ходе сверки выявленные несовпадения separator metadata/отсутствующий import и невалидный consent тестовой fixture исправлены; финальный результат выше.
+
+Новые Room CategoryChannelsPersistenceTest/изменённые TopBarLayoutTest/PrinterRenderingTest только скомпилированы, не запускались на пользовательском эмуляторе. Native namespace validation включён; фактический backup roundtrip новой категории на устройстве остаётся pending. Harness preflight/git diff --check passed. Физический образец и UI подтверждает владелец в Android Studio.
+
+
+2026-11-10 main/local: FOLDERS-HISTORY-UI.md. Gradle8.13/OpenJDK17/API36, in-process compiler; :app:compileDebugKotlin :app:compileDebugAndroidTestKotlin :app:testDebugUnitTest --tests com.mendelev.mpos.domain.workspace.WorkspaceRulesTest --tests com.mendelev.mpos.FolderLayoutTest SUCCESS1m11s.8 JVM/0fail (5 existing+3 new), UI/Room compiled not run. .local-folder-history-check.log. Реальная сеть/печать/DB владельца/remote не затрагивались. Preflight/diff/visual progress проверяются после документации.
+
+2026-11-10 folders final documentation: harness preflight, visual-progress --check и git diff --check passed. Парные снимки/устройство pending.
+
+## 2026-11-10 — operator dictionaries/staff/receipt badges, local main
+
+docs/OPERATOR-DIRECTORIES-STAFF.md. По новому правилу владельца: save/edit delivery, suppliers, receipt labels без admin; discount/delete admin. Legacy employee role остаётся codec/fingerprint metadata и больше не ограничивает cashier; active-shift edit guard сохранён. Employee modal без toggle, равные48dp кнопки; receipt stickers128×23.
+
+Финальный Gradle8.13/OpenJDK17/API36, in-process: :app:compileDebugAndroidTestKotlin :app:testDebugUnitTest --tests com.mendelev.mpos.domain.staff.EmployeeTest --tests com.mendelev.mpos.domain.staff.EmployeeMutationsTest --tests com.mendelev.mpos.domain.backup.WebStaffMappingTest --tests com.mendelev.mpos.domain.shift.ShiftRulesTest --tests com.mendelev.mpos.domain.settings.SettingsRulesTest SUCCESS17s (main compile в предыдущем проходе SUCCESS1m10s, финально up-to-date).20 JVM/0fail:5+2+5+4+4. Обновлены устаревшие ожидания admin-staff-not-selectable; добавлен отказ подмены SettingsEntry.kind. .local-operator-settings-check.log; XML Library/Caches/M-POS-Android/build/app/test-results/testDebugUnitTest.
+
+OperatorDictionaryAccessTest/ReceiptStickerSizeTest, обновлённые EmployeeRepositoryTest/AdminAccessTest/EmployeeUiTest compiled only. На пользовательском эмуляторе не запускались. Harness preflight/git diff --check passed. UI/actual operational direct access проверяет владелец в Android Studio. Без commit/push/API/печати/изменения реальных данных.
+
+## 2026-11-10 — online always available, local main
+
+По запросу владельца docs/ONLINE-ALWAYS-AVAILABLE.md: переключатель в карточке, ProductDetails/codec/fingerprint v4 и существующий quantity:null protocol. Backend availability-service.js bloba80c382963ff49537851ac2e68b9f3fceca20101 прочитан; сервер не менялся/не вызывался.
+
+Gradle8.13/JDK17/API36/in-process: :app:compileDebugKotlin :app:compileDebugAndroidTestKotlin :app:testDebugUnitTest --tests com.mendelev.mpos.OnlineAvailabilityTest --tests com.mendelev.mpos.domain.catalog.CatalogPresentationTest — BUILD SUCCESSFUL1m23s.6 JVM/0fail (4new+2existing). .local-online-unlimited-check.log; XML Library/Caches/M-POS-Android/build/app/test-results/testDebugUnitTest. Включение/отключение/null protocol/точные остатки/draft/codec1–4/legacy flags/command changes проверены. Room fake-HTTP BackendPublicationTest и ProductDetailsStoreTest только compiled. UI/site/device pending. Harness preflight/git diff --check passed. Без commit/push/реальной сети/печати/изменения рабочих данных.
+
+## 2026-11-10 — catalog compact success feedback, local main
+
+Постоянный success banner товаров заменён compact MposTransientNotice сверху; TransientMessages в ViewModel истекает2500ms независимо от lifecycle страницы. Только успешные save/delete/reorder после записи; ошибки отдельны и не удаляются timer. Повтор того же текста получает новый полный срок. docs/DESIGN-SYSTEM.md и context01 обновлены.
+
+Gradle8.13/JDK17/API36/in-process: :app:compileDebugKotlin :app:testDebugUnitTest --tests com.mendelev.mpos.TransientMessagesTest SUCCESS56s;3 JVM/0fail/0error. Virtual clock проверяет2499/2500ms, повтор того же/нового текста и clear/новое сообщение без гонки старого timer. .local-transient-notice-check.log, XML Library/Caches/M-POS-Android/build/app/test-results/testDebugUnitTest. Harness preflight/git diff --check passed. UI проверяет владелец в Android Studio; устройство не запускалось, без commit/push/реальных операций.
+
+## 2026-11-10 — folder Open action, local main
+
+По уточнению владельца: внутренний pencil удалён, explicit Open top-right на плитке в editing, без изменения editingState. Общий тап редактирует папку, обычный режим открывает содержимое. docs/FOLDERS-HISTORY-UI.md/context02/parity обновлены.
+
+Gradle8.13/JDK17/API36/in-process :app:compileDebugKotlin :app:compileDebugAndroidTestKotlin — BUILD SUCCESSFUL57s. .local-folder-open-check.log. FolderOpenActionTest render-only добавлен и compiled, на устройстве не запускался. JVM/domain не менялись и повторно не гонялись. Harness preflight/git diff --check passed. UI принимает владелец в Android Studio; без commit/push/реальных данных.
+
+## 2026-11-11 — authorised main release package
+
+Владелец прямо запросил отправить накопленный локальный пакет в main для выпуска релиза. Применён mpos-release; рабочий checkout уже main, fetched origin/main совпал с HEAD до коммита. Identity/certificate/workflow version formula не менялись.
+
+Перед push: полный testDebugUnitTest461/0fail/0error/0skip, lintDebug0errors/88warnings/12hints, compileDebugAndroidTestKotlin, Python32/0fail, harness preflight, visual-progress --check, diff-check passed. Full Gradle2m27s (.local-release-check.log), окончательная компиляция актуальных UI fixtures1m3s (.local-release-instrumented-check.log). Локальные логи исключены /.*.log; scan типовых токенов/private keys не обнаружил совпадений в пакете.
+
+Перед публикацией исправлены устаревшие UI/test expectations: supplier save теперь operational, delete admin; unknown-result admin revocation regression проверяется на EmployeeViewModel; supplier input сохраняется при logout. WorkspaceUiTest использует новые stable tags для folder Save и placement, без неоднозначного текста за modal. Политики доступа/финансовые gates не ослаблялись.
+
+Push main должен запустить штатные параллельные checks/emulator, затем sign → signed installation verification → Release/update.json. CI/runtime исход для нового commit на момент записи pending; итоговый run/release URL сообщается владельцу без рекурсивного docs-only release. На пользовательском планшете тесты/restore не запускались.

@@ -140,7 +140,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                             revalidationOwner=s.cart.sessionId;revalidationRevision=s.cartRevision
                             revalidationToken=runCatching {CartRevalidator.preview(s.cart,s.products,s.graph,s.balances,OrderReservations.total(s.parked.map {it.cart})).token}.getOrNull()
                             revalidationOpen=true;model.dismiss()
-                        },if(shiftOpen) onCheckout else onShift,{comingSoon=it},shiftOpen,onTransfer={ordersDialog="transfer"},onOptions={action,owner,done->model.options(action,owner,done)},error=ui.message,discounts=dictionaries.catalog.rows(com.mendelev.mpos.domain.settings.SettingKind.DISCOUNT),onlineHeader={CurrentOnlineOrder(s.cart.sessionId)})
+                        },if(shiftOpen) onCheckout else onShift,{comingSoon=it},shiftOpen,onTransfer={ordersDialog="transfer"},onOptions={action,owner,done->model.options(action,owner,done)},error=ui.message,discounts=dictionaries.catalog.rows(com.mendelev.mpos.domain.settings.SettingKind.DISCOUNT),onlineFooter={CurrentOnlineOrder(s.cart.sessionId,busy)})
                 }
                 val scale=LocalDensity.current.fontScale.coerceIn(1f,2f)
                 val cartWidth=(380*scale).dp
@@ -159,10 +159,18 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
         }
     }
     if(comingSoon in listOf("Печать счёта","Печать заказа") && s!=null) {
-        val quote=if(comingSoon=="Печать заказа") com.mendelev.mpos.domain.sale.SaleQuote(s.cart.lines.map {com.mendelev.mpos.domain.sale.SaleLineMoney(it.id,0,0,0)},0,0,0,null,0) else runCatching {com.mendelev.mpos.domain.sale.SaleMoney.quote(s.cart.lines.map {com.mendelev.mpos.domain.sale.SaleLineInput(it.id,it.unitPrice,it.quantity,s.sourceDiscounts[it.id])},s.cart.details.type,s.sourceDelivery)}.getOrNull()
+        val quote=if(comingSoon=="Печать заказа") com.mendelev.mpos.domain.sale.SaleQuote(s.cart.lines.map {com.mendelev.mpos.domain.sale.SaleLineMoney(it.id,0,0,0)},0,0,0,null,0) else runCatching {com.mendelev.mpos.domain.loyalty.LoyaltyRules.quote(s.cart,s.sourceDiscounts,s.sourceDelivery)}.getOrNull()
         if(quote!=null) com.mendelev.mpos.print.PrintWindow(com.mendelev.mpos.print.PrintDocuments.cart(s.cart,quote,if(comingSoon=="Печать заказа") com.mendelev.mpos.print.PrintKind.KITCHEN else com.mendelev.mpos.print.PrintKind.BILL,navigation?.shiftName ?: "Сотрудник",s.products.associate {p->p.id to (s.categories.find {it.id==p.categoryId}?.name ?: "")})) {comingSoon=null}
         else MposDialog("Печать",{comingSoon=null}) {Text("Проверьте состав заказа и тариф доставки перед печатью")}
-    } else if(comingSoon=="Управление загрузкой сайта") BackendDemandDialog {comingSoon=null}
+    } else if(comingSoon=="Клиент заказа" && s!=null) com.mendelev.mpos.feature.loyalty.CustomerWindow(s.cart,busy,ui.message,{comingSoon=null},persist={selection->
+        val current=model.state.value.snapshot ?: error("Рабочая зона недоступна")
+        check(current.cart.sessionId==s.cart.sessionId) {"Текущий заказ изменился"}
+        model.attachCustomer(selection,current.cartRevision,s.cart.sessionId)
+    }) {selection->
+        val current=model.state.value.snapshot
+        if(current?.cart?.sessionId==s.cart.sessionId) model.loyalty(selection,current.cartRevision,s.cart.sessionId) {comingSoon=null}
+    }
+    else if(comingSoon=="Управление загрузкой сайта") BackendDemandDialog {comingSoon=null}
     else if(comingSoon!=null) MposDialog("Скоро будет подключено",{comingSoon=null},!busy) {
         Text("${comingSoon}. Скоро будет подключено.")
         MposButton("Понятно",{comingSoon=null},style=ActionStyle.Secondary)
@@ -174,16 +182,12 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
         val folderItem=s.layout.find { it.type=="folder" && it.id==folder }
         if(folderItem!=null && !modal) {
             val count=s.layout.count {it.type=="product" && it.folderId==folderItem.id}
-            val columns=count.coerceIn(1,4)
-            val width=listOf(280,448,660,872)[columns-1].dp
-            MposDialog(folderItem.name,{folder=null},!busy,maxWidth=width) {
-                if(ui.message!=null) MposNotice(ui.message!!,true)
-                BoxWithConstraints(Modifier.fillMaxWidth()) {
-                    val fittingColumns=((maxWidth+12.dp)/162.dp).toInt().coerceAtLeast(1).coerceAtMost(columns)
-                    val rows=(count+fittingColumns-1)/fittingColumns
-                    val gridHeight=if(count==0) 72 else (rows*144+(rows-1)*12).coerceAtMost(420)
+            WorkspaceFolderWindow(folderItem,count,busy,{folder=null}) {columns,rowHeight,gridHeight->
+                Column {
+                    if(ui.message!=null) Text(ui.message!!,color=MaterialTheme.colorScheme.error,style=MaterialTheme.typography.bodySmall)
                     WorkspaceGrid(s,folderItem.categoryId,folderItem.id,"",editing,photos,Modifier.heightIn(max=gridHeight.dp),ui.pending<100,
-                        {},{},{configure(it)},{manage(it)},availabilityIndex=ui.availability,folderColumns=fittingColumns,onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)})
+                        {},{},{configure(it)},{manage(it)},availabilityIndex=ui.availability,folderColumns=columns,
+                        onReorder={tile,index->model.layout(LayoutAction.Reorder(tile.type,tile.id,index),s.layoutRevision)},folderTileHeight=rowHeight)
                 }
             }
         }
@@ -236,7 +240,15 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                 }
             }
         }
-        if(manageId!=null) MposDialog(if(confirmFolderDelete) "Удалить папку?" else if(manageType=="folder") "Папка" else "Размещение товара",
+        if(manageId!=null && manageType=="folder") {
+            val id=manageId!!
+            val item=s.layout.find {it.id==id && it.type=="folder"}
+            WorkspaceFolderEditor(id,item,busy,ui.message,{manageId=null;model.dismiss()},
+                {name,appearance->model.layout(LayoutAction.SaveFolder(id,item?.categoryId ?: category ?: "",name,appearance),manageRevision){manageId=null}},
+                {model.layout(LayoutAction.DeleteFolder(id),manageRevision){manageId=null;if(folder==id)folder=null}},
+                {folder=id;manageId=null})
+        }
+        if(manageId!=null && manageType!="folder") MposDialog(if(confirmFolderDelete) "Удалить папку?" else if(manageType=="folder") "Папка" else "Размещение товара",
             {if(!busy) {manageId=null;confirmFolderDelete=false;model.dismiss()}},!busy) {
             if(ui.message!=null) MposNotice(ui.message!!,true)
             val id=manageId!!
@@ -263,7 +275,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
                     MposButton(if(manageType=="folder") "Сохранить папку" else "Переместить",{
                         val action=if(manageType=="folder") LayoutAction.SaveFolder(id,category ?: "",manageName) else LayoutAction.MoveProduct(id,moveFolder)
                         model.layout(action,manageRevision){manageId=null}
-                    },busy=busy)
+                    },modifier=Modifier.testTag("workspacePlacementSave"),busy=busy)
                 }
                 if(manageType=="folder" && item!=null) MposButton("Открыть папку",{folder=id;manageId=null},enabled=!busy,style=ActionStyle.Secondary)
                 if(manageType=="folder" && item!=null) MposButton("Удалить папку",{confirmFolderDelete=true},enabled=!busy,style=ActionStyle.Danger)
@@ -290,24 +302,28 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
 
 @Composable private fun WorkspaceGrid(s: WorkspaceSnapshot,category: String?,folder: String?,search: String,editing: Boolean,
     photos: ProductPhotoStore,modifier: Modifier,enabled: Boolean,onCategory: (String)->Unit,onFolder: (LayoutItem)->Unit,
-    onProduct: (WorkspaceProduct)->Unit,onManage: (LayoutItem)->Unit,availabilityIndex: WorkspaceAvailability? = null,folderColumns: Int? = null,onReorder: ((LayoutItem,Int)->Unit)? = null) {
+    onProduct: (WorkspaceProduct)->Unit,onManage: (LayoutItem)->Unit,availabilityIndex: WorkspaceAvailability? = null,folderColumns: Int? = null,onReorder: ((LayoutItem,Int)->Unit)? = null,folderTileHeight: Int=144) {
     val query=CatalogRules.key(search)
     val products=remember(s.products) {s.products.associateBy {it.id}}
-    val projectionKey=remember(s.products,s.layout,query,category,folder) {Any()}
-    val result by produceState<Pair<Any,List<LayoutItem>>?>(null,projectionKey) {
-        value=projectionKey to withContext(Dispatchers.Default) {
-            if(query.isNotEmpty()) s.products.filter {(category==null || it.categoryId==category) && CatalogRules.key(it.name).contains(query)}.map {LayoutItem("product",it.id,it.categoryId)}
-            else s.layout.filter {it.categoryId==category && it.folderId==(folder ?: "")}
+    // Category/folder order is already an immutable snapshot; do not blank the grid between drag updates.
+    val projection=if(query.isEmpty()) remember(s.layout,category,folder) {
+        s.layout.filter {it.categoryId==category && it.folderId==(folder ?: "")}
+    } else {
+        val projectionKey=remember(s.products,query,category) {Any()}
+        val result by produceState<Pair<Any,List<LayoutItem>>?>(null,projectionKey) {
+            value=projectionKey to withContext(Dispatchers.Default) {
+                s.products.filter {(category==null || it.categoryId==category) && CatalogRules.key(it.name).contains(query)}.map {LayoutItem("product",it.id,it.categoryId)}
+            }
         }
+        result?.takeIf {it.first===projectionKey}?.second
     }
-    val projection=result?.takeIf {it.first===projectionKey}?.second
     val tiles=projection.orEmpty()
     val gridState=rememberLazyGridState()
     val drag=workspaceDrag(gridState,editing && enabled && query.isEmpty() && category!=null && onReorder!=null,s.layoutRevision,"$category/$folder/${tiles.map {it.type to it.id}}") {from,to->
         tiles.getOrNull(from)?.let {onReorder?.invoke(it,to.coerceIn(0,tiles.lastIndex))}
     }
     LazyVerticalGrid(if(folderColumns==null) GridCells.Fixed(LocalWorkspaceGeometry.current.columns) else GridCells.Fixed(folderColumns),modifier.then(drag.modifier).testTag(if(folder==null) "workspaceGrid" else "workspaceFolderGrid"),state=gridState,
-        contentPadding=PaddingValues(4.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+        contentPadding=PaddingValues(4.dp),horizontalArrangement=Arrangement.spacedBy(if(folder==null)12.dp else 10.dp),verticalArrangement=Arrangement.spacedBy(if(folder==null)12.dp else 10.dp)) {
         if(category==null && query.isEmpty()) {
             items(s.categories,key={"category:${it.id}"}) { c -> MposWorkspaceTile({onCategory(c.id)},Modifier.height(144.dp).testTag("workspaceCategory:${c.id}"),categoryColor=c.color,symbol=c.symbol) {
                 Text(c.name+"  ›",style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp),maxLines=2)
@@ -319,20 +335,20 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
             if(folder!=null && tiles.isEmpty()) item(span={GridItemSpan(maxLineSpan)}) {Text("В папке пока нет товаров")}
             items(tiles,key={"${it.type}:${it.id}"}) { tile ->
                 val highlight=if(drag.target==tiles.indexOf(tile)) Modifier.border(2.dp,MaterialTheme.colorScheme.primary,MaterialTheme.shapes.large) else Modifier
-                if(tile.type=="folder") MposWorkspaceTile({if(editing) onManage(tile) else onFolder(tile)},Modifier.height(144.dp).testTag("workspaceFolder:${tile.id}").then(highlight),enabled,editing=editing) {
-                    Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {Text(tile.name,style=MaterialTheme.typography.titleMedium.copy(fontSize=19.sp,lineHeight=22.8.sp,fontWeight=FontWeight.ExtraBold),textAlign=androidx.compose.ui.text.style.TextAlign.Center,maxLines=2)}
+                if(tile.type=="folder") {
+                    WorkspaceFolderTile(tile,editing,enabled,Modifier.height(144.dp).testTag("workspaceFolder:"+tile.id).then(highlight),{onManage(tile)},{onFolder(tile)})
                 } else products[tile.id]?.let { p ->
-                    MposWorkspaceTile({onProduct(p)},Modifier.height(144.dp).testTag("workspaceProduct:${p.id}").then(highlight),enabled,symbol=p.symbol,compact=folder!=null,editing=editing) {
+                    MposWorkspaceTile({onProduct(p)},Modifier.height((if(folder==null)144 else folderTileHeight).dp).testTag("workspaceProduct:${p.id}").then(highlight),enabled,symbol=p.symbol,compact=folder!=null,editing=editing) {
                         Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                             Text(p.name,Modifier.weight(1f),style=MaterialTheme.typography.titleSmall.copy(fontSize=if(folder!=null || editing) 13.5.sp else 14.5.sp,lineHeight=if(folder!=null || editing) 16.2.sp else 18.125.sp),maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         }
-                        if(editing) Text("Настроить размещение",style=MaterialTheme.typography.bodySmall)
+                        if(editing) Text("Переместить",color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.labelSmall)
                         Spacer(Modifier.weight(1f))
                         WorkspaceTileFooter(availabilityIndex,p)
                     }
                 }
             }
-            if(tiles.isEmpty()) item(span={GridItemSpan(maxLineSpan)}) { Text(if(projection==null) "Ищем товары…" else if(query.isEmpty()) "Здесь пока нет товаров" else "Ничего не найдено") }
+            if(folder==null && tiles.isEmpty()) item(span={GridItemSpan(maxLineSpan)}) { Text(if(projection==null) "Ищем товары…" else if(query.isEmpty()) "Здесь пока нет товаров" else "Ничего не найдено") }
         }
     }
 }

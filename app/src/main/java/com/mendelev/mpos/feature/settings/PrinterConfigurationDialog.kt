@@ -34,6 +34,7 @@ import com.mendelev.mpos.data.local.PrinterConfiguration
                 MposField(form.ip,{form=form.copy(ip=it)},"IP-адрес",Modifier.testTag("printerIp"),!busy)
                 MposSelect("Ширина бумаги",form.paperWidth,listOf("58" to "58 мм","80" to "80 мм"),{form=form.copy(paperWidth=it)},!busy)
                 Text("Что печатает этот принтер",style=MaterialTheme.typography.titleMedium)
+                PrinterToggle("Принтер включён",form.enabled,!busy) {form=form.copy(enabled=it)}
                 PrinterToggle("Печатать платежные чеки",form.printReceipts,!busy) {form=form.copy(printReceipts=it)}
                 PrinterToggle("Печатать комментарии в платежном чеке",form.paymentComments,!busy) {form=form.copy(paymentComments=it)}
                 MposField(form.receiptTitle,{form=form.copy(receiptTitle=it)},"Название вверху платежного чека",enabled=!busy)

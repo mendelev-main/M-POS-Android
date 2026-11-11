@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.*
                     cornerRadius=CornerRadius(16.dp.toPx()),style=Stroke(width=width,pathEffect=PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(),4.dp.toPx()))))
             }
         }) {
-            if(!symbol.isNullOrBlank()) Text(symbol,Modifier.align(Alignment.Center).alpha(if(compact || editing) .12f else .6f),style=MaterialTheme.typography.titleLarge.copy(fontSize=symbolSize,lineHeight=symbolSize,letterSpacing=1.sp,fontWeight=FontWeight.ExtraBold),
+            if(!symbol.isNullOrBlank()) Text(symbol,Modifier.align(Alignment.Center).alpha(.6f),style=MaterialTheme.typography.titleLarge.copy(fontSize=symbolSize,lineHeight=symbolSize,letterSpacing=1.sp,fontWeight=FontWeight.ExtraBold),
                 color=MaterialTheme.colorScheme.onSurface)
             Column(Modifier.fillMaxSize().padding(contentPadding),verticalArrangement=Arrangement.spacedBy(if(editing) 4.dp else if(compact) 6.dp else 10.dp),content=content)
         }

@@ -6,7 +6,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
-class BackendFailure(message: String,val status: Int?=null,val orderId: String?=null,val orderStatus: String?=null): Exception(message)
+class BackendFailure(message: String,val status: Int?=null,val orderId: String?=null,val orderStatus: String?=null,val code: String?=null): Exception(message)
 /** No redirects or automatic retries: credentials and writes stay bound to the configured endpoint. */
 class BackendHttp(private val client: OkHttpClient=OkHttpClient()) {
     private fun configured(s: BackendSettings)=client.newBuilder().callTimeout(s.timeoutSeconds.toLong(),TimeUnit.SECONDS)
@@ -23,8 +23,20 @@ class BackendHttp(private val client: OkHttpClient=OkHttpClient()) {
                 if(source.buffer.size>1_048_576) throw BackendFailure("Ответ backend слишком большой")
                 val raw=source.readUtf8()
                 if(!r.isSuccessful) {
-                    val order=runCatching {BackendJson.obj(raw).optJSONObject("order")}.getOrNull()
-                    throw responseFailure(r.code).let {BackendFailure(it.message!!,r.code,order?.optString("id"),order?.optString("status"))}
+                    val data=runCatching {BackendJson.obj(raw)}.getOrNull()
+                    val order=data?.optJSONObject("order")
+                    val code=when {
+                        r.code==403 && data?.optString("error")=="Administrator authorization required"->"ADMIN_AUTH_REQUIRED"
+                        data?.optString("code") in setOf("LOYALTY_BALANCE_CHANGED","LOYALTY_CONSENT_REQUIRED")->data?.optString("code")
+                        else->null
+                    }
+                    val message=when(code) {
+                        "ADMIN_AUTH_REQUIRED"->"Backend отклонил пароль администратора. Введите пароль администратора действующей Web-версии."
+                        "LOYALTY_BALANCE_CHANGED"->"Накопления клиента изменились. Обновите данные перед корректировкой."
+                        "LOYALTY_CONSENT_REQUIRED"->"Участие клиента изменилось. Обновите данные и проверьте согласие."
+                        else->responseFailure(r.code).message!!
+                    }
+                    throw BackendFailure(message,r.code,order?.optString("id"),order?.optString("status"),code)
                 }
                 try {BackendJson.obj(raw)} catch(_:Exception) {throw BackendFailure("Backend вернул некорректный JSON")}
             }
@@ -42,7 +54,7 @@ class BackendHttp(private val client: OkHttpClient=OkHttpClient()) {
         }} catch(e:BackendFailure) {throw e} catch(_:Exception) {throw BackendFailure("Канал заказов не ответил. Проверьте адрес и ключ устройства")}
     }
     private fun responseFailure(code: Int)=BackendFailure(when(code) {
-        401,403->"HTTP $code: backend не разрешил доступ. Проверьте ключ устройства и адрес сервера. Успешная проверка связи не подтверждает доступ к заказам"
+        401,403->"HTTP $code: backend не разрешил доступ. Проверьте ключ устройства и адрес сервера"
         404->"Маршрут отсутствует на backend. Проверьте пути API"
         409->"Данные на сервере изменились. Проверьте состояние перед повторной публикацией"
         429->"Backend ограничил запросы. Повторите позже"

@@ -27,7 +27,7 @@ class TopNavigationUiTest {
             else if(route=="receiving") compose.waitUntil(20_000) {compose.onAllNodes(hasTestTag("receivingNew") and isEnabled()).fetchSemanticsNodes().isNotEmpty()}
             else {
                 compose.onNodeWithTag("onlineOrdersScreen").assertIsDisplayed()
-                compose.onNodeWithText("Новых заказов нет").assertIsDisplayed()
+                compose.onNodeWithText("Новых событий нет").assertIsDisplayed()
                 compose.onNodeWithContentDescription("Закрыть").performClick()
             }
         }

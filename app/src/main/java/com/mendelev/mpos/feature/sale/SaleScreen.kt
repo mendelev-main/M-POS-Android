@@ -1,6 +1,7 @@
 package com.mendelev.mpos.feature.sale
 
 import androidx.activity.compose.BackHandler
+import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,22 +26,47 @@ import java.time.format.DateTimeFormatter
 
 private fun money(value: Long)=ShiftRules.money(value)
 private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(value))
+private fun saleNavigationLocked(ui: SaleUi,refund: RefundUi)=ui.pending || refund.pending || refund.unresolved!=null || ui.unresolved!=null || ui.splitUncertain || (ui.split?.paid?.isNotEmpty()==true && ui.completed==null)
+
+/** The history shell survives loading and selection; only its body can show a spinner. */
 @Composable fun SaleScreen(model: SaleViewModel,history: Boolean,onBack: ()->Unit,onHistory: ()->Unit,onShift: ()->Unit,refundModel: RefundViewModel) {
+    if(history) {
+        val ui by model.state.collectAsStateWithLifecycle()
+        val refund by refundModel.state.collectAsStateWithLifecycle()
+        ReceiptHistoryShell(onBack,!saleNavigationLocked(ui,refund)) {SaleScreenContent(model,true,onBack,onHistory,onShift,refundModel)}
+    } else SaleScreenContent(model,false,onBack,onHistory,onShift,refundModel)
+}
+@Composable internal fun ReceiptHistoryShell(onBack: ()->Unit,navigationEnabled: Boolean=true,content: @Composable ()->Unit) {
+    Column(Modifier.fillMaxSize().safeDrawingPadding()) {
+        MposAppBar("M-POS · История чеков",navigationEnabled=navigationEnabled) {MposNavigationAction("Назад",{if(navigationEnabled)onBack()})}
+        Box(Modifier.weight(1f)) {content()}
+    }
+}
+@Composable private fun SaleScreenContent(model: SaleViewModel,history: Boolean,onBack: ()->Unit,onHistory: ()->Unit,onShift: ()->Unit,refundModel: RefundViewModel) {
     val presets by com.mendelev.mpos.feature.settings.settingsCatalogModel().state.collectAsStateWithLifecycle()
     val ui by model.state.collectAsStateWithLifecycle()
     val printerContext=androidx.compose.ui.platform.LocalContext.current
     val printer=remember {com.mendelev.mpos.print.PrintRuntime.get(printerContext)}
     val printStatus by printer.status.collectAsStateWithLifecycle()
+    var entryReady by remember(model,history) {mutableStateOf(false)}
+    LaunchedEffect(model,history) {
+        model.open();refundModel.refresh()
+        model.state.first {!it.loading && !it.pending}
+        entryReady=true
+    }
+    if(!entryReady || ui.loading) {
+        Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {CircularProgressIndicator()}
+        return
+    }
     LaunchedEffect(ui.completed?.first?.id) {ui.completed?.let {printer.autoSale(it)}}
     val refund by refundModel.state.collectAsStateWithLifecycle()
-    LaunchedEffect(history) {model.refresh();refundModel.refresh()}
     LaunchedEffect(refund.result?.id) {refund.result?.let {if(it.cash>0) printer.drawer("refund:${it.id}",automatic=true);model.refresh()}}
-    val locked=ui.pending || refund.pending || refund.unresolved!=null || ui.unresolved!=null || ui.splitUncertain || (ui.split?.paid?.isNotEmpty()==true && ui.completed==null)
-    BackHandler {if(!ui.pending) {if(refund.review!=null || refund.result!=null) refundModel.dismiss() else if(!history && ui.selected!=null && refund.unresolved==null && !refund.pending) model.closeDetails() else if(ui.partPreview!=null) model.dismissPart() else if(ui.preview!=null) model.dismissPreview() else if(!history && ui.completed!=null) model.finish(onBack) else if(!locked) onBack()}}
-    val webPayment=!history && !ui.fatal && ui.split==null
-    var options by androidx.compose.runtime.saveable.rememberSaveable {mutableStateOf(false)}
+    val locked=saleNavigationLocked(ui,refund)
+    BackHandler {if(!ui.pending) {if(refund.review!=null || refund.result!=null) refundModel.dismiss() else if(!history && ui.selected!=null && refund.unresolved==null && !refund.pending) model.closeDetails() else if(ui.partPreview!=null) model.dismissPart() else if(!history && ui.split!=null && !ui.splitUncertain && ui.unresolved==null) model.leaveSplit() else if(ui.preview!=null) model.dismissPreview() else if(!history && ui.completed!=null) model.finish(onBack) else if(!locked) onBack()}}
+    val webPayment=!history && !ui.fatal
+    var options by androidx.compose.runtime.saveable.rememberSaveable(ui.work?.cart?.sessionId) {mutableStateOf(false)}
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        if(!webPayment) {
+        if(!webPayment && !history) {
             MposAppBar(if(history) "M-POS · История чеков" else "M-POS · Оплата", navigationEnabled=!locked) {
                 MposNavigationAction("Назад",{if(!locked) onBack()})
                 if(!history) MposNavigationAction("История чеков",{if(!locked) onHistory()})
@@ -63,14 +89,14 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
             LaunchedEffect(chosen,ui.selected?.first?.id,ui.history) {
                 if(chosen.isNotEmpty() && ui.selected?.first?.id!=chosen) model.select(chosen)
             }
-            ReceiptHistoryPage(ui.history,ui.receiptTypes,ui.receiptMethods,chosen,ui.selected?.takeIf {it.first.id==chosen},refund.history,!locked,
+            ReceiptHistoryPage(ui.history,ui.receiptTypes,ui.receiptMethods,chosen,ui.selected?.takeIf {it.first.id==chosen},(ui.historyRefunds+refund.history).distinctBy {it.id},!locked,
                 ui.shift?.active!=null && !refund.blocked && ui.split?.paid.isNullOrEmpty(),
                 {id->picked=id;model.select(id)},
                 {ui.selected?.takeIf {it.first.id==chosen}?.let {refundModel.prepare(it.first.id,ui.shift!!.active!!.actorId)}},
-                {printNotice=true},ui.message)
+                {printNotice=true},ui.message,web=ui.webHistory,more=ui.historyMore,loadingMore=ui.historyLoading,onMore=model::moreHistory,onChangePayment=model::editReceiptPayment)
             if(printNotice) ui.selected?.let {com.mendelev.mpos.print.ReceiptPrintWindow(it) {printNotice=false}}
         } else if(ui.split!=null) {
-            SplitCheckout(ui,model)
+            SplitPaymentPage(ui,model)
         } else {
             val work=ui.work!!;val enabled=!locked
             PaymentPage(work.cart,model.estimate(),ui.form.given,enabled,work.cart.lines.isNotEmpty() && ui.shift?.active!=null,
@@ -78,6 +104,7 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
                 {model.equal(2);model.startSplit()},
                 {method->model.edit {it.copy(mode=method,given=it.given.ifBlank {"0"}.trimEnd(',','.'))};model.prepare(autoCommit=method=="cash")},
                 {options=true},notice={
+                    if(ui.loyaltyBlocked) MposButton(if(work.cart.loyalty?.selected.isNullOrEmpty()) "Продолжить без лояльности" else "Продолжить без подарка",model::continueWithoutGift,enabled=enabled,style=ActionStyle.Secondary,modifier=Modifier.testTag("payWithoutLoyaltyGift"))
                     if(work.cart.lines.isEmpty()) Text("Заказ пуст. Добавьте товары в рабочей зоне",Modifier.testTag("checkoutEmpty"))
                     if(ui.shift?.active==null) {MposNotice("Откройте смену перед оплатой",true);MposButton("Перейти к смене",onShift,enabled=enabled,style=ActionStyle.Secondary)}
                 },resolve=if(ui.unresolved!=null) {{MposButton("Проверить результат оплаты",model::commit,Modifier.fillMaxWidth().testTag("saleResolve"),busy=ui.pending)}} else null)
@@ -184,15 +211,15 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
         if(ui.message!=null) MposNotice(ui.message!!,true)
         MposButton("Подтвердить оплату",model::commit,Modifier.fillMaxWidth().testTag("saleConfirm"),busy=ui.pending)
     }
-    ui.partPreview?.let {part->MposDialog("Подтверждение части",model::dismissPart,!ui.pending,wide=true) {
-        Text("${if(part.payment.method=="cash") "Наличные" else "Карта"}: ${money(part.payment.amount)}",Modifier.testTag("splitPreviewAmount"),style=MaterialTheme.typography.titleLarge)
-        if(part.payment.method=="cash") {
-            val given=part.payment.given!!
-            Text("Получено: ${money(given)}")
-            Text("Сдача: ${money(given-part.payment.amount)}",Modifier.testTag("splitPreviewChange"))
-        } else Text("Подтвердите только после оплаты на терминале. Приложение учитывает карту вручную.")
-        Text("Подтверждённую часть нельзя изменить или отменить. Чек будет завершён после подтверждения всех частей.")
-        MposButton("Подтвердить часть",model::confirmPart,Modifier.fillMaxWidth().testTag("splitConfirm"),busy=ui.pending)
+    ui.paymentEditing?.let {selected->ReceiptPaymentEditWindow(selected,ui.pending,ui.paymentEditError,model::dismissPaymentEdit,model::confirmReceiptPayment)}
+    ui.partPreview?.let {part->MposDialog("Оплата картой",model::dismissPart,!ui.pending) {
+        Text("Оплатите картой на терминале",Modifier.align(Alignment.CenterHorizontally))
+        Text(money(part.payment.amount),Modifier.align(Alignment.CenterHorizontally),style=MaterialTheme.typography.headlineLarge)
+        ui.message?.let {MposNotice(it,true)}
+        Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+            MposButton("Отмена",model::dismissPart,Modifier.weight(1f),!ui.pending,ActionStyle.Secondary)
+            MposButton("Оплата прошла",model::confirmPart,Modifier.weight(1f).testTag("splitConfirm"),busy=ui.pending)
+        }
     }}
     if(!history && refund.review==null && refund.unresolved==null && refund.result==null) ui.selected?.let {selected->
         MposDialog("Чек №${selected.first.number}",{if(!refund.pending) {refundModel.dismiss();model.closeDetails()}},!refund.pending,wide=true) {
@@ -208,71 +235,33 @@ private fun date(value: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").wi
             }
         }
     }
-    refund.review?.let {submission->MposDialog("Полный возврат чека",refundModel::dismiss,!refund.pending,wide=true) {
+    refund.review?.let {submission->MposDialog("Возврат товара",refundModel::dismiss,!refund.pending,maxWidth=560.dp) {
         val p=submission.preview.amounts
-        Column(Modifier.heightIn(max=400.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
-            Text("К возврату: ${money(p.total)}",Modifier.testTag("refundPreviewTotal"),style=MaterialTheme.typography.titleLarge)
-            Text("Выдать покупателю наличными: ${money(p.cash)}",Modifier.testTag("refundPreviewCash"))
-            Text("Вернуть на карту вручную через терминал: ${money(p.card)}",Modifier.testTag("refundPreviewCard"))
-            if(p.deliveryCashCredit>0) MposNotice("Отменяется оплата курьеру: ${money(p.deliveryCashCredit)}. Верните эти наличные в кассу.")
-            Text("После возврата в кассе: ${money(p.expectedCashAfter)}",Modifier.testTag("refundPreviewDrawer"))
-            Text("Будет возвращён весь чек. Товары восстановятся по сохранённому расходу продажи. Приложение не выполняет банковский возврат автоматически.")
+        Text("Будет выполнен полный возврат чека. Все товары вернутся на склад.",style=MaterialTheme.typography.bodyMedium)
+        Text(ui.selected?.let {"Чек №"+it.first.number+" · "+receiptDate(it.first.createdAt)} ?: "Чек",color=MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("К возврату",color=MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(money(p.total),Modifier.testTag("refundPreviewTotal"),style=MaterialTheme.typography.headlineLarge)
+        ReceiptMoneyRow("Наличными",p.cash,amountTag="refundPreviewCash")
+        if(p.card>0) ReceiptMoneyRow("Через терминал",p.card,amountTag="refundPreviewCard")
+        if(p.deliveryCashCredit>0) ReceiptMoneyRow("Возврат расхода на доставку в кассу",p.deliveryCashCredit,amountTag="refundPreviewDeliveryCredit")
+        if(p.deliveryCashCredit>0) Text("Отменяется оплата курьеру: "+money(p.deliveryCashCredit)+". Верните эти наличные в кассу.",style=MaterialTheme.typography.bodySmall)
+        if(p.card>0) Text("Карточную часть верните через банковский терминал.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        refund.message?.let {Text(it,color=MaterialTheme.colorScheme.error)}
+        Row(Modifier.fillMaxWidth().padding(top=8.dp),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+            MposPosControl("Отмена",refundModel::dismiss,Modifier.weight(1f),!refund.pending,PosControl.Secondary,48.dp,16.dp)
+            MposPosControl("Вернуть "+money(p.total),refundModel::confirm,Modifier.weight(1f).testTag("refundConfirm"),!refund.pending,PosControl.Delete,48.dp,16.dp)
         }
-        MposButton("Подтвердить возврат",refundModel::confirm,Modifier.fillMaxWidth().testTag("refundConfirm"),style=ActionStyle.Danger,busy=refund.pending)
     }}
-    if(refund.unresolved!=null) MposDialog("Проверка результата возврата",{},closable=false,wide=true) {
-        Text(refund.message ?: "Сохранение возврата…")
-        MposButton("Проверить результат возврата",refundModel::confirm,Modifier.fillMaxWidth().testTag("refundResolve"),busy=refund.pending)
-    }
-    refund.result?.let {result->MposDialog("Возврат сохранён",refundModel::dismiss,!refund.pending,wide=true) {
-        Column(Modifier.heightIn(max=400.dp).verticalScroll(rememberScrollState()).testTag("refundSuccess")) {RefundResultBody(result)}
-        if(refund.message!=null) MposNotice(refund.message!!,true)
-        MposButton("Готово",refundModel::dismiss,Modifier.fillMaxWidth().testTag("refundDone"),busy=refund.pending)
+    refund.result?.let {result->MposDialog("Возврат выполнен",refundModel::dismiss,!refund.pending,maxWidth=560.dp) {
+        Text("Товары возвращены на остатки.",style=MaterialTheme.typography.bodyMedium)
+        Text(money(result.total),Modifier.testTag("refundSavedTotal"),style=MaterialTheme.typography.headlineLarge)
+        ReceiptMoneyRow("Наличными",result.cash)
+        if(result.card>0) {ReceiptMoneyRow("Через терминал",result.card);Text("Карточная часть возвращается через банковский терминал.",style=MaterialTheme.typography.bodySmall)}
+        if(result.deliveryCashCredit>0) ReceiptMoneyRow("Расход на доставку возвращён в кассу",result.deliveryCashCredit)
+        refund.message?.let {Text(it,color=MaterialTheme.colorScheme.error)}
+        MposPosControl("Готово",refundModel::dismiss,Modifier.fillMaxWidth().testTag("refundDone"),!refund.pending,PosControl.Cash,48.dp,16.dp)
     }}
-}
-@Composable private fun SplitCheckout(ui: SaleUi,model: SaleViewModel) {
-    val progress=ui.split!!;val state=progress.editable();val enabled=!ui.pending && !ui.splitUncertain && ui.unresolved==null
-    var editor by remember {mutableStateOf<Pair<String,Long>?>(null)}
-    var input by remember {mutableStateOf("")}
-    fun open(kind: String,id: Long,value: String) {input=value;editor=kind to id}
-    Column(Modifier.fillMaxSize()) {
-        if(ui.message!=null) MposNotice(ui.message!!,true)
-        LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal=20.dp).testTag("splitParts"),verticalArrangement=Arrangement.spacedBy(12.dp),contentPadding=PaddingValues(vertical=16.dp)) {
-            item {
-                Text("Оплата по частям",style=MaterialTheme.typography.headlineSmall)
-                Text("Итого: ${money(state.total)}",Modifier.testTag("splitTotal"))
-                Text("Подтверждено: ${money(progress.paidAmount)} · Осталось: ${money(state.total-progress.paidAmount)}",Modifier.testTag("splitRemaining"))
-                Text("Наличные по незавершённой оплате: ${money(progress.pendingCash)}",Modifier.testTag("splitPendingCash"))
-                Text("В кассе по завершённым чекам: ${money(ui.shift!!.currentCash)}")
-                Text(if(progress.complete) "Все части подтверждены. Сохраните чек, чтобы завершить продажу и списать товары." else "Подтверждённые части сохранены и недоступны для изменений. Склад и итог кассы обновятся при завершении чека.")
-                if(!progress.complete) MposButton("Количество частей: ${state.parts.size}",{open("count",0,state.parts.size.toString())},Modifier.testTag("splitResize"),enabled,style=ActionStyle.Secondary)
-            }
-            items(state.parts,key={it.id}) {part->
-                val p=part.payment;val editable=enabled && !part.paid && !progress.complete
-                Surface(shape=MaterialTheme.shapes.large) {Column(Modifier.fillMaxWidth().padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                    Text("Часть ${state.parts.indexOf(part)+1} · ${if(part.paid) "Оплачено" else "Не оплачено"}",Modifier.testTag("splitStatus:${part.id}"),style=MaterialTheme.typography.titleMedium)
-                    Text(money(p.amount),Modifier.testTag("splitAmount:${part.id}"),style=MaterialTheme.typography.titleLarge)
-                    MposSelect("Способ части",p.method,listOf("cash" to "Наличные","card" to "Карта"),{model.changeSplit(SplitEdit.Method(part.id,it))},editable,Modifier.testTag("splitMethod:${part.id}"))
-                    MposButton("Изменить сумму",{open("amount",part.id,java.math.BigDecimal.valueOf(p.amount,2).toPlainString())},Modifier.testTag("splitEditAmount:${part.id}"),editable,style=ActionStyle.Secondary)
-                    if(p.method=="cash") {
-                        Text("Получено: ${p.given?.let(::money) ?: "не введено"}",Modifier.testTag("splitGiven:${part.id}"))
-                        if(p.given!=null && p.given>=p.amount) Text("Сдача: ${money(p.given-p.amount)}")
-                        MposButton("Ввести наличные",{open("given",part.id,p.given?.let {java.math.BigDecimal.valueOf(it,2).toPlainString()} ?: "")},Modifier.testTag("splitEditGiven:${part.id}"),editable,style=ActionStyle.Secondary)
-                    }
-                    MposButton(if(part.paid) "Часть подтверждена" else "Оплатить часть",{model.reviewPart(part.id)},Modifier.fillMaxWidth().testTag("splitPay:${part.id}"),editable)
-                }}
-            }
-            if(progress.paid.isEmpty()) item {MposButton("Вернуться к подготовке заказа",model::leaveSplit,Modifier.testTag("splitCancel"),enabled,style=ActionStyle.Secondary)}
-        }
-        if(ui.splitUncertain) MposButton("Прочитать сохранённую оплату",model::refresh,Modifier.fillMaxWidth().padding(16.dp).testTag("splitReload"),busy=ui.pending)
-        else if(ui.unresolved!=null) MposButton("Проверить результат оплаты",model::commit,Modifier.fillMaxWidth().padding(16.dp).testTag("saleResolve"),busy=ui.pending)
-        else if(progress.complete) MposButton("Завершить продажу",model::completeSplit,Modifier.fillMaxWidth().padding(16.dp).testTag("splitFinish"),busy=ui.pending)
-    }
-    editor?.let {(kind,id)->MposDialog(when(kind) {"count"->"Количество частей";"amount"->"Сумма части";else->"Получено наличными"},{if(!ui.pending) editor=null},!ui.pending) {
-        MposField(input,{input=it},if(kind=="count") "Части (2–10)" else "Сумма, BYN",Modifier.testTag("splitEditValue"),!ui.pending,numeric=true)
-        Text(if(kind=="count") "Подтверждённые части сохранятся. Неоплаченный остаток распределится поровну." else if(kind=="amount") "Остаток перераспределится между неоплаченными частями." else "Введите принятую сумму. Пустое поле очищает неподтверждённый ввод.")
-        MposButton("Сохранить",{model.splitValue(kind,id,input);editor=null},Modifier.fillMaxWidth().testTag("splitEditSave"),enabled,busy=ui.pending)
-    }}
+
 }
 @Composable private fun ReceiptBody(value: Pair<ReceiptEntity,ReceiptSnapshot>) {
     val (r,s)=value

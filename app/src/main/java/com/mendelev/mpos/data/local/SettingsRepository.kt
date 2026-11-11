@@ -33,8 +33,8 @@ class SettingsRepository(private val db: CatalogDatabase,private val afterWrite:
     private suspend fun change(row: SettingEntry?,deleted: String?,expected: Long,command: String) {
         val valid=row?.let(SettingsRules::validate)
         val fingerprint=CatalogRules.fingerprint("settings.v1",SettingsCodec.encode(SettingsCatalog(entries=listOfNotNull(valid))),deleted.orEmpty(),expected.toString())
-        InstallationGate.write {db.adminTransaction {
-            db.catalog().result(command)?.let {if(it.fingerprint!=fingerprint) throw CatalogFailure("conflict","Команда уже использована");return@adminTransaction}
+        InstallationGate.write {db.dictionaryTransaction(valid==null || valid.kind==SettingKind.DISCOUNT) {
+            db.catalog().result(command)?.let {if(it.fingerprint!=fingerprint) throw CatalogFailure("conflict","Команда уже использована");return@dictionaryTransaction}
             val current=snapshot()
             if(current.revision!=expected) throw CatalogFailure("conflict","Настройки изменились. Откройте форму заново")
             val next=if(valid!=null) SettingsRules.save(current,valid) else current.copy(entries=current.entries.filterNot {it.id==deleted})

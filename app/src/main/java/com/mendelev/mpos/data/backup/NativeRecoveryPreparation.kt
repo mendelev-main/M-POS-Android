@@ -76,7 +76,7 @@ class NativeRecoveryPreparation(context: Context,private val db: CatalogDatabase
     }
     private suspend fun protection(p: AdminAuthorization): ProtectedNativeCopy=temporary {dir->
         val coroutine=currentCoroutineContext();val snapshot=File(dir,"snapshot").apply {mkdir()}
-        val files=InstallationGate.write {Administration.session.authorized(p) {NativeSnapshotDatabase.capture(db,photos,snapshot)}}
+        val files=InstallationGate.write {Administration.session.authorized(p) {NativeSnapshotDatabase.capture(db,photos,snapshot,context)}}
         checkpoint("protectionCaptured");coroutine.ensureActive();p.requireCurrent()
         val archive=File(dir,"backup.mposnative")
         NativeBackupArchive.write(archive,files) {p.requireCurrent();coroutine.ensureActive()};checkpoint("protectionArchived")

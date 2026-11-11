@@ -46,3 +46,5 @@ Bluetooth/USB и production рассылка без задачи.
 
 
 2026-11-09: D04 owner analytics extension implemented локально: ../../docs/OWNER-ANALYTICS-TELEGRAM.md. Сменная/месячная статистика, PNG по пользовательскому PDF; каждый last-day close имеет отдельный snapshot/job. 17 JVM/fake HTTP passed; native render/read-only integration tests compiled only. Весь08/D05 physical acceptance pending, push не выполнялся.
+
+2026-11-10 D01/D02 print parity increment: ../../docs/PRINT-CATEGORIES-TOPBAR-PARITY.md; D05 physical pending.

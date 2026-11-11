@@ -31,3 +31,6 @@ N01: offline/HTTP/abort; N02: SSE reconnect/id/retry; N03: дедупликац�
 ## Контекст и результат
 
 Значимые решения в `harness/context/09-site.md` при начале работ; наблюдаемые результаты в `harness/build-log.md`.
+
+
+10.11 — ON02/ON06 implemented locally: окно события по Web + admin-only soft deletion через silent PATCH cancelled, encrypted inbox tombstones и запрет позднего local accept. Endpoint не менялся; physical delete/server CAS отсутствуют. Контракт ONLINE-LOYALTY-PARITY.md, проверки build-log.md, manual acceptance pending.

@@ -1,7 +1,6 @@
 # Этап 06 — Клиенты и лояльность
 
-Статус: TODO — отложено владельцем2026-10-31; сейчас не реализуем. Ниже сохранён будущий scope, он не блокирует07/08.
-Будущий scope сохранён ниже; начало реализации отложено.
+Статус: in progress — возобновлено владельцем2026-11-09 вместе с parity онлайн-заказов. Backend не меняем; переносим рабочий Web-протокол. Детали: [ONLINE-LOYALTY-PARITY.md](../../docs/ONLINE-LOYALTY-PARITY.md).
 
 ## Объём
 
@@ -32,3 +31,9 @@ Production клиентские данные в fixtures.
 ## Контекст и результат
 
 Значимые решения в `harness/context/06-customers.md` при начале работ; наблюдаемые результаты в `harness/build-log.md`.
+
+
+10.11 — локальная LO03: admin customer fullscreen/inline editor; исправлен consentVersion, отдельная диагностика admin403 и transient Web credential. Без изменений backend. Production save и визуальная приёмка владельца pending; evidence — build-log.md.
+
+
+10.11 — LO02 picker/create follow-up implemented locally: fixed-prefix pill fields/card results/optional enrollment, stale search и safe create/select flow, attach-before-consent. Адресные проверки — build-log.md; реальные клиенты/consent не менялись, device verification pending.

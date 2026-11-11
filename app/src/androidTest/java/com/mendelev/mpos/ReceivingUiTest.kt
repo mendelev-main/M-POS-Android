@@ -35,27 +35,25 @@ class ReceivingUiTest {
         compose.onNodeWithTag("receivingInvoice").performScrollTo().performTextInput("TTN-$key")
         compose.onNodeWithTag("receivingDate").performScrollTo().performTextInput("2026-10-27")
         compose.onNodeWithTag("receivingTotal:$id").performScrollTo().performTextInput("40");hideKeyboard()
-        compose.onNodeWithTag("receivingSave").performClick()
-        compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty}
+        compose.onNodeWithTag("receivingMore").assertDoesNotExist()
+        compose.onNodeWithTag("topNav-workspace").assertExists()
+        compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.saving && !model.state.value.dirty}
         compose.onNodeWithTag("receivingQty:$id").performScrollTo().performTextReplacement("9");hideKeyboard()
-        compose.onNodeWithTag("receivingClose").performClick()
-        compose.onNodeWithText("Продолжить редактирование").performClick()
-        compose.onNodeWithTag("receivingQty:$id").assertTextContains("9")
-        compose.onNodeWithTag("receivingReload").performClick();compose.onNodeWithTag("receivingDiscard").performClick()
-        compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty}
+        compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.saving && !model.state.value.dirty}
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {!model.state.value.pending && compose.onAllNodesWithTag("receivingQty:$id").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithTag("receivingQty:$id").assertTextContains("10")
+        compose.onNodeWithTag("receivingQty:$id").assertTextContains("9")
+        compose.onNodeWithTag("receivingQty:$id").performScrollTo().performTextReplacement("10");hideKeyboard()
         compose.onNodeWithTag("receivingTotal:$id").assertTextContains("40")
         compose.onNodeWithTag("receivingInvoice").assertTextContains("TTN-$key")
         shot("receiving-draft")
-        compose.onNodeWithTag("receivingPreview").performClick()
+        compose.onNodeWithTag("receivingPreview").performScrollTo().performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview!=null}
         compose.onNodeWithTag("receivingPreviewTotal").assertTextContains("40.00 BYN",substring=true)
         compose.onNodeWithTag("receivingPreviewLine:$id").assertTextContains("10 → 20",substring=true)
         compose.onNodeWithTag("receivingPreviewLine:$id").assertTextContains("2 → 3",substring=true)
         shot("receiving-preview")
-        compose.onNodeWithTag("receivingPost").assertIsEnabled()
+        compose.onNodeWithTag("receivingPostConfirm").assertIsEnabled()
         compose.onNodeWithContentDescription("Закрыть").performClick()
         val after=runBlocking {Triple(db.catalog().product(id)!!,db.catalog().balance(id)!!,db.workspace().document(PurchaseOrderCodec.KEY)!!)}
         assertEquals(before,after);assertEquals(1,runBlocking {db.catalog().movementCount(id)})

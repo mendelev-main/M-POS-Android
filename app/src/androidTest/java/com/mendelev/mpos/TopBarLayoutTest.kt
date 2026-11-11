@@ -50,6 +50,9 @@ class TopBarLayoutTest {
         compose.onNodeWithText("Бронирования").assertDoesNotExist()
         compose.onNodeWithTag("mposTopBar").assertHeightIsEqualTo(68.dp)
         compose.onNodeWithTag("topNav-settings").assertIsDisplayed()
+        listOf("workspace","purchaseOrders","receiving","history","events","shift").forEach {route->
+            compose.onNodeWithTag("topCapsule-$route",useUnmergedTree=true).assertHeightIsEqualTo(44.dp)
+        }
         compose.runOnIdle {large=true}
         // Android applies nonlinear font scaling: verify growth and reachability, not 2× pixel arithmetic.
         compose.onNodeWithTag("mposTopBar").assertHeightIsAtLeast(69.dp)

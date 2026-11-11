@@ -45,14 +45,11 @@ class PurchaseOrderMutationUiTest {
         compose.onNode(hasAnyAncestor(hasTestTag("purchaseContent:$id")) and hasClickAction()).performClick()
         compose.onNode(hasAnyAncestor(isPopup()) and hasText("мл")).performClick()
         compose.onNodeWithTag("purchaseExpected:$id").assertTextEquals("На склад поступит: 12 л")
-        compose.onNodeWithTag("purchaseDraftMenu").performClick()
-        compose.onNodeWithTag("purchaseSave").performClick()
-        compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty && model.state.value.snapshot?.draft!=null}
-        compose.onNodeWithTag("purchasePlace").performClick()
+        compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.saving && !model.state.value.dirty && model.state.value.snapshot?.draft!=null}
+        compose.onNodeWithTag("purchasePlace").performScrollTo().performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.lastPlacedId!=null && model.state.value.snapshot!!.orders.any {it.id==model.state.value.lastPlacedId}}
         val orderId=model.state.value.lastPlacedId!!
         compose.onNodeWithContentDescription("Закрыть").performClick()
-        compose.onNodeWithTag("purchaseHistory").performClick()
         compose.onNode(hasAnyAncestor(hasTestTag("purchaseSupplier")) and hasClickAction()).performClick()
         compose.onNode(hasAnyAncestor(isPopup()) and hasText(name)).performClick()
         PurchaseKeypadTestSupport.enter(compose,"purchaseQty:$id","5");hideKeyboard()
@@ -69,11 +66,12 @@ class PurchaseOrderMutationUiTest {
         shot("purchase-order-edit")
         compose.onNodeWithTag("purchaseEditSave").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.editing==null && model.state.value.snapshot!!.orders.any {it.id==orderId && it.requestVersion==2L}}
-        compose.onNodeWithTag("purchaseOrderText").assertTextContains("Версия заявки: 2",substring=true)
+        compose.runOnIdle {assertEquals(2L,model.state.value.snapshot!!.orders.single {it.id==orderId}.requestVersion)}
         compose.onNodeWithTag("purchaseOrderText").assertTextContains("12 бутылка × 500 мл",substring=true)
-        compose.onNodeWithText("Предыдущая версия 1",substring=true).assertExists()
-        assertTrue(model.state.value.dirty);assertEquals("5",model.state.value.form!!.lines.single().quantity)
+        compose.runOnIdle {assertEquals("24",model.state.value.snapshot!!.orders.single {it.id==orderId}.history.single().source.lines.single().quantity)}
+        assertFalse(model.state.value.dirty);assertEquals("5",model.state.value.form!!.lines.single().quantity)
         shot("purchase-order-edited")
+        compose.onNodeWithTag("purchaseOrderMore").performClick()
         compose.onNodeWithTag("purchaseCancelOpen").performClick()
         compose.onNodeWithTag("purchaseCancelConfirm").performClick()
         compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.snapshot!!.orders.any {it.id==orderId && it.status=="cancelled"}}
@@ -86,9 +84,7 @@ class PurchaseOrderMutationUiTest {
         compose.onNode(hasText("Отменён") and hasAnyAncestor(hasTestTag("purchaseOrder:$orderId")),useUnmergedTree=true).assertExists()
         compose.onNodeWithTag("purchaseHistory").performClick()
         compose.onNode(hasText("5") and hasAnyAncestor(hasTestTag("purchaseQty:$id")),useUnmergedTree=true).assertExists()
-        compose.onNodeWithTag("purchaseDraftMenu").performClick()
-        compose.onNodeWithTag("purchaseSave").performClick()
-        compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty && model.state.value.snapshot?.draft!=null}
+        compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.saving && !model.state.value.dirty && model.state.value.snapshot?.draft!=null}
         val after=runBlocking {db.catalog().product(id)!! to db.catalog().balance(id)!!}
         assertEquals(before.first.copy(revision=2,packSize="0.5"),after.first);assertEquals(before.second,after.second)
         assertEquals("5",model.state.value.snapshot!!.draft!!.lines.single().quantity)

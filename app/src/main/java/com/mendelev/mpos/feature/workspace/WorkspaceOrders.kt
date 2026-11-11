@@ -11,6 +11,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mendelev.mpos.domain.settings.SettingKind
 import com.mendelev.mpos.core.ui.*
@@ -34,7 +35,12 @@ import com.mendelev.mpos.domain.workspace.*
     var requestRevision by rememberSaveable {mutableStateOf(0L)}
     var requestOwner by rememberSaveable {mutableStateOf("")}
     var requestHasLines by rememberSaveable {mutableStateOf(false)}
-    val busy=ui.pending>0
+    val runtime=com.mendelev.mpos.backend.BackendRuntime.get(androidx.compose.ui.platform.LocalContext.current)
+    val online by runtime.accepted.collectAsStateWithLifecycle()
+    val scope=rememberCoroutineScope()
+    var onlineBusy by remember {mutableStateOf(false)}
+    var onlineError by remember {mutableStateOf<String?>(null)}
+    val busy=ui.pending>0 || onlineBusy
     if(mode==null) return
     val presets by com.mendelev.mpos.feature.settings.settingsCatalogModel().state.collectAsStateWithLifecycle()
     var label by rememberSaveable(mode) {mutableStateOf(s.cart.details.label)}
@@ -76,7 +82,9 @@ import com.mendelev.mpos.domain.workspace.*
     }
     if(mode=="list") {
         ParkedOrdersWindow(s.parked,busy,ui.message,{order->order.cart.lines.any {CartEngine.stale(it,s.products)}},
-            {close()},{choose(it,false)},{choose(it,true)})
+            {close()},{choose(it,false)},{choose(it,true)},onlineAction={order->
+                online.singleOrNull {it.sessionId==order.cart.sessionId && !it.cancelled}?.let {OnlineReadyAction(it,runtime,true,enabled=!busy)}
+            })
         return
     }
     if(mode=="details") {
@@ -90,10 +98,12 @@ import com.mendelev.mpos.domain.workspace.*
         if(ui.message!=null) MposNotice(ui.message!!,true)
         when(mode) {
             "delete" -> {
-                Text("Удалить «$targetLabel»? Его резерв будет освобождён")
+                val linked=s.parked.singleOrNull {it.id==target}?.let {parked->online.singleOrNull {it.sessionId==parked.cart.sessionId && !it.cancelled}}
+                Text(if(linked==null) "Удалить «$targetLabel»? Его резерв будет освобождён" else "Отменить «$targetLabel» на сайте? Заказ удалится после подтверждения сервера")
+                onlineError?.let {Text(it,color=MaterialTheme.colorScheme.error)}
                 Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
                     MposButton("Отмена",{onMode("list");model.dismiss()},enabled=!busy,style=ActionStyle.Secondary)
-                    MposButton("Удалить заказ",{model.deleteParked(target,targetRevision){onMode("list")}},busy=busy,style=ActionStyle.Danger)
+                    MposButton("Удалить заказ",{if(linked==null) model.deleteParked(target,targetRevision){onMode("list")} else {onlineBusy=true;scope.launch {try {runtime.cancel(linked.sessionId);onMode("list")} catch(e:kotlinx.coroutines.CancellationException) {throw e} catch(e:Exception) {onlineError=e.message} finally {onlineBusy=false}}}},busy=busy,style=ActionStyle.Danger)
                 }
             }
             "resume" -> {

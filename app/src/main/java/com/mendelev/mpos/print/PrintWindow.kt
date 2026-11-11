@@ -21,10 +21,10 @@ import kotlinx.coroutines.*
     var document by remember(value.first.id) {mutableStateOf<PrintDocument?>(null)}
     var error by remember {mutableStateOf<String?>(null)}
     LaunchedEffect(value.first.id) {
-        try {document=withContext(Dispatchers.IO) {val employee=com.mendelev.mpos.data.local.CatalogDatabase.get(context).shifts().shift(value.first.shiftId)?.actorName ?: "Сотрудник";PrintDocuments.receipt(value,employee)}}
+        try {document=withContext(Dispatchers.IO) {val db=com.mendelev.mpos.data.local.CatalogDatabase.get(context);val employee=db.shifts().shift(value.first.shiftId)?.actorName ?: "Сотрудник";PrintDocuments.receipt(value,employee,com.mendelev.mpos.data.local.LoyaltyOutbox(db).read(value.first.id))}}
         catch(e:Exception) {error=e.message ?: "Не удалось открыть чек"}
     }
-    document?.let {PrintWindow(it,onClose)} ?: MposDialog("Печать чека",onClose) {if(error!=null) Text(error!!) else CircularProgressIndicator()}
+    document?.let {PrintWindow(it,onClose)} ?: MposDialog("Печать чека",onClose) {if(error!=null) Text(error!!,color=MaterialTheme.colorScheme.error) else LinearProgressIndicator(Modifier.fillMaxWidth())}
 }
 
 @Composable fun PrintWindow(document: PrintDocument,onClose: ()->Unit) {
@@ -45,12 +45,15 @@ import kotlinx.coroutines.*
     var bitmap by remember {mutableStateOf<android.graphics.Bitmap?>(null)}
     LaunchedEffect(document,printer) {
         bitmap=null
-        if(printer!=null) try {bitmap=withContext(Dispatchers.Default) {ReceiptRenderer.render(PrintDocuments.page(document,printer))}}
+        if(printer!=null) try {
+            val prepared=withContext(Dispatchers.IO) {runtime.prepare(document)}
+            bitmap=withContext(Dispatchers.Default) {ReceiptRenderer.render(PrintDocuments.page(prepared,printer))}
+        }
         catch(e:Exception) {error=e.message}
     }
-    MposDialog(if(document.kind==PrintKind.KITCHEN) "Печать заказа" else "Печать чека",onClose,maxWidth=680.dp) {
+    MposDialog(if(document.kind==PrintKind.KITCHEN) "Печать заказа" else "Печать чека",onClose,maxWidth=640.dp) {
         if(loading) LinearProgressIndicator(Modifier.fillMaxWidth())
-        error?.let {MposNotice(it,true)}
+        error?.let {Text(it,color=MaterialTheme.colorScheme.error,style=MaterialTheme.typography.bodySmall)}
         if(!loading && printers.isEmpty()) Text("Принтер не настроен. Добавьте его в панели администратора → Сетевые настройки.")
         if(printers.isNotEmpty()) MposSelect("Принтер",selected,printers.map {it.id to "${it.name} · ${it.paperWidth} мм"},{selected=it})
         bitmap?.let {image->Box(Modifier.weight(1f,fill=false).heightIn(max=440.dp).verticalScroll(rememberScrollState())) {
@@ -59,8 +62,8 @@ import kotlinx.coroutines.*
         status?.let {Text(it,Modifier.padding(vertical=12.dp),style=MaterialTheme.typography.bodySmall)}
         Text("Если отправка прервалась, сначала проверьте бумажный чек. Повторная печать выполняется только по вашему нажатию.",style=MaterialTheme.typography.bodySmall)
         Row(Modifier.fillMaxWidth().padding(top=16.dp),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-            MposButton("Закрыть",onClose,Modifier.weight(1f),style=ActionStyle.Outline)
-            MposButton("Распечатать",{printer?.let {runtime.manual(document,it)}},Modifier.weight(1f).testTag("printSend"),enabled=printer!=null && bitmap!=null && pending==0)
+            MposPosControl("Закрыть",onClose,Modifier.weight(1f),kind=PosControl.Secondary,height=48.dp,radius=16.dp)
+            MposPosControl("Распечатать",{printer?.let {runtime.manual(document,it)}},Modifier.weight(1f).testTag("printSend"),enabled=printer!=null && bitmap!=null && pending==0,kind=PosControl.Cash,height=48.dp,radius=16.dp)
         }
     }
 }

@@ -11,7 +11,7 @@ data class ReceivingLine(val product: ReceivingProduct,val quantity: String,val 
     fun purchaseLine()=PurchaseLine(product.id,product.revision,product.name,product.unit,quantity,unit,packSize,contentUnit)
 }
 data class ReceivingSupplier(val id: String,val name: String,val revision: Long)
-data class ReceivingDraft(val id: String,val order: PurchaseOrder?,val invoiceNumber: String="",val invoiceDate: String="",val lines: List<ReceivingLine>,val supplier: ReceivingSupplier?=null) {
+data class ReceivingDraft(val id: String,val order: PurchaseOrder?,val invoiceNumber: String="",val invoiceDate: String="",val lines: List<ReceivingLine>,val supplier: ReceivingSupplier?=null,val working: Boolean=false) {
     val key get()=order?.id ?: ReceivingRules.STANDALONE
     val supplierName get()=order?.source?.supplierName ?: supplier?.name ?: "Без поставщика"
 }
@@ -25,7 +25,7 @@ data class ReceivingCommand(val commandId: String,val actorId: String,val orderI
     fun fingerprint(): String {
         validate();val d=draft
         val extended=d?.lines?.any {it.priceMode!="total" || it.unitPrice.isNotEmpty()}==true
-        val parts=mutableListOf<Any?>(if(extended) "receiving.draft.v2" else "receiving.draft.v1",actorId,orderId,revision,d!=null)
+        val parts=mutableListOf<Any?>(if(d?.working==true) "receiving.working.v1" else if(extended) "receiving.draft.v2" else "receiving.draft.v1",actorId,orderId,revision,d!=null)
         if(d!=null) {
             val order=d.order
             if(order!=null) {
@@ -70,7 +70,16 @@ object ReceivingRules {
         val amount=lineTotal(l)?.let {BigDecimal.valueOf(it,2).toPlainString()} ?: ""
         return l.copy(priceMode=next,total=amount,unitPrice="")
     }
+    fun validateWorking(d: ReceivingDraft) {
+        if(d.invoiceDate.length>64 || d.invoiceDate.any {it.isISOControl()} || d.lines.size>10000) throw CatalogFailure("receiving","Слишком большой черновик")
+        d.lines.forEach {l->listOf(l.quantity,l.packSize,l.total,l.unitPrice).forEach {
+            if(it.length>64 || it.any {c->c.isISOControl()}) throw CatalogFailure("receiving","Слишком длинное число")
+        }}
+        validate(d.copy(working=false,invoiceDate="",lines=d.lines.map {it.copy(quantity="",packSize="",total="",unitPrice="")}))
+    }
     fun validate(d: ReceivingDraft) {
+        if(d.working) {validateWorking(d);return}
+
         PurchaseDraftRules.id(d.id);val order=d.order
         if(order!=null) {PurchaseOrderRules.validate(order);require(order.id!=STANDALONE && d.supplier==null)}
         d.supplier?.let {PurchaseDraftRules.id(it.id);require(it.revision>=1 && CatalogRules.name(it.name)==it.name)}
@@ -127,7 +136,7 @@ object ReceivingRules {
         d.lines.forEach {l->if(products.find {it.id==l.product.id}!=l.product) throw CatalogFailure("conflict","Остаток или карточка «${l.product.name}» изменились. Обновите основание перед расчётом")}
     }
     fun preview(d: ReceivingDraft,o: PurchaseOrder?,products: List<ReceivingProduct>,costScale: Int=12,costRounding: RoundingMode=RoundingMode.HALF_EVEN): ReceivingPreview {
-        validate(d);current(d,o,products)
+        validate(d.copy(working=false));current(d,o,products)
         var sum=0L
         val expected=o?.source?.lines?.mapIndexed {i,l->l.productId to o.expectedQuantities[i]}?.toMap().orEmpty()
         val lines=d.lines.map {l->

@@ -88,10 +88,11 @@ class BackendRuntime private constructor(private val context: Context) {
         }}
         launch(Dispatchers.IO) {
             var nextAttempt=0L;var revision=-1L;var failures=0
+            var nextLoyaltyAttempt=0L;var loyaltyFailures=0
             while(isActive) {
                 try {
                     val s=settings.read()
-                    if(s.revision!=revision) {revision=s.revision;nextAttempt=0;failures=0}
+                    if(s.revision!=revision) {revision=s.revision;nextAttempt=0;failures=0;nextLoyaltyAttempt=0;loyaltyFailures=0}
                     if(usable(s) && System.currentTimeMillis()>=nextAttempt) {
                         try {recover(s);failures=0;nextAttempt=System.currentTimeMillis()+5000}
                         catch(e:CancellationException) {throw e}
@@ -100,6 +101,11 @@ class BackendRuntime private constructor(private val context: Context) {
                             nextAttempt=System.currentTimeMillis()+wait
                             statusState.value=if(e is BackendFailure) e.message.orEmpty() else "Подтверждения заказов ожидают связи с backend"
                         }
+                    }
+                    if(usable(s) && System.currentTimeMillis()>=nextLoyaltyAttempt) {
+                        try {LoyaltyDelivery.sync(context,s);loyaltyFailures=0;nextLoyaltyAttempt=System.currentTimeMillis()+5000}
+                        catch(e:CancellationException) {throw e}
+                        catch(_:Exception) {nextLoyaltyAttempt=System.currentTimeMillis()+minOf(60_000L,5000L shl minOf(loyaltyFailures++,4))}
                     }
                 } catch(e:CancellationException) {throw e} catch(_:Exception) {statusState.value="Не удалось прочитать подключение backend"}
                 delay(2000)
@@ -126,9 +132,17 @@ class BackendRuntime private constructor(private val context: Context) {
         try {
             val s=settings.read();current(s)
             check(s.receiveOrders) {"Включите получение онлайн-заказов в сетевых настройках"}
+            check(!inbox(s).isRemoved(order.getString("id"))) {"Заказ уже удалён. Откройте актуальный список событий"}
             check(order.optString("_mposTarget")==s.target() && order.optString("_mposDataset")==s.datasetId) {"Подключение изменилось. Откройте заказ из актуального списка событий"}
             val repo=OnlineOrderRepository(CatalogDatabase.get(context))
-            val record=repo.accept(order,s.target(),s.datasetId,estimate)
+            val customerId=order.optString("customer_id").takeIf {Regex("[A-Za-z0-9_-]{1,100}").matches(it) && it!="null"}
+            val loyalty=customerId?.let {id->
+                try {LoyaltyServices.api(context).profile(id)}
+                catch(e:CancellationException) {throw e}
+                catch(_:Exception) {com.mendelev.mpos.domain.loyalty.LoyaltySelection(s.loyaltyTarget(),com.mendelev.mpos.domain.loyalty.LoyaltyCustomer(id,order.optString("customer_name").takeUnless {it.isBlank() || it=="null"} ?: "Клиент",order.optString("phone").takeUnless {it=="null"}.orEmpty()),emptyList(),datasetId=s.datasetId)}
+            }
+            current(s)
+            val record=repo.accept(order,s.target(),s.datasetId,estimate,loyalty)
             synchronized(projection) {
                 acceptedHere+="${s.target()}:${record.orderId}"
                 inboxState.value=inboxState.value.filterNot {it.getString("id")==record.orderId}
@@ -140,6 +154,31 @@ class BackendRuntime private constructor(private val context: Context) {
             com.mendelev.mpos.print.PrintRuntime.get(context).autoPark(record.sessionId)
             if(confirmed) "Заказ принят и добавлен в Отложенные" else "Заказ сохранён в Отложенных. Подтверждение на сервере ожидает связи"
         } finally {busyState.value=false}
+    }}
+    suspend fun deleteNewOrder(order: JSONObject,generation: Long)=withContext(Dispatchers.IO) {operation.withLock {
+        busyState.value=true
+        try {
+            val s=settings.read();current(s)
+            val id=order.getString("id")
+            OnlineOrderDeletion().delete(s,id,generation,before={
+                current(s)
+                check(order.optString("_mposTarget")==s.target() && order.optString("_mposDataset")==s.datasetId) {"Подключение изменилось. Откройте заказ из актуального списка"}
+                check(order.optString("status")=="new") {"Удалить можно только новый заказ из событий"}
+                check(OnlineOrderRepository(CatalogDatabase.get(context)).record(OnlineOrderCodec.session(s.target(),id))==null) {"Заказ уже принят на этом планшете"}
+            },after={
+                current(s)
+                val remaining=inbox(s).remove(id)
+                synchronized(projection) {acceptedHere+="${s.target()}:$id";inboxState.value=inboxState.value.filterNot {it.getString("id")==id}}
+                showInbox(remaining)
+            })
+        } finally {busyState.value=false}
+    }}
+    suspend fun retryAcceptance(session: String): String=withContext(Dispatchers.IO) {operation.withLock {
+        val s=settings.read();current(s);val repo=OnlineOrderRepository(CatalogDatabase.get(context))
+        val record=repo.records().single {it.sessionId==session && it.target==s.target() && it.dataset==s.datasetId}
+        check(!record.cancelPending && record.conflict.isEmpty()) {"Проверьте состояние заказа"}
+        check(acknowledge(s,record,repo)) {"Подтверждение ожидает связи"}
+        "Принятие подтверждено на сервере"
     }}
     suspend fun ready(session: String): String=withContext(Dispatchers.IO) {operation.withLock {
         val s=settings.read();current(s);val repo=OnlineOrderRepository(CatalogDatabase.get(context))
@@ -171,7 +210,7 @@ class BackendRuntime private constructor(private val context: Context) {
         }
         if(!r.accepted) {
             current(s)
-            val result=try {http.json(s,s.ordersPath+"/${r.orderId}/accept","POST",JSONObject())} catch(e:BackendFailure) {
+            val result=try {OnlineOrderTransport(http).accept(s,r.orderId,r.estimate)} catch(e:BackendFailure) {
                 if(e.status==409 && e.orderId==r.orderId && e.orderStatus in setOf("ready","preparing")) {
                     repo.update(r.sessionId) {it.copy(accepted=true,ready=e.orderStatus=="ready",readyConfirmed=e.orderStatus=="ready")}
                     return true
@@ -184,8 +223,7 @@ class BackendRuntime private constructor(private val context: Context) {
         }
         if(r.ready && !r.readyConfirmed) {
             current(s)
-            val result=http.json(s,s.ordersPath+"/${r.orderId}/status","PATCH",JSONObject().put("status","ready"))
-            check(result.opt("ok")==true && result.optJSONObject("order")?.optString("id")==r.orderId && result.getJSONObject("order").optString("status")=="ready") {"Backend не подтвердил готовность"}
+            OnlineOrderTransport(http).ready(s,r.orderId)
             repo.update(r.sessionId) {it.copy(readyConfirmed=true)}
         }
         recordState.value=repo.records().filter {it.target==s.target()}

@@ -18,14 +18,33 @@ object WorkspaceCodec {
     fun home(raw: String): HomeLayout=root(raw).let {j->HomeEngine.validate(HomeLayout(j.getBoolean("customized"),j.getJSONArray("tiles").list {
         HomeTile(it.getString("type"),it.getString("id"),it.getInt("slot"))
     }))}
-    fun layout(items: List<LayoutItem>): String=JSONObject().put("version",1).put("items",objects(items.map {
-        JSONObject().put("type",it.type).put("id",it.id).put("categoryId",it.categoryId).put("folderId",it.folderId).put("name",it.name)
-    })).toString()
-    fun layout(raw: String): List<LayoutItem> = root(raw).getJSONArray("items").list {
-        LayoutItem(it.getString("type"),it.getString("id"),it.getString("categoryId"),it.getString("folderId"),it.getString("name"))
+    fun layout(items: List<LayoutItem>): String {
+        val styled=items.any {it.appearance!=FolderAppearance()}
+        return JSONObject().put("version",if(styled)2 else 1).put("items",objects(items.map {
+            require(it.type=="folder" || it.appearance==FolderAppearance())
+            JSONObject().put("type",it.type).put("id",it.id).put("categoryId",it.categoryId).put("folderId",it.folderId).put("name",it.name).apply {
+                if(it.appearance!=FolderAppearance()) {
+                    val a=it.appearance.validated()
+                    put("appearance",JSONObject().put("color",a.color).put("symbol",a.symbol).put("columns",a.columns).put("tileHeight",a.tileHeight))
+                }
+            }
+        })).toString()
+    }
+    fun layout(raw: String): List<LayoutItem> {
+        val j=root(raw,setOf(1,2))
+        return j.getJSONArray("items").list {
+            val appearance=if(it.has("appearance")) {
+                require(j.getInt("version")==2 && it.getString("type")=="folder")
+                val a=it.getJSONObject("appearance")
+                require(a.get("columns") is Int && a.get("tileHeight") is Int)
+                FolderAppearance(a.getString("color"),a.getString("symbol"),a.getInt("columns"),a.getInt("tileHeight")).also {v->require(v.validated()==v)}
+            } else FolderAppearance()
+            LayoutItem(it.getString("type"),it.getString("id"),it.getString("categoryId"),it.getString("folderId"),it.getString("name"),appearance)
+        }
     }
     fun cartVersion(raw: String)=root(raw,setOf(1,2,3)).getInt("version")
     fun cart(cart: CurrentCart): String=JSONObject().put("version",3).put("sessionId",cart.sessionId).put("createdAt",cart.createdAt)
+        .also {j->cart.loyalty?.let {j.put("loyalty",LoyaltyCodec.encode(it))}}
         .put("details",JSONObject().put("label",cart.details.label).put("type",cart.details.type).put("comment",cart.details.comment)
             .put("address",cart.details.address).put("phone",cart.details.phone).also {d->
                 if(cart.details.customerName.isNotEmpty()) d.put("customerName",cart.details.customerName)
@@ -89,7 +108,7 @@ object WorkspaceCodec {
                 if(it.has("customerName")) it.getString("customerName") else "",
                 if(it.has("deliveryTariff")) it.getJSONObject("deliveryTariff").let {t->com.mendelev.mpos.domain.sale.DeliveryCharge(t.getString("id"),t.getString("name"),t.get("fee").toString().toLongOrNull() ?: throw CatalogFailure("workspace","Некорректная сумма тарифа"),t.get("revision").toString().toLongOrNull() ?: throw CatalogFailure("workspace","Некорректная версия тарифа"))} else null,
                 if(it.has("deliveryEdited")) it.getBoolean("deliveryEdited") else false))
-        })
+        },loyalty=j.optJSONObject("loyalty")?.let(LoyaltyCodec::decode))
     }
     fun parked(order: ParkedOrder): String=JSONObject().put("version",1).put("parkedAt",order.parkedAt).put("cart",JSONObject(cart(order.cart))).toString()
     fun parked(id: String, revision: Long, payload: String): ParkedOrder {

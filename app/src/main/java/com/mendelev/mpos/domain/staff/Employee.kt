@@ -5,7 +5,7 @@ import com.mendelev.mpos.domain.catalog.CatalogRules
 
 /** Stable identity; deleted IDs stay reserved. Historical documents keep their own name snapshot. */
 data class Employee(val id: String,val name: String,val phone: String,val role: String,val revision: Long,val deleted: Boolean=false) {
-    val selectable: Boolean get()=!deleted && role=="employee"
+    val selectable: Boolean get()=!deleted
 }
 sealed interface EmployeeAction {
     data class Save(val id: String,val revision: Long?,val name: String,val phone: String,val role: String): EmployeeAction
@@ -84,7 +84,6 @@ object EmployeeMutations {
             }
             is EmployeeAction.Delete->{
                 if(existing==null || existing.deleted || existing.revision!=a.revision) conflict()
-                if(existing.role=="admin") throw CatalogFailure("adminEmployee","Нельзя удалить администратора. Сначала измените его роль")
                 existing.copy(deleted=true,revision=Math.addExact(existing.revision,1))
             }
         }

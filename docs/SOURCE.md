@@ -24,3 +24,12 @@
 
 
 Уточнение модульных паспортов2026-10-24: дополнительно прочитаны suppliers/delete guards, purchase-orders/receiving draft, shifts totals/cash handlers, analyticsOrders/analyticsData и hall-bookings/bookingOverlap/saveNewBooking из того же pin. Выбранные native правила и открытые контракты указаны в WAREHOUSE-SPEC, MANAGEMENT-REPORTS-SPEC, CUSTOMERS-HALL-SPEC. Это чтение исходников, не запуск/верификация Web; небезопасные literal credentials из Web не переносятся.
+
+
+## Уточнение09.11.2026: события и лояльность
+
+По прямому запросу владельца переносить текущее рабочее Web для этих двух модулей использован [Web05db2b7d06e857e7dbeb1870f7fab8eaff125d26](https://github.com/mendelev-main/M-POS-Android-Web/tree/05db2b7d06e857e7dbeb1870f7fab8eaff125d26): web-orders.js, loyalty.js, android-loyalty-pricing.js, послойные CSS pos.html и native AdministrationPasswordDialog.kt. Это локальное уточнение источника, не обновление reference всех прежних модулей. Контракт и отклонение денежного округления — [ONLINE-LOYALTY-PARITY.md](ONLINE-LOYALTY-PARITY.md). Сервер не меняем: запросы совпадают с работающим Web; наличие уведомлений проверяет владелец на устройстве.
+
+10.11.2026: по запросу владельца для вкладки заказов поставщикам использованы purchase-orders.js/pos.html того же Web05db2b7. Область, native отличия и критерии: [PURCHASE-UI-PARITY.md](PURCHASE-UI-PARITY.md).
+
+10.11.2026: receiving-ui.js/receiving-drafts.js/receiving.js из Web05db2b7 исследованы для переноса приёмки и operational permissions. Решение владельца о доступе сотрудников имеет приоритет над прежней native admin matrix; контракт RECEIVING-UI-PARITY.md.

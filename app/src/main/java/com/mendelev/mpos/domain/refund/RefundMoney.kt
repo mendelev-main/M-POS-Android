@@ -20,7 +20,7 @@ object RefundMoney {
         catch (_: ArithmeticException) { invalid("Сумма возврата слишком велика") }
 
     /** Uses the immutable receipt only; never reprices current goods or delivery tariffs. */
-    fun plan(quote: SaleQuote, payment: SalePayment, currentCash: Long): RefundAmounts {
+    fun plan(quote: SaleQuote, payment: SalePayment, currentCash: Long,unknownTender: Boolean=false): RefundAmounts {
         if (currentCash < 0 || quote.total < 0 || quote.subtotal < 0 || quote.gross < 0 ||
             quote.discount < 0 || payment.cash < 0 || payment.card < 0 ||
             payment.deliveryCashOut < 0 || payment.expectedCashAfter < 0) invalid("Повреждены суммы чека")
@@ -42,8 +42,10 @@ object RefundMoney {
             if (part.amount < 0) invalid("Повреждена сумма оплаты")
             when (part.method) {
                 "cash" -> {
-                    val given = part.given ?: invalid("Нет принятой суммы")
-                    if (given < part.amount || part.change != given - part.amount) invalid("Повреждена сдача")
+                    if(!(unknownTender && part.given==null && part.change==null)) {
+                        val given = part.given ?: invalid("Нет принятой суммы")
+                        if (given < part.amount || part.change != given - part.amount) invalid("Повреждена сдача")
+                    }
                     cash = add(cash, part.amount)
                 }
                 "card" -> {

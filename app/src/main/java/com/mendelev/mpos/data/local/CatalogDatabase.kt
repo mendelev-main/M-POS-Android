@@ -62,9 +62,13 @@ data class WorkspaceRevision(val id: String,val revision: Long)
 interface WorkspaceDao {
     @Query("SELECT * FROM workspace_documents WHERE id >= 'backend-online:' AND id < 'backend-online;' AND (json_extract(payload, '$.records[0].settled')=0 OR json_extract(payload, '$.records[0].readyConfirmed')=0) AND json_extract(payload, '$.records[0].cancelled')=0")
     suspend fun activeOnlineOrders(): List<WorkspaceDocument>
-    @Query("SELECT id, revision FROM workspace_documents WHERE id < 'backend-online:' OR id >= 'backend-online;' ORDER BY id") fun observeRevisions(): Flow<List<WorkspaceRevision>>
+    @Query("SELECT id, revision FROM workspace_documents WHERE (id < 'web-receipt:' OR id >= 'web-receipt;') AND (id < 'backend-online:' OR id >= 'backend-online;') AND (id < 'loyalty-pending:' OR id >= 'loyalty-pending;') AND (id < 'loyalty-result:' OR id >= 'loyalty-result;') ORDER BY id") fun observeRevisions(): Flow<List<WorkspaceRevision>>
+    @Query("SELECT * FROM workspace_documents WHERE id >= :prefix AND id < (:prefix || char(1114111)) ORDER BY id LIMIT :limit OFFSET :offset") suspend fun prefixPage(prefix: String,limit: Int,offset: Int): List<WorkspaceDocument>
     @Query("SELECT * FROM workspace_documents WHERE id=:id") fun observeDocument(id: String): Flow<WorkspaceDocument?>
     @Query("SELECT * FROM workspace_documents WHERE id >= :prefix AND id < (:prefix || char(1114111)) ORDER BY id") suspend fun documentsByPrefix(prefix: String): List<WorkspaceDocument>
+    @Query("SELECT * FROM workspace_documents WHERE id >= :prefix AND id < (:prefix || char(1114111)) ORDER BY id LIMIT :limit") suspend fun documentsByPrefixLimited(prefix: String,limit: Int): List<WorkspaceDocument>
+    @Query("SELECT * FROM workspace_documents WHERE id >= 'loyalty-pending:' AND id < 'loyalty-pending;' AND json_extract(payload,'$.target')=:target AND json_extract(payload,'$.dataset')=:dataset ORDER BY id LIMIT :limit")
+    suspend fun pendingLoyalty(target: String,dataset: String,limit: Int): List<WorkspaceDocument>
     @Query("SELECT * FROM workspace_documents ORDER BY id") fun observe(): Flow<List<WorkspaceDocument>>
     @Query("SELECT * FROM workspace_documents ORDER BY id") suspend fun documents(): List<WorkspaceDocument>
     @Query("SELECT * FROM workspace_documents WHERE id LIKE 'web-product-metadata:%' ORDER BY id") suspend fun productMetadataDocuments(): List<WorkspaceDocument>

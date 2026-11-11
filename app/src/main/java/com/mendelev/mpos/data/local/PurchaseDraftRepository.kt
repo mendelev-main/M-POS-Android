@@ -16,15 +16,16 @@ object PurchaseDraftCodec {
             .put("lines",JSONArray(it.lines.map {l->JSONObject().put("id",l.productId).put("revision",l.productRevision).put("name",l.productName)
                 .put("stockUnit",l.stockUnit).put("quantity",l.quantity).put("unit",l.unit).put("packSize",l.packSize).put("contentUnit",l.contentUnit)}))
     } ?: JSONObject.NULL).toString()
+    fun encodeWorking(d: PurchaseDraft?): String {d?.let(PurchaseDraftRules::validateWorking);return JSONObject(encode(d)).put("version",2).put("working",true).toString()}
     fun decode(raw: String): PurchaseDraft? {
         try {
-            val j=JSONObject(raw);require(j.get("version") is Number && j.get("version").toString()=="1");require(j.has("draft"))
+            val j=JSONObject(raw);require(j.get("version") is Number);val version=j.get("version").toString();require(version=="1" || version=="2" && j.opt("working")==true);require(j.has("draft"))
             if(j.isNull("draft")) return null
-            val d=j.getJSONObject("draft");val a=d.getJSONArray("lines")
+            val d=j.getJSONObject("draft");val a=d.getJSONArray("lines");if(version=="2") require(a.length()<=500)
             fun revision(j: JSONObject,key: String): Long {require(j.get(key) is Number);return j.get(key).toString().toLong()}
             return PurchaseDraft(d.getString("id"),d.getString("supplierId"),revision(d,"supplierRevision"),d.getString("supplierName"),
                 (0 until a.length()).map {i->val l=a.getJSONObject(i);PurchaseLine(l.getString("id"),revision(l,"revision"),l.getString("name"),l.getString("stockUnit"),
-                    l.getString("quantity"),l.getString("unit"),l.getString("packSize"),l.getString("contentUnit"))}).also(PurchaseDraftRules::validate)
+                    l.getString("quantity"),l.getString("unit"),l.getString("packSize"),l.getString("contentUnit"))}).also {if(version=="2") PurchaseDraftRules.validateWorking(it) else PurchaseDraftRules.validate(it)}
         } catch(_:Exception) {throw CatalogFailure("purchaseFormat","Не удалось прочитать черновик закупки. Данные не сброшены")}
     }
 }
@@ -65,21 +66,21 @@ class PurchaseDraftRepository(private val db: CatalogDatabase,private val clock:
         }
     }
     override suspend fun commit(command: PurchaseCommand): String {
-        val command=command.copy(action=when(val a=command.action) {is PurchaseAction.Save -> PurchaseAction.Save(a.draft.copy(lines=a.draft.lines.toList()));is PurchaseAction.Place -> a.copy(draft=a.draft.copy(lines=a.draft.lines.toList()));PurchaseAction.Clear -> PurchaseAction.Clear})
+        val command=command.copy(action=when(val a=command.action) {is PurchaseAction.Working -> a.copy(draft=a.draft?.let {it.copy(lines=it.lines.toList())});is PurchaseAction.Save -> PurchaseAction.Save(a.draft.copy(lines=a.draft.lines.toList()));is PurchaseAction.Place -> a.copy(draft=a.draft.copy(lines=a.draft.lines.toList()));PurchaseAction.Clear -> PurchaseAction.Clear})
         command.validate()
-        val id=InstallationGate.write {db.adminTransaction {
+        val id=InstallationGate.write {db.withTransaction {
             val owner=db.catalog().config()?.ownerId ?: error("Хранилище не открыто")
-            if(command.actorId!=owner) throw CatalogFailure("owner","Изменять закупки может только локальный владелец")
-            outcome(command)?.let {return@adminTransaction it}
+            if(command.actorId!=owner) throw CatalogFailure("owner","Команда относится к другой установке")
+            outcome(command)?.let {return@withTransaction it}
             val doc=db.workspace().document(PurchaseDraftCodec.KEY) ?: WorkspaceDocument(PurchaseDraftCodec.KEY,0,PurchaseDraftCodec.encode(null))
             val old=PurchaseDraftCodec.decode(doc.payload)
             if(doc.revision!=command.revision) throw CatalogFailure("conflict","Черновик изменился. Перечитайте его перед сохранением")
             val place=command.action as? PurchaseAction.Place
-            val draft=when(val a=command.action) {is PurchaseAction.Save->a.draft;is PurchaseAction.Place->a.draft;PurchaseAction.Clear->null}
+            val draft=when(val a=command.action) {is PurchaseAction.Save->a.draft;is PurchaseAction.Place->a.draft;is PurchaseAction.Working->a.draft;PurchaseAction.Clear->null}
             if(draft!=null) {
                 if(old!=null && old.id!=draft.id) throw CatalogFailure("conflict","В кассе уже открыт другой черновик")
-                if(old!=null && old.supplierId!=draft.supplierId && draft.lines.isNotEmpty()) throw CatalogFailure("supplier","Сменить поставщика можно только в пустом черновике")
-                PurchaseDraftRules.validateReferences(draft,suppliers(),products())
+                if(old!=null && old.supplierId!=draft.supplierId && PurchaseDraftRules.hasRequestedLines(old)) throw CatalogFailure("supplier","Сменить поставщика можно только в пустом черновике")
+                if(command.action !is PurchaseAction.Working) PurchaseDraftRules.validateReferences(draft,suppliers(),products())
             }
             val now=clock.millis();require(now>=0)
             if(place!=null) {
@@ -94,7 +95,7 @@ class PurchaseDraftRepository(private val db: CatalogDatabase,private val clock:
                 }
             }
             val target=place?.orderId ?: draft?.id ?: PurchaseDraftCodec.KEY
-            db.workspace().put(doc.copy(revision=Math.addExact(doc.revision,1),payload=PurchaseDraftCodec.encode(if(place==null) draft else null)));afterWrite?.invoke()
+            db.workspace().put(doc.copy(revision=Math.addExact(doc.revision,1),payload=if(command.action is PurchaseAction.Working) PurchaseDraftCodec.encodeWorking(draft) else PurchaseDraftCodec.encode(if(place==null) draft else null)));afterWrite?.invoke()
             db.catalog().result(ResultEntity(command.commandId,command.fingerprint(),target));afterWrite?.invoke()
             db.catalog().audit(AuditEntity(UUID.randomUUID().toString(),command.commandId,command.actorId,if(place!=null) "purchase.order.place" else if(draft==null) "purchase.draft.clear" else "purchase.draft.save",target,now));afterWrite?.invoke()
             target
@@ -105,7 +106,7 @@ class PurchaseDraftRepository(private val db: CatalogDatabase,private val clock:
         PurchaseOrderStore(db).requireSupplierUnused(id)
         ReceivingReferenceGuard(db).supplier(id)
         val d=db.workspace().document(PurchaseDraftCodec.KEY)?.let {PurchaseDraftCodec.decode(it.payload)}
-        if(d?.supplierId==id) throw CatalogFailure("used","Поставщик выбран в черновике закупки: сначала удалите черновик")
+        if(d?.supplierId==id) throw CatalogFailure("used","Поставщик выбран в незавершённом заказе: уберите товары и сбросьте выбор поставщика")
     }
     suspend fun requireProductUnused(id: String) {
         PurchaseOrderStore(db).requireProductUnused(id)

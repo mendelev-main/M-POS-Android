@@ -71,7 +71,8 @@ class CheckoutRepository(private val db: CatalogDatabase,private val afterWrite:
         if(cart.lines.any {line->line.references.any {(id,rev)->products[id]?.revision!=rev}}) conflict()
         if(draft.discounts.keys.any {id->cart.lines.none {it.id==id}}) conflict()
         // A delivery tariff must be explicitly selected, including a free tariff.
-        val quote=SaleMoney.quote(cart.lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity,draft.discounts[it.id])},cart.details.type,draft.delivery)
+        com.mendelev.mpos.domain.loyalty.LoyaltyRules.requireVerified(cart,draft.discounts)
+        val quote=com.mendelev.mpos.domain.loyalty.LoyaltyRules.quote(cart,draft.discounts,draft.delivery)
         if(split) {
             require(draft.parts.size in 2..10)
             SaleMoney.payments(quote,draft.parts.map {if(it.method=="cash" && it.given==null) it.copy(given=it.amount) else it},state.currentCash)

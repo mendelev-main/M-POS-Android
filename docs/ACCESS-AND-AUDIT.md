@@ -1,5 +1,7 @@
 # Доступ, секреты и аудит действий
 
+Актуальное уточнение владельца10.11.2026: заказы поставщикам и приёмка — операционные действия сотрудника без admin login. Исключение из прежней общей warehouse admin matrix описано в [RECEIVING-UI-PARITY.md](RECEIVING-UI-PARITY.md). Отзыв admin-форм сохраняется для справочников/настроек/инвентаризации и cancel заказа; операционный ввод не отзывается при admin logout.
+
 Статус: требования, текущая реализация05b.1–05b.3 ci-verified;05b.4 текущие команды ci-verified/API36/run41100246927, [матрица существующих действий](CAPABILITY-MATRIX-05B4.md). Владелец2026-10-29 подтвердил employee/admin, общий заданный password как salted slow verifier и Web runtime lifecycle; employee directory и UI revoke реализованы; будущие backup/integration capabilities planned. Здесь не задаются юридические правила consent/сроков хранения. Источник поведения Web: pinned `docs/ADMINISTRATION_SESSION_RU.md`, feature guards и `android-safety.js`; native UI следует общей дизайн-системе из Web.
 
 ## Кто действует и от чьего имени
@@ -19,7 +21,8 @@ Web разделяет admin session и смену: новый runtime треб�
 | layout.write | плитки, папки и расположение рабочей зоны | кассир без входа в администрирование (уточнение2026-11-08) |
 | sale.commit / shift.cash | продажа и движения наличных в разрешённой смене | кассир по активной смене |
 | sale.manualPrice / sale.discount / sale.refund | ручная цена, скидка, возврат | отдельное разрешение, не следствие order.edit |
-| inventory.write / receiving.commit | корректировка/приёмка | отдельное складское полномочие |
+| inventory.write | инвентаризация/корректировка | администратор |
+| purchase.write / receiving.commit | заявки/приёмка/приход | сотрудник без admin login (10.11.2026) |
 | employees.manage / roles.manage | сотрудники и права | администратор |
 | reports.read / reports.export | просмотр и выдача отчётов | отдельно с scope данных |
 | backup.export / backup.restore | доступ к полному набору данных | отдельное критическое полномочие |

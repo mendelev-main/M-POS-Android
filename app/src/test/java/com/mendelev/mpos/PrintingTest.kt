@@ -45,7 +45,7 @@ class PrintingTest {
         assertEquals("0.14 BYN",page.rows.single {it.left=="Кофе"}.right)
         assertEquals("0.14 BYN",page.rows.single {it.left=="Итого"}.right)
         assertEquals("0.04 BYN",page.rows.single {it.left=="Платёж 1 · Наличные"}.right)
-        assertEquals("0.06 BYN",page.rows.single {it.left=="Сдача"}.right)
+        assertEquals("0.06 BYN",page.rows.single {it.left.trim()=="Сдача"}.right)
         assertEquals(576,page.width)
     }
     @Test fun kitchenFiltersCategoriesAndDoesNotPrintMoneyOrPayment() {

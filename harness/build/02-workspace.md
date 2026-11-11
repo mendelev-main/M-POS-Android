@@ -71,3 +71,6 @@ Visual checkpoint CI-verified: [run40461096340](https://github.com/mendelev-main
 
 
 Уточнение владельца: на плитках показывать доступный остаток за вычетом текущего и отложенных заказов; при добавлении уменьшать, при удалении возвращать. Физический склад списывается прежней операцией продажи. При обновлении availability сохранять последнюю подпись плитки до завершения расчёта, без сброса на многоточие.
+
+
+2026-11-10: W04/W06/W08/W10 implemented locally; ../../docs/FOLDERS-HISTORY-UI.md.8 JVM passed/main+androidTest compile successful; Room/UI compiled only.

@@ -90,7 +90,7 @@ import com.mendelev.mpos.domain.catalog.CatalogRules
             Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                 MposButton("Отмена",model::dismiss,enabled=!locked,style=ActionStyle.Secondary)
                 MposButton(if(form.revision==null) "Создать" else "Сохранить",model::save,enabled=!locked,modifier=Modifier.testTag("supplierSave"))
-                if(form.revision!=null) MposButton("Удалить",{model.change {it.copy(deleting=true)}},enabled=!locked,style=ActionStyle.Danger,modifier=Modifier.testTag("supplierDelete"))
+                if(form.revision!=null && administration.active) MposButton("Удалить",{model.change {it.copy(deleting=true)}},enabled=!locked,style=ActionStyle.Danger,modifier=Modifier.testTag("supplierDelete"))
             }
         }
         if(ui.unresolved!=null) MposButton("Проверить результат",model::retry,enabled=!ui.pending,modifier=Modifier.testTag("supplierRetry"))

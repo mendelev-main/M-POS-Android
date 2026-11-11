@@ -42,20 +42,20 @@ class StandaloneReceivingUiTest {
         compose.onNode(hasAnyAncestor(hasTestTag("receivingMode:$p")) and hasClickAction()).performScrollTo().performClick()
         compose.onNode(hasAnyAncestor(isPopup()) and hasText("Цена за единицу")).performClick()
         compose.onNodeWithTag("receivingPrice:$p").performScrollTo().performTextInput("2.35");hideKeyboard()
-        compose.onNodeWithTag("receivingCalculated:$p").assertTextContains("3.53",substring=true)
-        compose.onNodeWithTag("receivingSave").performClick();compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty}
-        compose.onNodeWithTag("receivingRemove:$p").performScrollTo().performClick()
-        compose.onNodeWithTag("receivingReload").performClick();compose.onNodeWithTag("receivingDiscard").performClick()
-        compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.form?.lines?.size==1}
+        compose.onNodeWithTag("receivingTotal:$p").assertTextContains("3.53",substring=true)
+        compose.onNodeWithTag("receivingMore").assertDoesNotExist()
+        compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.saving && !model.state.value.dirty}
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("receivingQty:$p").fetchSemanticsNodes().isNotEmpty() && !model.state.value.pending}
         compose.onNodeWithTag("receivingQty:$p").assertTextContains("1.5");compose.onNodeWithTag("receivingPrice:$p").assertTextContains("2.35")
         shot("standalone-draft")
-        compose.onNodeWithTag("receivingPreview").performClick();compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview!=null}
+        compose.onNodeWithTag("receivingPreview").performScrollTo().performClick();compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.preview!=null}
         assertFalse(model.state.value.preview!!.hasOverage);assertNull(model.state.value.preview!!.lines.single().expected)
-        compose.onNodeWithTag("receivingPost").performClick();compose.onNodeWithTag("receivingOverage").assertDoesNotExist()
+        compose.onNodeWithTag("receivingOverage").assertDoesNotExist()
         compose.onNodeWithTag("receivingPostConfirm").performClick()
         compose.waitUntil(20_000) {!posting.state.value.pending && posting.state.value.committed!=null && model.state.value.form==null && !model.state.value.pending}
+        compose.onNodeWithTag("receivingHistory").performClick()
+        compose.onNodeWithTag("receivingPosted:${posting.state.value.committed}").performScrollTo().performClick()
         compose.onNodeWithTag("receivingPostedTitle").assertTextContains("TTN-$key",substring=true)
         compose.onNodeWithText("Приход проведён без заказа").assertIsDisplayed();shot("standalone-posted")
         val after=runBlocking {db.workspace().document(PurchaseOrderCodec.KEY) to db.workspace().document(PurchaseDraftCodec.KEY)}

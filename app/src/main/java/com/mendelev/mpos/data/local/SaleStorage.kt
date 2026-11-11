@@ -12,6 +12,7 @@ data class ReceiptEntity(@PrimaryKey val id: String,val commandId: String,val se
 data class ReceiptProductEntity(val receiptId: String,val productId: String)
 @Dao interface SaleDao {
     @Insert suspend fun insert(receipt: ReceiptEntity)
+    @Update suspend fun update(receipt: ReceiptEntity)
     @Insert suspend fun reference(value: ReceiptProductEntity)
     @Query("SELECT * FROM receipts WHERE id=:id") suspend fun receipt(id: String): ReceiptEntity?
     @Query("SELECT * FROM receipts WHERE commandId=:command") suspend fun command(command: String): ReceiptEntity?
@@ -19,6 +20,7 @@ data class ReceiptProductEntity(val receiptId: String,val productId: String)
     @Query("SELECT * FROM receipts WHERE shiftId=:shift ORDER BY number") suspend fun inShift(shift: String): List<ReceiptEntity>
     @Query("SELECT * FROM receipts WHERE shiftId IN (:ids) ORDER BY number") suspend fun inShifts(ids: List<String>): List<ReceiptEntity>
     @Query("SELECT * FROM receipts WHERE createdAt>=:start AND createdAt<=:cutoff ORDER BY createdAt,id") suspend fun analyticsRange(start: Long,cutoff: Long): List<ReceiptEntity>
+    @Query("SELECT * FROM receipts ORDER BY createdAt DESC,id ASC LIMIT :limit OFFSET :offset") suspend fun historyPage(limit: Int,offset: Int): List<ReceiptEntity>
     @Query("SELECT * FROM receipts ORDER BY createdAt DESC,id DESC") suspend fun history(): List<ReceiptEntity>
     @Query("SELECT * FROM receipts ORDER BY createdAt DESC,id DESC") fun observe(): Flow<List<ReceiptEntity>>
     @Query("SELECT COUNT(*) FROM receipt_products WHERE productId=:id") suspend fun productUses(id: String): Int

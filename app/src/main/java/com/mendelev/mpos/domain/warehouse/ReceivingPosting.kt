@@ -7,7 +7,7 @@ data class ReceivingPostCommand(val commandId: String,val actorId: String,val re
     fun validate() {
         PurchaseDraftRules.id(commandId);PurchaseDraftRules.id(actorId);require(costPolicy in 1..2)
         if(revision<1) throw CatalogFailure("receiving","Сначала сохраните черновик")
-        ReceivingRules.validate(draft)
+        ReceivingRules.validate(draft.copy(working=false))
     }
     fun fingerprint(): String {
         validate()

@@ -84,12 +84,19 @@ class EmployeeRepositoryTest {
             assertEquals(bad,db.workspace().document(EmployeeCodec.KEY));assertNull(db.catalog().result("create-other"))
         } finally {db.close()}
     }
-    @Test fun openingAndDeletingSameEmployeeSerializeAndAdministratorCannotOpen(): Unit=runBlocking {
+    @Test fun legacyAdministratorFlagIsOnlyMetadataAndCanOpenShift(): Unit=runBlocking {
         val db=memory()
         try {
             val shifts=ShiftRepository(db);shifts.initialize();val repo=EmployeeRepository(db);val owner=repo.snapshot().ownerId
-            repo.commit(EmployeeCommand("admin",owner,EmployeeAction.Save("admin",null,"Управляющий","","admin")))
-            reject {shifts.open("admin-open",0,null,"admin")};assertNull(db.catalog().result("admin-open"))
+            repo.commit(EmployeeCommand("legacy-create",owner,EmployeeAction.Save("legacy",null,"Кассир","","admin")))
+            shifts.open("legacy-open",0,null,"legacy")
+            assertEquals("legacy",shifts.snapshot().active!!.actorId)
+        } finally {db.close()}
+    }
+    @Test fun openingAndDeletingSameEmployeeSerialize(): Unit=runBlocking {
+        val db=memory()
+        try {
+            val shifts=ShiftRepository(db);shifts.initialize();val repo=EmployeeRepository(db);val owner=repo.snapshot().ownerId
             repo.commit(create(owner))
             val outcomes=coroutineScope {listOf(
                 async(Dispatchers.IO) {runCatching {shifts.open("race-open",0,null,"anna")}},

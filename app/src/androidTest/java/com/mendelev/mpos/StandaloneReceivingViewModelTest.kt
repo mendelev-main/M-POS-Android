@@ -24,7 +24,7 @@ class StandaloneReceivingViewModelTest {
         }
     }
     private fun model(store: ViewModelStore,f: Fake)=ViewModelProvider(store,object: ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=ReceivingViewModel(f) as T
+        @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=ReceivingViewModel(f,autoSaveEnabled=false) as T
     })[ReceivingViewModel::class.java]
     private suspend fun ready(vm: ReceivingViewModel)=withTimeout(20_000) {vm.state.first {!it.pending}}
     @Test fun emptyOpenAddSupplierSaveResumeAndRemoveKeepStandaloneSlot(): Unit=runBlocking {

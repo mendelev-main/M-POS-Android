@@ -17,7 +17,7 @@ data class CartLine(val id: String, val productId: String, val name: String, val
     }
 }
 data class CurrentCart(val lines: List<CartLine> = emptyList(), val graph: List<RecipeProduct> = emptyList(),
-    val sessionId: String = "", val createdAt: Long = 0, val details: OrderDetails = OrderDetails())
+    val sessionId: String = "", val createdAt: Long = 0, val details: OrderDetails = OrderDetails(),val loyalty: com.mendelev.mpos.domain.loyalty.LoyaltySelection?=null)
 sealed interface CartAction {
     data class Add(val productId: String, val expectedProductRevision: Long, val selected: Set<String>, val manualPrice: String?, val lineId: String): CartAction
     data class Step(val lineId: String, val delta: Int): CartAction
@@ -25,6 +25,7 @@ sealed interface CartAction {
     data class SetOptions(val lineId: String,val quantity: String,val comment: String,val discountId: String,val discount: com.mendelev.mpos.domain.sale.SaleDiscount?,val expectedRevision: Long): CartAction
     data class Remove(val lineId: String): CartAction
     data class SetDetails(val details: OrderDetails,val expectedRevision: Long): CartAction
+    data class SetLoyalty(val selection: com.mendelev.mpos.domain.loyalty.LoyaltySelection?,val expectedRevision: Long): CartAction
     data class Clear(val expectedRevision: Long): CartAction
 }
 object CartEngine {
@@ -84,6 +85,10 @@ object CartEngine {
         when(action) {
             is CartAction.Clear -> return CurrentCart()
             is CartAction.SetDetails -> return cart.copy(details=OrderRules.details(action.details))
+            is CartAction.SetLoyalty -> {
+                val selection=action.selection?.let(com.mendelev.mpos.domain.loyalty.LoyaltyRules::valid)
+                return cart.copy(loyalty=selection,details=OrderRules.details(cart.details.copy(customerName=selection?.customer?.name.orEmpty(),phone=selection?.customer?.phone.orEmpty())))
+            }
             is CartAction.Remove -> {
                 if(cart.lines.none { it.id==action.lineId }) throw CatalogFailure("conflict","Строка больше не существует")
                 return remaining(cart,cart.lines.filterNot { it.id==action.lineId })

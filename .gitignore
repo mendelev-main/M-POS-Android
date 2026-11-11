@@ -28,3 +28,6 @@ signing-private/
 /output/playwright/
 /.playwright-cli/
 /tools/web-reference/node_modules/
+
+# Local agent/build verification logs (not release sources)
+/.*.log

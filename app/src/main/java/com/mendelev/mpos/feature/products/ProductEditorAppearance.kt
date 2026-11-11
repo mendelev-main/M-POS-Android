@@ -33,7 +33,7 @@ internal val productEditorSections=listOf("main" to "Основное","stock" t
                     BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal=if(small) 12.dp else 28.dp,vertical=if(small) 12.dp else 18.dp)) {
                         val base=(maxWidth-94.dp)/3
                         Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(if(small) 10.dp else 22.dp)) {
-                            ProductEditorButton("← Назад",onBack,Modifier.width(if(small) 90.dp else base+26.dp).height(49.dp).testTag("productEditorBack"),!busy)
+                            ProductEditorButton("Назад",onBack,Modifier.width(if(small) 90.dp else base+26.dp).height(49.dp).testTag("productEditorBack"),!busy)
                             Column(Modifier.weight(1f)) {
                                 Text(if(dirty) "ЕСТЬ ИЗМЕНЕНИЯ" else "КАРТОЧКА ТОВАРА",fontSize=11.sp,lineHeight=15.sp,letterSpacing=.88.sp,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(name.ifBlank {"Новый товар"},Modifier.padding(top=4.dp),fontSize=if(small) 17.sp else 22.sp,lineHeight=27.5.sp,fontWeight=FontWeight.Bold,maxLines=1,overflow=TextOverflow.Ellipsis)
@@ -50,7 +50,6 @@ internal val productEditorSections=listOf("main" to "Основное","stock" t
                         productEditorSections.forEach {(id,label)->ProductSectionTab(id,label,section,!busy,onSection)}
                         if(editing) ProductEditorButton("Удалить товар",onDelete,enabled=!busy,style=ActionStyle.Danger)
                     } else Column(Modifier.fillMaxHeight().padding(horizontal=16.dp,vertical=28.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                        Text(if(type=="simple") "ПРОСТОЙ ТОВАР" else "СОСТАВНОЙ ТОВАР",Modifier.padding(start=12.dp,end=12.dp,bottom=18.dp),fontSize=11.sp,lineHeight=15.sp,letterSpacing=.66.sp,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurfaceVariant)
                         productEditorSections.forEach {(id,label)->ProductSectionTab(id,label,section,!busy,onSection,Modifier.fillMaxWidth())}
                         Spacer(Modifier.weight(1f))
                         if(editing) ProductEditorButton("Удалить товар",onDelete,Modifier.fillMaxWidth().padding(top=28.dp).testTag("productDelete"),!busy,ActionStyle.Danger)

@@ -39,7 +39,7 @@ class ShiftRulesTest {
     @Test fun stalePreviewOwnerAndDuplicateOpenCannotCommit() {
         val active=initial.copy(revision=1,last=ShiftRules.open(initial,0,null,employee,"s",10,"UTC"))
         reject {ShiftRules.open(active,1,"s",employee,"other",20,"UTC")}
-        reject {ShiftRules.open(initial,0,null,employee.copy(role="admin"),"s",10,"UTC")}
+        assertEquals(employee.id,ShiftRules.open(initial,0,null,employee.copy(role="admin"),"s",10,"UTC").actorId)
         reject {ShiftRules.close(active,"s",0,ShiftRules.token(active),0,"owner",20)}
         reject {ShiftRules.close(active,"s",1,"old",0,"owner",20)}
         reject {ShiftRules.close(active,"s",1,ShiftRules.token(active),0,"owner",9)}

@@ -36,7 +36,8 @@ class RefundRepository(private val db: CatalogDatabase,private val clock: Clock=
         if(receipt.total!=saved.quote.total || receipt.cash!=saved.payment.cash || receipt.card!=saved.payment.card ||
             receipt.deliveryCashOut!=saved.payment.deliveryCashOut || receipt.sessionId!=saved.cart.sessionId ||
             receipt.shiftId!=saved.checkout.shiftId || receipt.commandId!=saved.checkout.commandId) conflict()
-        val amounts=RefundMoney.plan(saved.quote,saved.payment,state.currentCash)
+        ReceiptPaymentHistory.validate(saved)
+        val amounts=RefundMoney.plan(saved.quote,saved.payment,state.currentCash,unknownTender=saved.originalReceiptJson!=null)
         val work=WorkspaceRepository(db).snapshot()
         val balances=db.catalog().allBalances().associate {it.productId to RestockBalance(it.quantity,it.revision)}
         val stock=HistoricalRestock.plan(saved.consumption,saved.cart.graph,work.graph,balances)
@@ -66,6 +67,7 @@ class RefundRepository(private val db: CatalogDatabase,private val clock: Clock=
             .put("expectedCashAfter",actual.amounts.expectedCashAfter).put("previewToken",actual.token).toString()
         db.refunds().insert(RefundEntity(id,receipt.id,command,shift.id,actual.actorId,now,actual.amounts.total,
             actual.amounts.cash,actual.amounts.card,actual.amounts.deliveryCashCredit,hash,payload));wrote()
+        if(LoyaltyOutbox(db).reverse(receipt.id)) wrote()
         actual.stock.forEach {change->
             db.catalog().updateBalance(BalanceEntity(change.productId,change.after,change.nextRevision));wrote()
             db.catalog().movement(MovementEntity(UUID.randomUUID().toString(),change.productId,change.delta,"refund",

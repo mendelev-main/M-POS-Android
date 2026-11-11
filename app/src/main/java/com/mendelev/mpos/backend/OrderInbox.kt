@@ -10,22 +10,27 @@ import java.io.File
 class OrderInbox(file: File,private val cipher: TelegramSecretCipher) {
     companion object {private val lock=Any()}
     private val atomic=AtomicFile(file)
-    fun read(): List<JSONObject> = synchronized(lock) {
-        if(!atomic.baseFile.exists() && !File(atomic.baseFile.path+".bak").exists()) return@synchronized emptyList()
+    private fun snapshot(): InboxSnapshot {
+        if(!atomic.baseFile.exists() && !File(atomic.baseFile.path+".bak").exists()) return InboxSnapshot()
         val raw=cipher.decrypt(atomic.openRead().use {it.readBytes()});require(raw.size<=16_000_000)
-        val j=JSONObject(raw.toString(Charsets.UTF_8));require(j.getInt("version")==1)
-        val a=j.getJSONArray("orders");require(a.length()<=1000)
-        List(a.length()) {a.getJSONObject(it)}
+        return InboxSnapshot.decode(raw.toString(Charsets.UTF_8))
     }
+    fun isRemoved(id: String): Boolean = synchronized(lock) {id in snapshot().removed}
+    fun read(): List<JSONObject> = synchronized(lock) {snapshot().orders}
     fun merge(incoming: List<JSONObject>,accepted: Set<String>): List<JSONObject> = synchronized(lock) {
-        val previous=read()
-        val merged=(incoming+previous).distinctBy {it.getString("id")}.filter {it.getString("id") !in accepted && it.getString("status")=="new"}
-            .sortedByDescending {it.optString("created_at")}
-        require(merged.size<=1000) {"Накопилось слишком много заказов сайта. Обработайте список событий"}
-        if(merged.map {it.toString()}==previous.map {it.toString()}) return@synchronized previous
-        val raw=JSONObject().put("version",1).put("orders",JSONArray(merged)).toString().toByteArray();require(raw.size<=16_000_000)
+        val previous=snapshot();val next=previous.merge(incoming,accepted)
+        if(next.encode()!=previous.encode()) write(next)
+        next.orders
+    }
+    fun remove(id: String): List<JSONObject> = synchronized(lock) {
+        val previous=snapshot();val next=previous.remove(id)
+        if(next.encode()!=previous.encode()) write(next)
+        next.orders
+    }
+    private fun write(state: InboxSnapshot) {
+        require(state.removed.size<=100000)
+        val raw=state.encode().toByteArray();require(raw.size<=16_000_000)
         val encrypted=cipher.encrypt(raw);val output=atomic.startWrite()
         try {output.write(encrypted);atomic.finishWrite(output)} catch(e:Exception) {atomic.failWrite(output);throw e}
-        merged
     }
 }

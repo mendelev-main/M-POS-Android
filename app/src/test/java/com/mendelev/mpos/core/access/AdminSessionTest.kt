@@ -47,4 +47,15 @@ class AdminSessionTest {
         assertFalse(verifier.matches(CharArray(129) {'a'}))
     }
 
+    @Test fun backendProofIsTransientRevokedAndWipedEvenWhenRequestFails()=runBlocking {
+        val s=session();s.login("fixture".toCharArray());val generation=s.state.value.generation
+        var exposed: CharArray?=null
+        try {s.withBackendCredential(generation) {p->exposed=p;assertEquals("fixture",p.concatToString());throw IllegalStateException("fixture")}} catch(_:IllegalStateException) {}
+        assertTrue(exposed!!.all {it=='\u0000'})
+        s.logout();s.login("fixture".toCharArray())
+        try {s.withBackendCredential(generation) {fail("stale form")};fail()} catch(_:CatalogFailure) {}
+        s.logout()
+        try {s.withBackendCredential(s.state.value.generation) {fail("logged out")};fail()} catch(_:CatalogFailure) {}
+    }
+
 }

@@ -1,5 +1,7 @@
 # 05b.3 — отзыв административных форм
 
+Актуальное уточнение владельца10.11.2026: заказы поставщикам и приёмка — операционные действия сотрудника без admin login. Исключение из прежней общей warehouse admin matrix описано в [RECEIVING-UI-PARITY.md](RECEIVING-UI-PARITY.md). Отзыв admin-форм сохраняется для справочников/настроек/инвентаризации и cancel заказа; операционный ввод не отзывается при admin logout.
+
 Статус: AR01–AR05 ci-verified/API36, [FullCI41028916124](https://github.com/mendelev-main/M-POS-Android/actions/runs/41028916124)/ea7e656.151JVM/235instrumentation/0failures/0skipped,16Python/lint/build и actual debugAPK1→2 passed. Не объявляет весь05b/H03/SA01–SA06 завершёнными.
 
 Источник: pinned Web1682c883, shifts.js closeAdministrationSession/requireAdministration; Android adapter android-admin.js использует общий runtime допуск; source-product-stock.test.cjs «closing administration blocks stale deletion confirmations». Web закрывает modal, editMode и settings admin panel при logout; повторные handlers проверяют текущий вход. Native дополнительно связывает отложенную команду с конкретным входом, чтобы logout → новый login не дал старой форме новую authority.

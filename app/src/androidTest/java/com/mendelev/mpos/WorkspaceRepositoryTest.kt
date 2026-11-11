@@ -95,6 +95,27 @@ class WorkspaceRepositoryTest {
             repo.applyCart(add(),"fault-cart");assertEquals(1L,repo.snapshot().cartRevision)
         } finally {db.close()}
     }
+    @Test fun styledFolderRollbackReplayAndBackupPayloadAreAtomic()=runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
+        try {
+            seed(db);val repo=WorkspaceRepository(db)
+            val before=repo.snapshot();val appearance=FolderAppearance("#DDEBFF","☕",3,168)
+            val action=LayoutAction.SaveFolder("f","c","Бар",appearance)
+            try {WorkspaceRepository(db,afterWrite={throw java.io.IOException("fault")}).layout(action,before.layoutRevision,"styled");fail()} catch(_:java.io.IOException) {}
+            assertEquals(before.layoutRevision,repo.snapshot().layoutRevision)
+            assertFalse(repo.snapshot().layout.any {it.id=="f"})
+            repo.layout(action,before.layoutRevision,"styled")
+            repo.layout(action,before.layoutRevision,"styled")
+            val state=repo.snapshot()
+            assertEquals(before.layoutRevision+1,state.layoutRevision)
+            assertEquals(appearance,state.layout.single {it.type=="folder"}.appearance)
+            val raw=db.workspace().document("layout")!!.payload
+            assertEquals(state.layout,WorkspaceCodec.layout(raw))
+            reject {repo.layout(action.copy(appearance=appearance.copy(columns=4)),before.layoutRevision,"styled")}
+            assertEquals(raw,db.workspace().document("layout")!!.payload)
+            assertEquals(before.balances,repo.snapshot().balances)
+        } finally {db.close()}
+    }
     @Test fun activeCartAndExplicitLayoutProtectCatalogDependencies() = runBlocking {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         try {

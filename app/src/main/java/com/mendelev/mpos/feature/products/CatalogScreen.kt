@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.data.local.CategoryEntity
+import com.mendelev.mpos.data.local.CategoryChannels
 import com.mendelev.mpos.domain.catalog.CategoryAppearance
 import com.mendelev.mpos.domain.catalog.CatalogRules
 import com.mendelev.mpos.domain.catalog.unitLabel
@@ -34,6 +35,7 @@ import java.util.UUID
 
 @Composable fun CatalogScreen(model: CatalogViewModel, onSettings: () -> Unit, onGallery: () -> Unit, onWorkspace: () -> Unit = {}, onShift: () -> Unit = {}) {
     val state by model.state.collectAsStateWithLifecycle()
+    val notice by model.notices.collectAsStateWithLifecycle()
     val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val context=LocalContext.current
     LaunchedEffect(model,administration.generation) {model.reopenForms()}
@@ -49,6 +51,8 @@ import java.util.UUID
     var filter by rememberSaveable { mutableStateOf<String?>(null) }
     var categories by rememberSaveable(administration.generation) { mutableStateOf(false) }
     var categoryId by rememberSaveable(administration.generation) { mutableStateOf<String?>(null) }
+    var categoryMenu by rememberSaveable(administration.generation) {mutableStateOf(true)}
+    var categoryOrder by rememberSaveable(administration.generation) {mutableStateOf(true)}
     var categoryName by rememberSaveable(administration.generation) { mutableStateOf("") }
     var categoryColor by rememberSaveable(administration.generation) { mutableStateOf(CategoryAppearance.DEFAULT_COLOR) }
     var categorySymbol by rememberSaveable(administration.generation) { mutableStateOf("") }
@@ -61,6 +65,7 @@ import java.util.UUID
     fun closeEditor() { nextProduct=null;if(!state.busy) { if(state.draft?.dirty == true) confirmDiscard=true else model.discard() } }
     BackHandler(enabled=state.draft!=null) { closeEditor() }
     val d = state.draft.takeIf {administration.active}
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
         if(d==null) MposAppBar(subtitle="Локальный владелец", navigationEnabled=d==null && !state.busy) {
             if(d==null) {
@@ -84,11 +89,14 @@ import java.util.UUID
             CatalogPage(state,search,{search=it},filter,{filter=it},administration.active,{categories=true},{model.edit()},{model.edit(it)})
         }
     }
+    notice?.takeUnless {state.error}?.let {MposTransientNotice(it,Modifier.align(Alignment.TopCenter).padding(top=80.dp,start=16.dp,end=16.dp))}
+    }
     fun openCategory(c: CategoryEntity?) {
+        categoryMenu=state.categoryChannels[c?.id]?.menu ?: true;categoryOrder=state.categoryChannels[c?.id]?.order ?: true
         categoryId=c?.id ?: UUID.randomUUID().toString();categoryRevision=c?.revision;categoryName=c?.name.orEmpty();categoryColor=c?.color ?: CategoryAppearance.DEFAULT_COLOR;categorySymbol=c?.symbol.orEmpty();categoryCommand=UUID.randomUUID().toString();model.dismissMessage()
     }
     if(categories && categoryId==null) CategoryListWindow(state.categories,state.products.groupingBy {it.product.categoryId}.eachCount(),!state.busy,administration.active,state.message.takeIf {state.error},
-        {categories=false},{openCategory(null)},{openCategory(it)},{openCategory(it);deleteCategory=true},{id,direction->model.moveCategory(id,direction)})
+        {categories=false},{openCategory(null)},{openCategory(it)},{openCategory(it);deleteCategory=true},{id,direction->model.moveCategory(id,direction)},state.categoryChannels,model::categoryChannel)
     if(administration.active && categoryId!=null && !deleteCategory) MposWebModal(if(categoryRevision==null) "Новая категория" else "Изменить категорию", { categoryId=null }, !state.busy) {
         if(state.error && state.message!=null) MposNotice(state.message!!, true)
         Column(Modifier.heightIn(max=380.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -101,13 +109,14 @@ import java.util.UUID
             },enabled=!state.busy && administration.active)
             listOf("Онлайн меню" to "Показывать категорию в меню для просмотра.","Онлайн заказ" to "Разрешить товары категории для онлайн-заказа.").forEach {(title,note)->
                 Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                    Column(Modifier.weight(1f)) {Text(title,fontWeight=FontWeight.Bold);Text(note,style=MaterialTheme.typography.bodySmall);Text("Будет подключено на этапе 09",style=MaterialTheme.typography.labelSmall)}
-                    Switch(false,null,enabled=false)
+                    Column(Modifier.weight(1f)) {Text(title,fontWeight=FontWeight.Bold);Text(note,style=MaterialTheme.typography.bodySmall)}
+                    val menu=title=="Онлайн меню"
+                    Switch(if(menu) categoryMenu else categoryOrder,{if(menu) categoryMenu=it else categoryOrder=it;categoryCommand=UUID.randomUUID().toString()},enabled=!state.busy)
                 }
             }
             if(categoryRevision!=null) Text("При переименовании категория изменится у всех товаров, которые к ней относятся.",style=MaterialTheme.typography.bodySmall)
         }
-        MposWebActions({categoryId=null;model.dismissMessage()},"Сохранить",{model.categorySave(categoryId!!,categoryRevision,categoryName,categoryCommand,categoryColor,categorySymbol) {categoryId=null}},!state.busy,tag="categorySave")
+        MposWebActions({categoryId=null;model.dismissMessage()},"Сохранить",{model.categorySave(categoryId!!,categoryRevision,categoryName,categoryCommand,categoryColor,categorySymbol,CategoryChannels(categoryMenu,categoryOrder)) {categoryId=null}},!state.busy,tag="categorySave")
         if(categoryRevision!=null) TextButton({deleteCategory=true},enabled=!state.busy,modifier=Modifier.testTag("categoryEditorDelete")) {Text("Удалить категорию",color=MaterialTheme.colorScheme.error)}
     }
     if(administration.active && confirmDiscard) MposWebModal("Сохранить изменения?", { confirmDiscard=false }) {

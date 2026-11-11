@@ -34,7 +34,7 @@ internal data class SettingsDirectory(val employees: List<Employee> = emptyList(
 /** Pinned renderSettingsScreen/renderAdminPanel, mapped to shared native controls. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable fun SettingsHome(onUpdates: ()->Unit,onCatalog: (() -> Unit)?,onSuppliers: (() -> Unit)?,
-    onInventory: (() -> Unit)?,onStock: (() -> Unit)?,onGallery: (() -> Unit)?,onBack: ()->Unit,updateAvailable: Boolean,onEmployees: (() -> Unit)?=null,onBackup: (() -> Unit)?=null,employees: List<Employee> = emptyList(),suppliers: List<Supplier> = emptyList(),directoryError: String?=null,model: SettingsCatalogViewModel=settingsCatalogModel()) {
+    onInventory: (() -> Unit)?,onStock: (() -> Unit)?,onGallery: (() -> Unit)?,onBack: ()->Unit,updateAvailable: Boolean,onEmployees: (() -> Unit)?=null,onBackup: (() -> Unit)?=null,employees: List<Employee> = emptyList(),suppliers: List<Supplier> = emptyList(),directoryError: String?=null,model: SettingsCatalogViewModel=settingsCatalogModel(),initialAdminPanel: Boolean=false) {
     val supplierContext=androidx.compose.ui.platform.LocalContext.current
     val supplierModel: com.mendelev.mpos.feature.suppliers.SupplierViewModel=androidx.lifecycle.viewmodel.compose.viewModel(factory=object: androidx.lifecycle.ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST") override fun <T: androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.suppliers.SupplierViewModel(com.mendelev.mpos.data.local.SupplierRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(supplierContext.applicationContext))) as T
@@ -66,16 +66,21 @@ internal data class SettingsDirectory(val employees: List<Employee> = emptyList(
     val accessModel: com.mendelev.mpos.feature.access.AdminViewModel=androidx.lifecycle.viewmodel.compose.viewModel()
     val navigation=LocalMposTopNavigation.current
     var network by rememberSaveable {mutableStateOf(false)}
-    var panel by rememberSaveable(admin.generation) {mutableStateOf(false)}
+    var loyalty by rememberSaveable {mutableStateOf(false)}
+    var panel by rememberSaveable(admin.generation) {mutableStateOf(initialAdminPanel)}
+    var company by rememberSaveable(admin.generation) {mutableStateOf(false)}
     var planned by rememberSaveable {mutableStateOf<String?>(null)}
-    var entry by remember(admin.generation) {mutableStateOf<SettingEntry?>(null)}
-    var entryRevision by remember(admin.generation) {mutableStateOf(0L)}
+    var entry by remember {mutableStateOf<SettingEntry?>(null)}
+    var entryRevision by remember {mutableStateOf(0L)}
+    LaunchedEffect(admin.generation) {if(entry?.kind==SettingKind.DISCOUNT) {entry=null;model.dismiss()}}
     var plannedAccess by remember {mutableStateOf(false)}
     fun edit(row: SettingEntry) {
-        if(!admin.active) {plannedAccess=true;return}
+        if(!admin.active && row.kind==SettingKind.DISCOUNT) {plannedAccess=true;return}
         model.dismiss();entryRevision=dictionaries.catalog.revision;entry=row
     }
-    LaunchedEffect(admin.active) {if(!admin.active) {panel=false;network=false}}
+    LaunchedEffect(admin.active) {if(!admin.active) {panel=false;network=false;loyalty=false}}
+    if(company && admin.active) CompanySettingsWindow(admin.generation) {company=false}
+    if(loyalty && admin.active) {com.mendelev.mpos.feature.loyalty.LoyaltyAdminScreen({loyalty=false;panel=true});return}
     if(network && admin.active) {NetworkSettingsScreen {network=false};return}
     if(!(panel && admin.active)) Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
         if(LocalMposTopNavigation.current!=null) MposAppBar {}
@@ -117,16 +122,16 @@ internal data class SettingsDirectory(val employees: List<Employee> = emptyList(
                         }
                     },
                     {
-                        SettingsCard("Поставщики товаров","Здесь настраиваются поставщики и товары, которые закреплены за каждым поставщиком.",onAction={supplierTarget="";supplierOpened=false;supplierModel.refresh()},tag="settingsSuppliers") {
+                        SettingsCard("Поставщики товаров","Здесь настраиваются поставщики и товары, которые закреплены за каждым поставщиком.",onAction={supplierTarget="";supplierOpened=false;supplierModel.refresh()},tag="settingsSuppliers",operatorEditable=true) {
                             if((supplierUi.snapshot?.suppliers ?: suppliers).isEmpty()) SettingsEmpty("Поставщиков пока нет.")
                             (supplierUi.snapshot?.suppliers ?: suppliers).forEach {supplier->
-                                SettingsDirectoryRow(supplier.name,"${supplier.productIds.size} закрепл. товаров",Modifier.testTag("supplier:${supplier.id}"),if(admin.active) { {supplierTarget=supplier.id;supplierOpened=false;supplierModel.refresh()} } else null)
+                                SettingsDirectoryRow(supplier.name,"${supplier.productIds.size} закрепл. товаров",Modifier.testTag("supplier:${supplier.id}"),{supplierTarget=supplier.id;supplierOpened=false;supplierModel.refresh()})
                             }
                         }
                     },
-                    {SettingsDictionaryCard(SettingKind.DELIVERY,dictionaries,admin.active,{edit(it)},{row->model.delete(row,dictionaries.catalog.revision) {}})},
-                    {SettingsDictionaryCard(SettingKind.DISCOUNT,dictionaries,admin.active,{edit(it)},{row->model.delete(row,dictionaries.catalog.revision) {}})},
-                    {SettingsDictionaryCard(SettingKind.RECEIPT_LABEL,dictionaries,admin.active,{edit(it)},{row->model.delete(row,dictionaries.catalog.revision) {}})}
+                    {SettingsDictionaryCard(SettingKind.DELIVERY,dictionaries,admin.active,{edit(it)})},
+                    {SettingsDictionaryCard(SettingKind.DISCOUNT,dictionaries,admin.active,{edit(it)})},
+                    {SettingsDictionaryCard(SettingKind.RECEIPT_LABEL,dictionaries,admin.active,{edit(it)})}
                 )
                 if(wide) Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(16.dp)) {
                     repeat(2) {column->Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(16.dp)) {
@@ -138,7 +143,7 @@ internal data class SettingsDirectory(val employees: List<Employee> = emptyList(
         }
     }
 
-    if(entry!=null && admin.active) SettingsEntryDialog(entry!!,entryRevision,model) {entry=null;model.dismiss()}
+    if(entry!=null && (admin.active || entry!!.kind!=SettingKind.DISCOUNT)) SettingsEntryDialog(entry!!,entryRevision,model) {entry=null;model.dismiss()}
     if(plannedAccess) MposDialog("Администрирование",{plannedAccess=false}) {
         Text("Для изменения справочников войдите в администрирование.")
         MposButton("Понятно",{plannedAccess=false})
@@ -155,9 +160,9 @@ internal data class SettingsDirectory(val employees: List<Employee> = emptyList(
                 }
                 Text("Версия ${com.mendelev.mpos.BuildConfig.VERSION_NAME}",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 val modules=listOf(
-                    AdminModule("loyalty","Программа лояльности","Программы, правила начисления, подарки и база клиентов. Будет реализовано.") {planned="Программа лояльности"},
+                    AdminModule("loyalty","Программа лояльности","Программы, правила начисления, подарки и база клиентов.","settingsLoyalty") {loyalty=true},
                     AdminModule("network","Сетевые настройки","Синхронизация, подключение принтера и сетевые конфигурации.","settingsNetwork") {network=true},
-                    AdminModule("company","Реквизиты организации","Название заведения, юридическое лицо, адрес и адрес доставки. Будет реализовано.") {planned="Реквизиты организации"},
+                    AdminModule("company","Реквизиты организации","Название заведения, юридическое лицо, адрес и адрес доставки.") {company=true},
                     AdminModule("inventory","Инвентаризация","График пересчёта, список товаров, проведение и история.","settingsInventory") {panel=false;onInventory?.invoke()},
                     AdminModule("warehouse","Складской учёт","Остатки, движение товаров, поставщики и складские отчёты.","settingsStock") {panel=false;onStock?.invoke()},
                     AdminModule("analytics","Аналитика","Продажи, возвраты, прибыль и отчёты.","settingsAnalytics") {panel=false;navigation?.navigate?.invoke("analytics")}
@@ -193,13 +198,13 @@ internal data class SettingsDirectory(val employees: List<Employee> = emptyList(
     }
 }
 @Composable private fun SettingsCard(title: String,description: String,planned: Boolean=false,onInfo: (() -> Unit)?=null,
-    onAction: (() -> Unit)?=null,tag: String?=null,content: @Composable ColumnScope.()->Unit) {
+    onAction: (() -> Unit)?=null,tag: String?=null,operatorEditable: Boolean=false,content: @Composable ColumnScope.()->Unit) {
     Surface(Modifier.fillMaxWidth(),shape=RoundedCornerShape(22.dp),shadowElevation=1.dp,color=MaterialTheme.colorScheme.surface) {
         Column(Modifier.padding(20.dp)) {
             Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                 Text(title,Modifier.weight(1f),fontSize=16.sp,fontWeight=FontWeight.ExtraBold)
                 val action=onAction ?: onInfo
-                if(action!=null && Administration.session.state.collectAsStateWithLifecycle().value.active) SettingsRoundAction("+",if(onAction!=null) "Открыть: $title" else "Будет подключено: $title",action,if(tag!=null) Modifier.testTag(tag) else Modifier)
+                if(action!=null && (operatorEditable || Administration.session.state.collectAsStateWithLifecycle().value.active)) SettingsRoundAction("+",if(onAction!=null) "Открыть: $title" else "Будет подключено: $title",action,if(tag!=null) Modifier.testTag(tag) else Modifier)
             }
 
             if(planned) SettingsEmpty("Будет реализовано")
@@ -221,26 +226,24 @@ internal data class SettingsDirectory(val employees: List<Employee> = emptyList(
     .background(MaterialTheme.colorScheme.onSurface.copy(alpha=.035f))
     .clickable(enabled=onClick!=null) {onClick?.invoke()}.padding(horizontal=14.dp,vertical=12.dp)
 
-@Composable private fun SettingsDictionaryCard(kind: SettingKind,ui: SettingsCatalogUi,admin: Boolean,onEdit: (SettingEntry)->Unit,onDelete: (SettingEntry)->Unit) {
+@Composable private fun SettingsDictionaryCard(kind: SettingKind,ui: SettingsCatalogUi,admin: Boolean,onEdit: (SettingEntry)->Unit) {
     val description=when(kind) {
         SettingKind.DISCOUNT->"Создайте варианты скидок, которые можно будет назначать отдельному товару в текущем заказе."
         SettingKind.DELIVERY->"Настройте варианты стоимости. Синхронизация с сайтом будет подключена позже."
         SettingKind.RECEIPT_LABEL->"Быстрые кнопки в окне «Отложить». Название можно изменить перед сохранением чека."
     }
-    SettingsCard(settingTitle(kind),description,onAction=if(ui.loading || ui.busy) null else { {onEdit(newSetting(kind))} },tag="settingsAdd:${kind.name}") {
+    SettingsCard(settingTitle(kind),description,onAction=if(ui.loading || ui.busy) null else { {onEdit(newSetting(kind))} },tag="settingsAdd:${kind.name}",operatorEditable=kind!=SettingKind.DISCOUNT) {
         val rows=ui.catalog.rows(kind)
         if(ui.loading) SettingsEmpty("Загрузка…") else if(rows.isEmpty()) SettingsEmpty(when(kind) {
             SettingKind.DISCOUNT->"Скидок пока нет.";SettingKind.DELIVERY->"Варианты доставки пока не добавлены.";SettingKind.RECEIPT_LABEL->"Шаблоны пока не добавлены."
         })
         rows.forEach {row->
-            Row(settingsRowModifier(Modifier.testTag("settingsEdit:${row.id}"),if(admin && !ui.busy) { {onEdit(row)} } else null),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+            Row(settingsRowModifier(Modifier.testTag("settingsEdit:${row.id}"),if((admin || kind!=SettingKind.DISCOUNT) && !ui.busy) { {onEdit(row)} } else null),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
                 Column(Modifier.weight(1f)) {
                     Text(row.name,fontSize=14.sp,fontWeight=FontWeight.Bold)
                     if(kind!=SettingKind.RECEIPT_LABEL) Text(if(row.type=="percent") "${row.value}%" else "${row.value} BYN",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                if(admin) {
-                    SettingsRoundAction("×","Удалить ${row.name}",{onDelete(row)},Modifier.offset(x=14.dp).testTag("settingsDelete:${row.id}"),enabled=!ui.busy)
-                }
+
             }
         }
     }

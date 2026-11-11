@@ -59,7 +59,7 @@ class OnlineOrderRepository(private val db: CatalogDatabase,private val afterWri
     }
     suspend fun localExists(record: OnlineAcceptance): Boolean = db.workspace().document("parked:${record.sessionId}")!=null ||
         db.workspace().document("current")?.let {WorkspaceCodec.cart(it.payload).sessionId==record.sessionId}==true || db.sales().session(record.sessionId)!=null
-    suspend fun accept(order: JSONObject,target: String,dataset: String,estimate: String): OnlineAcceptance=InstallationGate.write {db.withTransaction {
+    suspend fun accept(order: JSONObject,target: String,dataset: String,estimate: String,loyalty: com.mendelev.mpos.domain.loyalty.LoyaltySelection?=null): OnlineAcceptance=InstallationGate.write {db.withTransaction {
         require(OnlineOrderCodec.estimate(estimate)) {"Выберите время готовности"}
         val orderId=order.getString("id")
         require(Regex("[A-Za-z0-9_-]{1,100}").matches(orderId) && Regex("[0-9a-f]{64}").matches(target))
@@ -90,7 +90,7 @@ class OnlineOrderRepository(private val db: CatalogDatabase,private val afterWri
         val details=OrderRules.details(OrderDetails(label,type,order.optString("comment").takeUnless {it=="null"}.orEmpty(),
             order.optString("address").takeUnless {it=="null"}.orEmpty(),order.optString("phone").takeUnless {it=="null"}.orEmpty(),
             order.optString("customer_name").takeUnless {it=="null"}.orEmpty(),delivery,true))
-        val cart=CurrentCart(lines,state.graph.filter {it.id in used},session,System.currentTimeMillis(),details)
+        val cart=CurrentCart(lines,state.graph.filter {it.id in used},session,System.currentTimeMillis(),details,loyalty)
         WorkspaceCodec.cart(WorkspaceCodec.cart(cart)) // Validate all persisted text and exact decimals before any write.
         val reservations=OrderReservations.total(state.parked.map {it.cart}+listOf(state.cart))
         require(RecipeCalculator(cart.graph).shortages(CartEngine.requests(cart),state.balances,reservations).isEmpty()) {"Недостаточно остатков для заказа сайта"}

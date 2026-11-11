@@ -43,7 +43,7 @@ private fun displayPrice(value: BigDecimal?)=value?.setScale(2,RoundingMode.HALF
     LaunchedEffect(d.sessionId,section) {if(section=="usage" && d.expectedRevision!=null) model.loadUsage()}
     ProductEditorFrame(d.name,d.type,d.dirty,d.expectedRevision!=null,state.busy,section,{section=it},onBack,model::save,onDelete,
         summary={ProductEditorSummary(d,state)}) {
-        if(state.message!=null) {MposNotice(state.message,state.error);Spacer(Modifier.height(16.dp))}
+        if(state.error && state.message!=null) {MposNotice(state.message,true);Spacer(Modifier.height(16.dp))}
         if(state.field=="conflict") ProductEditorButton("Перечитать карточку",model::reloadProduct,enabled=!state.busy)
         when(section) {
             "main"->ProductMainPanel(model,state,d,onPhoto)
@@ -77,14 +77,9 @@ private fun displayPrice(value: BigDecimal?)=value?.setScale(2,RoundingMode.HALF
             "web"->{
                 ProductSectionHeading("Онлайн")
                 val details=d.details ?: ProductDetails()
-                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
-                    Text("Онлайн заказ",Modifier.weight(1f),fontWeight=FontWeight.Bold)
-                    Switch(details.onlineOrder ?: true,{v->model.change {it.copy(details=(it.details ?: ProductDetails()).copy(onlineOrder=v))}},enabled=enabled)
-                }
-                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
-                    Text("Онлайн меню",Modifier.weight(1f),fontWeight=FontWeight.Bold)
-                    Switch(details.onlineMenu ?: true,{v->model.change {it.copy(details=(it.details ?: ProductDetails()).copy(onlineMenu=v))}},enabled=enabled)
-                }
+                ProductEditorSwitch("Онлайн заказ",details.onlineOrder ?: true,{v->model.change {it.copy(details=(it.details ?: ProductDetails()).copy(onlineOrder=v))}},enabled,Modifier.testTag("productOnlineOrder"))
+                ProductEditorSwitch("Онлайн меню",details.onlineMenu ?: true,{v->model.change {it.copy(details=(it.details ?: ProductDetails()).copy(onlineMenu=v))}},enabled,Modifier.testTag("productOnlineMenu"))
+                ProductEditorSwitch("Всегда в наличии",details.alwaysAvailableOnline ?: false,{v->model.change {it.copy(details=(it.details ?: ProductDetails()).copy(alwaysAvailableOnline=v))}},enabled,Modifier.testTag("productAlwaysAvailableOnline"))
                 if(d.modifierGroups.any {it.minimum.toIntOrNull()?.let {n->n>0}==true}) ProductEditorNote("Товар с обязательными модификаторами пока не публикуется на сайте.")
                 Spacer(Modifier.height(20.dp))
                 ProductEditorField(details.description.orEmpty(),{v->model.change {it.copy(details=(it.details ?: ProductDetails()).copy(description=v))}},"Описание для онлайн-платформы",enabled=enabled,singleLine=false)
@@ -142,11 +137,12 @@ internal fun changeProductType(model: CatalogViewModel,type: String) {
         Column {
             Surface(color=MaterialTheme.colorScheme.primaryContainer,contentColor=MaterialTheme.colorScheme.primary) {
                 Column(Modifier.fillMaxWidth().padding(24.dp)) {
+                    Text(if(d.type=="composite") "Составной товар" else "Товар",Modifier.padding(bottom=12.dp).testTag("productSummaryType"),fontSize=14.sp,fontWeight=FontWeight.Bold)
                     Text("Цена продажи",fontSize=12.sp,fontWeight=FontWeight.Bold)
                     Text(displayPrice(price),Modifier.padding(top=8.dp),fontSize=30.sp,lineHeight=39.sp,fontWeight=FontWeight.Bold)
                 }
             }
-            listOf("Себестоимость" to cost,"Цена − себестоимость" to if(price!=null && cost!=null) price-cost else null).forEach {(label,value)->
+            listOf("Себестоимость" to cost,"Маржа" to if(price!=null && cost!=null) price-cost else null).forEach {(label,value)->
                 FlowRow(Modifier.fillMaxWidth().padding(start=20.dp,end=20.dp,top=18.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                     Text(label,fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(displayPrice(value),fontSize=12.sp,fontWeight=FontWeight.Bold)

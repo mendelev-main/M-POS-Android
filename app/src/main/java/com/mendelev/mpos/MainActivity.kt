@@ -106,13 +106,13 @@ fun FoundationScreen(fixtureUrl: String? = null) {
         CompositionLocalProvider(LocalMposTopNavigation provides navigation) {
             Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                 when (route) {
-                    "settings" -> {
+                    "settings","settingsAdmin" -> {
                         val model: UpdateViewModel = viewModel(factory = object : ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T =
                                 UpdateViewModel(UpdateRepository(context.applicationContext, fixture)) as T
                         })
-                        UpdatesScreen(model, onCatalog={route="catalog"}, onGallery={route="gallery"},onSuppliers={route="suppliers"},onInventory={route="inventory"},onStock={route="stock"},onEmployees={route="employees"},onBackup={route="backup"}) { route = "catalog" }
+                        UpdatesScreen(model, initialAdminPanel=route=="settingsAdmin", onCatalog={route="catalog"}, onGallery={route="gallery"},onSuppliers={route="suppliers"},onInventory={route="inventory"},onStock={route="stock"},onEmployees={route="employees"},onBackup={route="backup"}) { route = "catalog" }
                     }
                     "backup" -> {
                         val model: com.mendelev.mpos.feature.backup.BackupViewModel = viewModel(factory=object: ViewModelProvider.Factory {
@@ -123,7 +123,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                     }
                     "inventory", "inventoryWork", "inventoryHistory" -> {
                         com.mendelev.mpos.feature.inventory.InventoryScreen(inventoryModel,
-                            onBack={route=if(route=="inventoryWork" || route=="inventoryHistory") "inventory" else "settings"},onWork={route="inventoryWork"},work=route=="inventoryWork",onPause={route="workspace"},history=route=="inventoryHistory",onHistory={route="inventoryHistory"})
+                            onBack={route=if(route=="inventoryWork" || route=="inventoryHistory") "inventory" else "settingsAdmin"},onWork={route="inventoryWork"},work=route=="inventoryWork",onPause={route="workspace"},history=route=="inventoryHistory",onHistory={route="inventoryHistory"})
                     }
                     "stock" -> {
                         val model: com.mendelev.mpos.feature.stock.StockViewModel = viewModel(factory=object: ViewModelProvider.Factory {
@@ -154,7 +154,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                         val model: com.mendelev.mpos.feature.sale.SaleViewModel = viewModel(factory=object: ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST")
                             override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.sale.SaleViewModel(
-                                com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext)) as T
+                                com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext),{work,discounts->com.mendelev.mpos.backend.LoyaltyCheckout.verify(context.applicationContext,work,discounts)}) as T
                         })
                         val refunds: com.mendelev.mpos.feature.sale.RefundViewModel = viewModel(factory=object: ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST")

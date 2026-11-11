@@ -56,11 +56,11 @@ class BackendPublication(private val context: Context,private val http: BackendH
                 val id=WebIdentity.source(row["id"])
                 id to ((row["imageUrl"] as? BackupJson.Str)?.value ?: "")
             }.toMap()
-            fun flag(key: String,name: String)=((source?.root?.fields?.get(key) as? BackupJson.Obj)?.fields?.get(name) as? BackupJson.Bool)?.value ?: true
+            val categoryChannels=db.categoryChannels()
             val categories=db.catalog().categorySnapshot()
             val names=categories.associate {it.id to it.name}
             val catRows=categories.map {c->JSONObject().put("externalId","category:${c.name}").put("name",c.name).put("color",c.color)
-                .put("sortOrder",c.sortOrder).put("isActive",true).put("availableOnline",flag("categoryOnlineOrder",c.name)).put("visibleInOnlineMenu",flag("categoryOnlineMenu",c.name))}.toMutableList()
+                .put("sortOrder",c.sortOrder).put("isActive",true).put("availableOnline",(categoryChannels[c.id]?.order ?: true)).put("visibleInOnlineMenu",(categoryChannels[c.id]?.menu ?: true))}.toMutableList()
             if(work.products.any {it.categoryId.isBlank()}) catRows+=JSONObject().put("externalId","category:Без категории").put("name","Без категории").put("color","").put("sortOrder",catRows.size).put("isActive",true)
             val photos=linkedMapOf<String,String>()
             val eligible=work.products.filter {p->p.groups.none {it.minimum.toInt()>0}}
@@ -73,8 +73,8 @@ class BackendPublication(private val context: Context,private val http: BackendH
                 val category=names[p.categoryId] ?: "Без категории"
                 JSONObject().put("externalId",external).put("name",p.name).put("description",details.description ?: metadata.optString("description").takeUnless {it=="null"}.orEmpty())
                     .put("price",BigDecimal(p.price)).put("category",category).put("sortOrder",origin?.metadata?.sortOrder?.toBigDecimal() ?: index.toBigDecimal())
-                    .put("isActive",true).put("availableOnline",(details.onlineOrder ?: metadata.optBoolean("availableOnline",true)) && flag("categoryOnlineOrder",category))
-                    .put("visibleInOnlineMenu",(details.onlineMenu ?: metadata.optBoolean("availableInOnlineMenu",true)) && flag("categoryOnlineMenu",category))
+                    .put("isActive",true).put("availableOnline",(details.onlineOrder ?: metadata.optBoolean("availableOnline",true)) && (categoryChannels[p.categoryId]?.order ?: true))
+                    .put("visibleInOnlineMenu",(details.onlineMenu ?: metadata.optBoolean("availableInOnlineMenu",true)) && (categoryChannels[p.categoryId]?.menu ?: true))
                     .put("imageUrl",if(p.photoId==null && origin?.externalPhoto==true) sourcePhotos[origin.sourceId].orEmpty() else "")
             }
             val rates=SettingsRepository(db).snapshot().rows(SettingKind.DELIVERY)
@@ -144,11 +144,17 @@ class BackendPublication(private val context: Context,private val http: BackendH
             importedCache=marker to source?.let {WebCatalogMapping.map(it).products.associate {p->p.id to p.sourceId}}.orEmpty()
         }
         val imported=importedCache!!.second
+        val alwaysAvailable=db.workspace().documentsByPrefix(ProductDetailsCodec.PREFIX).mapNotNull {d->
+            val id=d.id.removePrefix(ProductDetailsCodec.PREFIX)
+            id.takeIf {ProductDetailsCodec.decode(d.payload,id).alwaysAvailableOnline==true}
+        }.toSet()
         val graph=work.graph.associateBy {it.id};val calculator=RecipeCalculator(work.graph)
-        val items=work.products.map {p->val node=graph.getValue(p.id)
-            val qty=if(node is RecipeProduct.Simple) {if(node.noStockTracking) null else work.balances[p.id] ?: BigDecimal.ZERO}
+        val items=work.products.map {p->
+            OnlineAvailability.item(imported[p.id] ?: p.id,p.id in alwaysAvailable) {
+            val node=graph.getValue(p.id)
+            if(node is RecipeProduct.Simple) {if(node.noStockTracking) null else work.balances[p.id] ?: BigDecimal.ZERO}
                 else calculator.physicalPortions(RecipeRequest(p.id,if(p.sellingBasis=="recipe-batch") (node as RecipeProduct.Composite).yield else BigDecimal.ONE,node.unit),work.balances)
-            JSONObject().put("externalId",imported[p.id] ?: p.id).put("quantity",qty?.max(BigDecimal.ZERO) ?: JSONObject.NULL)
+            }
         }
         val j=state(s);val revision=maxOf(System.currentTimeMillis(),Math.addExact(j.getLong("availabilityRevision"),1))
         j.put("availabilityRevision",revision);save(s,j)

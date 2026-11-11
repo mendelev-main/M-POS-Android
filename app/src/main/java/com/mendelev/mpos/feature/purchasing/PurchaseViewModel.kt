@@ -8,24 +8,57 @@ import com.mendelev.mpos.domain.catalog.CatalogFailure
 import com.mendelev.mpos.domain.warehouse.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.UUID
 
 data class PurchaseEdit(val baseline: PurchaseOrder,val initial: PurchaseDraft,val form: PurchaseDraft) {
     val dirty: Boolean get()=form!=initial
 }
 data class PurchaseUi(val snapshot: PurchaseSnapshot?=null,val form: PurchaseDraft?=null,val pending: Boolean=false,val blocked: Boolean=true,
-    val unresolved: PurchaseCommand?=null,val message: String?=null,val lastPlacedId: String?=null,val editing: PurchaseEdit?=null,val orderUnresolved: PurchaseOrderCommand?=null,val orderReloadNeeded: Boolean=false,val orderCommitted: Boolean=false,val canEdit: Boolean=false) {
-    val dirty: Boolean get()=form!=null && form!=snapshot?.draft
+    val unresolved: PurchaseCommand?=null,val message: String?=null,val lastPlacedId: String?=null,val editing: PurchaseEdit?=null,val orderUnresolved: PurchaseOrderCommand?=null,val orderReloadNeeded: Boolean=false,val orderCommitted: Boolean=false,val canEdit: Boolean=false,val saving: Boolean=false,val autoError: String?=null) {
+    val dirty: Boolean get()=snapshot!=null && form!=snapshot.draft
 }
-class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
+class PurchaseViewModel(private val access: PurchaseAccess,private val autoSaveEnabled: Boolean=true): ViewModel() {
     private val mutable=MutableStateFlow(PurchaseUi());val state=mutable.asStateFlow()
-    private val forms=AdminForms(viewModelScope)
-    private fun revoke() {mutable.update {it.copy(form=null,editing=null,canEdit=false)}}
-    private fun update(change: (PurchaseUi)->PurchaseUi) {mutable.update {old->change(old).let {if(forms.current()) it.copy(canEdit=true) else it.copy(form=null,editing=null,canEdit=false)}}}
-    init {forms.watch(::revoke);refresh()}
+    private val forms=AdminForms(viewModelScope) // Administrative cancellation only.
+    private fun update(change: (PurchaseUi)->PurchaseUi) {mutable.update {change(it).copy(canEdit=true)}}
+    private val writes=Mutex()
+    private var autoJob: Job?=null
+    private var autoCommand: PurchaseCommand?=null
+    private suspend fun completeAuto(command: PurchaseCommand) {
+        withContext(Dispatchers.IO) {access.outcome(command) ?: access.commit(command)}
+        val draft=(command.action as PurchaseAction.Working).draft
+        update {it.copy(snapshot=it.snapshot?.copy(revision=Math.addExact(command.revision,1),draft=draft),autoError=null)}
+        autoCommand=null
+    }
+    private fun autosave() {
+        if(!autoSaveEnabled || autoJob?.isActive==true) return
+        autoJob=viewModelScope.launch {
+            update {it.copy(saving=true)}
+            try {
+                while(true) {
+                    val again=writes.withLock {
+                        val ui=state.value
+                        if(ui.pending || ui.unresolved!=null || ui.orderUnresolved!=null) return@withLock false
+                        val snapshot=ui.snapshot ?: return@withLock false
+                        if(autoCommand==null && ui.form==snapshot.draft) return@withLock false
+                        val command=autoCommand ?: PurchaseCommand(UUID.randomUUID().toString(),snapshot.ownerId,snapshot.revision,PurchaseAction.Working(ui.form))
+                        autoCommand=command
+                        completeAuto(command)
+                        true
+                    }
+                    if(!again) break
+                }
+            } catch(e:CancellationException) {throw e}
+            catch(_:Exception) {update {it.copy(autoError="Не удалось автоматически сохранить заказ. Ввод сохранён в открытом приложении; повторите сохранение.")}}
+            finally {update {it.copy(saving=false)}}
+        }
+    }
+    fun retryAutosave()=autosave()
+    init {refresh()}
     fun refresh() {
-        if(state.value.pending || state.value.unresolved!=null || state.value.orderUnresolved!=null || state.value.editing!=null || state.value.dirty) return
-        forms.reopen(::revoke)
+        if(state.value.pending || state.value.saving || state.value.unresolved!=null || state.value.orderUnresolved!=null || state.value.editing!=null || state.value.dirty) return
         update {it.copy(pending=true,message=null)}
         viewModelScope.launch {
             try {val s=withContext(Dispatchers.IO) {access.snapshot()};update {it.copy(snapshot=s,form=s.draft,blocked=false)}}
@@ -34,15 +67,17 @@ class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
             finally {update {it.copy(pending=false)}}
         }
     }
-    private fun available()=forms.current() && !state.value.pending && !state.value.blocked && state.value.unresolved==null && state.value.orderUnresolved==null
+    private fun available()=!state.value.pending && !state.value.blocked && state.value.unresolved==null && state.value.orderUnresolved==null
     private fun editable()=available() && state.value.editing==null
     fun supplier(id: String) {
         if(!editable()) return
         val ui=state.value;val old=ui.form
         if(old?.supplierId==id) return
-        if(old?.lines?.isNotEmpty()==true) {update {it.copy(message="Сначала уберите строки или удалите черновик")};return}
+        if(old!=null && PurchaseDraftRules.hasRequestedLines(old)) {update {it.copy(message="Сначала уберите товары из текущего заказа")};return}
+        if(id.isBlank()) {update {it.copy(form=null,message=null)};autosave();return}
         val supplier=ui.snapshot?.suppliers?.find {it.id==id} ?: return
-        update {it.copy(form=PurchaseDraft(old?.id ?: UUID.randomUUID().toString(),id,supplier.revision,supplier.name,emptyList()),message=null)}
+        update {it.copy(form=PurchaseDraft(old?.id ?: ui.snapshot?.draft?.id ?: UUID.randomUUID().toString(),id,supplier.revision,supplier.name,emptyList()),message=null)}
+        autosave()
     }
     fun line(id: String,change: (PurchaseLine)->PurchaseLine) {
         if(!editable()) return
@@ -53,8 +88,9 @@ class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
         val old=d.lines.find {it.productId==id} ?: p.blankLine()
         val next=change(old)
         update {it.copy(form=d.copy(lines=if(d.lines.any {it.productId==id}) d.lines.map {if(it.productId==id) next else it} else d.lines+next),message=null)}
+        autosave()
     }
-    fun remove(id: String) {if(editable()) update {it.copy(form=it.form?.let {d->d.copy(lines=d.lines.filterNot {l->l.productId==id})},message=null)}}
+    fun remove(id: String) {if(editable()) {update {it.copy(form=it.form?.let {d->d.copy(lines=d.lines.filterNot {l->l.productId==id})},message=null)};autosave()}}
     fun discard() {if(!state.value.pending && state.value.unresolved==null && state.value.orderUnresolved==null && state.value.editing==null) update {it.copy(form=it.snapshot?.draft,message=null)}}
     fun revalidate() {
         if(!editable()) return
@@ -127,10 +163,10 @@ class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
     }
     fun retryOrder() {if(!state.value.pending) state.value.orderUnresolved?.let(::mutate)}
     private fun mutate(c: PurchaseOrderCommand) {
-        val permit=try {forms.command(c.commandId)} catch(e:CatalogFailure) {update {it.copy(message=e.message)};return}
+        val permit=try {if(c.action is PurchaseOrderAction.Cancel) {forms.reopen {};forms.command(c.commandId)} else null} catch(e:CatalogFailure) {update {it.copy(message=e.message)};return}
         update {it.copy(pending=true,orderUnresolved=c,message=null)}
         viewModelScope.launch {
-            try {withContext(Dispatchers.IO) {access.mutationOutcome(c) ?: permit.write {access.mutate(c)}};orderSaved(c)}
+            try {withContext(Dispatchers.IO) {access.mutationOutcome(c) ?: if(permit!=null) permit.write {access.mutate(c)} else access.mutate(c)};orderSaved(c)}
             catch(ex:CancellationException) {throw ex}
             catch(ex:Exception) {
                 try {
@@ -161,11 +197,25 @@ class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
     private val placeAfterSave=mutableSetOf<String>()
     fun saveAndPlace() {
         if(!editable()) return
-        if(!state.value.dirty && state.value.snapshot?.draft!=null) {place();return}
-        val ui=state.value;val d=ui.form ?: return;val s=ui.snapshot ?: return
-        try {PurchaseDraftRules.validateReferences(d,s.suppliers,s.products)} catch(e:CatalogFailure) {update {it.copy(message=e.message)};return}
-        val c=PurchaseCommand(UUID.randomUUID().toString(),s.ownerId,s.revision,PurchaseAction.Save(d))
-        placeAfterSave.add(c.commandId);submit(c)
+        update {it.copy(pending=true,message=null)}
+        viewModelScope.launch {
+            try {writes.withLock {
+                autoCommand?.let {completeAuto(it)}
+                val snapshot=withContext(Dispatchers.IO) {access.snapshot()}
+                check(snapshot.revision==state.value.snapshot?.revision) {"Заказ изменился в другом окне. Ввод сохранён; перечитайте данные"}
+                val raw=state.value.form ?: return@withLock
+                val draft=PurchaseDraftRules.revalidate(raw,snapshot.suppliers,snapshot.products)
+                PurchaseDraftRules.validateReferences(draft,snapshot.suppliers,snapshot.products)
+                update {it.copy(snapshot=snapshot,form=draft,pending=false)}
+                if(!state.value.dirty && snapshot.draft!=null) place()
+                else {
+                    val command=PurchaseCommand(UUID.randomUUID().toString(),snapshot.ownerId,snapshot.revision,PurchaseAction.Save(draft))
+                    placeAfterSave.add(command.commandId);submit(command)
+                }
+            }} catch(e:CancellationException) {throw e}
+            catch(e:Exception) {update {it.copy(pending=false,message=e.message ?: "Не удалось сформировать заказ. Ввод сохранён")}}
+            finally {if(state.value.unresolved==null) {update {it.copy(pending=false)};if(state.value.dirty) autosave()}}
+        }
     }
     fun place() {
         if(!editable()) return
@@ -183,20 +233,28 @@ class PurchaseViewModel(private val access: PurchaseAccess): ViewModel() {
         submit(PurchaseCommand(UUID.randomUUID().toString(),s.ownerId,s.revision,PurchaseAction.Clear))
     }
     fun retry() {if(!state.value.pending) state.value.unresolved?.let(::submit)}
-    private fun submit(c: PurchaseCommand) {
-        val permit=try {forms.command(c.commandId)} catch(e:CatalogFailure) {update {it.copy(message=e.message)};return}
-        update {it.copy(pending=true,unresolved=c,message=null)}
+    private fun submit(raw: PurchaseCommand) {
+        update {it.copy(pending=true,unresolved=raw,message=null)}
         viewModelScope.launch {
-            try {withContext(Dispatchers.IO) {access.outcome(c) ?: permit.write {access.commit(c)}};saved(c)}
-            catch(e:CancellationException) {throw e}
+            var command=raw
+            try {writes.withLock {
+                autoCommand?.let {completeAuto(it)}
+                val known=withContext(Dispatchers.IO) {access.outcome(command)}
+                if(known==null) {
+                    command=command.copy(revision=state.value.snapshot?.revision ?: command.revision)
+                    update {it.copy(unresolved=command)}
+                    withContext(Dispatchers.IO) {access.commit(command)}
+                }
+                saved(command)
+            }} catch(e:CancellationException) {throw e}
             catch(e:Exception) {
                 try {
-                    if(withContext(Dispatchers.IO) {access.outcome(c)}!=null) saved(c)
-                    else update {it.copy(unresolved=null,message=if(e is CatalogFailure) e.message else "Черновик не сохранён. Ввод сохранён; повторите действие")}
+                    if(withContext(Dispatchers.IO) {access.outcome(command)}!=null) saved(command)
+                    else update {it.copy(unresolved=null,message=if(e is CatalogFailure) e.message else "Заказ не сохранён. Ввод сохранён; повторите действие")}
                 } catch(e2:CancellationException) {throw e2}
-                catch(_:Exception) {update {it.copy(blocked=true,unresolved=c,message="Результат неизвестен. Проверьте ту же команду перед новым действием")}}
+                catch(_:Exception) {update {it.copy(blocked=true,unresolved=command,message="Результат неизвестен. Проверьте ту же команду перед новым действием")}}
             } finally {update {it.copy(pending=false)}}
-            if(placeAfterSave.remove(c.commandId) && !state.value.blocked && state.value.unresolved==null && !state.value.dirty && state.value.snapshot?.draft!=null) place()
+            if(placeAfterSave.remove(raw.commandId) && !state.value.blocked && state.value.unresolved==null && !state.value.dirty && state.value.snapshot?.draft!=null) place()
         }
     }
     private suspend fun saved(c: PurchaseCommand) {

@@ -91,3 +91,5 @@ Inventory close04b.3: history payload3 reads1/2, loss policy1=negative delta × 
 
 
 07.3b native restore: версии Room9 и native archive1 прежние. Локация working DB+photos выбирается immutable generation selector, legacy path поддержан без копирования при обычном APK update. Restore/pending/descriptor metadata вне business tables; archive/source financial payloads не пересчитываются. [Протокол и ограничения](NATIVE-ACTIVATION-07-3B.md). Приложение/сертификат/preferences/admin session не берутся из backup.
+
+10.11.2026: purchase-draft codec2/working:true хранит raw рабочие поля для автоматического сохранения; codec1 сохраняет прежнюю strict validation. Это не финансовый документ: Place/Receiving используют прежние строгие денежные/количественные правила. Контракт: PURCHASE-AUTOSAVE.md.

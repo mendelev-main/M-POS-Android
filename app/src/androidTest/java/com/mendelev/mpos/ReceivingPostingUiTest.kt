@@ -33,14 +33,16 @@ class ReceivingPostingUiTest {
         compose.onNodeWithTag("receivingInvoice").performScrollTo().performTextInput("TTN-$key")
         compose.onNodeWithTag("receivingQty:$id").performScrollTo().performTextReplacement("12")
         compose.onNodeWithTag("receivingTotal:$id").performScrollTo().performTextInput("48");hideKeyboard()
-        compose.onNodeWithTag("receivingSave").performClick();compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty}
-        compose.onNodeWithTag("receivingPreview").performClick();compose.waitUntil(20_000) {model.state.value.preview!=null && !model.state.value.pending}
-        compose.onNodeWithTag("receivingPost").performClick()
+        compose.onNodeWithTag("receivingMore").assertDoesNotExist()
+        compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.saving && !model.state.value.dirty}
+        compose.onNodeWithTag("receivingPreview").performScrollTo().performClick();compose.waitUntil(20_000) {model.state.value.preview!=null && !model.state.value.pending}
         compose.onNodeWithTag("receivingPostConfirm").assertIsNotEnabled()
         compose.onNodeWithTag("receivingOverage").performClick();compose.onNodeWithTag("receivingPostConfirm").assertIsEnabled()
         shot("receiving-post-confirm")
         compose.onNodeWithTag("receivingPostConfirm").performClick()
         compose.waitUntil(20_000) {!posting.state.value.pending && posting.state.value.committed!=null && model.state.value.form==null && !model.state.value.pending}
+        compose.onNodeWithTag("receivingHistory").performClick()
+        compose.onNodeWithTag("receivingPosted:${posting.state.value.committed}").performScrollTo().performClick()
         compose.onNodeWithTag("receivingPostedTitle").assertTextContains("TTN-$key",substring=true)
         shot("receiving-posted")
         compose.activityRule.scenario.recreate()

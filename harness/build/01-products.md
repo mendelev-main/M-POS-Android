@@ -55,3 +55,13 @@
 P03 appearance: [цвет/обозначение/schema4](../../docs/CATEGORY-APPEARANCE.md) ci-verified API36/run40101394875/attempt2,26JVM/24instrumentation+2explicitUI/updateE2E; device отдельно.
 
 2026-11-08: локальный инкремент P01–P10/T01–T10 — [CATALOG-WEB-PARITY](../../docs/CATALOG-WEB-PARITY.md): таблица/поиск/фильтр/категории, редактируемые metadata, usage, picker, сохранение/отмена. Admin/ledger/revision/история сохранены; device/pixel pending.
+
+10.11.2026 PCE01–04 implemented locally/PCE05 local validation: [компактная карточка товара](../../docs/PRODUCT-CARD-POLISH.md). Модификаторы по текущему Web, requested compact variation; stock flags shared switches above fields. Device verification pending.
+
+2026-11-10 P02/T02 category channels и visual parity: ../../docs/PRINT-CATEGORIES-TOPBAR-PARITY.md. Device pending.
+
+
+2026-11-10: alwaysAvailableOnline switch, product details/draft/backup v4 — ../../docs/ONLINE-ALWAYS-AVAILABLE.md. UI/site verification pending.
+
+
+2026-11-10: catalog success feedback вынесен в компактный overlay2500ms; persistent error banners сохранены. Адресные проверки TransientMessagesTest + main compile, результат в build-log.

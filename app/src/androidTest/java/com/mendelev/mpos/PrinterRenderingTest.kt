@@ -18,6 +18,9 @@ class PrinterRenderingTest {
             val bytes=ReceiptRenderer.encode(d,p)
             assertArrayEquals(byteArrayOf(27,64,29,118,48,0),bytes.take(6).toByteArray())
             assertTrue(bytes.size>1000)
+            // Web Android ignores the legacy text flag and rasterizes both modes identically.
+            assertArrayEquals(bytes,ReceiptRenderer.encode(d,p.copy(printMode="text")))
+            assertArrayEquals(byteArrayOf(10,29,86,66,0),bytes.takeLast(5).toByteArray())
         }
         val dir=File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir,"print-jobs-${UUID.randomUUID()}")
         try {

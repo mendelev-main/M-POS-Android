@@ -33,9 +33,28 @@ class PurchaseViewModelTest {
     }
     private suspend fun ready(vm: PurchaseViewModel)=withTimeout(20_000) {vm.state.first {!it.pending}}
     private fun model(store: ViewModelStore,fake: Fake)=ViewModelProvider(store,object: ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=PurchaseViewModel(fake) as T
+        @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=PurchaseViewModel(fake,autoSaveEnabled=false) as T
     })[PurchaseViewModel::class.java]
     private fun edit(vm: PurchaseViewModel) {vm.supplier("s");vm.line("p") {it.copy(quantity="24",packSize="500",contentUnit="ml")}}
+    @Test fun emptySupplierChoiceCanBeClearedButFilledRequestCannotBeDiscardedBySwitch(): Unit=runBlocking {
+        val fake=Fake();val store=ViewModelStore();val vm=withContext(Dispatchers.Main) {model(store,fake)};ready(vm)
+        withContext(Dispatchers.Main) {vm.supplier("s");vm.supplier("")}
+        assertNull(vm.state.value.form)
+        withContext(Dispatchers.Main) {edit(vm);vm.supplier("")}
+        assertEquals("s",vm.state.value.form!!.supplierId)
+        assertEquals("24",vm.state.value.form!!.lines.single().quantity)
+        assertEquals(0,fake.calls);withContext(Dispatchers.Main) {store.clear()}
+    }
+    @Test fun employeeCreatesOrderWithoutOpeningAdministrativeSession(): Unit=runBlocking {
+        val store=ViewModelStore();val f=Fake()
+        try {
+            com.mendelev.mpos.core.access.Administration.session.logout()
+            val vm=withContext(Dispatchers.Main) {model(store,f)};ready(vm)
+            withContext(Dispatchers.Main) {edit(vm);vm.saveAndPlace()}
+            withTimeout(20_000) {vm.state.first {!it.pending && it.lastPlacedId!=null}}
+            assertEquals(1,vm.state.value.snapshot!!.orders.size);assertFalse(com.mendelev.mpos.core.access.Administration.session.state.value.active)
+        } finally {withContext(Dispatchers.Main) {store.clear()}}
+    }
     @Test fun formAndPlaceSavesLatestInputAndIgnoresRepeatedTap(): Unit=runBlocking {
         val store=ViewModelStore();val f=Fake()
         try {

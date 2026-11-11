@@ -1,5 +1,7 @@
 package com.mendelev.mpos.data.local
 
+import com.mendelev.mpos.domain.warehouse.*
+
 import androidx.room.withTransaction
 import com.mendelev.mpos.domain.catalog.CatalogRules
 import com.mendelev.mpos.domain.catalog.unitLabel
@@ -40,10 +42,14 @@ class StockDocumentReader(private val db: CatalogDatabase) {
             "inventory"->{
                 val d=InventoryCodec.decode(checkNotNull(db.workspace().document(InventoryCodec.KEY)).payload)
                 val record=d.history.singleOrNull {it.id==link};val draft=record?.draft ?: checkNotNull(d.draft?.takeIf {it.id==link})
-                val fixed=draft.counts.mapNotNull {it.fixed}.single {it.movementId==m.id}
-                require(fixed.product.id==m.productId);matches("inventory.stock.v1",fixed.commandId,fixed.at,fixed.delta)
+                val count=draft.counts.single {it.fixed?.movementId==m.id || it.corrections.any {x->x.movementId==m.id}}
+                val fixed=count.fixed!!
+                require(fixed.product.id==m.productId)
+                val correction=count.corrections.firstOrNull {it.movementId==m.id}
+                if(correction==null) matches("inventory.stock.v1",fixed.commandId,fixed.at,fixed.delta)
+                else matches("inventory.correction.v1",correction.commandId,correction.at,correction.delta)
                 StockDocument("Инвентаризация · ${if(record==null) "В работе" else if(record.cancelled) "Отменена" else "Завершена"}",record?.at ?: draft.startedAt,
-                    draft.products.map {p->val f=draft.counts.find {it.product.id==p.id}?.fixed; if(f==null) "${p.name}: не зафиксировано" else "${f.product.name}: учёт ${f.product.stock} · факт ${f.actual} · разница ${f.delta} ${unitLabel(f.product.unit)}"},fixed.product.unit)
+                    draft.products.map {p->val c=draft.counts.find {it.product.id==p.id};val f=c?.fixed; if(f==null) "${p.name}: не зафиксировано" else "${f.product.name}: учёт ${f.product.stock} · факт ${c!!.effectiveActual} · разница ${c.effectiveDelta} ${unitLabel(f.product.unit)}"},fixed.product.unit)
             }
             else->error("Для этого движения нет отдельного документа")
         }

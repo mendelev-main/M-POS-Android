@@ -2,6 +2,7 @@ package com.mendelev.mpos
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.test.*
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.lifecycle.*
 import androidx.room.Room
@@ -38,6 +39,7 @@ class EmployeeUiTest {
             compose.onNodeWithTag("shiftSetupEmployees").performScrollTo().performClick()
             compose.waitUntil(20_000) {!staff.state.value.pending && !staff.state.value.blocked}
             compose.onNodeWithTag("employeeNew").performClick()
+            compose.onNodeWithTag("employeeAdmin").assertDoesNotExist();compose.onNodeWithTag("employeeSave").assertHeightIsEqualTo(48.dp)
             compose.onNodeWithTag("employeeName").performTextInput("Иванова Анна")
             shot("employee-card")
             compose.onNodeWithTag("employeeSave").performScrollTo().performClick()

@@ -9,6 +9,33 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class BackendTest {
+    @Test fun onlineAcceptanceSendsWebReadyEstimateWithoutQueryCredentials() {
+        val calls=mutableListOf<String>()
+        val transport=OnlineOrderTransport(BackendHttp(client {r->
+            assertEquals("POST",r.method);assertEquals("/pos/api/orders/order-123/accept",r.url.encodedPath)
+            assertNull(r.url.query);assertEquals(settings.deviceKey,r.header("X-Device-Key"))
+            val sink=okio.Buffer();r.body!!.writeTo(sink)
+            calls+=JSONObject(sink.readUtf8()).getString("readyEstimate")
+            200 to "{\"ok\":true,\"order\":{\"id\":\"order-123\",\"status\":\"accepted\"}}"
+        }))
+        listOf("5m","15m","30m","40m","60plus","at:18:30").forEach {transport.accept(settings,"order-123",it)}
+        assertEquals(listOf("5m","15m","30m","40m","60plus","at:18:30"),calls)
+        try {transport.accept(settings,"order-123","at:25:90");fail()} catch(_:IllegalArgumentException) {}
+        assertEquals(6,calls.size)
+    }
+    @Test fun readyUsesWebNotificationCommandAndNeverFallsBackToSilentStatusChange() {
+        var calls=0
+        val transport=OnlineOrderTransport(BackendHttp(client {r->
+            calls++;assertEquals("POST",r.method);assertEquals("/pos/api/orders/order-123/ready",r.url.encodedPath)
+            val sink=okio.Buffer();r.body!!.writeTo(sink);assertEquals("{}",sink.readUtf8())
+            404 to "{}"
+        }))
+        try {transport.ready(settings,"order-123");fail()} catch(e:BackendFailure) {assertEquals(404,e.status)}
+        assertEquals(1,calls)
+        OnlineOrderTransport(BackendHttp(client {200 to "{\"ok\":true}"})).ready(settings,"order-123")
+        try {OnlineOrderTransport(BackendHttp(client {200 to "{\"ok\":true,\"order\":{\"id\":\"other\",\"status\":\"ready\"}}"})).ready(settings,"order-123");fail()}
+        catch(_:IllegalStateException) {}
+    }
     private val settings=BackendSettings(url="https://shop.example.org/pos/",deviceKey="fixture-device-key")
     private fun client(handler: (Request)->Pair<Int,String>)=OkHttpClient.Builder().addInterceptor {chain->
         val (code,body)=handler(chain.request())

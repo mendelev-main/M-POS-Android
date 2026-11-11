@@ -34,6 +34,15 @@ class SaleViewModelTest {
             assertEquals(2000L,shifts.snapshot().currentCash)
             withContext(Dispatchers.Main) {model.prepare(autoCommit=true)}
             assertEquals("9",db.catalog().balance("p")!!.quantity)
+            var left=false
+            withContext(Dispatchers.Main) {model.finish {left=true}}
+            withTimeout(20_000) {model.state.first {!it.pending && left}}
+            assertNull(model.state.value.completed);assertNull(model.state.value.split)
+            assertNull(model.state.value.preview);assertTrue(model.state.value.work!!.cart.lines.isEmpty())
+            work.cart(CartAction.Add("p",1,emptySet(),null,"next-line"),"next-add",work.snapshot().cart.sessionId)
+            withContext(Dispatchers.Main) {model.open();assertTrue(model.state.value.loading);assertNull(model.state.value.split);assertNull(model.state.value.completed)}
+            val fresh=withTimeout(20_000) {model.state.first {!it.pending && !it.loading}}
+            assertEquals("next-line",fresh.work!!.cart.lines.single().id);assertEquals("cash",fresh.form.mode)
         } finally {withContext(Dispatchers.Main) {store.clear()};db.close()}
     }
 

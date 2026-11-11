@@ -68,12 +68,12 @@ class WorkspaceUiTest {
         compose.onNodeWithTag("workspaceLayoutMenu").performClick()
         compose.onNodeWithTag("layoutMenu:folder").performClick()
         compose.onNodeWithTag("workspaceFolderName").performTextInput(folderName)
-        compose.onNodeWithText("Сохранить папку").performClick()
+        compose.onNodeWithTag("workspaceFolderSave").performScrollTo().performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.layout.any {it.type=="folder" && it.name==folderName}}
         val folder=model.state.value.snapshot!!.layout.first {it.type=="folder" && it.name==folderName}.id
         compose.onNodeWithTag("workspaceProduct:$coffee").performClick()
         compose.onNodeWithText("Корень категории").performClick();compose.onNode(hasText(folderName) and hasAnyAncestor(isPopup())).performClick()
-        compose.onNodeWithText("Переместить").performClick()
+        compose.onNodeWithTag("workspacePlacementSave").performClick()
         compose.waitUntil(20_000) {model.state.value.pending==0 && model.state.value.snapshot!!.layout.any {it.id==coffee && it.folderId==folder}}
         compose.onNodeWithTag("workspaceEdit").performClick()
         compose.onNodeWithTag("workspaceFolder:$folder").performClick()

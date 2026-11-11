@@ -47,15 +47,23 @@ class PrintRuntime private constructor(private val context: Context) {
     val pendingJobs=pending.asStateFlow()
     fun clearStatus() {mutable.value=null}
     fun configurations()=PrinterSettingsStore(File(context.filesDir,"printer-configurations-v1.json")) {Administration.session.state.value.active}.read()
+    internal suspend fun prepare(document: PrintDocument): PrintDocument {
+        if(document.kind!=PrintKind.SHIFT || document.label.isNotBlank()) return document
+        val raw=CatalogDatabase.get(context).workspace().document(com.mendelev.mpos.domain.backup.WebSettingsMapping.COMPANY)?.payload
+        val name=raw?.let {org.json.JSONObject(it).optString("establishmentName").trim()}.orEmpty()
+        return document.copy(label=name)
+    }
     fun print(document: PrintDocument,p: PrinterConfiguration,key: String="manual:${UUID.randomUUID()}") {
         pending.update {it+1}
         scope.launch {try {
             val config=p.validated()
+            check(config.enabled) {"Принтер выключен"}
             if(document.kind==PrintKind.KITCHEN && document.items.none {config.categories.isBlank() || it.category in config.categories.lines().map(String::trim)}) {mutable.value="Нет товаров выбранных категорий для ${p.name}";return@launch}
             locks.getOrPut(config.ip) {Mutex()}.withLock {
                 val previousStatus=mutable.value
                 mutable.value="Отправка на ${config.name}…"
-                val result=dispatcher.dispatch(key,config.ip) {ReceiptRenderer.encode(document,config)}
+                val prepared=prepare(document)
+                val result=dispatcher.dispatch(key,config.ip) {ReceiptRenderer.encode(prepared,config)}
                 mutable.value=if(result.duplicate) previousStatus else "${config.name}: ${result.message}"
             }
         } catch(_:CancellationException) {throw CancellationException()} catch(e:Exception) {mutable.value=e.message ?: "Не удалось подготовить печать"} finally {pending.update {it-1}}}
@@ -63,7 +71,12 @@ class PrintRuntime private constructor(private val context: Context) {
     fun autoSale(value: Pair<ReceiptEntity,ReceiptSnapshot>) {
         scope.launch {try {
             val employee=CatalogDatabase.get(context).shifts().shift(value.first.shiftId)?.actorName ?: "Сотрудник"
-            val doc=PrintDocuments.receipt(value,employee)
+            if(value.second.cart.loyalty!=null) try {kotlinx.coroutines.withTimeout(5500) {com.mendelev.mpos.backend.LoyaltyDelivery.sync(context,com.mendelev.mpos.backend.LoyaltyServices.settings(context))}}
+                catch(_:kotlinx.coroutines.TimeoutCancellationException) {}
+                catch(e:CancellationException) {throw e}
+                catch(_:Exception) {}
+            val effect=if(value.second.cart.loyalty==null) null else com.mendelev.mpos.data.local.LoyaltyOutbox(CatalogDatabase.get(context)).read(value.first.id)
+            val doc=PrintDocuments.receipt(value,employee,effect)
             val printers=configurations()
             val receipts=PrinterRouting.targets(PrintKind.RECEIPT,printers,true)
             val kitchen=PrinterRouting.targets(PrintKind.KITCHEN,printers,true)
@@ -108,7 +121,7 @@ class PrintRuntime private constructor(private val context: Context) {
                 val active=ShiftRepository(CatalogDatabase.get(context)).snapshot().active!=null
                 check(Administration.session.state.value.active || active) {"Откройте смену или войдите в администрирование"}
             }
-            val p=configurations().singleOrNull {it.printReceipts && it.drawer}
+            val p=configurations().singleOrNull {it.enabled && it.printReceipts && it.drawer}
             if(p==null) {if(!automatic) mutable.value="Принтер с кассовым ящиком не настроен";return@launch}
             locks.getOrPut(p.ip) {Mutex()}.withLock {
                 val result=dispatcher.dispatch("drawer:$event",p.ip) {EscPosCommands.drawer(p.drawerCommand)}

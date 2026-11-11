@@ -41,15 +41,10 @@ class AdminCapabilityMatrixTest {
             check("catalog.draft.discard") {catalog.discardDraft()}
             for((i,a) in listOf(EmployeeAction.Save("cashier",1,"Другое","","admin"),EmployeeAction.Delete("cashier",1)).withIndex())
                 check("employee.$i") {employees.commit(EmployeeCommand("denied-employee-$i",seed.owner,a))}
-            for((i,a) in listOf(SupplierAction.Save(seed.order.source.supplierId,1,"Другое",setOf(p.id)),SupplierAction.Delete(seed.order.source.supplierId,1)).withIndex())
+            for((i,a) in listOf(SupplierAction.Delete(seed.order.source.supplierId,1)).withIndex())
                 check("supplier.$i") {SupplierRepository(db).commit(SupplierCommand("denied-supplier-$i",seed.owner,a))}
-            for((i,a) in listOf(PurchaseAction.Save(seed.order.source),PurchaseAction.Place("new-order",seed.order.source),PurchaseAction.Clear).withIndex())
-                check("purchase.draft.$i") {purchase.commit(PurchaseCommand("denied-purchase-$i",seed.owner,ps.revision,a))}
-            for((i,a) in listOf(PurchaseOrderAction.Edit(seed.order.source),PurchaseOrderAction.Cancel).withIndex())
-                check("purchase.order.$i") {PurchaseOrderRepository(db).commit(PurchaseOrderCommand("denied-order-$i",seed.owner,seed.order.id,seed.order.revision,a))}
-            check("receiving.save") {receiving.commit(ReceivingCommand("denied-invoice",seed.owner,invoice.key,1,invoice))}
-            check("receiving.clear") {receiving.commit(ReceivingCommand("denied-invoice-clear",seed.owner,invoice.key,1,null))}
-            check("receiving.post") {ReceivingPostingRepository(db).commit(ReceivingPostCommand("denied-post",seed.owner,1,invoice))}
+            check("purchase.order.cancel") {PurchaseOrderRepository(db).commit(PurchaseOrderCommand("denied-order-cancel",seed.owner,seed.order.id,seed.order.revision,PurchaseOrderAction.Cancel))}
+            // Purchase save/place/edit and receiving save/post are operational (OperatorReceivingAccessTest).
             for((i,a) in listOf(InventoryAction.Configure(InventoryConfig()),InventoryAction.Start("count","adhoc"),InventoryAction.Count("count",product,"9","generation"),InventoryAction.Fix("count",p.id,"generation"),InventoryAction.Finish("count",false),InventoryAction.Finish("count",true)).withIndex())
                 check("inventory.$i") {inventory.commit(InventoryCommand("denied-inventory-$i",seed.owner,inv.revision,a))}
             val before=tables(db)

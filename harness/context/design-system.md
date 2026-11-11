@@ -49,3 +49,5 @@ Stock UI editable без обязательной причины, внутри p
 - 2026-11-07 S01–S07: кассовая смена по Web — карточки/grid/история и модальные формы shared MposWebModal. Источник/числа/исключения: [SHIFT-WEB](../../docs/SHIFT-WEB.md). Hardware и визуальная приёмка pending.
 
 - 2026-11-08 T01–T10: вкладка товаров по Web, общий поисковый picker, категории/подтверждения и подключённые sku/note/symbol; контракт [CATALOG-WEB-PARITY](../../docs/CATALOG-WEB-PARITY.md). Онлайн09 и визуальная приёмка pending.
+
+2026-11-10 UI01: владелец уточнил высоту верхней подсветки44, ширину по надписи. Все капсулы minimum44, accessibility font growth сохранён. ../../docs/PRINT-CATEGORIES-TOPBAR-PARITY.md.

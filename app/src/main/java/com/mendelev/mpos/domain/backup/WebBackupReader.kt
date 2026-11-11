@@ -129,8 +129,8 @@ object WebBackupReader {
                 if(sum!=total || !paidPart) backupBad("payment");drafts++
             }
         }
-        val deferred=listOf("hallTables","bookings","operationalOutbox","webEvents","discounts","deliveryRates","receiptLabelTemplates").filter {rows.getValue(it).isNotEmpty()}+
-            listOf("network","telegram","printer","printerSettings","webOrderAcceptances","company","theme").filter {f[it]!=null}+
+        val deferred=listOf("hallTables","bookings","operationalOutbox","webEvents").filter {rows.getValue(it).isNotEmpty()}+
+            listOf("webOrderAcceptances").filter {f[it]!=null}+
             if(sessions.any {s->obj(s).fields.keys.any {it.startsWith("loyalty") || it in setOf("webOrderId","webOrderStatus")}}) listOf("sessionIntegrations") else emptyList()
         val known=(arrays+objects+nullable+listOf("version","exportedAt","printerSettings","productImages","imageCount","theme","demandOverload","operationalRevision")).toSet()
         val sha=MessageDigest.getInstance("SHA-256").digest(original).joinToString("") {"%02x".format(it)}

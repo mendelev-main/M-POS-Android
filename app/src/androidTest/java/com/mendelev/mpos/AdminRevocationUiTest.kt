@@ -56,7 +56,7 @@ class AdminRevocationUiTest {
             assertEquals(0,runBlocking {db.catalog().categorySnapshot().size});assertEquals("Товар",runBlocking {db.catalog().product("p")!!.name})
         } finally {compose.runOnIdle {store.clear()};db.close()}
     }
-    @Test fun inventoryFixConfirmationClosesWhileSavedCountAndStockRemain() {
+    @Test fun inventoryCancelDialogClosesWhileSavedCountAndStockRemain() {
         val context=InstrumentationRegistry.getInstrumentation().targetContext
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build();val store=ViewModelStore()
         lateinit var model: com.mendelev.mpos.feature.inventory.InventoryViewModel
@@ -75,13 +75,13 @@ class AdminRevocationUiTest {
             })[com.mendelev.mpos.feature.inventory.InventoryViewModel::class.java]}
             compose.setContent {MposTheme {com.mendelev.mpos.feature.inventory.InventoryScreen(model,{},work=true)}}
             compose.waitUntil(20_000) {!model.state.value.pending && model.state.value.snapshot!=null}
-            compose.onNodeWithTag("inventoryFix:p").performScrollTo().performClick()
-            compose.onNodeWithTag("inventoryFixConfirm").assertIsDisplayed()
+            compose.onNodeWithTag("inventoryCancel").performClick()
+            compose.onNodeWithTag("inventoryFinishConfirm").assertIsDisplayed()
             runBlocking {Administration.session.logout()}
-            compose.onNodeWithTag("inventoryFixConfirm").assertDoesNotExist()
+            compose.onNodeWithTag("inventoryFinishConfirm").assertDoesNotExist()
             compose.onNodeWithTag("inventoryFix:p").assertIsNotEnabled()
             runBlocking {assertTrue(Administration.session.login("fixture-admin".toCharArray()))}
-            compose.onNodeWithTag("inventoryFixConfirm").assertDoesNotExist()
+            compose.onNodeWithTag("inventoryFinishConfirm").assertDoesNotExist()
             assertEquals("10",runBlocking {db.catalog().balance("p")!!.quantity})
             val count=runBlocking {repo.snapshot().document.draft!!.counts.single()}
             assertEquals("3",count.raw);assertNull(count.fixed)

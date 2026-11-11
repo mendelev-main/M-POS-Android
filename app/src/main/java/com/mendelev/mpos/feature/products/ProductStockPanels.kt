@@ -43,8 +43,8 @@ private fun costLabel(value: BigDecimal?)=value?.setScale(2,RoundingMode.HALF_UP
     }
     if(showTypeSelector && d.expectedRevision==null) ProductEditorSelect("Тип товара",d.type,listOf("simple" to "Простой","composite" to "Составной"),{changeProductType(model,it)},enabled,Modifier.testTag("productType"))
     if(d.type=="simple") {
-        ProductEditorFlag("Разрешить продажу при отрицательном остатке",d.allowNegativeStock,{v->change {it.copy(allowNegativeStock=v)}},enabled)
-        ProductEditorNote("Продажа разрешена при нехватке товара. Учёт продолжается: остаток может стать отрицательным. Если товар входит в рецепт, его нехватка также не будет блокировать продажу составного товара.")
+        ProductEditorSwitch("Разрешить продажу при отрицательном остатке",d.allowNegativeStock,{v->change {it.copy(allowNegativeStock=v)}},enabled,Modifier.testTag("productAllowNegativeStock"))
+        ProductEditorSwitch("Не вести учёт остатков",d.noStockTracking,{v->change {it.copy(noStockTracking=v)}},enabled,Modifier.testTag("productNoStockTracking"))
         ProductEditorSelect("Единица ввода остатка и себестоимости",d.displayUnit,stockUnits(d.unit.takeIf {d.expectedRevision!=null}),{next->
             if(d.expectedRevision==null && quantityUnit(next).dimension!=quantityUnit(d.unit).dimension)
                 change {it.copy(unit=next,displayUnit=next,details=(it.details ?: ProductDetails()).copy(purchaseContentUnit=null))}
@@ -63,8 +63,6 @@ private fun costLabel(value: BigDecimal?)=value?.setScale(2,RoundingMode.HALF_UP
         }
         ProductEditorField(d.minimumStock,{v->change {it.copy(minimumStock=v)}},"Минимальный остаток, ${unitLabel(d.displayUnit)}",Modifier.testTag("minimumStock"),enabled,true,placeholder="Не задан")
         ProductEditorNote("Подсказка в карточке; не блокирует продажи и не создаёт заказ поставщику.")
-        ProductEditorFlag("Не вести учет остатков",d.noStockTracking,{v->change {it.copy(noStockTracking=v)}},enabled)
-        ProductEditorNote("Для этого товара остаток не будет уменьшаться при продаже и не будет учитываться в стоимости остатков.")
     } else {
         StockCard("Выход готового состава") {
             StockPair({modifier->Box(modifier) {ProductEditorField(d.recipeYield,{v->change {it.copy(recipeYield=v,details=(it.details ?: ProductDetails()).copy(recipeYieldManual=true))}},"Вес / объём",Modifier.testTag("recipeYield"),enabled,true)}},

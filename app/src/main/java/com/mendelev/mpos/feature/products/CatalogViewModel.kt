@@ -63,13 +63,15 @@ data class ProductDraft(val id: String = UUID.randomUUID().toString(), val expec
 }
 data class CatalogUi(val loading: Boolean = true, val fatal: Boolean = false, val busy: Boolean = false,
     val products: List<ProductRow> = emptyList(), val categories: List<CategoryEntity> = emptyList(),
-    val components: List<RecipeComponentEntity> = emptyList(),
+    val categoryChannels: Map<String,CategoryChannels> = emptyMap(), val components: List<RecipeComponentEntity> = emptyList(),
     val draft: ProductDraft? = null, val hasSavedDraft: Boolean=false, val message: String? = null, val error: Boolean = false, val field: String? = null,val recipeBatchIds: Set<String> = emptySet(),val usage: ProductUsage?=null,val usageMessage: String?=null)
 
 class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
     val photos get() = repo.photos
     private val mutable = MutableStateFlow(CatalogUi())
     val state = mutable.asStateFlow()
+    private val feedback=com.mendelev.mpos.core.ui.TransientMessages(viewModelScope)
+    val notices=feedback.state
     private val commands = Channel<suspend () -> Unit>(Channel.UNLIMITED)
     private val forms=AdminForms(viewModelScope)
     private fun revoke() {mutable.update {it.copy(draft=null)}}
@@ -103,6 +105,7 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
             viewModelScope.launch { repo.products.catch { update { it.copy(fatal=true, message="Не удалось прочитать товары. Данные не удалены", error=true) } }.collect { p -> update { it.copy(products=p) } } }
             viewModelScope.launch {repo.recipeBatchIds.catch {update {it.copy(fatal=true,message="Не удалось прочитать единицы каталога",error=true)}}.collect {ids->update {it.copy(recipeBatchIds=ids)}}}
             viewModelScope.launch { repo.components.catch { update { it.copy(fatal=true, message="Не удалось прочитать составы", error=true) } }.collect { c -> update { it.copy(components=c) } } }
+            viewModelScope.launch {repo.categoryChannels.catch {update {it.copy(fatal=true,message="Не удалось прочитать каналы категорий",error=true)}}.collect {c->update {it.copy(categoryChannels=c)}}}
             viewModelScope.launch { repo.categories.catch { update { it.copy(fatal=true, message="Не удалось прочитать категории. Данные не удалены", error=true) } }.collect { c -> update { it.copy(categories=c) } } }
         } catch(c: CancellationException) { throw c } catch(_: Exception) {
             update { it.copy(loading=false, fatal=true, message="Не удалось открыть каталог. Данные не удалены", error=true) }
@@ -180,7 +183,7 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
         update { it.copy(busy=true, message=null, field=null) }
         enqueueAdmin {
             withContext(Dispatchers.IO) { repo.saveProduct(d.input()) }
-            update { it.copy(draft=null,hasSavedDraft=false, busy=false, message="Товар сохранён", error=false) };done()
+            update { it.copy(draft=null,hasSavedDraft=false, busy=false, message=null, error=false) };feedback.show("Товар сохранён");done()
         }
     }
     fun reloadProduct() {
@@ -202,7 +205,7 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
         update { it.copy(busy=true) }
         enqueueAdmin {
             withContext(Dispatchers.IO) { repo.deleteProduct(d.id, revision, "delete:${d.commandId}") }
-            update { it.copy(draft=null,hasSavedDraft=false, busy=false, message="Товар удалён", error=false) }
+            update { it.copy(draft=null,hasSavedDraft=false, busy=false, message=null, error=false) };feedback.show("Товар удалён")
         }
     }
     private var usageJob: Job?=null
@@ -225,16 +228,21 @@ class CatalogViewModel(private val repo: CatalogRepository) : ViewModel() {
         update { it.copy(busy=true,message=null,field=null) }
         enqueueAdmin {
             withContext(Dispatchers.IO) { repo.reorderCategories(order.map { CategoryOrderEntry(it.id,it.revision) },command) }
-            update { it.copy(busy=false,message="Порядок категорий сохранён",error=false) }
+            update { it.copy(busy=false,message=null,error=false) };feedback.show("Порядок категорий сохранён")
         }
     }
-    fun categorySave(id: String, revision: Long?, name: String, commandId: String, color: String = CategoryAppearance.DEFAULT_COLOR, symbol: String = "", done: () -> Unit) {
+    fun categorySave(id: String, revision: Long?, name: String, commandId: String, color: String = CategoryAppearance.DEFAULT_COLOR, symbol: String = "", channels: CategoryChannels? = null, done: () -> Unit) {
         if(state.value.busy) return
         update { it.copy(busy=true, message=null) }
         enqueueAdmin {
-            withContext(Dispatchers.IO) { repo.saveCategory(id,revision,name,commandId,color,symbol) }
+            withContext(Dispatchers.IO) { repo.saveCategory(id,revision,name,commandId,color,symbol,channels) }
             update { it.copy(busy=false, message=null) }; done()
         }
+    }
+    fun categoryChannel(c: CategoryEntity,menu: Boolean) {
+        val current=state.value.categoryChannels[c.id] ?: CategoryChannels()
+        val next=if(menu) current.copy(menu=!current.menu) else current.copy(order=!current.order)
+        categorySave(c.id,c.revision,c.name,UUID.randomUUID().toString(),c.color,c.symbol,next) {}
     }
     fun categoryDelete(category: CategoryEntity, done: () -> Unit) {
         if(state.value.busy) return

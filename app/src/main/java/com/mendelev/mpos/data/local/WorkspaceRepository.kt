@@ -115,6 +115,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
             is CartAction.SetOptions -> listOf("line.options.v1",action.lineId,action.quantity,action.comment,action.discountId,action.discount?.let {CatalogRules.fingerprint(it.type,it.value,it.name)},action.expectedRevision.toString())
             is CartAction.Remove -> listOf("remove",action.lineId)
             is CartAction.Clear -> listOf("clear",action.expectedRevision.toString())
+            is CartAction.SetLoyalty -> listOf("loyalty",action.expectedRevision.toString(),action.selection?.let {LoyaltyCodec.encode(it).toString()})
             is CartAction.SetDetails -> listOf("details",action.expectedRevision.toString(),action.details.label,action.details.type,action.details.comment,action.details.address,action.details.phone) + if(action.details.customerName.isNotEmpty() || action.details.deliveryEdited || action.details.deliveryTariff!=null)
                 listOf("details.extra.v1",action.details.customerName,action.details.deliveryEdited.toString(),action.details.deliveryTariff?.let {CatalogRules.fingerprint(it.id,it.name,it.fee,it.revision)}) else emptyList()
         }
@@ -123,7 +124,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
         if(repeat(commandId,fp,legacy)) return@withTransaction
         SplitPaymentRepository(db).requireNone()
         val state=snapshot()
-        val expected=when(action) { is CartAction.SetQuantity -> action.expectedRevision;is CartAction.Clear -> action.expectedRevision;is CartAction.SetDetails -> action.expectedRevision;is CartAction.SetOptions -> action.expectedRevision;else -> null }
+        val expected=when(action) { is CartAction.SetQuantity -> action.expectedRevision;is CartAction.Clear -> action.expectedRevision;is CartAction.SetDetails -> action.expectedRevision;is CartAction.SetOptions -> action.expectedRevision;is CartAction.SetLoyalty -> action.expectedRevision;else -> null }
         requireCurrent(state,expected,expectedSessionId)
         val candidate=CartEngine.apply(state.cart,action,state.products,state.graph,state.balances,OrderReservations.total(state.parked.map {it.cart}))
         if(candidate.lines.isEmpty() && state.cart.lines.isNotEmpty()) OnlineOrderRepository(db).requireLocalRemovalAllowed(state.cart.sessionId)
@@ -218,7 +219,7 @@ class WorkspaceRepository(private val db: CatalogDatabase, private val afterWrit
     }
     suspend fun layout(action: LayoutAction, expectedRevision: Long, commandId: String) = layoutTransaction {
         val intent=when(action) {
-            is LayoutAction.SaveFolder -> listOf("folder",action.id,action.categoryId,action.name)
+            is LayoutAction.SaveFolder -> listOf("folder",action.id,action.categoryId,action.name)+ (action.appearance?.validated()?.let {listOf("appearance",it.color,it.symbol,it.columns.toString(),it.tileHeight.toString())} ?: emptyList())
             is LayoutAction.DeleteFolder -> listOf("deleteFolder",action.id)
             is LayoutAction.MoveProduct -> listOf("move",action.productId,action.folderId)
             is LayoutAction.ResetProduct -> listOf("reset",action.productId)
@@ -244,7 +245,7 @@ suspend fun CatalogDatabase.requireNoWorkspaceProduct(id: String) {
         if(WorkspaceCodec.cart(it.payload).lines.any { line -> id in line.references })
             throw CatalogFailure("used","Товар используется в текущем заказе")
     }
-    workspace().documents().filter {it.id.startsWith("parked:")}.forEach {
+    workspace().documentsByPrefix("parked:").forEach {
         if(WorkspaceCodec.parked(it.id,it.revision,it.payload).cart.lines.any {line -> id in line.references})
             throw CatalogFailure("used","Товар используется в отложенном заказе")
     }

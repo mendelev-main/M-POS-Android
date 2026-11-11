@@ -14,6 +14,7 @@ import java.util.UUID
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import org.json.JSONObject
+import org.json.JSONArray
 
 /** Validates an independent copy. Never initializes, reprices, repairs or writes into the supplied snapshot. */
 internal object NativeRestoreValidator {
@@ -106,14 +107,14 @@ internal object NativeRestoreValidator {
         c.draft()?.let {strict(it.payload);com.mendelev.mpos.feature.products.ProductDraft.parse(it.payload)}
         val docs=db.workspace().documents().associateBy {it.id}
         val validationSource=knownSource ?: WebSourceDocuments.decode(docs.mapValues {it.value.payload})?.withoutPhotoPayloads()
-        val known=setOf("current","layout","home","orders","checkout","split-progress",SettingsCodec.KEY,EmployeeCodec.KEY,SupplierCodec.KEY,PurchaseDraftCodec.KEY,PurchaseOrderCodec.KEY,ReceivingCodec.KEY,PostedReceivingCodec.KEY,InventoryCodec.KEY,ShiftCashCodec.KEY)
+        val known=setOf("current","layout","home","orders","checkout","split-progress",SettingsCodec.KEY,EmployeeCodec.KEY,SupplierCodec.KEY,PurchaseDraftCodec.KEY,PurchaseOrderCodec.KEY,ReceivingCodec.KEY,PostedReceivingCodec.KEY,InventoryCodec.KEY,ShiftCashCodec.KEY,WebSettingsMapping.DEVICE,WebSettingsMapping.COMPANY)
         WebLegacyHistoryDocuments.decode(docs.mapValues {it.value.payload})
         WebImportedPaymentDocuments.decode(docs.mapValues {it.value.payload})
         // Evidence alone is insufficient: require original source, cash baseline and an active or completed native adoption.
         WebCandidateValidation.validate(db,validationSource)
         for(d in docs.values) {
             currentCoroutineContext().ensureActive()
-            require(d.revision>=0 && (d.id in known || OnlineOrderCodec.owns(d.id) || ProductDetailsCodec.owns(d.id) || d.id.startsWith("parked:") || WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id) || WebSourceDocuments.owns(d.id) || WebProductMetadataDocuments.owns(d.id) || d.id in setOf(WebCandidateDatabase.BASELINE,WebCandidateDatabase.BASIS,WebOrderDefaults.KEY)))
+            require(d.revision>=0 && (d.id in known || d.id.startsWith(WebReceiptIndex.PREFIX) || d.id.startsWith(WebShiftSummary.PREFIX) || LoyaltyEffectCodec.owns(d.id) || OnlineOrderCodec.owns(d.id) || ProductDetailsCodec.owns(d.id) || CategoryChannelsCodec.owns(d.id) || d.id.startsWith("parked:") || WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id) || WebSourceDocuments.owns(d.id) || WebProductMetadataDocuments.owns(d.id) || d.id in setOf(WebCandidateDatabase.BASELINE,WebCandidateDatabase.BASIS,WebOrderDefaults.KEY)))
             if(WebLegacyHistoryDocuments.owns(d.id) || WebImportedPaymentDocuments.owns(d.id) || WebProductMetadataDocuments.owns(d.id))require(d.revision==1L)
             // Part envelopes contain only integer version + escaped text. Fractional source facts are validated by the dedicated codec above.
             strict(d.payload)
@@ -125,12 +126,19 @@ internal object NativeRestoreValidator {
             if(row.paid) require(receipt!=null)
             require(row.cancelled || receipt!=null || docs["parked:${row.sessionId}"]!=null || docs["current"]?.let {WorkspaceCodec.cart(it.payload).sessionId==row.sessionId}==true)
         }
+        docs.values.filter {CategoryChannelsCodec.owns(it.id)}.forEach {d->
+            val id=d.id.removePrefix(CategoryChannelsCodec.PREFIX);val c=db.catalog().categorySnapshot().single {it.id==id}
+            require(d.revision in 1..c.revision);CategoryChannelsCodec.decode(d.payload,id)
+        }
         docs.values.filter {ProductDetailsCodec.owns(it.id)}.forEach {d->
             val id=d.id.removePrefix(ProductDetailsCodec.PREFIX);val p=products.single {it.id==id};require(d.revision in 1..p.revision)
             val details=ProductDetailsCodec.decode(d.payload,id)
             require(p.type=="composite" || details.sellingBasis!="recipe-batch")
             details.purchaseContentUnit?.let {quantityUnit(it).convert(BigDecimal.ONE,quantityUnit(p.unit))}
         }
+        docs.values.filter {it.id.startsWith(WebReceiptIndex.PREFIX)}.forEach(WebReceiptIndex::validate)
+        docs[WebSettingsMapping.DEVICE]?.let {WebSettingsMapping.validate(it.payload)}
+        docs[WebSettingsMapping.COMPANY]?.let {require(org.json.JSONObject(it.payload).toString().length<=50000)}
         docs[SettingsCodec.KEY]?.let {SettingsCodec.decode(it.payload,it.revision)}
         docs[EmployeeCodec.KEY]?.let {EmployeeCodec.decode(it.payload)}
         val suppliers=docs[SupplierCodec.KEY]?.let {SupplierCodec.decode(it.payload)}.orEmpty()
@@ -163,13 +171,27 @@ internal object NativeRestoreValidator {
         if(db.shifts().register()!=null) ShiftRepository(db).snapshot() else require(db.shifts().history().isEmpty())
         for(s in db.shifts().history()) {require(s.openingCash>=0 && s.openedAt>=0 && s.registerId==config?.registerId);if(s.closedAt!=null) require(s.closedAt>=s.openedAt && s.countedCash!=null && s.expectedCash!=null && s.difference==Math.subtractExact(s.countedCash,s.expectedCash))}
         val receiptRows=db.sales().history();val receiptById=receiptRows.associateBy {it.id}
+        val effects=docs.values.filter {LoyaltyEffectCodec.owns(it.id)}.map {d->
+            val effect=LoyaltyEffectCodec.decode(d.payload)
+            require(d.id==LoyaltyEffectCodec.key(effect))
+            val receipt=receiptById[effect.receiptId] ?: error("loyalty receipt")
+            val snapshot=ReceiptCodec.decode(receipt.payload)
+            require(snapshot.cart.loyalty?.target==effect.target && effect.createdAt==receipt.createdAt)
+            require(effect.body==LoyaltyEffectCodec.body(receipt.id,receipt.createdAt,snapshot.cart,snapshot.checkout.discounts))
+            require(effect.reverseRequested==(db.refunds().forReceipt(receipt.id)!=null))
+            effect
+        }
+        require(effects.map {it.receiptId}.distinct().size==effects.size)
+        val loyaltyReceiptIds=effects.map {it.receiptId}.toSet()
+        receiptRows.forEach {receipt->if(ReceiptCodec.decode(receipt.payload).cart.loyalty!=null) require(receipt.id in loyaltyReceiptIds)}
         for(r in receiptRows) {
             currentCoroutineContext().ensureActive();strict(r.payload);receiptShape(JSONObject(r.payload));val saved=ReceiptCodec.decode(r.payload)
-            val q=SaleMoney.quote(saved.cart.lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity,saved.checkout.discounts[it.id])},saved.cart.details.type,saved.checkout.delivery)
+            val q=com.mendelev.mpos.domain.loyalty.LoyaltyRules.quote(saved.cart,saved.checkout.discounts,saved.checkout.delivery)
             require(q==saved.quote && r.total==q.total && r.cash==saved.payment.cash && r.card==saved.payment.card && r.deliveryCashOut==saved.payment.deliveryCashOut)
             require(r.sessionId==saved.cart.sessionId && r.sessionId==saved.checkout.sessionId && r.commandId==saved.checkout.commandId && r.shiftId==saved.checkout.shiftId)
-            val opening=Math.addExact(Math.subtractExact(saved.payment.expectedCashAfter,saved.payment.cash),saved.payment.deliveryCashOut)
-            require(SaleMoney.payments(q,saved.checkout.parts,opening)==saved.payment)
+            ReceiptPaymentHistory.validate(saved)
+            val corrections=JSONArray(saved.paymentCorrections)
+            for(i in 0 until corrections.length()) require(c.result(corrections.getJSONObject(i).getString("id"))?.resultId==r.id)
             require(c.result(r.commandId)?.resultId==r.id)
             val consumption=RecipeCalculator(saved.cart.graph).consumption(CartEngine.requests(saved.cart)).mapValues {CatalogRules.canonical(it.value)}
             require(consumption==saved.consumption)
@@ -187,7 +209,7 @@ internal object NativeRestoreValidator {
             require(checkout==progress.checkout);val d=progress.checkout.draft;val w=WorkspaceRepository(db).snapshot();val s=ShiftRepository(db).snapshot()
             require(w.cart.sessionId==d.sessionId && w.cartRevision==d.cartRevision && s.active?.id==d.shiftId && s.active?.actorId==d.actorId && s.revision==d.shiftRevision)
             require(w.cart.lines.none {CartEngine.stale(it,w.products)} && receiptRows.none {it.sessionId==d.sessionId || it.commandId==d.commandId})
-            val q=SaleMoney.quote(w.cart.lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity,d.discounts[it.id])},w.cart.details.type,d.delivery)
+            val q=com.mendelev.mpos.domain.loyalty.LoyaltyRules.quote(w.cart,d.discounts,d.delivery)
             require(q.total==progress.editable().total)
             SaleMoney.payments(q,d.parts.map {if(it.method=="cash" && it.given==null) it.copy(given=it.amount) else it},s.currentCash)
             for(index in progress.paid) {

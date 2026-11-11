@@ -19,7 +19,7 @@ import java.util.UUID
 class PurchaseUiTest {
     @get:Rule val compose=createAndroidComposeRule<MainActivity>()
     private fun hideKeyboard() {compose.runOnIdle {(compose.activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).hideSoftInputFromWindow(compose.activity.window.decorView.windowToken,0)}}
-    @Test fun exactPackDraftDiscardRecreateAndNoStockWrite() {
+    @Test fun exactPackDraftAutosaveRecreateAndNoStockWrite() {
         lateinit var catalog: CatalogViewModel
         compose.runOnIdle {catalog=ViewModelProvider(compose.activity)[CatalogViewModel::class.java]}
         compose.waitUntil(20_000) {!catalog.state.value.loading && !catalog.state.value.busy}
@@ -45,29 +45,24 @@ class PurchaseUiTest {
         compose.onNode(hasAnyAncestor(hasTestTag("purchaseContent:$id")) and hasClickAction()).performClick()
         compose.onNode(hasAnyAncestor(isPopup()) and hasText("мл")).performClick()
         compose.onNodeWithTag("purchaseExpected:$id").assertTextEquals("На склад поступит: 12 л")
-        compose.onNodeWithTag("purchaseDraftMenu").performClick()
-        compose.onNodeWithTag("purchaseSave").performClick()
-        compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty && model.state.value.snapshot?.draft!=null}
+        compose.onNodeWithTag("purchaseDraftMenu").assertDoesNotExist()
+        compose.waitUntil(20_000) {!model.state.value.saving && !model.state.value.dirty && model.state.value.snapshot?.draft!=null}
         PurchaseKeypadTestSupport.enter(compose,"purchaseQty:$id","25");hideKeyboard()
-        compose.runOnIdle {compose.activity.onBackPressedDispatcher.onBackPressed()}
-        compose.onNodeWithText("Продолжить редактирование").performClick()
-        compose.onNode(hasText("25") and hasAnyAncestor(hasTestTag("purchaseQty:$id")),useUnmergedTree=true).assertExists()
-        compose.runOnIdle {compose.activity.onBackPressedDispatcher.onBackPressed()};compose.onNodeWithText("Закрыть без сохранения").performClick()
-        compose.waitUntil(20_000) {!model.state.value.pending && !model.state.value.dirty}
+        compose.onNodeWithTag("topNav-history").assertIsEnabled().performClick()
         compose.onNodeWithTag("topNav-purchaseOrders").performClick()
+        compose.waitUntil(20_000) {compose.onAllNodesWithTag("purchaseQty:$id").fetchSemanticsNodes().isNotEmpty() && !model.state.value.saving}
+        compose.onNode(hasText("25") and hasAnyAncestor(hasTestTag("purchaseQty:$id")),useUnmergedTree=true).assertExists()
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("purchaseQty:$id").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNode(hasText("24") and hasAnyAncestor(hasTestTag("purchaseQty:$id")),useUnmergedTree=true).assertExists()
+        compose.onNode(hasText("25") and hasAnyAncestor(hasTestTag("purchaseQty:$id")),useUnmergedTree=true).assertExists()
         compose.onNode(hasText("500") and hasAnyAncestor(hasTestTag("purchasePack:$id")),useUnmergedTree=true).assertExists()
-        compose.onNodeWithTag("purchaseExpected:$id").assertTextEquals("На склад поступит: 12 л")
+        compose.onNodeWithTag("purchaseExpected:$id").assertTextEquals("На склад поступит: 12,5 л")
         compose.waitForIdle();val automation=InstrumentationRegistry.getInstrumentation().uiAutomation;automation.waitForIdle(200,5_000)
         check(automation.rootInActiveWindow?.packageName?.toString()==BuildConfig.APPLICATION_ID)
         val bitmap=checkNotNull(automation.takeScreenshot());val file=File(compose.activity.filesDir,"qa/purchase-draft.png");file.parentFile!!.mkdirs()
         file.outputStream().use {bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};bitmap.recycle()
-        PurchaseKeypadTestSupport.enter(compose,"purchaseQty:$id","25")
         compose.runOnIdle {compose.activity.onBackPressedDispatcher.onBackPressed()}
-        compose.onNodeWithText("Закрыть без сохранения?").assertIsDisplayed()
-        compose.onNodeWithText("Продолжить редактирование").performClick()
+        compose.onNodeWithText("Закрыть без сохранения?").assertDoesNotExist()
         assertEquals(before,runBlocking {db.catalog().product(id)!! to db.catalog().balance(id)!!})
     }
 }

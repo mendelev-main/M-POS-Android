@@ -14,7 +14,7 @@ class EmployeeTest {
         val c=save().validated().action as EmployeeAction.Save
         assertEquals("Иванова Анна",c.name);assertEquals("+375 00 000-00-00",c.phone)
         assertEquals("",EmployeeRules.phone("  "))
-        assertTrue(worker.selectable);assertFalse(worker.copy(role="admin").selectable);assertFalse(worker.copy(deleted=true).selectable)
+        assertTrue(worker.selectable);assertTrue(worker.copy(role="admin").selectable);assertFalse(worker.copy(deleted=true).selectable)
         rejected {EmployeeRules.name("  ")};rejected {EmployeeRules.name("A\nB")};rejected {EmployeeRules.role("owner")}
         rejected {EmployeeRules.id(" anna ")};rejected {EmployeeRules.phone("1".repeat(65))};rejected {EmployeeRules.id("bad\u0000")}
     }

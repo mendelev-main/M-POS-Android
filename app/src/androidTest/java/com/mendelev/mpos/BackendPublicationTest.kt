@@ -20,6 +20,33 @@ import java.util.UUID
 
 class BackendPublicationTest {
     private val app get()=InstrumentationRegistry.getInstrumentation().targetContext
+    @Test fun alwaysAvailableSendsNullThenRestoresPhysicalStockWithoutChangingBalance()=runBlocking {
+        val root=File(app.cacheDir,"online-unlimited-${UUID.randomUUID()}").apply {mkdirs()}
+        val context=object: ContextWrapper(app) {override fun getNoBackupFilesDir()=root}
+        val db=Room.inMemoryDatabaseBuilder(app,CatalogDatabase::class.java).build()
+        try {
+            val catalog=CatalogRepository(db);catalog.initialize()
+            val details=com.mendelev.mpos.domain.catalog.ProductDetails(alwaysAvailableOnline=true)
+            val input=ProductInput("p",null,"Кофе",null,"10","3","0",null,true,"create",details=details)
+            catalog.saveProduct(input)
+            val settings=BackendSettings(url="https://fixture.example.org",deviceKey="fixture",datasetId="fixture")
+            val sent=mutableListOf<JSONObject>()
+            val client=OkHttpClient.Builder().addInterceptor {chain->
+                val request=chain.request();assertEquals(settings.availabilityPath,request.url.encodedPath)
+                val raw=Buffer();request.body!!.writeTo(raw);sent+=JSONObject(raw.readUtf8())
+                Response.Builder().request(request).protocol(Protocol.HTTP_1_1).code(200).message("fixture")
+                    .body("""{"ok":true,"applied":true}""".toResponseBody("application/json".toMediaType())).build()
+            }.build()
+            val publication=BackendPublication(context,BackendHttp(client),db) {}
+            val before=db.catalog().balance("p")
+            publication.availability(settings,emptyList())
+            assertTrue(sent.last().getJSONArray("items").getJSONObject(0).isNull("quantity"))
+            catalog.saveProduct(input.copy(expectedRevision=1,stockEdited=false,commandId="disable",details=details.copy(alwaysAvailableOnline=false)))
+            publication.availability(settings,emptyList())
+            assertEquals(0,sent.last().getJSONArray("items").getJSONObject(0).getInt("quantity"))
+            assertEquals(before,db.catalog().balance("p"))
+        } finally {db.close();root.deleteRecursively()}
+    }
     @Test fun lostTariffReplyReusesPersistedPublicationIdWithoutDuplicateVersion()=runBlocking {
         val root=File(app.cacheDir,"backend-publication-${UUID.randomUUID()}").apply {mkdirs()}
         val context=object: ContextWrapper(app) {override fun getNoBackupFilesDir()=root}

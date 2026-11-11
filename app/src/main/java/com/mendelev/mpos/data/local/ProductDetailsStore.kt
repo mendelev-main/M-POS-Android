@@ -9,25 +9,27 @@ object ProductDetailsCodec {
     fun owns(id: String)=id.startsWith(PREFIX)
     fun fields(value: ProductDetails)=JSONObject().put("sku",value.sku).put("note",value.note).put("symbol",value.symbol)
         .put("sellingBasis",value.sellingBasis).put("recipeYieldManual",value.recipeYieldManual).put("purchaseContentUnit",value.purchaseContentUnit).apply {
-            value.description?.let {put("description",it)};value.onlineOrder?.let {put("onlineOrder",it)};value.onlineMenu?.let {put("onlineMenu",it)}
+            value.description?.let {put("description",it)};value.onlineOrder?.let {put("onlineOrder",it)};value.onlineMenu?.let {put("onlineMenu",it)};value.alwaysAvailableOnline?.let {put("alwaysAvailableOnline",it)}
         }
     fun value(j: JSONObject): ProductDetails {
         if(!j.isNull("recipeYieldManual")) require(j.get("recipeYieldManual") is Boolean)
-        listOf("onlineOrder","onlineMenu").forEach {if(!j.isNull(it)) require(j.get(it) is Boolean)}
+        listOf("onlineOrder","onlineMenu","alwaysAvailableOnline").forEach {if(!j.isNull(it)) require(j.get(it) is Boolean)}
         return ProductDetails(j.getString("sku"),j.getString("note"),j.getString("symbol"),
         if(j.isNull("sellingBasis")) null else j.getString("sellingBasis"),
         if(j.isNull("recipeYieldManual")) null else j.getBoolean("recipeYieldManual"),
         if(j.isNull("purchaseContentUnit")) null else j.getString("purchaseContentUnit"),
         if(j.isNull("description")) null else j.getString("description"),
         if(j.isNull("onlineOrder")) null else j.getBoolean("onlineOrder"),
-        if(j.isNull("onlineMenu")) null else j.getBoolean("onlineMenu"))
+        if(j.isNull("onlineMenu")) null else j.getBoolean("onlineMenu"),
+        if(j.isNull("alwaysAvailableOnline")) null else j.getBoolean("alwaysAvailableOnline"))
     }
-    fun encode(id: String,value: ProductDetails)=fields(value).put("version",if(value.description!=null || value.onlineOrder!=null || value.onlineMenu!=null) 3 else if(value.sellingBasis!=null || value.recipeYieldManual!=null || value.purchaseContentUnit!=null) 2 else 1).put("productId",id).toString()
+    fun encode(id: String,value: ProductDetails)=fields(value).put("version",if(value.alwaysAvailableOnline!=null) 4 else if(value.description!=null || value.onlineOrder!=null || value.onlineMenu!=null) 3 else if(value.sellingBasis!=null || value.recipeYieldManual!=null || value.purchaseContentUnit!=null) 2 else 1).put("productId",id).toString()
     fun decode(raw: String,id: String): ProductDetails {
-        val j=JSONObject(raw);val version=j.getInt("version");require(version in 1..3 && j.getString("productId")==id)
+        val j=JSONObject(raw);val version=j.getInt("version");require(version in 1..4 && j.getString("productId")==id)
         val row=value(j);require(row.validated()==row)
         require(version>=2 || row.sellingBasis==null && row.recipeYieldManual==null && row.purchaseContentUnit==null)
-        require(version==3 || row.description==null && row.onlineOrder==null && row.onlineMenu==null)
+        require(version>=3 || row.description==null && row.onlineOrder==null && row.onlineMenu==null)
+        require(version==4 || row.alwaysAvailableOnline==null)
         return row
     }
     fun imported(raw: String): ProductDetails {

@@ -16,6 +16,8 @@ internal object WebCandidateValidation {
             if(p.type=="simple") {require(actual.cost==p.cost);require(db.catalog().balance(p.id)?.quantity==p.stock)}
             if(p.photoKey!=null)require(actual.photoId!=null)
         }
+        require(db.workspace().document(SettingsCodec.KEY)?.payload==SettingsCodec.encode(WebSettingsMapping.catalog(source)))
+        require(db.workspace().documentsByPrefix(WebReceiptIndex.PREFIX).size==WebValues.rows(source.root.fields["orders"]).size)
         val staff=WebStaffMapping.map(source)
         require(db.shifts().history().map {it.id}.toSet()==staff.shifts.map {it.id}.toSet())
         require(EmployeeCodec.decode(db.workspace().document(EmployeeCodec.KEY)!!.payload)==staff.employees)
@@ -31,6 +33,11 @@ internal object WebCandidateValidation {
             require(WebCandidateDatabase.BASELINE !in docs && WebCandidateDatabase.BASIS !in docs && WebOrderDefaults.KEY !in docs && (evidence==null || evidence.records.isEmpty()))
             return
         }
+        val shiftSummaries=rows.filter {it.id.startsWith(WebShiftSummary.PREFIX)}.associate {it.id to it.payload}
+        if(shiftSummaries.isNotEmpty()) require(shiftSummaries==WebShiftSummary.documents(original).associate {it.id to it.payload})
+        val receiptIndex=rows.filter {it.id.startsWith(WebReceiptIndex.PREFIX)}.associate {it.id to it.payload}
+        if(receiptIndex.isNotEmpty()) require(receiptIndex==WebReceiptIndex.documents(original).associate {it.id to it.payload})
+        docs[WebSettingsMapping.DEVICE]?.let {require(WebSettingsMapping.decode(it).getString("source")==original.preview.sha256)}
         require(rows.filter {WebSourceDocuments.owns(it.id) || it.id==WebCandidateDatabase.BASELINE}.all {it.revision==1L})
         require(WebLegacyHistoryDocuments.decode(docs)?.payload==WebLegacyHistoryArchiveCodec.encode(original).payload)
         require(evidence!=null);WebImportedPaymentEvidenceCodec.requireSource(evidence,original)

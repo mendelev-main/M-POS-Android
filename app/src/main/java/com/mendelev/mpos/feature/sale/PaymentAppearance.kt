@@ -67,7 +67,7 @@ private fun displayCash(raw: String)=runCatching {ShiftRules.money(ShiftRules.ca
     }
     }
 }
-@Composable private fun PaymentReceipt(cart: CurrentCart,quote: SaleQuote?,enabled: Boolean,onOptions: ()->Unit,modifier: Modifier) {
+@Composable internal fun PaymentReceipt(cart: CurrentCart,quote: SaleQuote?,enabled: Boolean,onOptions: ()->Unit,modifier: Modifier) {
     PaymentPanel(modifier.testTag("paymentReceipt")) {
         Column(Modifier.verticalScroll(rememberScrollState())) {
             Text("Чек",Modifier.padding(bottom=12.dp),fontSize=16.sp,lineHeight=22.sp,fontWeight=FontWeight.ExtraBold)

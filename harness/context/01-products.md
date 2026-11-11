@@ -54,3 +54,13 @@ Run40097725989/5b13d8d:16 instrumentation passed eachAPI,API28 full updater E2E 
 
 
 Итог category appearance: [run40101394875](https://github.com/mendelev-main/M-POS-Android/actions/runs/40101394875), a19cb3e, attempt2: checks и emulator36 success;26JVM/4Python/lint/assembleDebug,24instrumentation +2explicit UI seed; CATALOG UPDATE PASSED/UPDATE E2E PASSED (1→2, stock8/data preserved). KSPschema4 committed byte-equal checks export; screenshot reviewed. Attempt1 SystemUI ANR был infrastructure blocker, rerun failed-only прошёл без code changes/assert weakening. После a19cb3e — только docs/generated schema4 artifact. Main/stable/key неизменны. Каталог core и appearance провереныCI36; physical acceptance и будущие модульные подключения по CATALOG-ACCEPTANCE отдельно.02 не начат.
+
+10.11.2026 PCE01–05: docs/PRODUCT-CARD-POLISH.md. Back без стрелки, type summary справа, Маржа label, photo Row; compact modifier group/options/picker and default new minimum1 как Web, existing values unchanged; shared online/stock switches first. Local test/compile evidence build-log, device/pixel pending.
+
+2026-11-10 P02/T02: подключены category menu/order flags, stable-ID sidecar с atomic save/admin/CAS, fallback Web import, namespace native restore, применение при ручной публикации. Список и иконки по текущему Web. ../../docs/PRINT-CATEGORIES-TOPBAR-PARITY.md; device pending.
+
+
+2026-11-10: product online switch «Всегда в наличии»; nullable bool metadata v4/fingerprint v4, draft/backup compatibility; ../../docs/ONLINE-ALWAYS-AVAILABLE.md. Local implemented, tablet/site pending.
+
+
+2026-11-10: по запросу владельца успех save/delete/category-order больше не остаётся зелёным баннером. Compact top overlay2500ms через TransientMessages; error state независим, повторное событие продлевает срок. ../../docs/DESIGN-SYSTEM.md, UI принимает владелец.

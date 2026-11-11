@@ -2,6 +2,7 @@ package com.mendelev.mpos.core.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import com.mendelev.mpos.core.ui.isMposDarkTheme
@@ -67,14 +68,14 @@ fun MposTopBar(navigation: MposTopNavigation, enabled: Boolean = true) {
                 if(navigation.inventoryReminder) TopItem("Инвентаризация","inventory",navigation,allowed,selected=navigation.route in setOf("inventory","inventoryWork","inventoryHistory"),compact=compact)
             }
             Spacer(Modifier.weight(1f))
-            TopItem(if(navigation.eventsCount>0) "События (${navigation.eventsCount})" else "События", "events", navigation, allowed, compact=compact, icon="bell", selected=false)
+            TopItem("События", "events", navigation, allowed, compact=compact, icon="bell", selected=navigation.route=="events",badge=navigation.eventsCount)
             val shiftLabel = when {
                 navigation.shiftLoading -> "Загрузка смены"
                 navigation.shiftUnavailable -> "Смена недоступна"
                 navigation.shiftOpen -> shortEmployeeName(navigation.shiftName)
                 else -> "Открыть смену"
             }
-            TopItem(shiftLabel, "shift", navigation, allowed, compact=compact, shift=true, selected=false)
+            TopItem(shiftLabel, "shift", navigation, allowed, compact=compact, shift=true, selected=navigation.route=="shift")
             Box(Modifier.size(44.dp).clip(CircleShape)
                 .background(if(navigation.route=="settings") Color.White.copy(alpha=.14f) else Color.Transparent)
                 .clickable(enabled=allowed, role=Role.Button) { navigation.navigate("settings") }
@@ -89,15 +90,17 @@ fun MposTopBar(navigation: MposTopNavigation, enabled: Boolean = true) {
 @Composable
 private fun TopItem(label: String, route: String, nav: MposTopNavigation, enabled: Boolean,
     selected: Boolean = nav.route==route, compact: Boolean=false, bold: Boolean=false,
-    icon: String?=null, shift: Boolean=false, testId: String="topNav-$route") {
-    val ink=if(selected || shift) Color.White else Color.White.copy(alpha=.62f)
-    // 44dp interaction row, 36dp capsule at normal text scale; source header is 68dp tall.
+    icon: String?=null, shift: Boolean=false, testId: String="topNav-$route",badge: Int=0) {
+    val inventory=route=="inventory"
+    val ink=if(inventory) Color(0xFFE9C989) else if(selected || shift) Color.White else Color.White.copy(alpha=.62f)
+    // All selected capsules match the settings control: 44dp minimum, width follows the label.
     Box(Modifier.heightIn(min=44.dp).clip(CircleShape)
         .clickable(enabled=enabled, role=Role.Tab) {nav.navigate(route)}
         .semantics { this.selected=selected }
         .testTag(testId), contentAlignment=Alignment.Center) {
-        Row(Modifier.clip(CircleShape)
-            .background(Color.White.copy(alpha=if(selected) .14f else if(shift) .08f else 0f))
+        Row(Modifier.testTag("topCapsule-$route").heightIn(min=44.dp).clip(CircleShape)
+            .background(if(inventory) Color(0xFF3A3022) else Color.White.copy(alpha=if(selected) .14f else if(shift) .08f else 0f))
+            .then(if(inventory && selected) Modifier.border(1.dp,ink,CircleShape) else Modifier)
             .padding(horizontal=if(compact) (if(shift) 10.dp else 11.dp) else 14.dp,
                 vertical=if(compact && shift) 7.dp else 8.dp),
             verticalAlignment=Alignment.CenterVertically,
@@ -113,6 +116,10 @@ private fun TopItem(label: String, route: String, nav: MposTopNavigation, enable
                 fontSize=if(shift) (if(compact) 11.sp else 13.5.sp) else if(compact && !bold) 12.sp else 14.sp,
                 lineHeight=20.sp, fontWeight=if(bold) FontWeight.Bold else FontWeight.SemiBold),
                 maxLines=1, softWrap=false, overflow=TextOverflow.Visible)
+            if(badge>0) Box(Modifier.height(20.dp).widthIn(min=20.dp).background(MaterialTheme.colorScheme.error,CircleShape)
+                .padding(horizontal=6.dp).testTag("topNav-eventsCount"),contentAlignment=Alignment.Center) {
+                Text(badge.toString(),color=Color.White,fontSize=11.sp,lineHeight=14.sp,fontWeight=FontWeight.ExtraBold)
+            }
         }
     }
 }

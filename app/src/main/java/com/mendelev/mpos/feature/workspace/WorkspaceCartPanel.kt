@@ -2,6 +2,7 @@ package com.mendelev.mpos.feature.workspace
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,9 +29,10 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
 
 @Composable internal fun WorkspaceCartPanel(s: WorkspaceSnapshot,pending: Int,modifier: Modifier,onQuantity: (String)->Unit,
     onStep: (String,Int)->Unit,onRemove: (String)->Unit,onClear: ()->Unit,onDetails: ()->Unit,onPark: ()->Unit,
-    onRevalidate: ()->Unit,onCheckout: ()->Unit,onSoon: (String)->Unit,shiftOpen: Boolean,onTransfer: ()->Unit={},onOptions: (CartAction.SetOptions,String,()->Unit)->Unit={_,_,_->},error: String?=null,discounts: List<com.mendelev.mpos.domain.settings.SettingEntry> = emptyList(),onlineHeader: @Composable ()->Unit={}) {
+    onRevalidate: ()->Unit,onCheckout: ()->Unit,onSoon: (String)->Unit,shiftOpen: Boolean,onTransfer: ()->Unit={},onOptions: (CartAction.SetOptions,String,()->Unit)->Unit={_,_,_->},error: String?=null,discounts: List<com.mendelev.mpos.domain.settings.SettingEntry> = emptyList(),onlineFooter: @Composable ()->Unit={}) {
     var selectedRevision by rememberSaveable {mutableStateOf(0L)}
     var selectedOwner by rememberSaveable {mutableStateOf("")}
+    val listState=rememberLazyListState()
     var previousQuantities by remember(s.cart.sessionId) {mutableStateOf(s.cart.lines.associate {it.id to it.quantity.toBigDecimal()})}
     var highlightTokens by remember(s.cart.sessionId) {mutableStateOf(emptyMap<String,Long>())}
     LaunchedEffect(s.cartRevision,s.cart.sessionId) {
@@ -38,13 +40,14 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
         val changed=next.filter {(id,quantity)->quantity>(previousQuantities[id] ?: BigDecimal.ZERO)}.keys
         highlightTokens=highlightTokens.filterKeys {it in next}+changed.associateWith {s.cartRevision}
         previousQuantities=next
+        val target=s.cart.lines.indexOfLast {it.id in changed}
+        if(target>=0) listState.animateScrollToItem(target)
     }
     var more by remember {mutableStateOf(false)}
     var selected by rememberSaveable {mutableStateOf<String?>(null)}
     LaunchedEffect(s.cart.sessionId) {if(selectedOwner!=s.cart.sessionId) selected=null}
     Surface(modifier.testTag("workspaceCartPanel"),shape=RoundedCornerShape(22.dp),color=MaterialTheme.colorScheme.surface) {
         Column {
-            onlineHeader()
             Row(Modifier.fillMaxWidth().padding(start=20.dp,end=20.dp,top=18.dp,bottom=10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 val count=s.cart.lines.fold(BigDecimal.ZERO) {n,l->n+l.quantity.toBigDecimal()}
                 val muted=MaterialTheme.colorScheme.onSurfaceVariant
@@ -52,7 +55,7 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
                     withStyle(androidx.compose.ui.text.SpanStyle(fontSize=17.sp,fontWeight=FontWeight.ExtraBold)) {append("Текущий заказ")}
                     withStyle(androidx.compose.ui.text.SpanStyle(fontSize=13.sp,fontWeight=FontWeight.Medium,color=muted)) {append(" — ${CatalogRules.canonical(count)} поз.")}
                 },Modifier.weight(1f),style=MaterialTheme.typography.titleMedium.copy(lineHeight=23.8.sp))
-                PosIconButton("customer","Выбрать клиента",{onSoon("Клиент заказа")},enabled=pending==0,modifier=Modifier.testTag("workspaceCustomer"),retainingAppearance=pending>0)
+                PosIconButton("customer",if(s.cart.loyalty!=null) "Изменить клиента заказа" else "Выбрать клиента",{onSoon("Клиент заказа")},enabled=pending==0,modifier=Modifier.testTag("workspaceCustomer"),retainingAppearance=pending>0,selected=s.cart.loyalty!=null)
                 Box {
                     PosIconButton("more","Действия с чеком",{more=true},enabled=pending==0,modifier=Modifier.testTag("workspaceMore"),retainingAppearance=pending>0)
                     CartActionsMenu(more,{more=false},pending==0 && s.cart.lines.isNotEmpty(),
@@ -66,7 +69,7 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
                     onDetails,Modifier.fillMaxWidth().testTag("workspaceDetails"),enabled=pending==0,meta=true,retainingAppearance=pending>0)
             }
             if(s.cart.details.comment.isNotBlank()) Text(s.cart.details.comment,Modifier.padding(horizontal=18.dp,vertical=6.dp),style=MaterialTheme.typography.bodySmall)
-            LazyColumn(Modifier.weight(1f).padding(horizontal=14.dp).testTag("workspaceCart")) {
+            LazyColumn(Modifier.weight(1f).padding(horizontal=14.dp).testTag("workspaceCart"),state=listState) {
                 items(s.cart.lines,key={it.id}) {line ->
                     val flash=remember {androidx.compose.animation.core.Animatable(0f)}
                     val token=highlightTokens[line.id]
@@ -78,9 +81,10 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
                     Column(Modifier.fillMaxWidth().background(rowColor,RoundedCornerShape(8.dp)).testTag("workspaceLine:${line.id}").semantics {customActions=listOf(CustomAccessibilityAction("Удалить позицию") {if(pending==0) {onRemove(line.id);true} else false})}.clickable(enabled=pending==0) {selectedRevision=s.cartRevision;selectedOwner=s.cart.sessionId;selected=line.id}.padding(horizontal=6.dp,vertical=9.dp)) {
                         Row(horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.Top,modifier=Modifier.padding(bottom=3.dp)) {
                             Text(line.name,Modifier.weight(1f).alignByBaseline(),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.sp,lineHeight=18.9.sp))
-                            Text(runCatching {com.mendelev.mpos.domain.shift.ShiftRules.money(com.mendelev.mpos.domain.sale.SaleMoney.quote(listOf(com.mendelev.mpos.domain.sale.SaleLineInput(line.id,line.unitPrice,line.quantity,s.sourceDiscounts[line.id]))).total)}.getOrDefault("—"),modifier=Modifier.alignByBaseline(),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp,fontWeight=FontWeight.ExtraBold))
+                            Text(runCatching {com.mendelev.mpos.domain.shift.ShiftRules.money(com.mendelev.mpos.domain.loyalty.LoyaltyRules.quote(s.cart,s.sourceDiscounts,s.sourceDelivery).lines.single {it.id==line.id}.net)}.getOrDefault("—"),modifier=Modifier.alignByBaseline(),style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp,fontWeight=FontWeight.ExtraBold))
                         }
-                        Text("${posMoney(line.unitPrice.toBigDecimal())} / ${if(line.sellingBasis=="recipe-batch") "порция рецепта" else unitLabel(line.unit)} · ×${line.quantity}${s.sourceDiscounts[line.id]?.let {" · "+it.name}.orEmpty()}",modifier=Modifier.padding(top=2.dp),style=MaterialTheme.typography.bodySmall.copy(lineHeight=17.4.sp),color=MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${posMoney(line.unitPrice.toBigDecimal())} · ×${line.quantity}${s.sourceDiscounts[line.id]?.let {" · "+it.name}.orEmpty()}",modifier=Modifier.padding(top=2.dp),style=MaterialTheme.typography.bodySmall.copy(lineHeight=17.4.sp),color=MaterialTheme.colorScheme.onSurfaceVariant)
+                        if(s.cart.loyalty!=null) com.mendelev.mpos.domain.loyalty.LoyaltyRules.allocation(s.cart,s.sourceDiscounts).gifts.filter {it.lineId==line.id}.forEach {gift->Text("Подарок · "+gift.programName,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.primary)}
                         if(line.options.isNotEmpty()) Text("↳ "+line.options.joinToString(" · ") {it.name},Modifier.padding(top=5.dp),style=MaterialTheme.typography.bodySmall.copy(lineHeight=17.4.sp))
                         if(line.comment.isNotBlank()) Text("Комментарий: ${line.comment}",Modifier.padding(top=5.dp),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -104,6 +108,7 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
                     Text("Итого",Modifier.weight(1f),style=MaterialTheme.typography.bodyMedium.copy(fontSize=14.5.sp,fontWeight=FontWeight.SemiBold),color=MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(runCatching {com.mendelev.mpos.domain.shift.ShiftRules.money(orderSettingsTotal(s.cart,s.sourceDiscounts,s.sourceDelivery))}.getOrDefault("—"),style=MaterialTheme.typography.titleLarge.copy(fontSize=26.sp),modifier=Modifier.testTag("workspaceTotal"))
                 }
+                onlineFooter()
                 BoxWithConstraints(Modifier.fillMaxWidth()) {
                 val parkWidth=maxWidth*.34f
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -132,8 +137,8 @@ internal fun posMoney(value: BigDecimal)=value.setScale(2,RoundingMode.HALF_UP).
         }
     }
     SwipeToDismissBox(state,enableDismissFromStartToEnd=false,enableDismissFromEndToStart=enabled,backgroundContent={
-        if(state.dismissDirection==SwipeToDismissBoxValue.EndToStart) Surface(Modifier.fillMaxSize(),color=MaterialTheme.colorScheme.errorContainer) {
-            Box(Modifier.padding(16.dp),contentAlignment=Alignment.CenterEnd) {Text("Удалить",color=MaterialTheme.colorScheme.error)}
+        if(state.dismissDirection==SwipeToDismissBoxValue.EndToStart) Surface(Modifier.fillMaxSize(),color=MaterialTheme.colorScheme.error) {
+            Box(Modifier.padding(16.dp),contentAlignment=Alignment.CenterEnd) {MposPosIcon("delete",Modifier.size(24.dp),tint=MaterialTheme.colorScheme.onError)}
         }
     }) {Surface(color=MaterialTheme.colorScheme.surface) {content()}}
 }

@@ -60,9 +60,9 @@ class RefundUiTest {
         compose.waitUntil(20_000) {compose.onAllNodesWithTag("refundPrepare").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("refundPrepare").performClick()
         compose.waitUntil(20_000) {model.state.value.review!=null && !model.state.value.pending}
-        compose.onNodeWithTag("refundPreviewTotal").assertTextEquals("К возврату: 25,00 BYN")
-        compose.onNodeWithTag("refundPreviewCash").assertTextEquals("Выдать покупателю наличными: 10,00 BYN")
-        compose.onNodeWithTag("refundPreviewCard").assertTextEquals("Вернуть на карту вручную через терминал: 15,00 BYN")
+        compose.onNodeWithTag("refundPreviewTotal").assertTextEquals("25,00 BYN")
+        compose.onNodeWithTag("refundPreviewCash").assertTextEquals("10,00 BYN")
+        compose.onNodeWithTag("refundPreviewCard").assertTextEquals("15,00 BYN")
         compose.onNodeWithText("Отменяется оплата курьеру: 5,00 BYN. Верните эти наличные в кассу.").assertExists()
         shot("refund-confirm")
         db.openHelper.writableDatabase.execSQL("CREATE TEMP TRIGGER refuse_ui_refund BEFORE INSERT ON refunds BEGIN SELECT RAISE(ABORT, 'injected'); END")

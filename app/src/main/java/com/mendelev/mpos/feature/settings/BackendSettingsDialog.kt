@@ -28,12 +28,14 @@ import kotlinx.coroutines.*
     var advanced by remember {mutableStateOf(false)}
     var needsRebind by remember {mutableStateOf(false)}
     var confirmTarget by remember {mutableStateOf(false)}
-    fun load() {busy=true;scope.launch {try {val s=withContext(Dispatchers.IO) {access.requireSession();access.store.read().also {current->needsRebind=com.mendelev.mpos.data.local.OnlineOrderRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context)).records().any {it.target==current.target() && it.dataset!=com.mendelev.mpos.data.recovery.AppDataset.paths(context).id}}};form=s;saved=s;error=null} catch(_:Exception) {error="Не удалось прочитать подключение. Данные не изменены"} finally {busy=false}}}
+    fun load() {busy=true;scope.launch {try {val s=withContext(Dispatchers.IO) {access.requireSession();access.store.read().also {current->val db=com.mendelev.mpos.data.local.CatalogDatabase.get(context);val dataset=com.mendelev.mpos.data.recovery.AppDataset.paths(context).id
+                    needsRebind=com.mendelev.mpos.data.local.OnlineOrderRepository(db).records().any {it.target==current.target() && it.dataset!=dataset} ||
+                        db.workspace().documentsByPrefix(com.mendelev.mpos.data.local.LoyaltyEffectCodec.PENDING).any {document->com.mendelev.mpos.data.local.LoyaltyEffectCodec.decode(document.payload).let {it.target==current.loyaltyTarget() && it.dataset!=dataset}}}};form=s;saved=s;error=null} catch(_:Exception) {error="Не удалось прочитать подключение. Данные не изменены"} finally {busy=false}}}
     LaunchedEffect(Unit) {load()}
     fun save() {
         val draft=form ?: return
         busy=true;error=null;status=null;confirmTarget=false
-        scope.launch {try {val next=withContext(Dispatchers.IO) {access.store.save(draft.copy(datasetId=com.mendelev.mpos.data.recovery.AppDataset.paths(context).id)).also {next->com.mendelev.mpos.data.local.OnlineOrderRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context)).rebind(next.target(),next.datasetId,generation)}};form=next;saved=next;needsRebind=false;status="Настройки сохранены";onStatus("Подключение сохранено. Связь ещё не проверена")}
+        scope.launch {try {val next=withContext(Dispatchers.IO) {access.store.save(draft.copy(datasetId=com.mendelev.mpos.data.recovery.AppDataset.paths(context).id)).also {next->com.mendelev.mpos.data.local.OnlineOrderRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context)).rebind(next.target(),next.datasetId,generation);com.mendelev.mpos.data.local.LoyaltyOutbox(com.mendelev.mpos.data.local.CatalogDatabase.get(context)).rebind(next.loyaltyTarget(),next.datasetId,generation)}};form=next;saved=next;needsRebind=false;status="Настройки сохранены";onStatus("Подключение сохранено. Связь ещё не проверена")}
             catch(e:Exception) {error=if(e is IllegalArgumentException || e is IllegalStateException) e.message else "Не удалось сохранить подключение"} finally {busy=false}}
     }
     fun check(events: Boolean) {
@@ -74,6 +76,9 @@ import kotlinx.coroutines.*
                     MposWebField(s.mediaPath,{form=s.copy(mediaPath=it)},"Фотографии","backendMedia",!busy)
                     MposWebField(s.tariffsPath,{form=s.copy(tariffsPath=it)},"Тарифы доставки","backendTariffs",!busy)
                     MposWebField(s.availabilityPath,{form=s.copy(availabilityPath=it)},"Доступность товаров","backendAvailability",!busy)
+                    MposWebField(s.loyaltyPath,{form=s.copy(loyaltyPath=it)},"API лояльности","backendLoyalty",!busy)
+                    MposWebField(s.customersPath,{form=s.copy(customersPath=it)},"API клиентов","backendCustomers",!busy)
+                    MposWebField(s.loyaltyTermsPath,{form=s.copy(loyaltyTermsPath=it)},"Условия участия","backendLoyaltyTerms",!busy)
                     MposWebField(s.timeoutSeconds.toString(),{it.toIntOrNull()?.let {n->form=s.copy(timeoutSeconds=n)}},"Ожидание ответа, секунд","backendTimeout",!busy)
                 }
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
@@ -94,7 +99,7 @@ import kotlinx.coroutines.*
         }
     }
     if(confirmTarget) MposDialog("Изменить подключение?",{confirmTarget=false},maxWidth=560.dp) {
-        Text("Изменятся адрес backend или ключ устройства. Следующая ручная синхронизация опубликует каталог на новом подключении. Старые данные на сервере сохранятся. После восстановления копии будут разрешены подтверждения только тех заказов этого backend, которые присутствуют в восстановленной базе.")
+        Text("Изменятся адрес backend или ключ устройства. Следующая ручная синхронизация опубликует каталог на новом подключении. Старые данные на сервере сохранятся. После восстановления копии будут разрешены подтверждения только тех заказов этого backend, которые присутствуют в восстановленной базе. Ожидающие операции лояльности этого же подключения также продолжат отправляться; на другой backend они не переносятся.")
         Row(Modifier.fillMaxWidth().padding(top=16.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             MposButton("Отмена",{confirmTarget=false},Modifier.weight(1f),style=ActionStyle.Outline)
             MposButton("Изменить",{save()},Modifier.weight(1f))

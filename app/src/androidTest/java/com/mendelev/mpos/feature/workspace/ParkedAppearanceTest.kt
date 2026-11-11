@@ -54,6 +54,12 @@ class ParkedAppearanceTest {
         compose.onNodeWithText("Нет отложенных чеков").assertExists()
         compose.onNodeWithTag("parkedOpen:atlas").assertDoesNotExist();shot("C09-empty-native-dark")
     }
+    @Test fun orderTypeBadgesHaveEqualWidthAndHeight() {
+        compose.setContent {MposTheme {Column {listOf("here","takeaway","delivery").forEach {ParkedType(it)}}}}
+        listOf("here","takeaway","delivery").forEach {
+            compose.onNodeWithTag("parkedType:$it").assertWidthIsEqualTo(110.dp).assertHeightIsEqualTo(28.dp)
+        }
+    }
     private fun shot(name: String) {
         compose.waitForIdle()
         val bitmap=checkNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())

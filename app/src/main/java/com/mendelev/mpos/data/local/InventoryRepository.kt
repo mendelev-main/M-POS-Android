@@ -18,27 +18,27 @@ object InventoryCodec {
     private fun long(o: JSONObject,k: String): Long {require(o.get(k) is Number);return o.get(k).toString().toLong()}
     private fun product(p: JSONObject)=InventoryProduct(p.getString("id"),p.getString("name"),p.getString("category"),p.getString("unit"),long(p,"revision"),long(p,"stockRevision"),p.getString("stock"),p.getString("cost"))
     private fun draft(s: InventoryDraft)=JSONObject().put("id",s.id).put("type",s.type).put("startedAt",s.startedAt).put("scheduledDate",s.scheduledDate).put("products",JSONArray(s.products.map(::product)))
-        .put("counts",JSONArray(s.counts.map {c->JSONObject().put("product",product(c.product)).put("raw",c.raw).put("generation",c.generation).put("fixed",c.fixed?.let {f->JSONObject().put("product",product(f.product)).put("actual",f.actual).put("delta",f.delta).put("at",f.at).put("actorId",f.actorId).put("commandId",f.commandId).put("movementId",f.movementId).put("stockRevisionAfter",f.stockRevisionAfter)} ?: JSONObject.NULL)}))
-    private fun draft(s: JSONObject,countsRequired: Boolean): InventoryDraft {
-        val a=s.getJSONArray("products");val counts=if(!countsRequired) emptyList() else s.getJSONArray("counts").let {rows->(0 until rows.length()).map {i->val r=rows.getJSONObject(i);require(r.has("fixed"))
-            InventoryCount(product(r.getJSONObject("product")),r.getString("raw"),r.getString("generation"),if(r.isNull("fixed")) null else r.getJSONObject("fixed").let {f->InventoryFix(product(f.getJSONObject("product")),f.getString("actual"),f.getString("delta"),long(f,"at"),f.getString("actorId"),f.getString("commandId"),f.getString("movementId"),long(f,"stockRevisionAfter"))})
+        .put("counts",JSONArray(s.counts.map {c->JSONObject().put("product",product(c.product)).put("raw",c.raw).put("generation",c.generation).put("corrections",JSONArray(c.corrections.map {x->JSONObject().put("actual",x.actual).put("delta",x.delta).put("stockBefore",x.stockBefore).put("stockAfter",x.stockAfter).put("at",x.at).put("actorId",x.actorId).put("commandId",x.commandId).put("movementId",x.movementId).put("stockRevisionAfter",x.stockRevisionAfter)})).put("fixed",c.fixed?.let {f->JSONObject().put("product",product(f.product)).put("actual",f.actual).put("delta",f.delta).put("at",f.at).put("actorId",f.actorId).put("commandId",f.commandId).put("movementId",f.movementId).put("stockRevisionAfter",f.stockRevisionAfter)} ?: JSONObject.NULL)}))
+    private fun draft(s: JSONObject,countsRequired: Boolean,correctionsRequired: Boolean=false): InventoryDraft {
+        val a=s.getJSONArray("products");val counts=if(!countsRequired) emptyList() else s.getJSONArray("counts").let {rows->(0 until rows.length()).map {i->val r=rows.getJSONObject(i);require(r.has("fixed"));if(correctionsRequired) r.getJSONArray("corrections")
+            InventoryCount(product(r.getJSONObject("product")),r.getString("raw"),r.getString("generation"),if(r.isNull("fixed")) null else r.getJSONObject("fixed").let {f->InventoryFix(product(f.getJSONObject("product")),f.getString("actual"),f.getString("delta"),long(f,"at"),f.getString("actorId"),f.getString("commandId"),f.getString("movementId"),long(f,"stockRevisionAfter"))},r.optJSONArray("corrections")?.let {a->List(a.length()) {i->val x=a.getJSONObject(i);InventoryCorrection(x.getString("actual"),x.getString("delta"),x.getString("stockBefore"),x.getString("stockAfter"),long(x,"at"),x.getString("actorId"),x.getString("commandId"),x.getString("movementId"),long(x,"stockRevisionAfter"))}} ?: emptyList())
         }}
         return InventoryDraft(s.getString("id"),s.getString("type"),long(s,"startedAt"),s.getString("scheduledDate"),(0 until a.length()).map {product(a.getJSONObject(it))},counts)
     }
     fun encode(d: InventoryDocument): String {
         val c=d.config
-        return JSONObject().put("version",3).put("config",JSONObject().put("enabled",c.enabled).put("frequency",c.frequency).put("products",JSONArray(c.productIds.sorted())).put("lastCompleted",c.lastCompleted ?: JSONObject.NULL))
+        return JSONObject().put("version",4).put("config",JSONObject().put("enabled",c.enabled).put("frequency",c.frequency).put("products",JSONArray(c.productIds.sorted())).put("lastCompleted",c.lastCompleted ?: JSONObject.NULL))
             .put("draft",d.draft?.let(::draft) ?: JSONObject.NULL)
             .put("history",JSONArray(d.history.map {r->JSONObject().put("draft",draft(r.draft)).put("cancelled",r.cancelled).put("at",r.at).put("date",r.date).put("actorId",r.actorId).put("commandId",r.commandId).put("lossMinor",r.lossMinor ?: JSONObject.NULL).put("policy",r.policy)})).toString()
     }
     fun decode(raw: String): InventoryDocument=try {
-        val j=JSONObject(raw);require(j.get("version") is Number && j.get("version").toString() in setOf("1","2","3"));val version=j.get("version").toString()
+        val j=JSONObject(raw);require(j.get("version") is Number && j.get("version").toString() in setOf("1","2","3","4"));val version=j.get("version").toString()
         val c=j.getJSONObject("config");require(c.get("enabled") is Boolean && c.has("lastCompleted") && j.has("draft"))
         val ids=c.getJSONArray("products");val selected=(0 until ids.length()).map {ids.getString(it)};require(selected.distinct().size==selected.size)
-        val history=if(version!="3") emptyList() else j.getJSONArray("history").let {a->(0 until a.length()).map {i->val r=a.getJSONObject(i);require(r.get("cancelled") is Boolean && r.has("lossMinor"))
-            InventoryRecord(draft(r.getJSONObject("draft"),true),r.getBoolean("cancelled"),long(r,"at"),r.getString("date"),r.getString("actorId"),r.getString("commandId"),if(r.isNull("lossMinor")) null else long(r,"lossMinor"),long(r,"policy").also {require(it==1L)}.toInt())
+        val history=if(version in setOf("1","2")) emptyList() else j.getJSONArray("history").let {a->(0 until a.length()).map {i->val r=a.getJSONObject(i);require(r.get("cancelled") is Boolean && r.has("lossMinor"))
+            InventoryRecord(draft(r.getJSONObject("draft"),true,version=="4"),r.getBoolean("cancelled"),long(r,"at"),r.getString("date"),r.getString("actorId"),r.getString("commandId"),if(r.isNull("lossMinor")) null else long(r,"lossMinor"),long(r,"policy").also {require(it==1L)}.toInt())
         }}
-        InventoryDocument(InventoryConfig(c.getBoolean("enabled"),c.getString("frequency"),selected.toSet(),if(c.isNull("lastCompleted")) null else c.getString("lastCompleted")),if(j.isNull("draft")) null else draft(j.getJSONObject("draft"),version!="1"),history).also(InventoryRules::validate)
+        InventoryDocument(InventoryConfig(c.getBoolean("enabled"),c.getString("frequency"),selected.toSet(),if(c.isNull("lastCompleted")) null else c.getString("lastCompleted")),if(j.isNull("draft")) null else draft(j.getJSONObject("draft"),version!="1",version=="4"),history).also(InventoryRules::validate)
     } catch(_:Exception) {throw CatalogFailure("inventoryFormat","Не удалось прочитать инвентаризацию. Данные не сброшены")}
 }
 
@@ -112,6 +112,23 @@ class InventoryRepository(private val db: CatalogDatabase,private val clock: Clo
                     db.catalog().updateBalance(balance.copy(quantity=actual,revision=revision));afterWrite?.invoke()
                     old.copy(draft=draft.copy(counts=draft.counts.map {if(it.product.id==live.id) it.copy(fixed=fixed) else it}))
                 }
+                is InventoryAction.Correct->{
+                    val draft=old.draft?.takeIf {it.id==a.draftId} ?: throw CatalogFailure("inventory","Инвентаризация уже закрыта")
+                    val count=draft.counts.find {it.product.id==a.productId && it.fixed!=null} ?: throw CatalogFailure("inventory","Строка не зафиксирована")
+                    if(count.effectiveActual!=a.expectedActual) throw CatalogFailure("conflict","Откройте исправление заново")
+                    val live=eligible[a.productId]?.takeIf {it.unit==count.product.unit} ?: throw CatalogFailure("inventory","Товар или единица учёта изменились")
+                    val actual=InventoryRules.actual(a.actual)
+                    if(actual==count.effectiveActual) old else {
+                    val (delta,after)=InventoryRules.correction(count,live.stock,actual)
+                    val at=clock.millis();val movementId=UUID.randomUUID().toString()
+                    val balance=db.catalog().balance(live.id) ?: error("Нет остатка")
+                    val revision=Math.addExact(balance.revision,1)
+                    val correction=InventoryCorrection(actual,delta,live.stock,after,at,c.actorId,c.commandId,movementId,revision)
+                    db.catalog().movement(MovementEntity(movementId,live.id,delta,"inventory",CatalogRules.fingerprint("inventory.correction.v1",c.commandId,live.id),at,draft.id));afterWrite?.invoke()
+                    db.catalog().updateBalance(balance.copy(quantity=after,revision=revision));afterWrite?.invoke()
+                    old.copy(draft=draft.copy(counts=draft.counts.map {if(it.product.id==live.id) it.copy(corrections=it.corrections+correction) else it}))
+                    }
+                }
                 is InventoryAction.Finish->{
                     val draft=old.draft?.takeIf {it.id==a.draftId} ?: throw CatalogFailure("inventory","Инвентаризация уже закрыта или изменилась")
                     val at=clock.millis();require(at>=0);val date=LocalDate.now(clock).toString()
@@ -125,7 +142,7 @@ class InventoryRepository(private val db: CatalogDatabase,private val clock: Clo
             InventoryRules.validate(next);val target=(c.action as? InventoryAction.Finish)?.draftId ?: next.draft?.id ?: InventoryCodec.KEY
             db.workspace().put(doc.copy(revision=Math.addExact(doc.revision,1),payload=InventoryCodec.encode(next)));afterWrite?.invoke()
             db.catalog().result(ResultEntity(c.commandId,c.fingerprint(),target));afterWrite?.invoke()
-            db.catalog().audit(AuditEntity(UUID.randomUUID().toString(),c.commandId,c.actorId,when(c.action) {is InventoryAction.Start->"inventory.start";is InventoryAction.Configure->"inventory.configure";is InventoryAction.Count->"inventory.count";is InventoryAction.Fix->"inventory.fix";is InventoryAction.Finish->if(c.action.cancelled) "inventory.cancel" else "inventory.complete"},target,clock.millis()));afterWrite?.invoke()
+            db.catalog().audit(AuditEntity(UUID.randomUUID().toString(),c.commandId,c.actorId,when(c.action) {is InventoryAction.Start->"inventory.start";is InventoryAction.Configure->"inventory.configure";is InventoryAction.Count->"inventory.count";is InventoryAction.Fix->"inventory.fix";is InventoryAction.Correct->"inventory.correct";is InventoryAction.Finish->if(c.action.cancelled) "inventory.cancel" else "inventory.complete"},target,clock.millis()));afterWrite?.invoke()
             target
         }}
         afterCommit?.invoke();return id

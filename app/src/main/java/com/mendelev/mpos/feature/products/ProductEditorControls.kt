@@ -79,3 +79,12 @@ import com.mendelev.mpos.core.ui.ActionStyle
         Text(label,fontSize=14.sp,lineHeight=19.6.sp)
     }
 }
+
+/** Shared row for online and stock policies: label left, switch right, one accessible toggle. */
+@Composable internal fun ProductEditorSwitch(label: String,checked: Boolean,onChange: (Boolean)->Unit,enabled: Boolean=true,modifier: Modifier=Modifier) {
+    Row(modifier.fillMaxWidth().heightIn(min=48.dp).toggleable(value=checked,enabled=enabled,role=Role.Switch,onValueChange=onChange),
+        verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(16.dp)) {
+        Text(label,Modifier.weight(1f),fontSize=14.sp,lineHeight=20.sp,fontWeight=FontWeight.Bold)
+        Switch(checked,onCheckedChange=null,enabled=enabled)
+    }
+}

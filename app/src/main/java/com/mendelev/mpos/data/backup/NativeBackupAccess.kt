@@ -40,7 +40,7 @@ class NativeBackupRepository(context: Context,private val db: CatalogDatabase=Ca
         return staging {root->
             val snapshot=File(root,"snapshot").apply {mkdir()}
             // Source database transaction also serializes cleanup/photos; no live DB/WAL copying.
-            val files=InstallationGate.write {Administration.session.authorized(p) {NativeSnapshotDatabase.capture(db,photos,snapshot)}}
+            val files=InstallationGate.write {Administration.session.authorized(p) {NativeSnapshotDatabase.capture(db,photos,snapshot,context)}}
             checkpoint("captured");coroutine.ensureActive();p.requireCurrent()
             val archive=File(root,"backup.mposnative")
             NativeBackupArchive.write(archive,files) {coroutine.ensureActive();p.requireCurrent()}
@@ -85,6 +85,9 @@ class NativeBackupRepository(context: Context,private val db: CatalogDatabase=Ca
     }
     private fun report(archive: File,files: NativeBackupFiles): NativeBackupReport {
         val counts=NativeSnapshotDatabase.validate(files)
-        return NativeBackupReport(archive.length(),NativeBackupArchive.sha256(archive),files.photos.size,counts.getValue("products"),counts.getValue("shifts"),counts.getValue("receipts"))
+        val webCount=android.database.sqlite.SQLiteDatabase.openDatabase(files.database.absolutePath,null,android.database.sqlite.SQLiteDatabase.OPEN_READONLY).use {database->
+            database.rawQuery("SELECT COUNT(*) FROM workspace_documents WHERE id >= 'web-receipt:' AND id < 'web-receipt;'",null).use {c->check(c.moveToFirst());c.getLong(0)}
+        }
+        return NativeBackupReport(archive.length(),NativeBackupArchive.sha256(archive),files.photos.size,counts.getValue("products"),counts.getValue("shifts"),Math.addExact(counts.getValue("receipts"),webCount))
     }
 }

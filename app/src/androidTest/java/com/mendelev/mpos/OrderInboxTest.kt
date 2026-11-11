@@ -36,4 +36,14 @@ class OrderInboxTest {
             assertEquals("corrupted",file.readText())
         } finally {file.delete()}
     }
+
+    @Test fun removedOrderCannotReturnAfterAtomicFileReopenOrLateEvent() {
+        val file=file()
+        try {
+            val inbox=OrderInbox(file,cipher);inbox.merge(listOf(row("one"),row("two")),emptySet());inbox.remove("one")
+            val reopened=OrderInbox(file,cipher)
+            assertTrue(reopened.isRemoved("one"));assertFalse(reopened.isRemoved("two"))
+            assertEquals(listOf("two"),reopened.merge(listOf(row("one")),emptySet()).map {it.getString("id")})
+        } finally {file.delete()}
+    }
 }

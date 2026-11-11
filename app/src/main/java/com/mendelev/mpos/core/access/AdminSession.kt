@@ -40,19 +40,26 @@ class AdminSession(private val verifier: PasswordVerifier=EmbeddedPasswordVerifi
     val state=mutable.asStateFlow()
     private var failures=0
     private var blockedUntil=0L
+    private var backendCredential: CharArray?=null
     suspend fun login(password: CharArray): Boolean {
         try {
             // Serialize verification as well: concurrent attempts cannot evade the attempt limit.
             return mutex.withLock {
                 if(monotonicMillis()<blockedUntil) throw CatalogFailure("access","Слишком много попыток. Повторите вход через 30 секунд")
                 val valid=withContext(Dispatchers.Default) {verifier.matches(password)}
-                if(valid) {failures=0;blockedUntil=0;mutable.value=AdminState(true,mutable.value.generation+1)}
+                if(valid) {backendCredential?.fill('\u0000');backendCredential=password.copyOf();failures=0;blockedUntil=0;mutable.value=AdminState(true,mutable.value.generation+1)}
                 else if(++failures>=5) {failures=0;blockedUntil=monotonicMillis()+30_000}
                 valid
             }
         } finally {password.fill('\u0000')}
     }
-    suspend fun logout()=mutex.withLock {mutable.value=AdminState(false,mutable.value.generation+1)}
+    suspend fun logout()=mutex.withLock {backendCredential?.fill('\u0000');backendCredential=null;mutable.value=AdminState(false,mutable.value.generation+1)}
+    /** Transient successful login only, for the Web backend's administrative adjustment proof. */
+    internal suspend fun <T> withBackendCredential(generation: Long,block: suspend (CharArray)->T): T=authorized {
+        if(state.value.generation!=generation) throw CatalogFailure("access","Сессия этой формы завершена")
+        val copy=backendCredential?.copyOf() ?: throw CatalogFailure("access","Войдите в администрирование заново")
+        try {block(copy)} finally {copy.fill('\u0000')}
+    }
     /** A command admitted before logout finishes before logout; logout winning the lock refuses it. */
     suspend fun <T> authorized(expected: AdminAuthorization?=null,block: suspend ()->T): T=mutex.withLock {
         if(expected!=null && (expected.session!==this || expected.generation!=mutable.value.generation)) throw CatalogFailure("access","Сессия этой формы завершена. Откройте форму заново")

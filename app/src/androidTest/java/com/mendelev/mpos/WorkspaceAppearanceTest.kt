@@ -17,6 +17,18 @@ import org.junit.Test
 /** Isolated render: never opens or writes the installed application's database. */
 class WorkspaceAppearanceTest {
     @get:Rule val compose=createComposeRule()
+    @Test fun customerIconIsSelectedOnlyWhileCustomerIsAttachedToReceipt() {
+        var customer by mutableStateOf<com.mendelev.mpos.domain.loyalty.LoyaltySelection?>(null)
+        val empty=WorkspaceSnapshot(emptyList(),emptyList(),emptyList(),emptyMap(),CurrentCart(),0,emptyList(),0)
+        compose.setContent {MposTheme {
+            WorkspaceCartPanel(empty.copy(cart=empty.cart.copy(loyalty=customer)),0,Modifier.width(380.dp).height(650.dp),{},{_,_->},{},{},{},{},{},{},{},true)
+        }}
+        compose.onNodeWithTag("workspaceCustomer").assertIsNotSelected()
+        compose.runOnIdle {customer=com.mendelev.mpos.domain.loyalty.LoyaltySelection("a".repeat(64),com.mendelev.mpos.domain.loyalty.LoyaltyCustomer("web-customer","Тест","375290000000"),emptyList(),datasetId="fixture")}
+        compose.onNodeWithTag("workspaceCustomer").assertIsSelected().assertContentDescriptionEquals("Изменить клиента заказа")
+        compose.runOnIdle {customer=null}
+        compose.onNodeWithTag("workspaceCustomer").assertIsNotSelected()
+    }
     @Test fun sourceCartWidthAndFutureActionsDoNotIssueOrderCommands() {
         var soon by mutableStateOf<String?>(null)
         var writes=0

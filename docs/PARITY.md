@@ -17,7 +17,7 @@
 | S01–S05 | payment, receipts, android-safety, stockConsumption | 03 | S01/S02/S04/S05 initial manual checkout/history scope ci-verified/run40231561635; sequential split ci-verified/run40291228647; S03 repository ci-verified/run40380296921, refund UI/recovery ci-verified/run40387854147; full physical03 pending |
 | I01–I04 | inventory, receiving-ui/drafts, purchase-orders, suppliers, warehouse-reporting, android-inventory | 04 | in progress:04a.1–04a.7/04b.1–04b.3 ci-verified; queries/device audit pending |
 | H01–H04 | shifts, employees, analytics, administration guards | 05 | planned |
-| C01–C04 | loyalty, privacy, customer adapters | 06 | planned; C05/hall-bookings excluded владельцем2026-10-28 |
+| C01–C04 | loyalty, privacy, customer adapters | 06 | implemented locally09.11; device acceptance pending; C05/hall-bookings excluded владельцем2026-10-28 |
 | B01–B05 | storage, backup/photo native boundaries | 07 | planned |
 | D01–D05 | network-printer, cash drawer, native report/Telegram | 08 | planned |
 | N01–N06 | web-orders, availability, delivery-tariffs, HTTPS/SSE native boundaries | 09 | planned |
@@ -440,3 +440,52 @@ Rounding follow-up acceptance: [CI40519616659](https://github.com/mendelev-main/
 2026-11-09: N01.CFG implemented локально — editable encrypted backend config, отдельное сохранение/GET diagnostics/header SSE probe. N01 целиком и N02–N06 ещё не закрыты: [BACKEND-09.md](BACKEND-09.md). Никаких production HTTP/публикаций.
 
 2026-11-09: N02.INBOX/N03.ACCEPT/N03.READY/N04.PUB local implemented: SSE+encrypted inbox, modal events, local-first ACK/ready/cancel, preserved website quote, paid settlement, manual menu/photo/tariff publish, online product metadata. N01/N05/N06 целиком остаются in progress: инструментальные и staging/device проверки pending, точные ограничения в BACKEND-09.md. Backend не изменён.
+
+2026-11-09: ON01–ON04/LO01–LO04 implemented locally: [контракт и приёмка](ONLINE-LOYALTY-PARITY.md). C01–C04 возобновлены владельцем; backend не изменён, без push. Тесты/точные ограничения — harness/build-log.md; визуальная и live Telegram приёмка владельца pending.
+
+10.11.2026: POV01–POV04 implemented locally в рамках заказа на UI вкладки «Заказы»: docs/PURCHASE-UI-PARITY.md. POV05 проверки/owner acceptance pending; прежняя ci-verified04 остаётся evidence прежней реализации, не новой компоновки.
+
+10.11.2026 RV01–RV06 implemented locally: docs/RECEIVING-UI-PARITY.md. Создание/edit pending и сохранение/проведение приёмки сотрудником разрешены; cancel/catalog/suppliers/staff остаются admin-only. RV07:31JVM passed, lint0errors, compile Android fixtures; owner/device acceptance pending.
+
+10.11.2026 PA01–PA05 implemented locally, PA06 local16JVM/compile/lint; docs/PURCHASE-AUTOSAVE.md. Новая форма без Save/Discard меню, dirty не блокирует вкладки, Working input автоматический; source/native monetary validation не ослаблена. UI/Room device acceptance pending.
+
+
+2026-11-10: LO03 admin client card/inline adjustment implemented locally (fullscreen contacts/programs/history tabs, independent loading, gift removal, consentVersion/CAS, structured admin403). Контракт и границы проверки: ONLINE-LOYALTY-PARITY.md. Визуальная/live server приёмка pending.
+
+
+2026-11-10: RV03/RV04 receiving follow-up implemented locally: верхняя панель в документе, yellow receive/resume, no overflow, background raw-draft autosave/flush-before-exit/fresh-preview. docs/RECEIVING-UI-PARITY.md. Pixel/device verification pending.
+
+
+2026-11-10: ON02 event detail visual follow-up и ON06 admin-only silent soft deletion implemented locally; shared modal variant/persistent inbox removal/generation guard. ONLINE-LOYALTY-PARITY.md описывает semantics и ограничения existing backend. Device/pixel/live acceptance pending.
+
+
+2026-11-10: LO02 customer picker/create parity follow-up implemented locally:560/460dp, +375 inputs, last4 lookup, optional explicit enrollment, durable attach-before-consent and selection on profile outage. ONLINE-LOYALTY-PARITY.md. Pixel/live device acceptance pending.
+
+2026-11-10: WB-FULL01 settings/device activation, WB-FULL02 historical receipts/refunds + SQL50, WB-FULL03 shift projections/photos implemented locally. Границы и ручная приёмка: WEB-RESTORE-FULL-PLAN.md. Device verification pending.
+
+2026-11-10 SP01–04/ST01/RB01 implemented locally: SPLIT-PAYMENT-UI.md. Чек+split workspace, cash/card confirmation, settings deletion in editor, receipt badges. Device verification pending.
+
+2026-11-10 IV01–06/BG01 implemented locally: INVENTORY-UI-PARITY.md. Settings/work/history/summary/correction inventory; equal parked badges/compact receipt badges. IV07 local validation, device/pixel pending.
+
+2026-11-10 CT01–05 implemented locally: CHECKOUT-TRANSITIONS.md. No stale checkout UI/disabled-ink flash; explicit native split rollback; cart price label/trash/auto-scroll. Device/runtime acceptance pending.
+
+2026-11-10 RPC01–04/IV08/RV08/ON07 implemented locally: RECEIPT-PAYMENT-CORRECTION.md. RPC05 local tests/compile evidence, Room/device/pixel pending. Native receipt payment correction; restored Web history read-only.
+
+2026-11-10 PCE01–04 implemented locally, PCE05 local compile/tests: PRODUCT-CARD-POLISH.md. Product card header/summary/photo/modifiers/stock switches. Device/pixel pending.
+
+2026-11-10 P02/T02/UI01/D01/D02 implemented локально: [PRINT-CATEGORIES-TOPBAR-PARITY](PRINT-CATEGORIES-TOPBAR-PARITY.md). Каналы категорий/backup validator/publication; capsule44; печатные строки по независимому Web oracle. D05 physical и device verification pending; без remote.
+
+
+2026-11-10 W04/W06/W08/W10/R01 implemented locally: [FOLDERS-HISTORY-UI](FOLDERS-HISTORY-UI.md). Folder appearance/grid/drag projection, history header outside loading gate;8 JVM passed, UI/Room compile-only; pixel/device pending.
+
+
+2026-11-10 ST03/ST04/SA01–SA06 subset/R01: [OPERATOR-DIRECTORIES-STAFF](OPERATOR-DIRECTORIES-STAFF.md). Новые права add/edit, separate admin session, employee card, receipt badges128×23. Локально implemented; Android tests compiled only, device pending.
+
+
+2026-11-10 PCE/09 availability extension implemented locally: [ONLINE-ALWAYS-AVAILABLE](ONLINE-ALWAYS-AVAILABLE.md). Онлайн-switch, JSON null availability, metadata/fingerprint v4. Backend не менялся; site/device pending.
+
+
+2026-11-10 T01/catalog feedback: постоянный success banner заменён компактным top overlay2500ms по правилу владельца; повторный успех перезапускает таймер, ошибки не скрываются. Локальная визуальная приёмка pending.
+
+
+2026-11-10 W04/W06 folder entry refinement: Open на плитке в режиме раскладки, внутри folder modal без карандаша; editing сохраняется. FolderOpenActionTest compiled-only, device verification pending. docs/FOLDERS-HISTORY-UI.md.

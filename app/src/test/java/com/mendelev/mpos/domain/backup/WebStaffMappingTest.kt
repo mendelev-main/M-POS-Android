@@ -16,9 +16,9 @@ class WebStaffMappingTest {
         assertEquals(f.employees.single().id,f.shifts.single().actorId);assertEquals(before,j.toString())
         j.getJSONArray("employees").getJSONObject(0).put("name","Новое имя").put("role","admin")
         shift(j).put("employeeName","Имя при открытии")
-        val updated=mapped(j);assertFalse(updated.employees.single().selectable)
+        val updated=mapped(j);assertTrue(updated.employees.single().selectable)
         assertEquals("Имя при открытии",updated.shifts.single().actorName)
-        assertTrue(updated.shifts.single().blockers.contains("activeCashierUnavailable"))
+        assertFalse(updated.shifts.single().blockers.contains("activeCashierUnavailable"))
     }
     @Test fun closedShiftMissingExpectedIsNotRecalculatedFromCurrentProducts() {
         val j=source();shift(j).put("status","closed").put("closedAt",10).put("countedCash","10.25")

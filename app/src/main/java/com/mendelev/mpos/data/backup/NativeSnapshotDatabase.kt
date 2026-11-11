@@ -17,7 +17,7 @@ internal object NativeSnapshotDatabase {
     private const val IDENTITY="9bb6667a9d85501c211c4629dbdaa2d2"
     private fun quoted(name: String)="\""+name.replace("\"","\"\"")+"\""
     /** Clone committed tables, exact SQLite types and schema under one source transaction, including WAL data. */
-    suspend fun capture(db: CatalogDatabase,photos: ProductPhotoStore,directory: File): NativeBackupFiles=db.withTransaction {
+    suspend fun capture(db: CatalogDatabase,photos: ProductPhotoStore,directory: File,deviceContext: android.content.Context?=null): NativeBackupFiles=db.withTransaction {
         val context=currentCoroutineContext();val source=db.openHelper.writableDatabase
         if(source.version!=NativeBackupArchive.SCHEMA_VERSION) throw BackupFailure("version","Версия базы не поддерживается")
         val schema=mutableListOf<Triple<String,String,String>>()
@@ -51,6 +51,11 @@ internal object NativeSnapshotDatabase {
                                 statement.executeInsert()
                             }
                         }
+                    }
+                }
+                if(deviceContext!=null) {
+                    target.rawQuery("SELECT payload FROM workspace_documents WHERE id=?",arrayOf(WebSettingsMapping.DEVICE)).use {c->
+                        if(c.moveToFirst()) target.execSQL("UPDATE workspace_documents SET payload=? WHERE id=?",arrayOf(RestoredDeviceSettings.capture(deviceContext,c.getString(0)),WebSettingsMapping.DEVICE))
                     }
                 }
                 schema.filter {it.first=="index"}.forEach {target.execSQL(it.third)}

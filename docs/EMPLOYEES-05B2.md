@@ -1,5 +1,7 @@
 # 05b.2 — справочник сотрудников и кассир смены
 
+Актуальное правило2026-11-10: role хранится только для совместимости; все неудалённые сотрудники выбираются кассирами, переключатель роли удалён. Администратор — отдельная сессия. [OPERATOR-DIRECTORIES-STAFF](OPERATOR-DIRECTORIES-STAFF.md) имеет приоритет над прежним описанием ролей ниже.
+
 Статус: in progress; EF01–EF05 и ED01–ED06 ci-verified/API36; общий05b остаётся in progress. Не объявляет SA01–SA06 или полный05b завершёнными.
 
 Источник: pinned Web1682c883 employees.js saveEmployee/employeeDeletionAllowed/employeeDisplayName, shifts.js openShiftModal/submitOpenShift, android-admin.js и regression source-product-stock.test.cjs (employee CRUD, administration session, cashier identity). Общие утверждённые решения — STAFF-ACCESS-05B.md.

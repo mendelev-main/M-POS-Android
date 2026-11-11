@@ -1,5 +1,7 @@
 # 05b — сотрудники и административный доступ
 
+Актуальное уточнение владельца10.11.2026: заказы поставщикам и приёмка — операционные действия сотрудника без admin login. Исключение из прежней общей warehouse admin matrix описано в [RECEIVING-UI-PARITY.md](RECEIVING-UI-PARITY.md). Отзыв admin-форм сохраняется для справочников/настроек/инвентаризации и cancel заказа; операционный ввод не отзывается при admin logout.
+
 Статус на2026-10-30: 05b.1 A01–A04,05b.2 ED01–ED06 и05b.3 AR01–AR05 ci-verified/API36. Заключительная сверка05b.4 ci-verified/API36: [CI41100246927](https://github.com/mendelev-main/M-POS-Android/actions/runs/41100246927)/f668fef,151JVM/236instrumentation/0failures/0skipped. Полный этап05 включает будущие отчёты и не закрыт.
 
 ## Источник и решения владельца

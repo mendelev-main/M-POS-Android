@@ -1,5 +1,5 @@
 {
-  "updated_on": "2026-11-08",
+  "updated_on": "2026-11-10",
   "blocker": "Run42372632697 исполнил300API tests:3fail (геометрия оплаты и merging метки возврата). Причины исправлены; локальные PaymentAppearanceTest/ReceiptHistoryAppearanceTest прошли API36 на Mac9,711s. Полный следующий CI/release pending; локальный RefundUiTest заблокирован существующей сменой в fixture setup. Полная pixel-приёмка не закрыта.",
   "windows": {
     "W01": {
@@ -28,7 +28,7 @@
       "implementation": "partial",
       "api_verified": false,
       "pixel_verified": false,
-      "remaining": "Окно папки/сетка/действия, фото, тени и парные снимки"
+      "remaining": "Локальные folder editor/grid/style или history shell: docs/FOLDERS-HISTORY-UI.md.8 JVM passed; UI/Room compiled only. Владелец проверяет drag/цвет/переходы/парные снимки."
     },
     "W05": {
       "source_reviewed": true,
@@ -42,7 +42,7 @@
       "implementation": "partial",
       "api_verified": false,
       "pixel_verified": false,
-      "remaining": "Сетка/drag/drop/управление, точный пунктир и парные снимки"
+      "remaining": "Локальные folder editor/grid/style или history shell: docs/FOLDERS-HISTORY-UI.md.8 JVM passed; UI/Room compiled only. Владелец проверяет drag/цвет/переходы/парные снимки."
     },
     "C09": {
       "source_reviewed": true,
@@ -77,7 +77,7 @@
       "implementation": "partial",
       "api_verified": false,
       "pixel_verified": false,
-      "remaining": "Локальный API36 прогон, парные PNG обеих тем, точные тени/типографика, длинная история и узкий экран"
+      "remaining": "Локальные folder editor/grid/style или history shell: docs/FOLDERS-HISTORY-UI.md.8 JVM passed; UI/Room compiled only. Владелец проверяет drag/цвет/переходы/парные снимки."
     },
     "R04": {
       "source_reviewed": true,
@@ -260,6 +260,20 @@
       "api_verified": false,
       "pixel_verified": false,
       "remaining": "Локальный перенос списка/карточек/категорий/picker/подтверждений и metadata; онлайн09 TODO, device/API/парные снимки pending. docs/CATALOG-WEB-PARITY.md"
+    },
+    "W08": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Локальные folder editor/grid/style или history shell: docs/FOLDERS-HISTORY-UI.md.8 JVM passed; UI/Room compiled only. Владелец проверяет drag/цвет/переходы/парные снимки."
+    },
+    "W10": {
+      "source_reviewed": true,
+      "implementation": "partial",
+      "api_verified": false,
+      "pixel_verified": false,
+      "remaining": "Локальные folder editor/grid/style или history shell: docs/FOLDERS-HISTORY-UI.md.8 JVM passed; UI/Room compiled only. Владелец проверяет drag/цвет/переходы/парные снимки."
     }
   }
 }

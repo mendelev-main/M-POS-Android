@@ -1,10 +1,12 @@
 package com.mendelev.mpos.data.local
 
 import androidx.room.withTransaction
+import com.mendelev.mpos.domain.backup.WebSourceDocuments
 import com.mendelev.mpos.domain.catalog.*
 import java.util.UUID
 import com.mendelev.mpos.data.media.ProductPhotoStore
 import org.json.JSONObject
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.distinctUntilChanged
 
@@ -15,6 +17,9 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
     val products = dao.products()
     val categories = dao.categories()
     val components = dao.components()
+    val categoryChannels = combine(dao.categories(),db.workspace().observeRevisions().map {rows->
+        rows.filter {CategoryChannelsCodec.owns(it.id) || WebSourceDocuments.owns(it.id)}
+    }.distinctUntilChanged()) {_,_->db.withTransaction {db.categoryChannels()}}.distinctUntilChanged()
     val recipeBatchIds=db.workspace().observeRevisions().map {
         val imported=db.workspace().document(WebCandidateDatabase.BASIS)?.let {doc->val a=JSONObject(doc.payload).getJSONArray("products");(0 until a.length()).map {a.getString(it)}.toSet()}.orEmpty()
         val local=db.workspace().documentsByPrefix(ProductDetailsCodec.PREFIX).associate {d->d.id.removePrefix(ProductDetailsCodec.PREFIX) to ProductDetailsCodec.decode(d.payload,d.id.removePrefix(ProductDetailsCodec.PREFIX))}
@@ -118,20 +123,23 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
             input.id
         }
     }
-    suspend fun saveCategory(id: String, expectedRevision: Long?, rawName: String, commandId: String, color: String = CategoryAppearance.DEFAULT_COLOR, symbol: String = ""): String {
+    suspend fun saveCategory(id: String, expectedRevision: Long?, rawName: String, commandId: String, color: String = CategoryAppearance.DEFAULT_COLOR, symbol: String = "", channels: CategoryChannels? = null): String {
         val name = CatalogRules.name(rawName, 100); val key = CatalogRules.key(name)
         val cleanColor=CategoryAppearance.color(color); val cleanSymbol=CategoryAppearance.symbol(symbol)
         val legacyFp = CatalogRules.fingerprint("category", id, expectedRevision, name)
-        val fp = if(cleanColor==CategoryAppearance.DEFAULT_COLOR && cleanSymbol.isEmpty()) legacyFp
+        val appearanceFp = if(cleanColor==CategoryAppearance.DEFAULT_COLOR && cleanSymbol.isEmpty()) legacyFp
             else CatalogRules.fingerprint("categoryAppearance",legacyFp,cleanColor,cleanSymbol)
+        val fp=if(channels==null) appearanceFp else CatalogRules.fingerprint("categoryChannels",appearanceFp,channels.menu,channels.order)
         return db.adminTransaction {
             repeat(commandId, fp)?.let { return@adminTransaction it }
             SplitPaymentRepository(db).requireCategoryUnlocked(id)
             val old = dao.category(id)
             if (old?.revision != expectedRevision) throw CatalogFailure("conflict", "Категория изменилась. Откройте её заново")
             if (dao.categoryByKey(key)?.id?.let { it != id } == true) throw CatalogFailure("name", "Такая категория уже существует")
+            val channelValue=channels ?: db.categoryChannels()[id] ?: CategoryChannels()
             val category = CategoryEntity(id, name, key, old?.sortOrder ?: dao.nextCategoryOrder(), (old?.revision ?: 0) + 1, cleanColor, cleanSymbol)
             if (old == null) dao.insertCategory(category) else dao.updateCategory(category)
+            db.workspace().put(WorkspaceDocument(CategoryChannelsCodec.PREFIX+id,category.revision,CategoryChannelsCodec.encode(id,channelValue)))
             afterCategoryWrite?.invoke()
             record(commandId, fp, id, "category.save"); id
         }
@@ -160,6 +168,7 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
         if (dao.category(id)?.revision != revision) throw CatalogFailure("conflict", "Категория изменилась")
         if (dao.categoryUses(id) > 0) throw CatalogFailure("used", "В категории есть товары. Сначала переместите их")
         db.requireNoWorkspaceCategory(id)
+        db.workspace().delete(CategoryChannelsCodec.PREFIX+id)
         dao.deleteCategory(id); record(commandId, fp, id, "category.delete")
     }
     suspend fun deleteProduct(id: String, revision: Long, commandId: String) = db.adminTransaction {

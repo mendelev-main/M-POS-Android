@@ -2,9 +2,15 @@ package com.mendelev.mpos.domain.workspace
 
 import com.mendelev.mpos.domain.catalog.*
 
-data class LayoutItem(val type: String, val id: String, val categoryId: String, val folderId: String = "", val name: String = "")
+data class FolderAppearance(val color: String="",val symbol: String="",val columns: Int=0,val tileHeight: Int=144) {
+    fun validated(): FolderAppearance {
+        if(columns !in 0..4 || tileHeight !in listOf(120,144,168)) throw CatalogFailure("folder","Проверьте размеры папки")
+        return copy(color=if(color.isBlank()) "" else CategoryAppearance.color(color),symbol=CategoryAppearance.symbol(symbol))
+    }
+}
+data class LayoutItem(val type: String, val id: String, val categoryId: String, val folderId: String = "", val name: String = "",val appearance: FolderAppearance=FolderAppearance())
 sealed interface LayoutAction {
-    data class SaveFolder(val id: String, val categoryId: String, val name: String): LayoutAction
+    data class SaveFolder(val id: String, val categoryId: String, val name: String,val appearance: FolderAppearance?=null): LayoutAction
     data class DeleteFolder(val id: String): LayoutAction
     data class MoveProduct(val productId: String, val folderId: String): LayoutAction
     data class ResetProduct(val productId: String): LayoutAction
@@ -32,8 +38,9 @@ object LayoutEngine {
                 if(old!=null && old.categoryId!=action.categoryId) throw CatalogFailure("folder","Папка принадлежит другой категории")
                 if(items.any { it.type=="folder" && it.categoryId==action.categoryId && it.id!=action.id && CatalogRules.key(it.name)==CatalogRules.key(name) })
                     throw CatalogFailure("folder","Папка с таким названием уже есть")
-                if(old==null) items.add(LayoutItem("folder",action.id,action.categoryId,name=name))
-                else items[items.indexOf(old)]=old.copy(name=name)
+                val appearance=(action.appearance ?: old?.appearance ?: FolderAppearance()).validated()
+                if(old==null) items.add(LayoutItem("folder",action.id,action.categoryId,name=name,appearance=appearance))
+                else items[items.indexOf(old)]=old.copy(name=name,appearance=appearance)
             }
             is LayoutAction.DeleteFolder -> {
                 val old=items.find { it.type=="folder" && it.id==action.id } ?: throw CatalogFailure("folder","Папка больше не существует")

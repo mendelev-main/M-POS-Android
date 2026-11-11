@@ -72,8 +72,9 @@ data class ProductInput(
             val old=CatalogRules.fingerprint("product.details.v1",copy(details=null).fingerprint(),details.sku,details.note,details.symbol)
             val existing=if(details.sellingBasis==null && details.recipeYieldManual==null && details.purchaseContentUnit==null) old else
                 CatalogRules.fingerprint("product.details.v2",old,details.sellingBasis,details.recipeYieldManual,details.purchaseContentUnit)
-            return if(details.description==null && details.onlineOrder==null && details.onlineMenu==null) existing else
+            val web=if(details.description==null && details.onlineOrder==null && details.onlineMenu==null) existing else
                 CatalogRules.fingerprint("product.details.v3",existing,details.description,details.onlineOrder,details.onlineMenu)
+            return if(details.alwaysAvailableOnline==null) web else CatalogRules.fingerprint("product.details.v4",web,details.alwaysAvailableOnline)
         }
         if(photoId==null && modifierGroups.isEmpty()) return configurationFingerprint()
         val parts=modifierGroups.flatMap { g -> listOf(g.id,g.name,g.minimum,g.maximum,g.options.size.toString()) +

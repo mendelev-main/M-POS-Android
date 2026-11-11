@@ -17,7 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mendelev.mpos.core.access.Administration
 import com.mendelev.mpos.core.ui.*
 
-/** Name, optional phone and administrator switch follow the pinned Web employee modal. */
+/** Staff directory is independent of the separate administration session. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable fun EmployeeScreen(model: EmployeeViewModel,embedded: Boolean=false,onBack: ()->Unit) {
     val ui by model.state.collectAsStateWithLifecycle()
@@ -46,7 +46,7 @@ import com.mendelev.mpos.core.ui.*
                     Surface(onClick={model.edit(employee.id)},enabled=admin.active && !locked && !ui.blocked && ui.canEdit && !active,shape=MaterialTheme.shapes.large,modifier=Modifier.fillMaxWidth().testTag("employee:${employee.id}")) {
                         Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                             Text(employee.name,style=MaterialTheme.typography.titleMedium)
-                            Text(if(employee.role=="admin") "Администратор · не открывает смены" else "Кассир",style=MaterialTheme.typography.bodySmall)
+                            Text("Кассир",style=MaterialTheme.typography.bodySmall)
                             if(employee.phone.isNotBlank()) Text(employee.phone)
                             if(active) Text("Работает в открытой смене · изменения после закрытия",style=MaterialTheme.typography.bodySmall)
                         }
@@ -60,28 +60,24 @@ import com.mendelev.mpos.core.ui.*
         MposNotice(ui.message ?: "Не удалось прочитать сотрудников",true)
         MposButton("Повторить чтение",model::refresh)
     }
-    if(form!=null && admin.active) MposDialog(if(form.discarding) "Закрыть без сохранения?" else if(form.deleting) "Удалить сотрудника?" else if(form.revision==null) "Новый сотрудник" else "Сотрудник",close,!locked,maxWidth=700.dp) {
+    if(form!=null && admin.active) MposDialog(if(form.discarding) "Закрыть без сохранения?" else if(form.deleting) "Удалить сотрудника?" else if(form.revision==null) "Новый сотрудник" else "Сотрудник",close,!locked,maxWidth=560.dp) {
         Column(Modifier.heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(16.dp)) {
             if(ui.message!=null) MposNotice(ui.message!!,true)
             if(form.discarding) {
                 Text("Изменения сотрудника ещё не сохранены.")
-                MposButton("Продолжить редактирование",{model.change {it.copy(discarding=false)}},enabled=!locked,style=ActionStyle.Secondary)
-                MposButton("Закрыть без сохранения",model::discard,enabled=!locked,style=ActionStyle.Danger)
+                MposPosControl("Продолжить редактирование",{model.change {it.copy(discarding=false)}},Modifier.fillMaxWidth(),!locked,PosControl.Secondary,height=48.dp,radius=16.dp)
+                MposPosControl("Закрыть без сохранения",model::discard,Modifier.fillMaxWidth(),!locked,PosControl.Delete,height=48.dp,radius=16.dp)
             } else if(form.deleting) {
                 Text("Удалить сотрудника «${form.name}»? История смен и чеков сохранится.")
-                MposButton("Отмена",{model.change {it.copy(deleting=false)}},enabled=!locked,style=ActionStyle.Secondary)
-                MposButton("Удалить",model::save,enabled=!locked,style=ActionStyle.Danger,modifier=Modifier.testTag("employeeDeleteConfirm"))
+                MposPosControl("Отмена",{model.change {it.copy(deleting=false)}},Modifier.fillMaxWidth(),!locked,PosControl.Secondary,height=48.dp,radius=16.dp)
+                MposPosControl("Удалить",model::save,Modifier.fillMaxWidth().testTag("employeeDeleteConfirm"),!locked,PosControl.Delete,height=48.dp,radius=16.dp)
             } else {
                 MposWebField(form.name,{value->model.change {it.copy(name=value)}},"ФИО","employeeName",!locked,placeholder="Иванов Иван Иванович")
                 MposWebField(form.phone,{value->model.change {it.copy(phone=value)}},"Номер телефона","employeePhone",!locked,placeholder="+375 XX XXX-XX-XX")
-                Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {Text("Администратор");Text("Управляет приложением через отдельный вход. Кассовые смены не открывает.",style=MaterialTheme.typography.bodySmall)}
-                    Switch(form.role=="admin",{value->model.change {it.copy(role=if(value) "admin" else "employee")}},enabled=!locked,modifier=Modifier.testTag("employeeAdmin"))
-                }
-                FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                    MposButton("Отмена",model::dismiss,enabled=!locked,style=ActionStyle.Secondary)
-                    MposButton(if(form.revision==null) "Добавить" else "Сохранить",model::save,enabled=!locked,modifier=Modifier.testTag("employeeSave"))
-                    if(form.revision!=null && form.role!="admin") MposButton("Удалить",{model.change {it.copy(deleting=true)}},enabled=!locked,style=ActionStyle.Danger,modifier=Modifier.testTag("employeeDelete"))
+                Row(Modifier.fillMaxWidth().padding(top=4.dp),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                    if(form.revision!=null) MposPosControl("Удалить",{model.change {it.copy(deleting=true)}},Modifier.weight(1f).testTag("employeeDelete"),!locked,PosControl.Delete,height=48.dp,radius=16.dp,horizontalPadding=8.dp)
+                    MposPosControl("Отмена",model::dismiss,Modifier.weight(1f),!locked,PosControl.Secondary,height=48.dp,radius=16.dp,horizontalPadding=8.dp)
+                    MposPosControl(if(form.revision==null)"Добавить" else "Сохранить",model::save,Modifier.weight(1f).testTag("employeeSave"),!locked,PosControl.Cash,height=48.dp,radius=16.dp,horizontalPadding=8.dp)
                 }
             }
             if(ui.unresolved!=null) MposButton("Проверить результат",model::retry,enabled=!ui.pending,modifier=Modifier.testTag("employeeRetry"))

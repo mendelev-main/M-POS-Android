@@ -20,6 +20,9 @@ internal suspend fun CatalogDatabase.shiftDashboard(before: ShiftHistoryCursor?=
     val imported=workspace().document(WebCandidateDatabase.BASELINE)?.let {doc->val j=JSONObject(doc.payload).getJSONObject("cashDeltas");j.keys().asSequence().toSet()}.orEmpty()
     val data=ShiftDashboardRules.build(state,selected.map {it.domain()},sales,refunds,ShiftCashCodec.all(this).filter {it.command.shiftId in ids},imported,SplitPaymentRepository(this).load()?.pendingCash ?: 0)
     val numbers=ShiftDashboardRules.numbers(shifts().sequence())
-    data.copy(summaries=data.summaries.map {it.copy(number=numbers.getValue(it.shift.id))},
+    data.copy(summaries=data.summaries.map {summary->
+        val numbered=summary.copy(number=numbers.getValue(summary.shift.id))
+        workspace().document(WebShiftSummary.PREFIX+summary.shift.id)?.let {WebShiftSummary.merge(numbered,it.payload)} ?: numbered
+    },
         nextHistory=closed.lastOrNull()?.takeIf {page.size>10}?.let {ShiftHistoryCursor(it.closedAt!!,it.id)})
 }

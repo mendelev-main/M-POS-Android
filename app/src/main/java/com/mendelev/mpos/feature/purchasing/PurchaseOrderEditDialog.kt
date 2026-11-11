@@ -13,25 +13,26 @@ import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.domain.warehouse.*
 
 @OptIn(ExperimentalLayoutApi::class)
-@Composable internal fun PurchaseOrderEditDialog(ui: PurchaseUi,model: PurchaseViewModel) {
+@Composable internal fun PurchaseOrderEditDialog(ui: PurchaseUi,model: PurchaseViewModel,onClosed: (String)->Unit={}) {
     val edit=ui.editing ?: return;val s=ui.snapshot ?: return
     val locked=ui.pending || ui.orderUnresolved!=null
     val enabled=!locked && !ui.blocked
     var confirmClose by rememberSaveable(edit.baseline.id) {mutableStateOf(false)}
-    fun close() {if(!locked) {if(edit.dirty) confirmClose=true else model.discardEdit()}}
+    fun close() {if(!locked) {if(edit.dirty) confirmClose=true else {model.discardEdit();onClosed(edit.baseline.id)}}}
     if(confirmClose) {
         MposDialog("Закрыть без сохранения?",{confirmClose=false}) {
             Text("Несохранённые изменения заказа будут потеряны. Сохранённые версии останутся в истории.")
             PurchaseAction("Продолжить редактирование",{confirmClose=false},style=ActionStyle.Secondary)
-            PurchaseAction("Закрыть без сохранения",{confirmClose=false;model.discardEdit()},style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseEditDiscard"))
+            PurchaseAction("Закрыть без сохранения",{confirmClose=false;model.discardEdit();onClosed(edit.baseline.id)},style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseEditDiscard"))
         }
     } else MposDialog("Изменить заказ поставщику",::close,!locked,maxWidth=1100.dp) {
-        Text("${edit.baseline.source.supplierName} · Версия ${edit.baseline.requestVersion}")
+        Text(edit.baseline.source.supplierName,style=MaterialTheme.typography.titleSmall)
+        Text(purchaseDate(edit.baseline.createdAt),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
         if(ui.message!=null) MposNotice(ui.message!!,ui.blocked || ui.orderUnresolved!=null)
         if(ui.pending) LinearProgressIndicator(Modifier.fillMaxWidth())
         if(ui.orderUnresolved!=null) PurchaseAction("Проверить результат",model::retryOrder,enabled=!ui.pending,modifier=Modifier.testTag("purchaseOrderRetry"))
         val supplier=s.suppliers.find {it.id==edit.form.supplierId}
-        val products=s.products.filter {it.id in supplier?.productIds.orEmpty()}
+        val products=s.products.filter {it.id in supplier?.productIds.orEmpty()}.sortedBy {it.name.lowercase()}
         Column(Modifier.weight(1f,fill=false).heightIn(max=480.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(16.dp)) {
             products.forEach {p->
                 val l=edit.form.lines.find {it.productId==p.id} ?: p.blankLine()
@@ -43,10 +44,10 @@ import com.mendelev.mpos.domain.warehouse.*
             }
             if(products.isEmpty() && edit.form.lines.isEmpty()) Text("У поставщика нет доступных товаров")
         }
-        FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            PurchaseAction("Сохранить изменения",model::saveEdit,enabled=enabled,modifier=Modifier.testTag("purchaseEditSave"))
-            PurchaseAction("Обновить ссылки",model::revalidateEdit,enabled=enabled,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseEditRevalidate"))
-            PurchaseAction("Отмена",::close,enabled=!locked,style=ActionStyle.Secondary)
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+            PurchaseAction("Отмена",::close,Modifier.weight(1f),enabled=!locked,style=ActionStyle.Secondary)
+            PurchaseAction("Сохранить изменения",model::saveEdit,enabled=enabled,modifier=Modifier.weight(1f).testTag("purchaseEditSave"))
         }
+        if(ui.message!=null && ui.orderUnresolved==null) PurchaseAction("Обновить ссылки",model::revalidateEdit,enabled=enabled,style=ActionStyle.Secondary,modifier=Modifier.testTag("purchaseEditRevalidate"))
     }
 }

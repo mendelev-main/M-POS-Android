@@ -28,3 +28,6 @@ Native backup/restore ранее поддержанных native-докумен�
 `WebProductMetadataDocumentsTest`: null/false/дробный порядок, привязка к исходнику, отказ при изменении/частичной потере метаданных. Физическая планшетная приёмка остаётся отдельной; develop не означает опубликованный релиз.
 
 Результат CI: [42294129816 / 75b78ad](https://github.com/mendelev-main/M-POS-Android/actions/runs/42294129816) — 307 JVM и 295 API36 тестов, без ошибок/пропусков; lint/debug APK и native update/process restore прошли. CORE01–CORE03 ci-verified. Физический планшет и отдельный Web OS-process restart не проверены этим результатом.
+
+## Уточнение 10.11.2026
+Ранее перечисленные ограничения переноса настроек и просмотра истории чеков изменены: см. [WEB-RESTORE-FULL-PLAN](WEB-RESTORE-FULL-PLAN.md). Статус — implemented locally, ручная приёмка pending; оставшиеся ограничения указаны там явно.

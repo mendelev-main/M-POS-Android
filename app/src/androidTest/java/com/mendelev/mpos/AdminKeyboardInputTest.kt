@@ -37,6 +37,8 @@ class AdminKeyboardInputTest {
                 pressKey(Key.B); pressKey(Key.Zero); pressKey(Key.Backspace); pressKey(Key.Nine)
             }
             compose.onNodeWithText("Показать").assertDoesNotExist()
+            compose.onNodeWithTag("adminPassword").performTextReplacement("••X")
+            compose.onNodeWithTag("adminPassword").performTextReplacement("••9")
             compose.onNodeWithTag("adminPassword").assert(
                 SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.Password))
             compose.onNodeWithTag("adminLogin").performClick()

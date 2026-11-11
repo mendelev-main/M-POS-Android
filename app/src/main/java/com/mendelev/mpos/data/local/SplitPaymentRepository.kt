@@ -91,7 +91,8 @@ class SplitPaymentRepository(private val db: CatalogDatabase,private val afterWr
         OnlineOrderRepository(db).requirePayable(cart.sessionId)
         if(cart.sessionId!=d.sessionId || work.cartRevision!=d.cartRevision || cart.lines.any {CartEngine.stale(it,work.products)}) conflict()
         if(d.discounts.keys.any {id->cart.lines.none {it.id==id}}) conflict()
-        val quote=SaleMoney.quote(cart.lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity,d.discounts[it.id])},cart.details.type,d.delivery)
+        com.mendelev.mpos.domain.loyalty.LoyaltyRules.requireVerified(cart,d.discounts)
+        val quote=com.mendelev.mpos.domain.loyalty.LoyaltyRules.quote(cart,d.discounts,d.delivery)
         SaleMoney.payments(quote,if(allowIncomplete) d.parts.map {
             if(it.method=="cash" && it.given==null) it.copy(given=it.amount) else it
         } else d.parts,shift.currentCash)
@@ -174,6 +175,24 @@ class SplitPaymentRepository(private val db: CatalogDatabase,private val afterWr
         db.workspace().put(WorkspaceDocument(key,next.revision,payload(next)));afterWrite?.invoke()
         db.catalog().result(ResultEntity(command,fp,command));afterWrite?.invoke()
         db.catalog().audit(AuditEntity(UUID.randomUUID().toString(),command,d.actorId,"sale.split.edited",d.commandId,now));afterWrite?.invoke()
+        command
+    }}
+
+    /** Cancel manual accounting only. No receipt/stock/cash or terminal refund is created. */
+    suspend fun cancel(command: String,expected: SplitProgress): String=InstallationGate.write {db.withTransaction {
+        require(command.isNotBlank() && command.length<=100)
+        val d=expected.checkout.draft
+        val fp=CatalogRules.fingerprint("split.cancel.v1",expected.revision,expected.checkout.revision,payload(expected))
+        db.catalog().result(command)?.let {if(it.fingerprint!=fp) conflict();return@withTransaction it.resultId}
+        if(expected.importedOrigin!=null) throw CatalogFailure("split","Части оплаты из Web-копии нельзя отменить этим действием")
+        if(db.sales().command(d.commandId)!=null || db.sales().session(d.sessionId)!=null) conflict()
+        if(load()!=expected || CheckoutRepository(db).load()!=expected.checkout) conflict()
+        validateContext(d,true)
+        val now=System.currentTimeMillis()
+        db.workspace().put(WorkspaceDocument(key,Math.addExact(expected.revision,1),"{\"version\":1,\"completed\":true,\"cancelled\":true}"));afterWrite?.invoke()
+        db.workspace().put(WorkspaceDocument("checkout",Math.addExact(expected.checkout.revision,1),"{\"version\":1,\"discarded\":true}"));afterWrite?.invoke()
+        db.catalog().result(ResultEntity(command,fp,command));afterWrite?.invoke()
+        db.catalog().audit(AuditEntity(UUID.randomUUID().toString(),command,d.actorId,"sale.split.cancelled",d.commandId,now));afterWrite?.invoke()
         command
     }}
 

@@ -40,6 +40,7 @@ internal fun newSetting(kind: SettingKind)=SettingEntry(UUID.randomUUID().toStri
         if(row.kind==SettingKind.DISCOUNT) MposSelect("Тип скидки",type,listOf("percent" to "Процент","fixed" to "Фиксированная сумма"),{type=it},!ui.busy,Modifier.testTag("settingDiscountType"))
         if(row.kind!=SettingKind.RECEIPT_LABEL) MposField(value,{value=it},if(row.kind==SettingKind.DELIVERY) "Стоимость, BYN" else "Размер скидки",Modifier.testTag("settingValue"),!ui.busy,numeric=true)
         ui.error?.let {MposNotice(it,true)}
+        if(editing && com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle().value.active) MposButton("Удалить",{model.delete(row,revision,onClose)},Modifier.fillMaxWidth().testTag("settingsDelete:${row.id}"),!ui.busy,ActionStyle.Danger)
         Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
             MposButton("Отмена",onClose,Modifier.weight(1f),!ui.busy,ActionStyle.Secondary)
             MposButton(if(row.kind==SettingKind.DISCOUNT && !editing) "Добавить" else "Сохранить",{model.save(row.copy(name=name,type=type,value=value),revision,onClose)},Modifier.weight(1f).testTag("settingSave"),busy=ui.busy)

@@ -54,7 +54,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGallery: (() -> Unit)? = null, onSuppliers: (() -> Unit)? = null, onInventory: (() -> Unit)? = null, onStock: (() -> Unit)? = null, onEmployees: (() -> Unit)? = null, onBackup: (() -> Unit)? = null, onBack: () -> Unit) {
+fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGallery: (() -> Unit)? = null, onSuppliers: (() -> Unit)? = null, onInventory: (() -> Unit)? = null, onStock: (() -> Unit)? = null, onEmployees: (() -> Unit)? = null, onBackup: (() -> Unit)? = null, initialAdminPanel: Boolean=false,onBack: () -> Unit) {
     val state by model.state.collectAsStateWithLifecycle()
     BackHandler(enabled = state.stage == UpdateStage.VERIFYING) { }
     val context = LocalContext.current
@@ -82,7 +82,7 @@ fun UpdatesScreen(model: UpdateViewModel, onCatalog: (() -> Unit)? = null, onGal
             catch(_: Exception) {com.mendelev.mpos.feature.settings.SettingsDirectory(error="Не удалось загрузить справочники. Откройте раздел сотрудников или поставщиков для повторного чтения.")}
         }
     }
-    com.mendelev.mpos.feature.settings.SettingsHome({updatesOpen=true;model.openUpdateWindow()},onCatalog,onSuppliers,onInventory,onStock,onGallery,onBack,state.candidate!=null,onEmployees,onBackup,directory?.employees.orEmpty(),directory?.suppliers.orEmpty(),directory?.error)
+    com.mendelev.mpos.feature.settings.SettingsHome({updatesOpen=true;model.openUpdateWindow()},onCatalog,onSuppliers,onInventory,onStock,onGallery,onBack,state.candidate!=null,onEmployees,onBackup,directory?.employees.orEmpty(),directory?.suppliers.orEmpty(),directory?.error,initialAdminPanel=initialAdminPanel)
     if(updatesOpen) com.mendelev.mpos.core.ui.MposDialog(stringResource(R.string.update_title),{updatesOpen=false},closable=!locked,maxWidth=520.dp) {
         Column(Modifier.heightIn(max=520.dp).verticalScroll(rememberScrollState()).testTag("updatesWindow").semantics {testTagsAsResourceId=true},verticalArrangement=Arrangement.spacedBy(16.dp)) {
             Text("Текущая версия: ${model.repository.installedName}")

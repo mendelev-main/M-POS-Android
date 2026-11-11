@@ -46,12 +46,12 @@ internal enum class PosTone { Neutral, Info, Zone, Primary, Warning, Demand }
     }
 }
 
-@Composable internal fun PosIconButton(icon: String,label: String,onClick: ()->Unit,modifier: Modifier=Modifier,enabled: Boolean=true, retainingAppearance: Boolean=false) {
+@Composable internal fun PosIconButton(icon: String,label: String,onClick: ()->Unit,modifier: Modifier=Modifier,enabled: Boolean=true, retainingAppearance: Boolean=false, selected: Boolean=false) {
     val shape=RoundedCornerShape(12.dp)
-    Box(modifier.size(44.dp).clip(shape).background(MaterialTheme.colorScheme.surface)
-        .border(1.dp,MaterialTheme.colorScheme.outline,shape)
-        .clickable(enabled=enabled,role=Role.Button,onClick=onClick).semantics {contentDescription=label},contentAlignment=Alignment.Center) {
-        PosIcon(icon,MaterialTheme.colorScheme.onSurface.copy(alpha=if(enabled || retainingAppearance) 1f else .4f))
+    Box(modifier.size(44.dp).clip(shape).background(if(selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)
+        .border(1.dp,if(selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,shape)
+        .clickable(enabled=enabled,role=Role.Button,onClick=onClick).semantics {contentDescription=label;this.selected=selected},contentAlignment=Alignment.Center) {
+        PosIcon(icon,(if(selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface).copy(alpha=if(enabled || retainingAppearance) 1f else .4f))
     }
 }
 @Composable internal fun PosIcon(icon: String,ink: Color) {

@@ -1,7 +1,8 @@
 package com.mendelev.mpos.feature.workspace
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.*
+import com.mendelev.mpos.domain.workspace.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.*
@@ -42,4 +43,22 @@ class WorkspaceVisualParityTest {
         val bitmap=compose.onNodeWithTag("workspaceCartPanel").captureToImage().asAndroidBitmap()
         File(root,"workspace-web-cart-empty.png").outputStream().use {bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)}
     }
+    @Test fun addingScrollsToNewLineAndSwipeRemovesWithoutRecipePortionLabel() {
+        fun line(n: Int)=CartLine("line$n","p$n","Товар $n","2",false,"2","1","piece",emptyList(),emptyList(),emptyMap(),sellingBasis="recipe-batch")
+        val cart=CurrentCart(lines=(1..20).map(::line))
+        val state=mutableStateOf(WorkspaceSnapshot(emptyList(),emptyList(),emptyList(),emptyMap(),cart,1,emptyList(),0))
+        compose.setContent {
+            MposTheme {WorkspaceCartPanel(state.value,0,Modifier.size(400.dp,650.dp),{},{_,_->},{id->
+                state.value=state.value.copy(cart=state.value.cart.copy(lines=state.value.cart.lines.filterNot {it.id==id}),cartRevision=state.value.cartRevision+1)
+            },{},{},{},{},{},{},true)}
+        }
+        compose.runOnIdle {state.value=state.value.copy(cart=cart.copy(lines=cart.lines+line(21)),cartRevision=2)}
+        compose.waitForIdle()
+        compose.onNodeWithTag("workspaceLine:line21").assertIsDisplayed()
+        compose.onNodeWithText("порция рецепта",substring=true).assertDoesNotExist()
+        compose.onNodeWithTag("workspaceLine:line21").performTouchInput {swipeLeft()}
+        compose.waitUntil(5000) {state.value.cart.lines.none {it.id=="line21"}}
+        assertEquals(20,state.value.cart.lines.size)
+    }
+
 }

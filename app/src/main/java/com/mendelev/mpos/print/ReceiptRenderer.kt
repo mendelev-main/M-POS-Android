@@ -6,7 +6,6 @@ import android.text.StaticLayout
 import android.text.TextPaint
 import com.mendelev.mpos.data.local.PrinterConfiguration
 import java.io.ByteArrayOutputStream
-import java.nio.charset.Charset
 import kotlin.math.ceil
 
 object ReceiptRenderer {
@@ -23,10 +22,10 @@ object ReceiptRenderer {
             val right=r.right?.let {layout(it,content*.43f,r,Layout.Alignment.ALIGN_OPPOSITE)}
             Measured(r,left,right,if(r.separator)1 else maxOf(left?.height ?: 0,right?.height ?: 0)+2)
         }
-        val height=ceil(measured.sumOf {(it.height+it.row.gap).toDouble()}+14).toInt()
+        val height=ceil(measured.sumOf {(it.height+it.row.gap).toDouble()}+page.top+page.bottom).toInt()
         require(height in 1..20000) {"Чек слишком длинный; уменьшите количество строк"}
         return Bitmap.createBitmap(page.width,height,Bitmap.Config.ARGB_8888).also {bitmap->
-            val canvas=Canvas(bitmap);canvas.drawColor(Color.WHITE);var y=4f
+            val canvas=Canvas(bitmap);canvas.drawColor(Color.WHITE);var y=page.top
             val rule=Paint().apply {color=Color.BLACK;strokeWidth=1f;pathEffect=DashPathEffect(floatArrayOf(3f,3f),0f)}
             measured.forEach {m->
                 if(m.row.separator) canvas.drawLine(page.margin,y,page.width-page.margin,y,rule)
@@ -38,19 +37,8 @@ object ReceiptRenderer {
     }
     fun encode(document: PrintDocument,p: PrinterConfiguration): ByteArray {
         val page=PrintDocuments.page(document,p)
-        val body=if(p.printMode=="text") text(page,p) else render(page).let {bitmap->try {raster(bitmap)} finally {bitmap.recycle()}}
-        return EscPosCommands.hex(p.initCommand)+body+byteArrayOf(10,10,10)+EscPosCommands.hex(p.cutCommand)
-    }
-    private fun text(page: ReceiptPage,p: PrinterConfiguration): ByteArray {
-        val columns=if(p.paperWidth=="58")32 else 48
-        return ByteArrayOutputStream().apply {
-            write(byteArrayOf(27,116,17)) // ESC t17: CP866; graphics remains the portable default.
-            page.rows.forEach {r->
-                write(byteArrayOf(27,97,if(r.centered)1 else 0));write(byteArrayOf(27,69,if(r.weight>=600)1 else 0))
-                val value=if(r.separator) "-".repeat(columns) else if(r.right!=null) r.left+" "+r.right else r.left
-                value.replace("↳",">").replace("−","-").replace("×","x").chunked(columns).ifEmpty {listOf("")}.forEach {write((it+"\n").toByteArray(Charset.forName("IBM866")))}
-            }
-        }.toByteArray()
+        val body=render(page).let {bitmap->try {raster(bitmap)} finally {bitmap.recycle()}}
+        return EscPosCommands.hex(p.initCommand)+body+byteArrayOf(10)+EscPosCommands.hex(p.cutCommand)
     }
     internal fun raster(bitmap: Bitmap): ByteArray {
         val width=(bitmap.width+7)/8

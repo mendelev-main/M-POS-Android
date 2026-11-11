@@ -14,7 +14,10 @@ import kotlinx.coroutines.withContext
 
 @Composable fun RecoveryStartupScreen(context: android.content.Context,onClose: ()->Unit,content: @Composable ()->Unit) {
     val blocking by AppDataset.runtime.blocking.collectAsStateWithLifecycle()
-    val startup by produceState<RecoveryStartup?>(null) {value=withContext(Dispatchers.IO) {NativeActivationStartup(context).open()}}
+    val startup by produceState<RecoveryStartup?>(null) {value=withContext(Dispatchers.IO) {NativeActivationStartup(context).open().let {startup->
+        if(!startup.ready) startup else try {com.mendelev.mpos.data.backup.RestoredDeviceSettings.apply(context);startup}
+        catch(_:Exception) {RecoveryStartup(false,"Не удалось применить восстановленные настройки. Закройте и снова откройте M-POS; данные сохранены.")}
+    }}}
     var noticeClosed by remember {mutableStateOf(false)}
     val ready=startup?.ready==true && blocking==null
     if(ready) {

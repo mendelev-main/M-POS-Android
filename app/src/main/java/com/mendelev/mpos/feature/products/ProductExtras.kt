@@ -1,6 +1,13 @@
 package com.mendelev.mpos.feature.products
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -28,48 +35,90 @@ import java.util.UUID
         Column(Modifier.weight(1f)) {
             Text("Фото товара",style=MaterialTheme.typography.titleSmall)
             ProductEditorNote("Изображение для онлайн-меню.",Modifier.padding(top=8.dp,bottom=12.dp))
-            ProductEditorButton("Выбрать фото",onPick,enabled=enabled)
-            Spacer(Modifier.height(8.dp))
-            ProductEditorButton("Убрать фото",{model.change {it.copy(photoId=null)}},enabled=enabled && d.photoId!=null)
+            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                ProductEditorButton("Выбрать фото",onPick,Modifier.weight(1f).testTag("productPickPhoto"),enabled)
+                ProductEditorButton("Удалить фото",{model.change {it.copy(photoId=null)}},Modifier.weight(1f).testTag("productRemovePhoto"),enabled && d.photoId!=null)
+            }
         }
     }
 
 }
 
 @Composable fun ProductModifierEditor(model: CatalogViewModel, state: CatalogUi, d: ProductDraft) {
-    ProductSectionHeading("Модификаторы")
-    ProductEditorNote("Варианты связаны с существующими товарами и списываются с их остатков.")
-    val enabled= !state.busy
-    fun group(index: Int, transform: (ModifierGroupInput) -> ModifierGroupInput) {
-        model.change { draft -> draft.copy(modifierGroups=draft.modifierGroups.mapIndexed { i,g -> if(i==index) transform(g) else g }) }
+    val enabled=!state.busy
+    fun group(index: Int,transform: (ModifierGroupInput)->ModifierGroupInput) {
+        model.change {draft->draft.copy(modifierGroups=draft.modifierGroups.mapIndexed {i,g->if(i==index) transform(g) else g})}
     }
-    d.modifierGroups.forEachIndexed { gi,g ->
-        Column(verticalArrangement=Arrangement.spacedBy(10.dp)) {
-            ProductEditorField(g.name,{v -> group(gi) { it.copy(name=v) }},"Название группы ${gi+1}",Modifier.testTag("modifierGroup$gi"),enabled)
-            ProductEditorField(g.minimum,{v -> group(gi) { it.copy(minimum=v) }},"Минимум вариантов ${gi+1}",enabled=enabled,numeric=true)
-            ProductEditorField(g.maximum,{v -> group(gi) { it.copy(maximum=v) }},"Максимум вариантов ${gi+1}",enabled=enabled,numeric=true)
-            g.options.forEachIndexed { oi,o ->
-                fun option(transform: (ModifierOptionInput) -> ModifierOptionInput) { group(gi) { current ->
-                    current.copy(options=current.options.mapIndexed { i,value -> if(i==oi) transform(value) else value })
-                } }
-                val product=state.products.find { it.product.id==o.productId }?.product
-                ProductPickerField("Товар",product?.name ?: "Выберите товар",state.products.filter {it.product.id!=d.id && (it.product.id==o.productId || g.options.none {option->option.productId==it.product.id})},enabled,d.sessionId,"modifierProduct$gi-$oi") {row->
-                    option {it.copy(productId=row.product.id)}
+    Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+        Text("Модификаторы",Modifier.weight(1f),fontSize=20.sp,fontWeight=FontWeight.Bold)
+        ProductEditorButton("+ Группа",{model.change {it.copy(modifierGroups=it.modifierGroups+ModifierGroupInput(UUID.randomUUID().toString(),"",minimum="1"))}},
+            Modifier.testTag("modifierAddGroup"),enabled && d.modifierGroups.size<20)
+    }
+    if(d.modifierGroups.isEmpty()) ProductEditorNote("Модификаторов пока нет. Добавьте группу вариантов.")
+    d.modifierGroups.forEachIndexed {gi,g->key(g.id) {
+        Surface(Modifier.fillMaxWidth().testTag("modifierGroupCard$gi"),shape=RoundedCornerShape(16.dp),border=BorderStroke(1.dp,MaterialTheme.colorScheme.outline)) {
+            Column(Modifier.padding(14.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                BoxWithConstraints(Modifier.fillMaxWidth()) {
+                    val name: @Composable (Modifier)->Unit={m->Box(m) {ProductEditorField(g.name,{v->group(gi) {it.copy(name=v)}},"Название группы",Modifier.testTag("modifierGroup$gi"),enabled,placeholder="Например, Начинка")}}
+                    val limits: @Composable (Modifier)->Unit={m->Row(m,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                        Box(Modifier.weight(1f)) {ProductEditorField(g.minimum,{v->group(gi) {it.copy(minimum=v)}},"Минимум вариантов",Modifier.testTag("modifierMinimum$gi"),enabled,true)}
+                        Box(Modifier.weight(1f)) {ProductEditorField(g.maximum,{v->group(gi) {it.copy(maximum=v)}},"Максимум вариантов",Modifier.testTag("modifierMaximum$gi"),enabled,true)}
+                    }}
+                    val remove: @Composable ()->Unit={ModifierDelete("Удалить группу",enabled,Modifier.padding(top=22.dp).testTag("modifierDeleteGroup$gi")) {
+                        model.change {it.copy(modifierGroups=it.modifierGroups.filterIndexed {i,_->i!=gi})}
+                    }}
+                    if(maxWidth>=560.dp) Row(horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.Top) {name(Modifier.weight(1.3f));limits(Modifier.weight(1f));remove()}
+                    else Column(verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                        Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {name(Modifier.weight(1f));remove()}
+                        limits(Modifier.fillMaxWidth())
+                    }
                 }
-                ProductEditorField(o.posName,{v -> option { it.copy(posName=v) }},"Название в POS ${gi+1}.${oi+1}",enabled=enabled)
-                ProductEditorField(o.quantity,{v -> option { it.copy(quantity=v) }},"Количество ${gi+1}.${oi+1}, ${unitLabel(product?.unit ?: "piece")}",Modifier.testTag("modifierQty$gi-$oi"),enabled,true)
-                ProductEditorField(o.priceDelta,{v -> option { it.copy(priceDelta=v) }},"Доплата ${gi+1}.${oi+1}, BYN",Modifier.testTag("modifierPrice$gi-$oi"),enabled,true)
-                ProductEditorButton("Удалить вариант ${gi+1}.${oi+1}",{ group(gi) { it.copy(options=it.options.filterIndexed { index,_ -> index!=oi }) } },enabled=enabled,style=ActionStyle.Secondary)
+                val min=g.minimum.toIntOrNull();val max=g.maximum.toIntOrNull()
+                ProductEditorNote(when {
+                    min==null || max==null || min<0 || max<1 || min>max->"Проверьте минимум и максимум вариантов."
+                    min>0 && max==1->"Обязательная группа · выбрать 1"
+                    min>0->"Обязательная группа · выбрать от $min до $max"
+                    else->"Необязательная группа · выбрать до $max"
+                })
+                if(g.options.isEmpty()) ProductEditorNote("Добавьте первый вариант.")
+                g.options.forEachIndexed {oi,o->key(o.id) {
+                    fun option(transform: (ModifierOptionInput)->ModifierOptionInput) {group(gi) {current->
+                        current.copy(options=current.options.mapIndexed {i,v->if(i==oi) transform(v) else v})
+                    }}
+                    val product=state.products.find {it.product.id==o.productId}?.product
+                    Surface(Modifier.fillMaxWidth().testTag("modifierOption$gi-$oi"),shape=RoundedCornerShape(12.dp),color=MaterialTheme.colorScheme.background) {
+                        Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                            ModifierFieldPair({m->Box(m) {
+                                ProductPickerField("Товар",product?.name ?: "Выберите товар",state.products.filter {it.product.id!=d.id && (it.product.id==o.productId || g.options.none {v->v.productId==it.product.id})},
+                                    enabled,d.sessionId,"modifierProduct$gi-$oi") {row->option {it.copy(productId=row.product.id)}}
+                            }},{m->Box(m) {
+                                ProductEditorField(o.posName,{v->option {it.copy(posName=v)}},"Название в POS",Modifier.testTag("modifierName$gi-$oi"),enabled,placeholder=product?.name ?: "Название для кассы")
+                            }})
+                            Row(horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.Bottom) {
+                                Box(Modifier.weight(1f)) {ProductEditorField(o.quantity,{v->option {it.copy(quantity=v)}},"Количество для списания, ${unitLabel(product?.unit ?: "piece")}",Modifier.testTag("modifierQty$gi-$oi"),enabled,true)}
+                                Box(Modifier.weight(1f)) {ProductEditorField(o.priceDelta,{v->option {it.copy(priceDelta=v)}},"Доплата к цене, BYN",Modifier.testTag("modifierPrice$gi-$oi"),enabled,true)}
+                                ModifierDelete("Удалить вариант",enabled,Modifier.testTag("modifierDeleteOption$gi-$oi")) {
+                                    group(gi) {it.copy(options=it.options.filterIndexed {i,_->i!=oi})}
+                                }
+                            }
+                        }
+                    }
+                }}
+                val choices=state.products.filter {it.product.id!=d.id && g.options.none {o->o.productId==it.product.id}}
+                if(choices.isNotEmpty()) ProductPickerField("Добавить вариант","Выбрать товар",choices,enabled,d.sessionId,"modifierAdd$gi") {row->
+                    group(gi) {it.copy(options=it.options+ModifierOptionInput(UUID.randomUUID().toString(),row.product.id))}
+                }
             }
-            val choices=state.products.filter {it.product.id!=d.id && g.options.none {o->o.productId==it.product.id}}
-            if(choices.isNotEmpty()) ProductPickerField("Добавить вариант в группу ${gi+1}","Выбрать вариант ${gi+1}",choices,enabled,d.sessionId,"modifierAdd$gi") {row->
-                group(gi) {it.copy(options=it.options+ModifierOptionInput(UUID.randomUUID().toString(),row.product.id))}
-            }
-            ProductEditorButton("Удалить группу ${gi+1}",{ model.change { it.copy(modifierGroups=it.modifierGroups.filterIndexed { index,_ -> index!=gi }) } },enabled=enabled,style=ActionStyle.Danger)
-            HorizontalDivider()
         }
+    }}
+}
+
+@Composable private fun ModifierFieldPair(left: @Composable (Modifier)->Unit,right: @Composable (Modifier)->Unit) {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        if(maxWidth>=450.dp) Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {left(Modifier.weight(1f));right(Modifier.weight(1f))}
+        else Column(verticalArrangement=Arrangement.spacedBy(10.dp)) {left(Modifier.fillMaxWidth());right(Modifier.fillMaxWidth())}
     }
-    ProductEditorButton("Добавить группу",{ model.change { it.copy(modifierGroups=it.modifierGroups+ModifierGroupInput(UUID.randomUUID().toString(),"")) } },
-        enabled=enabled && d.modifierGroups.size<20,style=ActionStyle.Secondary)
-    Text("Выбор вариантов доступен в заказе. Количество задаётся в базовой единице товара; доплата — за одну основную позицию.",style=MaterialTheme.typography.bodySmall)
+}
+@Composable private fun ModifierDelete(label: String,enabled: Boolean,modifier: Modifier=Modifier,onClick: ()->Unit) {
+    MposPosControl("",onClick,modifier.size(44.dp).semantics {contentDescription=label},enabled,PosControl.Delete,44.dp,12.dp,icon="delete")
 }

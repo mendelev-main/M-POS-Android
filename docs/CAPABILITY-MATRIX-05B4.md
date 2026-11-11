@@ -1,5 +1,7 @@
 # 05b.4 — матрица прав существующего приложения
 
+Актуальное правило2026-11-10: доставка/поставщики/шаблоны add/edit без admin; удаление и скидки admin. Legacy staff.role не ограничивает выбор кассира и не даёт прав. [OPERATOR-DIRECTORIES-STAFF](OPERATOR-DIRECTORIES-STAFF.md) заменяет прежние строки матрицы в этой части.
+
 Уточнение владельца2026-11-08: раскладку разрешено менять без административной сессии. Предыдущие CI-evidence относятся к прежней матрице; новая граница проверяется LayoutCashierAccessTest. Доступ к каталогу, складу и остальным административным действиям не менялся.
 
 Статус: audit и35 direct denied variants ci-verified/API36: [CI41100246927](https://github.com/mendelev-main/M-POS-Android/actions/runs/41100246927)/f668fef.151JVM/236instrumentation/0failures/0skipped,16Python/lint/build, actual debugAPK1→2 passed. Не вводит новые группы прав. Источник/решения: [STAFF-ACCESS-05B](STAFF-ACCESS-05B.md). Будущие возможности не считаются готовыми.

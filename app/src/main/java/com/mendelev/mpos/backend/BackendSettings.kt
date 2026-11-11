@@ -9,8 +9,14 @@ data class BackendSettings(
     val healthPath: String="/health",val statePath: String="/api/operational/state",val eventsPath: String="/api/orders/events",
     val menuPath: String="/api/menu/sync",val mediaPath: String="/api/media/upload",
     val tariffsPath: String="/api/device/delivery-tariffs",val availabilityPath: String="/api/availability/snapshot",
-    val timeoutSeconds: Int=15,val ordersPath: String="/api/orders",val receiveOrders: Boolean=false,val datasetId: String="",val operationalPath: String="/api/operational/snapshot",val heartbeatPath: String="/api/operational/heartbeat"
+    val timeoutSeconds: Int=15,val ordersPath: String="/api/orders",val receiveOrders: Boolean=false,val datasetId: String="",val operationalPath: String="/api/operational/snapshot",val heartbeatPath: String="/api/operational/heartbeat",
+    val loyaltyPath: String="/api/loyalty",val customersPath: String="/api/customers",val loyaltyTermsPath: String="/api/device/loyalty/terms"
 ) {
+    fun validatedOrDraft(): BackendSettings {
+        if(url.isNotBlank() && deviceKey.isNotBlank()) return validated()
+        val checked=copy(url=url.ifBlank {"https://unconfigured.invalid"},deviceKey=deviceKey.ifBlank {"unconfigured"}).validated()
+        return checked.copy(url=url.trim(),deviceKey=deviceKey.trim(),receiveOrders=false)
+    }
     fun validated(): BackendSettings {
         val address=url.trim().trimEnd('/')
         val parsed=address.toHttpUrlOrNull()
@@ -18,7 +24,7 @@ data class BackendSettings(
         require(deviceName.trim().isNotEmpty() && deviceName.length<=100 && deviceName.none {it.isISOControl()}) {"Укажите название устройства до 100 символов"}
         require(deviceKey.trim().length in 8..512 && deviceKey.trim().all {it.code in 33..126}) {"Укажите ключ устройства: от 8 до 512 символов без пробелов"}
         require(timeoutSeconds in 5..60) {"Время ожидания: от 5 до 60 секунд"}
-        listOf(healthPath,statePath,eventsPath,menuPath,mediaPath,tariffsPath,availabilityPath,ordersPath,operationalPath,heartbeatPath).forEach {path->
+        listOf(healthPath,statePath,eventsPath,menuPath,mediaPath,tariffsPath,availabilityPath,ordersPath,operationalPath,heartbeatPath,loyaltyPath,customersPath,loyaltyTermsPath).forEach {path->
             require(path.startsWith('/') && !path.startsWith("//") && path.length<=200 && path.none {it.isWhitespace() || it in "?#\\"} && path.split('/').none {it==".." || it=="."} && '%' !in path) {"Маршрут должен начинаться с / и не содержать адрес, параметры или переходы между каталогами"}
         }
         require(datasetId.length<=100 && datasetId.all {it.isLetterOrDigit() || it in "-_"})
@@ -26,8 +32,9 @@ data class BackendSettings(
         return copy(url=parsed.toString().trimEnd('/'),deviceName=deviceName.trim(),deviceKey=deviceKey.trim())
     }
     override fun toString()="BackendSettings(revision=$revision, configured=${url.isNotBlank()}, credentials=redacted)"
-    fun sameTarget(other: BackendSettings)=url==other.url && deviceKey==other.deviceKey && ordersPath==other.ordersPath
+    fun sameTarget(other: BackendSettings)=url==other.url && deviceKey==other.deviceKey && ordersPath==other.ordersPath && loyaltyPath==other.loyaltyPath && customersPath==other.customersPath && loyaltyTermsPath==other.loyaltyTermsPath
     fun target(): String=java.security.MessageDigest.getInstance("SHA-256").digest((url+"\n"+deviceKey+"\n"+ordersPath).toByteArray()).joinToString("") {"%02x".format(it)}
+    fun loyaltyTarget(): String=java.security.MessageDigest.getInstance("SHA-256").digest((url+"\n"+deviceKey+"\n"+loyaltyPath+"\n"+customersPath+"\n"+loyaltyTermsPath).toByteArray()).joinToString("") {"%02x".format(it)}
 }
 
 object BackendSettingsCodec {
@@ -35,9 +42,10 @@ object BackendSettingsCodec {
         put("version",1);put("revision",s.revision);put("url",s.url);put("deviceName",s.deviceName);put("deviceKey",s.deviceKey)
         put("healthPath",s.healthPath);put("statePath",s.statePath);put("eventsPath",s.eventsPath);put("menuPath",s.menuPath)
         put("mediaPath",s.mediaPath);put("tariffsPath",s.tariffsPath);put("availabilityPath",s.availabilityPath);put("timeoutSeconds",s.timeoutSeconds);put("ordersPath",s.ordersPath);put("receiveOrders",s.receiveOrders);put("datasetId",s.datasetId);put("operationalPath",s.operationalPath);put("heartbeatPath",s.heartbeatPath)
+        put("loyaltyPath",s.loyaltyPath);put("customersPath",s.customersPath);put("loyaltyTermsPath",s.loyaltyTermsPath)
     }.toString()
     fun decode(raw: String): BackendSettings {
         val j=JSONObject(raw);require(j.getInt("version")==1)
-        return BackendSettings(j.getLong("revision"),j.getString("url"),j.getString("deviceName"),j.getString("deviceKey"),j.getString("healthPath"),j.getString("statePath"),j.getString("eventsPath"),j.getString("menuPath"),j.getString("mediaPath"),j.getString("tariffsPath"),j.getString("availabilityPath"),j.getInt("timeoutSeconds"),j.optString("ordersPath","/api/orders"),j.optBoolean("receiveOrders"),j.optString("datasetId"),j.optString("operationalPath","/api/operational/snapshot"),j.optString("heartbeatPath","/api/operational/heartbeat")).validated()
+        return BackendSettings(j.getLong("revision"),j.getString("url"),j.getString("deviceName"),j.getString("deviceKey"),j.getString("healthPath"),j.getString("statePath"),j.getString("eventsPath"),j.getString("menuPath"),j.getString("mediaPath"),j.getString("tariffsPath"),j.getString("availabilityPath"),j.getInt("timeoutSeconds"),j.optString("ordersPath","/api/orders"),j.optBoolean("receiveOrders"),j.optString("datasetId"),j.optString("operationalPath","/api/operational/snapshot"),j.optString("heartbeatPath","/api/operational/heartbeat"),j.optString("loyaltyPath","/api/loyalty"),j.optString("customersPath","/api/customers"),j.optString("loyaltyTermsPath","/api/device/loyalty/terms")).validatedOrDraft()
     }
 }

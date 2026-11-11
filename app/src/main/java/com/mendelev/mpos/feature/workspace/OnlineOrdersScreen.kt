@@ -19,101 +19,70 @@ import kotlinx.coroutines.*
 import org.json.JSONObject
 import java.math.BigDecimal
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable fun OnlineOrdersScreen(onWorkspace: ()->Unit) {
     val context=LocalContext.current;val runtime=remember {BackendRuntime.get(context)}
-    val orders by runtime.orders.collectAsState();val records by runtime.accepted.collectAsState()
-    val status by runtime.status.collectAsState();val busy by runtime.busy.collectAsState()
+    val orders by runtime.orders.collectAsState();val busy by runtime.busy.collectAsState()
     var selected by remember {mutableStateOf<JSONObject?>(null)}
-    var estimate by remember {mutableStateOf("")}
-    var custom by remember {mutableStateOf(false)}
-    var customTime by remember {mutableStateOf("")}
     var message by remember {mutableStateOf<String?>(null)}
     val scope=rememberCoroutineScope()
-    MposDialog(if(selected==null) "События" else "Заказ с сайта ${selected!!.optString("external_id")}",onWorkspace,closable=!busy,maxWidth=760.dp) {
-        val detail=selected
-        if(detail==null) {
-        Column(Modifier.weight(1f,fill=false).verticalScroll(rememberScrollState()).testTag("onlineOrdersScreen"),verticalArrangement=Arrangement.spacedBy(14.dp)) {
-            Text(status,style=MaterialTheme.typography.bodySmall)
-            message?.let {Text(it)}
-            if(orders.isEmpty()) Text("Новых заказов нет")
-            orders.forEach {order->
-                Surface(shape=RoundedCornerShape(18.dp),modifier=Modifier.fillMaxWidth().clickable(enabled=!busy) {selected=order;estimate="";custom=false;customTime="";message=null}.testTag("online:${order.getString("id")}")) {
-                    Column(Modifier.padding(18.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                        Text("Заказ с сайта ${order.optString("external_id")}",fontWeight=FontWeight.Bold)
-                        Text("${order.optString("customer_name")} · ${order.opt("total")} BYN")
-                        Text(order.optString("created_at"),style=MaterialTheme.typography.bodySmall)
-                    }
-                }
-            }
-            records.filter {(!it.settled || !it.readyConfirmed) && !it.cancelled}.forEach {record->key(record.sessionId) {OnlineOrderState(record,runtime)}}
-            if(records.any {(!it.settled || !it.readyConfirmed) && !it.cancelled}) MposButton("К рабочей зоне и Отложенным",onWorkspace,style=ActionStyle.Outline)
+    val admin by com.mendelev.mpos.core.access.Administration.session.state.collectAsState()
+    var deleting by remember {mutableStateOf(false)}
+    val detail=selected
+    if(detail==null) OnlineEventsWindow(orders,busy,{selected=it;message=null},onWorkspace)
+    else OnlineOrderWindow(detail,busy || deleting,message,{selected=null;message=null},canDelete=admin.active,onDelete={
+        val generation=admin.generation
+        deleting=true;message=null
+        scope.launch {
+            try {runtime.deleteNewOrder(detail,generation);selected=null}
+            catch(e:CancellationException) {throw e}
+            catch(e:Exception) {message=e.message ?: "Не удалось удалить заказ. Повторите действие"}
+            finally {deleting=false}
         }
-        MposButton("Закрыть",onWorkspace,Modifier.fillMaxWidth().padding(top=16.dp),enabled=!busy,style=ActionStyle.Outline)
-        } else {
-        val o=detail
-        Column(Modifier.weight(1f,fill=false).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(14.dp)) {
-            Text(o.optString("customer_name"),style=MaterialTheme.typography.titleLarge)
-            Text(o.optString("phone"))
-            Text(o.optString("order_type","На месте"),fontWeight=FontWeight.Bold)
-            val items=o.getJSONArray("order_items")
-            repeat(items.length()) {i->val item=items.getJSONObject(i)
-                Surface(shape=RoundedCornerShape(12.dp),color=MaterialTheme.colorScheme.onSurface.copy(alpha=.035f)) {
-                    Column(Modifier.fillMaxWidth().padding(14.dp)) {
-                        Text(item.optString("product_name"),fontWeight=FontWeight.Bold)
-                        Text("${item.get("quantity")} × ${item.get("price")} BYN")
-                        val comment=item.optString("comment").takeUnless {it=="null"}.orEmpty();if(comment.isNotBlank()) Text(comment)
-                    }
-                }
-            }
-            val delivery=o.opt("delivery_fee")?.toString()?.toBigDecimalOrNull() ?: BigDecimal.ZERO
-            if(delivery.signum()>0) Text("Доставка: $delivery BYN")
-            Text("Итого: ${o.get("total")} BYN",style=MaterialTheme.typography.titleLarge)
-            val address=o.optString("address").takeUnless {it=="null"}.orEmpty();if(address.isNotBlank()) Text("Адрес: $address")
-            val comment=o.optString("comment").takeUnless {it=="null"}.orEmpty();if(comment.isNotBlank()) Text("Комментарий: $comment")
-            Text("Время готовности",fontWeight=FontWeight.Bold)
-            FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                listOf("5m" to "5 мин","15m" to "15 мин","30m" to "30 мин","40m" to "40 мин","60plus" to "Больше часа").forEach {(value,label)->
-                    MposButton(label,{estimate=value;custom=false},enabled=!busy,style=if(estimate==value) ActionStyle.Primary else ActionStyle.Outline)
-                }
-                MposButton("Будет готово к",{custom=true;estimate="at:$customTime"},enabled=!busy,style=if(custom) ActionStyle.Primary else ActionStyle.Outline)
-            }
-            if(custom) MposWebField(customTime,{customTime=it;estimate="at:$it"},"Время HH:mm","onlineReadyTime",!busy,placeholder="18:30")
-            Text("Время готовности сохраняется на планшете.",style=MaterialTheme.typography.bodySmall)
-            message?.let {Text(it,color=MaterialTheme.colorScheme.error)}
-        }
-        Row(Modifier.fillMaxWidth().padding(top=16.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-            MposButton("Назад",{selected=null},Modifier.weight(1f),enabled=!busy,style=ActionStyle.Outline)
-            MposButton("Взять в работу",{scope.launch {try {message=runtime.accept(o,estimate);selected=null} catch(e:Exception) {message=e.message ?: "Не удалось принять заказ"}}},Modifier.weight(1f).testTag("onlineAccept"),enabled=!busy && com.mendelev.mpos.data.local.OnlineOrderCodec.estimate(estimate))
-        }
+    }) {estimate->
+        scope.launch {
+            try {runtime.accept(detail,estimate);onWorkspace()}
+            catch(e: kotlinx.coroutines.CancellationException) {throw e}
+            catch(e:Exception) {message=e.message ?: "Не удалось принять заказ"}
         }
     }
 }
 
-@Composable internal fun OnlineOrderState(record: OnlineAcceptance,runtime: BackendRuntime) {
-    val scope=rememberCoroutineScope();var message by remember {mutableStateOf<String?>(null)};var busy by remember {mutableStateOf(false)};var cancelConfirm by remember {mutableStateOf(false)}
-    Surface(shape=RoundedCornerShape(14.dp),modifier=Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=4.dp),color=MaterialTheme.colorScheme.onSurface.copy(alpha=.035f)) {
-        Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            Text("Веб ${record.externalId} · "+when {record.paid && record.readyConfirmed->"Оплачен · Готов";record.paid->"Оплачен";record.cancelPending->"Отмена ожидает подтверждения";record.conflict=="cancelled"->"Отменён на сайте";record.readyConfirmed->"Готов";record.ready->"Готов · ожидает подтверждения";record.accepted->"В работе";else->"Ожидает подтверждения принятия"},fontWeight=FontWeight.Bold)
-            Text("Готовность: "+when(record.estimate) {"5m"->"5 мин";"15m"->"15 мин";"30m"->"30 мин";"40m"->"40 мин";"60plus"->"Больше часа";else->record.estimate.removePrefix("at:")},style=MaterialTheme.typography.bodySmall)
-            if(!record.ready && !record.cancelPending && record.conflict.isEmpty()) MposButton("Заказ готов",{busy=true;scope.launch {try {message=runtime.ready(record.sessionId)} catch(e:Exception) {message=e.message ?: "Не удалось сохранить готовность"} finally {busy=false}}},enabled=!busy && record.accepted)
-            if(!record.cancelPending && !record.paid) MposButton("Отменить заказ",{cancelConfirm=true},enabled=!busy,style=ActionStyle.Danger)
-            message?.let {Text(it,style=MaterialTheme.typography.bodySmall)}
+@Composable internal fun OnlineReadyAction(record: OnlineAcceptance,runtime: BackendRuntime,compact: Boolean=false,enabled: Boolean=true) {
+    val scope=rememberCoroutineScope()
+    var confirm by remember(record.sessionId) {mutableStateOf(false)}
+    var pending by remember(record.sessionId) {mutableStateOf(false)}
+    var error by remember(record.sessionId) {mutableStateOf<String?>(null)}
+    if(record.cancelPending || record.conflict.isNotEmpty()) return
+    if(record.readyConfirmed) {if(compact) OnlineReadyControl(true,true,false,false,false,{});return}
+    val retry=!record.accepted || record.ready
+    OnlineReadyControl(record.readyConfirmed,compact,retry,pending,enabled,{confirm=true},Modifier.testTag("onlineReady:${record.sessionId}"))
+    if(confirm) MposDialog(if(retry) "Подтверждение заказа" else "Подтверждение",{if(!pending) confirm=false},closable=!pending,maxWidth=520.dp) {
+        Text(if(retry) "Повторить отправку сохранённого состояния заказа на сервер?" else "Подтвердить готовность заказа?")
+        error?.let {Text(it,color=MaterialTheme.colorScheme.error)}
+        Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+            MposButton("Отмена",{confirm=false},Modifier.weight(1f),enabled=!pending,style=ActionStyle.Secondary)
+            MposButton("Подтвердить",{pending=true;scope.launch {
+                try {if(retry) runtime.retryAcceptance(record.sessionId) else runtime.ready(record.sessionId);confirm=false}
+                catch(e:kotlinx.coroutines.CancellationException) {throw e}
+                catch(e:Exception) {error=e.message ?: "Не удалось подтвердить заказ"}
+                finally {pending=false}
+            }},Modifier.weight(1f).testTag("onlineReadyConfirm"),enabled=!pending,busy=pending)
         }
     }
-    if(cancelConfirm) MposDialog("Отменить онлайн-заказ?",{cancelConfirm=false},closable=!busy,maxWidth=520.dp) {
-        Text("Отмена будет отправлена на сайт. После подтверждения заказ удалится из Отложенных, а резерв освободится. Оплаченные чеки отменяются через возврат.")
-        Row(Modifier.fillMaxWidth().padding(top=16.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-            MposButton("Назад",{cancelConfirm=false},Modifier.weight(1f),enabled=!busy,style=ActionStyle.Outline)
-            MposButton("Отменить заказ",{busy=true;scope.launch {try {message=runtime.cancel(record.sessionId);cancelConfirm=false} catch(e:Exception) {message=e.message ?: "Не удалось сохранить отмену";cancelConfirm=false} finally {busy=false}}},Modifier.weight(1f),enabled=!busy,style=ActionStyle.Danger)
-        }
-    }
-
 }
 
-@Composable internal fun CurrentOnlineOrder(session: String) {
+/** Shared presentation only; all network commands remain in OnlineReadyAction. */
+@Composable internal fun OnlineReadyControl(confirmed: Boolean,compact: Boolean,retry: Boolean,pending: Boolean,enabled: Boolean,
+    onClick: ()->Unit,modifier: Modifier=Modifier) {
+    if(confirmed && !compact) return
+    val label=if(confirmed) "✓ Готов" else if(retry) "Подтвердить" else if(compact) "Готов" else "Заказ готов"
+    if(compact) ParkedReadyBadge(label,enabled && !pending && !confirmed,onClick,modifier)
+    else PosAction(label,onClick,modifier.fillMaxWidth(),enabled=enabled && !pending,tone=PosTone.Primary,footer=true,retainingAppearance=pending)
+}
+
+@Composable internal fun CurrentOnlineOrder(session: String,busy: Boolean=false) {
     val runtime=BackendRuntime.get(LocalContext.current);val records by runtime.accepted.collectAsState()
-    records.singleOrNull {it.sessionId==session && (!it.settled || !it.readyConfirmed) && !it.cancelled}?.let {key(it.sessionId) {OnlineOrderState(it,runtime)}}
+    records.singleOrNull {it.sessionId==session && (!it.settled || !it.readyConfirmed) && !it.cancelled}?.let {key(it.sessionId) {OnlineReadyAction(it,runtime,enabled=!busy)}}
 }
 
 @Composable internal fun BackendDemandDialog(onClose: ()->Unit) {

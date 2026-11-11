@@ -14,9 +14,9 @@ interface RefundAccess {
     suspend fun commit(command: String,preview: RefundPreview): String
     suspend fun outcome(command: String): RefundEntity?
 }
-private class RoomRefundAccess(db: CatalogDatabase): RefundAccess {
+private class RoomRefundAccess(private val db: CatalogDatabase): RefundAccess {
     private val repo=RefundRepository(db)
-    override suspend fun history()=repo.history()
+    override suspend fun history()=db.refunds().recent(50)
     override suspend fun preview(receiptId: String,actor: String)=repo.preview(receiptId,actor)
     override suspend fun commit(command: String,preview: RefundPreview)=repo.commit(command,preview)
     override suspend fun outcome(command: String)=repo.outcome(command)

@@ -1,5 +1,7 @@
 # Тема и локальные справочники настроек
 
+Уточнение2026-11-10 ST03/ST04: доставка и шаблоны доступны для add/edit без admin; удаление и скидки требуют admin. [OPERATOR-DIRECTORIES-STAFF](OPERATOR-DIRECTORIES-STAFF.md).
+
 Локальная реализация от 2026-11-07 по запросу владельца. Источник — pinned Web: `pos.html` (setTheme, renderSettingsScreen, open/save/deleteDiscount, open/save/deleteDeliveryRate), `Web/js/features/parked-orders.js` (шаблоны и выбор названия). Применены mpos-phase/mpos-domain. Внешний вид и запуск принимает владелец в Android Studio; публикация отдельно.
 
 ## Поведение

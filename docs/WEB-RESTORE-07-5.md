@@ -37,3 +37,6 @@
 3. End-to-end Web activation/restart/source40 + native60/target30 protection, UI/API36, recovery/retention, операторская и планшетная приёмка.
 
 Наличие кнопки применения не закрывает эти пункты. Статусы CI/device ставятся только после наблюдаемого результата.
+
+## Уточнение 10.11.2026
+Ранее перечисленные ограничения переноса настроек и просмотра истории чеков изменены: см. [WEB-RESTORE-FULL-PLAN](WEB-RESTORE-FULL-PLAN.md). Статус — implemented locally, ручная приёмка pending; оставшиеся ограничения указаны там явно.

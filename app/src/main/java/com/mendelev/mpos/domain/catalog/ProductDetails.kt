@@ -2,7 +2,7 @@ package com.mendelev.mpos.domain.catalog
 
 /** Editable local metadata; never modifies the immutable Web import sidecar. */
 data class ProductDetails(val sku: String="",val note: String="",val symbol: String="",val sellingBasis: String?=null,val recipeYieldManual: Boolean?=null,val purchaseContentUnit: String?=null,
-    val description: String?=null,val onlineOrder: Boolean?=null,val onlineMenu: Boolean?=null) {
+    val description: String?=null,val onlineOrder: Boolean?=null,val onlineMenu: Boolean?=null,val alwaysAvailableOnline: Boolean?=null) {
     fun validated(): ProductDetails {
         val code=sku.trim();val text=note.trim()
         if(code.length>80 || code.any {it.isISOControl()}) throw CatalogFailure("sku","Артикул: до 80 символов без переносов")

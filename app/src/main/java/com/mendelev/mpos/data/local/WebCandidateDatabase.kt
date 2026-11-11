@@ -20,9 +20,11 @@ internal class WebCandidateDatabase(private val context: Context,private val db:
         val name=db.openHelper.databaseName ?: fail("Нужна отдельная база")
         if(context.getDatabasePath(name).canonicalFile==com.mendelev.mpos.data.recovery.AppDataset.paths(context).database.canonicalFile)fail("Рабочая база не является кандидатом")
         val catalog=WebCatalogMapping.map(source);val staff=WebStaffMapping.map(source);val layout=WebLayoutMapping.map(source)
+        val importedSettings=WebSettingsMapping.catalog(source)
+        val deviceSettings=WebSettingsMapping.device(source).also(WebSettingsMapping::validate)
         val binding=WebRecipeBinding.bind(source);val cash=WebCashReconciliation.compare(source)
         val evidence=WebImportedPaymentEvidenceCodec.encode(source)
-        val deferred=setOf("metadataRetentionRequired","productMetadataNotMapped","photoTranscodePending","externalPhotoNeedsExplicitSkip","compositeLegacyStockFields")
+        val deferred=setOf("metadataRetentionRequired","productMetadataNotMapped","photoTranscodePending","externalPhotoDownloadPending","compositeLegacyStockFields")
         catalog.products.forEach {p->if((p.blockers-deferred).isNotEmpty())fail("Товар не прошёл проверку: "+(p.blockers-deferred).sorted().joinToString())}
         val layoutProblems=WebLayoutMapping.installationBlockers(layout)
         if(layoutProblems.isNotEmpty())fail("Раскладка не прошла проверку: "+layoutProblems.sorted().joinToString())
@@ -50,7 +52,12 @@ internal class WebCandidateDatabase(private val context: Context,private val db:
                 db.catalog().insertModifierOptions(p.modifierGroups.flatMap {g->g.options.mapIndexed {i,o->ModifierOptionEntity(p.id,o.id,g.id,o.productId,o.posName,o.quantity,o.priceDelta,i)}});wrote()
             }
             db.workspace().put(WorkspaceDocument(WebOrderDefaults.KEY,1,WebOrderDefaults.encode(source)));wrote()
+            WebShiftSummary.documents(source).forEach {db.workspace().put(it);wrote()}
+            WebReceiptIndex.documents(source).forEach {db.workspace().put(it);wrote()}
             for((id,payload) in retained) {db.workspace().put(WorkspaceDocument(id,1,payload));wrote()}
+            db.workspace().put(WorkspaceDocument(SettingsCodec.KEY,1,SettingsCodec.encode(importedSettings)));wrote()
+            db.workspace().put(WorkspaceDocument(WebSettingsMapping.DEVICE,1,deviceSettings));wrote()
+            db.workspace().put(WorkspaceDocument(WebSettingsMapping.COMPANY,1,WebSettingsMapping.obj(source.root.fields["company"]).toString()));wrote()
             db.workspace().put(WorkspaceDocument(EmployeeCodec.KEY,1,EmployeeCodec.encode(staff.employees)));wrote()
             val suppliers=WebSupplierMapping.map(source,catalog)
             val supplierPayload=SupplierCodec.encode(suppliers);SupplierCodec.decode(supplierPayload)

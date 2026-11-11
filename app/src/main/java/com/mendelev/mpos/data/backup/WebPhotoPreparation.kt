@@ -17,7 +17,7 @@ import java.util.UUID
 
 internal data class WebPreparedPhotos(val id: String,val sourceSha256: String,val files: Map<String,String>,val mediaRoot: File)
 /** Asset-only publication, never a dataset selector or a complete Room import. Original keys are opaque. */
-internal class WebPhotoPreparation(context: Context,private val checkpoint: (String)->Unit={}) {
+internal class WebPhotoPreparation(context: Context,private val externalReader: suspend (String)->ByteArray={WebExternalPhotos.read(it)},private val checkpoint: (String)->Unit={}) {
     private val root=File(context.noBackupFilesDir,"web-conversion-photos")
     private suspend fun permit(): AdminAuthorization {
         val p=currentCoroutineContext()[AdminAuthorization] ?: throw CatalogFailure("access","Откройте подготовку из административной сессии")
@@ -35,7 +35,11 @@ internal class WebPhotoPreparation(context: Context,private val checkpoint: (Str
             for(key in keys) {
                 p.requireCurrent();currentCoroutineContext().ensureActive()
                 if(key.length>512) bad()
-                val bytes=document.images[key] ?: bad()
+                val bytes=document.images[key] ?: if(key.startsWith("external:")) {
+                    val fields=WebValues.obj(WebValues.rows(document.root.fields["products"])[key.substringAfter(":").toInt()])
+                    val url=WebValues.text(fields["image"]).takeIf {it.isNotBlank() && !it.startsWith("data:")} ?: WebValues.text(fields["imageUrl"])
+                    externalReader(url)
+                } else bad()
                 val bounds=BitmapFactory.Options().apply {inJustDecodeBounds=true}
                 BitmapFactory.decodeByteArray(bytes,0,bytes.size,bounds)
                 if(bytes.size !in 1..2_000_000 || bounds.outWidth<=0 || bounds.outHeight<=0 || bounds.outWidth.toLong()*bounds.outHeight>16_000_000 || bounds.outMimeType !in setOf("image/jpeg","image/png","image/webp")) bad()

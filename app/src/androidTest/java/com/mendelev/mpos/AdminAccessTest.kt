@@ -38,9 +38,10 @@ class AdminAccessTest {
                 try {action();fail("Administrative command accepted")}
                 catch(e: CatalogFailure) {assertEquals("access",e.kind)}
             }
+            suppliers.commit(com.mendelev.mpos.domain.warehouse.SupplierCommand("operator-supplier",owner,com.mendelev.mpos.domain.warehouse.SupplierAction.Save("supplier",null,"Поставщик",emptySet())))
             val documents=db.workspace().documents()
             denied {suppliers.commit(com.mendelev.mpos.domain.warehouse.SupplierCommand("denied-supplier",owner,
-                com.mendelev.mpos.domain.warehouse.SupplierAction.Save("supplier",null,"Поставщик",emptySet())))}
+                com.mendelev.mpos.domain.warehouse.SupplierAction.Delete("supplier",1)))}
             denied {inventory.commit(com.mendelev.mpos.domain.warehouse.InventoryCommand("denied-inventory",owner,stock.revision,
                 com.mendelev.mpos.domain.warehouse.InventoryAction.Start("draft","adhoc")))}
             assertEquals(documents,db.workspace().documents())

@@ -33,11 +33,9 @@ class InventoryUiTest {
         compose.onNodeWithTag("inventorySearch").performScrollTo().performTextInput(key)
         compose.onNodeWithTag("inventoryProduct:$p").performScrollTo().performClick();hideKeyboard()
         compose.onNodeWithTag("inventorySave").performClick();compose.waitUntil(20_000) {!vm.state.value.pending && !vm.state.value.dirty}
-        compose.onNode(hasAnyAncestor(hasTestTag("inventoryFrequency")) and hasClickAction()).performScrollTo().performClick()
-        compose.onNode(hasAnyAncestor(isPopup()) and hasText("Ежеквартально")).performClick()
-        compose.onNodeWithTag("inventoryStart").assertIsNotEnabled()
+        compose.onNodeWithTag("inventoryFrequency:quarterly").performScrollTo().performClick()
         compose.onNodeWithTag("inventoryBack").performClick();compose.onNodeWithTag("inventoryDiscard").performClick()
-        compose.onNodeWithTag("adminControl").performClick()
+        compose.onNodeWithTag("adminPanelScreen").assertExists()
         compose.onNodeWithTag("settingsInventory").performScrollTo().performClick()
         compose.waitUntil(20_000) {!vm.state.value.pending && !vm.state.value.blocked}
         startInventory(vm)
@@ -51,34 +49,26 @@ class InventoryUiTest {
         assertEquals(before,runBlocking {Triple(db.catalog().product(p),db.catalog().balance(p),db.catalog().movementCount(p))})
         shot("inventory-start")
         compose.onNodeWithTag("topNav-inventory").performScrollTo().assertIsSelected()
-        compose.onNodeWithTag("inventoryCount:$p").performScrollTo().performClick()
-        compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.countForm!=null}
-        compose.onNodeWithTag("topNav-workspace").assertIsNotEnabled()
-        compose.onNodeWithTag("inventoryCountSave").performClick();assertNotNull(vm.state.value.countForm)
-        compose.onNodeWithTag("inventoryActual").performTextInput("0,0004");hideKeyboard()
-        compose.onNodeWithTag("inventoryCountSave").performClick();compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.countForm==null}
+        compose.onNodeWithTag("inventoryActual:$p").performScrollTo().performTextReplacement("0,0004");hideKeyboard()
+        compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.inlineInputs.isEmpty() && vm.state.value.snapshot?.document?.draft?.counts?.singleOrNull()?.raw=="0,0004"}
         compose.activityRule.scenario.recreate()
         compose.waitUntil(20_000) {!vm.state.value.pending && !vm.state.value.blocked && compose.onAllNodesWithTag("inventoryFix:$p").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithTag("inventoryFix:$p").performScrollTo().assertIsEnabled()
         // A real product-card stock correction after the physical count invalidates it.
         runBlocking {
             val current=db.catalog().product(p)!!;val balance=db.catalog().balance(p)!!
             CatalogRepository(db).saveProduct(com.mendelev.mpos.domain.catalog.ProductInput(p,current.revision,current.name,current.categoryId,current.price,current.cost,"9",balance.revision,true,"stock-$key",unit=current.unit))
         }
-        compose.onNodeWithTag("inventoryFix:$p").performClick();compose.onNodeWithTag("inventoryFixConfirm").performClick()
+        compose.onNodeWithTag("inventoryFix:$p").performClick()
         compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.products?.find {it.id==p}?.stock=="9"}
-        compose.onNodeWithTag("inventoryFix:$p").performScrollTo().assertIsNotEnabled()
-        compose.onNodeWithTag("inventorySaved:$p").assertTextContains("0,0004",substring=true)
+        compose.onNodeWithTag("inventoryActual:$p").assertTextContains("0,0004")
+        assertEquals("9",runBlocking {db.catalog().balance(p)!!.quantity})
         shot("inventory-stale")
-        compose.onNodeWithTag("inventoryCount:$p").performClick()
-        compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.countForm!=null};assertEquals("",vm.state.value.countForm!!.raw)
-        compose.onNodeWithTag("inventoryActual").performTextInput("0,0004");hideKeyboard()
-        compose.onNodeWithTag("inventoryCountSave").performClick();compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.countForm==null}
-        compose.onNodeWithTag("inventoryFix:$p").performScrollTo().performClick();shot("inventory-fix-confirm")
-        compose.onNodeWithTag("inventoryFixConfirm").performClick()
+        compose.onNodeWithTag("inventoryActual:$p").performTextReplacement("0,0004");hideKeyboard()
+        compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.inlineInputs.isEmpty()}
+        compose.onNodeWithTag("inventoryFix:$p").performScrollTo().performClick()
         compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.document?.draft?.counts?.singleOrNull()?.fixed!=null}
         compose.onNodeWithTag("inventoryFixed:$p").performScrollTo().assertTextContains("0.0004",substring=true)
-        compose.onNodeWithTag("inventoryCount:$p").assertDoesNotExist()
+        compose.onNodeWithTag("inventoryActual:$p").assertDoesNotExist()
         assertEquals("0.0004",runBlocking {db.catalog().balance(p)!!.quantity});assertEquals(3,runBlocking {db.catalog().movementCount(p)})
         val fixed=vm.state.value.snapshot!!.document.draft!!.counts.single().fixed!!;assertEquals("-8.9996",fixed.delta)
         compose.activityRule.scenario.recreate()
@@ -90,24 +80,29 @@ class InventoryUiTest {
         compose.waitUntil(20_000) {!vm.state.value.pending && !vm.state.value.blocked && compose.onAllNodesWithTag("inventoryFixed:$p").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithTag("inventoryFixed:$p").performScrollTo().assertTextContains("0.0004",substring=true)
         compose.onNodeWithTag("inventoryComplete").performClick()
-        compose.onNodeWithTag("inventoryLoss").assertTextContains("18.00 BYN",substring=true);shot("inventory-summary")
+        compose.onNodeWithTag("inventoryLoss").assertTextContains("18,00 BYN",substring=true);shot("inventory-summary")
         compose.onNodeWithTag("inventoryFinishConfirm").performClick()
-        compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.document?.draft==null && compose.onAllNodesWithTag("inventoryRecord:$id").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithTag("inventoryRecord:$id").performScrollTo().performClick()
+        compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.document?.draft==null && compose.onAllNodesWithTag("workspaceCheckout").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithTag("topNav-settings").performClick()
+        compose.onNodeWithTag("adminControl").performClick()
+        compose.onNodeWithTag("settingsInventory").performScrollTo().performClick()
+        compose.onNodeWithTag("inventorySettingsList").performScrollToNode(hasTestTag("inventoryRecord:$id"))
+        compose.onNodeWithTag("inventoryRecord:$id").performClick()
         compose.onNodeWithTag("inventoryRecordStatus").performScrollTo().assertTextContains("Завершена",substring=true)
-        compose.onNodeWithTag("inventoryLoss").assertTextContains("18.00 BYN",substring=true);shot("inventory-completed")
+        compose.onNodeWithTag("inventoryLoss").assertTextContains("18,00 BYN",substring=true);shot("inventory-completed")
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("inventoryRecordStatus").assertTextContains("Завершена",substring=true)
-        compose.onNodeWithTag("inventoryBack").performClick()
+        compose.onNodeWithContentDescription("Закрыть").performClick()
         startInventory(vm)
         compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.document?.draft!=null && compose.onAllNodesWithTag("inventoryCancel").fetchSemanticsNodes().isNotEmpty()}
         val cancelledId=vm.state.value.snapshot!!.document.draft!!.id
-        compose.onNodeWithTag("inventoryComplete").assertIsNotEnabled()
+        compose.onNodeWithTag("inventoryComplete").performClick();compose.onNodeWithText("Сначала зафиксируйте остаток каждого товара").assertExists()
         val balanceBeforeCancel=runBlocking {db.catalog().balance(p)}
         compose.onNodeWithTag("inventoryCancel").performClick();shot("inventory-cancel-confirm")
         compose.onNodeWithTag("inventoryFinishConfirm").performClick()
-        compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.document?.history?.size==2 && compose.onAllNodesWithTag("inventoryRecord:$cancelledId").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithTag("inventoryRecord:$cancelledId").performScrollTo().performClick()
+        compose.waitUntil(20_000) {!vm.state.value.pending && vm.state.value.snapshot?.document?.history?.size==2 && vm.state.value.snapshot?.document?.draft==null}
+        compose.onNodeWithTag("inventorySettingsList").performScrollToNode(hasTestTag("inventoryRecord:$cancelledId"))
+        compose.onNodeWithTag("inventoryRecord:$cancelledId").performClick()
         compose.onNodeWithTag("inventoryRecordStatus").performScrollTo().assertTextContains("Отменена",substring=true);shot("inventory-cancelled")
         assertEquals(balanceBeforeCancel,runBlocking {db.catalog().balance(p)});assertEquals(3,runBlocking {db.catalog().movementCount(p)})
     }
@@ -125,9 +120,8 @@ class InventoryUiTest {
             val ui=model.state.value
             throw AssertionError("Inventory start not ready: pending=${ui.pending}, blocked=${ui.blocked}, canEdit=${ui.canEdit}, dirty=${ui.dirty}, enabled=${ui.snapshot?.document?.config?.enabled}, draft=${ui.snapshot?.document?.draft?.id}, message=${ui.message}",e)
         }
-        compose.onNodeWithTag("inventoryStart").assertIsEnabled().assertIsDisplayed().performClick()
-        compose.waitUntil(10_000) {compose.onAllNodesWithTag("inventoryStartConfirm").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithTag("inventoryStartConfirm").assertIsEnabled().performClick()
+        compose.onNodeWithTag("inventoryStart").assertIsEnabled().performScrollTo().performClick()
+
     }
     private fun hideKeyboard() {compose.runOnIdle {(compose.activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).hideSoftInputFromWindow(compose.activity.window.decorView.windowToken,0)}}
     private fun shot(name: String) {

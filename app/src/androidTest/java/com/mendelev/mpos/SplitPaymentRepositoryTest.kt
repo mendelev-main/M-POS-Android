@@ -294,4 +294,32 @@ class SplitPaymentRepositoryTest {
         } finally {db.close()}
     }
 
+    @Test fun cancellingConfirmedPartsIsAtomicReplaySafeAndKeepsCartCashAndStock(): Unit=runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
+        try {
+            val saved=seed(db);val splits=SplitPaymentRepository(db)
+            splits.confirm(saved,1,0)
+            val progress=splits.load()!!
+            val cart=WorkspaceRepository(db).snapshot().cart
+            val cash=ShiftRepository(db).snapshot().currentCash
+            val balance=db.catalog().balance("p")
+            val movements=db.catalog().movementCount("p")
+            for(fault in 1..4) {
+                var writes=0
+                val broken=SplitPaymentRepository(db) {if(++writes==fault) error("injected")}
+                assertTrue(runCatching {broken.cancel("cancel",progress)}.isFailure)
+                assertEquals(progress,splits.load());assertEquals(saved,CheckoutRepository(db).load())
+                assertEquals(balance,db.catalog().balance("p"));assertEquals(cash,ShiftRepository(db).snapshot().currentCash)
+            }
+            splits.cancel("cancel",progress);splits.cancel("cancel",progress)
+            assertNull(splits.load());assertNull(CheckoutRepository(db).load())
+            assertEquals(cart,WorkspaceRepository(db).snapshot().cart)
+            assertEquals(balance,db.catalog().balance("p"));assertEquals(movements,db.catalog().movementCount("p"))
+            assertEquals(cash,ShiftRepository(db).snapshot().currentCash);assertTrue(db.sales().history().isEmpty())
+            assertTrue(runCatching {SaleRepository(db).commit(saved)}.isFailure)
+            val fresh=CheckoutRepository(db).save(CheckoutRepository(db).revision(),saved.draft.copy(commandId="new-sale"))
+            assertTrue(fresh.revision>saved.revision)
+        } finally {db.close()}
+    }
+
 }

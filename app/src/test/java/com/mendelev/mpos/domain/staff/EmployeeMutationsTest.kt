@@ -18,8 +18,8 @@ class EmployeeMutationsTest {
     }
     @Test fun revisionRoleAndTombstonePreventOverwriteAndIdReuse() {
         val edited=EmployeeMutations.apply(listOf(anna),command(EmployeeAction.Save("anna",1,"Анна Новая","123","admin")),null)
-        assertEquals(2L,edited.single().revision);assertFalse(edited.single().selectable)
-        reject {EmployeeMutations.apply(edited,command(EmployeeAction.Delete("anna",2)),null)}
+        assertEquals(2L,edited.single().revision);assertTrue(edited.single().selectable)
+        assertTrue(EmployeeMutations.apply(edited,command(EmployeeAction.Delete("anna",2)),null).single().deleted)
         reject {EmployeeMutations.apply(edited,command(EmployeeAction.Save("anna",1,"Старое","","employee")),null)}
         val employee=EmployeeMutations.apply(edited,command(EmployeeAction.Save("anna",2,"Анна Новая","123","employee")),null)
         val deleted=EmployeeMutations.apply(employee,command(EmployeeAction.Delete("anna",3)),null)

@@ -9,12 +9,16 @@ data class InventoryConfig(val enabled: Boolean=false,val frequency: String="mon
 data class InventoryProduct(val id: String,val name: String,val category: String,val unit: String,val revision: Long,val stockRevision: Long,val stock: String,val cost: String)
 data class InventoryDraft(val id: String,val type: String,val startedAt: Long,val scheduledDate: String,val products: List<InventoryProduct>,val counts: List<InventoryCount> = emptyList())
 data class InventoryFix(val product: InventoryProduct,val actual: String,val delta: String,val at: Long,val actorId: String,val commandId: String,val movementId: String,val stockRevisionAfter: Long)
-data class InventoryCount(val product: InventoryProduct,val raw: String,val generation: String,val fixed: InventoryFix?=null)
+data class InventoryCount(val product: InventoryProduct,val raw: String,val generation: String,val fixed: InventoryFix?=null,val corrections: List<InventoryCorrection> = emptyList())
 data class InventoryDocument(val config: InventoryConfig=InventoryConfig(),val draft: InventoryDraft?=null,val history: List<InventoryRecord> = emptyList())
+data class InventoryCorrection(val actual: String,val delta: String,val stockBefore: String,val stockAfter: String,val at: Long,val actorId: String,val commandId: String,val movementId: String,val stockRevisionAfter: Long)
+val InventoryCount.effectiveActual: String get()=corrections.lastOrNull()?.actual ?: fixed?.actual ?: InventoryRules.actual(raw)
+val InventoryCount.effectiveDelta: String get()=CatalogRules.canonical(effectiveActual.toBigDecimal()-product.stock.toBigDecimal())
 sealed interface InventoryAction {
     data class Configure(val config: InventoryConfig): InventoryAction
     data class Start(val id: String,val type: String): InventoryAction
     data class Count(val draftId: String,val product: InventoryProduct,val raw: String,val generation: String): InventoryAction
+    data class Correct(val draftId: String,val productId: String,val expectedActual: String,val actual: String): InventoryAction
     data class Fix(val draftId: String,val productId: String,val generation: String): InventoryAction
     data class Finish(val draftId: String,val cancelled: Boolean): InventoryAction
 }
@@ -25,6 +29,7 @@ data class InventoryCommand(val commandId: String,val actorId: String,val revisi
             is InventoryAction.Configure->InventoryRules.validate(a.config)
             is InventoryAction.Start->{PurchaseDraftRules.id(a.id);require(a.type in setOf("scheduled","adhoc"))}
             is InventoryAction.Count->{PurchaseDraftRules.id(a.draftId);InventoryRules.validate(InventoryCount(a.product,a.raw,a.generation))}
+            is InventoryAction.Correct->{listOf(a.draftId,a.productId).forEach(PurchaseDraftRules::id);InventoryRules.actual(a.expectedActual);InventoryRules.actual(a.actual)}
             is InventoryAction.Fix->{listOf(a.draftId,a.productId,a.generation).forEach(PurchaseDraftRules::id)}
             is InventoryAction.Finish->PurchaseDraftRules.id(a.draftId)
         }
@@ -35,6 +40,7 @@ data class InventoryCommand(val commandId: String,val actorId: String,val revisi
             is InventoryAction.Configure->{p.addAll(listOf("configure",a.config.enabled,a.config.frequency,a.config.lastCompleted));p.addAll(a.config.productIds.sorted())}
             is InventoryAction.Start->p.addAll(listOf("start",a.id,a.type))
             is InventoryAction.Count->{val b=a.product;p.addAll(listOf("count",a.draftId,b.id,b.name,b.category,b.unit,b.revision,b.stockRevision,b.stock,b.cost,a.raw,a.generation))}
+            is InventoryAction.Correct->p.addAll(listOf("correct",a.draftId,a.productId,a.expectedActual,a.actual))
             is InventoryAction.Fix->p.addAll(listOf("fix",a.draftId,a.productId,a.generation))
             is InventoryAction.Finish->p.addAll(listOf("finish",a.draftId,a.cancelled))
         }
@@ -42,6 +48,14 @@ data class InventoryCommand(val commandId: String,val actorId: String,val revisi
     }
 }
 object InventoryRules {
+    fun correction(count: InventoryCount,currentStock: String,raw: String): Pair<String,String> {
+        require(count.fixed!=null)
+        val actual=actual(raw)
+        val delta=CatalogRules.canonical(actual.toBigDecimal()-count.effectiveActual.toBigDecimal())
+        val after=CatalogRules.canonical(currentStock.toBigDecimal()+delta.toBigDecimal())
+        ReceivingRules.quantity(delta);ReceivingRules.quantity(after)
+        return delta to after
+    }
     fun actual(raw: String): String {
         if(raw.length>64) throw CatalogFailure("inventory","Слишком длинное количество")
         return PurchaseDraftRules.number(raw)?.let(CatalogRules::canonical) ?: throw CatalogFailure("inventory","Введите фактический остаток; пустое поле не равно нулю")
@@ -53,6 +67,20 @@ object InventoryRules {
     }
     fun validate(c: InventoryCount) {
         validate(c.product);actual(c.raw);delta(c);PurchaseDraftRules.id(c.generation)
+        require(c.fixed!=null || c.corrections.isEmpty())
+        var previous=c.fixed?.actual
+        var lastTime=c.fixed?.at ?: 0L
+        var lastRevision=c.fixed?.stockRevisionAfter ?: 0L
+        c.corrections.forEach {x->
+            val actual=actual(x.actual);require(actual==x.actual)
+            require(x.delta==CatalogRules.canonical(actual.toBigDecimal()-previous!!.toBigDecimal()))
+            ReceivingRules.quantity(x.stockBefore);ReceivingRules.quantity(x.stockAfter)
+            require(x.stockAfter==CatalogRules.canonical(x.stockBefore.toBigDecimal()+x.delta.toBigDecimal()))
+            require(x.at>=lastTime && x.stockRevisionAfter>lastRevision)
+            listOf(x.actorId,x.commandId,x.movementId).forEach(PurchaseDraftRules::id)
+            previous=actual;lastTime=x.at;lastRevision=x.stockRevisionAfter
+        }
+        require(c.corrections.map {it.commandId}.distinct().size==c.corrections.size)
         c.fixed?.let {f->
             validate(f.product);listOf(f.actorId,f.commandId,f.movementId).forEach(PurchaseDraftRules::id)
             require(f.at>=0 && sameStock(c.product,f.product) && f.actual==actual(c.raw) && f.delta==delta(c) && f.stockRevisionAfter==Math.addExact(c.product.stockRevision,1))

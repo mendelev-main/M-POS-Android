@@ -71,6 +71,23 @@ class WorkspaceViewModel(private val repo: WorkspaceRepository): ViewModel() {
         val command=UUID.randomUUID().toString()
         enqueue {repo.cart(CartAction.SetDetails(details,revision),command,owner);withContext(Dispatchers.Main) {done()} }
     }
+    fun loyalty(selection: com.mendelev.mpos.domain.loyalty.LoyaltySelection?,revision: Long,owner: String,done: ()->Unit) {
+        val command=UUID.randomUUID().toString()
+        enqueue {repo.cart(CartAction.SetLoyalty(selection,revision),command,owner);withContext(Dispatchers.Main) {done()}}
+    }
+    suspend fun attachCustomer(selection: com.mendelev.mpos.domain.loyalty.LoyaltySelection,revision: Long,owner: String) {
+        check(!state.value.loading && !state.value.fatal) {"Рабочая зона недоступна"}
+        val result=kotlinx.coroutines.CompletableDeferred<Unit>()
+        val command=UUID.randomUUID().toString()
+        enqueue {
+            try {
+                repo.cart(CartAction.SetLoyalty(selection,revision),command,owner)
+                publish(repo.snapshot())
+                result.complete(Unit)
+            } catch(e:Exception) {result.completeExceptionally(e);throw e}
+        }
+        result.await()
+    }
     fun revalidate(revision: Long,owner: String,token: String,done: () -> Unit) {
         val command=UUID.randomUUID().toString()
         enqueue {repo.revalidate(revision,owner,token,command);withContext(Dispatchers.Main) {done()} }

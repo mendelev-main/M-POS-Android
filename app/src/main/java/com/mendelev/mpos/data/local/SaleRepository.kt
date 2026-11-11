@@ -23,7 +23,7 @@ object ReceiptCodec {
         .put("products",JSONArray(products)).toString()
     fun decode(raw: String): ReceiptSnapshot {
         val j=JSONObject(raw)
-        if(j.getInt("version")!=1 || j.getString("currency")!="BYN") throw CatalogFailure("receipt","Неизвестный формат чека")
+        if(j.getInt("version") !in 1..2 || j.getString("currency")!="BYN") throw CatalogFailure("receipt","Неизвестный формат чека")
         val cart=WorkspaceCodec.cart(j.getJSONObject("cart").toString());val draft=CheckoutCodec.decode(j.getJSONObject("checkout").toString())
         val lines=j.getJSONArray("lines");val payments=j.getJSONArray("payments");val stock=j.getJSONObject("consumption")
         val products=j.getJSONArray("products")
@@ -31,11 +31,11 @@ object ReceiptCodec {
             j.getLong("gross"),j.getLong("subtotal"),j.getLong("discount"),draft.delivery,j.getLong("total")),
             SalePayment((0 until payments.length()).map {payments.getJSONObject(it).let {p->PaymentAllocation(p.getString("method"),p.getLong("amount"),if(p.isNull("given")) null else p.getLong("given"),if(p.isNull("change")) null else p.getLong("change"))}},
                 j.getLong("cash"),j.getLong("card"),j.getLong("deliveryCashOut"),j.getLong("expectedCashAfter")),
-            stock.keys().asSequence().associateWith {stock.getString(it)},(0 until products.length()).map {products.getJSONObject(it).toString()})
+            stock.keys().asSequence().associateWith {stock.getString(it)},(0 until products.length()).map {products.getJSONObject(it).toString()},if(j.getInt("version")==2) j.getString("originalReceiptJson") else null,if(j.getInt("version")==2) j.getJSONArray("paymentCorrections").toString() else "[]")
     }
 }
 data class ReceiptSnapshot(val cart: CurrentCart,val checkout: CheckoutDraft,val quote: SaleQuote,val payment: SalePayment,
-    val consumption: Map<String,String>,val products: List<String>)
+    val consumption: Map<String,String>,val products: List<String>,val originalReceiptJson: String?=null,val paymentCorrections: String="[]")
 
 class SaleRepository(private val db: CatalogDatabase,private val clock: Clock=Clock.systemDefaultZone(),private val afterWrite: (() -> Unit)?=null) {
     private fun conflict(): Nothing=throw CatalogFailure("conflict","Заказ или оплата изменились. Проверьте оплату заново")
@@ -81,7 +81,8 @@ class SaleRepository(private val db: CatalogDatabase,private val clock: Clock=Cl
         if(cart.sessionId!=d.sessionId || work.cartRevision!=d.cartRevision || cart.lines.isEmpty()) conflict()
         if(cart.lines.any {CartEngine.stale(it,work.products)}) conflict()
         if(d.discounts.keys.any {id->cart.lines.none {it.id==id}}) conflict()
-        val quote=SaleMoney.quote(cart.lines.map {SaleLineInput(it.id,it.unitPrice,it.quantity,d.discounts[it.id])},cart.details.type,d.delivery)
+        com.mendelev.mpos.domain.loyalty.LoyaltyRules.requireVerified(cart,d.discounts)
+        val quote=com.mendelev.mpos.domain.loyalty.LoyaltyRules.quote(cart,d.discounts,d.delivery)
         val payment=SaleMoney.payments(quote,d.parts,shiftState.currentCash)
         val calculator=RecipeCalculator(cart.graph)
         val requests=CartEngine.requests(cart)
@@ -102,6 +103,7 @@ class SaleRepository(private val db: CatalogDatabase,private val clock: Clock=Cl
         db.sales().insert(ReceiptEntity(id,d.commandId,cart.sessionId,shift.id,number,now,quote.total,payment.cash,payment.card,payment.deliveryCashOut,
             ReceiptCodec.encode(cart,d,quote,payment,consumption,metadata)));wrote()
         if(OnlineOrderRepository(db).markPaid(cart.sessionId)) wrote()
+        if(LoyaltyOutbox(db).enqueue(db.sales().receipt(id)!!,cart,d.discounts)) wrote()
         productIds.forEach {db.sales().reference(ReceiptProductEntity(id,it));wrote()}
         consumption.toSortedMap().forEach {(productId,qty)->
             val balance=db.catalog().balance(productId) ?: throw CatalogFailure("stock","Не найден остаток ингредиента")

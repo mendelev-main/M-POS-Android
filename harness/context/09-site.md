@@ -9,3 +9,9 @@ N01.CFG/N02.INBOX/N03.ACCEPT/N03.READY/N04.PUB implemented locally: encrypted co
 Online state хранится отдельными backend-online:session документами: indexed per-session reads, активные задачи отдельно от завершённой истории. NativeRestoreValidator проверяет prefix/детерминированный ID/связи; restore не разрешает автоматическую пересылку на другой target. ACK обновления не заставляют пересчитывать/перерисовывать рабочую зону.
 
 N05/N06 и визуальная/staging приёмка не закрыты. Не объявлять live backend готовым по одному наличию кода/JVM tests. Один активный принимающий POS на deployment; перенос сетевого контекста Web-принятых заказов, редактирование category-online flags и merge online receipts — TODO. Pending/недоступность сервера не блокируют обычную локальную кассу.
+
+
+10.11: ON02 modal parity follow-up и ON06 admin silent remove. Web940/zero root padding/heading/type badge/scroll body/fixed actions. Новый admin action -> existing PATCH /status cancelled, reviewed handler без Telegram; это soft delete, не физический DELETE. Native role/generation + target/dataset + not locally accepted guards, only validated ACK then encrypted inbox2 tombstone; read inbox1. Поздний accept removed ID отклоняется. Никаких production мутаций/серверных изменений. CAS на сервере отсутствует; сохраняется режим одного принимающего POS, live/pixel acceptance pending. Контракт ONLINE-LOYALTY-PARITY.md.
+
+
+2026-11-10: Always available online через существующий quantity:null availability snapshot. Backend service source проверен, сервер не меняется. Stock/local sales unchanged; ../../docs/ONLINE-ALWAYS-AVAILABLE.md. Без production requests/push.

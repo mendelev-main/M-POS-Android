@@ -141,3 +141,23 @@ Shared MposDialog maxWidth — ограничение ширины без отд
 ## Верхняя системная строка Android
 
 По запросу владельца2026-11-07 в рабочих экранах и диалогах скрыта status bar с часами/батареей/уведомлениями. Единая policy `MposSystemBars.kt` применяется к MainActivity и отдельным Dialog windows; при возврате фокуса восстанавливается. Safe drawing для вырезов, клавиатуры и нижней навигации сохраняется. Политика не распространяется на внешние системные окна (например установщик APK). Системный жест временно показывает скрытую панель по [штатному Android API](https://developer.android.com/develop/ui/views/layout/immersive); это не kiosk-mode.
+
+
+### LO02 — профиль клиента Web05db2b7
+
+Для customer-profile-modal допускается custom heading общего MposDialog: аватар52, имя/телефон, Telegram; без дублирующего заголовка и крестика, закрытие «Готово»/dismiss. Card border1/radius14/padding14; gift choice radius11. Нейтральная outlined кнопка удаления с danger text — variant source loyalty-remove-customer. Выбранная cart-customer-button44/radius12 использует primaryContainer/primary border+ink (как accent-soft/accent Web); подробности и статус приёмки — ONLINE-LOYALTY-PARITY.md.
+
+
+10.11: PosControl.Receiving — Web receiving-resume light bg#ffe08a/ink#6b5200/border#e4be45; dark bg#695015/ink#ffe9aa/border#aa8434. Обе кнопки приёмки по заказу используют54dp/radius14, общие с PurchaseAction.
+
+
+10.11: Web online-order-modal940 — допустимый вариант shared MposDialog с нулевыми contentPadding/spacing и собственными heading/body/footer inset20. Значения по умолчанию28/16 для остальных окон сохранены. Header eyebrow12/title18, type badge radius8, section radius16, fixed bottom actions; admin-only destructive action — MposButton Danger.
+
+
+10.11: customer-picker variant560dp — heading44/title18/44, shared close и primary add icon, result avatar44/card radius14. Customer input variant из android-customer-input.js:56dp pill, border1.5, immutable country/suffix prefix, text20; новый клиент460dp. MposPosIcon получил optional tint (default unchanged), чтобы shared add на primary surface использовал onPrimary.
+
+## Временные сообщения об успехе — уточнение10.11.2026
+
+В товарах постоянные зелёные MposNotice для успешного save/delete/reorder заменены компактным MposTransientNotice: overlay сверху по центру (отступ80dp под шапкой), max-width400, radius16, padding18×12, shared primaryContainer, тонкая рамка и вежливый accessibility live region. Сообщение не занимает строку в потоке страницы и исчезает через2500ms.
+
+TransientMessages(viewModelScope) отделён от validation errors: повторный успех, в том числе с тем же текстом, получает новый срок2500ms; старый timer отменяется. Таймер продолжает работать при уходе с экрана и не воспроизводит устаревший баннер при возврате. Ошибки остаются в форме; overlay скрыт при активной ошибке. Показ успеха только после успешной записи. Компонент пригоден для дальнейшего применения в других модулях; массовая замена всех сообщений приложения этим изменением не выполнялась.

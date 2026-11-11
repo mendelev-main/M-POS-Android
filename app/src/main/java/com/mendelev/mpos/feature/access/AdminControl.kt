@@ -69,7 +69,7 @@ class AdminViewModel : ViewModel() {
             modifier=Modifier.testTag("adminControl"))
     }
     if(opened && !session.active) MposDialog("Администрирование",{opened=false;password=""},closable=!ui.busy) {
-        MposField(password,{password=it.take(128)},"Пароль администратора",Modifier.testTag("adminPassword"),
+        MposField(password,{password=com.mendelev.mpos.core.access.RemotePasswordInput.restore(password,it)},"Пароль администратора",Modifier.testTag("adminPassword"),
             enabled=!ui.busy,password=true)
         ui.error?.let {MposNotice(it,true)}
         MposButton("Войти",{val submitted=password.toCharArray();password="";model.login(submitted)},

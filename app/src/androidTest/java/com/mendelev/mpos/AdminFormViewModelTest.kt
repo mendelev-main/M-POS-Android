@@ -6,6 +6,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.mendelev.mpos.core.access.Administration
 import com.mendelev.mpos.data.local.*
 import com.mendelev.mpos.domain.catalog.*
+import com.mendelev.mpos.domain.staff.*
 import com.mendelev.mpos.domain.warehouse.*
 import com.mendelev.mpos.feature.products.*
 import com.mendelev.mpos.feature.suppliers.*
@@ -57,48 +58,50 @@ class AdminFormViewModelTest {
             }
             waitFor {!receiving.state.value.pending && receiving.state.value.form!=null && !counts.state.value.pending && counts.state.value.countForm!=null}
             withContext(Dispatchers.Main) {receiving.change {it.copy(invoiceNumber="Не сохраняли")};counts.countRaw("3")}
+            waitFor {!purchase.state.value.saving && !purchase.state.value.dirty}
             val documents=db.workspace().documents();val savedProduct=db.catalog().draft();val balance=db.catalog().balance("p")
             relogin()
-            waitFor {products.state.value.draft==null && suppliers.state.value.form==null && staff.state.value.form==null && purchase.state.value.form==null && receiving.state.value.form==null && counts.state.value.countForm==null && !counts.state.value.canEdit}
+            waitFor {products.state.value.draft==null && staff.state.value.form==null && counts.state.value.countForm==null && !counts.state.value.canEdit}
             assertEquals(documents,db.workspace().documents());assertEquals(savedProduct,db.catalog().draft());assertEquals(balance,db.catalog().balance("p"))
             assertNotNull(receiving.state.value.snapshot);assertNotNull(counts.state.value.snapshot);assertNotNull(purchase.state.value.snapshot)
-            withContext(Dispatchers.Main) {products.save();suppliers.save();staff.save();purchase.save();receiving.save();counts.saveCount()}
+            withContext(Dispatchers.Main) {products.save();staff.save();counts.saveCount()}
             assertEquals(documents,db.workspace().documents());assertEquals(balance,db.catalog().balance("p"))
+            assertEquals("Несохранённый поставщик",suppliers.state.value.form!!.name)
             // Explicit fresh reentry can recover durable business drafts, never the transient invoice/count/name edits.
             withContext(Dispatchers.Main) {products.edit();receiving.refresh();counts.refresh()}
             waitFor {!products.state.value.busy && products.state.value.draft!=null && !receiving.state.value.pending && !counts.state.value.pending}
             assertEquals("Сохранённый ввод товара",products.state.value.draft!!.name)
-            assertNull(receiving.state.value.form);assertNull(counts.state.value.countForm)
+            assertNotNull(purchase.state.value.form);assertEquals("Не сохраняли",receiving.state.value.form!!.invoiceNumber);assertNull(counts.state.value.countForm)
             withContext(Dispatchers.Main) {receiving.standalone()};waitFor {!receiving.state.value.pending}
-            assertEquals("",receiving.state.value.form!!.invoiceNumber)
+            assertEquals("Не сохраняли",receiving.state.value.form!!.invoiceNumber)
         } finally {withContext(Dispatchers.Main) {store.clear()};db.close()}
     }
-    private class Uncertain: SupplierAccess {
+    private class Uncertain: EmployeeAccess {
         @Volatile var failOutcome=true
         @Volatile var committed=false
         @Volatile var commits=0
-        var rows=emptyList<Supplier>()
-        override suspend fun snapshot()=SupplierSnapshot("owner",rows,emptyList())
-        override suspend fun outcome(command: SupplierCommand): String? {if(failOutcome) error("read unavailable");return if(committed) (command.action as SupplierAction.Save).id else null}
-        override suspend fun commit(command: SupplierCommand): String {commits++;error("must not be retried under a new login")}
+        var rows=emptyList<Employee>()
+        override suspend fun snapshot()=EmployeeSnapshot("owner",rows,null)
+        override suspend fun outcome(command: EmployeeCommand): String? {if(failOutcome) error("read unavailable");return if(committed) (command.action as EmployeeAction.Save).id else null}
+        override suspend fun commit(command: EmployeeCommand): String {commits++;error("must not be retried under a new login")}
     }
     @Test fun unknownResultRemainsReadableAfterLogoutButMissingResultCannotResubmitUnderNewLogin(): Unit=runBlocking {
         for(known in listOf(false,true)) {
             val store=ViewModelStore();val access=Uncertain()
             try {
                 val model=withContext(Dispatchers.Main) {ViewModelProvider(store,object: ViewModelProvider.Factory {
-                    @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=SupplierViewModel(access) as T
-                })[SupplierViewModel::class.java]}
+                    @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=EmployeeViewModel(access) as T
+                })[EmployeeViewModel::class.java]}
                 waitFor {!model.state.value.pending}
                 withContext(Dispatchers.Main) {model.edit();model.change {it.copy(name="Поставщик")};model.save()}
                 waitFor {!model.state.value.pending && model.state.value.unresolved!=null}
                 val command=model.state.value.unresolved!!
                 relogin();waitFor {model.state.value.form==null}
                 access.committed=known;access.failOutcome=false
-                if(known) access.rows=listOf(Supplier((command.action as SupplierAction.Save).id,"Поставщик",1,emptySet()))
+                if(known) access.rows=listOf(Employee((command.action as EmployeeAction.Save).id,"Поставщик","","employee",1))
                 withContext(Dispatchers.Main) {model.retry()};waitFor {!model.state.value.pending && model.state.value.unresolved==null}
                 assertEquals(0,access.commits);assertNull(model.state.value.form)
-                assertEquals(if(known) 1 else 0,model.state.value.snapshot!!.suppliers.size)
+                assertEquals(if(known) 1 else 0,model.state.value.snapshot!!.employees.size)
                 assertNotNull(command.commandId)
             } finally {withContext(Dispatchers.Main) {store.clear()}}
         }

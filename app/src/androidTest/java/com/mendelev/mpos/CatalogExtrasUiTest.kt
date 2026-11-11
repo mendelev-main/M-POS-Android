@@ -36,9 +36,9 @@ class CatalogExtrasUiTest {
         compose.onNodeWithTag("productName").performTextInput(coffee)
         compose.onNodeWithTag("productPrice").performTextReplacement("3")
         compose.onNodeWithTag("productSection:modifiers").performClick()
-        compose.onNodeWithText("Добавить группу").performScrollTo().performClick()
+        compose.onNodeWithTag("modifierAddGroup").performScrollTo().performClick()
         compose.onNodeWithTag("modifierGroup0").performScrollTo().performTextInput("Молоко на выбор")
-        compose.onNodeWithText("Выбрать вариант 1").performScrollTo().performClick()
+        compose.onNodeWithTag("modifierAdd0").performScrollTo().performClick()
         compose.onNodeWithText(milk).performClick()
         compose.onNodeWithTag("modifierQty0-0").performScrollTo().performTextReplacement("0.05")
         compose.onNodeWithTag("modifierPrice0-0").performScrollTo().performTextReplacement("1.50")
@@ -67,7 +67,7 @@ class CatalogExtrasUiTest {
         compose.onNodeWithTag("productSection:modifiers").performClick()
         compose.onNodeWithTag("modifierPrice0-0").performScrollTo().assertTextContains("1.50")
         compose.onNodeWithTag("productSection:main").performClick()
-        compose.onNodeWithText("Убрать фото").performScrollTo().assertExists()
+        compose.onNodeWithText("Удалить фото").performScrollTo().assertExists()
         compose.waitUntil(20_000) { compose.onAllNodesWithTag("productPhoto").fetchSemanticsNodes().isNotEmpty() }
         val folder=java.io.File(compose.activity.filesDir,"qa").apply { mkdirs() }
         instrumentation.uiAutomation.takeScreenshot()?.let { screenshot ->
@@ -81,7 +81,7 @@ class CatalogExtrasUiTest {
         compose.waitUntil(20_000) { model.state.value.draft!=null && !model.state.value.busy }
         assertEquals(prepared,model.state.value.draft!!.photoId)
         assertEquals(groupId,model.state.value.draft!!.modifierGroups.single().id)
-        compose.onNodeWithText("Убрать фото").performScrollTo().performClick()
+        compose.onNodeWithText("Удалить фото").performScrollTo().performClick()
         assertNull(model.state.value.draft!!.photoId)
         compose.onNodeWithTag("productEditorBack").performClick()
         compose.onNodeWithText("Не сохранять").performClick()

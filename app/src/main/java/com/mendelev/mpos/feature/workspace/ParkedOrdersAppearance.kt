@@ -2,6 +2,7 @@ package com.mendelev.mpos.feature.workspace
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import com.mendelev.mpos.core.ui.isMposDarkTheme
 import androidx.compose.foundation.layout.*
@@ -34,7 +35,8 @@ import java.util.Locale
 
 /** C09: 820px / 24px inset / 44px header / 18px gap / 66px cards in pinned Web. */
 @Composable internal fun ParkedOrdersWindow(orders: List<ParkedOrder>,busy: Boolean,message: String?,
-    stale: (ParkedOrder)->Boolean,onClose: ()->Unit,onOpen: (ParkedOrder)->Unit,onDelete: (ParkedOrder)->Unit) {
+    stale: (ParkedOrder)->Boolean,onClose: ()->Unit,onOpen: (ParkedOrder)->Unit,onDelete: (ParkedOrder)->Unit,
+    onlineAction: @Composable (ParkedOrder)->Unit={}) {
     val sorted=remember(orders) {
         val collator=(android.icu.text.Collator.getInstance(Locale.forLanguageTag("ru")) as android.icu.text.RuleBasedCollator).apply {numericCollation=true;strength=android.icu.text.Collator.PRIMARY}
         orders.sortedWith {a,b->
@@ -69,8 +71,14 @@ import java.util.Locale
                                                 Text(order.cart.details.label.ifBlank {"Без подписи"},fontSize=14.sp,lineHeight=19.6.sp,fontWeight=FontWeight.Bold)
                                                 Text(SimpleDateFormat("dd.MM, HH:mm",Locale.forLanguageTag("ru")).format(Date(order.cart.createdAt.takeIf {it>0} ?: order.parkedAt)),fontSize=11.sp,lineHeight=16.5.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
-                                            if(compact) Column(Modifier.width(96.dp),horizontalAlignment=Alignment.End,verticalArrangement=Arrangement.spacedBy(4.dp)) {ParkedTotal(order);ParkedType(order.cart.details.type)}
-                                            else {Box(Modifier.width(110.dp)) {ParkedType(order.cart.details.type)};Box(Modifier.width(104.dp),contentAlignment=Alignment.CenterEnd) {ParkedTotal(order)}}
+                                            if(compact) Column(Modifier.widthIn(max=220.dp),horizontalAlignment=Alignment.End,verticalArrangement=Arrangement.spacedBy(4.dp)) {
+                                                ParkedTotal(order)
+                                                Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {onlineAction(order);ParkedType(order.cart.details.type)}
+                                            } else {
+                                                onlineAction(order)
+                                                Box(Modifier.width(110.dp)) {ParkedType(order.cart.details.type)}
+                                                Box(Modifier.width(104.dp),contentAlignment=Alignment.CenterEnd) {ParkedTotal(order)}
+                                            }
                                         }
                                     }
                                     MposPosControl("",{onDelete(order)},Modifier.size(40.dp).testTag("parkedDelete:${order.id}").semantics {contentDescription="Удалить отложенный заказ"},!busy,PosControl.Delete,40.dp,10.dp,icon="delete")
@@ -92,16 +100,28 @@ import java.util.Locale
 @Composable private fun ParkedTotal(order: ParkedOrder) {
     Text(com.mendelev.mpos.domain.shift.ShiftRules.money(orderSettingsTotal(order.cart,emptyMap(),order.cart.details.deliveryTariff)),fontSize=16.sp,fontWeight=FontWeight.ExtraBold)
 }
-@Composable private fun ParkedType(type: String) {
+@Composable internal fun ParkedType(type: String,compact: Boolean=false) {
     val dark=isMposDarkTheme()
     val palette=when(type) {
         "takeaway"->if(dark) listOf(0xFF3A3022,0xFFE9C989,0xFF5A4A30) else listOf(0xFFFFF4E9,0xFF8A5A17,0xFFF5DCB8)
         "delivery"->if(dark) listOf(0xFF26334A,0xFFBFD5FF,0xFF3C506F) else listOf(0xFFE8F0FF,0xFF31558F,0xFFC7D7F2)
         else->if(dark) listOf(0xFF1D4638,0xFF8FE0BE,0xFF43C38D) else listOf(0xFFE3F6E8,0xFF26733A,0xFFC9EBCF)
     }
-    Surface(shape=RoundedCornerShape(8.dp),color=Color(palette[0]),contentColor=Color(palette[1]),border=BorderStroke(1.dp,Color(palette[2]))) {
-        Row(Modifier.padding(horizontal=9.dp,vertical=6.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(5.dp)) {
-            MposPosIcon(type,Modifier.size(13.dp));Text(OrderRules.typeLabel(type),fontSize=11.sp,lineHeight=14.3.sp,fontWeight=FontWeight.Bold)
+    Surface(modifier=Modifier.width(if(compact)128.dp else 110.dp).testTag("parkedType:$type"),shape=RoundedCornerShape(8.dp),color=Color(palette[0]),contentColor=Color(palette[1]),border=BorderStroke(1.dp,Color(palette[2]))) {
+        Row(Modifier.height(if(compact) 23.dp else 28.dp).padding(horizontal=if(compact) 7.dp else 9.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.Center) {
+            MposPosIcon(type,Modifier.size(if(compact) 12.dp else 13.dp));Spacer(Modifier.width(5.dp));Text(OrderRules.typeLabel(type),fontSize=if(compact) 10.sp else 11.sp,lineHeight=if(compact) 13.sp else 14.3.sp,fontWeight=FontWeight.Bold,maxLines=1)
         }
+    }
+}
+
+
+/** ON04 variant: same radius, insets and typography as ParkedType; green action before type. */
+@Composable internal fun ParkedReadyBadge(label: String,enabled: Boolean,onClick: ()->Unit,modifier: Modifier=Modifier) {
+    val dark=isMposDarkTheme()
+    val background=if(dark) Color(0xFF1D4638) else Color(0xFFE3F6E8)
+    val ink=if(dark) Color(0xFF8FE0BE) else Color(0xFF26733A)
+    val border=if(dark) Color(0xFF43C38D) else Color(0xFFC9EBCF)
+    Surface(modifier.clickable(enabled=enabled,role=androidx.compose.ui.semantics.Role.Button,onClick=onClick),shape=RoundedCornerShape(8.dp),color=background,contentColor=ink,border=BorderStroke(1.dp,border)) {
+        Text(label,Modifier.padding(horizontal=9.dp,vertical=6.dp),fontSize=11.sp,lineHeight=14.3.sp,fontWeight=FontWeight.Bold,maxLines=1)
     }
 }
