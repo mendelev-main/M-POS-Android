@@ -41,7 +41,7 @@ object LoyaltyEffectCodec {
         return JSONObject().put("orderId",receiptId).put("customerId",selection.customer.id)
             .put("consentVersion",if(selection.customer.active) selection.customer.consentVersion else JSONObject.NULL)
             .put("occurredAt",Instant.ofEpochMilli(time).toString())
-            .put("items",JSONArray(cart.lines.map {line->JSONObject().put("productId",LoyaltyRules.externalId(cart,line.productId)).put("quantity",line.quantity.toBigDecimal())}))
+            .put("items",JSONArray(cart.lines.map {line->JSONObject().put("productId",LoyaltyRules.externalId(cart,line.productId)).put("quantity",line.quantity.toBigDecimal()).put("unitPrice",line.unitPrice.toBigDecimal())}))
             .put("redemptions",redemptions).put("rewardAllocations",allocations).toString()
     }
 }

@@ -1620,3 +1620,11 @@ BackendPublicationTest reached HTTP after Workspace initialize and exposed inval
 ## 2026-11-11 — CI43009786744 / inventory record modal selector
 
 Run https://github.com/mendelev-main/M-POS-Android/actions/runs/43009786744: 399/400 Android tests passed; InventoryUiTest failed at line92 because the history modal status has no scrollable ancestor. Replaced performScrollTo with assertIsDisplayed for both completed and cancelled history statuses. Exact stock, movement count, loss, recreation and cancellation assertions retained; production code and CI gates unchanged. Local compileDebugAndroidTestKotlin passed; git diff --check passed. Push authorized by owner; remote pipeline completion is checked by owner, not monitored in this turn.
+
+2026-11-11 — LO03/LO04 receipt unitPrice correction, local checkout in Codex/new-chat.
+Gradle 8.13/JDK17/API36, testDebugUnitTest --tests LoyaltyReceiptPriceTest
+--tests LoyaltyRulesTest + compileDebugAndroidTestKotlin: BUILD SUCCESSFUL (1m23s),
+7 JVM tests/0 failures. Kotlin daemon could not write timestamp under sandboxed
+~/Library/Application Support/kotlin/daemon; Gradle's normal fallback compilation
+completed successfully. Log: ../work/android-loyalty-price-tests.log.
+No device execution, payment, Telegram or production sync; no push/release yet.

@@ -95,3 +95,13 @@ Implemented locally по Web05db2b7 loyalty.js openCustomerPicker/createCustomer
 Workspace persist callback не закрывает модальное окно и публикует подтверждённый снимок до продолжения consent; final save берёт актуальную revision и проверяет прежний sessionId. Локальная запись по-прежнему не является оплатой/начислением. Backend не изменялся; реальные клиенты не создавались и consent не отправлялся для автотестов. Pixel/device приёмка владельца pending.
 
 10.11.2026 ON07 visual follow-up: Web main order frame/sections/comment/ready control colours/selection, admin-only silent deletion рядом в footer48dp. RECEIPT-PAYMENT-CORRECTION.md; endpoint/protocol/backend прежние. Device/pixel pending.
+
+## 11.11 — LO03/LO04 единичное начисление и нулевая строка сайта
+
+Backend получает два сообщения об одной веб-покупке: snapshot для резерва и
+receipt для лояльности. Начисление остаётся только у receipt (backend fix015).
+Native immutable items теперь включает unitPrice; бесплатная quoted строка сайта
+не начисляет прогресс и не требует второго redemption. orderId/occurredAt,
+количества и очередь повторов сохранены. Старые outbox body не переписываются.
+7 адресных JVM tests и компиляция instrumentation пройдены локально; публикация,
+установка и физическая приёмка pending. См. harness/context/06-customers.md.

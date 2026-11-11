@@ -17,3 +17,19 @@ Consent берём с сервера, с актуальной версией и 
 
 
 10.11 LO02 follow-up: CustomerPickerWindow560 и CustomerCreateWindow460 по loyalty.js+android-customer-input.js. Pill56/fixed +375 prefix/9 national digits, suffix4/stale search guard/cards/avatar/select, no redundant footer; optional enrollment after create. Selected/create без enrollment закрывает modal; GET profile failure не теряет identity и не выдумывает rewards. После create+enroll сначала durable attach через workspace command, затем consent; cancel сохраняет attach. Подтверждённый server ID кэшируется в окне при ошибке local attach, no second create. Gift checkbox persist immediate/rollback. Подробности ONLINE-LOYALTY-PARITY.md; UI/live acceptance pending.
+
+## 11.11 — цена исторической строки в событии лояльности
+
+По подтверждённому сообщению владельца один веб-товар давал два очка. Найдены
+два независимых сообщения: inventory settledWebOrderIds и durable receipt
+/api/loyalty/sales. Исправление backend вынесено в отдельный пакет: начисляет
+только receipt, snapshot освобождает резерв. Android сохраняет unitPrice каждой
+строки в неизменяемом body LoyaltyEffectCodec: backend исключает нулевую цену
+уже подаренной на сайте позиции, без повторного списания подарка. Идентификатор
+чека/время/количества/redemptions не меняются, outbox replay остаётся идентичным.
+Существующие сохранённые тела не переписываются. Нужна установка обновления для
+новых событий с ценами; старые события без поля сохраняют legacy semantics.
+
+LO03/LO04 implemented locally: две JVM регрессии (paid+quoted zero и all-free),
+пять существующих LoyaltyRulesTest и компиляция androidTestKotlin пройдены.
+Live/device приёмка и публикация pending; реальные продажи/синхронизация не запускались.
