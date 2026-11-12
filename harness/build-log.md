@@ -1817,3 +1817,19 @@ JDK17/java.io.tmpdir=/private/tmp ./gradlew :app:compileDebugKotlin --offline --
 Harness preflight passed; git diff --check passed. Ранее адресные JVM20 складских и JVM39 денежных/отчётных регрессий прошли (команды выше). Предрелизная :app:compileDebugAndroidTestKotlin и :app:lintDebug: первый offline запуск остановился из-за отсутствия com.android.tools.lint:lint-gradle:31.13.2 в локальном кэше; online повтор загрузил зависимости и завершился BUILD SUCCESSFUL1m54s. При подготовке скорректирован ещё один исторический cash expectation в SalesReportRepositoryTest: cash1000 вместо500, без выдачи курьеру. Runtime instrumentation/ручная приёмка локально не запускались; полный CI/signing/install/release выполнит штатный main workflow. Remote main перед отправкой совпадал с локальным HEAD. Не ожидать завершения удалённого pipeline по ранее заданному workflow владельца.
 
 После последней правки expectation повторная :app:compileDebugAndroidTestKotlin --offline — BUILD SUCCESSFUL29s. Все63 файла подготовлены одним согласованным пакетом.
+
+## 2026-11-12 — Чек оплачен: убрать технический статус
+
+Из paid dialog удалён текст PrintRuntime.status и ненужная подписка на поток. Финансовый чек, сообщения об оплате, Печать/Готово сохранены; automatic print/drawer commands не менялись. Документация/parity обновлены. JDK17/java.io.tmpdir=/private/tmp :app:compileDebugKotlin --offline --no-watch-fs -Pkotlin.compiler.execution.strategy=in-process — BUILD SUCCESSFUL56s; git diff --check passed. UI-тесты не добавлялись, ручная приёмка владельцем pending. Без commit/push.
+
+## 2026-11-12 — SF14: простое подтверждение приёмки
+
+ReceivingConfirmationWindow заменено компактным вопросом с двумя действиями Отмена/Подтвердить. Зелёная кнопка формы — Принять поставку. Подробная таблица/суммы/повторная себестоимость убраны. При hasOverage в вопросе явно указано превышение; подтверждение разрешает его той же командой. Отмена не вызывает post, черновик остаётся. Действующий ReceivingPostingRepository сохраняет склад, средневзвешенную себестоимость и закрытие заказа в withTransaction с прежними revision/idempotency guards. Экономические вычисления/БД не изменялись.
+
+JDK17/java.io.tmpdir=/private/tmp :app:compileDebugKotlin --offline --no-watch-fs -Pkotlin.compiler.execution.strategy=in-process — BUILD SUCCESSFUL1m5s. git diff --check passed. UI-тесты не добавлялись; ручная приёмка владельцем pending. Документация/parity/context обновлены. Без commit/push.
+
+## 2026-11-12 — SF15: обязательная проверка жёлтых сумм
+
+reviewAmount снимает жёлтое выделение касанием/фокусом без изменения total; amountsReviewed блокирует Next и прямой preview, пока хотя бы одна видимая строка остаётся жёлтой. Сообщение просит коснуться полей. Сохраняется автопересчёт текущей себестоимости при изменении количества: изменившаяся сумма вновь жёлтая. Ручной total снимает auto suggestion по прежнему правилу. MposSupplyField слушает pointer-down без consume для повторного тапа уже сфокусированного поля, обычный ввод/выделение не перехватываются. Повторные callbacks идемпотентны. Команды проведения/БД не менялись.
+
+JDK17/java.io.tmpdir=/private/tmp ./gradlew :app:compileDebugKotlin :app:testDebugUnitTest --tests com.mendelev.mpos.ReceivingAutosaveTest --offline --no-watch-fs -Pkotlin.compiler.execution.strategy=in-process — BUILD SUCCESSFUL1m11s. После уточнения assertion без привязки к UI-тексту повтор адресного теста SUCCESS12s. XML8tests/0failures/0errors/0skipped: две строки требуют проверки обеих, касание не меняет сумму/склад, прямой preview блокируется, автопересчёт требует повторной проверки, ручная сумма работает. git diff --check passed. Compose/UI tests не добавлялись; ручная приёмка pending. Документация/parity/context обновлены. Без commit/push.

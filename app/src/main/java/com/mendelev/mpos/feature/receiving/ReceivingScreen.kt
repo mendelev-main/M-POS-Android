@@ -41,7 +41,6 @@ import java.math.BigDecimal
     LaunchedEffect(d?.id) {if(d==null) expanded=false else if(d.order==null) expanded=true}
     var showHistory by rememberSaveable {mutableStateOf(false)}
     var detail by rememberSaveable {mutableStateOf<String?>(null)}
-    var overage by rememberSaveable {mutableStateOf(false)}
     var search by rememberSaveable {mutableStateOf("")}
     LaunchedEffect(post.committed,post.pending) {
         if(post.committed!=null && !post.pending) {model.dismissPreview();model.refresh();expanded=false;posting.acknowledge();if(onSection!=null) onSection(MposFolderTab.History) else onBack()}
@@ -77,9 +76,9 @@ import java.math.BigDecimal
     }
     val document: @Composable ()->Unit={
         if(d!=null) ReceivingDocument(d,snapshot?.suppliers.orEmpty(),editable,
-            onExit=::back,onNext={overage=false;model.next()},onSupplier=model::supplier,onMeta={next->model.change {next}},
+            onExit=::back,onNext=model::next,onSupplier=model::supplier,onMeta={next->model.change {next}},
             onLine=model::line,onUnit=model::unit,onMode=model::priceMode,onAdd={search="";dialog="product"},onRemove=model::remove,
-            navigationEnabled=!locked,suggested=ui.suggestedAmounts,onAmount=model::amount)
+            navigationEnabled=!locked,suggested=ui.suggestedAmounts,onReviewAmount=model::reviewAmount,onAmount=model::amount)
     }
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding().semantics {testTagsAsResourceId=true}.testTag("receivingScreen")) {
         MposAppBar("Приёмка",navigationEnabled=!locked && dialog==null && preview==null) {}
@@ -94,8 +93,8 @@ import java.math.BigDecimal
             }
     }
     post.history.find {it.id==detail}?.let {ReceivingRecordWindow(it) {detail=null}}
-    if(preview!=null && dialog==null) ReceivingConfirmationWindow(preview,d?.order!=null,locked,ui.dirty,overage,{overage=!overage},model::dismissPreview,draft=d) {
-        posting.post(snapshot!!.ownerId,snapshot.records.single {it.orderId==d!!.key}.revision,d!!,overage)
+    if(preview!=null && dialog==null) ReceivingConfirmationWindow(preview,locked,ui.dirty,model::dismissPreview) {
+        posting.post(snapshot!!.ownerId,snapshot.records.single {it.orderId==d!!.key}.revision,d!!,preview.hasOverage)
     }
     if(dialog!=null) MposDialog("Добавить товар",{if(!locked) dialog=null},!locked) {
         when(dialog) {

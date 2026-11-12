@@ -95,7 +95,7 @@ internal fun receivingDiscrepancy(record: PostedReceiving)=record.draft.order!=n
 @Composable internal fun ReceivingDocument(d: ReceivingDraft,suppliers: List<ReceivingSupplier>,enabled: Boolean,onExit: ()->Unit,onNext: ()->Unit,
     onSupplier: (String)->Unit,onMeta: (ReceivingDraft)->Unit,onLine: (String,(ReceivingLine)->ReceivingLine)->Unit,onUnit: (String,String)->Unit,
     onMode: (String,String)->Unit,onAdd: ()->Unit,onRemove: (String)->Unit,navigationEnabled: Boolean=enabled,
-    suggested: Set<String> = emptySet(),onAmount: (String,String)->Unit={id,value->onLine(id) {it.copy(total=value,priceMode="total",unitPrice="")}}) {
+    suggested: Set<String> = emptySet(),onReviewAmount: (String)->Unit={},onAmount: (String,String)->Unit={id,value->onLine(id) {it.copy(total=value,priceMode="total",unitPrice="")}}) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Text(d.supplierName,fontSize=17.sp,fontWeight=FontWeight.Bold)
         Row(Modifier.fillMaxWidth().padding(top=18.dp,bottom=18.dp),horizontalArrangement=Arrangement.spacedBy(16.dp)) {
@@ -104,7 +104,7 @@ internal fun receivingDiscrepancy(record: PostedReceiving)=record.draft.order!=n
         }
         if(d.order==null) PurchaseSupplierSelect("Поставщик",d.supplier?.id.orEmpty(),listOf("" to "Без поставщика")+suppliers.map {it.id to it.name},onSupplier,enabled)
         Column(Modifier.fillMaxWidth()) {
-            d.lines.forEach {l->key(l.product.id) {ReceivingInvoiceRow(l,enabled,onLine,onUnit,d.order==null,onRemove,l.product.id in suggested,onAmount)}}
+            d.lines.forEach {l->key(l.product.id) {ReceivingInvoiceRow(l,enabled,onLine,onUnit,d.order==null,onRemove,l.product.id in suggested,onAmount,onReviewAmount)}}
             if(d.order==null) PurchaseAction("Добавить товар",onAdd,enabled=enabled,style=ActionStyle.Outline)
         }
         val total=runCatching {receivingMoney(d.lines.fold(0L) {sum,l->Math.addExact(sum,ReceivingRules.lineTotal(l) ?: 0L)})}.getOrDefault("—")
@@ -114,14 +114,14 @@ internal fun receivingDiscrepancy(record: PostedReceiving)=record.draft.order!=n
         }
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
             MposSupplyAction("Продолжить позже",onExit,enabled=navigationEnabled,kind=PosControl.Receiving,height=44.dp,radius=16.dp)
-            MposSupplyAction("Проверить приёмку",onNext,enabled=enabled && d.lines.isNotEmpty(),kind=PosControl.Cash,height=44.dp,radius=16.dp)
+            MposSupplyAction("Принять поставку",onNext,enabled=enabled && d.lines.isNotEmpty(),kind=PosControl.Cash,height=44.dp,radius=16.dp)
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable private fun ReceivingInvoiceRow(l: ReceivingLine,enabled: Boolean,onLine: (String,(ReceivingLine)->ReceivingLine)->Unit,
-    onUnit: (String,String)->Unit,removable: Boolean,onRemove: (String)->Unit,suggested: Boolean,onAmount: (String,String)->Unit) {
+    onUnit: (String,String)->Unit,removable: Boolean,onRemove: (String)->Unit,suggested: Boolean,onAmount: (String,String)->Unit,onReviewAmount: (String)->Unit) {
     val p=l.product;val packed=l.unit in PurchaseDraftRules.packs
     BoxWithConstraints(Modifier.fillMaxWidth().padding(vertical=12.dp)) {
         val wide=maxWidth>=820.dp
@@ -140,7 +140,7 @@ internal fun receivingDiscrepancy(record: PostedReceiving)=record.draft.order!=n
                 Spacer(Modifier.weight(1f))
             }
             MposSupplyField("Сумма строки, BYN",l.total,{onAmount(p.id,it)},Modifier.weight(1f),enabled,
-                suggested=suggested,tag="receivingTotal:${p.id}")
+                suggested=suggested,onTouch={onReviewAmount(p.id)},tag="receivingTotal:${p.id}")
             if(removable) MposSupplyAction("",{onRemove(p.id)},Modifier.size(44.dp),enabled,PosControl.Delete,height=44.dp,radius=12.dp,icon="close")
         }}
         if(wide) Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(14.dp)) {

@@ -24,6 +24,16 @@ class ReceivingViewModel(private val access: ReceivingAccess,private val autoSav
     private var autoJob: Job?=null
     private var autoCommand: ReceivingCommand?=null
     private val suggestedPrices=mutableMapOf<String,java.math.BigDecimal>()
+    fun reviewAmount(id: String) {
+        if(!available() || id !in state.value.suggestedAmounts) return
+        update {it.copy(suggestedAmounts=it.suggestedAmounts-id,message=null)}
+    }
+    private fun amountsReviewed(): Boolean {
+        val ui=state.value
+        if(ui.form?.lines?.any {it.product.id in ui.suggestedAmounts}!=true) return true
+        update {it.copy(preview=null,message="Нужно проверить поля суммы. Каснитесь каждого жёлтого поля «Сумма строки», чтобы снять выделение.")}
+        return false
+    }
     fun amount(id: String,value: String) {
         if(!available()) return
         val before=state.value.form?.lines?.find {it.product.id==id} ?: return
@@ -141,11 +151,13 @@ class ReceivingViewModel(private val access: ReceivingAccess,private val autoSav
         val before=state.value.form?.lines?.find {it.product.id==id} ?: return
         val edited=edit(before)
         if(edited.total!=before.total) {suggestedPrices.remove(id);update {it.copy(suggestedAmounts=it.suggestedAmounts-id)}}
-        change {d->d.copy(lines=d.lines.map {l->if(l.product.id!=id) l else edited.let {next->
-            val price=suggestedPrices[id]
-            if(price!=null && next.total==l.total && next.priceMode=="total") next.copy(total=ReceivingAmountDefaults.amount(next,price).orEmpty())
-            else if(next.priceMode=="total" && next.quantity.trim().replace(',','.').toBigDecimalOrNull()?.signum()==0) next.copy(total="0") else next
-        }})}
+        val price=suggestedPrices[id]
+        val next=if(price!=null && edited.total==before.total && edited.priceMode=="total") {
+            val total=ReceivingAmountDefaults.amount(edited,price).orEmpty()
+            if(total!=before.total) update {it.copy(suggestedAmounts=it.suggestedAmounts+id)}
+            edited.copy(total=total)
+        } else if(edited.priceMode=="total" && edited.quantity.trim().replace(',','.').toBigDecimalOrNull()?.signum()==0) edited.copy(total="0") else edited
+        change {d->d.copy(lines=d.lines.map {if(it.product.id==id) next else it})}
     }
     fun priceMode(id: String,next: String) {
         try {line(id) {ReceivingRules.priceMode(it,next)}}
@@ -158,7 +170,7 @@ class ReceivingViewModel(private val access: ReceivingAccess,private val autoSav
     fun discard() {if(!state.value.pending && state.value.unresolved==null) update {it.copy(form=it.saved,preview=null,message=null)}}
     fun close() {if(!state.value.pending && state.value.unresolved==null && !state.value.dirty) update {it.copy(form=null,preview=null,message=null)}}
     fun saveAndExit() {if(autoSaveEnabled) afterAutosave {close()} else saveThen {close()}}
-    fun next() {if(autoSaveEnabled) {afterAutosave {preparePreview()};return};if(state.value.dirty) saveThen {preview()} else preview()}
+    fun next() {if(!available() || !amountsReviewed()) return;if(autoSaveEnabled) {afterAutosave {preparePreview()};return};if(state.value.dirty) saveThen {preview()} else preview()}
     private fun saveThen(after: ()->Unit) {
         if(!available()) return
         val expected=state.value.form ?: return
@@ -228,7 +240,7 @@ class ReceivingViewModel(private val access: ReceivingAccess,private val autoSav
     fun rebase()=query(true)
     fun preview()=query(false)
     private fun query(rebase: Boolean) {
-        if(!available()) return
+        if(!available() || !rebase && !amountsReviewed()) return
         val ui=state.value;val d=ui.form ?: return
         update {it.copy(pending=true,preview=null,message=null)}
         viewModelScope.launch {

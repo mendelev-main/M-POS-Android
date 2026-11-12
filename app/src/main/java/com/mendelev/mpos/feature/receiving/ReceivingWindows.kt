@@ -13,35 +13,15 @@ import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.domain.warehouse.*
 import com.mendelev.mpos.feature.purchasing.purchaseDate
 import java.math.BigDecimal
-@Composable internal fun ReceivingConfirmationWindow(preview: ReceivingPreview,linked: Boolean,locked: Boolean,dirty: Boolean,
-    overage: Boolean,onOverage: ()->Unit,onBack: ()->Unit,draft: ReceivingDraft?=null,onConfirm: ()->Unit) {
-    MposDialog("Подтвердить приёмку",onBack,closable=!locked,maxWidth=480.dp) {
-        draft?.let {Text(it.supplierName,fontSize=15.sp,fontWeight=androidx.compose.ui.text.font.FontWeight.Bold)}
-        val shortage=preview.lines.any {it.shortage?.toBigDecimalOrNull()?.signum()==1}
-        if(shortage) com.mendelev.mpos.feature.purchasing.SupplyBadge("Недовоз","danger")
-        Column(Modifier.weight(1f,fill=false).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(14.dp)) {
-            preview.lines.forEach {line->
-                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(16.dp)) {
-                    Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(5.dp)) {
-                        Text(line.name,fontSize=14.sp)
-                        Text("Себестоимость: ${line.oldCost} → ${line.newCost} BYN",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    val unit=draft?.lines?.find {it.product.id==line.productId}?.product?.unit
-                    Text(line.actual.replace('.',',')+(line.expected?.let {" / "+it.replace('.',',')} ?: "")+" "+(unit?.let {com.mendelev.mpos.domain.catalog.unitLabel(it)} ?: ""),fontSize=13.sp)
-                }
-            }
-            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
-                Text("Сумма приёмки");Text(receivingMoney(preview.totalMinor),fontWeight=androidx.compose.ui.text.font.FontWeight.Bold)
-            }
-            if(linked && shortage) Text("Заказ закроется с фактически полученным количеством.",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-            if(preview.hasOverage) Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
-                Checkbox(overage,{onOverage()},enabled=!locked)
-                Text("Подтверждаю количество сверх заказа",fontSize=13.sp)
-            }
-        }
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-            MposSupplyAction("Назад",onBack,Modifier.weight(1f),!locked,PosControl.Outline,height=44.dp,radius=16.dp)
-            MposSupplyAction("Принять товары",onConfirm,Modifier.weight(1f),!locked && !dirty && (!preview.hasOverage || overage),PosControl.Cash,height=44.dp,radius=16.dp)
+@Composable internal fun ReceivingConfirmationWindow(preview: ReceivingPreview,locked: Boolean,dirty: Boolean,
+    onBack: ()->Unit,onConfirm: ()->Unit) {
+    MposDialog("Подтвердить приёмку?",onBack,closable=!locked,maxWidth=440.dp) {
+        // The same explicit confirmation also authorizes the highlighted excess quantity.
+        if(preview.hasOverage) Text("Количество превышает заказанное. Подтвердить приёмку с превышением?",
+            fontSize=14.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(Modifier.fillMaxWidth().padding(top=8.dp),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+            MposSupplyAction("Отмена",onBack,Modifier.weight(1f),!locked,PosControl.Outline,height=48.dp,radius=16.dp)
+            MposSupplyAction("Подтвердить",onConfirm,Modifier.weight(1f),!locked && !dirty,PosControl.Cash,height=48.dp,radius=16.dp)
         }
     }
 }

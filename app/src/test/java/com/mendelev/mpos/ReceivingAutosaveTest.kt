@@ -110,6 +110,38 @@ class ReceivingAutosaveTest {
         assertEquals("total",m.state.value.form!!.lines.single().priceMode)
         assertEquals("10",f.data.products.single().stock)
     }
+    @Test fun yellowAmountsBlockPreviewUntilTouchedWithoutChangingTheAmount()=fixture(seed={f->
+        val second=f.product.copy(id="p2",name="Сливки")
+        val order=PurchaseOrderRules.create("o",f.order.source.copy(lines=f.order.source.lines+f.order.source.lines.single().copy(productId="p2",productName="Сливки")),1)
+        f.data=f.data.copy(orders=listOf(order),products=listOf(f.product,second))
+    }) {f,m,main->
+        val before=m.state.value.form!!
+        withContext(main) {m.next()}
+        assertNull(m.state.value.preview);assertFalse(m.state.value.pending)
+        assertNotNull(m.state.value.message)
+        withContext(main) {m.preview()}
+        assertNull(m.state.value.preview)
+        withContext(main) {m.reviewAmount("p")}
+        assertEquals(setOf("p2"),m.state.value.suggestedAmounts);assertEquals(before,m.state.value.form)
+        assertNull(m.state.value.message)
+        withContext(main) {m.next()};assertNull(m.state.value.preview)
+        withContext(main) {m.reviewAmount("p2");m.next()}
+        withTimeout(5000) {m.state.first {!it.pending && it.preview!=null}}
+        assertTrue(f.data.products.all {it.stock=="10"})
+        assertEquals("pending",f.data.orders.single().status)
+    }
+    @Test fun automaticRecalculationNeedsReviewAgainButManualAmountDoesNot()=fixture {_,m,main->
+        withContext(main) {m.reviewAmount("p");m.line("p") {it.copy(quantity="3")}}
+        saved(m)
+        assertEquals("6.00",m.state.value.form!!.lines.single().total)
+        assertEquals(setOf("p"),m.state.value.suggestedAmounts)
+        withContext(main) {m.next()};assertNull(m.state.value.preview)
+        withContext(main) {m.amount("p","7")};saved(m)
+        assertTrue(m.state.value.suggestedAmounts.isEmpty())
+        withContext(main) {m.next()}
+        withTimeout(5000) {m.state.first {!it.pending && it.preview!=null}}
+        assertEquals(700L,m.state.value.preview!!.totalMinor)
+    }
     @Test fun failedSaveCannotCloseFormOrPretendItIsDurable()=fixture {f,m,main->
         f.failWrite=true
         withContext(main) {m.line("p") {it.copy(total="40")};m.saveAndExit()}

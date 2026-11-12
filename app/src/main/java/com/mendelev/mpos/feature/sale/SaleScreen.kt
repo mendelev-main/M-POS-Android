@@ -47,7 +47,6 @@ private fun saleNavigationLocked(ui: SaleUi,refund: RefundUi)=ui.pending || refu
     val ui by model.state.collectAsStateWithLifecycle()
     val printerContext=androidx.compose.ui.platform.LocalContext.current
     val printer=remember {com.mendelev.mpos.print.PrintRuntime.get(printerContext)}
-    val printStatus by printer.status.collectAsStateWithLifecycle()
     var entryReady by remember(model,history) {mutableStateOf(false)}
     LaunchedEffect(model,history) {
         if(history) model.openHistory() else model.open()
@@ -181,7 +180,6 @@ private fun saleNavigationLocked(ui: SaleUi,refund: RefundUi)=ui.pending || refu
         if(paid!=null) {
             Column(Modifier.heightIn(max=480.dp).verticalScroll(rememberScrollState()).testTag("saleSuccess")) {ReceiptBody(paid)}
             ui.message?.let {MposNotice(it,true)}
-            printStatus?.let {Text(it,style=MaterialTheme.typography.bodySmall)}
             Row(Modifier.fillMaxWidth().padding(top=16.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
                 MposPosControl("Печать",{printing=true},Modifier.weight(1f).testTag("receiptPrint"),!ui.pending,PosControl.Secondary,height=48.dp,radius=16.dp)
                 MposPosControl("Готово",{model.finish(onBack)},Modifier.weight(1f).testTag("saleDone"),!ui.pending,PosControl.Cash,height=48.dp,radius=16.dp)
