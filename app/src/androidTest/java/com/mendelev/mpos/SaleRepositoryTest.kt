@@ -101,7 +101,7 @@ class SaleRepositoryTest {
             val d=CheckoutDraft("recipe-sale",w.cart.sessionId,w.cartRevision,shift.active!!.id,shift.revision,shift.ownerId,
                 delivery=DeliveryCharge("courier","Курьер",500,1),parts=listOf(PaymentInput("card",2500)))
             val repo=CheckoutRepository(db);var saved=repo.save(0,d)
-            reject {SaleRepository(db).commit(saved)} // Card cannot fund the courier in an empty drawer.
+            // Card delivery no longer requires cash for an automatic courier payout.
             saved=repo.save(saved.revision,d.copy(parts=listOf(PaymentInput("cash",1000,1500),PaymentInput("card",1500))))
             val baseline=db.catalog().balance("tracked")!!
             db.catalog().updateBalance(baseline.copy(quantity="0.0007",revision=baseline.revision+1))
@@ -112,7 +112,7 @@ class SaleRepositoryTest {
             assertEquals("0.0006",db.catalog().balance("tracked")!!.quantity)
             assertEquals("-0.0004",db.catalog().balance("negative")!!.quantity)
             assertEquals("0",db.catalog().balance("untracked")!!.quantity)
-            assertEquals(500L,shifts.snapshot().currentCash);assertEquals(500L,receipt.payment.deliveryCashOut)
+            assertEquals(1000L,shifts.snapshot().currentCash);assertEquals(0L,receipt.payment.deliveryCashOut)
             assertEquals(1,work.snapshot().parked.size)
             // Even the composite and untracked ingredients have historical FK references.
             assertEquals(1,db.sales().productUses("dish"));assertEquals(1,db.sales().productUses("untracked"))

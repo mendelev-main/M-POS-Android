@@ -9,7 +9,7 @@ data class PurchaseProduct(val id: String,val name: String,val revision: Long,va
 }
 data class PurchaseLine(val productId: String,val productRevision: Long,val productName: String,val stockUnit: String,
     val quantity: String,val unit: String,val packSize: String="",val contentUnit: String=stockUnit)
-data class PurchaseDraft(val id: String,val supplierId: String,val supplierRevision: Long,val supplierName: String,val lines: List<PurchaseLine>)
+data class PurchaseDraft(val id: String,val supplierId: String,val supplierRevision: Long,val supplierName: String,val lines: List<PurchaseLine>,val note: String="")
 sealed interface PurchaseAction {
     /** Raw, bounded operator input. Economic validation belongs to Save/Place. */
     data class Working(val draft: PurchaseDraft?): PurchaseAction
@@ -33,12 +33,17 @@ data class PurchaseCommand(val commandId: String,val actorId: String,val revisio
         if(d!=null) {
             parts.addAll(listOf(d.id,d.supplierId,d.supplierRevision,d.supplierName))
             d.lines.forEach {parts.addAll(listOf(it.productId,it.productRevision,it.productName,it.stockUnit,it.quantity,it.unit,it.packSize,it.contentUnit))}
+            if(d.note.isNotEmpty()) parts.addAll(listOf("purchase.note.v1",d.note))
         }
         return CatalogRules.fingerprint(*parts.toTypedArray())
     }
 }
 object PurchaseDraftRules {
+    fun included(line: PurchaseLine)=runCatching {number(line.quantity)?.signum()==1}.getOrDefault(false)
+    fun activate(line: PurchaseLine)=if(included(line)) line else line.copy(quantity="1")
+    private fun note(d: PurchaseDraft) {if(d.note.length>1000 || d.note.any {it.isISOControl() && it!='\n' && it!='\t'}) throw CatalogFailure("purchase","Комментарий: до 1000 символов")}
     fun validateWorking(d: PurchaseDraft) {
+        note(d)
         id(d.id);id(d.supplierId)
         require(d.supplierRevision>0 && CatalogRules.name(d.supplierName)==d.supplierName)
         require(d.lines.size<=500 && d.lines.map {it.productId}.distinct().size==d.lines.size)
@@ -81,6 +86,7 @@ object PurchaseDraftRules {
         return qty?.takeIf {it.signum()>0}?.let {exactBase(from.convert(it,base))}
     }
     fun validate(d: PurchaseDraft) {
+        note(d)
         id(d.id);id(d.supplierId)
         if(d.supplierRevision<1 || CatalogRules.name(d.supplierName)!=d.supplierName) throw CatalogFailure("purchase","Некорректный снимок поставщика")
         if(d.lines.map {it.productId}.distinct().size!=d.lines.size) throw CatalogFailure("purchase","Товар повторяется в черновике")

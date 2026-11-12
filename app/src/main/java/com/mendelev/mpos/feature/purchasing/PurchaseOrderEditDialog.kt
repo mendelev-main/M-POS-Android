@@ -36,7 +36,7 @@ import com.mendelev.mpos.domain.warehouse.*
         Column(Modifier.weight(1f,fill=false).heightIn(max=480.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(16.dp)) {
             products.forEach {p->
                 val l=edit.form.lines.find {it.productId==p.id} ?: p.blankLine()
-                PurchaseRequestRow(p,l,enabled,"purchaseEdit") {next->if(l.quantity.isNotBlank() && next.quantity.isBlank()) model.removeEditLine(p.id) else model.editLine(p.id) {next}}
+                PurchaseRequestRow(p,l,enabled,"purchaseEdit",onActivate={model.activateEdit(p.id)}) {next->if(l.quantity.isNotBlank() && next.quantity.isBlank()) model.removeEditLine(p.id) else model.editLine(p.id) {next}}
             }
             edit.form.lines.filter {l->products.none {it.id==l.productId}}.forEach {l->
                 Text("${l.productName}: недоступен у поставщика. ${l.quantity} ${purchaseUnitLabel(l.unit)}, в единице ${l.packSize} ${l.contentUnit}")

@@ -25,6 +25,7 @@ internal fun purchaseOrderViewText(order: PurchaseOrder,zone: ZoneId=ZoneId.syst
     append("Заказ поставщику: ${order.source.supplierName}\n")
     append("Дата: ${DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").format(Instant.ofEpochMilli(order.createdAt).atZone(zone))}\n\n")
     order.source.lines.forEachIndexed {i,line->append("${i+1}. ${line.productName} — ${PurchaseOrderRules.requested(line)}\n")}
+    if(order.source.note.isNotBlank()) append("\nКомментарий: ${order.source.note}\n")
     append("\nПросьба подтвердить наличие и сроки поставки.")
 }
 

@@ -26,12 +26,12 @@ internal suspend fun CatalogDatabase.ownerAnalytics(shiftId: String,month: Boole
     val facts=records.map {r->
         val saved=snapshots.getValue(r.id)
         require(saved.quote.total==r.total && saved.payment.cash==r.cash && saved.payment.card==r.card && saved.payment.deliveryCashOut==r.deliveryCashOut && r.cash.toBigInteger()+r.card.toBigInteger()==r.total.toBigInteger()) {"Повреждены суммы чека"}
-        OwnerSale(r.id,r.shiftId,r.createdAt,r.total,r.deliveryCashOut,details.getValue(r.id).lines)
+        OwnerSale(r.id,r.shiftId,r.createdAt,r.total,saved.quote.delivery?.fee ?: 0,details.getValue(r.id).lines,r.deliveryCashOut)
     }.associateBy {it.id}
     val returns=refundCandidates.map {r->
         val original=records.single {it.id==r.receiptId}
         require(r.receiptHash==CatalogRules.fingerprint("refund.receipt.v1",original.payload) && r.cash==original.cash && r.card==original.card) {"Повреждён снимок возврата"}
-        OwnerRefund(r.id,r.receiptId,r.shiftId,r.createdAt,r.total,r.deliveryCashCredit)
+        OwnerRefund(r.id,r.receiptId,r.shiftId,r.createdAt,r.total,snapshots.getValue(r.receiptId).quote.delivery?.fee ?: 0,r.deliveryCashCredit)
     }
     val current=OwnerAnalyticsRules.build(candidates.map {facts.getValue(it.id)},returns,facts,zone)
     val archived=workspace().document(WebOrderDefaults.KEY)?.let {WebOrderDefaults.historyCount(it.payload)} ?: 0

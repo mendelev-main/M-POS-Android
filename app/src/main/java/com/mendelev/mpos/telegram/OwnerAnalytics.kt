@@ -7,8 +7,8 @@ import java.math.RoundingMode
 import java.time.Instant
 import java.time.ZoneId
 
-data class OwnerSale(val id: String,val shiftId: String,val at: Long,val total: Long,val delivery: Long,val lines: List<ReportDetailLine>)
-data class OwnerRefund(val id: String,val receiptId: String,val shiftId: String,val at: Long,val total: Long,val delivery: Long)
+data class OwnerSale(val id: String,val shiftId: String,val at: Long,val total: Long,val delivery: Long,val lines: List<ReportDetailLine>,val courier: Long=delivery)
+data class OwnerRefund(val id: String,val receiptId: String,val shiftId: String,val at: Long,val total: Long,val delivery: Long,val courier: Long=delivery)
 data class OwnerRank(val key: String,val name: String,val sales: BigInteger,val refunds: BigInteger,val sold: Map<String,BigDecimal>,val returned: Map<String,BigDecimal>)
 data class OwnerHour(val hour: Int,val sales: BigInteger)
 data class OwnerAnalytics(val sales: BigInteger,val refunds: BigInteger,val profit: BigInteger,val delivery: BigInteger,val checks: Int,val refundChecks: Int,
@@ -67,10 +67,10 @@ object OwnerAnalyticsRules {
         }
         val products=linkedMapOf<String,MutableRank>();val categories=linkedMapOf<String,MutableRank>()
         val sold=sortedMapOf<String,BigDecimal>();val returned=sortedMapOf<String,BigDecimal>()
-        var saleMoney=BigInteger.ZERO;var refundMoney=BigInteger.ZERO;var cost=BigInteger.ZERO;var delivery=BigInteger.ZERO
+        var saleMoney=BigInteger.ZERO;var refundMoney=BigInteger.ZERO;var cost=BigInteger.ZERO;var delivery=BigInteger.ZERO;var courier=BigInteger.ZERO
         val hours=sortedMapOf<Int,BigInteger>()
         fun detail(s: OwnerSale,refund: Boolean) {
-            require(s.total>=0 && s.delivery in 0..s.total && s.lines.isNotEmpty()) {"Повреждён чек аналитики"}
+            require(s.total>=0 && s.delivery in 0..s.total && (s.courier==0L || s.courier==s.delivery) && s.lines.isNotEmpty()) {"Повреждён чек аналитики"}
             require(s.lines.fold(BigInteger.ZERO) {sum,l->sum+l.netMinor.toBigInteger()}+s.delivery.toBigInteger()==s.total.toBigInteger()) {"Суммы строк не совпадают с чеком"}
             s.lines.forEach {l->
                 require(l.quantity.signum()>0 && l.netMinor>=0 && l.costMinor.signum()>=0 && l.name.isNotBlank() && l.unit.isNotBlank())
@@ -83,17 +83,17 @@ object OwnerAnalyticsRules {
             }
         }
         sales.forEach {s->
-            detail(s,false);saleMoney+=s.total.toBigInteger();delivery+=s.delivery.toBigInteger()
+            detail(s,false);saleMoney+=s.total.toBigInteger();delivery+=s.delivery.toBigInteger();courier+=s.courier.toBigInteger()
             val hour=Instant.ofEpochMilli(s.at).atZone(zone).hour;hours[hour]=(hours[hour] ?: BigInteger.ZERO)+s.total.toBigInteger()
         }
         refunds.forEach {r->
             val s=originals[r.receiptId] ?: error("Не найден исходный чек возврата")
-            require(r.at>=s.at && r.total==s.total && r.delivery==s.delivery) {"Возврат не совпадает с исходной продажей"}
-            detail(s,true);refundMoney+=r.total.toBigInteger();delivery-=r.delivery.toBigInteger()
+            require(r.at>=s.at && r.total==s.total && r.delivery==s.delivery && r.courier==s.courier) {"Возврат не совпадает с исходной продажей"}
+            detail(s,true);refundMoney+=r.total.toBigInteger();delivery-=r.delivery.toBigInteger();courier-=r.courier.toBigInteger()
         }
         fun ranks(map: Map<String,MutableRank>)=map.values.map {it.result()}.sortedWith(compareByDescending<OwnerRank> {it.sales}.thenBy {it.name}.thenBy {it.key})
         val hourRows=if(hours.isEmpty()) emptyList() else (hours.keys.first()..hours.keys.last()).map {OwnerHour(it,hours[it] ?: BigInteger.ZERO)}
-        return OwnerAnalytics(saleMoney,refundMoney,saleMoney-refundMoney-cost-delivery,delivery,sales.size,refunds.size,sold,returned,ranks(products),ranks(categories),hourRows)
+        return OwnerAnalytics(saleMoney,refundMoney,saleMoney-refundMoney-cost-courier,delivery,sales.size,refunds.size,sold,returned,ranks(products),ranks(categories),hourRows)
     }
     /** Largest remainder keeps visible percentage labels at exactly100 without floating point. */
     fun percentages(values: List<BigInteger>): List<Int> = shares(values,100)

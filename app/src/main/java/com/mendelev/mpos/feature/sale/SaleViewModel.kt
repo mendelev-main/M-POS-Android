@@ -42,13 +42,16 @@ class SaleViewModel(private val db: CatalogDatabase,private val verifyLoyalty: s
         if(!state.value.pending && state.value.unresolved==null) mutable.update {it.copy(loading=true,preview=null,partPreview=null,completed=null,split=null)}
         refresh()
     }
-    fun refresh() {
+    fun openHistory()=refreshState(preserveHistorySelection=true)
+    fun refresh()=refreshState(preserveHistorySelection=false)
+    private fun refreshState(preserveHistorySelection: Boolean) {
         if(state.value.pending || state.value.unresolved!=null) return
         mutable.update {it.copy(pending=true,message=null,preview=null)}
         viewModelScope.launch {
             try {
                 val next=withContext(Dispatchers.IO) {readState()}
-                mutable.value=next
+                val selected=state.value.selected?.takeIf {old->next.history.any {it.id==old.first.id && it.payload==old.first.payload}}
+                mutable.value=if(preserveHistorySelection) next.copy(selected=selected) else next
             } catch(e:CancellationException) {throw e}
             catch(_:Exception) {mutable.update {it.copy(loading=false,fatal=true,message="Не удалось прочитать оплату. Данные сохранены; повторите открытие")}}
             finally {mutable.update {it.copy(pending=false)}}

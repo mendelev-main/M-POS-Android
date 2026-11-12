@@ -1,5 +1,13 @@
 # Контекст04 — склад
 
+12.11.2026 SF11–SF12: прямое уточнение владельца заменяет supplier last-price на текущую себестоимость карточки × базовое количество. Жёлтый остаётся при focus, снимается при изменении суммы. Сохранённые ручные суммы не переоцениваются. Касание поля/редактирование упаковки включает товар с qty1, уже положительная qty сохраняется, ноль/очистка исключают; зелёные поля отображают включение. В приёмке пять одинаковых колонок, пустые pack-слоты у простых единиц сохраняют выравнивание суммы.
+
+12.11.2026 SF09–SF10 по скриншоту: boundsInParent относится к вложенной padded Row, а Canvas — к внешней панели; заменён единым расчётом gutter/gap/трёх равных долей. Поставка/Новый/История с иконками. Верхняя Приёмка удалена прямым указанием владельца, её внутренний маршрут сохранён для приёмки из Поставок, автоматическое создание standalone при пустом маршруте убрано. Ввод шире и левее; receiving footer после строк, ручной UI acceptance pending.
+
+12.11.2026 продолжение SF05–SF08: владелец требует перенести внутренние вкладки полностью и растянуть три равные закладки ещё шире. Отдельные компактные карточки и меню, исторический Недовоз только при shortage, редактор с stock/поступит, amount-only receiving, last posted supplier/product price2dec/HALF_UP. Суммы и количества BigDecimal; ручной total не заменяется подсказкой. PurchaseDraft optional note сохраняется через существующий codec, пустой note сохраняет прежний fingerprint. UI manual pending; локально без push.
+
+12.11.2026: владелец утвердил перенос folder-style из макета в приложение. SF01–SF04/docs/SUPPLIES-FOLDER-UI.md: shared silhouette и цветные плашки, отдельного заголовка нет; pending/new/history в заказах, те же закладки открытой приёмки. Это оформление и навигация; прочие детали согласованного макета пока отдельные задачи. Local main, no push, ручная приёмка владельцем pending.
+
 ## Старт2026-10-27
 
 Авторизовано продолжение после merge/release. PR5 merged4d522575; stable0.1.74.1/code8401/main40466390578 SUCCESS; public signed channel40468056889/API36 SUCCESS7101→8401, permission/cancel/retry/system install/settings preserved. Publicbytes/SHA/signature verified; local physical tablet не проверен. Develop синхронизирован с main.
@@ -94,3 +102,7 @@ Policy2 итог: [CI40519616659](https://github.com/mendelev-main/M-POS-Android
 10.11.2026 IV01–07/BG01: docs/INVENTORY-UI-PARITY.md. Актуальный Web05db включает correction и действия в header; ранее reference1682 этого не имел. Native fix immutable/correction append-only, stock delta actualNew−actualOld сохраняет later movements; InventoryCodec4/legacy1–3 read. Admin-only native authority retained для задачи панели; Web cashier reminder role parity отдельно. Device/pixel pending.
 
 10.11.2026 IV08/RV08 styles: separate category cards; muted warning topbar/pause44; receiving pending cards one column/acceptgreen/resumeyellow48. RECEIPT-PAYMENT-CORRECTION.md; business rules прежние.
+
+2026-11-12 SF12: по уточнению владельца зелёная заливка перенесена с полей на строку. Тап по свободной области строки переключает qty0/1, упаковка и единицы сохраняются; касание/редактирование полей по-прежнему включает товар. UI acceptance вручную.
+
+12.11.2026 SF13 implemented locally: запрос открытия приёмки из Поставок сохраняется до фактического появления формы нужного order ID. Не подтверждается сразу после вызова open: refresh может синхронно поставить pending между Compose snapshot и эффектом. После завершения refresh запрос повторяется; открытая форма подтверждает запрос, повторное открытие/перезапись введённых данных не выполняются. Список Supplies содержит все pending без ограничения по возрасту; History — все статусы. Пустой receiving route предлагает кнопку Поставки вместо тупиковой подсказки. Manual acceptance старых поставок владельцем pending.

@@ -49,6 +49,13 @@ class OwnerAnalyticsTest {
         assertTrue(result.products.any {it.name=="Старое имя" && it.sales==BigInteger.ZERO && it.refunds==1000.toBigInteger()})
         assertTrue(result.products.any {it.name=="Новое имя"})
     }
+    @Test fun deliveryWithoutCashExpenseAddsToProfitAndRefundReversesSameAmount() {
+        val sale=OwnerSale("s","shift",100,2500,500,listOf(line(net=2000,cost=800)),courier=0)
+        val sold=OwnerAnalyticsRules.build(listOf(sale),emptyList(),mapOf("s" to sale),zone)
+        assertEquals(1700.toBigInteger(),sold.profit);assertEquals(500.toBigInteger(),sold.delivery)
+        val refunded=OwnerAnalyticsRules.build(emptyList(),listOf(OwnerRefund("r","s","next",200,2500,500,0)),mapOf("s" to sale),zone)
+        assertEquals((-1700).toBigInteger(),refunded.profit)
+    }
     @Test fun moneyAggregatesDoNotOverflowLongAndSharesRemainExactly100() {
         val first=OwnerSale("a","s",100,Long.MAX_VALUE,0,listOf(line(net=Long.MAX_VALUE,cost=0)))
         val second=first.copy(id="b")

@@ -13,24 +13,35 @@ import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.domain.warehouse.*
 import com.mendelev.mpos.feature.purchasing.purchaseDate
 import java.math.BigDecimal
-
 @Composable internal fun ReceivingConfirmationWindow(preview: ReceivingPreview,linked: Boolean,locked: Boolean,dirty: Boolean,
-    overage: Boolean,onOverage: ()->Unit,onBack: ()->Unit,onConfirm: ()->Unit) {
-    MposDialog("Подтвердить приёмку?",onBack,closable=!locked,wide=true) {
-        Text("${preview.lines.size} строк · ${receivingMoney(preview.totalMinor)}. Фактическое количество зачислится на склад, себестоимость пересчитается.",modifier=Modifier.testTag("receivingPreviewTotal"))
-        if(linked) Text("Заказ будет закрыт; недопоставленные позиции автоматически не переносятся.",fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-        Column(Modifier.weight(1f,fill=false).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
-            preview.lines.forEach {line->Surface(shape=MaterialTheme.shapes.medium,color=MaterialTheme.colorScheme.background) {
-                Column(Modifier.fillMaxWidth().padding(14.dp),verticalArrangement=Arrangement.spacedBy(5.dp)) {
-                    Text(line.name,style=MaterialTheme.typography.titleSmall)
-                    Text("Остаток ${line.oldStock} → ${line.newStock}; себестоимость ${line.oldCost} → ${line.newCost} BYN/ед.",fontSize=13.sp,modifier=Modifier.testTag("receivingPreviewLine:${line.productId}"))
+    overage: Boolean,onOverage: ()->Unit,onBack: ()->Unit,draft: ReceivingDraft?=null,onConfirm: ()->Unit) {
+    MposDialog("Подтвердить приёмку",onBack,closable=!locked,maxWidth=480.dp) {
+        draft?.let {Text(it.supplierName,fontSize=15.sp,fontWeight=androidx.compose.ui.text.font.FontWeight.Bold)}
+        val shortage=preview.lines.any {it.shortage?.toBigDecimalOrNull()?.signum()==1}
+        if(shortage) com.mendelev.mpos.feature.purchasing.SupplyBadge("Недовоз","danger")
+        Column(Modifier.weight(1f,fill=false).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(14.dp)) {
+            preview.lines.forEach {line->
+                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(16.dp)) {
+                    Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(5.dp)) {
+                        Text(line.name,fontSize=14.sp)
+                        Text("Себестоимость: ${line.oldCost} → ${line.newCost} BYN",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    val unit=draft?.lines?.find {it.product.id==line.productId}?.product?.unit
+                    Text(line.actual.replace('.',',')+(line.expected?.let {" / "+it.replace('.',',')} ?: "")+" "+(unit?.let {com.mendelev.mpos.domain.catalog.unitLabel(it)} ?: ""),fontSize=13.sp)
                 }
-            }}
-            if(preview.hasOverage) MposButton(if(overage) "Превышение подтверждено" else "Подтверждаю превышение заказа",onOverage,Modifier.testTag("receivingOverage"),enabled=!locked,style=ActionStyle.Secondary)
+            }
+            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
+                Text("Сумма приёмки");Text(receivingMoney(preview.totalMinor),fontWeight=androidx.compose.ui.text.font.FontWeight.Bold)
+            }
+            if(linked && shortage) Text("Заказ закроется с фактически полученным количеством.",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            if(preview.hasOverage) Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
+                Checkbox(overage,{onOverage()},enabled=!locked)
+                Text("Подтверждаю количество сверх заказа",fontSize=13.sp)
+            }
         }
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-            MposButton("Вернуться к приёмке",onBack,Modifier.weight(1f),enabled=!locked,style=ActionStyle.Secondary)
-            MposButton("Подтвердить приход",onConfirm,Modifier.weight(1f).testTag("receivingPostConfirm"),enabled=!locked && !dirty && (!preview.hasOverage || overage))
+            MposSupplyAction("Назад",onBack,Modifier.weight(1f),!locked,PosControl.Outline,height=44.dp,radius=16.dp)
+            MposSupplyAction("Принять товары",onConfirm,Modifier.weight(1f),!locked && !dirty && (!preview.hasOverage || overage),PosControl.Cash,height=44.dp,radius=16.dp)
         }
     }
 }
@@ -39,7 +50,10 @@ import java.math.BigDecimal
     MposDialog(if(record.draft.order==null) "Закупка" else "Приёмка",onClose,maxWidth=680.dp) {
         Text("${record.draft.supplierName} · ${purchaseDate(record.at)}",style=MaterialTheme.typography.titleSmall)
         Text("Номер ${record.draft.invoiceNumber} · ${record.draft.invoiceDate}",modifier=Modifier.testTag("receivingPostedTitle"),color=MaterialTheme.colorScheme.onSurfaceVariant,fontSize=13.sp)
-        if(record.draft.order!=null) ReceivingBadge(if(receivingDiscrepancy(record)) "Расхождение" else "Принято",receivingDiscrepancy(record))
+        Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            com.mendelev.mpos.feature.purchasing.SupplyBadge("Принята","success")
+            if(receivingDiscrepancy(record)) com.mendelev.mpos.feature.purchasing.SupplyBadge("Недовоз","danger")
+        }
         Column(Modifier.weight(1f,fill=false).verticalScroll(rememberScrollState())) {
             record.draft.lines.forEach {line->
                 val total=ReceivingRules.lineTotal(line) ?: 0L

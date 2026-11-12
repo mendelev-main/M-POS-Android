@@ -28,7 +28,7 @@ class RefundRepositoryTest {
         val work=WorkspaceRepository(db);work.initialize()
         val shifts=ShiftRepository(db);shifts.initializeCashierFixture();val initial=shifts.snapshot()
         shifts.open("open",initial.revision,null,initial.ownerId)
-        // Funding sale is unnecessary: cash delivery funds its own courier expense.
+        // Delivery stays in the customer bill; no automatic courier payout.
         work.cart(CartAction.Add("p",1,emptySet(),null,"line"),"add",work.snapshot().cart.sessionId)
         if(delivery) {val w=work.snapshot();work.cart(CartAction.SetDetails(OrderDetails(type="delivery"),w.cartRevision),"delivery",w.cart.sessionId)}
         val w=work.snapshot();val s=shifts.snapshot();val total=if(delivery) 2500L else 2000L
@@ -43,11 +43,11 @@ class RefundRepositoryTest {
         var db=open()
         try {
             val receipt=sale(db,true);val s=ShiftRepository(db).snapshot()
-            assertEquals(2000L,s.currentCash)
+            assertEquals(2500L,s.currentCash)
             val p=db.catalog().product("p")!!
             db.catalog().updateProduct(p.copy(price="99",noStockTracking=true,revision=2))
             val repo=RefundRepository(db);val preview=repo.preview(receipt.id,s.ownerId)
-            assertEquals(-2000L,preview.amounts.cashDelta)
+            assertEquals(-2500L,preview.amounts.cashDelta)
             val id=repo.commit("refund",preview)
             assertEquals(id,repo.commit("refund",preview));assertEquals(id,repo.outcome("refund")!!.id)
             assertEquals(receipt,db.sales().receipt(receipt.id));assertEquals("10",db.catalog().balance("p")!!.quantity)
@@ -66,13 +66,13 @@ class RefundRepositoryTest {
         val db=memory()
         try {
             val receipt=sale(db,true,true);val shifts=ShiftRepository(db);val old=shifts.snapshot()
-            assertEquals(500L,old.currentCash)
-            shifts.close("close",old.active!!.id,old.revision,ShiftRules.token(old),500,old.ownerId)
+            assertEquals(1000L,old.currentCash)
+            shifts.close("close",old.active!!.id,old.revision,ShiftRules.token(old),1000,old.ownerId)
             val closed=db.shifts().shift(old.active!!.id)!!;val state=shifts.snapshot()
             shifts.open("today",state.revision,state.last!!.id,state.ownerId)
             val preview=RefundRepository(db).preview(receipt.id,state.ownerId)
             assertEquals(1000L,preview.amounts.cash);assertEquals(1500L,preview.amounts.card)
-            assertEquals(500L,preview.amounts.deliveryCashCredit)
+            assertEquals(0L,preview.amounts.deliveryCashCredit)
             RefundRepository(db).commit("refund",preview)
             assertEquals(0L,shifts.snapshot().currentCash);assertEquals(closed,db.shifts().shift(closed.id))
             assertEquals(receipt,db.sales().receipt(receipt.id))

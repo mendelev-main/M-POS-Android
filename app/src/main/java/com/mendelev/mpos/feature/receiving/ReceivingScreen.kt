@@ -1,6 +1,7 @@
 package com.mendelev.mpos.feature.receiving
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -23,7 +24,9 @@ import com.mendelev.mpos.feature.purchasing.units
 import java.math.BigDecimal
 
 @OptIn(ExperimentalLayoutApi::class)
-@Composable fun ReceivingScreen(model: ReceivingViewModel,posting: ReceivingPostingViewModel,requestedOrder: String?,consumeRequest: ()->Unit,onBack: ()->Unit) {
+@Composable fun ReceivingScreen(model: ReceivingViewModel,posting: ReceivingPostingViewModel,requestedOrder: String?,consumeRequest: ()->Unit,
+    onSection: ((MposFolderTab)->Unit)?=null,onBack: ()->Unit) {
+    MposSupplyTheme {
     val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val ui by model.state.collectAsStateWithLifecycle();val d=ui.form;val snapshot=ui.snapshot
     // Capture nullable content before Dialog creates a separate composition.
@@ -31,26 +34,34 @@ import java.math.BigDecimal
     val post by posting.state.collectAsStateWithLifecycle()
     val locked=ui.pending || ui.unresolved!=null || post.pending || post.unresolved!=null
     var expanded by rememberSaveable {mutableStateOf(false)}
+    var requestedSection by rememberSaveable {mutableStateOf<MposFolderTab?>(null)}
+    LaunchedEffect(d?.id,requestedSection) {
+        if(d==null) requestedSection?.let {tab->requestedSection=null;if(onSection!=null) onSection(tab) else onBack()}
+    }
     LaunchedEffect(d?.id) {if(d==null) expanded=false else if(d.order==null) expanded=true}
     var showHistory by rememberSaveable {mutableStateOf(false)}
     var detail by rememberSaveable {mutableStateOf<String?>(null)}
     var overage by rememberSaveable {mutableStateOf(false)}
     var search by rememberSaveable {mutableStateOf("")}
     LaunchedEffect(post.committed,post.pending) {
-        if(post.committed!=null && !post.pending) {model.dismissPreview();model.refresh();expanded=false}
+        if(post.committed!=null && !post.pending) {model.dismissPreview();model.refresh();expanded=false;posting.acknowledge();if(onSection!=null) onSection(MposFolderTab.History) else onBack()}
     }
     val order=snapshot?.orders?.find {it.id==d?.order?.id}
     val editable=!locked && !ui.blocked && ui.canEdit && (d?.order==null || order?.status=="pending")
     var dialog by rememberSaveable {mutableStateOf<String?>(null)}
     LaunchedEffect(model) {model.refresh();posting.refresh()}
     LaunchedEffect(administration.generation,post.pending,post.unresolved) {posting.reopenForms()}
-    LaunchedEffect(requestedOrder,ui.pending,ui.snapshot,locked,ui.blocked) {
-        if(requestedOrder!=null && snapshot!=null && !locked && !ui.blocked && ui.canEdit) {
+    // A request is acknowledged only after the form is actually opened. Refresh may
+    // set pending before this effect runs, even when its captured UI was still idle.
+    LaunchedEffect(requestedOrder,d?.order?.id) {
+        if(requestedOrder!=null && d?.order?.id==requestedOrder) consumeRequest()
+    }
+    LaunchedEffect(requestedOrder,ui.pending,ui.snapshot,locked,ui.blocked,d?.order?.id) {
+        if(requestedOrder!=null && d?.order?.id!=requestedOrder && snapshot!=null && !locked && !ui.blocked && ui.canEdit) {
             posting.acknowledge();showHistory=false;model.open(requestedOrder)
-            consumeRequest()
         }
     }
-    fun back() {if(!locked) {if(d==null) onBack() else if(d.order!=null && order?.status!="pending") {model.discard();model.close()} else model.saveAndExit()}}
+    fun back() {if(!locked) {if(d==null) onBack() else if(d.order!=null && order?.status!="pending") {model.discard();model.close();onBack()} else {requestedSection=MposFolderTab.Supplies;model.saveAndExit()}}}
     BackHandler {back()}
     val notice: @Composable ()->Unit={
         if(post.message!=null) Text(post.message!!,color=MaterialTheme.colorScheme.onSurfaceVariant,fontSize=13.sp)
@@ -68,22 +79,22 @@ import java.math.BigDecimal
         if(d!=null) ReceivingDocument(d,snapshot?.suppliers.orEmpty(),editable,
             onExit=::back,onNext={overage=false;model.next()},onSupplier=model::supplier,onMeta={next->model.change {next}},
             onLine=model::line,onUnit=model::unit,onMode=model::priceMode,onAdd={search="";dialog="product"},onRemove=model::remove,
-            navigationEnabled=!locked)
+            navigationEnabled=!locked,suggested=ui.suggestedAmounts,onAmount=model::amount)
     }
-    Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}.testTag("receivingScreen")) {
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding().semantics {testTagsAsResourceId=true}.testTag("receivingScreen")) {
         MposAppBar("Приёмка",navigationEnabled=!locked && dialog==null && preview==null) {}
-        if(d?.order!=null) {
-            Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(12.dp)) {notice();document()}
-        } else {
-            ReceivingHome(snapshot?.orders.orEmpty(),snapshot?.records.orEmpty(),post.history,expanded,showHistory,locked || ui.blocked,
-                onHistory={showHistory=!showHistory;if(showHistory) posting.refresh()},
-                onNew={if(d!=null) expanded=!expanded else {posting.acknowledge();model.standalone()}},
-                onOrder={id->posting.acknowledge();model.open(id)},
-                onRecord={detail=it},notice=notice,form=document)
-        }
+            MposFolderPanel(MposFolderTab.Supplies,{tab->
+                if(!locked) {if(d==null) {if(onSection!=null) onSection(tab) else onBack()} else {requestedSection=tab;model.saveAndExit()}}
+            },Modifier.weight(1f).fillMaxWidth().padding(horizontal=20.dp,vertical=16.dp),enabled=!locked && preview==null) {
+                notice()
+                if(d!=null) document()
+                else if(!locked && requestedOrder==null && requestedSection==null) {
+                    MposSupplyAction("Поставки",{if(onSection!=null) onSection(MposFolderTab.Supplies) else onBack()},kind=PosControl.Outline)
+                }
+            }
     }
     post.history.find {it.id==detail}?.let {ReceivingRecordWindow(it) {detail=null}}
-    if(preview!=null && dialog==null) ReceivingConfirmationWindow(preview,d?.order!=null,locked,ui.dirty,overage,{overage=!overage},model::dismissPreview) {
+    if(preview!=null && dialog==null) ReceivingConfirmationWindow(preview,d?.order!=null,locked,ui.dirty,overage,{overage=!overage},model::dismissPreview,draft=d) {
         posting.post(snapshot!!.ownerId,snapshot.records.single {it.orderId==d!!.key}.revision,d!!,overage)
     }
     if(dialog!=null) MposDialog("Добавить товар",{if(!locked) dialog=null},!locked) {
@@ -98,5 +109,6 @@ import java.math.BigDecimal
                 }
             }
         }
+    }
     }
 }

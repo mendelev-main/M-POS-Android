@@ -13,7 +13,7 @@ import kotlinx.coroutines.sync.withLock
 import java.util.UUID
 
 data class ReceivingUi(val snapshot: ReceivingSnapshot?=null,val form: ReceivingDraft?=null,val pending: Boolean=false,val blocked: Boolean=true,
-    val unresolved: ReceivingCommand?=null,val message: String?=null,val preview: ReceivingPreview?=null,val canEdit: Boolean=false,val saving: Boolean=false,val autoError: String?=null) {
+    val unresolved: ReceivingCommand?=null,val message: String?=null,val preview: ReceivingPreview?=null,val canEdit: Boolean=false,val saving: Boolean=false,val autoError: String?=null,val suggestedAmounts: Set<String> = emptySet()) {
     val saved get()=form?.let {d->snapshot?.records?.find {it.orderId==d.key}?.draft}
     val dirty get()=form!=saved
 }
@@ -23,6 +23,15 @@ class ReceivingViewModel(private val access: ReceivingAccess,private val autoSav
     private val writes=Mutex()
     private var autoJob: Job?=null
     private var autoCommand: ReceivingCommand?=null
+    private val suggestedPrices=mutableMapOf<String,java.math.BigDecimal>()
+    fun amount(id: String,value: String) {
+        if(!available()) return
+        val before=state.value.form?.lines?.find {it.product.id==id} ?: return
+        if(value==before.total) return
+        suggestedPrices.remove(id)
+        update {it.copy(suggestedAmounts=it.suggestedAmounts-id)}
+        line(id) {it.copy(total=value,priceMode="total",unitPrice="")}
+    }
     private suspend fun flushAuto(): Boolean = writes.withLock {
         while(true) {
             val ui=state.value;val s=ui.snapshot ?: return@withLock false
@@ -81,17 +90,33 @@ class ReceivingViewModel(private val access: ReceivingAccess,private val autoSav
         if(state.value.dirty || autoCommand!=null) {if(autoSaveEnabled) afterAutosave {open(id)};return}
         val s=state.value.snapshot ?: return
         val existing=s.records.find {it.orderId==id}?.draft
-        if(existing!=null) {update {it.copy(form=existing,preview=null,message=null)};return}
+        if(existing!=null) {
+            suggestedPrices.clear()
+            try {
+                val normalized=existing.copy(lines=existing.lines.map {ReceivingRules.priceMode(it,"total")})
+                update {it.copy(form=normalized,preview=null,message=null,suggestedAmounts=emptySet())}
+                if(normalized!=existing) autosave()
+            } catch(_:CatalogFailure) {
+                update {it.copy(form=existing,preview=null,suggestedAmounts=emptySet(),message="В старом черновике незавершённая цена. Укажите сумму строки; исходный ввод сохранён.")}
+            }
+            return
+        }
         val o=s.orders.find {it.id==id} ?: return
         try {
-            val d=ReceivingRules.open(UUID.randomUUID().toString(),o,s.products).copy(working=autoSaveEnabled)
-            update {it.copy(form=d,preview=null,message=null)};save()
+            suggestedPrices.clear()
+            val opened=ReceivingRules.open(UUID.randomUUID().toString(),o,s.products).copy(working=autoSaveEnabled)
+            val d=opened.copy(lines=opened.lines.map {line->
+                val price=ReceivingAmountDefaults.cost(line.product)
+                if(price==null) line else {suggestedPrices[line.product.id]=price;line.copy(total=ReceivingAmountDefaults.amount(line,price).orEmpty())}
+            })
+            update {it.copy(form=d,preview=null,message=null,suggestedAmounts=suggestedPrices.keys.toSet())};save()
         } catch(e:CatalogFailure) {update {it.copy(message=e.message)}}
     }
     fun standalone() {
         if(!available()) return
         if(state.value.dirty || autoCommand!=null) {if(autoSaveEnabled) afterAutosave {standalone()};return}
         val s=state.value.snapshot ?: return
+        suggestedPrices.clear()
         val saved=s.records.find {it.orderId==ReceivingRules.STANDALONE}?.draft
         update {it.copy(form=saved ?: ReceivingDraft(UUID.randomUUID().toString(),null,lines=emptyList(),working=autoSaveEnabled),preview=null,message=null)}
         if(saved==null) save()
@@ -112,8 +137,14 @@ class ReceivingViewModel(private val access: ReceivingAccess,private val autoSav
     }
     fun change(edit: (ReceivingDraft)->ReceivingDraft) {if(available()) {update {it.copy(form=it.form?.let(edit)?.let {d->if(autoSaveEnabled) d.copy(working=true) else d},preview=null,message=null)};autosave()}}
     fun line(id: String,edit: (ReceivingLine)->ReceivingLine) {
-        change {d->d.copy(lines=d.lines.map {l->if(l.product.id!=id) l else edit(l).let {next->
-            if(next.priceMode=="total" && next.quantity.trim().replace(',','.').toBigDecimalOrNull()?.signum()==0) next.copy(total="0") else next
+        if(!available()) return
+        val before=state.value.form?.lines?.find {it.product.id==id} ?: return
+        val edited=edit(before)
+        if(edited.total!=before.total) {suggestedPrices.remove(id);update {it.copy(suggestedAmounts=it.suggestedAmounts-id)}}
+        change {d->d.copy(lines=d.lines.map {l->if(l.product.id!=id) l else edited.let {next->
+            val price=suggestedPrices[id]
+            if(price!=null && next.total==l.total && next.priceMode=="total") next.copy(total=ReceivingAmountDefaults.amount(next,price).orEmpty())
+            else if(next.priceMode=="total" && next.quantity.trim().replace(',','.').toBigDecimalOrNull()?.signum()==0) next.copy(total="0") else next
         }})}
     }
     fun priceMode(id: String,next: String) {

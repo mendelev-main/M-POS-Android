@@ -16,6 +16,8 @@ import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
+import com.mendelev.mpos.core.ui.MposCountBadge
+import com.mendelev.mpos.core.ui.MposCountTone
 
 /** pos.html: screen-pos / pos-toolbar / cart-*; baseline mapping CSS px → dp/sp. */
 internal data class WorkspaceGeometry(val columns: Int = 5, val homeRows: Int = 4)
@@ -98,9 +100,7 @@ internal enum class PosTone { Neutral, Info, Zone, Primary, Warning, Demand }
         Surface(onClick=onParked,enabled=!pending && !editing,modifier=size.testTag("workspaceParked"),shape=RoundedCornerShape(16.dp),color=if(isMposDarkTheme()) Color(0xFF26334A) else Color(0xFFE8F0FF)) {
             Row(Modifier.padding(horizontal=15.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 Text("Отложенные",style=MaterialTheme.typography.labelLarge)
-                if(parked>0) Surface(shape=RoundedCornerShape(100.dp),color=Color(0xFF34C759),contentColor=Color.White) {
-                    Box(Modifier.defaultMinSize(minWidth=24.dp,minHeight=24.dp).padding(horizontal=5.dp),contentAlignment=Alignment.Center) {Text(parked.toString(),style=MaterialTheme.typography.labelMedium)}
-                }
+                MposCountBadge(parked,MposCountTone.Parked)
             }
         }
     }

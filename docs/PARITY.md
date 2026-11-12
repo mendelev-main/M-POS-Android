@@ -1,5 +1,23 @@
 # Карта функционального переноса
 
+2026-11-12 S05 history navigation implemented locally: постоянный каркас списка/просмотра вместо полной замены спиннером, cache сохраняется при обновлении, прежний selected сохраняется при неизменном payload. Ручная визуальная приёмка pending.
+
+SF13 (12.11.2026) implemented locally: старые ожидающие поставки доступны без age-filter; запрос перехода в приёмку подтверждается после открытия формы, не теряется при refresh. Ручная приёмка pending.
+
+2026-11-12 S03/S04 delivery cash policy implemented locally: доставка остаётся в чеке, новые продажи без автоматического cash-out; исторические расходы/возвраты сохранены. Отчёты разделяют fee и courier expense. Адресные проверки — build-log, ручная приёмка pending.
+
+2026-11-12 SF12 уточнение implemented locally: зелёная вся строка нового заказа/редактора, касание строки включает/исключает товар; поля сохраняют редактирование. Manual acceptance pending.
+
+2026-11-12 W/topbar count badge implemented locally: общий Web .park-badge для Отложенных/Событий, green/red и одинаковая геометрия во всех локальных темах. Счётчики/источники данных прежние, manual device acceptance pending.
+
+2026-11-12 SF11–SF12 implemented locally: одинаковые поля приёмки/выравнивание строк, current-cost amount suggestion вместо last receipt, yellow до ручной правки; включение товара касанием/правкой полей и зелёные включённые строки. Адресные20JVM/compile passed, UI/device acceptance владельцем pending; SUPPLIES-FOLDER-UI.md.
+
+2026-11-12 SF09–SF10 implemented locally: исправлено смещение folder-tab по скриншоту владельца, иконки для всех трёх вкладок, удалён верхний пункт Приёмка, шире/левее поля нового заказа, receiving body без растянутого пустого списка. SUPPLIES-FOLDER-UI.md; ручная повторная приёмка владельцем pending.
+
+2026-11-12 SF05–SF08 implemented locally: полный перенос внутренних вкладок Поставок по утверждённому макету: карточки/⋯/статусы, stock+ожидаемый приход в редакторе, только сумма строки при приёмке и supplier-specific историческая цена, ручная сумма защищена, комментарии сохранены. Превышение не считается недовозом. Компиляция/JVM evidence в build-log; manual pixel/device acceptance pending.
+
+2026-11-12 SF01–SF04 implemented locally: [закладки поставок](SUPPLIES-FOLDER-UI.md), утверждённое владельцем отличие от Web. Взаимоисключающие вкладки, pending по умолчанию и переход приёмки после сохранения. Device/pixel acceptance pending; данные/транзакции и права прежние.
+
 2026-11-09 уточнение admin input: раскрытие пароля удалено по владельцу. Всегда немедленная маска точками; регрессия проверяет masked hardware input → исходные символы verifier. Реальный AnyDesk по-прежнему pending; прежняя запись о reveal ниже описывает отменённый вариант.
 
 2026-11-09 локально: N01.CFG connection probe приведён к Web /health; SSE проверяет доступ отдельно,401/403 отображаются явно. BackendTest8/AdminSessionTest5 JVM passed; production/device проверка pending. Admin password reveal и запрет autocorrect implemented, hardware-key тест compile-only; совместимость AnyDesk pending, verifier неизменен. Evidence: harness/build-log.md, harness/context/08-admin-keyboard.md.

@@ -70,6 +70,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun FoundationScreen(fixtureUrl: String? = null) {
     var route by rememberSaveable { mutableStateOf("workspace") }
+    var supplySection by rememberSaveable {mutableStateOf(com.mendelev.mpos.core.ui.MposFolderTab.Supplies)}
     val context = LocalContext.current
     val backend=androidx.compose.runtime.remember {com.mendelev.mpos.backend.BackendRuntime.get(context)}
     val lifecycle=androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
@@ -187,7 +188,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                             override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.purchasing.PurchaseViewModel(
                                 com.mendelev.mpos.data.local.PurchaseDraftRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
                         })
-                        com.mendelev.mpos.feature.purchasing.PurchaseScreen(model,{id->receivingOrder=id;route="receiving"}) {route="workspace"}
+                        com.mendelev.mpos.feature.purchasing.PurchaseScreen(model,{id->receivingOrder=id;route="receiving"},section=supplySection,onSection={supplySection=it}) {route="workspace"}
                     }
                     "receiving" -> {
                         val model: com.mendelev.mpos.feature.receiving.ReceivingViewModel = viewModel(factory=object: ViewModelProvider.Factory {
@@ -198,7 +199,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                             @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.receiving.ReceivingPostingViewModel(
                                 com.mendelev.mpos.data.local.ReceivingPostingRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
                         })
-                        com.mendelev.mpos.feature.receiving.ReceivingScreen(model,posting,receivingOrder,{receivingOrder=null}) {route="purchaseOrders"}
+                        com.mendelev.mpos.feature.receiving.ReceivingScreen(model,posting,receivingOrder,{receivingOrder=null},onSection={supplySection=it;route="purchaseOrders"}) {supplySection=com.mendelev.mpos.core.ui.MposFolderTab.Supplies;route="purchaseOrders"}
                     }
                     "analytics" -> {
                         val model: com.mendelev.mpos.feature.report.ReportViewModel = viewModel(factory=object: ViewModelProvider.Factory {

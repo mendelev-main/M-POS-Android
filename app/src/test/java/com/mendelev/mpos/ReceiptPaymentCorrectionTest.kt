@@ -31,6 +31,20 @@ class ReceiptPaymentCorrectionTest {
         assertTrue(runCatching {RefundMoney.plan(s.quote,s.payment,1000)}.isFailure)
         ReceiptPaymentHistory.validate(s)
     }
+    @Test fun newAndLegacyDeliveryReceiptsValidateAndKeepOriginalCashOutOnCorrection() {
+        for(courier in listOf(0L,500L)) {
+            val base=receipt();val old=ReceiptCodec.decode(base.payload)
+            val q=SaleMoney.quote(listOf(SaleLineInput("line","10","1")),"delivery",DeliveryCharge("d","Доставка",500,1))
+            val d=old.checkout.copy(delivery=q.delivery,parts=listOf(PaymentInput("cash",1500,2000)))
+            val p=SaleMoney.payments(q,d.parts,0).copy(deliveryCashOut=courier,expectedCashAfter=1500-courier)
+            val receipt=base.copy(total=1500,cash=1500,deliveryCashOut=courier,payload=ReceiptCodec.encode(old.cart,d,q,p,emptyMap(),emptyList()))
+            ReceiptPaymentHistory.validate(ReceiptCodec.decode(receipt.payload))
+            val corrected=ReceiptPaymentHistory.change(receipt,"card","edit",2,"a","Кассир",false)
+            assertEquals(courier,corrected.deliveryCashOut)
+            val saved=ReceiptCodec.decode(corrected.payload)
+            assertEquals(courier,RefundMoney.plan(saved.quote,saved.payment,0,true).deliveryCashCredit)
+        }
+    }
     @Test fun changedAmountsInventedTenderOrBrokenHistoryAreRejected() {
         val changed=ReceiptPaymentHistory.change(receipt(),"card","edit",2,"actor","Сотрудник",false)
         val json=JSONObject(changed.payload)

@@ -26,7 +26,12 @@ object ReceiptPaymentHistory {
             ReceiptCodec.decode(it)
         } ?: s
         val before=Math.addExact(Math.subtractExact(original.payment.expectedCashAfter,original.payment.cash),original.payment.deliveryCashOut)
-        require(SaleMoney.payments(original.quote,original.checkout.parts,before)==original.payment)
+        // Older receipts really issued the courier fee; preserve that immutable cash movement.
+        val courier=original.payment.deliveryCashOut
+        require(courier==0L || courier==original.quote.delivery?.fee)
+        val current=SaleMoney.payments(original.quote,original.checkout.parts,before)
+        require(current.expectedCashAfter>=courier)
+        require(current.copy(deliveryCashOut=courier,expectedCashAfter=current.expectedCashAfter-courier)==original.payment)
         val rows=JSONArray(s.paymentCorrections)
         if(s.originalReceiptJson==null) {require(rows.length()==0);return}
         require(s.cart==original.cart && s.checkout==original.checkout && s.quote==original.quote && s.consumption==original.consumption && s.products==original.products)

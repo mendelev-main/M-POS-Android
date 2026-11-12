@@ -60,11 +60,6 @@ class SaleViewModelTest {
             suspend fun ready(): SaleUi=withTimeout(20_000) {model.state.first {!it.loading && !it.pending}}
             ready()
             withContext(Dispatchers.Main) {model.edit {it.copy(mode="card",tariff="Курьер",fee="5")};model.prepare()}
-            assertNotNull(ready().message);assertNull(model.state.value.preview);assertNull(CheckoutRepository(db).load())
-            val active=shifts.snapshot();shifts.close("close",active.active!!.id,active.revision,ShiftRules.token(active),500,active.ownerId)
-            val closed=shifts.snapshot();shifts.open("next",closed.revision,closed.last!!.id,closed.ownerId)
-            withContext(Dispatchers.Main) {model.refresh()};ready()
-            withContext(Dispatchers.Main) {model.edit {it.copy(mode="card",tariff="Курьер",fee="5")};model.prepare()}
             val prepared=ready();assertEquals(2500L,prepared.quote!!.total);assertEquals(0L,prepared.payment!!.expectedCashAfter)
             val command=prepared.preview!!.draft.commandId
             db.openHelper.writableDatabase.execSQL("CREATE TEMP TRIGGER refuse_sale BEFORE INSERT ON receipts BEGIN SELECT RAISE(ABORT, 'injected'); END")

@@ -60,14 +60,31 @@ class PurchaseAutosaveTest {
         assertEquals(model.state.value.form,PurchaseDraftCodec.decode(PurchaseDraftCodec.encodeWorking(fake.snapshot.draft)))
         assertTrue(fake.snapshot.orders.isEmpty())
     }
+    @Test fun touchingProductIncludesOneAndEditingPackIncludesWithoutReplacingPositiveQuantity()=fixture {fake,model,main->
+        withContext(main) {model.supplier("s");model.activate("p")};saved(model)
+        assertEquals("1",fake.snapshot.draft!!.lines.single().quantity)
+        assertTrue(PurchaseDraftRules.included(fake.snapshot.draft!!.lines.single()))
+        withContext(main) {model.activate("p");model.line("p") {it.copy(quantity="3")};model.activate("p")};saved(model)
+        assertEquals(1,fake.snapshot.draft!!.lines.size)
+        assertEquals("3",fake.snapshot.draft!!.lines.single().quantity)
+        withContext(main) {model.line("p") {it.copy(quantity="0")}};saved(model)
+        assertFalse(PurchaseDraftRules.included(fake.snapshot.draft!!.lines.single()))
+        withContext(main) {model.line("p") {it.copy(packSize="500",contentUnit="ml")}};saved(model)
+        val line=fake.snapshot.draft!!.lines.single()
+        assertEquals("1",line.quantity);assertEquals("500",line.packSize);assertEquals("ml",line.contentUnit)
+        assertEquals(0,java.math.BigDecimal("0.5").compareTo(PurchaseDraftRules.expected(line)!!))
+        assertTrue(fake.snapshot.orders.isEmpty())
+    }
     @Test fun formingWaitsForAutosaveAndNeverResurrectsOrDuplicatesOldRequest()=fixture {fake,model,main->
         fake.gate=CompletableDeferred()
-        withContext(main) {model.supplier("s");model.line("p") {it.copy(quantity="24",packSize="500",contentUnit="ml")};model.saveAndPlace();model.saveAndPlace()}
+        withContext(main) {model.supplier("s");model.note("Доставить утром");model.line("p") {it.copy(quantity="24",packSize="500",contentUnit="ml")};model.saveAndPlace();model.saveAndPlace()}
         fake.gate!!.complete(Unit)
         withTimeout(5000) {model.state.first {!it.pending && it.lastPlacedId!=null}}
         saved(model)
         assertEquals(1,fake.snapshot.orders.size)
         assertEquals("24",fake.snapshot.orders.single().source.lines.single().quantity)
+        val order=fake.snapshot.orders.single()
+        assertEquals("Доставить утром",PurchaseOrderCodec.decode(PurchaseOrderCodec.encode(listOf(order))).single().source.note)
         assertNull(fake.snapshot.draft);assertNull(model.state.value.form)
         assertEquals(1,fake.commands.count {it.action is PurchaseAction.Place})
     }

@@ -20,9 +20,9 @@ data class ReportPeriod(val from: LocalDate,val through: LocalDate,val zone: Zon
     }
     fun contains(at: Long)=at>=start && at<endExclusive
 }
-data class ReportSale(val id: String,val at: Long,val total: Long,val cash: Long,val card: Long,val delivery: Long)
-data class ReportRefund(val id: String,val receiptId: String,val at: Long,val total: Long,val cash: Long,val card: Long,val delivery: Long)
-data class ReportEvent(val kind: String,val id: String,val receiptId: String,val at: Long,val total: Long,val cash: Long,val card: Long,val delivery: Long)
+data class ReportSale(val id: String,val at: Long,val total: Long,val cash: Long,val card: Long,val delivery: Long,val courier: Long=delivery)
+data class ReportRefund(val id: String,val receiptId: String,val at: Long,val total: Long,val cash: Long,val card: Long,val delivery: Long,val courier: Long=delivery)
+data class ReportEvent(val kind: String,val id: String,val receiptId: String,val at: Long,val total: Long,val cash: Long,val card: Long,val delivery: Long,val courier: Long=delivery)
 data class ReportAmounts(val total: BigInteger,val cash: BigInteger,val card: BigInteger,val delivery: BigInteger)
 data class SalesReport(val period: ReportPeriod,val generatedAt: Long,val events: List<ReportEvent>,
     val saleCount: Long,val refundCount: Long,val sales: ReportAmounts,val refunds: ReportAmounts,
@@ -43,16 +43,16 @@ object SalesReports {
                 cash.toBigInteger()+card.toBigInteger()!=total.toBigInteger() || delivery>total)
                 invalid("Повреждены суммы документа")
         }
-        sales.forEach {validate(it.id,it.at,it.total,it.cash,it.card,it.delivery)}
+        sales.forEach {validate(it.id,it.at,it.total,it.cash,it.card,it.delivery);if(it.courier!=0L && it.courier!=it.delivery) invalid("Повреждён расход доставки")}
         val byId=sales.associateBy {it.id}
         refunds.forEach {r->
             validate(r.id,r.at,r.total,r.cash,r.card,r.delivery)
             val sale=byId[r.receiptId] ?: invalid("Не найден исходный чек возврата")
-            if(r.at<sale.at || r.total!=sale.total || r.cash!=sale.cash || r.card!=sale.card || r.delivery!=sale.delivery)
+            if(r.at<sale.at || r.total!=sale.total || r.cash!=sale.cash || r.card!=sale.card || r.delivery!=sale.delivery || r.courier!=sale.courier)
                 invalid("Возврат не совпадает с исходной полной оплатой")
         }
-        val events=(sales.filter {period.contains(it.at)}.map {ReportEvent("sale",it.id,it.id,it.at,it.total,it.cash,it.card,it.delivery)}+
-            refunds.filter {period.contains(it.at)}.map {ReportEvent("refund",it.id,it.receiptId,it.at,it.total,it.cash,it.card,it.delivery)})
+        val events=(sales.filter {period.contains(it.at)}.map {ReportEvent("sale",it.id,it.id,it.at,it.total,it.cash,it.card,it.delivery,it.courier)}+
+            refunds.filter {period.contains(it.at)}.map {ReportEvent("refund",it.id,it.receiptId,it.at,it.total,it.cash,it.card,it.delivery,it.courier)})
             .sortedWith(compareBy({it.at},{it.kind},{it.id})).toList()
         fun amounts(rows: List<ReportEvent>): ReportAmounts {
             fun sum(value: (ReportEvent)->Long)=rows.fold(BigInteger.ZERO) {acc,row->acc+value(row).toBigInteger()}

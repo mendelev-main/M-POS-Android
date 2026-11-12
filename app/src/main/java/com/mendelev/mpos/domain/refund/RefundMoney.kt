@@ -33,7 +33,7 @@ object RefundMoney {
             quote.lines.fold(0L) { sum, line -> add(sum, line.discount) } != quote.discount)
             invalid("Суммы строк не совпадают с чеком")
         val fee = quote.delivery?.fee ?: 0L
-        if (fee < 0 || payment.deliveryCashOut != fee || add(quote.subtotal, fee) != quote.total)
+        if (fee < 0 || (payment.deliveryCashOut != 0L && payment.deliveryCashOut != fee) || add(quote.subtotal, fee) != quote.total)
             invalid("Повреждён расход доставки")
         if (payment.parts.isEmpty() || payment.parts.size > 10) invalid("Повреждена оплата чека")
         var cash = 0L
@@ -58,9 +58,10 @@ object RefundMoney {
         if (cash != payment.cash || card != payment.card || add(cash, card) != quote.total)
             invalid("Оплата не совпадает с чеком")
         // Both operands are nonnegative Longs: their signed difference cannot overflow.
-        val delta = fee - cash
+        val courierCredit = payment.deliveryCashOut
+        val delta = courierCredit - cash
         val after = add(currentCash, delta)
         if (after < 0) invalid("Недостаточно наличных для возврата")
-        return RefundAmounts(quote.total, cash, card, fee, delta, after)
+        return RefundAmounts(quote.total, cash, card, courierCredit, delta, after)
     }
 }

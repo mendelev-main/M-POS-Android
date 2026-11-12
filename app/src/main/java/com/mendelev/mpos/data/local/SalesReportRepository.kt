@@ -18,9 +18,9 @@ class SalesReportRepository(private val db: CatalogDatabase,private val clock: C
         val sales=receipts.map {r->
             val saved=snapshots.getValue(r.id)
             if(saved.quote.total!=r.total || saved.payment.cash!=r.cash || saved.payment.card!=r.card ||
-                saved.payment.deliveryCashOut!=r.deliveryCashOut || (saved.quote.delivery?.fee ?: 0)!=r.deliveryCashOut)
+                saved.payment.deliveryCashOut!=r.deliveryCashOut || (r.deliveryCashOut!=0L && (saved.quote.delivery?.fee ?: 0)!=r.deliveryCashOut))
                 throw CatalogFailure("report","Суммы чека не совпадают с историческим снимком")
-            ReportSale(r.id,r.createdAt,r.total,r.cash,r.card,r.deliveryCashOut)
+            ReportSale(r.id,r.createdAt,r.total,r.cash,r.card,saved.quote.delivery?.fee ?: 0,r.deliveryCashOut)
         }
         val byId=receipts.associateBy {it.id}
         val refundRows=db.refunds().history()
@@ -28,7 +28,7 @@ class SalesReportRepository(private val db: CatalogDatabase,private val clock: C
             val original=byId[r.receiptId] ?: throw CatalogFailure("report","Не найден чек возврата")
             if(r.receiptHash!=CatalogRules.fingerprint("refund.receipt.v1",original.payload))
                 throw CatalogFailure("report","Исторический снимок возврата не совпадает с чеком")
-            ReportRefund(r.id,r.receiptId,r.createdAt,r.total,r.cash,r.card,r.deliveryCashCredit)
+            ReportRefund(r.id,r.receiptId,r.createdAt,r.total,r.cash,r.card,snapshots.getValue(r.receiptId).quote.delivery?.fee ?: 0,r.deliveryCashCredit)
         }
         val summary=SalesReports.build(period,clock.millis(),sales,refunds)
         val cash=ShiftCashCodec.all(db)

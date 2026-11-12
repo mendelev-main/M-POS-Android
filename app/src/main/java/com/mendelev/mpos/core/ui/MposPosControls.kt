@@ -64,6 +64,8 @@ enum class PosControl { Surface, Outline, Cash, Card, Delete, Close, Secondary, 
         "next"->"M9 6L15 12L9 18"
         "add"->"M12 5V19M5 12H19"
         "edit"->"M16 3L21 8L8 21H3V16L16 3ZM13 6L18 11"
+        "copy"->"M8 8H21V21H8ZM16 8V3H3V16H8"
+        "check"->"M5 12L10 17L20 7"
         "close"->"M6 6L18 18M18 6L6 18"
         "bill"->"M6 3H18V21L15 19L12 21L9 19L6 21ZM9 7H15M9 11H15M9 15H12"
         "printer"->"M7 8V3H17V8M7 17H4V8H20V17H17M7 14H17V21H7ZM17 11H17.01"

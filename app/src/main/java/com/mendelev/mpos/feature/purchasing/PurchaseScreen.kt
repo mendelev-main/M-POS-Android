@@ -1,6 +1,7 @@
 package com.mendelev.mpos.feature.purchasing
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -30,26 +31,31 @@ import com.mendelev.mpos.domain.catalog.*
 import com.mendelev.mpos.domain.warehouse.*
 
 @OptIn(ExperimentalLayoutApi::class)
-@Composable fun PurchaseScreen(model: PurchaseViewModel,onReceive: (String)->Unit,onBack: ()->Unit) {
+@Composable fun PurchaseScreen(model: PurchaseViewModel,onReceive: (String)->Unit,section: MposFolderTab=MposFolderTab.Supplies,
+    onSection: (MposFolderTab)->Unit={},onBack: ()->Unit) {
+    MposSupplyTheme {
     val administration by com.mendelev.mpos.core.access.Administration.session.state.collectAsStateWithLifecycle()
     val ui by model.state.collectAsStateWithLifecycle();val form=ui.form;val snapshot=ui.snapshot
     val locked=ui.pending || ui.unresolved!=null || ui.orderUnresolved!=null
     val editable=!locked && !ui.blocked && ui.canEdit
     var expanded by rememberSaveable {mutableStateOf(false)}
     var history by rememberSaveable {mutableStateOf(false)}
+    var selectedOrder by rememberSaveable {mutableStateOf<String?>(null)}
+    LaunchedEffect(section) {expanded=section==MposFolderTab.New;history=section==MposFolderTab.History}
     val context=LocalContext.current
     val clipboard=LocalClipboardManager.current
     var dialog by rememberSaveable {mutableStateOf<String?>(null)}
-    LaunchedEffect(model) {model.refresh()}
-    LaunchedEffect(ui.lastPlacedId) {ui.lastPlacedId?.let {dialog="order:$it"}}
-    var restored by rememberSaveable {mutableStateOf(false)}
-    LaunchedEffect(snapshot!=null) {if(!restored && snapshot!=null) {if(form!=null) expanded=true;restored=true}}
+    LaunchedEffect(model) {model.refresh();model.refreshOrders()}
+    LaunchedEffect(ui.lastPlacedId) {ui.lastPlacedId?.let {selectedOrder=it;expanded=false;history=false;onSection(MposFolderTab.Supplies);model.dismissPlaced()}}
     fun back() {if(!locked) onBack()}
     BackHandler {back()}
-    Column(Modifier.fillMaxSize().safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding().semantics {testTagsAsResourceId=true}) {
         MposAppBar("Заказы поставщикам",navigationEnabled=!locked && dialog==null && ui.editing==null) {}
         PurchasePanels(snapshot?.orders.orEmpty(),history,expanded,locked,!ui.blocked && ui.canEdit,ui.canEdit,
-            {history=!history},{expanded=!expanded},{dialog="order:${it.id}"},{model.openEdit(it)},
+            {history=true;expanded=false;onSection(MposFolderTab.History)},{expanded=true;history=false;onSection(MposFolderTab.New)},{dialog="order:${it.id}"},{model.openEdit(it)},
+            onSupplies={history=false;expanded=false;onSection(MposFolderTab.Supplies)},onReceive=onReceive,
+            onCopy={clipboard.setText(AnnotatedString(purchaseOrderViewText(it)))},onCancel={dialog="cancel:${it.id}"},canCancel=administration.active,
+            drafts=snapshot?.receivingRecords.orEmpty(),receipts=snapshot?.receipts.orEmpty(),initialOrder=selectedOrder,
             notice={
                 if(ui.blocked) PurchaseAction("Перечитать",model::refresh,Modifier.testTag("purchaseReload"),!locked,ActionStyle.Secondary)
                 ui.message?.let {Text(it,fontSize=13.sp,color=if(ui.blocked || ui.unresolved!=null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)}
@@ -68,7 +74,7 @@ import com.mendelev.mpos.domain.warehouse.*
                     Column(Modifier.fillMaxWidth().testTag("purchaseLines")) {
                         available.sortedBy {it.name.lowercase()}.forEach {p->
                             val line=form.lines.find {it.productId==p.id} ?: p.blankLine()
-                            PurchaseRequestRow(p,line,editable) {next->if(line.quantity.isNotBlank() && next.quantity.isBlank()) model.remove(p.id) else model.line(p.id) {next}}
+                            PurchaseRequestRow(p,line,editable,onActivate={model.activate(p.id)}) {next->if(line.quantity.isNotBlank() && next.quantity.isBlank()) model.remove(p.id) else model.line(p.id) {next}}
                         }
                         missing.forEach {l->
                             Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -79,8 +85,14 @@ import com.mendelev.mpos.domain.warehouse.*
                         if(available.isEmpty() && missing.isEmpty()) Text("Закрепите простые товары за поставщиком в Настройках → Поставщики")
                     }
                 }
-                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp,Alignment.End)) {
-                    PurchaseAction("Сформировать заказ",model::saveAndPlace,Modifier.widthIn(min=230.dp).testTag("purchasePlace"),editable && form?.lines.orEmpty().any {runCatching {PurchaseDraftRules.number(it.quantity)?.signum()==1}.getOrDefault(false)})
+                if(form!=null) {
+                    var comment by rememberSaveable(form.id) {mutableStateOf(form.note.isNotBlank())}
+                    TextButton(onClick={comment=!comment}) {Text("Комментарий",color=MaterialTheme.colorScheme.onSurfaceVariant)}
+                    if(comment) OutlinedTextField(form.note,model::note,Modifier.fillMaxWidth(),enabled=editable,placeholder={Text("При необходимости")},shape=androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+                }
+                Row(Modifier.fillMaxWidth().padding(top=18.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
+                    Text("Позиций: ${form?.lines.orEmpty().count {runCatching {PurchaseDraftRules.number(it.quantity)?.signum()==1}.getOrDefault(false)}}",Modifier.weight(1f),fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    MposPosControl("Сформировать заказ",model::saveAndPlace,Modifier.testTag("purchasePlace"),editable && form?.lines.orEmpty().any {runCatching {PurchaseDraftRules.number(it.quantity)?.signum()==1}.getOrDefault(false)},PosControl.Cash,height=44.dp,radius=16.dp)
 
                 }
 
@@ -108,14 +120,19 @@ import com.mendelev.mpos.domain.warehouse.*
                 PurchaseAction("Перечитать историю",model::refreshOrders,enabled=!locked,modifier=Modifier.testTag("purchaseOrderReload"))
             }
             dialog?.startsWith("cancel:")==true -> {
-                Text("Заказ останется в истории со статусом «Отменён». Остатки и себестоимость не изменятся; отмена не отправляет сообщение поставщику.")
                 val target=snapshot?.orders?.find {it.id==dialog?.substringAfter("cancel:")}
-                PurchaseAction("Отменить заказ",{if(target!=null) {dialog=null;model.cancelOrder(target)}},enabled=editable && target!=null,style=ActionStyle.Danger,modifier=Modifier.testTag("purchaseCancelConfirm"))
+                target?.let {Text(it.source.supplierName,fontSize=15.sp,fontWeight=FontWeight.Bold)}
+                Text("Заказ останется в истории с отметкой «Отменена».",fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                    MposPosControl("Назад",{dialog=null},Modifier.weight(1f),!locked,PosControl.Outline,height=44.dp,radius=16.dp)
+                    MposPosControl("Отменить заказ",{if(target!=null) {dialog=null;model.cancelOrder(target)}},Modifier.weight(1f).testTag("purchaseCancelConfirm"),editable && target!=null,PosControl.Delete,height=44.dp,radius=16.dp)
+                }
             }
 
         }
     }
-    PurchaseOrderEditDialog(ui,model) {dialog="order:$it"}
+    PurchaseOrderEditDialog(ui,model)
+    }
 }
 internal fun purchaseDate(timestamp: Long)=DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").format(Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()))
 

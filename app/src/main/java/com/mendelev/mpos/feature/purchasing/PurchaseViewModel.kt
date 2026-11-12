@@ -76,9 +76,11 @@ class PurchaseViewModel(private val access: PurchaseAccess,private val autoSaveE
         if(old!=null && PurchaseDraftRules.hasRequestedLines(old)) {update {it.copy(message="Сначала уберите товары из текущего заказа")};return}
         if(id.isBlank()) {update {it.copy(form=null,message=null)};autosave();return}
         val supplier=ui.snapshot?.suppliers?.find {it.id==id} ?: return
-        update {it.copy(form=PurchaseDraft(old?.id ?: ui.snapshot?.draft?.id ?: UUID.randomUUID().toString(),id,supplier.revision,supplier.name,emptyList()),message=null)}
+        update {it.copy(form=PurchaseDraft(old?.id ?: ui.snapshot?.draft?.id ?: UUID.randomUUID().toString(),id,supplier.revision,supplier.name,emptyList(),old?.note.orEmpty()),message=null)}
         autosave()
     }
+    fun activate(id: String) {line(id,PurchaseDraftRules::activate)}
+    fun activateEdit(id: String) {editLine(id,PurchaseDraftRules::activate)}
     fun line(id: String,change: (PurchaseLine)->PurchaseLine) {
         if(!editable()) return
         val ui=state.value;val d=ui.form ?: return
@@ -86,10 +88,12 @@ class PurchaseViewModel(private val access: PurchaseAccess,private val autoSaveE
         val s=ui.snapshot.suppliers.find {it.id==d.supplierId} ?: return
         if(id !in s.productIds && d.lines.none {it.productId==id}) return
         val old=d.lines.find {it.productId==id} ?: p.blankLine()
-        val next=change(old)
+        val changed=change(old)
+        val next=if(changed!=old && changed.quantity==old.quantity) PurchaseDraftRules.activate(changed) else changed
         update {it.copy(form=d.copy(lines=if(d.lines.any {it.productId==id}) d.lines.map {if(it.productId==id) next else it} else d.lines+next),message=null)}
         autosave()
     }
+    fun note(value: String) {if(editable() && value.length<=1000) {update {it.copy(form=it.form?.copy(note=value),message=null)};autosave()}}
     fun remove(id: String) {if(editable()) {update {it.copy(form=it.form?.let {d->d.copy(lines=d.lines.filterNot {l->l.productId==id})},message=null)};autosave()}}
     fun discard() {if(!state.value.pending && state.value.unresolved==null && state.value.orderUnresolved==null && state.value.editing==null) update {it.copy(form=it.snapshot?.draft,message=null)}}
     fun revalidate() {
@@ -128,7 +132,8 @@ class PurchaseViewModel(private val access: PurchaseAccess,private val autoSaveE
         val p=s.products.find {it.id==id} ?: return
         if(id !in s.suppliers.find {it.id==e.form.supplierId}?.productIds.orEmpty() && e.form.lines.none {it.productId==id}) return
         val line=e.form.lines.find {it.productId==id} ?: p.blankLine()
-        val changed=change(line)
+        val raw=change(line)
+        val changed=if(raw!=line && raw.quantity==line.quantity) PurchaseDraftRules.activate(raw) else raw
         update {it.copy(editing=e.copy(form=e.form.copy(lines=if(e.form.lines.any {it.productId==id}) e.form.lines.map {if(it.productId==id) changed else it} else e.form.lines+changed)),message=null)}
     }
     fun removeEditLine(id: String) {if(available()) update {it.copy(editing=it.editing?.let {e->e.copy(form=e.form.copy(lines=e.form.lines.filterNot {l->l.productId==id}))},message=null)}}
@@ -184,7 +189,7 @@ class PurchaseViewModel(private val access: PurchaseAccess,private val autoSaveE
     private suspend fun readOrders() {
         try {
             val s=withContext(Dispatchers.IO) {access.snapshot()}
-            update {it.copy(snapshot=it.snapshot?.copy(orders=s.orders,products=s.products,suppliers=s.suppliers),blocked=false,orderReloadNeeded=false,orderCommitted=false,message=if(it.orderCommitted) "Изменение заказа сохранено. Остатки не менялись" else "История закупок обновлена")}
+            update {it.copy(snapshot=it.snapshot?.copy(orders=s.orders,products=s.products,suppliers=s.suppliers,receivingRecords=s.receivingRecords,receipts=s.receipts),blocked=false,orderReloadNeeded=false,orderCommitted=false,message=if(it.orderCommitted) "Изменение заказа сохранено. Остатки не менялись" else null)}
         } catch(ex:CancellationException) {throw ex}
         catch(_:Exception) {update {it.copy(blocked=true,orderReloadNeeded=true,message=if(it.orderCommitted) "Изменение заказа сохранено. Не удалось перечитать историю; повторите чтение" else "Не удалось прочитать историю. Ввод сохранён; повторите чтение")}}
     }
@@ -193,7 +198,7 @@ class PurchaseViewModel(private val access: PurchaseAccess,private val autoSaveE
         update {it.copy(pending=true)}
         viewModelScope.launch {try {readOrders()} finally {update {it.copy(pending=false)}}}
     }
-    fun dismissPlaced() {if(!state.value.pending) update {it.copy(lastPlacedId=null)}}
+    fun dismissPlaced() {if(!state.value.pending) update {it.copy(lastPlacedId=null,message=null)}}
     private val placeAfterSave=mutableSetOf<String>()
     fun saveAndPlace() {
         if(!editable()) return

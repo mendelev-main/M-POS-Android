@@ -24,8 +24,17 @@ class ReportGroupsTest {
         assertEquals(800.toBigInteger(),b.refundCost);assertEquals(500.toBigInteger(),b.courierCredit)
         assertTrue(b.products.single().sold.isEmpty());assertEquals(BigDecimal("2"),b.products.single().returned["piece"])
     }
+    @Test fun deliveryFeeIsRevenueWithoutAutomaticCourierExpenseAndRefundReversesIt() {
+        val fresh=sale.copy(courier=0)
+        val ret=ReportRefund("r","s",period.endExclusive,2500,1000,1500,500,0)
+        fun report(p: ReportPeriod)=ReportGroups.build(SalesReports.build(p,period.endExclusive+1,listOf(fresh),listOf(ret)),listOf(history))
+        val sold=report(period)
+        assertEquals(1700.toBigInteger(),sold.profit);assertEquals(BigInteger.ZERO,sold.courierOut)
+        val returned=report(ReportPeriod(date.plusDays(1),date.plusDays(1),period.zone))
+        assertEquals((-1700).toBigInteger(),returned.profit);assertEquals(BigInteger.ZERO,returned.courierCredit)
+    }
     @Test fun historicalLabelsIdsAndUnitsRemainSeparateAndGroupsReconcile() {
-        val other=sale.copy(id="second",total=1000,cash=1000,card=0,delivery=0)
+        val other=sale.copy(id="second",total=1000,cash=1000,card=0,delivery=0,courier=0)
         val facts=listOf(history,history.copy(receiptId="second",employeeId="other",employeeName="Анна",lines=listOf(
             history.lines.single().copy(id="kg",name="Новое имя",unit="kg",quantity=BigDecimal("1.5"),netMinor=1000))))
         val report=SalesReports.build(period,period.start,listOf(sale,other),emptyList())

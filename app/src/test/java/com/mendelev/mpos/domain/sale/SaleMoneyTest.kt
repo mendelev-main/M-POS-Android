@@ -21,14 +21,18 @@ class SaleMoneyTest {
         reject {SaleMoney.quote(listOf(SaleLineInput("a","10","1")),"delivery")}
         assertEquals(1000L,SaleMoney.quote(listOf(SaleLineInput("a","10","1")),"delivery",DeliveryCharge("free","Бесплатно",0,1)).total)
     }
-    @Test fun mixedPaymentChangesCashByNetAmountAndDeliveryIsIssuedOnce() {
+    @Test fun mixedPaymentChangesCashByNetAmountAndDeliveryStaysInBill() {
         val q=SaleMoney.quote(listOf(SaleLineInput("a","100","1")))
         val p=SaleMoney.payments(q,listOf(PaymentInput("cash",4000,5000),PaymentInput("card",6000)),0)
         assertEquals(4000L,p.cash);assertEquals(6000L,p.card);assertEquals(1000L,p.parts[0].change);assertEquals(4000L,p.expectedCashAfter)
         val delivery=SaleMoney.quote(listOf(SaleLineInput("a","20","1")),"delivery",DeliveryCharge("town","Город",500,1))
-        reject {SaleMoney.payments(delivery,listOf(PaymentInput("card",2500)),0)}
-        assertEquals(0L,SaleMoney.payments(delivery,listOf(PaymentInput("card",2500)),500).expectedCashAfter)
-        assertEquals(2000L,SaleMoney.payments(delivery,listOf(PaymentInput("cash",2500,3000)),0).expectedCashAfter)
+        assertEquals(0L,SaleMoney.payments(delivery,listOf(PaymentInput("card",2500)),0).expectedCashAfter)
+        assertEquals(500L,SaleMoney.payments(delivery,listOf(PaymentInput("card",2500)),500).expectedCashAfter)
+        val paid=SaleMoney.payments(delivery,listOf(PaymentInput("cash",2500,3000)),0)
+        assertEquals(2500L,paid.expectedCashAfter);assertEquals(0L,paid.deliveryCashOut)
+        assertEquals(500L,paid.parts.single().change)
+        val mixed=SaleMoney.payments(delivery,listOf(PaymentInput("cash",1000,1500),PaymentInput("card",1500)),0)
+        assertEquals(1000L,mixed.expectedCashAfter);assertEquals(0L,mixed.deliveryCashOut)
     }
     @Test fun equalSplitKeepsEveryKopeckAndZeroPartsAreValid() {
         assertEquals(listOf(334L,333L,333L),SaleMoney.equalParts(1000,3))

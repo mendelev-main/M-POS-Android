@@ -43,7 +43,7 @@ data class MposTopNavigation(
 )
 val LocalMposTopNavigation = staticCompositionLocalOf<MposTopNavigation?> { null }
 private val destinations = listOf(
-    "purchaseOrders" to "Заказы", "receiving" to "Приёмка", "history" to "Чеки",
+    "purchaseOrders" to "Поставки", "history" to "Чеки",
 
 )
 
@@ -63,7 +63,8 @@ fun MposTopBar(navigation: MposTopNavigation, enabled: Boolean = true) {
                 selected=navigation.route in setOf("workspace", "checkout"), bold=true)
             Row(horizontalArrangement=Arrangement.spacedBy(4.dp)) {
                 destinations.forEach { (route, label) ->
-                    TopItem(label, route, navigation, allowed, compact=compact)
+                    TopItem(label, route, navigation, allowed, compact=compact,
+                        selected=navigation.route==route || route=="purchaseOrders" && navigation.route=="receiving")
                 }
                 if(navigation.inventoryReminder) TopItem("Инвентаризация","inventory",navigation,allowed,selected=navigation.route in setOf("inventory","inventoryWork","inventoryHistory"),compact=compact)
             }
@@ -125,10 +126,7 @@ private fun TopItem(label: String, route: String, nav: MposTopNavigation, enable
                 fontSize=if(shift) (if(compact) 11.sp else 13.5.sp) else if(compact && !bold) 12.sp else 14.sp,
                 lineHeight=20.sp, fontWeight=if(bold) FontWeight.Bold else FontWeight.SemiBold),
                 maxLines=1, softWrap=false, overflow=TextOverflow.Visible)
-            if(badge>0) Box(Modifier.height(20.dp).widthIn(min=20.dp).background(MaterialTheme.colorScheme.error,CircleShape)
-                .padding(horizontal=6.dp).testTag("topNav-eventsCount"),contentAlignment=Alignment.Center) {
-                Text(badge.toString(),color=Color.White,fontSize=11.sp,lineHeight=14.sp,fontWeight=FontWeight.ExtraBold)
-            }
+            MposCountBadge(badge,MposCountTone.Events,Modifier.testTag("topNav-eventsCount"))
         }
     }
 }

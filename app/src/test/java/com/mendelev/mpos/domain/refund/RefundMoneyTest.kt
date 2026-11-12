@@ -15,21 +15,21 @@ class RefundMoneyTest {
         try { block(); fail("Expected refusal") } catch (_: CatalogFailure) { }
     }
 
-    @Test fun deliveryCardReturnsWholeChequeAndCreditsCourierCash() {
+    @Test fun deliveryCardReturnsWholeChequeWithoutInventingCash() {
         val q = quote(true)
         val p = SaleMoney.payments(q, listOf(PaymentInput("card", 2500)), 500)
-        assertEquals(RefundAmounts(2500, 0, 2500, 500, 500, 500), RefundMoney.plan(q, p, 0))
+        assertEquals(RefundAmounts(2500, 0, 2500, 0, 0, 0), RefundMoney.plan(q, p, 0))
     }
     @Test fun deliveryCashUsesNetDrawerEffectWithoutRequiringExtraFloat() {
         val q = quote(true)
         val p = SaleMoney.payments(q, listOf(PaymentInput("cash", 2500, 3000)), 0)
-        assertEquals(RefundAmounts(2500, 2500, 0, 500, -2000, 0), RefundMoney.plan(q, p, 2000))
-        refused { RefundMoney.plan(q, p, 1999) }
+        assertEquals(RefundAmounts(2500, 2500, 0, 0, -2500, 0), RefundMoney.plan(q, p, 2500))
+        refused { RefundMoney.plan(q, p, 2499) }
     }
     @Test fun mixedDeliveryPreservesOriginalMethods() {
         val q = quote(true)
         val p = SaleMoney.payments(q, listOf(PaymentInput("cash", 1000, 1000), PaymentInput("card", 1500)), 0)
-        assertEquals(RefundAmounts(2500, 1000, 1500, 500, -500, 0), RefundMoney.plan(q, p, 500))
+        assertEquals(RefundAmounts(2500, 1000, 1500, 0, -1000, 0), RefundMoney.plan(q, p, 1000))
     }
     @Test fun mixedRefundNeverReturnsTenderOrChangeTwice() {
         val q = SaleMoney.quote(listOf(SaleLineInput("goods", "100", "1")))
@@ -45,12 +45,21 @@ class RefundMoneyTest {
         val free = SaleMoney.payments(zero, listOf(PaymentInput("cash", 0, 0)), 0)
         assertEquals(RefundAmounts(0, 0, 0, 0, 0, 0), RefundMoney.plan(zero, free, 0))
     }
+    @Test fun legacyCourierMovementIsReversedOnlyWhenOriginallyIssued() {
+        val q=quote(true)
+        val card=SaleMoney.payments(q,listOf(PaymentInput("card",2500)),500)
+            .copy(deliveryCashOut=500,expectedCashAfter=0)
+        assertEquals(RefundAmounts(2500,0,2500,500,500,500),RefundMoney.plan(q,card,0))
+        val cash=SaleMoney.payments(q,listOf(PaymentInput("cash",2500,3000)),0)
+            .copy(deliveryCashOut=500,expectedCashAfter=2000)
+        assertEquals(RefundAmounts(2500,2500,0,500,-2000,0),RefundMoney.plan(q,cash,2000))
+    }
     @Test fun corruptReceiptAndOverflowRefuseBeforeProducingPlan() {
         val q = quote(true)
         val p = SaleMoney.payments(q, listOf(PaymentInput("card", 2500)), 500)
         refused { RefundMoney.plan(q, p, -1) }
-        refused { RefundMoney.plan(q, p, Long.MAX_VALUE) }
-        refused { RefundMoney.plan(q, p.copy(deliveryCashOut = 0), 0) }
+        refused { RefundMoney.plan(q, p.copy(deliveryCashOut=500), Long.MAX_VALUE) }
+        refused { RefundMoney.plan(q, p.copy(deliveryCashOut = 499), 0) }
         refused { RefundMoney.plan(q.copy(total = 2400), p, 0) }
         refused { RefundMoney.plan(q.copy(subtotal = 1900), p, 0) }
         refused { RefundMoney.plan(q.copy(lines = q.lines + q.lines), p, 0) }

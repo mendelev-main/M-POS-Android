@@ -1,6 +1,10 @@
 package com.mendelev.mpos.feature.purchasing
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -54,9 +58,16 @@ import com.mendelev.mpos.core.ui.*
     }
 }
 
-@Composable internal fun PurchaseRequestRow(product: com.mendelev.mpos.domain.warehouse.PurchaseProduct,line: com.mendelev.mpos.domain.warehouse.PurchaseLine,enabled: Boolean,prefix: String="purchase",onChange: (com.mendelev.mpos.domain.warehouse.PurchaseLine)->Unit) {
-    BoxWithConstraints(Modifier.fillMaxWidth().padding(vertical=12.dp)) {
-        val wide=maxWidth>650.dp
+@Composable internal fun PurchaseRequestRow(product: com.mendelev.mpos.domain.warehouse.PurchaseProduct,line: com.mendelev.mpos.domain.warehouse.PurchaseLine,enabled: Boolean,prefix: String="purchase",onActivate: ()->Unit={},onChange: (com.mendelev.mpos.domain.warehouse.PurchaseLine)->Unit) {
+    val included=com.mendelev.mpos.domain.warehouse.PurchaseDraftRules.included(line)
+    fun include(next: com.mendelev.mpos.domain.warehouse.PurchaseLine)=onChange(com.mendelev.mpos.domain.warehouse.PurchaseDraftRules.activate(next))
+    BoxWithConstraints(Modifier.fillMaxWidth().padding(vertical=4.dp)
+        .clip(RoundedCornerShape(12.dp))
+        .background(if(included) {if(isMposDarkTheme()) Color(0xFF254237) else Color(0xFFD9EEE3)} else Color.Transparent)
+        .clickable(enabled=enabled) {
+            onChange(if(included) line.copy(quantity="0") else com.mendelev.mpos.domain.warehouse.PurchaseDraftRules.activate(line))
+        }.padding(horizontal=10.dp,vertical=10.dp)) {
+        val wide=maxWidth>=820.dp
         @Composable fun productName(modifier: Modifier) {
             Column(modifier) {
                 Text(line.productName,fontSize=14.sp,fontWeight=FontWeight.Bold)
@@ -66,37 +77,43 @@ import com.mendelev.mpos.core.ui.*
         @Composable fun fields(modifier: Modifier) {
             Column(modifier,verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    PurchaseNumber(line.quantity,{onChange(line.copy(quantity=it))},"Количество",Modifier.weight(if(wide) .75f else 1f).testTag("${prefix}Qty:${product.id}"),enabled,productName=product.name,editing=prefix=="purchaseEdit")
-                    PurchaseSelect("Единица заказа",line.unit,units(product.unit)+com.mendelev.mpos.domain.warehouse.PurchaseDraftRules.packs.map {it to com.mendelev.mpos.domain.warehouse.purchaseUnitLabel(it)},{onChange(line.copy(unit=it))},enabled,Modifier.weight(if(wide) 1.15f else 1f).testTag("${prefix}Unit:${product.id}"))
+                    MposSupplyField("Количество",line.quantity,{onChange(line.copy(quantity=it))},if(wide) Modifier.width(110.dp) else Modifier.weight(1f),enabled,tag="${prefix}Qty:${product.id}",included=false,onTouch=onActivate)
+                    PurchaseSelect("Единица заказа",line.unit,units(product.unit)+com.mendelev.mpos.domain.warehouse.PurchaseDraftRules.packs.map {it to com.mendelev.mpos.domain.warehouse.purchaseUnitLabel(it)},{include(line.copy(unit=it))},enabled,(if(wide) Modifier.width(130.dp) else Modifier.weight(1f)).testTag("${prefix}Unit:${product.id}"),included=false,onTouch=onActivate)
                     if(line.unit in com.mendelev.mpos.domain.warehouse.PurchaseDraftRules.packs && wide) {
-                        PurchaseNumber(line.packSize,{onChange(line.copy(packSize=it))},"В единице",Modifier.weight(.8f).testTag("${prefix}Pack:${product.id}"),enabled,productName=product.name,editing=prefix=="purchaseEdit")
-                        PurchaseSelect("Единица внутри",line.contentUnit,units(product.unit),{onChange(line.copy(contentUnit=it))},enabled,Modifier.weight(1f).testTag("${prefix}Content:${product.id}"))
+                        MposSupplyField("В единице",line.packSize,{include(line.copy(packSize=it))},Modifier.width(110.dp),enabled,tag="${prefix}Pack:${product.id}",included=false,onTouch=onActivate)
+                        PurchaseSelect("Единица внутри",line.contentUnit,units(product.unit),{include(line.copy(contentUnit=it))},enabled,Modifier.width(120.dp).testTag("${prefix}Content:${product.id}"),included=false,onTouch=onActivate)
                     }
                 }
                 if(line.unit in com.mendelev.mpos.domain.warehouse.PurchaseDraftRules.packs && !wide) Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    PurchaseNumber(line.packSize,{onChange(line.copy(packSize=it))},"В единице",Modifier.weight(1f).testTag("${prefix}Pack:${product.id}"),enabled,productName=product.name,editing=prefix=="purchaseEdit")
-                    PurchaseSelect("Единица внутри",line.contentUnit,units(product.unit),{onChange(line.copy(contentUnit=it))},enabled,Modifier.weight(1f).testTag("${prefix}Content:${product.id}"))
+                    MposSupplyField("В единице",line.packSize,{include(line.copy(packSize=it))},Modifier.weight(1f),enabled,included=false,onTouch=onActivate)
+                    PurchaseSelect("Единица внутри",line.contentUnit,units(product.unit),{include(line.copy(contentUnit=it))},enabled,Modifier.weight(1f).testTag("${prefix}Content:${product.id}"),included=false,onTouch=onActivate)
                 }
-                if(line.quantity.isNotBlank()) Text(expectation(line),Modifier.testTag("${prefix}Expected:${product.id}"),fontSize=11.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        if(wide) Row(horizontalArrangement=Arrangement.spacedBy(16.dp)) {productName(Modifier.weight(1.15f));fields(Modifier.weight(2.85f))}
+        if(wide) Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
+            productName(Modifier.weight(1f));fields(Modifier.weight(2.7f))
+            Column(Modifier.width(92.dp),horizontalAlignment=androidx.compose.ui.Alignment.End) {
+                Text("Поступит",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(runCatching {com.mendelev.mpos.domain.warehouse.PurchaseDraftRules.expected(line)?.let {com.mendelev.mpos.domain.catalog.CatalogRules.canonical(it).replace('.',',')} ?: "—"}.getOrDefault("—")+" "+com.mendelev.mpos.domain.catalog.unitLabel(line.stockUnit),fontSize=14.sp,fontWeight=FontWeight.Bold)
+            }
+        }
         else Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {productName(Modifier.fillMaxWidth());fields(Modifier.fillMaxWidth())}
     }
     HorizontalDivider()
 }
-@Composable internal fun PurchaseSelect(label: String,value: String,options: List<Pair<String,String>>,onChange: (String)->Unit,enabled: Boolean,modifier: Modifier) {
+@Composable internal fun PurchaseSelect(label: String,value: String,options: List<Pair<String,String>>,onChange: (String)->Unit,enabled: Boolean,modifier: Modifier,included: Boolean=false,onTouch: ()->Unit={}) {
     var open by remember {mutableStateOf(false)}
-    Column(modifier) {
-        Text(label,fontSize=10.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+    Column(modifier,verticalArrangement=Arrangement.spacedBy(4.dp)) {
+        Text(label,fontSize=12.sp,lineHeight=16.sp,maxLines=1,color=MaterialTheme.colorScheme.onSurfaceVariant)
         Box {
-            Surface(onClick={open=true},enabled=enabled,modifier=Modifier.fillMaxWidth().heightIn(min=44.dp),shape=RoundedCornerShape(10.dp),color=MaterialTheme.colorScheme.background,border=BorderStroke(1.5.dp,MaterialTheme.colorScheme.outline)) {
-                Row(Modifier.padding(9.dp),horizontalArrangement=Arrangement.spacedBy(5.dp)) {
-                    Text(options.find {it.first==value}?.second ?: value,Modifier.weight(1f),fontSize=14.sp,maxLines=1)
-                    Text("⌄",fontSize=14.sp)
+            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+            Surface(onClick={onTouch();open=true},enabled=enabled,modifier=Modifier.fillMaxWidth().height(44.dp),shape=RoundedCornerShape(10.dp),color=if(included) {if(isMposDarkTheme()) androidx.compose.ui.graphics.Color(0xFF254237) else androidx.compose.ui.graphics.Color(0xFFD9EEE3)} else MaterialTheme.colorScheme.background,border=BorderStroke(1.dp,if(included) MaterialTheme.colorScheme.primary.copy(alpha=.5f) else MaterialTheme.colorScheme.outline)) {
+                Row(Modifier.fillMaxSize().padding(horizontal=10.dp),horizontalArrangement=Arrangement.spacedBy(5.dp),verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
+                    Text(options.find {it.first==value}?.second ?: value,Modifier.weight(1f),fontSize=14.sp,lineHeight=20.sp,maxLines=1)
                 }
             }
-            DropdownMenu(open,{open=false}) {options.forEach {(id,name)->DropdownMenuItem(text={Text(name)},onClick={open=false;onChange(id)})}}
+            }
+            DropdownMenu(open,{open=false},shape=RoundedCornerShape(12.dp)) {options.forEach {(id,name)->DropdownMenuItem(text={Text(name)},onClick={open=false;onChange(id)})}}
         }
     }
 }
@@ -110,10 +127,9 @@ import com.mendelev.mpos.core.ui.*
             Surface(onClick={open=true},enabled=enabled,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp),shape=RoundedCornerShape(10.dp),color=MaterialTheme.colorScheme.background,border=BorderStroke(1.5.dp,MaterialTheme.colorScheme.outline)) {
                 Row(Modifier.padding(horizontal=14.dp,vertical=12.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                     Text(options.find {it.first==value}?.second.orEmpty(),Modifier.weight(1f),fontSize=15.sp)
-                    Text("⌄",fontSize=15.sp)
                 }
             }
-            DropdownMenu(open,{open=false},modifier=Modifier.heightIn(max=300.dp)) {
+            DropdownMenu(open,{open=false},modifier=Modifier.heightIn(max=300.dp),shape=RoundedCornerShape(12.dp)) {
                 options.forEach {(id,name)->DropdownMenuItem(text={Text(name)},onClick={open=false;onChange(id)})}
             }
         }

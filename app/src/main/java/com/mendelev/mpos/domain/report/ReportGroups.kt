@@ -46,7 +46,8 @@ object ReportGroups {
             }
         }
         fun rows(map: Map<String,Row>)=map.values.map {it.result()}.sortedWith(compareByDescending<ReportGroup> {it.sales}.thenBy {it.id})
-        val out=summary.sales.delivery;val credit=summary.refunds.delivery
+        val out=summary.events.filter {it.kind=="sale"}.fold(BigInteger.ZERO) {a,e->a+e.courier.toBigInteger()}
+        val credit=summary.events.filter {it.kind=="refund"}.fold(BigInteger.ZERO) {a,e->a+e.courier.toBigInteger()}
         return ReportDetails(rows(employees),rows(categories),rows(products),saleCost,refundCost,out,credit,
             summary.net.total-(saleCost-refundCost)-(out-credit))
     }

@@ -41,7 +41,7 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
 /** Pinned receipts screen: 26/22/40 gutters, .82:1.18 columns, gap16, shared history selection. */
 @Composable internal fun ReceiptHistoryPage(receipts: List<ReceiptEntity>,types: Map<String,String>,methods: Map<String,String>,selectedId: String,
     detail: Pair<ReceiptEntity,ReceiptSnapshot>?,returns: List<RefundEntity>,enabled: Boolean,canRefund: Boolean,
-    onSelect: (String)->Unit,onRefund: ()->Unit,onPrint: ()->Unit,error: String?=null,web: Map<String,WebReceiptRecord> = emptyMap(),more: Boolean=false,loadingMore: Boolean=false,onMore: ()->Unit={},onChangePayment: ()->Unit={}) {
+    onSelect: (String)->Unit,onRefund: ()->Unit,onPrint: ()->Unit,error: String?=null,web: Map<String,WebReceiptRecord> = emptyMap(),more: Boolean=false,loadingMore: Boolean=false,onMore: ()->Unit={},onChangePayment: ()->Unit={},initialLoading: Boolean=false) {
     ProvideTextStyle(LocalTextStyle.current.copy(platformStyle=PlatformTextStyle(includeFontPadding=false),letterSpacing=0.sp)) {
         BoxWithConstraints(Modifier.fillMaxSize().testTag("receiptsPage")) {
             val narrow=maxWidth<=900.dp
@@ -49,17 +49,17 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
             val listMax=maxHeight*.34f
             Column(Modifier.fillMaxSize().padding(start=if(small) 12.dp else 26.dp,end=if(small) 12.dp else 26.dp,top=12.dp,bottom=0.dp)) {
                 if(narrow) Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-                    ReceiptList(receipts,types,methods,selectedId,returns,enabled,onSelect,Modifier.fillMaxWidth().heightIn(max=listMax),web,more,loadingMore,onMore)
+                    ReceiptList(receipts,types,methods,selectedId,returns,enabled,onSelect,Modifier.fillMaxWidth().heightIn(max=listMax),web,more,loadingMore,onMore,initialLoading)
                     if(web[selectedId]!=null) WebReceiptDetail(web.getValue(selectedId),Modifier.fillMaxWidth().weight(1f)) else ReceiptDetail(detail,returns,enabled,canRefund,onRefund,onPrint,onChangePayment,error,{onSelect(selectedId)},Modifier.fillMaxWidth().weight(1f))
                 } else Row(Modifier.fillMaxWidth().weight(1f),horizontalArrangement=Arrangement.spacedBy(16.dp)) {
-                    ReceiptList(receipts,types,methods,selectedId,returns,enabled,onSelect,Modifier.weight(.82f).fillMaxHeight(),web,more,loadingMore,onMore)
+                    ReceiptList(receipts,types,methods,selectedId,returns,enabled,onSelect,Modifier.weight(.82f).fillMaxHeight(),web,more,loadingMore,onMore,initialLoading)
                     if(web[selectedId]!=null) WebReceiptDetail(web.getValue(selectedId),Modifier.weight(1.18f).fillMaxHeight()) else ReceiptDetail(detail,returns,enabled,canRefund,onRefund,onPrint,onChangePayment,error,{onSelect(selectedId)},Modifier.weight(1.18f).fillMaxHeight())
                 }
             }
         }
     }
 }
-@Composable private fun ReceiptList(receipts: List<ReceiptEntity>,types: Map<String,String>,methods: Map<String,String>,selectedId: String,returns: List<RefundEntity>,enabled: Boolean,onSelect: (String)->Unit,modifier: Modifier,web: Map<String,WebReceiptRecord>,more: Boolean,loadingMore: Boolean,onMore: ()->Unit) {
+@Composable private fun ReceiptList(receipts: List<ReceiptEntity>,types: Map<String,String>,methods: Map<String,String>,selectedId: String,returns: List<RefundEntity>,enabled: Boolean,onSelect: (String)->Unit,modifier: Modifier,web: Map<String,WebReceiptRecord>,more: Boolean,loadingMore: Boolean,onMore: ()->Unit,initialLoading: Boolean) {
     Surface(modifier.testTag("receiptsListPanel"),shape=RoundedCornerShape(topStart=22.dp,topEnd=22.dp),shadowElevation=1.dp) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start=18.dp,end=18.dp,top=18.dp,bottom=14.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -68,7 +68,7 @@ internal fun receiptPaymentLabel(snapshot: ReceiptSnapshot): String = when(snaps
             }
             HorizontalDivider(color=MaterialTheme.colorScheme.outline)
             LazyColumn(Modifier.fillMaxWidth().weight(1f).testTag("receiptHistory"),contentPadding=PaddingValues(10.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                if(receipts.isEmpty()) item {Text("Чеков пока нет — они появятся здесь после первой оплаты.",Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=30.dp),fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant,textAlign=androidx.compose.ui.text.style.TextAlign.Center)}
+                if(receipts.isEmpty()) item {Text(if(initialLoading) "Загрузка чеков…" else "Чеков пока нет — они появятся здесь после первой оплаты.",Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=30.dp),fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant,textAlign=androidx.compose.ui.text.style.TextAlign.Center)}
                 items(receipts,key={it.id}) {r->
                     val active=selectedId==r.id;val returned=returns.any {it.receiptId==r.id} || web[r.id]?.returned==true;val c=MaterialTheme.colorScheme
                     Surface(onClick={onSelect(r.id)},enabled=enabled,modifier=Modifier.fillMaxWidth().testTag("receipt:${r.commandId}").semantics {selected=active},shape=RoundedCornerShape(16.dp),

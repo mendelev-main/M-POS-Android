@@ -69,8 +69,6 @@ object SaleMoney {
         if(allocations.fold(0L) {sum,p->add(sum,p.amount)}!=quote.total) invalid("Сумма частей не совпадает с чеком")
         val cash=allocations.filter {it.method=="cash"}.fold(0L) {sum,p->add(sum,p.amount)}
         val card=allocations.filter {it.method=="card"}.fold(0L) {sum,p->add(sum,p.amount)}
-        val available=add(openingCash,cash);val delivery=quote.delivery?.fee ?: 0
-        if(delivery>available) invalid("Недостаточно наличных в кассе для выдачи доставки")
-        return SalePayment(allocations,cash,card,delivery,available-delivery)
+        return SalePayment(allocations,cash,card,0,add(openingCash,cash))
     }
 }

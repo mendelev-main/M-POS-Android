@@ -12,7 +12,7 @@ import java.util.UUID
 object PurchaseDraftCodec {
     const val KEY="purchase-draft"
     fun encode(d: PurchaseDraft?): String=JSONObject().put("version",1).put("draft",d?.let {
-        JSONObject().put("id",it.id).put("supplierId",it.supplierId).put("supplierRevision",it.supplierRevision).put("supplierName",it.supplierName)
+        JSONObject().put("id",it.id).put("supplierId",it.supplierId).put("supplierRevision",it.supplierRevision).put("supplierName",it.supplierName).apply {if(it.note.isNotEmpty()) put("note",it.note)}
             .put("lines",JSONArray(it.lines.map {l->JSONObject().put("id",l.productId).put("revision",l.productRevision).put("name",l.productName)
                 .put("stockUnit",l.stockUnit).put("quantity",l.quantity).put("unit",l.unit).put("packSize",l.packSize).put("contentUnit",l.contentUnit)}))
     } ?: JSONObject.NULL).toString()
@@ -25,11 +25,11 @@ object PurchaseDraftCodec {
             fun revision(j: JSONObject,key: String): Long {require(j.get(key) is Number);return j.get(key).toString().toLong()}
             return PurchaseDraft(d.getString("id"),d.getString("supplierId"),revision(d,"supplierRevision"),d.getString("supplierName"),
                 (0 until a.length()).map {i->val l=a.getJSONObject(i);PurchaseLine(l.getString("id"),revision(l,"revision"),l.getString("name"),l.getString("stockUnit"),
-                    l.getString("quantity"),l.getString("unit"),l.getString("packSize"),l.getString("contentUnit"))}).also {if(version=="2") PurchaseDraftRules.validateWorking(it) else PurchaseDraftRules.validate(it)}
+                    l.getString("quantity"),l.getString("unit"),l.getString("packSize"),l.getString("contentUnit"))},if(d.has("note"))d.getString("note") else "").also {if(version=="2") PurchaseDraftRules.validateWorking(it) else PurchaseDraftRules.validate(it)}
         } catch(_:Exception) {throw CatalogFailure("purchaseFormat","Не удалось прочитать черновик закупки. Данные не сброшены")}
     }
 }
-data class PurchaseSnapshot(val revision: Long,val ownerId: String,val draft: PurchaseDraft?,val suppliers: List<Supplier>,val products: List<PurchaseProduct>,val orders: List<PurchaseOrder> = emptyList())
+data class PurchaseSnapshot(val revision: Long,val ownerId: String,val draft: PurchaseDraft?,val suppliers: List<Supplier>,val products: List<PurchaseProduct>,val orders: List<PurchaseOrder> = emptyList(),val receivingRecords: List<ReceivingRecord> = emptyList(),val receipts: List<PostedReceiving> = emptyList())
 interface PurchaseAccess {
     suspend fun snapshot(): PurchaseSnapshot
     suspend fun outcome(command: PurchaseCommand): String?
@@ -55,7 +55,7 @@ class PurchaseDraftRepository(private val db: CatalogDatabase,private val clock:
         }}
         return db.withTransaction {
             val doc=db.workspace().document(PurchaseDraftCodec.KEY)!!
-            PurchaseSnapshot(doc.revision,db.catalog().config()!!.ownerId,PurchaseDraftCodec.decode(doc.payload),suppliers().filterNot {it.deleted},products(),PurchaseOrderStore(db).all().sortedWith(compareByDescending<PurchaseOrder> {it.createdAt}.thenByDescending {it.id}))
+            PurchaseSnapshot(doc.revision,db.catalog().config()!!.ownerId,PurchaseDraftCodec.decode(doc.payload),suppliers().filterNot {it.deleted},products(),PurchaseOrderStore(db).all().sortedWith(compareByDescending<PurchaseOrder> {it.createdAt}.thenByDescending {it.id}),db.workspace().document(ReceivingCodec.KEY)?.let {ReceivingCodec.decode(it.payload)}.orEmpty(),PostedReceivingStore(db).all())
         }
     }
     override suspend fun outcome(command: PurchaseCommand): String? {

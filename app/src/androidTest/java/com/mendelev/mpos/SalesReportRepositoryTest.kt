@@ -51,8 +51,8 @@ class SalesReportRepositoryTest {
             assertEquals(listOf("Товар"),yd.products.single().names)
             assertEquals("Без категории",yd.categories.single().names.single())
             assertEquals(BigInteger.valueOf(100),yd.saleCost)
-            assertEquals(BigInteger.valueOf(1900),yd.profit)
-            assertEquals(BigInteger.valueOf(-1900),td.profit)
+            assertEquals(BigInteger.valueOf(2400),yd.profit)
+            assertEquals(BigInteger.valueOf(-2400),td.profit)
             assertEquals(yd.employees.single().id,td.employees.single().id)
             assertEquals(BigInteger.valueOf(2500),td.employees.single().refunds)
             assertEquals(BigInteger.ZERO,requireNotNull(both.details).profit)
@@ -98,7 +98,7 @@ class SalesReportRepositoryTest {
         try {
             val id=seed(db);val owner=db.catalog().config()!!.ownerId
             val oldRepo=ShiftRepository(db,clock("2026-10-30"));val old=oldRepo.snapshot()
-            oldRepo.close("close-report",old.active!!.id,old.revision,ShiftRules.token(old),500,owner)
+            oldRepo.close("close-report",old.active!!.id,old.revision,ShiftRules.token(old),1000,owner)
             val shifts=ShiftRepository(db,clock("2026-10-31"));val closed=shifts.snapshot()
             val next=shifts.open("open-report",closed.revision,closed.last!!.id,owner)
             val refunds=RefundRepository(db,clock("2026-10-31"));refunds.commit("refund-report",refunds.preview(id,owner))
@@ -108,7 +108,7 @@ class SalesReportRepositoryTest {
             assertEquals(2,all.stock!!.checked);assertTrue(all.stock.issues.isEmpty())
             val first=all.shifts!!.single {it.shift.id==old.active!!.id};val second=all.shifts.single {it.shift.id==next}
             assertEquals(BigInteger.valueOf(2500),first.sales);assertEquals(BigInteger.ZERO,first.refunds)
-            assertEquals(true,first.savedCashMatches);assertEquals(BigInteger.valueOf(500),first.calculatedCash)
+            assertEquals(true,first.savedCashMatches);assertEquals(BigInteger.valueOf(1000),first.calculatedCash)
             assertEquals(BigInteger.ZERO,second.sales);assertEquals(BigInteger.valueOf(2500),second.refunds)
             assertEquals(BigInteger.ZERO,second.calculatedCash)
             assertEquals(listOf(next),repo.snapshot(period("2026-10-31")).shifts!!.map {it.shift.id})

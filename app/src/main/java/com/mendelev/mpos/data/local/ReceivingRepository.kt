@@ -38,7 +38,7 @@ object ReceivingCodec {
         } catch(_:Exception) {throw CatalogFailure("receivingFormat","Не удалось прочитать черновики приёмки. Данные не сброшены")}
     }
 }
-data class ReceivingSnapshot(val ownerId: String,val orders: List<PurchaseOrder>,val records: List<ReceivingRecord>,val products: List<ReceivingProduct>,val suppliers: List<ReceivingSupplier> = emptyList())
+data class ReceivingSnapshot(val ownerId: String,val orders: List<PurchaseOrder>,val records: List<ReceivingRecord>,val products: List<ReceivingProduct>,val suppliers: List<ReceivingSupplier> = emptyList(),val receipts: List<PostedReceiving> = emptyList())
 interface ReceivingAccess {
     suspend fun snapshot(): ReceivingSnapshot
     suspend fun outcome(c: ReceivingCommand): String?
@@ -52,7 +52,7 @@ class ReceivingRepository(private val db: CatalogDatabase,private val clock: Clo
             val products=db.catalog().allProducts().filter {it.type=="simple"}.map {p->val b=db.catalog().balance(p.id) ?: error("Нет складского baseline")
                 ReceivingProduct(p.id,p.name,p.unit,p.revision,b.revision,b.quantity,p.cost,p.noStockTracking)
             }
-            ReceivingSnapshot(db.catalog().config()!!.ownerId,PurchaseOrderStore(db).all().sortedByDescending {it.createdAt},records,products,db.workspace().document(SupplierCodec.KEY)?.let {SupplierCodec.decode(it.payload)}.orEmpty().filterNot {it.deleted}.map {ReceivingSupplier(it.id,it.name,it.revision)})
+            ReceivingSnapshot(db.catalog().config()!!.ownerId,PurchaseOrderStore(db).all().sortedByDescending {it.createdAt},records,products,db.workspace().document(SupplierCodec.KEY)?.let {SupplierCodec.decode(it.payload)}.orEmpty().filterNot {it.deleted}.map {ReceivingSupplier(it.id,it.name,it.revision)},PostedReceivingStore(db).all())
         }
     }
     override suspend fun outcome(c: ReceivingCommand): String? {

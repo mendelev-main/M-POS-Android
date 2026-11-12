@@ -50,11 +50,12 @@ private fun saleNavigationLocked(ui: SaleUi,refund: RefundUi)=ui.pending || refu
     val printStatus by printer.status.collectAsStateWithLifecycle()
     var entryReady by remember(model,history) {mutableStateOf(false)}
     LaunchedEffect(model,history) {
-        model.open();refundModel.refresh()
+        if(history) model.openHistory() else model.open()
+        refundModel.refresh()
         model.state.first {!it.loading && !it.pending}
         entryReady=true
     }
-    if(!entryReady || ui.loading) {
+    if(!history && (!entryReady || ui.loading)) {
         Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {CircularProgressIndicator()}
         return
     }
@@ -77,23 +78,23 @@ private fun saleNavigationLocked(ui: SaleUi,refund: RefundUi)=ui.pending || refu
                 }
             }
         }
-        if(ui.loading) Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {CircularProgressIndicator()}
+        if(ui.loading && !history) Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {CircularProgressIndicator()}
         else if(ui.fatal) Column(Modifier.padding(20.dp)) {MposNotice(ui.message ?: "Не удалось открыть оплату",true);MposButton("Повторить открытие",model::refresh)}
         else if(history) {
             if(ui.message!=null) MposNotice(ui.message!!,true)
             if(refund.message!=null) MposNotice(refund.message!!,true)
             if(refund.blocked && refund.unresolved==null) MposButton("Прочитать возвраты",refundModel::refresh,busy=refund.pending,style=ActionStyle.Secondary)
-            var picked by androidx.compose.runtime.saveable.rememberSaveable {mutableStateOf("")}
+            var picked by androidx.compose.runtime.saveable.rememberSaveable {mutableStateOf(ui.selected?.first?.id.orEmpty())}
             var printNotice by remember {mutableStateOf(false)}
             val chosen=picked.takeIf {id->ui.history.any {it.id==id}} ?: ui.history.firstOrNull()?.id.orEmpty()
-            LaunchedEffect(chosen,ui.selected?.first?.id,ui.history) {
-                if(chosen.isNotEmpty() && ui.selected?.first?.id!=chosen) model.select(chosen)
+            LaunchedEffect(chosen,ui.selected?.first?.id,ui.history,ui.pending,ui.loading) {
+                if(!ui.pending && !ui.loading && chosen.isNotEmpty() && ui.selected?.first?.id!=chosen) model.select(chosen)
             }
             ReceiptHistoryPage(ui.history,ui.receiptTypes,ui.receiptMethods,chosen,ui.selected?.takeIf {it.first.id==chosen},(ui.historyRefunds+refund.history).distinctBy {it.id},!locked,
                 ui.shift?.active!=null && !refund.blocked && ui.split?.paid.isNullOrEmpty(),
                 {id->picked=id;model.select(id)},
                 {ui.selected?.takeIf {it.first.id==chosen}?.let {refundModel.prepare(it.first.id,ui.shift!!.active!!.actorId)}},
-                {printNotice=true},ui.message,web=ui.webHistory,more=ui.historyMore,loadingMore=ui.historyLoading,onMore=model::moreHistory,onChangePayment=model::editReceiptPayment)
+                {printNotice=true},ui.message,web=ui.webHistory,more=ui.historyMore,loadingMore=ui.historyLoading,onMore=model::moreHistory,onChangePayment=model::editReceiptPayment,initialLoading=ui.loading || !entryReady)
             if(printNotice) ui.selected?.let {com.mendelev.mpos.print.ReceiptPrintMenu(it) {printNotice=false}}
         } else if(ui.split!=null) {
             SplitPaymentPage(ui,model)
@@ -142,7 +143,6 @@ private fun saleNavigationLocked(ui: SaleUi,refund: RefundUi)=ui.pending || refu
                         },enabled,Modifier.testTag("deliveryPreset"))
                         MposField(f.tariff,{v->model.edit {it.copy(tariff=v)}},"Название тарифа",Modifier.testTag("deliveryName"),enabled)
                         MposField(f.fee,{v->model.edit {it.copy(fee=v)}},"Стоимость доставки, BYN (0 — бесплатно)",Modifier.testTag("deliveryFee"),enabled,numeric=true)
-                        Text("Стоимость доставки сразу выдаётся из наличной кассы, в том числе при оплате картой.",style=MaterialTheme.typography.bodySmall)
                     }
                     item {
                         Text("Способ оплаты",style=MaterialTheme.typography.titleMedium)
@@ -204,7 +204,7 @@ private fun saleNavigationLocked(ui: SaleUi,refund: RefundUi)=ui.pending || refu
             Text("Скидки: ${money(q.discount)}")
             Text("Наличные: ${money(p.cash)} · Карта: ${money(p.card)}")
             p.parts.filter {it.method=="cash"}.forEachIndexed {i,part->Text("Сдача ${i+1}: ${money(part.change!!)}",Modifier.testTag("saleChange:$i"))}
-            if(q.delivery!=null) Text("Выдать за доставку: ${money(p.deliveryCashOut)}")
+            if(p.deliveryCashOut>0) Text("Выдать за доставку: ${money(p.deliveryCashOut)}")
             Text("После продажи в кассе: ${money(p.expectedCashAfter)}")
             Text("Подтверждение сохранит чек и спишет товары. Карта — ручной учёт.",style=MaterialTheme.typography.bodySmall)
         }

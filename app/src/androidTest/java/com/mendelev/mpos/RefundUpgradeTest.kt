@@ -51,7 +51,7 @@ class RefundUpgradeTest {
             val repo=RefundRepository(db);val refund=repo.outcome("upgrade-refund")!!
             val receipt=db.sales().receipt(refund.receiptId)!!;val historical=ReceiptCodec.decode(receipt.payload)
             assertEquals("Историческое блюдо",historical.cart.lines.single().name)
-            assertEquals(2500L,refund.total);assertEquals(2500L,refund.cash);assertEquals(0L,refund.card);assertEquals(500L,refund.deliveryCashCredit)
+            assertEquals(2500L,refund.total);assertEquals(2500L,refund.cash);assertEquals(0L,refund.card);assertEquals(0L,refund.deliveryCashCredit)
             assertEquals(2500L,historical.quote.total);assertEquals(500L,historical.payment.parts.single().change)
             assertEquals(mapOf("ingredient" to "0.0004"),historical.consumption)
             assertEquals("10",db.catalog().balance("ingredient")!!.quantity);assertEquals(3L,db.catalog().balance("ingredient")!!.revision)

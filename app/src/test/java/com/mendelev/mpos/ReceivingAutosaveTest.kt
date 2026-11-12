@@ -39,10 +39,10 @@ class ReceivingAutosaveTest {
         }
     }
     private suspend fun saved(m: ReceivingViewModel)=withTimeout(5000) {m.state.first {!it.pending && !it.saving && !it.dirty && it.autoError==null}}
-    private fun fixture(block: suspend (Fake,ReceivingViewModel,CoroutineDispatcher)->Unit)=runBlocking {
+    private fun fixture(seed: (Fake)->Unit={},block: suspend (Fake,ReceivingViewModel,CoroutineDispatcher)->Unit)=runBlocking {
         val main=newSingleThreadContext("receiving-autosave-test");Dispatchers.setMain(main);val store=ViewModelStore()
         try {
-            val f=Fake();val m=withContext(main) {ReceivingViewModel(f).also {store.put("fixture",it)}}
+            val f=Fake().also(seed);val m=withContext(main) {ReceivingViewModel(f).also {store.put("fixture",it)}}
             withTimeout(5000) {m.state.first {it.snapshot!=null && !it.pending}}
             withContext(main) {m.open("o")};saved(m)
             block(f,m,main)
@@ -92,12 +92,30 @@ class ReceivingAutosaveTest {
         assertEquals(4000L,ui.preview!!.totalMinor);assertFalse(ui.dirty)
         assertEquals("pending",f.data.orders.single().status)
     }
+    @Test fun currentCostOverridesOldPurchasePriceAndManualAmountSurvivesExit()=fixture(seed={f->
+        val draft=ReceivingDraft("previous",null,lines=listOf(ReceivingLine(f.product,"2","box","500","ml","6")),supplier=ReceivingSupplier("s","Поставка",1))
+        f.data=f.data.copy(receipts=listOf(PostedReceiving("previous","previous-command","owner",0,1,draft,false)))
+    }) {f,m,main->
+        assertEquals("20.00",m.state.value.form!!.lines.single().total)
+        assertEquals(setOf("p"),m.state.value.suggestedAmounts)
+        withContext(main) {m.amount("p","20.00");m.line("p") {it.copy(quantity="3",unit="box",packSize="500",contentUnit="ml")}}
+        saved(m);assertEquals("3.00",m.state.value.form!!.lines.single().total)
+        assertEquals(setOf("p"),m.state.value.suggestedAmounts)
+        withContext(main) {m.amount("p","10");m.line("p") {it.copy(quantity="4")}}
+        saved(m);assertEquals("10",m.state.value.form!!.lines.single().total)
+        assertTrue(m.state.value.suggestedAmounts.isEmpty())
+        withContext(main) {m.saveAndExit()};withTimeout(5000) {m.state.first {it.form==null && !it.pending}}
+        withContext(main) {m.open("o")};saved(m)
+        assertEquals("10",m.state.value.form!!.lines.single().total)
+        assertEquals("total",m.state.value.form!!.lines.single().priceMode)
+        assertEquals("10",f.data.products.single().stock)
+    }
     @Test fun failedSaveCannotCloseFormOrPretendItIsDurable()=fixture {f,m,main->
         f.failWrite=true
         withContext(main) {m.line("p") {it.copy(total="40")};m.saveAndExit()}
         withTimeout(5000) {m.state.first {!it.pending && !it.saving && it.autoError!=null}}
         assertNotNull(m.state.value.form);assertTrue(m.state.value.dirty)
-        assertEquals("",f.data.records.single().draft!!.lines.single().total)
+        assertEquals("20.00",f.data.records.single().draft!!.lines.single().total)
         f.failWrite=false
         withContext(main) {m.retryAutosave()};saved(m)
         assertEquals("40",f.data.records.single().draft!!.lines.single().total)

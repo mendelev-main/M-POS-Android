@@ -341,7 +341,7 @@ private fun money(value: String)=value.replace('.',',')+" BYN"
         contentPadding=PaddingValues(4.dp),horizontalArrangement=Arrangement.spacedBy(if(folder==null)12.dp else 10.dp),verticalArrangement=Arrangement.spacedBy(if(folder==null)12.dp else 10.dp)) {
         if(category==null && query.isEmpty()) {
             items(s.categories,key={"category:${it.id}"}) { c -> MposWorkspaceTile({onCategory(c.id)},Modifier.height(tileHeight).testTag("workspaceCategory:${c.id}"),categoryColor=c.color,symbol=c.symbol) {
-                Text(c.name+"  ›",style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp),maxLines=2)
+                Text(c.name,style=MaterialTheme.typography.titleSmall.copy(fontSize=14.5.sp),maxLines=2)
                 Spacer(Modifier.weight(1f));Text("Категория",style=MaterialTheme.typography.bodySmall.copy(fontSize=11.5.sp))
             } }
             if(s.products.any { it.categoryId.isEmpty() }) item { MposWorkspaceTile({onCategory("")},Modifier.testTag("workspaceCategory:")) { Text("Без категории",style=MaterialTheme.typography.titleMedium) } }

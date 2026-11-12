@@ -8,6 +8,16 @@ import java.time.Instant
 import java.time.ZoneId
 
 class PurchasePresentationTest {
+    @Test fun noteIsDurableAndChangesFingerprintButLegacyEmptyNotesRemainCompatible() {
+        val legacy="""{"version":1,"draft":{"id":"d","supplierId":"s","supplierRevision":1,"supplierName":"Поставка","lines":[]}}"""
+        val d=com.mendelev.mpos.data.local.PurchaseDraftCodec.decode(legacy)!!
+        assertEquals("",d.note)
+        val before=PurchaseCommand("c","owner",0,PurchaseAction.Save(d)).fingerprint()
+        assertEquals(com.mendelev.mpos.domain.catalog.CatalogRules.fingerprint("purchase.draft.v1","owner",0,"save","d","s",1L,"Поставка"),before)
+        val noted=d.copy(note="До 10:00\nПозвонить по прибытии")
+        assertEquals(noted,com.mendelev.mpos.data.local.PurchaseDraftCodec.decode(com.mendelev.mpos.data.local.PurchaseDraftCodec.encodeWorking(noted)))
+        assertNotEquals(before,PurchaseCommand("c","owner",0,PurchaseAction.Save(noted)).fingerprint())
+    }
     @Test fun supplierCopyUsesHistoricalNamesUnitsAndLocalDateWithoutInternalAuditFields() {
         val draft=PurchaseDraft("draft","supplier",1,"Поставка",listOf(PurchaseLine("p",1,"Молоко","l","24","bottle","500","ml")))
         val order=PurchaseOrderRules.create("internal-order-id",draft,Instant.parse("2026-11-10T09:00:00Z").toEpochMilli())

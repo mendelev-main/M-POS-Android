@@ -22,16 +22,14 @@ import com.mendelev.mpos.feature.purchasing.*
 import java.math.BigDecimal
 
 internal fun receivingMoney(value: Long)=BigDecimal.valueOf(value,2).toPlainString()+" BYN"
-internal fun receivingDiscrepancy(record: PostedReceiving)=record.draft.order!=null && record.result.lines.any {
-    if(it.expected==null) it.actual.toBigDecimal().signum()==0 else it.actual.toBigDecimal().compareTo(it.expected.toBigDecimal())!=0
-}
+internal fun receivingDiscrepancy(record: PostedReceiving)=record.draft.order!=null && ReceivingAmountDefaults.shortage(record)
 
 @Composable internal fun ReceivingHome(orders: List<PurchaseOrder>,records: List<ReceivingRecord>,history: List<PostedReceiving>,expanded: Boolean,
     historyOpen: Boolean,busy: Boolean,onHistory: ()->Unit,onNew: ()->Unit,onOrder: (String)->Unit,onRecord: (String)->Unit,
     notice: @Composable ()->Unit,form: @Composable ()->Unit) {
     Column(Modifier.fillMaxSize().padding(horizontal=24.dp,vertical=16.dp).verticalScroll(rememberScrollState()),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(16.dp)) {
         Column(Modifier.widthIn(max=1200.dp).fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            MposPosControl("История",onHistory,Modifier.fillMaxWidth().testTag("receivingHistory"),!busy,PosControl.Outline,height=54.dp,radius=14.dp,icon="history")
+            MposSupplyAction("История",onHistory,Modifier.fillMaxWidth().testTag("receivingHistory"),!busy,PosControl.Outline,height=54.dp,radius=14.dp,icon="history")
             if(historyOpen) Surface(shape=RoundedCornerShape(16.dp),border=BorderStroke(1.dp,MaterialTheme.colorScheme.outline)) {
                 LazyColumn(Modifier.fillMaxWidth().heightIn(max=440.dp).testTag("receivingHistoryList")) {
                     if(history.isEmpty()) item {Text("Приёмок пока нет.",Modifier.padding(16.dp),fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)}
@@ -75,7 +73,7 @@ internal fun receivingDiscrepancy(record: PostedReceiving)=record.draft.order!=n
                                                 }}
                                             }
                                         }
-                                        MposPosControl(if(records.any {it.orderId==o.id && it.draft!=null}) "Продолжить приёмку" else "Принять",{onOrder(o.id)},Modifier.fillMaxWidth().testTag("receivingOrder:${o.id}"),!busy,if(records.any {it.orderId==o.id && it.draft!=null}) PosControl.Receiving else PosControl.Cash,height=48.dp,radius=16.dp)
+                                        MposSupplyAction(if(records.any {it.orderId==o.id && it.draft!=null}) "Продолжить приёмку" else "Принять",{onOrder(o.id)},Modifier.fillMaxWidth().testTag("receivingOrder:${o.id}"),!busy,if(records.any {it.orderId==o.id && it.draft!=null}) PosControl.Receiving else PosControl.Cash,height=48.dp,radius=16.dp)
                                     }
                                 }}
                                 repeat(columns-row.size) {Spacer(Modifier.weight(1f))}
@@ -94,81 +92,60 @@ internal fun receivingDiscrepancy(record: PostedReceiving)=record.draft.order!=n
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable internal fun ReceivingDocument(d: ReceivingDraft,suppliers: List<ReceivingSupplier>,enabled: Boolean,onExit: ()->Unit,onNext: ()->Unit,
     onSupplier: (String)->Unit,onMeta: (ReceivingDraft)->Unit,onLine: (String,(ReceivingLine)->ReceivingLine)->Unit,onUnit: (String,String)->Unit,
-    onMode: (String,String)->Unit,onAdd: ()->Unit,onRemove: (String)->Unit,navigationEnabled: Boolean=enabled) {
-    Surface((if(d.order!=null) Modifier.fillMaxSize() else Modifier.fillMaxWidth()).testTag("receivingForm"),shape=if(d.order!=null) androidx.compose.ui.graphics.RectangleShape else RoundedCornerShape(22.dp)) {
-        Column {
-          Column(if(d.order!=null) Modifier.weight(1f).verticalScroll(rememberScrollState()) else Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(18.dp)) {
-            FlowRow(Modifier.fillMaxWidth().padding(24.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                Column(Modifier.weight(1f)) {
-                    Text(if(d.order!=null) "Приёмка заказа" else "Приёмка без заказа",fontSize=22.sp,fontWeight=FontWeight.ExtraBold)
-                    Text("Не поставлено — укажите 0.",fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                if(d.order!=null) PurchaseAction("Назад",onExit,Modifier.testTag("receivingClose"),navigationEnabled,ActionStyle.Outline)
-                PurchaseAction(if(d.order!=null) "Завершить приёмку позже" else "Сохранить и выйти",onExit,Modifier.testTag("receivingExit"),navigationEnabled,ActionStyle.Outline)
-            }
-            FlowRow(Modifier.fillMaxWidth().padding(horizontal=24.dp),horizontalArrangement=Arrangement.spacedBy(14.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                Box(Modifier.widthIn(min=220.dp).weight(1.4f)) {
-                    PurchaseSupplierSelect("Поставщик",d.order?.source?.supplierId ?: d.supplier?.id.orEmpty(),listOf("" to "Не указан")+suppliers.map {it.id to it.name}+if(d.order!=null && suppliers.none {it.id==d.order.source.supplierId}) listOf(d.order.source.supplierId to d.order.source.supplierName) else emptyList(),onSupplier,enabled && d.order==null,Modifier.testTag("receivingSupplier"))
-                }
-                Box(Modifier.width(200.dp)) {MposWebField(d.invoiceNumber,{onMeta(d.copy(invoiceNumber=it))},"Номер","receivingInvoice",enabled,placeholder="Номер")}
-                Box(Modifier.width(190.dp)) {MposWebField(d.invoiceDate,{onMeta(d.copy(invoiceDate=it))},"Дата","receivingDate",enabled,placeholder="ГГГГ-ММ-ДД")}
-            }
-            Column(Modifier.padding(horizontal=24.dp)) {
-                d.lines.forEach {l->ReceivingInvoiceRow(d,l,enabled,onLine,onUnit,onMode,onRemove)}
-            }
-            if(d.order==null) PurchaseAction("Добавить товар",onAdd,Modifier.padding(horizontal=24.dp).testTag("receivingAdd"),enabled,ActionStyle.Outline)
-          }
-            HorizontalDivider()
-            Row(Modifier.fillMaxWidth().padding(horizontal=24.dp,vertical=16.dp),horizontalArrangement=Arrangement.spacedBy(18.dp),verticalAlignment=Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("Итого",fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(runCatching {receivingMoney(d.lines.fold(0L) {sum,l->Math.addExact(sum,ReceivingRules.lineTotal(l) ?: 0L)})}.getOrDefault("Проверьте суммы"),fontSize=24.sp,fontWeight=FontWeight.ExtraBold,modifier=Modifier.testTag("receivingDraftTotal"))
-                }
-                PurchaseAction("Далее",onNext,Modifier.widthIn(min=160.dp).testTag("receivingPreview"),enabled && d.lines.isNotEmpty())
-            }
+    onMode: (String,String)->Unit,onAdd: ()->Unit,onRemove: (String)->Unit,navigationEnabled: Boolean=enabled,
+    suggested: Set<String> = emptySet(),onAmount: (String,String)->Unit={id,value->onLine(id) {it.copy(total=value,priceMode="total",unitPrice="")}}) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        Text(d.supplierName,fontSize=17.sp,fontWeight=FontWeight.Bold)
+        Row(Modifier.fillMaxWidth().padding(top=18.dp,bottom=18.dp),horizontalArrangement=Arrangement.spacedBy(16.dp)) {
+            MposSupplyField("Номер накладной",d.invoiceNumber,{onMeta(d.copy(invoiceNumber=it))},Modifier.weight(1f),enabled,numeric=false,tag="receivingInvoice",placeholder="Например, ТН-1043")
+            MposSupplyField("Дата",d.invoiceDate,{onMeta(d.copy(invoiceDate=it))},Modifier.weight(1f),enabled,numeric=false,tag="receivingDate",placeholder="ГГГГ-ММ-ДД")
+        }
+        if(d.order==null) PurchaseSupplierSelect("Поставщик",d.supplier?.id.orEmpty(),listOf("" to "Без поставщика")+suppliers.map {it.id to it.name},onSupplier,enabled)
+        Column(Modifier.fillMaxWidth()) {
+            d.lines.forEach {l->key(l.product.id) {ReceivingInvoiceRow(l,enabled,onLine,onUnit,d.order==null,onRemove,l.product.id in suggested,onAmount)}}
+            if(d.order==null) PurchaseAction("Добавить товар",onAdd,enabled=enabled,style=ActionStyle.Outline)
+        }
+        val total=runCatching {receivingMoney(d.lines.fold(0L) {sum,l->Math.addExact(sum,ReceivingRules.lineTotal(l) ?: 0L)})}.getOrDefault("—")
+        Row(Modifier.fillMaxWidth().padding(vertical=18.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
+            Text("Позиций: ${d.lines.count {runCatching {PurchaseDraftRules.number(it.quantity)?.signum()==1}.getOrDefault(false)}} из ${d.lines.size}",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {Text("Итого",fontSize=14.sp);Text(total,fontSize=22.sp,fontWeight=FontWeight.Bold)}
+        }
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
+            MposSupplyAction("Продолжить позже",onExit,enabled=navigationEnabled,kind=PosControl.Receiving,height=44.dp,radius=16.dp)
+            MposSupplyAction("Проверить приёмку",onNext,enabled=enabled && d.lines.isNotEmpty(),kind=PosControl.Cash,height=44.dp,radius=16.dp)
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
-@Composable private fun ReceivingInvoiceRow(d: ReceivingDraft,l: ReceivingLine,enabled: Boolean,onLine: (String,(ReceivingLine)->ReceivingLine)->Unit,
-    onUnit: (String,String)->Unit,onMode: (String,String)->Unit,onRemove: (String)->Unit) {
-    val p=l.product
-    BoxWithConstraints(Modifier.fillMaxWidth().padding(vertical=15.dp)) {
-      val wide=maxWidth>1000.dp
-      val heading: @Composable ()->Unit = {
-        Row(verticalAlignment=Alignment.CenterVertically) {
-            Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(5.dp)) {
-                Text(p.name,fontSize=14.sp,fontWeight=FontWeight.Bold)
-                val ordered=d.order?.source?.lines?.find {it.productId==p.id}
-                Text((ordered?.let {"Заказано: "+PurchaseOrderRules.requested(it)} ?: "Дополнительная позиция")+" · Склад: ${unitLabel(p.unit)}",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+@Composable private fun ReceivingInvoiceRow(l: ReceivingLine,enabled: Boolean,onLine: (String,(ReceivingLine)->ReceivingLine)->Unit,
+    onUnit: (String,String)->Unit,removable: Boolean,onRemove: (String)->Unit,suggested: Boolean,onAmount: (String,String)->Unit) {
+    val p=l.product;val packed=l.unit in PurchaseDraftRules.packs
+    BoxWithConstraints(Modifier.fillMaxWidth().padding(vertical=12.dp)) {
+        val wide=maxWidth>=820.dp
+        val heading: @Composable (Modifier)->Unit={modifier->Column(modifier,verticalArrangement=Arrangement.spacedBy(5.dp)) {
+            Text(p.name,fontSize=14.sp,fontWeight=FontWeight.Bold)
+            Text((ReceivingAmountDefaults.unitPrice(l) ?: "—")+" BYN / "+unitLabel(p.unit),fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        }}
+        val fields: @Composable ()->Unit={Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.Bottom) {
+            MposSupplyField("Принято",l.quantity,{v->onLine(p.id) {it.copy(quantity=v)}},Modifier.weight(1f),enabled,tag="receivingQty:${p.id}")
+            PurchaseSelect("Единица",l.unit,units(p.unit)+PurchaseDraftRules.packs.map {it to purchaseUnitLabel(it)},{onUnit(p.id,it)},enabled,Modifier.weight(1f))
+            if(packed) {
+                MposSupplyField("В единице",l.packSize,{v->onLine(p.id) {it.copy(packSize=v)}},Modifier.weight(1f),enabled)
+                PurchaseSelect("Единица внутри",l.contentUnit,units(p.unit),{v->onLine(p.id) {it.copy(contentUnit=v)}},enabled,Modifier.weight(1f))
+            } else {
+                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.weight(1f))
             }
-            if(d.order==null) MposPosControl("",{onRemove(p.id)},Modifier.size(40.dp).testTag("receivingRemove:${p.id}"),enabled,PosControl.Delete,height=40.dp,radius=10.dp,icon="close")
-        }
-      }
-      val fields: @Composable ()->Unit = {
-        FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            Box(Modifier.width(120.dp)) {MposWebField(l.quantity,{v->onLine(p.id) {it.copy(quantity=v)}},"Принято","receivingQty:${p.id}",enabled,true)}
-            PurchaseSelect("Единица",l.unit,units(p.unit)+PurchaseDraftRules.packs.map {it to purchaseUnitLabel(it)},{onUnit(p.id,it)},enabled,Modifier.width(140.dp).testTag("receivingUnit:${p.id}"))
-            if(l.unit in PurchaseDraftRules.packs) {
-                Box(Modifier.width(120.dp)) {MposWebField(l.packSize,{v->onLine(p.id) {it.copy(packSize=v)}},"В единице","receivingPack:${p.id}",enabled,true)}
-                PurchaseSelect("Единица внутри",l.contentUnit,units(p.unit),{v->onLine(p.id) {it.copy(contentUnit=v)}},enabled,Modifier.width(140.dp).testTag("receivingContent:${p.id}"))
-            }
-            val zero=l.quantity.trim().replace(',','.').toBigDecimalOrNull()?.signum()==0
-            if(l.priceMode=="price") Box(Modifier.width(150.dp)) {MposWebField(l.unitPrice,{v->onLine(p.id) {it.copy(unitPrice=v)}},"Цена за единицу","receivingPrice:${p.id}",enabled,true)}
-            Box(Modifier.width(150.dp)) {
-                val total=if(l.priceMode=="price") runCatching {ReceivingRules.lineTotal(l)?.let {BigDecimal.valueOf(it,2).toPlainString()}}.getOrNull().orEmpty() else l.total
-                MposWebField(total,{v->onLine(p.id) {it.copy(total=v)}},"Сумма строки","receivingTotal:${p.id}",enabled && !zero && l.priceMode=="total",true)
-            }
-            PurchaseSelect("Ввод стоимости",l.priceMode,listOf("total" to "Сумма строки","price" to "Цена за единицу"),{onMode(p.id,it)},enabled,Modifier.width(160.dp).testTag("receivingMode:${p.id}"))
-        }
-      }
-      if(wide) Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-        Box(Modifier.weight(1.5f)) {heading()};Box(Modifier.weight(4f)) {fields()}
-      } else Column(verticalArrangement=Arrangement.spacedBy(10.dp)) {heading();fields()}
+            MposSupplyField("Сумма строки, BYN",l.total,{onAmount(p.id,it)},Modifier.weight(1f),enabled,
+                suggested=suggested,tag="receivingTotal:${p.id}")
+            if(removable) MposSupplyAction("",{onRemove(p.id)},Modifier.size(44.dp),enabled,PosControl.Delete,height=44.dp,radius=12.dp,icon="close")
+        }}
+        if(wide) Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(14.dp)) {
+            heading(Modifier.weight(1f));Box(Modifier.weight(3f)) {fields()}
+        } else Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {heading(Modifier.fillMaxWidth());fields()}
     }
-    HorizontalDivider()
+    HorizontalDivider(color=MaterialTheme.colorScheme.outline)
 }
