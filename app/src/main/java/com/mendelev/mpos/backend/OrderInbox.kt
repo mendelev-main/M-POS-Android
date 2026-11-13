@@ -22,6 +22,11 @@ class OrderInbox(file: File,private val cipher: TelegramSecretCipher) {
         if(next.encode()!=previous.encode()) write(next)
         next.orders
     }
+    fun reconcileCurrent(incoming: List<JSONObject>,accepted: Set<String>): List<JSONObject> = synchronized(lock) {
+        val previous=snapshot();val next=previous.reconcileCurrent(incoming,accepted)
+        if(next.encode()!=previous.encode()) write(next)
+        next.orders
+    }
     fun remove(id: String): List<JSONObject> = synchronized(lock) {
         val previous=snapshot();val next=previous.remove(id)
         if(next.encode()!=previous.encode()) write(next)

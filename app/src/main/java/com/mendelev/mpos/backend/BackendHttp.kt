@@ -27,7 +27,7 @@ class BackendHttp(private val client: OkHttpClient=OkHttpClient()) {
                     val order=data?.optJSONObject("order")
                     val code=when {
                         r.code==403 && data?.optString("error")=="Administrator authorization required"->"ADMIN_AUTH_REQUIRED"
-                        data?.optString("code") in setOf("LOYALTY_BALANCE_CHANGED","LOYALTY_CONSENT_REQUIRED")->data?.optString("code")
+                        data?.optString("code") in setOf("LOYALTY_BALANCE_CHANGED","LOYALTY_CONSENT_REQUIRED","CURRENT_QUEUE_TOO_LARGE")->data?.optString("code")
                         else->null
                     }
                     val message=when(code) {

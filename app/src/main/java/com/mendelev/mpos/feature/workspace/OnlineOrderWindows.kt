@@ -3,6 +3,8 @@ package com.mendelev.mpos.feature.workspace
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -34,28 +36,49 @@ private fun onlineDate(order: JSONObject)=runCatching {
     DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm").withZone(ZoneId.systemDefault()).format(Instant.parse(order.getString("created_at")))
 }.getOrDefault("")
 
-@Composable internal fun OnlineEventsWindow(orders: List<JSONObject>,busy: Boolean,onSelect: (JSONObject)->Unit,onClose: ()->Unit) {
-    MposDialog("События",onClose,closable=!busy) {
-        Column(Modifier.weight(1f,fill=false).verticalScroll(rememberScrollState()).testTag("onlineOrdersScreen")) {
-            if(orders.isEmpty()) Text("Новых событий нет",Modifier.fillMaxWidth().padding(vertical=24.dp),color=MaterialTheme.colorScheme.onSurfaceVariant)
-            orders.sortedByDescending {onlineText(it,"created_at")}.forEach {order->
-                Row(Modifier.fillMaxWidth().clickable(enabled=!busy) {onSelect(order)}.testTag("online:${order.getString("id")}")
-                    .padding(vertical=16.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(14.dp)) {
-                    Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(5.dp)) {
-                        Text("Заказ с сайта ${onlineText(order,"external_id")}",fontSize=16.sp,fontWeight=FontWeight.SemiBold)
-                        Text("${onlineText(order,"customer_name").ifBlank {"Клиент"}} · ${onlineMoney(order.opt("total"))} · ${onlineDate(order)}",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    MposPosIcon("next",Modifier.size(18.dp))
-                }
-                HorizontalDivider(color=MaterialTheme.colorScheme.outline.copy(alpha=.5f))
-            }
+@Composable internal fun OnlineEventsWindow(orders: List<JSONObject>,busy: Boolean,onSelect: (JSONObject)->Unit,onClose: ()->Unit,
+    history: Boolean=false,loading: Boolean=false,error: String?=null,hasMore: Boolean=false,onCurrent: ()->Unit={},onHistory: ()->Unit={},onRefresh: ()->Unit={},onMore: ()->Unit={}) {
+    MposDialog("События",onClose,closable=!busy,maxWidth=900.dp) {
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.CenterVertically) {
+            MposPosControl("Текущие",onCurrent,Modifier.weight(1f),!busy,if(!history) PosControl.Cash else PosControl.Outline,height=44.dp,radius=14.dp)
+            MposPosControl("История",onHistory,Modifier.weight(1f),!busy,if(history) PosControl.Cash else PosControl.Outline,height=44.dp,radius=14.dp,icon="history")
+            MposPosControl("Обновить",onRefresh,enabled=!busy,kind=PosControl.Outline,height=44.dp,radius=14.dp,icon="refresh")
         }
-        MposButton("Закрыть",onClose,Modifier.fillMaxWidth(),enabled=!busy,style=ActionStyle.Secondary)
+        if(loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+        error?.let {Text(it,fontSize=13.sp,color=MaterialTheme.colorScheme.error)}
+        LazyColumn(Modifier.weight(1f,fill=false).testTag("onlineOrdersScreen")) {
+            if(orders.isEmpty() && !loading && error==null) item {Text(if(history) "История заказов пуста" else "Новых событий нет",Modifier.fillMaxWidth().padding(vertical=24.dp),color=MaterialTheme.colorScheme.onSurfaceVariant)}
+            items(orders,key={it.getString("id")}) {order->
+                Surface(onClick={onSelect(order)},enabled=!busy,modifier=Modifier.fillMaxWidth().padding(vertical=5.dp).testTag("online:${order.getString("id")}"),
+                    shape=RoundedCornerShape(14.dp),border=BorderStroke(1.dp,MaterialTheme.colorScheme.outline),color=MaterialTheme.colorScheme.background) {
+                    Row(Modifier.padding(14.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(14.dp)) {
+                        Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(5.dp)) {
+                            Text("Заказ с сайта ${onlineText(order,"external_id")}",fontSize=16.sp,fontWeight=FontWeight.SemiBold)
+                            Text("${onlineText(order,"customer_name").ifBlank {"Клиент"}} · ${onlineMoney(order.opt("total"))}",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(onlineDate(order),fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        if(history) OnlineOrderStatus(order)
+                        MposPosIcon("next",Modifier.size(18.dp))
+                    }
+                }
+            }
+            if(history && hasMore) item {MposPosControl("Показать 5 следующих",onMore,Modifier.fillMaxWidth().padding(top=12.dp),!busy,PosControl.Outline,height=44.dp,radius=14.dp)}
+        }
+    }
+}
+
+@Composable internal fun OnlineOrderStatus(order: JSONObject) {
+    val status=order.optString("status")
+    val paid=!order.isNull("web_paid_at") && order.optString("web_paid_at").isNotBlank()
+    val label=when {status=="cancelled"->"Отменён";paid->"Оплачен";else->when(status) {"new"->"Новый";"accepted"->"Принят";"preparing"->"Готовится";"ready"->"Готов";else->status}}
+    val color=when {status=="cancelled"->MaterialTheme.colorScheme.error;paid || status=="ready"->MaterialTheme.colorScheme.primary;else->MaterialTheme.colorScheme.onSurfaceVariant}
+    Surface(shape=RoundedCornerShape(9.dp),color=color.copy(alpha=.12f),contentColor=color) {
+        Text(label,Modifier.padding(horizontal=10.dp,vertical=7.dp),fontSize=12.sp,fontWeight=FontWeight.SemiBold)
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
-@Composable internal fun OnlineOrderWindow(order: JSONObject,busy: Boolean,message: String?,onBack: ()->Unit,canDelete: Boolean=false,onDelete: ()->Unit={},onAccept: (String)->Unit) {
+@Composable internal fun OnlineOrderWindow(order: JSONObject,busy: Boolean,message: String?,onBack: ()->Unit,canDelete: Boolean=false,onDelete: ()->Unit={},readOnly: Boolean=false,onAccept: (String)->Unit) {
     var estimate by remember(order.getString("id")) {mutableStateOf("")}
     var customTime by remember(order.getString("id")) {mutableStateOf("")}
     val custom=estimate=="custom" || estimate.startsWith("at:")
@@ -100,7 +123,8 @@ private fun onlineDate(order: JSONObject)=runCatching {
             val details: @Composable (Modifier)->Unit={modifier->Column(modifier,verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 onlineText(order,"address").takeIf {it.isNotBlank()}?.let {OnlineSection("Адрес доставки") {Text(it,fontSize=14.sp,lineHeight=21.sp)}}
                 onlineText(order,"comment").takeIf {it.isNotBlank()}?.let {OnlineSection("Комментарий клиента",danger=true) {Text(it,fontSize=14.sp,lineHeight=21.sp,color=MaterialTheme.colorScheme.error,fontWeight=FontWeight.SemiBold)}}
-                OnlineSection("Время готовности") {
+                if(readOnly) OnlineSection("Статус заказа") {OnlineOrderStatus(order);Text(onlineDate(order),fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+                if(!readOnly) OnlineSection("Время готовности") {
                     val choices=listOf("5m" to "5 мин","15m" to "15 мин","30m" to "30 мин","40m" to "40 мин","60plus" to "Больше часа","custom" to "Будет готово к")
                     Box {val columns=if(twoReadyColumns) 2 else 3
                         Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -128,8 +152,8 @@ private fun onlineDate(order: JSONObject)=runCatching {
         HorizontalDivider()
         Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=14.dp),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
             MposPosControl("Назад",onBack,Modifier.weight(1f),!busy,PosControl.Secondary,48.dp,16.dp,retainingAppearance=true)
-            if(canDelete) MposPosControl("Удалить заказ",onDelete,Modifier.weight(1.4f).testTag("onlineDelete"),!busy,PosControl.Delete,48.dp,16.dp,retainingAppearance=true)
-            MposPosControl("Взять в работу",{onAccept(estimate)},Modifier.weight(2f).testTag("onlineAccept"),!busy && OnlineOrderCodec.estimate(estimate),PosControl.Cash,48.dp,16.dp,retainingAppearance=busy)
+            if(canDelete && !readOnly) MposPosControl("Удалить заказ",onDelete,Modifier.weight(1.4f).testTag("onlineDelete"),!busy,PosControl.Delete,48.dp,16.dp,retainingAppearance=true)
+            if(!readOnly) MposPosControl("Взять в работу",{onAccept(estimate)},Modifier.weight(2f).testTag("onlineAccept"),!busy && OnlineOrderCodec.estimate(estimate),PosControl.Cash,48.dp,16.dp,retainingAppearance=busy)
         }
     }
 }

@@ -18,6 +18,7 @@ class BackendRuntime private constructor(private val context: Context) {
         @Volatile private var instance: BackendRuntime?=null
         fun get(context: Context)=instance ?: synchronized(this) {instance ?: BackendRuntime(context.applicationContext).also {instance=it}}
     }
+    private val connectionState=MutableStateFlow<String?>(null);val connection=connectionState.asStateFlow()
     private val operation=Mutex()
     private val projection=Any()
     private val acceptedHere=mutableSetOf<String>()
@@ -45,8 +46,8 @@ class BackendRuntime private constructor(private val context: Context) {
     suspend fun foreground(): Unit=coroutineScope {
         val configurations=MutableStateFlow<BackendSettings?>(null)
         launch(Dispatchers.IO) {while(isActive) {
-            try {val s=settings.read();configurations.value=s.takeIf {usable(it) && it.receiveOrders}}
-            catch(_:Exception) {configurations.value=null;statusState.value="Не удалось прочитать подключение backend"}
+            try {val s=settings.read();connectionState.value=s.takeIf {usable(it)}?.let {it.target()+":"+it.datasetId};configurations.value=s.takeIf {usable(it) && it.receiveOrders}}
+            catch(_:Exception) {configurations.value=null;connectionState.value=null;statusState.value="Не удалось прочитать подключение backend"}
             delay(2000)
         }}
         launch(Dispatchers.IO) {configurations.collectLatest {s->
@@ -75,7 +76,7 @@ class BackendRuntime private constructor(private val context: Context) {
                             val known=runBlocking {(rows+inbox(s).read()).mapNotNull {row->repo.record(OnlineOrderCodec.session(s.target(),row.getString("id")))?.orderId}.toSet()}
                             recordState.value=records
                             rows.forEach {it.put("_mposTarget",s.target()).put("_mposDataset",s.datasetId)}
-                            showInbox(inbox(s).merge(rows,records.map {it.orderId}.toSet()+known))
+                            synchronized(projection) {showInbox(inbox(s).merge(rows,records.map {it.orderId}.toSet()+known))}
                             attempt=0;statusState.value="Канал заказов подключён"
                         }
                     }
@@ -132,6 +133,30 @@ class BackendRuntime private constructor(private val context: Context) {
         val s=settings.read();current(s);publication.storeDemand(s,value);demandState.value=value
         try {publication.heartbeat(s);"Загрузка передана на сайт"} catch(_:Exception) {"Загрузка сохранена на планшете; отправка на сайт ожидает связи"}
     }}
+    suspend fun refreshInbox(): Unit=withContext(Dispatchers.IO) {operation.withLock {
+        busyState.value=true
+        try {
+            val s=settings.read();current(s)
+            check(s.receiveOrders) {"Включите получение онлайн-заказов в настройках"}
+            val fresh=OrderDirectory().current(s)
+            currentCoroutineContext().ensureActive();current(s)
+            val repo=OnlineOrderRepository(CatalogDatabase.get(context))
+            val records=repo.records().filter {it.target==s.target()}
+            val known=records.map {it.orderId}.toSet()+fresh.mapNotNull {row->repo.record(OnlineOrderCodec.session(s.target(),row.getString("id")))?.orderId}.toSet()
+            fresh.forEach {it.put("_mposTarget",s.target()).put("_mposDataset",s.datasetId)}
+            synchronized(projection) {
+                showInbox(inbox(s).reconcileCurrent(fresh,known))
+                recordState.value=records
+            }
+        } finally {busyState.value=false}
+    }}
+    internal suspend fun orderHistory(cursor: String?): OrderHistoryPage=withContext(Dispatchers.IO) {
+        val s=settings.read();current(s)
+        val page=OrderDirectory().history(s,cursor)
+        currentCoroutineContext().ensureActive();current(s)
+        page.orders.forEach {it.put("_mposTarget",s.target()).put("_mposDataset",s.datasetId)}
+        page
+    }
     suspend fun accept(order: JSONObject,estimate: String): String=withContext(Dispatchers.IO) {operation.withLock {
         busyState.value=true
         try {

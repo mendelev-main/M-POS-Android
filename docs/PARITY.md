@@ -560,3 +560,5 @@ AN01–AN09 local verification: 506JVM +26API36 business tests via ADB, lint/bui
 2026-11-13 SF13/SHC10 implemented locally: вкладки поставок выровнены по внешним краям панели с корректным соединением активной крайней вкладки; сведения об открытии смены перенесены под кассира в карточке продаж. Визуальная приёмка владельцем pending; денежные/складские правила прежние.
 
 2026-11-13 SF14/SHC11 implemented locally: уменьшены цветные кнопки поставок внутри прежнего контура; касса одной высоты с правой колонкой, закрытие шире/в одной линии с заголовком, второстепенные подписи убраны. Контракты SUPPLIES-FOLDER-UI.md/SHIFT-CASH-LAYOUT.md; visual acceptance владельцем pending.
+
+2026-11-13 EV01–EV05 implemented locally: кнопка обновления текущих событий, общая история5/next5, серверные статусы и read-only detail; authoritative refresh/restart/late-SSE protection и source generation guards. [Контракт](EVENTS-DIRECTORY.md). Требуется отдельное обновление backend/migration016, live и visual acceptance pending.

@@ -15,6 +15,19 @@ class OrderInboxTest {
     private fun file()=File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir,"inbox-${UUID.randomUUID()}.json")
     private fun row(id: String)=JSONObject().put("id",id).put("status","new").put("created_at","2026-11-09T10:00:00Z")
     private val cipher=object: TelegramSecretCipher {override fun encrypt(bytes: ByteArray)=bytes;override fun decrypt(bytes: ByteArray)=bytes}
+    @Test fun completeRefreshAndLateSnapshotRemainConsistentAcrossFileReopen() {
+        val file=file()
+        try {
+            val inbox=OrderInbox(file,cipher);inbox.merge(listOf(row("taken"),row("waiting")),emptySet())
+            inbox.reconcileCurrent(listOf(row("waiting")),emptySet())
+            val reopened=OrderInbox(file,cipher)
+            assertEquals(listOf("waiting"),reopened.read().map {it.getString("id")})
+            assertEquals(listOf("waiting"),reopened.merge(listOf(row("taken")),emptySet()).map {it.getString("id")})
+            val before=file.readText()
+            try {reopened.reconcileCurrent(listOf(row("broken").put("status","accepted")),emptySet());fail()} catch(_:IllegalArgumentException) {}
+            assertEquals(before,file.readText())
+        } finally {file.delete()}
+    }
     @Test fun parallelInstancesDoNotLoseOrdersOrCorruptAtomicFile()=runBlocking {
         val file=file()
         try {

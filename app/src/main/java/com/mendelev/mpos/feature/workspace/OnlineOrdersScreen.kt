@@ -23,13 +23,21 @@ import java.math.BigDecimal
     val context=LocalContext.current;val runtime=remember {BackendRuntime.get(context)}
     val orders by runtime.orders.collectAsState();val busy by runtime.busy.collectAsState()
     var selected by remember {mutableStateOf<JSONObject?>(null)}
+    var selectedHistory by remember {mutableStateOf(false)}
     var message by remember {mutableStateOf<String?>(null)}
     val scope=rememberCoroutineScope()
+    val directory=remember(runtime,scope) {EventsDirectory(scope,runtime::refreshInbox,runtime::orderHistory)}
+    val page by directory.state.collectAsState()
+    val connection by runtime.connection.collectAsState()
+    LaunchedEffect(connection) {directory.reset();selected=null;message=null}
     val admin by com.mendelev.mpos.core.access.Administration.session.state.collectAsState()
     var deleting by remember {mutableStateOf(false)}
     val detail=selected
-    if(detail==null) OnlineEventsWindow(orders,busy,{selected=it;message=null},onWorkspace)
-    else OnlineOrderWindow(detail,busy || deleting,message,{selected=null;message=null},canDelete=admin.active,onDelete={
+    if(detail==null) OnlineEventsWindow(if(page.history) page.rows else orders,busy || page.loading,
+        {selected=it;selectedHistory=page.history;message=null},onWorkspace,
+        history=page.history,loading=page.loading,error=page.error,hasMore=page.cursor!=null,
+        onCurrent=directory::current,onHistory=directory::history,onRefresh=directory::refresh,onMore=directory::more)
+    else OnlineOrderWindow(detail,busy || deleting,message,{selected=null;message=null},canDelete=admin.active && !selectedHistory,readOnly=selectedHistory,onDelete={
         val generation=admin.generation
         deleting=true;message=null
         scope.launch {
