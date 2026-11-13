@@ -39,11 +39,10 @@ object OwnerReportCaption {
     }
 }
 
-enum class OwnerStatsKind { SHIFT, MONTH }
+enum class OwnerStatsKind { SHIFT, MONTH, QUARTER }
 object OwnerStatsRouting {
     fun kinds(s: TelegramSettings,closedAt: Long,zone: ZoneId): List<OwnerStatsKind> {
-        if(!s.enabled || s.botToken.isBlank() || s.ownerChatId.isBlank()) return emptyList()
-        return listOfNotNull(if(s.ownerShiftStats) OwnerStatsKind.SHIFT else null,if(s.ownerMonthlyStats && OwnerAnalyticsRules.lastDay(closedAt,zone)) OwnerStatsKind.MONTH else null)
+        return OwnerReportSchedule.closingKinds(s,closedAt,zone)
     }
     fun recipient(s: TelegramSettings)=s.copy(chatId=s.ownerChatId,threadId="")
     fun key(kind: OwnerStatsKind,shiftId: String,closedAt: Long,zone: ZoneId,page: Int): String {

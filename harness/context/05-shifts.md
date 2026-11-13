@@ -1,5 +1,7 @@
 # Этап05 — контекст
 
+13.11.2026 AA01–AA03: [Учёт и аналитика](../../docs/ACCOUNTING-ANALYTICS.md). Один модуль админ-панели, период и продажи прежние, расчёт расхода всех простых ингредиентов из frozen receipt graph/requests, включая noStockTracking по прямому уточнению владельца. Физический stock posting не меняется. Ручная приёмка pending.
+
 2026-10-29: владелец попросил перейти к следующему этапу. Складской программный checkpoint04 сверён в docs/PHASE-04-REVIEW.md; device pending, receiving charges/storno deferred, M17 excluded. Начат05a manual cash как независимый от ещё не согласованной role/auth matrix блок. Pinned shifts.js/source tests inspected. Web optional note preserved, positive exact cents, no overdraft. Native single-owner+CAS/InstallationGate/partial-payment guard; journal workspace payload1, SQLschema8 unchanged. UI unknown result retains exact command; known commit/read failure cannot duplicate. CM01–CM05 implemented, CI pending. No physical drawer/printing/Telegram effects.
 
 2026-10-29: 05a CM01–CM05 ci-verified/API36: [FullCI40853537689](https://github.com/mendelev-main/M-POS-Android/actions/runs/40853537689)/7293d9c SUCCESS; production runtime93c1f2c, screenshot helper7293d9c.136JVM/211instrumentation/0failures/0skipped,13Python/harness/lint/debugAPK/testAPK; actual debugAPK1→2 passed. Manual deposit/withdrawal, exact cash/close/count/carry, four-write rollback/SQL abort/lost reply/replay, owner/gate/CAS/concurrent withdrawal, unfinished split refusal, corrupt journal refusal, recreation/input retention and unknown-result locks passed. SHIFT CASH UPDATE PASSED: journal, closed summary, carry/current cash and original command replays preserved without duplication. Full-window modal/history screenshots inspected: readable, no overlap. Initial40852329275 failed only the modal screenshot helper (two Compose roots); helper corrected without weakening monetary assertions. Single-owner scope only; roles/auth/analytics and physical tablet/dark/150%/cold-process UI remain pending. Main/signing/SQLschema8 unchanged.
@@ -74,3 +76,25 @@
 
 
 2026-11-10: прямое правило владельца — операционные доставка/поставщики/шаблоны add/edit без admin, delete/скидки остаются admin. Legacy role сотрудника не даёт доступ и не исключает кассира; форма без role toggle, кнопки48. ../../docs/OPERATOR-DIRECTORIES-STAFF.md. R01 badges128×23; device pending.
+
+13.11.2026: AN01–AN09, модернизация по ТЗ владельца; план/семантика в docs/ACCOUNTING-ANALYTICS.md. Старый profit не переопределён, новый gross исключает courier. Исторический fulfillment, точное объединение расхода по ID/совместимым единицам; noStockTracking включён только в аналитику. UI acceptance pending, push/release запрещены до команды.
+
+13.11.2026 UI follow-up владельца: аналитика упрощена до данных/кнопок; без прогресс-баров и инструкций, контурные строки по стилю settings/history, равные финансовые карточки, сверка по кнопке. Домен/репозитории/расчёты не изменялись. Ручная приёмка pending, без push.
+
+13.11.2026 следующий UI follow-up: по прямой просьбе владельца убраны Web-баннер, «Дополнительно» со всеми кнопками/панелями и оба поиска. Вместо9карточек —3модуля «Выручка», «Чеки», «Прибыль» с тремя показателями/выделенным итогом. Предыдущее требование ТЗ о видимом предупреждении/доступе к доп. отчётам заменено этим решением владельца; domain/repository не менялись.
+
+13.11.2026 tables follow-up: fixed DESC, без кнопок сортировки; категории+товары по net revenue с общей акцентной шапкой SalesTable; consumption net DESC внутри unit, compact2columns. Domain/repository не менялись, только выбор уже существующей сортировки и UI; ручная приёмка pending.
+
+13.11.2026 layout: сотрудники слева, оплата над получением справа; узкий экран — один столбец. Перенесён существующий модуль, без изменения данных/формул. UI acceptance pending.
+
+Последнее уточнение владельца: добавить поступило/израсходовано/в наличии только в consumption table; расход gross без возвратов. Новый ConsumptionStockReports объединяет существующие snapshot DTO, invoices за период, warehouse.end на последний выбранный день, точные кг/л/шт; unknown/untracked stock — прочерк. Включены складские simple без продаж. Ранее net/two-column UI-контракт заменён этим указанием; кассовые/складские операции и старые net DTO сохранены.
+
+Следующая просьба владельца: убрать available из UI consumption table, оставить приход/расход; kg formatting scale2/HALF_UP только отображение аналитики. Данные/end boundary/полная точность не меняются.
+
+13.11.2026 PA01–PA05: владелец утвердил «Панораму», оформление теперь от макета, а не старого UI. План/точные tokens/layout в docs/PANORAMA-ANALYTICS.md. Реальный ReportTrends внутри той же read transaction, historical line cost/gross, <=31календарных bins; без posting/schema changes. Сотрудники под получением справа; товары и расход полноширинные друг под другом. UI acceptance pending; push/release запрещены до команды.
+
+13.11.2026 UI: Товары/Движение товаров (новое имя расхода) стали независимыми collapsible-блоками по header tap; default expanded, rememberSaveable, next-icon right/down. Скрытые таблицы не compose; domain/DB unchanged. Ручная приёмка pending, без push.
+
+13.11.2026 PDF01–PDF07: выбранный период с primary fill/text/border (не borderless Secondary). Share snapshot→native one-page vector Panorama PDF→Android chooser, all rows expanded; caller confirmed. IO/cancellation/admin epoch guards, private cache reports provider/read-only grants, без новых БД/сетевых эффектов. l и kg display2/HALF_UP, расчёты точные. План/границы docs/ANALYTICS-PDF.md, UI/chooser acceptance pending.
+
+13.11.2026 OT01–OT07: owner month/quarter independent toggles +always one Panorama PDF for shift/month/quarter. Owner confirmed every end-day closing, full calendar periods; missed holiday reports on first next opening (all months/quarters), no unchanged resend after successful end-day coverage. Shared trusted scoped report read, no admin impersonation, historical cost/receipt original validation intact; schedule activation dates encrypted, durable sent/covered/unknown journal, dataset/owner partition. Plan/limits docs/OWNER-PANORAMA-REPORTS.md. No real Telegram calls in tests; UI/live sends pending, no push.

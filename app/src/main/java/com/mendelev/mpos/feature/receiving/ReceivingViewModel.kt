@@ -13,7 +13,7 @@ import kotlinx.coroutines.sync.withLock
 import java.util.UUID
 
 data class ReceivingUi(val snapshot: ReceivingSnapshot?=null,val form: ReceivingDraft?=null,val pending: Boolean=false,val blocked: Boolean=true,
-    val unresolved: ReceivingCommand?=null,val message: String?=null,val preview: ReceivingPreview?=null,val canEdit: Boolean=false,val saving: Boolean=false,val autoError: String?=null,val suggestedAmounts: Set<String> = emptySet()) {
+    val unresolved: ReceivingCommand?=null,val message: String?=null,val preview: ReceivingPreview?=null,val canEdit: Boolean=false,val saving: Boolean=false,val autoError: String?=null,val suggestedAmounts: Set<String> = emptySet(),val transientNotice: String?=null) {
     val saved get()=form?.let {d->snapshot?.records?.find {it.orderId==d.key}?.draft}
     val dirty get()=form!=saved
 }
@@ -21,6 +21,7 @@ class ReceivingViewModel(private val access: ReceivingAccess,private val autoSav
     private val mutable=MutableStateFlow(ReceivingUi());val state=mutable.asStateFlow()
     private fun update(change: (ReceivingUi)->ReceivingUi) {mutable.update {change(it).copy(canEdit=true)}}
     private val writes=Mutex()
+    private var noticeJob: Job?=null
     private var autoJob: Job?=null
     private var autoCommand: ReceivingCommand?=null
     private val suggestedPrices=mutableMapOf<String,java.math.BigDecimal>()
@@ -31,7 +32,9 @@ class ReceivingViewModel(private val access: ReceivingAccess,private val autoSav
     private fun amountsReviewed(): Boolean {
         val ui=state.value
         if(ui.form?.lines?.any {it.product.id in ui.suggestedAmounts}!=true) return true
-        update {it.copy(preview=null,message="Нужно проверить поля суммы. Каснитесь каждого жёлтого поля «Сумма строки», чтобы снять выделение.")}
+        noticeJob?.cancel()
+        update {it.copy(preview=null,message=null,transientNotice="Нужно проверить все строки сумм")}
+        noticeJob=viewModelScope.launch {delay(2_000);update {it.copy(transientNotice=null)}}
         return false
     }
     fun amount(id: String,value: String) {
@@ -89,11 +92,35 @@ class ReceivingViewModel(private val access: ReceivingAccess,private val autoSav
         if(state.value.pending || state.value.saving || state.value.unresolved!=null || state.value.dirty) return
         update {it.copy(pending=true,preview=null,message=null)}
         viewModelScope.launch {
-            try {val s=withContext(Dispatchers.IO) {access.snapshot()};update {it.copy(snapshot=s,form=it.form?.let {d->s.records.find {r->r.orderId==d.key}?.draft},blocked=false)}}
+            try {val s=withContext(Dispatchers.IO) {access.snapshot()}
+                val current=state.value.form
+                val saved=current?.let {d->s.records.find {r->r.orderId==d.key}?.draft}
+                val next=saved?.let {synchronizeOrder(it,s)}
+                update {it.copy(snapshot=s,form=next,blocked=false)}
+            }
             catch(e:CancellationException) {throw e}
             catch(_:Exception) {update {it.copy(blocked=true,message="Не удалось прочитать приёмки. Данные не сброшены")}}
             finally {update {it.copy(pending=false)}}
+            if(state.value.dirty && !state.value.blocked) autosave()
         }
+    }
+    private fun synchronizeOrder(d: ReceivingDraft,s: ReceivingSnapshot): ReceivingDraft {
+        val order=d.order ?: return d
+        val latest=s.orders.find {it.id==order.id} ?: return d
+        if(latest.status!="pending") return d
+        val ids=latest.source.lines.map {it.productId}.toSet()
+        if(latest==order && d.lines.all {it.product.id in ids}) return d
+        val rebased=ReceivingRules.synchronizeOrder(d,latest,s.products)
+        val added=ReceivingRules.open(d.id,latest,s.products).lines.filter {line->d.lines.none {it.product.id==line.product.id}}.associateBy {it.product.id}
+        val next=rebased.copy(lines=rebased.lines.map {line->
+            val fresh=added[line.product.id] ?: return@map line
+            val price=ReceivingAmountDefaults.cost(fresh.product) ?: return@map fresh
+            suggestedPrices[fresh.product.id]=price
+            fresh.copy(total=ReceivingAmountDefaults.amount(fresh,price).orEmpty())
+        })
+        suggestedPrices.keys.retainAll(ids)
+        update {it.copy(suggestedAmounts=(it.suggestedAmounts+added.keys.filter {id->id in suggestedPrices}).intersect(ids))}
+        return next
     }
     fun open(id: String) {
         if(!available()) return
@@ -103,8 +130,9 @@ class ReceivingViewModel(private val access: ReceivingAccess,private val autoSav
         if(existing!=null) {
             suggestedPrices.clear()
             try {
-                val normalized=existing.copy(lines=existing.lines.map {ReceivingRules.priceMode(it,"total")})
-                update {it.copy(form=normalized,preview=null,message=null,suggestedAmounts=emptySet())}
+                val updated=synchronizeOrder(existing,s)
+                val normalized=updated.copy(lines=updated.lines.map {ReceivingRules.priceMode(it,"total")})
+                update {it.copy(form=normalized,preview=null,message=null,suggestedAmounts=suggestedPrices.keys.toSet())}
                 if(normalized!=existing) autosave()
             } catch(_:CatalogFailure) {
                 update {it.copy(form=existing,preview=null,suggestedAmounts=emptySet(),message="В старом черновике незавершённая цена. Укажите сумму строки; исходный ввод сохранён.")}
@@ -226,7 +254,7 @@ class ReceivingViewModel(private val access: ReceivingAccess,private val autoSav
                 val saved=state.value.snapshot?.records?.find {it.orderId==d.key}
                 if(s.records.find {it.orderId==d.key}?.revision!=saved?.revision) throw CatalogFailure("conflict","Черновик изменился в другом окне")
                 val o=d.order?.let {s.orders.find {it.id==d.key} ?: throw CatalogFailure("receiving","Заказ недоступен")}
-                val rebased=ReceivingRules.rebase(d,o,s.products).let {r->if(d.order!=null || d.supplier==null) r else r.copy(supplier=s.suppliers.find {it.id==d.supplier.id} ?: throw CatalogFailure("supplier","Поставщик недоступен"))}
+                val rebased=ReceivingRules.rebase(if(o!=null) synchronizeOrder(d,s) else d,o,s.products).let {r->if(d.order!=null || d.supplier==null) r else r.copy(supplier=s.suppliers.find {it.id==d.supplier.id} ?: throw CatalogFailure("supplier","Поставщик недоступен"))}
                 ReceivingRules.validate(rebased.copy(working=false))
                 update {it.copy(snapshot=s,form=rebased)}
                 flushAuto();ready=true
@@ -250,7 +278,7 @@ class ReceivingViewModel(private val access: ReceivingAccess,private val autoSav
                 if((s.records.find {it.orderId==d.key}?.revision ?: 0)!=expected) throw CatalogFailure("conflict","Черновик изменился в другом окне. Ввод сохранён; перечитайте его явно")
                 val o=if(d.order!=null) s.orders.find {it.id==d.key} ?: throw CatalogFailure("receiving","Заказ недоступен") else null
                 if(rebase) {
-                    val next=ReceivingRules.rebase(d,o,s.products).let {rebased->if(d.order!=null || d.supplier==null) rebased else rebased.copy(supplier=s.suppliers.find {it.id==d.supplier.id} ?: throw CatalogFailure("supplier","Поставщик недоступен. Выберите другого или Без поставщика"))}
+                    val next=ReceivingRules.rebase(if(o!=null) synchronizeOrder(d,s) else d,o,s.products).let {rebased->if(d.order!=null || d.supplier==null) rebased else rebased.copy(supplier=s.suppliers.find {it.id==d.supplier.id} ?: throw CatalogFailure("supplier","Поставщик недоступен. Выберите другого или Без поставщика"))}
                     update {it.copy(snapshot=s,form=next,message="Основание обновлено. Введённые факты сохранены; сохраните черновик")}
                 } else {
                     if(d.supplier!=null && s.suppliers.find {it.id==d.supplier.id}!=d.supplier) throw CatalogFailure("conflict","Поставщик изменился. Обновите основание перед расчётом")

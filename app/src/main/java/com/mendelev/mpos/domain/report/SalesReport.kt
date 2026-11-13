@@ -20,13 +20,13 @@ data class ReportPeriod(val from: LocalDate,val through: LocalDate,val zone: Zon
     }
     fun contains(at: Long)=at>=start && at<endExclusive
 }
-data class ReportSale(val id: String,val at: Long,val total: Long,val cash: Long,val card: Long,val delivery: Long,val courier: Long=delivery)
-data class ReportRefund(val id: String,val receiptId: String,val at: Long,val total: Long,val cash: Long,val card: Long,val delivery: Long,val courier: Long=delivery)
-data class ReportEvent(val kind: String,val id: String,val receiptId: String,val at: Long,val total: Long,val cash: Long,val card: Long,val delivery: Long,val courier: Long=delivery)
+data class ReportSale(val id: String,val at: Long,val total: Long,val cash: Long,val card: Long,val delivery: Long,val courier: Long=delivery,val fulfillment: String?=null)
+data class ReportRefund(val id: String,val receiptId: String,val at: Long,val total: Long,val cash: Long,val card: Long,val delivery: Long,val courier: Long=delivery,val fulfillment: String?=null)
+data class ReportEvent(val kind: String,val id: String,val receiptId: String,val at: Long,val total: Long,val cash: Long,val card: Long,val delivery: Long,val courier: Long=delivery,val fulfillment: String?=null)
 data class ReportAmounts(val total: BigInteger,val cash: BigInteger,val card: BigInteger,val delivery: BigInteger)
 data class SalesReport(val period: ReportPeriod,val generatedAt: Long,val events: List<ReportEvent>,
     val saleCount: Long,val refundCount: Long,val sales: ReportAmounts,val refunds: ReportAmounts,
-    val net: ReportAmounts,val averageSale: BigInteger,val details: ReportDetails?=null,val shifts: List<ShiftReportRow>?=null,val stock: StockReconciliation?=null,val warehouse: WarehouseReport?=null,val archivedWebReceipts: Int=0) {
+    val net: ReportAmounts,val averageSale: BigInteger,val details: ReportDetails?=null,val shifts: List<ShiftReportRow>?=null,val stock: StockReconciliation?=null,val warehouse: WarehouseReport?=null,val archivedWebReceipts: Int=0,val consumption: List<ConsumptionRow>?=null,val trend: List<ReportTrendPoint>?=null) {
     val currency: String get()="BYN"
     val policyVersion: Int get()=1
 }
@@ -34,7 +34,7 @@ private fun invalid(message: String): Nothing=throw CatalogFailure("report",mess
 
 /** Pure reader: no current product prices, mutable categories, shifts or network state. */
 object SalesReports {
-    fun build(period: ReportPeriod,generatedAt: Long,sales: List<ReportSale>,refunds: List<ReportRefund>): SalesReport {
+    fun build(period: ReportPeriod,generatedAt: Long,sales: List<ReportSale>,refunds: List<ReportRefund>,saleIds: Set<String>?=null,refundIds: Set<String>?=null): SalesReport {
         if(generatedAt<0) invalid("Некорректное время формирования")
         if(sales.map {it.id}.distinct().size!=sales.size || refunds.map {it.id}.distinct().size!=refunds.size ||
             refunds.map {it.receiptId}.distinct().size!=refunds.size) invalid("Повтор документа в отчёте")
@@ -51,8 +51,9 @@ object SalesReports {
             if(r.at<sale.at || r.total!=sale.total || r.cash!=sale.cash || r.card!=sale.card || r.delivery!=sale.delivery || r.courier!=sale.courier)
                 invalid("Возврат не совпадает с исходной полной оплатой")
         }
-        val events=(sales.filter {period.contains(it.at)}.map {ReportEvent("sale",it.id,it.id,it.at,it.total,it.cash,it.card,it.delivery,it.courier)}+
-            refunds.filter {period.contains(it.at)}.map {ReportEvent("refund",it.id,it.receiptId,it.at,it.total,it.cash,it.card,it.delivery,it.courier)})
+        if(saleIds?.any {it !in byId}==true || refundIds?.any {id->refunds.none {it.id==id}}==true) invalid("Не найден выбранный документ отчёта")
+        val events=(sales.filter {period.contains(it.at) && (saleIds==null || it.id in saleIds)}.map {ReportEvent("sale",it.id,it.id,it.at,it.total,it.cash,it.card,it.delivery,it.courier,ReportAnalytics.fulfillment(it.fulfillment))}+
+            refunds.filter {period.contains(it.at) && (refundIds==null || it.id in refundIds)}.map {ReportEvent("refund",it.id,it.receiptId,it.at,it.total,it.cash,it.card,it.delivery,it.courier,ReportAnalytics.fulfillment(byId.getValue(it.receiptId).fulfillment))})
             .sortedWith(compareBy({it.at},{it.kind},{it.id})).toList()
         fun amounts(rows: List<ReportEvent>): ReportAmounts {
             fun sum(value: (ReportEvent)->Long)=rows.fold(BigInteger.ZERO) {acc,row->acc+value(row).toBigInteger()}

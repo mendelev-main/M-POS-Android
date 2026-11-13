@@ -28,6 +28,39 @@ class ReceivingViewModelTest {
         @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T=ReceivingViewModel(f,autoSaveEnabled=false) as T
     })[ReceivingViewModel::class.java]
     private suspend fun ready(vm: ReceivingViewModel)=withTimeout(20_000) {vm.state.first {!it.pending}}
+    @Test fun editedOrderAddsProductOnReopenAndRefreshWithoutLosingReceivingFacts(): Unit=runBlocking {
+        val store=ViewModelStore();val f=Fake()
+        try {
+            val vm=withContext(Dispatchers.Main) {model(store,f)};ready(vm)
+            withContext(Dispatchers.Main) {vm.open("o")};ready(vm)
+            withContext(Dispatchers.Main) {vm.change {it.copy(invoiceNumber="TT84",invoiceDate="2026-11-13",lines=it.lines.map {l->l.copy(quantity="3",total="12")})};vm.save()};ready(vm)
+            val second=f.p.copy(id="p2",name="Вода")
+            val added=f.order.source.lines.single().copy(productId="p2",productName="Вода")
+            val edited=f.order.copy(source=f.order.source.copy(lines=f.order.source.lines+added),revision=2,requestVersion=2,updatedAt=2,expectedQuantities=f.order.expectedQuantities+f.order.expectedQuantities,history=listOf(PurchaseRequestRevision(f.order.source,f.order.expectedQuantities,1,2)))
+            f.s=f.s.copy(orders=listOf(edited),products=listOf(f.p,second))
+            withContext(Dispatchers.Main) {vm.refresh()};ready(vm)
+            val draft=vm.state.value.form!!
+            assertEquals(listOf("p","p2"),draft.lines.map {it.product.id})
+            assertEquals("3",draft.lines.first().quantity);assertEquals("12",draft.lines.first().total)
+            assertEquals("TT84",draft.invoiceNumber);assertEquals("2026-11-13",draft.invoiceDate)
+            assertEquals(edited,draft.order);assertEquals("10",f.s.products.first().stock)
+            assertEquals("10",draft.lines.last().quantity);assertEquals("20.00",draft.lines.last().total)
+            assertTrue("p2" in vm.state.value.suggestedAmounts)
+            withContext(Dispatchers.Main) {vm.save()};ready(vm)
+            withContext(Dispatchers.Main) {vm.close();vm.open("o")};ready(vm)
+            assertEquals(draft,vm.state.value.form)
+            val removed=PurchaseOrderMutationRules.apply(edited,PurchaseOrderCommand("remove","owner","o",2,
+                PurchaseOrderAction.Edit(edited.source.copy(lines=listOf(added)))),3)
+            f.s=f.s.copy(orders=listOf(removed))
+            withContext(Dispatchers.Main) {vm.refresh()};ready(vm)
+            assertEquals(listOf("p2"),vm.state.value.form!!.lines.map {it.product.id})
+            assertEquals("20.00",vm.state.value.form!!.lines.single().total)
+            assertEquals("TT84",vm.state.value.form!!.invoiceNumber)
+            withContext(Dispatchers.Main) {vm.save()};ready(vm)
+            withContext(Dispatchers.Main) {vm.close();vm.open("o")};ready(vm)
+            assertEquals(listOf("p2"),vm.state.value.form!!.lines.map {it.product.id})
+        } finally {withContext(Dispatchers.Main) {store.clear()}}
+    }
     @Test fun operatorNextSavesBeforePreviewAndSaveExitPreservesInvoice(): Unit=runBlocking {
         val store=ViewModelStore();val f=Fake()
         try {

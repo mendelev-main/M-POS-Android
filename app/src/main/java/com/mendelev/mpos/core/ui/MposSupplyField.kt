@@ -1,5 +1,6 @@
 package com.mendelev.mpos.core.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -23,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable fun MposSupplyField(label: String,value: String,onChange: (String)->Unit,modifier: Modifier=Modifier,
-    enabled: Boolean=true,numeric: Boolean=true,suggested: Boolean=false,onTouch: ()->Unit={},tag: String="",placeholder: String="0",included: Boolean=false) {
+    enabled: Boolean=true,numeric: Boolean=true,suggested: Boolean=false,onTouch: ()->Unit={},tag: String="",placeholder: String="0",included: Boolean=false,error: Boolean=false,trailing: (@Composable ()->Unit)?=null,onOpen: (() -> Unit)?=null) {
     val c=MaterialTheme.colorScheme
     val yellow=if(isMposDarkTheme()) Color(0xFF514421) else Color(0xFFFFF1BB)
     val green=if(isMposDarkTheme()) Color(0xFF254237) else Color(0xFFD9EEE3)
@@ -33,10 +34,12 @@ import androidx.compose.ui.unit.sp
     LaunchedEffect(value) {if(editor.text!=value) editor=TextFieldValue(value,if(focused && numeric) TextRange(0,value.length) else TextRange(value.length))}
     Column(modifier,verticalArrangement=Arrangement.spacedBy(4.dp)) {
         Text(label,fontSize=12.sp,lineHeight=16.sp,maxLines=1,color=c.onSurfaceVariant)
-        Surface(shape=RoundedCornerShape(10.dp),color=if(suggested) yellow else if(included) green else c.background,border=BorderStroke(1.dp,if(suggested) {if(isMposDarkTheme()) Color(0xFFB99B49) else Color(0xFFB88A25)} else if(included) c.primary.copy(alpha=.5f) else c.outline)) {
-            BasicTextField(editor,{next->val changed=next.text!=editor.text;editor=next;if(changed) onChange(next.text)},enabled=enabled,singleLine=true,textStyle=TextStyle(color=c.onSurface,fontSize=14.sp,lineHeight=20.sp,fontFamily=MaterialTheme.typography.bodyMedium.fontFamily),
+        Surface(shape=RoundedCornerShape(10.dp),color=if(error) c.errorContainer else if(suggested) yellow else if(included) green else c.background,border=BorderStroke(1.dp,if(error) c.error else if(suggested) {if(isMposDarkTheme()) Color(0xFFB99B49) else Color(0xFFB88A25)} else if(included) c.primary.copy(alpha=.5f) else c.outline)) {
+            Box {
+            Row(verticalAlignment=Alignment.CenterVertically) {
+            BasicTextField(editor,{next->val changed=next.text!=editor.text;editor=next;if(changed) onChange(next.text)},enabled=enabled,readOnly=onOpen!=null,singleLine=true,textStyle=TextStyle(color=c.onSurface,fontSize=14.sp,lineHeight=20.sp,fontFamily=MaterialTheme.typography.bodyMedium.fontFamily),
                 keyboardOptions=KeyboardOptions(keyboardType=if(numeric) KeyboardType.Decimal else KeyboardType.Text),
-                modifier=Modifier.fillMaxWidth().heightIn(min=44.dp).pointerInput(enabled) {
+                modifier=Modifier.weight(1f).heightIn(min=44.dp).pointerInput(enabled) {
                     awaitEachGesture {awaitFirstDown(requireUnconsumed=false);if(enabled) touch()}
                 }.onFocusChanged {
                     if(it.isFocused && !focused) {focused=true;if(numeric) editor=editor.copy(selection=TextRange(0,editor.text.length));onTouch()}
@@ -46,6 +49,10 @@ import androidx.compose.ui.unit.sp
                     if(editor.text.isEmpty()) Text(placeholder,color=c.onSurfaceVariant,fontSize=14.sp)
                     inner()
                 }})
+            trailing?.invoke()
+            }
+            if(onOpen!=null) Box(Modifier.matchParentSize().clickable(enabled=enabled,onClick=onOpen))
+            }
         }
     }
 }

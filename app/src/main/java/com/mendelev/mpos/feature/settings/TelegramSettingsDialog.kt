@@ -19,57 +19,41 @@ import kotlinx.coroutines.*
     val context=LocalContext.current;val runtime=remember {TelegramRuntime.get(context)}
     val generation=remember {Administration.session.state.value.generation}
     val store=remember {runtime.settingsStore(generation)}
-    val ownerPreview by runtime.ownerPreview.collectAsState()
-    ownerPreview?.let {OwnerAnalyticsPreview(it) {runtime.closeOwnerPreview()}}
     val status by runtime.status.collectAsState();val pending by runtime.pending.collectAsState()
-    var original by remember {mutableStateOf<TelegramSettings?>(null)}
     // Credentials deliberately never enter savedInstanceState / rememberSaveable.
     var form by remember {mutableStateOf<TelegramSettings?>(null)}
     var error by remember {mutableStateOf<String?>(null)}
     var busy by remember {mutableStateOf(true)}
     var visible by remember {mutableStateOf(false)}
     val scope=rememberCoroutineScope()
-    fun load() {busy=true;scope.launch {try {val s=withContext(Dispatchers.IO) {store.read()};original=s;form=s;error=null} catch(_:Exception) {error="Не удалось прочитать настройки Telegram. Данные не изменены"} finally {busy=false}}}
+    fun load() {busy=true;scope.launch {try {val s=withContext(Dispatchers.IO) {store.read()};form=s;error=null} catch(_:Exception) {error="Не удалось прочитать настройки Telegram. Данные не изменены"} finally {busy=false}}}
     LaunchedEffect(Unit) {runtime.clearStatus();load()}
     val locked=busy || pending>0
     MposDialog("Telegram",onClose,closable=!busy,maxWidth=680.dp) {
-        Column(Modifier.weight(1f,fill=false).verticalScroll(rememberScrollState()).testTag("telegramSettings"),verticalArrangement=Arrangement.spacedBy(14.dp)) {
+        Column(Modifier.weight(1f,fill=false).verticalScroll(rememberScrollState()).testTag("telegramSettings"),verticalArrangement=Arrangement.spacedBy(22.dp)) {
             if(busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             error?.let {MposNotice(it,true)}
             if(form==null && !busy) MposButton("Повторить чтение",{load()})
             form?.let {s->
-                Text("Рабочий бот отправляет отчёты в группу. Укажите своего бота и чат для этой организации.",style=MaterialTheme.typography.bodySmall)
-                Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    Box(Modifier.weight(1f)) {MposField(s.botToken,{form=s.copy(botToken=it)},"Токен бота",Modifier.testTag("telegramToken"),!locked,password=!visible)}
-                    MposButton(if(visible) "Скрыть" else "Показать",{visible=!visible},enabled=!locked,style=ActionStyle.Outline)
+                TelegramSettingsSection("Подключение") {
+                    Row(verticalAlignment=Alignment.Bottom,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                        Box(Modifier.weight(1f)) {MposField(s.botToken,{form=s.copy(botToken=it)},"Токен бота",Modifier.testTag("telegramToken"),!locked,password=!visible)}
+                        MposButton(if(visible) "Скрыть" else "Показать",{visible=!visible},Modifier.width(108.dp).height(56.dp),enabled=!locked,style=ActionStyle.Outline)
+                    }
+                    TelegramRecipientFields(s,!locked) {form=it}
                 }
-                MposWebField(s.chatId,{form=s.copy(chatId=it)},"ID рабочей группы","telegramChat",!locked,placeholder="Например: -1001234567890")
-                MposWebField(s.threadId,{form=s.copy(threadId=it)},"ID темы · необязательно","telegramThread",!locked,placeholder="Например: 123")
-                TelegramToggle("Включить Telegram","Разрешить отправку выбранных уведомлений.",s.enabled,!locked) {form=s.copy(enabled=it)}
-                TelegramToggle("Смена открыта","Сообщение после открытия смены.",s.shiftOpened,!locked) {form=s.copy(shiftOpened=it)}
-                TelegramToggle("Смена закрыта","Изображение чека-отчёта после закрытия смены.",s.shiftClosed,!locked) {form=s.copy(shiftClosed=it)}
-                TelegramToggle("Ежемесячный складской отчёт","PDF за предыдущий календарный месяц; отправляется при открытом приложении и административном доступе.",s.monthlyWarehouse,!locked) {form=s.copy(monthlyWarehouse=it)}
-                MposWebField(s.deviceChatId,{form=s.copy(deviceChatId=it)},"ID рабочего устройства","telegramDevice",!locked,placeholder="Telegram ID рабочего устройства")
-                Text("Аккаунт рабочего устройства должен открыть бота и нажать Start.",style=MaterialTheme.typography.bodySmall)
-                MposWebField(s.ownerChatId,{form=s.copy(ownerChatId=it)},"ID владельца","telegramOwner",!locked,placeholder="Telegram ID владельца")
-                TelegramToggle("Отправка статистики владельцу","Подробные изображения за смену отправляются в личный чат после каждого закрытия.",s.ownerShiftStats,!locked,"telegramOwnerShift") {form=s.copy(ownerShiftStats=it)}
-                TelegramToggle("Месячная статистика владельцу","В последний день месяца — после каждого закрытия, с итогами месяца на этот момент.",s.ownerMonthlyStats,!locked,"telegramOwnerMonth") {form=s.copy(ownerMonthlyStats=it)}
-                Text("Владелец должен открыть бота и нажать Start. Статистика не отправляется в рабочую группу.",style=MaterialTheme.typography.bodySmall)
-                TelegramToggle("Уведомления об онлайн-заказах через сервер","Серверные Telegram-уведомления и команды владельца подключим отдельно.",s.onlineOrders,false) {}
-                Text("Адрес и ключ backend задаются в модуле «Меню и backend».",style=MaterialTheme.typography.bodySmall)
-                if(original?.enabled==true) {
-                    Text("Отправка по сохранённым настройкам",style=MaterialTheme.typography.titleSmall)
-                    MposButton("Отчёт последней закрытой смены",{runtime.sendLatestShift()},enabled=!locked && s==original,style=ActionStyle.Outline)
-                    MposButton("Складской PDF за прошлый месяц",{runtime.sendMonthly()},enabled=!locked && s==original && s.monthlyWarehouse,style=ActionStyle.Outline)
-                    if(s!=original) Text("Сохраните изменения перед отправкой отчётов.",style=MaterialTheme.typography.bodySmall)
+                TelegramSettingsSection("Уведомления") {
+                    TelegramToggle("Включить Telegram","Разрешить отправку выбранных уведомлений.",s.enabled,!locked) {form=s.copy(enabled=it)}
+                    TelegramToggle("Смена открыта","Сообщение после открытия смены.",s.shiftOpened,!locked) {form=s.copy(shiftOpened=it)}
+                    TelegramToggle("Смена закрыта","Изображение чека-отчёта после закрытия смены.",s.shiftClosed,!locked) {form=s.copy(shiftClosed=it)}
+                    TelegramToggle("Уведомления об онлайн-заказах","Backend отправляет сообщение на ID рабочего устройства.",s.onlineOrders,!locked) {form=s.copy(onlineOrders=it,onlineOrdersConfigured=true)}
                 }
-                Text("Предпросмотр без отправки в Telegram",style=MaterialTheme.typography.titleSmall)
-                MposButton("Предпросмотр статистики смены",{runtime.previewLatestOwner()},enabled=!locked,style=ActionStyle.Outline,modifier=Modifier.testTag("ownerStatsPreview"))
-                MposButton("Предпросмотр статистики месяца",{runtime.previewLatestOwner(month=true)},enabled=!locked,style=ActionStyle.Outline)
-                if(original?.enabled==true && (s.ownerShiftStats || s.ownerMonthlyStats)) {
-                    MposButton("Повторить статистику владельцу",{runtime.resendLatestOwner()},enabled=!locked && s==original,style=ActionStyle.Outline)
+                TelegramSettingsSection("Отчёты владельцу") {
+                    TelegramToggle("Отчёт за смену","PDF после каждого закрытия смены.",s.ownerShiftStats,!locked,"telegramOwnerShift") {form=s.copy(ownerShiftStats=it)}
+                    TelegramToggle("Отправлять отчёт за месяц","С первого по последнее число. Пропущенный отчёт — при следующем открытии смены.",s.ownerMonthReport,!locked,"telegramOwnerMonth") {form=s.copy(ownerMonthReport=it)}
+                    TelegramToggle("Отправлять отчёт за квартал","Календарный квартал. Пропущенный отчёт — при следующем открытии смены.",s.ownerQuarterReport,!locked,"telegramOwnerQuarter") {form=s.copy(ownerQuarterReport=it)}
                 }
-                Text("Проверка отправляет одно тестовое сообщение в выбранную группу. После обрыва связи проверьте чат перед повтором.",style=MaterialTheme.typography.bodySmall)
+
             }
             status?.let {Text(it,Modifier.testTag("telegramStatus"),style=MaterialTheme.typography.bodySmall)}
         }
@@ -80,7 +64,7 @@ import kotlinx.coroutines.*
                 val s=try {form!!.validated()} catch(e:IllegalArgumentException) {error=e.message;return@MposButton}
                 busy=true;error=null
                 scope.launch {
-                    try {val saved=withContext(Dispatchers.IO) {store.save(s)};original=saved;form=saved;onSaved(saved);runtime.configurationSaved();onClose()}
+                    try {val saved=withContext(Dispatchers.IO) {store.save(s)};form=saved;onSaved(saved);runtime.configurationSaved();onClose()}
                     catch(e:IllegalStateException) {error=e.message ?: "Не удалось сохранить настройки Telegram"}
                     catch(_:Exception) {error="Не удалось сохранить настройки Telegram. Данные не изменены"}
                     finally {busy=false}
@@ -93,5 +77,33 @@ import kotlinx.coroutines.*
     Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
         Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {Text(title);Text(note,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
         Switch(value,onChange,enabled=enabled,modifier=if(tag.isBlank()) Modifier else Modifier.testTag(tag))
+    }
+}
+
+@Composable private fun TelegramSettingsSection(title: String,content: @Composable ColumnScope.()->Unit) {
+    Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+        Text(title,style=MaterialTheme.typography.titleSmall,fontWeight=androidx.compose.ui.text.font.FontWeight.Bold)
+        content()
+    }
+}
+
+@Composable private fun TelegramRecipientFields(s: TelegramSettings,enabled: Boolean,onChange: (TelegramSettings)->Unit) {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val wide=maxWidth>=500.dp
+        val labels=listOf("ID рабочей группы","ID темы · необязательно","ID рабочего устройства","ID владельца")
+        val values=listOf(s.chatId,s.threadId,s.deviceChatId,s.ownerChatId)
+        val tags=listOf("telegramChat","telegramThread","telegramDevice","telegramOwner")
+        @Composable fun field(index: Int,modifier: Modifier) {
+            MposField(values[index],{value->onChange(when(index) {
+                0->s.copy(chatId=value);1->s.copy(threadId=value);2->s.copy(deviceChatId=value);else->s.copy(ownerChatId=value)
+            })},labels[index],modifier.testTag(tags[index]),enabled)
+        }
+        Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
+            if(wide) listOf(0 to 1,2 to 3).forEach {(left,right)->
+                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                    field(left,Modifier.weight(1f));field(right,Modifier.weight(1f))
+                }
+            } else (0..3).forEach {field(it,Modifier.fillMaxWidth())}
+        }
     }
 }

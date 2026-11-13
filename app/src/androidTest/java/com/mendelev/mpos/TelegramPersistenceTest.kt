@@ -30,6 +30,28 @@ class TelegramPersistenceTest {
             assertArrayEquals(byteArrayOf(1,2,3),file.readBytes())
         } finally {file.delete();File(file.path+".bak").delete();File(file.path+".new").delete()}
     }
+    @Test fun newPeriodSwitchesAndActivationDatesSurviveEncryptionAndReopen() {
+        val file=File(context.cacheDir,"telegram-periods-${UUID.randomUUID()}.enc")
+        fun store()=TelegramSettingsStore(file,TelegramKeystoreCipher()) {true}
+        try {
+            val before=System.currentTimeMillis()
+            val first=store().save(TelegramSettings(enabled=true,botToken="123456:"+"P".repeat(32),shiftOpened=false,shiftClosed=false,ownerChatId="123456",ownerMonthReport=true,ownerQuarterReport=true))
+            assertTrue(first.ownerMonthSince>=before);assertTrue(first.ownerQuarterSince>=before)
+            assertEquals(first,store().read())
+            val edited=store().save(first.copy(ownerChatId="234567"))
+            assertEquals(first.ownerMonthSince,edited.ownerMonthSince);assertEquals(first.ownerQuarterSince,edited.ownerQuarterSince)
+            val off=store().save(edited.copy(ownerMonthReport=false))
+            assertEquals(0L,off.ownerMonthSince);assertTrue(off.ownerQuarterReport)
+            val again=store().save(off.copy(ownerMonthReport=true))
+            assertTrue(again.ownerMonthSince>=first.ownerMonthSince);assertEquals(first.ownerQuarterSince,again.ownerQuarterSince)
+            assertEquals(again,store().read())
+            val muted=store().save(again.copy(enabled=false))
+            assertEquals(0L,muted.ownerMonthSince);assertEquals(0L,muted.ownerQuarterSince)
+            val resumed=store().save(muted.copy(enabled=true))
+            assertTrue(resumed.ownerMonthSince>=again.ownerMonthSince)
+            assertTrue(resumed.ownerQuarterSince>=again.ownerQuarterSince)
+        } finally {file.delete();File(file.path+".bak").delete();File(file.path+".new").delete()}
+    }
     /** Preview fixture only: no database access and no Telegram transport. */
     @Test fun exportGroupShiftReceiptPreview() {
         val zone=java.time.ZoneId.systemDefault()

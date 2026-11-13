@@ -15,3 +15,7 @@ N05/N06 и визуальная/staging приёмка не закрыты. Не
 
 
 2026-11-10: Always available online через существующий quantity:null availability snapshot. Backend service source проверен, сервер не меняется. Stock/local sales unchanged; ../../docs/ONLINE-ALWAYS-AVAILABLE.md. Без production requests/push.
+
+13.11.2026: QR01–QR03/D04-online — CUSTOMER-QR.md и TELEGRAM-08.md. Сервер00f8fa9 изучен read-only, QR=полный phone, уведомление=deviceChatId через PUT существующего маршрута. Backend/production не менялись; локальные fake-тесты, камера/реальный бот — ручная приёмка.
+
+13.11.2026: Telegram monthly warehouse/monthly owner retired владельцем. UI/manual preview/send sections удалены; runtime не планирует/не отправляет monthly, legacy settings flags нормализуются false. Смены/статистика смены владельцу/online device notification остаются текущими сценариями.

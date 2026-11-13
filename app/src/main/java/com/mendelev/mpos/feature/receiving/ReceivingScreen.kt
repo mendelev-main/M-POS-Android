@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
@@ -80,6 +81,7 @@ import java.math.BigDecimal
             onLine=model::line,onUnit=model::unit,onMode=model::priceMode,onAdd={search="";dialog="product"},onRemove=model::remove,
             navigationEnabled=!locked,suggested=ui.suggestedAmounts,onReviewAmount=model::reviewAmount,onAmount=model::amount)
     }
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding().semantics {testTagsAsResourceId=true}.testTag("receivingScreen")) {
         MposAppBar("Приёмка",navigationEnabled=!locked && dialog==null && preview==null) {}
             MposFolderPanel(MposFolderTab.Supplies,{tab->
@@ -91,6 +93,8 @@ import java.math.BigDecimal
                     MposSupplyAction("Поставки",{if(onSection!=null) onSection(MposFolderTab.Supplies) else onBack()},kind=PosControl.Outline)
                 }
             }
+    }
+    ui.transientNotice?.let {MposTransientNotice(it,Modifier.align(Alignment.TopCenter).padding(top=8.dp,start=16.dp,end=16.dp))}
     }
     post.history.find {it.id==detail}?.let {ReceivingRecordWindow(it) {detail=null}}
     if(preview!=null && dialog==null) ReceivingConfirmationWindow(preview,locked,ui.dirty,model::dismissPreview) {

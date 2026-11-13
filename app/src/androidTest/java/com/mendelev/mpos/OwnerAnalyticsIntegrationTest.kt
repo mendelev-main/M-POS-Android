@@ -5,6 +5,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.mendelev.mpos.data.local.*
 import com.mendelev.mpos.domain.catalog.ProductInput
 import com.mendelev.mpos.domain.report.ReportDetailLine
+import com.mendelev.mpos.domain.report.ReportAnalytics
 import com.mendelev.mpos.domain.sale.PaymentInput
 import com.mendelev.mpos.domain.shift.ShiftRules
 import com.mendelev.mpos.domain.workspace.CartAction
@@ -53,6 +54,16 @@ class OwnerAnalyticsIntegrationTest {
             assertEquals("Историческая категория",oldReport.current.categories.single().name)
             assertTrue(newReport.current.products.any {it.name=="Новое имя"})
             assertEquals(100.toBigInteger(),oldReport.current.profit)
+            val panoramaFirst=db.ownerPanorama(first,OwnerStatsKind.MONTH)
+            val panoramaLast=db.ownerPanorama(second,OwnerStatsKind.MONTH)
+            assertEquals(200.toBigInteger(),panoramaFirst.report.sales.total)
+            assertEquals(600.toBigInteger(),panoramaLast.report.sales.total)
+            assertEquals("Старое имя",panoramaFirst.report.details!!.products.single().names.single())
+            assertEquals(100.toBigInteger(),ReportAnalytics.grossProfit(panoramaFirst.report))
+            val singleShift=db.ownerPanorama(second,OwnerStatsKind.SHIFT)
+            assertEquals(400.toBigInteger(),singleShift.report.sales.total);assertEquals(1L,singleShift.report.saleCount)
+            val period=OwnerReportSchedule.period(OwnerStatsKind.MONTH,java.time.LocalDate.parse("2026-11-30"),ZoneOffset.UTC)
+            assertTrue(db.ownerPeriodChanged(period,oldReport.cutoff));assertFalse(db.ownerPeriodChanged(period,newReport.cutoff))
             assertEquals(before,shifts.snapshot());assertEquals(balance,db.catalog().balance("p"));assertEquals(2,db.sales().history().size)
         } finally {db.close()}
     }

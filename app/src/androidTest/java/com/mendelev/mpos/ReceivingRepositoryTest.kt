@@ -18,6 +18,36 @@ class ReceivingRepositoryTest {
         return ReceivingCommand("save",s.ownerId,seed.order.id,0,d.copy(invoiceNumber="TTN",invoiceDate="2026-10-27",lines=d.lines.map {it.copy(total="40")}))
     }
     private suspend fun reject(block: suspend ()->Unit) {try {block();fail()} catch(_:CatalogFailure) {}}
+    @Test fun removedOrderLineCanBeRemovedFromDraftAndStaysRemovedAfterRead(): Unit=runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
+        try {
+            val first=seedReceiving(db,"first");val second=seedReceiving(db,"second")
+            val repo=ReceivingRepository(db)
+            val orders=PurchaseOrderStore(db).all()
+            val added=second.order.source.lines.single()
+            val two=PurchaseOrderMutationRules.apply(first.order,PurchaseOrderCommand("add",first.owner,first.order.id,1,
+                PurchaseOrderAction.Edit(first.order.source.copy(lines=first.order.source.lines+added))),2)
+            var doc=db.workspace().document(PurchaseOrderCodec.KEY)!!
+            db.workspace().put(doc.copy(revision=doc.revision+1,payload=PurchaseOrderCodec.encode(orders.map {if(it.id==two.id) two else it})))
+            val snapshot=repo.snapshot()
+            val d=ReceivingRules.open("draft",two,snapshot.products).copy(invoiceNumber="TTN",lines=ReceivingRules.open("draft",two,snapshot.products).lines.map {it.copy(total="40")})
+            repo.commit(ReceivingCommand("save-two",first.owner,two.id,0,d))
+            val removed=PurchaseOrderMutationRules.apply(two,PurchaseOrderCommand("remove",first.owner,two.id,2,
+                PurchaseOrderAction.Edit(two.source.copy(lines=listOf(added)))),3)
+            doc=db.workspace().document(PurchaseOrderCodec.KEY)!!
+            db.workspace().put(doc.copy(revision=doc.revision+1,payload=PurchaseOrderCodec.encode(orders.map {if(it.id==removed.id) removed else it})))
+            val before=db.catalog().balance(first.productId)
+            val next=ReceivingRules.synchronizeOrder(d,removed,repo.snapshot().products)
+            assertEquals(listOf(second.productId),next.lines.map {it.product.id})
+            val command=ReceivingCommand("save-removed",first.owner,removed.id,1,next)
+            repo.commit(command);repo.commit(command)
+            val read=repo.snapshot().records.single {it.orderId==removed.id}
+            assertEquals(next,read.draft);assertEquals(2L,read.revision)
+            assertEquals("40",read.draft!!.lines.single().total)
+            assertEquals(before,db.catalog().balance(first.productId))
+            reject {repo.commit(command.copy(commandId="omit-live",revision=2,draft=next.copy(lines=emptyList())))}
+        } finally {db.close()}
+    }
     @Test fun reopenPreviewClearAndOldReplayNeverChangeOrderProductsOrStock(): Unit=runBlocking {
         val name="receiving-${UUID.randomUUID()}.db"
         fun open()=Room.databaseBuilder(context,CatalogDatabase::class.java,name).build()

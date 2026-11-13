@@ -2,6 +2,18 @@ package com.mendelev.mpos.domain.loyalty
 
 /** Web android-customer-input.js: fixed Belarus prefix, paste normalization, ASCII digits only. */
 internal object CustomerEntryRules {
+    /** Account QR is a full, confirmed Belarus phone, never a URL or a suffix. */
+    fun qrPhone(raw: String): String {
+        val value=raw.trim()
+        require(value.length<=32 && value.matches(Regex("\\+?375[0-9]{9}"))) {"QR-код не содержит полный номер клиента. Используйте QR из личного кабинета."}
+        return value.removePrefix("+")
+    }
+    fun qrMatch(rows: List<LoyaltyCustomer>,raw: String): LoyaltyCustomer {
+        val phone=qrPhone(raw)
+        val matches=rows.filter {it.phone.filter {c->c in '0'..'9'}==phone}
+        require(matches.size==1) {if(matches.isEmpty()) "Клиент по QR-коду не найден" else "Найдено несколько клиентов с этим номером. Найдите клиента вручную."}
+        return matches.single()
+    }
     fun suffix(value: String)=value.filter {it in '0'..'9'}.takeLast(4)
     fun national(value: String): String {
         val text=value.trim();val digits=text.filter {it in '0'..'9'}

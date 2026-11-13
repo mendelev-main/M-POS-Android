@@ -92,15 +92,31 @@ internal fun receivingDiscrepancy(record: PostedReceiving)=record.draft.order!=n
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun ReceivingDocument(d: ReceivingDraft,suppliers: List<ReceivingSupplier>,enabled: Boolean,onExit: ()->Unit,onNext: ()->Unit,
     onSupplier: (String)->Unit,onMeta: (ReceivingDraft)->Unit,onLine: (String,(ReceivingLine)->ReceivingLine)->Unit,onUnit: (String,String)->Unit,
     onMode: (String,String)->Unit,onAdd: ()->Unit,onRemove: (String)->Unit,navigationEnabled: Boolean=enabled,
     suggested: Set<String> = emptySet(),onReviewAmount: (String)->Unit={},onAmount: (String,String)->Unit={id,value->onLine(id) {it.copy(total=value,priceMode="total",unitPrice="")}}) {
+    var calendar by remember(d.id) {mutableStateOf(false)}
+    if(calendar) {
+        val picker=rememberDatePickerState(initialSelectedDateMillis=runCatching {java.time.LocalDate.parse(d.invoiceDate).atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli()}.getOrNull())
+        MposDialog("Дата накладной",{calendar=false},maxWidth=480.dp) {
+            DatePicker(picker,showModeToggle=false)
+            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                MposButton("Отмена",{calendar=false},Modifier.weight(1f))
+                MposButton("Выбрать",{picker.selectedDateMillis?.let {millis->
+                    onMeta(d.copy(invoiceDate=java.time.Instant.ofEpochMilli(millis).atZone(java.time.ZoneOffset.UTC).toLocalDate().toString()))
+                    calendar=false
+                }},Modifier.weight(1f))
+            }
+        }
+    }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Text(d.supplierName,fontSize=17.sp,fontWeight=FontWeight.Bold)
-        Row(Modifier.fillMaxWidth().padding(top=18.dp,bottom=18.dp),horizontalArrangement=Arrangement.spacedBy(16.dp)) {
-            MposSupplyField("Номер накладной",d.invoiceNumber,{onMeta(d.copy(invoiceNumber=it))},Modifier.weight(1f),enabled,numeric=false,tag="receivingInvoice",placeholder="Например, ТН-1043")
-            MposSupplyField("Дата",d.invoiceDate,{onMeta(d.copy(invoiceDate=it))},Modifier.weight(1f),enabled,numeric=false,tag="receivingDate",placeholder="ГГГГ-ММ-ДД")
+        Row(Modifier.fillMaxWidth().padding(top=18.dp,bottom=18.dp),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.Bottom) {
+            MposSupplyField("Номер накладной",d.invoiceNumber,{onMeta(d.copy(invoiceNumber=it))},Modifier.weight(1f),enabled,numeric=false,tag="receivingInvoice",placeholder="Например, ТН-1043",error=d.invoiceNumber.isBlank())
+            MposSupplyField("Дата",d.invoiceDate,{onMeta(d.copy(invoiceDate=it))},Modifier.weight(1f),enabled,numeric=false,tag="receivingDate",placeholder="ГГГГ-ММ-ДД",error=d.invoiceDate.isBlank() || runCatching {java.time.LocalDate.parse(d.invoiceDate)}.isFailure,
+                onOpen={calendar=true})
         }
         if(d.order==null) PurchaseSupplierSelect("Поставщик",d.supplier?.id.orEmpty(),listOf("" to "Без поставщика")+suppliers.map {it.id to it.name},onSupplier,enabled)
         Column(Modifier.fillMaxWidth()) {

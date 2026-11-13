@@ -47,6 +47,21 @@ class ReceivingRulesTest {
         val cancelled=PurchaseOrderMutationRules.apply(changed,PurchaseOrderCommand("cancel","owner","o",2,PurchaseOrderAction.Cancel),3)
         reject {ReceivingRules.rebase(rebased,cancelled,listOf(newer,p.copy(id="new")))}
     }
+    @Test fun synchronizeOrderRemovesDeselectedRowsAndKeepsRemainingFacts() {
+        val p=product();val nextProduct=p.copy(id="new",name="Вода")
+        val first=order()
+        val two=PurchaseOrderMutationRules.apply(first,PurchaseOrderCommand("add","owner","o",1,
+            PurchaseOrderAction.Edit(first.source.copy(lines=first.source.lines+first.source.lines.single().copy(productId="new")))),2)
+        val d=ReceivingRules.open("r",two,listOf(p,nextProduct)).copy(invoiceNumber="TTN",invoiceDate="2026-11-13",lines=
+            ReceivingRules.open("r",two,listOf(p,nextProduct)).lines.map {it.copy(quantity="3",total="12")})
+        val removed=PurchaseOrderMutationRules.apply(two,PurchaseOrderCommand("remove","owner","o",2,
+            PurchaseOrderAction.Edit(two.source.copy(lines=two.source.lines.filter {it.productId=="new"}))),3)
+        val result=ReceivingRules.synchronizeOrder(d,removed,listOf(nextProduct))
+        assertEquals(listOf("new"),result.lines.map {it.product.id})
+        assertEquals("3",result.lines.single().quantity);assertEquals("12",result.lines.single().total)
+        assertEquals("TTN",result.invoiceNumber);assertEquals("2026-11-13",result.invoiceDate)
+        assertEquals(result,ReceivingRules.synchronizeOrder(result,removed,listOf(nextProduct)))
+    }
     @Test fun exactQuantityMoneyLimitsAndPhysicalUnitSwitchNeverRoundStock() {
         val line=ReceivingLine(product(),"0,4","l","","l","1")
         assertEquals("400",ReceivingRules.switchUnit(line,"ml").quantity)

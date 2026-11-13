@@ -28,7 +28,7 @@ import java.time.format.DateTimeFormatter
         MposAppBar("Склад",navigationEnabled=!ui.pending && ui.documentId==null) {}
         Column(Modifier.padding(20.dp).weight(1f),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                MposButton(if(selected!=null) "К остаткам" else "Настройки",back,enabled=!ui.pending,style=ActionStyle.Secondary,modifier=Modifier.testTag("stockBack"))
+                MposButton(if(selected!=null) "К остаткам" else "Учёт и аналитика",back,enabled=!ui.pending,style=ActionStyle.Secondary,modifier=Modifier.testTag("stockBack"))
                 Text(selected?.name ?: "Остатки и движения",style=MaterialTheme.typography.titleLarge,modifier=Modifier.weight(1f))
                 MposButton("Перечитать",model::refresh,enabled=!ui.pending,style=ActionStyle.Secondary)
             }

@@ -55,6 +55,9 @@ class RecipeCalculator(products: Collection<RecipeProduct>) {
         expand(requests).filterKeys { !(products.getValue(it) as RecipeProduct.Simple).noStockTracking }
             .mapValues { (_, value) -> value.stockDecimal() }
 
+    /** Reporting includes untracked ingredients and keeps fractions exact across receipt aggregation. */
+    fun exactAnalyticsConsumption(requests: List<RecipeRequest>): Map<String,Fraction> = expand(requests)
+
     /** Physical portions only: no reservations/negative-sale permission, no decimal intermediate rounding. */
     fun physicalPortions(request: RecipeRequest, balances: Map<String, BigDecimal>): BigDecimal? =
         expand(listOf(request)).filterKeys { !(products.getValue(it) as RecipeProduct.Simple).noStockTracking }
@@ -121,7 +124,7 @@ class RecipeCalculator(products: Collection<RecipeProduct>) {
 }
 
 /** Exact rational intermediates avoid rounding 1/3 at each edge of a nested recipe. */
-private class Fraction private constructor(val numerator: BigInteger, val denominator: BigInteger) {
+class Fraction private constructor(val numerator: BigInteger, val denominator: BigInteger) {
     operator fun plus(other: Fraction) = normalized(
         numerator * other.denominator + other.numerator * denominator, denominator * other.denominator)
     operator fun times(other: Fraction) = normalized(numerator * other.numerator, denominator * other.denominator)

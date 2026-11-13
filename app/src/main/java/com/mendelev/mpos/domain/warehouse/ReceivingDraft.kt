@@ -110,6 +110,11 @@ object ReceivingRules {
             ReceivingLine(p,if(o.expectedQuantities[i]==null) "" else l.quantity,l.unit,l.packSize,l.contentUnit)
         }).also(::validate)
     }
+    /** Explicit order edits determine pending lines; posted receipts are never changed. */
+    fun synchronizeOrder(d: ReceivingDraft,o: PurchaseOrder,products: List<ReceivingProduct>): ReceivingDraft {
+        val ids=o.source.lines.map {it.productId}.toSet()
+        return rebase(d.copy(lines=d.lines.filter {it.product.id in ids}),o,products)
+    }
     fun rebase(d: ReceivingDraft,o: PurchaseOrder?,products: List<ReceivingProduct>): ReceivingDraft {
         if(o?.id!=d.order?.id || (o!=null && o.status!="pending")) throw CatalogFailure("receiving","Заказ уже не ожидает приёмку")
         val existing=d.lines.map {l->

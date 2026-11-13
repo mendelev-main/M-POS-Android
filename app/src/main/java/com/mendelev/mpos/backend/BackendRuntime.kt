@@ -88,7 +88,7 @@ class BackendRuntime private constructor(private val context: Context) {
         }}
         launch(Dispatchers.IO) {
             var nextAttempt=0L;var revision=-1L;var failures=0
-            var nextLoyaltyAttempt=0L;var loyaltyFailures=0
+            var nextLoyaltyAttempt=0L;var loyaltyFailures=0;var nextTelegramAttempt=0L
             while(isActive) {
                 try {
                     val s=settings.read()
@@ -101,6 +101,11 @@ class BackendRuntime private constructor(private val context: Context) {
                             nextAttempt=System.currentTimeMillis()+wait
                             statusState.value=if(e is BackendFailure) e.message.orEmpty() else "Подтверждения заказов ожидают связи с backend"
                         }
+                    }
+                    if(usable(s) && System.currentTimeMillis()>=nextTelegramAttempt) {
+                        try {com.mendelev.mpos.telegram.TelegramRuntime.get(context).syncOnline(s);nextTelegramAttempt=System.currentTimeMillis()+5000}
+                        catch(e:CancellationException) {throw e}
+                        catch(_:Exception) {nextTelegramAttempt=System.currentTimeMillis()+30000}
                     }
                     if(usable(s) && System.currentTimeMillis()>=nextLoyaltyAttempt) {
                         try {LoyaltyDelivery.sync(context,s);loyaltyFailures=0;nextLoyaltyAttempt=System.currentTimeMillis()+5000}

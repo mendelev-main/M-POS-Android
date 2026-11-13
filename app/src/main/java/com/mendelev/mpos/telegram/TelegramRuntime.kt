@@ -11,8 +11,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.io.File
 import java.security.MessageDigest
-import java.time.LocalDate
-import java.util.UUID
 
 internal class FileTelegramJournal(private val directory: File): TelegramDeliveryJournal {
     private fun file(key: String)=AtomicFile(File(directory,MessageDigest.getInstance("SHA-256").digest(key.toByteArray()).joinToString("") {"%02x".format(it)}))
@@ -34,16 +32,9 @@ class TelegramRuntime private constructor(private val context: Context) {
     private val delivery=TelegramDelivery(journal,transport)
     private val mutable=MutableStateFlow<String?>(null);val status=mutable.asStateFlow()
     private val working=MutableStateFlow(0);val pending=working.asStateFlow()
-    init {
-        scope.launch {Administration.session.state.collect {if(it.active) try {monthly()} catch(e:CancellationException) {throw e} catch(_:Exception) {mutable.value="Не удалось подготовить ежемесячный отчёт"}}}
-        scope.launch {while(isActive) {delay(60*60*1000L);try {monthly()} catch(e:CancellationException) {throw e} catch(_:Exception) {mutable.value="Не удалось подготовить ежемесячный отчёт"}}}
-    }
     fun settingsStore(generation: Long?=null)=TelegramSettingsStore(File(context.noBackupFilesDir,"telegram-settings-v1.enc"),TelegramKeystoreCipher()) {
         Administration.session.state.value.let {it.active && (generation==null || it.generation==generation)}
     }
-    private val previewState=MutableStateFlow<OwnerAnalyticsReport?>(null)
-    val ownerPreview=previewState.asStateFlow()
-    fun closeOwnerPreview() {previewState.value=null}
     fun clearStatus() {mutable.value=null}
     private fun destination(s: TelegramSettings)=MessageDigest.getInstance("SHA-256").digest("${s.botToken}:${s.chatId}:${s.threadId}".toByteArray()).joinToString("") {"%02x".format(it)}
     private fun launch(block: suspend ()->Unit) {
@@ -82,79 +73,61 @@ class TelegramRuntime private constructor(private val context: Context) {
                 } catch(e:Exception) {results+="Рабочая группа: ${TelegramFailure.safe(e)}"}
             }
             // A group failure or disabled group notification must never suppress owner jobs.
-            if(closed) try {results+=ownerClosed(s,id)} catch(_:Exception) {results+="Не удалось подготовить статистику владельцу"}
-            else monthly()
+            try {results+=ownerReports(s,id,closed)} catch(_:Exception) {results+="Не удалось подготовить статистику владельцу"}
             if(results.isNotEmpty()) mutable.value=results.joinToString(" · ")
         }
     }
-    private suspend fun ownerClosed(s: TelegramSettings,id: String,manual: Boolean=false): List<String> {
-        val db=CatalogDatabase.get(context)
-        val shift=db.shifts().shift(id) ?: return listOf("Не найдена смена для статистики владельца")
-        val closed=shift.closedAt ?: return emptyList()
-        val zone=java.time.ZoneId.of(shift.zoneId);val recipient=OwnerStatsRouting.recipient(s)
-        val result=mutableListOf<String>()
-        val nonce=if(manual) "manual:${UUID.randomUUID()}:" else ""
-        OwnerStatsRouting.kinds(s,closed,zone).forEach {kind->
-            val label=if(kind==OwnerStatsKind.MONTH) "Статистика месяца владельцу" else "Статистика смены владельцу"
-            try {
-                val report=db.ownerAnalytics(id,kind==OwnerStatsKind.MONTH)
-                val pages=OwnerAnalyticsImage.pages(report)
-                // Do not automatically resend legacy page jobs as a new album after upgrading.
-                val legacy=if(manual) emptyList() else pages.indices.mapNotNull {page->journal.state(OwnerStatsRouting.key(kind,id,closed,zone,page)+":${destination(recipient)}")}
-                if(legacy.isNotEmpty()) {
-                    result+="$label: отчёт уже обрабатывался по страницам; для нового альбома используйте явный повтор"
-                } else {
-                    val key=nonce+"bundle:v2:"+OwnerStatsRouting.key(kind,id,closed,zone,0)+":${destination(recipient)}"
-                    val outcome=delivery.send(key,recipient) {
-                        OwnerReportBundle.message(OwnerReportCaption.format(report),pages.size,
-                            {page->OwnerAnalyticsImage.render(report,page)},{OwnerAnalyticsImage.pdf(report)})
-                    }
-                    if(!outcome.sent) result+="$label: "+if(outcome.skipped) "предыдущая отправка требует проверки чата перед повтором" else outcome.message
-                    else if(!outcome.skipped) result+="$label: отправлено одним отчётом"
-                }
-            } catch(e:Exception) {result+="$label: не удалось подготовить отчёт"}
-        }
-        return result
-    }
-    fun previewLatestOwner(month: Boolean=false) {
-        if(working.value>0) return
-        launch {
-            check(Administration.session.state.value.active)
+    private val ownerReportsLock=kotlinx.coroutines.sync.Mutex()
+    private suspend fun ownerReports(s: TelegramSettings,id: String,closedEvent: Boolean): List<String> {
+        if(!s.enabled || s.botToken.isBlank() || s.ownerChatId.isBlank()) return emptyList()
+        ownerReportsLock.lock()
+        try {
             val db=CatalogDatabase.get(context)
-            val closed=db.shifts().history().filter {it.closedAt!=null}.maxByOrNull {it.closedAt!!}
-            if(closed==null) {mutable.value="Нет закрытых смен для предпросмотра";return@launch}
-            previewState.value=db.ownerAnalytics(closed.id,month,requireLastDay=false)
-        }
-    }
-    fun resendLatestOwner() {
-        if(working.value>0) return
-        launch {
-            check(Administration.session.state.value.active)
-            val db=CatalogDatabase.get(context);val s=settingsStore().read()
-            val closed=db.shifts().history().filter {it.closedAt!=null}.maxByOrNull {it.closedAt!!}
-            if(closed==null) {mutable.value="Нет закрытых смен для отправки";return@launch}
-            mutable.value=ownerClosed(s,closed.id,manual=true).joinToString(" · ").ifBlank {"Нет отчётов: проверьте переключатели и дату последнего закрытия"}
-        }
-    }
-    fun sendShift(summary: ShiftSummary) {
-        if(working.value>0) return
-        launch {
-            check(Administration.session.state.value.active) {"Войдите в администрирование"}
-            val s=settingsStore().read().validated(test=true)
-            check(s.enabled) {"Включите Telegram"}
-            val result=delivery.send("manual-shift:${UUID.randomUUID()}",s) {shiftMessage(summary)}
-            mutable.value=result.message
-        }
-    }
-    fun sendLatestShift() {
-        if(working.value>0) return
-        launch {
-            check(Administration.session.state.value.active) {"Войдите в администрирование"}
-            val s=settingsStore().read().validated(test=true)
-            check(s.enabled) {"Включите Telegram"}
-            val summary=ShiftRepository(CatalogDatabase.get(context)).dashboard().history.firstOrNull() ?: error("Нет закрытых смен")
-            mutable.value=delivery.send("manual-shift:${UUID.randomUUID()}",s) {shiftMessage(summary)}.message
-        }
+            val shift=db.shifts().shift(id) ?: return listOf("Не найдена смена для отчёта владельцу")
+            val at=if(closedEvent) shift.closedAt ?: return emptyList() else shift.openedAt
+            val zone=java.time.ZoneId.of(shift.zoneId);val recipient=OwnerStatsRouting.recipient(s)
+            val dataset=com.mendelev.mpos.data.recovery.AppDataset.paths(context).id
+            val suffix=":$dataset:${destination(recipient)}"
+            val results=mutableListOf<String>()
+            fun guard() {check(com.mendelev.mpos.data.recovery.AppDataset.runtime.blocking.value==null && com.mendelev.mpos.data.recovery.AppDataset.paths(context).id==dataset) {"Рабочие данные изменились"}}
+            fun send(kind: OwnerStatsKind,key: String,completed: OwnerReportPeriod?=null) {
+                guard()
+                val result=delivery.send(key,recipient) {
+                    val value=runBlocking {db.ownerPanorama(id,kind,completed)}
+                    guard();OwnerPanoramaDelivery.message(context,value)
+                }
+                if(!result.sent && result.skipped) results+="${OwnerPanoramaDelivery.label(kind)}: проверьте результат предыдущей отправки в Telegram"
+                else if(!result.skipped) results+="${OwnerPanoramaDelivery.label(kind)} владельцу: ${result.message}"
+            }
+            // Completed missed periods, including a holiday on the last day, are checked on next open/close.
+            for(period in OwnerReportSchedule.completed(s,at,zone)) {
+                guard()
+                val key=OwnerReportSchedule.finalKey(period)+suffix
+                if(journal.state(key) in setOf("sent","covered")) continue
+                val closes=db.shifts().history().mapNotNull {past->past.closedAt?.let {time->
+                    if(OwnerReportSchedule.date(time,zone)==period.through) time to journal.state(OwnerReportSchedule.closeKey(period,past.id)+suffix) else null
+                }}
+                if(OwnerReportCoverage.uncertain(closes)) {results+="${OwnerPanoramaDelivery.label(period.kind)}: проверьте результат предыдущей отправки в Telegram";continue}
+                if(OwnerReportCoverage.retryNotDue(closes,System.currentTimeMillis())) continue
+                val covered=OwnerReportCoverage.latestSent(closes)
+                if(covered!=null && !db.ownerPeriodChanged(period,covered)) {journal.put(key,"covered");continue}
+                send(period.kind,key,period)
+            }
+            if(closedEvent) for(kind in OwnerReportSchedule.closingKinds(s,at,zone)) {
+                if(kind==OwnerStatsKind.SHIFT) {
+                    // Preserve the prior delivery journal: upgrading an already reported shift must not resend it.
+                    val old="bundle:v2:"+OwnerStatsRouting.key(kind,id,at,zone,0)+":${destination(recipient)}"
+                    if(journal.state(old)!=null) continue
+                    val oldFirst=OwnerStatsRouting.key(kind,id,at,zone,0)+":${destination(recipient)}"
+                    if(journal.state(oldFirst)!=null) continue
+                    send(kind,"owner-panorama:v1:SHIFT:close:$id"+suffix)
+                } else {
+                    val period=OwnerReportSchedule.period(kind,OwnerReportSchedule.date(at,zone),zone)
+                    send(kind,OwnerReportSchedule.closeKey(period,id)+suffix)
+                }
+            }
+            return results
+        } finally {ownerReportsLock.unlock()}
     }
     private fun shiftMessage(summary: ShiftSummary): TelegramMessage {
         check(!summary.shift.isOpen) {"Смена ещё открыта"}
@@ -162,28 +135,26 @@ class TelegramRuntime private constructor(private val context: Context) {
         val bytes=MPosShiftReceiptImage.render(report)
         return TelegramMessage(MPosShiftReceipt.caption(report),TelegramAttachment("shift-report.png","image/png",bytes))
     }
-    fun sendMonthly() {if(working.value==0) launch {monthly(manual=true)}}
-    fun configurationSaved() {launch {monthly()}}
-    private suspend fun monthly(manual: Boolean=false) {
-        if(!Administration.session.state.value.active) return
-        val s=try {settingsStore().read()} catch(_:Exception) {return}
-        if(!s.enabled || !s.monthlyWarehouse || s.botToken.isBlank() || s.chatId.isBlank()) return
-        val month=TelegramMessages.previousMonth(LocalDate.now())
-        val automaticKey="month:$month:${destination(s)}"
-        if(!manual) {
-            val state=journal.state(automaticKey)
-            if(state!=null && (!state.startsWith("retry:") || (state.substringAfter(":").toLongOrNull() ?: Long.MAX_VALUE)>System.currentTimeMillis())) return
-        }
-        val report=TelegramReports.warehouse(CatalogDatabase.get(context),month)
-        val file=File(context.cacheDir,"warehouse-$month-${UUID.randomUUID()}.pdf")
+    private val onlineSync=kotlinx.coroutines.sync.Mutex()
+    private var onlineSignature: String?=null
+    internal suspend fun syncOnline(backend: com.mendelev.mpos.backend.BackendSettings) {
+        onlineSync.lock()
         try {
-            com.mendelev.mpos.documents.MPosWarehousePdf.write(report,file)
-            val bytes=file.readBytes()
-            val result=delivery.send(if(manual) "manual-month:${UUID.randomUUID()}" else automaticKey,s) {
-                TelegramMessage("📊 <b>Ежемесячный складской отчёт</b>\nПериод: ${TelegramMessages.escape(report.getString("period"))}",TelegramAttachment("warehouse-$month.pdf","application/pdf",bytes))
-            }
-            if(result.sent && manual) journal.put(automaticKey,"sent")
-            if(!result.skipped) mutable.value=result.message
-        } finally {file.delete()}
+            val s=settingsStore().read()
+            if(s.revision==0L || !com.mendelev.mpos.backend.DeviceTelegramSettings.shouldSync(s) || backend.url.isBlank() || backend.datasetId!=com.mendelev.mpos.data.recovery.AppDataset.paths(context).id || com.mendelev.mpos.data.recovery.AppDataset.runtime.blocking.value!=null) return
+            val signature="${backend.target()}:${backend.datasetId}:${backend.telegramSettingsPath}:${s.revision}"
+            if(signature==onlineSignature) return
+            val store=com.mendelev.mpos.backend.BackendAccess(context,0).store
+            check(store.read()==backend) {"Подключение изменилось"}
+            withContext(Dispatchers.IO) {com.mendelev.mpos.backend.DeviceTelegramSettings().sync(backend,s)}
+            check(store.read()==backend && settingsStore().read()==s) {"Настройки изменились; синхронизация будет повторена"}
+            onlineSignature=signature
+            mutable.value=if(s.enabled && s.onlineOrders) "Уведомления рабочего устройства подключены на backend" else "Уведомления рабочего устройства отключены на backend"
+        } finally {onlineSync.unlock()}
     }
+    fun configurationSaved() {launch {
+        try {syncOnline(com.mendelev.mpos.backend.BackendAccess(context,0).store.read())}
+        catch(e:CancellationException) {throw e}
+        catch(_:Exception) {mutable.value="Настройки сохранены на планшете. Уведомления рабочего устройства ожидают подключения к backend."}
+    }}
 }

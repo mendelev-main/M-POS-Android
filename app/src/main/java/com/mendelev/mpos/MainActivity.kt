@@ -135,7 +135,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                             @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.stock.StockViewModel(
                                 com.mendelev.mpos.data.local.StockReadRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
                         })
-                        com.mendelev.mpos.feature.stock.StockScreen(model) {route="settings"}
+                        com.mendelev.mpos.feature.stock.StockScreen(model) {route="analytics"}
                     }
                     "employees" -> {
                         val model: com.mendelev.mpos.feature.staff.EmployeeViewModel = viewModel(factory=object: ViewModelProvider.Factory {
@@ -207,7 +207,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                                 com.mendelev.mpos.feature.report.ReportViewModel(com.mendelev.mpos.data.local.SalesReportRepository(
                                     com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext)),extras.createSavedStateHandle()) as T
                         })
-                        com.mendelev.mpos.feature.report.ReportScreen(model,{route="settings"},{route="workspace"})
+                        com.mendelev.mpos.feature.report.ReportScreen(model,{route="settingsAdmin"},{route="settingsAdmin"},onStock={route="stock"})
                     }
                     else -> {
                         val model: com.mendelev.mpos.feature.products.CatalogViewModel = viewModel(factory = object : ViewModelProvider.Factory {

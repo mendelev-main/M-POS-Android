@@ -22,6 +22,23 @@ class LoyaltyApiTest {
         }.build())
         return LoyaltyApi(settingsProvider,http)
     }
+    @Test fun qrFetchesExactCustomerAndFreshProfileWithoutCreatingOne()=runBlocking {
+        val calls=mutableListOf<String>()
+        val service=api {r->
+            assertEquals("GET",r.method);calls+=r.url.encodedPath
+            if(r.url.encodedPath.endsWith("/search")) {
+                assertEquals("375290000000",r.url.queryParameter("q"))
+                200 to """{"customers":[{"id":"wrong","name":"Другой","normalized_phone":"375330000000"},{"id":"customer","name":"Тест","normalized_phone":"375290000000"}]}"""
+            } else 200 to profile
+        }
+        val result=service.scan("+375290000000")
+        assertEquals("customer",result.customer.id);assertTrue(result.customer.active)
+        assertEquals(2,calls.size);assertTrue(calls.last().endsWith("/customer/loyalty"))
+    }
+    @Test fun qrDoesNotSelectAnUnverifiedFallbackProfile()=runBlocking {
+        val service=api {r->if(r.url.encodedPath.endsWith("/search")) 200 to """{"customers":[{"id":"customer","name":"Тест","normalized_phone":"375290000000"}]}""" else 503 to "{}"}
+        try {service.scan("375290000000");fail()} catch(_:BackendFailure) {}
+    }
     @Test fun profileMapsWebIdsConsentAndBalanceWithoutInventingMembership()=runBlocking {
         val fresh=api {request->assertEquals("/pos/api/customers/customer/loyalty",request.url.encodedPath);200 to profile}.profile("customer")
         assertEquals(4L,fresh.customer.consentVersion);assertEquals("dataset",fresh.datasetId)

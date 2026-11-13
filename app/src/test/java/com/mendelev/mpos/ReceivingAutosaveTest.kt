@@ -118,7 +118,11 @@ class ReceivingAutosaveTest {
         val before=m.state.value.form!!
         withContext(main) {m.next()}
         assertNull(m.state.value.preview);assertFalse(m.state.value.pending)
-        assertNotNull(m.state.value.message)
+        assertNull(m.state.value.message)
+        assertNotNull(m.state.value.transientNotice)
+        withTimeout(5000) {m.state.first {it.transientNotice==null}}
+        assertEquals(setOf("p","p2"),m.state.value.suggestedAmounts)
+        assertEquals(before,m.state.value.form)
         withContext(main) {m.preview()}
         assertNull(m.state.value.preview)
         withContext(main) {m.reviewAmount("p")}

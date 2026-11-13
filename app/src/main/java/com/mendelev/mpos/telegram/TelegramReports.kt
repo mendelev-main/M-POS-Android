@@ -20,7 +20,7 @@ object TelegramReports {
         put("openingCash",amount(s.shift.openingCash));put("countedCash",amount(s.shift.countedCash ?: 0));put("expectedCash",amount(s.expected));put("difference",amount(s.shift.difference ?: 0))
         put("cash",amount(s.cashNet));put("card",amount(s.cardNet));put("total",amount(s.revenue));put("deposits",amount(s.deposits));put("withdrawals",amount(s.withdrawals))
         put("currency","BYN");put("establishmentName","M-POS");put("orders",JSONArray(List(s.count) {JSONObject()}))
-        put("cashMovements",JSONArray(s.movements.map {m->JSONObject().put("type",if(m.delta>=0) "deposit" else "withdrawal").put("amount",BigDecimal.valueOf(m.delta,2).abs().toPlainString()).put("timestamp",m.at).put("note",listOf(m.title,m.note).filter {it.isNotBlank()}.joinToString(" · "))}))
+        put("cashMovements",JSONArray(s.movements.map {m->JSONObject().put("type",if(m.delta>=0) "deposit" else "withdrawal").put("amount",BigDecimal.valueOf(m.delta,2).abs().toPlainString()).put("timestamp",m.at).put("note",listOf(m.title.takeUnless {it in setOf("Внесение наличных","Изъятие наличных","Внесение","Изъятие")},m.note).filterNotNull().filter {it.isNotBlank()}.joinToString(" · "))}))
     }
     internal suspend fun warehouse(db: CatalogDatabase,month: YearMonth): JSONObject=db.adminTransaction {
         val period=ReportPeriod(month.atDay(1),month.atEndOfMonth(),ZoneId.systemDefault())

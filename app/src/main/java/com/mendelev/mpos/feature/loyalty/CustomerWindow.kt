@@ -74,15 +74,26 @@ import java.util.UUID
         catch(e:Exception) {if(sequence==searchSequence) searchError=e.message ?: "Не удалось найти клиента"}
         finally {if(sequence==searchSequence) searching=false}
     }
+    if(mode=="scan") {
+        CustomerQrScannerWindow(onClose={mode="search"},onResult={raw->
+            mode="search"
+            action {
+                val next=api.scan(raw)
+                persistLatest?.invoke(next)
+                profile=next;mode="profile"
+            }
+        })
+        return
+    }
     if(mode=="search") {
-        CustomerPickerWindow(query,rows,searching,locked,searchError ?: error ?: externalError,
+        CustomerPickerWindow(query,rows,searching || loading,locked,searchError ?: error ?: externalError,
             onQuery={query=CustomerEntryRules.suffix(it);error=null},
             onSelect={customer->action {
                 val next=api.select(customer)
                 persistLatest?.invoke(next)
                 profile=next;mode="profile"
             }},
-            onCreate={mode="create";createdCustomer=null;name="";phone="";enrollAfterCreate=false;error=null},onClose=onClose)
+            onCreate={mode="create";createdCustomer=null;name="";phone="";enrollAfterCreate=false;error=null},onClose=onClose,onScan={error=null;query="";mode="scan"})
         return
     }
     if(mode=="create") {

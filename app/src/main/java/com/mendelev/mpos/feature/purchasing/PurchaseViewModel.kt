@@ -265,8 +265,8 @@ class PurchaseViewModel(private val access: PurchaseAccess,private val autoSaveE
     private suspend fun saved(c: PurchaseCommand) {
         val d=(c.action as? PurchaseAction.Save)?.draft
         val placed=(c.action as? PurchaseAction.Place)?.orderId
-        update {it.copy(form=d,snapshot=it.snapshot?.copy(revision=Math.addExact(c.revision,1),draft=d),unresolved=null,blocked=true,lastPlacedId=placed ?: it.lastPlacedId,message=if(placed!=null) "Заказ сформирован" else "Черновик сохранён")}
-        try {val s=withContext(Dispatchers.IO) {access.snapshot()};update {it.copy(snapshot=s,form=s.draft,blocked=false,message=if(placed!=null) "Заказ сформирован. Ожидается приёмка; остатки не менялись" else if(d==null) "Черновик удалён. Остатки не менялись" else "Черновик сохранён. Остатки не менялись")}}
+        update {it.copy(form=d,snapshot=it.snapshot?.copy(revision=Math.addExact(c.revision,1),draft=d),unresolved=null,blocked=true,lastPlacedId=placed ?: it.lastPlacedId,message=if(placed!=null) null else "Черновик сохранён")}
+        try {val s=withContext(Dispatchers.IO) {access.snapshot()};update {it.copy(snapshot=s,form=s.draft,blocked=false,message=if(placed!=null) null else if(d==null) "Черновик удалён. Остатки не менялись" else "Черновик сохранён. Остатки не менялись")}}
         catch(e:CancellationException) {throw e}
         catch(_:Exception) {update {it.copy(message="Изменение сохранено. Не удалось перечитать черновик; повторите чтение")}}
     }

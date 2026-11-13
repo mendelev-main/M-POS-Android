@@ -104,7 +104,7 @@ object WorkspaceCodec {
         },graph,sessionId=if(j.getInt("version")==1) "" else j.getString("sessionId").also {
             if(it.isBlank() || it.length>100) throw CatalogFailure("workspace","Не найден владелец заказа")
         },createdAt=if(j.getInt("version")==1) 0 else j.getLong("createdAt"),details=if(j.getInt("version")==1) OrderDetails() else j.getJSONObject("details").let {
-            OrderRules.details(OrderDetails(it.getString("label"),it.getString("type"),it.getString("comment"),it.getString("address"),it.getString("phone"),
+            OrderRules.details(OrderDetails(it.getString("label"),it.optString("type","here"),it.getString("comment"),it.getString("address"),it.getString("phone"),
                 if(it.has("customerName")) it.getString("customerName") else "",
                 if(it.has("deliveryTariff")) it.getJSONObject("deliveryTariff").let {t->com.mendelev.mpos.domain.sale.DeliveryCharge(t.getString("id"),t.getString("name"),t.get("fee").toString().toLongOrNull() ?: throw CatalogFailure("workspace","Некорректная сумма тарифа"),t.get("revision").toString().toLongOrNull() ?: throw CatalogFailure("workspace","Некорректная версия тарифа"))} else null,
                 if(it.has("deliveryEdited")) it.getBoolean("deliveryEdited") else false))

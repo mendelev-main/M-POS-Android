@@ -74,7 +74,7 @@ class OwnerAnalyticsTest {
         val at=Instant.parse("2026-11-30T15:00:00Z").toEpochMilli()
         val ownerOnly=settings.copy(chatId="",shiftOpened=false,shiftClosed=false,monthlyWarehouse=false)
         ownerOnly.validated()
-        assertEquals(listOf(OwnerStatsKind.SHIFT,OwnerStatsKind.MONTH),OwnerStatsRouting.kinds(ownerOnly,at,zone))
+        assertEquals(listOf(OwnerStatsKind.SHIFT),OwnerStatsRouting.kinds(ownerOnly,at,zone))
         assertEquals(listOf(OwnerStatsKind.SHIFT),OwnerStatsRouting.kinds(ownerOnly,Instant.parse("2026-11-29T23:00:00Z").toEpochMilli(),zone))
         val recipient=OwnerStatsRouting.recipient(settings)
         assertEquals(settings.ownerChatId,recipient.chatId);assertEquals("",recipient.threadId);assertEquals("-100123",settings.chatId)
@@ -93,8 +93,17 @@ class OwnerAnalyticsTest {
     @Test fun oldSettingsDisableNewFlagsAndNewFlagsNeedOwner() {
         val old=JSONObject(TelegramSettingsCodec.encode(settings));old.remove("ownerShiftStats");old.remove("ownerMonthlyStats")
         val decoded=TelegramSettingsCodec.decode(old.toString());assertFalse(decoded.ownerShiftStats);assertFalse(decoded.ownerMonthlyStats)
-        assertEquals(settings,TelegramSettingsCodec.decode(TelegramSettingsCodec.encode(settings)))
+        assertEquals(settings.copy(ownerMonthlyStats=false),TelegramSettingsCodec.decode(TelegramSettingsCodec.encode(settings)))
         try {settings.copy(ownerChatId="").validated();fail()} catch(_:IllegalArgumentException) {}
+    }
+    @Test fun retiredMonthlyFlagsCannotScheduleEvenWhenStoredOrRestoredAsTrue() {
+        val old=settings.copy(monthlyWarehouse=true,ownerMonthlyStats=true,ownerShiftStats=false)
+        val decoded=TelegramSettingsCodec.decode(TelegramSettingsCodec.encode(old))
+        assertFalse(decoded.monthlyWarehouse);assertFalse(decoded.ownerMonthlyStats)
+        val lastDay=Instant.parse("2026-11-30T23:59:00Z").toEpochMilli()
+        assertTrue(OwnerStatsRouting.kinds(old,lastDay,zone).isEmpty())
+        assertTrue(OwnerStatsRouting.kinds(decoded,lastDay,zone).isEmpty())
+        assertEquals(listOf(OwnerStatsKind.SHIFT),OwnerStatsRouting.kinds(old.copy(ownerShiftStats=true),lastDay,zone))
     }
     @Test fun corruptRefundAndRepeatedSaleAreRejected() {
         val sale=OwnerSale("s","shift",1,1000,0,listOf(line()))

@@ -1,5 +1,13 @@
 # Карта функционального переноса
 
+13.11.2026 AA01–AA03 implemented locally: объединённый модуль Учёт и аналитика, расход simple по выбранному периоду из сохранённых рецептов/модификаторов, включая untracked. Возвраты по дате возврата/оригинальному составу. См. ACCOUNTING-ANALYTICS.md; визуальная приёмка pending.
+
+13.11.2026 D04 scope reduced by owner: админ-панель без версии (версия в Обновлениях); Telegram без preview/manual reports/help blocks и месячных переключателей. Месячные automatic/manual entry points удалены, legacy flags отключаются. Ручная UI acceptance pending.
+
+13.11.2026 D04 Telegram settings layout implemented locally: поля сверху, затем переключатели, затем действия/справка; единые поля/отступы и адаптивные2/1колонки. Визуальная приёмка владельцем pending.
+
+13.11.2026 QR01–QR03/D04-online implemented locally: сканирование QR полного телефона→точный клиент→тот же профиль; синхронизация ID рабочего устройства/onlineOrders с существующим backend; устранён дубль типа кассового движения в PNG. Проверки и ограничения — CUSTOMER-QR.md/TELEGRAM-08.md/build-log. Реальная камера/Telegram device acceptance pending.
+
 SF15 (12.11.2026) implemented locally: обязательная проверка всех жёлтых сумм перед preview; касание снимает жёлтый без изменения значения, автоматический пересчёт требует повторной проверки. Manual acceptance pending.
 
 SF14 (12.11.2026) implemented locally: компактное подтверждение приёмки Отмена/Подтвердить, склад и себестоимость изменяются только атомарным подтверждением. Превышение указано явно. Manual acceptance pending.
@@ -523,3 +531,19 @@ Rounding follow-up acceptance: [CI40519616659](https://github.com/mendelev-main/
 2026-11-11 W/LO01–LO03: header текущего заказа без счётчика, фокус скрывает пример телефона, выбор клиента сохраняется перед переходом в профиль; программа orange/green progress с кнопкой использования подарка. [Контекст](../harness/context/11-customer-profile-progress.md); implemented, device pending.
 
 2026-11-11 H/settings: Управление перенесено в стандартную карточку панели, страница Руководитель с contact fields; shield/settings/M POS routes reset nested UI root. План будущего кабинета — [OWNER-PORTAL-PLAN](OWNER-PORTAL-PLAN.md), server/site TODO. UI regression added, device pending.
+
+2026-11-13 AN01–AN09 implemented locally по ТЗ владельца v1.0: [контракт и план](ACCOUNTING-ANALYTICS.md). Девять блоков на общей странице, исторический fulfillment, gross отдельно от courier-adjusted profit, точный net расход простых компонентов, два столбца. Права/read-only/старые сменные и складские отчёты сохранены. Результаты локальных проверок — harness/build-log.md; UI/device acceptance владельцем pending. CI/release не запускались.
+
+AN01–AN09 local verification: 506JVM +26API36 business tests via ADB, lint/build/preflight/36Python/diff passed; [evidence и ограничения](ANALYTICS-VERIFICATION-2026-11-13.md). Gradle connected host gate failed до тестов, CI не запускался; visual/device acceptance владельцем pending, не ci-verified.
+
+2026-11-13 PA01–PA05 «Панорама» implemented locally: [контракт/результаты](PANORAMA-ANALYTICS.md).20targeted JVM/7API36 repository+VM tests passed; debug/testAPK/preflight/diff passed. Native Canvas graphs from frozen report snapshot, unchanged posting/schema. UI acceptance владельцем pending, CI/push/release не запускались.
+
+2026-11-13 PDF01–PDF07 implemented locally: [контракт/результаты](ANALYTICS-PDF.md).13JVM/4API36 PDF-data tests passed, debug/testAPK/preflight/diff passed; fixture PDF light/dark inspected. Provider authority alias найден тестом и исправлен отдельным классом, доступ к файлу реально проверен. UI chooser/highlight manual acceptance pending; без CI/push/release.
+
+2026-11-13 RV08 implemented locally: приёмка синхронизирует изменённый заказ при refresh/open, сохраняет введённые факты и добавляет новые позиции с проверяемой стоимостью. Пустые реквизиты выделены красным, добавлен календарь. Контракт: RECEIVING-UI-PARITY.md. Device visual acceptance pending.
+
+2026-11-13 OT01–OT07 implemented locally: отчёты владельцу смена/месяц/квартал одним PDF Панорамы; пропущенный календарный период догоняется при первом открытии смены. Контракт: OWNER-PANORAMA-REPORTS.md. Реальная отправка владельцу и ручная приёмка pending.
+
+2026-11-13 RV09 implemented locally: исключённые из заказа строки исчезают из незавершённой приёмки, сохранение допускает удаление только исключённых позиций; календарь — иконка внутри поля даты. Сценарий удаления уточняет RV08. Контракт RECEIVING-UI-PARITY.md; UI acceptance владельцем pending.
+
+2026-11-13 RV10 implemented locally: поле даты открывает календарь целиком, без иконки; убрана служебная надпись сформированного заказа; проверка сумм показывает компактное уведомление сверху на2секунды, без ослабления запрета приёмки непроверенных сумм. Контракт RECEIVING-UI-PARITY.md, UI acceptance pending.

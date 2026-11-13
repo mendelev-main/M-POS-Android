@@ -28,7 +28,7 @@ import com.mendelev.mpos.core.ui.*
 import com.mendelev.mpos.domain.loyalty.*
 
 @Composable internal fun CustomerPickerWindow(query: String,rows: List<LoyaltyCustomer>,searching: Boolean,busy: Boolean,error: String?,
-    onQuery: (String)->Unit,onSelect: (LoyaltyCustomer)->Unit,onCreate: ()->Unit,onClose: ()->Unit) {
+    onQuery: (String)->Unit,onSelect: (LoyaltyCustomer)->Unit,onCreate: ()->Unit,onClose: ()->Unit,onScan: ()->Unit={}) {
     MposDialog("",onClose,closable=!busy,maxWidth=560.dp,header={
         Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
             Box(Modifier.size(44.dp)) {MposCloseButton(onClose,!busy)}
@@ -39,12 +39,13 @@ import com.mendelev.mpos.domain.loyalty.*
             }
         }
     }) {
+        MposButton("Сканировать QR",onScan,Modifier.fillMaxWidth(),enabled=!busy,style=ActionStyle.Outline)
         CustomerPhoneField(query,onQuery,"Последние 4 цифры телефона","+375 XX XXX","1234","customerSearch",!busy,true)
         Column(Modifier.fillMaxWidth().heightIn(min=112.dp,max=330.dp).verticalScroll(rememberScrollState()).padding(2.dp).testTag("customerResults"),verticalArrangement=Arrangement.spacedBy(8.dp)) {
             val note=when {
-                query.length<4->"Введите последние 4 цифры номера"
+                error!=null->error
                 searching->"Поиск…"
-                error!=null->"Нет связи с сервером. Повторите поиск."
+                query.length<4->"Введите последние 4 цифры номера"
                 rows.isEmpty()->"Клиент не найден. Можно создать нового."
                 else->null
             }

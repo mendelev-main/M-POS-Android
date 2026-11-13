@@ -161,14 +161,12 @@ internal data class SettingsDirectory(val employees: List<Employee> = emptyList(
                     MposButton("Назад",{panel=false},style=ActionStyle.Outline)
                     Text("Панель администратора",fontSize=24.sp,fontWeight=FontWeight.ExtraBold)
                 }
-                Text("Версия ${com.mendelev.mpos.BuildConfig.VERSION_NAME}",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 val modules=listOf(
                     AdminModule("loyalty","Программа лояльности","Программы, правила начисления, подарки и база клиентов.","settingsLoyalty") {loyalty=true},
                     AdminModule("network","Сетевые настройки","Синхронизация, подключение принтера и сетевые конфигурации.","settingsNetwork") {network=true},
                     AdminModule("company","Реквизиты организации","Название заведения, юридическое лицо, адрес и адрес доставки.") {company=true},
                     AdminModule("inventory","Инвентаризация","График пересчёта, список товаров, проведение и история.","settingsInventory") {panel=false;onInventory?.invoke()},
-                    AdminModule("warehouse","Складской учёт","Остатки, движение товаров, поставщики и складские отчёты.","settingsStock") {panel=false;onStock?.invoke()},
-                    AdminModule("analytics","Аналитика","Продажи, возвраты, прибыль и отчёты.","settingsAnalytics") {panel=false;navigation?.navigate?.invoke("analytics")},
+                    AdminModule("analytics","Учёт и аналитика","Продажи, возвраты, прибыль, расход продукции и складские движения.","settingsAnalytics") {panel=false;navigation?.navigate?.invoke("analytics")},
                     AdminModule("admin","Управление","Контакты руководителя и администраторов.","settingsManagement") {management=true}
                 )
                 BoxWithConstraints(Modifier.fillMaxWidth().widthIn(max=1080.dp)) {

@@ -24,6 +24,16 @@ internal class LoyaltyApi(private val settings: ()->BackendSettings,private val 
         val rows=result.getJSONArray("customers");require(rows.length()<=100)
         return List(rows.length()) {customer(rows.getJSONObject(it))}
     }
+    suspend fun scan(raw: String): LoyaltySelection {
+        val original=settings().validated()
+        val phone=CustomerEntryRules.qrPhone(raw)
+        val customer=CustomerEntryRules.qrMatch(search(phone),phone)
+        check(settings().validated()==original) {"Подключение изменилось. Отсканируйте QR заново"}
+        val result=profile(customer.id)
+        check(result.target==original.loyaltyTarget() && result.datasetId==original.datasetId &&
+            result.customer.phone.filter {it in '0'..'9'}==phone) {"Данные клиента изменились. Повторите поиск."}
+        return result
+    }
     suspend fun create(name: String,phone: String): LoyaltyCustomer {
         val (n,p)=CustomerEntryRules.registration(name,phone)
         return try {customer(call({it.customersPath},"POST",JSONObject().put("name",n).put("phone",p)).second.getJSONObject("customer"))}

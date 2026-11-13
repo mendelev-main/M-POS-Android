@@ -80,7 +80,7 @@ class ReceivingRepository(private val db: CatalogDatabase,private val clock: Clo
                 val order=d.order?.let {PurchaseOrderStore(db).all().find {it.id==c.orderId} ?: throw CatalogFailure("receiving","Заказ недоступен")}
                 if((order!=null && order.status!="pending") || order!=d.order) throw CatalogFailure("conflict","Заказ изменился. Обновите основание черновика")
                 if(old?.draft!=null && old.draft.id!=d.id) throw CatalogFailure("conflict","У заказа уже есть другой черновик")
-                if(d.order!=null && old?.draft!=null && !d.lines.map {it.product.id}.containsAll(old.draft.lines.map {it.product.id})) throw CatalogFailure("receiving","Нельзя незаметно удалить введённые факты приёмки")
+                if(d.order!=null && old?.draft!=null && !d.lines.map {it.product.id}.containsAll(old.draft.lines.map {it.product.id}.filter {id->d.order.source.lines.any {it.productId==id}})) throw CatalogFailure("receiving","Нельзя незаметно удалить введённые факты приёмки")
                 requireSupplierCurrent(d)
                 d.lines.forEach {l->val p=db.catalog().product(l.product.id)
                     if(p==null || p.type!="simple" || p.unit!=l.product.unit) throw CatalogFailure("receiving","Товар «${l.product.name}» недоступен")

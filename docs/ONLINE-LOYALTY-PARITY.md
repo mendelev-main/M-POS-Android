@@ -107,3 +107,5 @@ Native immutable items теперь включает unitPrice; бесплатн
 установка и физическая приёмка pending. См. harness/context/06-customers.md.
 
 11.11.2026, уточнение владельца LO01–LO03: поиск→durable attach→профиль без закрытия;1234 скрывается при фокусе; header без счётчика позиций; orange/green program progress и явная кнопка «Использовать». Право на подарок/согласия/checkout guards прежние. [Контекст и тесты](../harness/context/11-customer-profile-progress.md). implemented locally, UI device pending.
+
+13.11.2026 QR01–QR03: [QR клиента](CUSTOMER-QR.md), same customer profile/persist path; новая библиотека камеры, UI acceptance вручную. D04-online — backend Telegram settings sync в TELEGRAM-08, без серверных изменений.

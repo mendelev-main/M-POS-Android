@@ -72,6 +72,20 @@ class TelegramTest {
         assertEquals("-0.01 BYN",rows.single {it.label=="Расхождение"}.value)
         assertTrue(rows.single {it.label=="Расхождение"}.bold)
     }
+    @Test fun manualCashMovementHasOneKindAndKeepsDateCommentAndAmount() {
+        val shift=com.mendelev.mpos.domain.shift.Shift("s","r","a","Кассир",0,"UTC",0,null)
+        val z=java.math.BigInteger.ZERO
+        val summary=com.mendelev.mpos.domain.shift.ShiftSummary(shift=shift,number=1,count=0,sales=z,refunds=z,discounts=z,
+            saleCash=z,saleCard=z,refundCash=z,refundCard=z,deposits=z,withdrawals=z,expected=z,baseline=z,imported=false,
+            movements=listOf(com.mendelev.mpos.domain.shift.ShiftMovementRow("w",0,"Изъятие наличных","Инкассация",-1000),
+                com.mendelev.mpos.domain.shift.ShiftMovementRow("d",1,"Внесение наличных","Размен",500)))
+        val report=TelegramReports.shift(summary)
+        assertEquals("Инкассация",report.getJSONArray("cashMovements").getJSONObject(0).getString("note"))
+        val rows=MPosShiftReceipt.rows(report,now=0)
+        assertTrue(rows.any {it.label.contains("Изъятие · Инкассация") && it.value.contains("10.00")})
+        assertTrue(rows.any {it.label.contains("Внесение · Размен") && it.value.contains("5.00")})
+        assertFalse(rows.any {it.label.contains("Изъятие наличных") || it.label.contains("Внесение наличных")})
+    }
     @Test fun failureMessagesNeverEchoServerDescriptionOrCredentials() {
         val failure=TelegramFailure.response(400,JSONObject().put("description","chat not found ${settings.botToken}").toString())
         assertTrue(failure.definite);assertTrue(failure.safeMessage.contains("Чат"));assertFalse(failure.safeMessage.contains(settings.botToken))

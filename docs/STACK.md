@@ -155,3 +155,5 @@ Coil3.3.0/coil-compose подключён; shared application loader16MiB, priva
 ## Минимальная смена03a
 
 Room schema6 добавляет shifts/shift_register с unique active slot, singleton revision и last FK. java.time Clock/ZoneId, BigDecimal↔Long minor units без новых библиотек. ViewModel/Flow/main UI, общие Compose components; InstallationGate на coroutines Mutex в core/operations координирует только текущие shift writes/installer. Будущий sale/recovery расширит границу. Контракт [SHIFT-03A](SHIFT-03A.md). Hilt/сотрудники/эквайринг этим инкрементом не подключаются.
+
+13.11.2026: установлен ZXing Android Embedded4.3.0 для QR клиента (камера в AndroidView/Compose Dialog, runtime permission, pure Kotlin lookup). Пакет содержит decoder, Google Play Services не требуется; детали/lifecycle/критерии — [CUSTOMER-QR](CUSTOMER-QR.md).

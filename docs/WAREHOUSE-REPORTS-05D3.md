@@ -1,5 +1,7 @@
 # 05d.3 — исторические остатки и оценка склада
 
+13.11.2026 AA01–AA03: [Учёт и аналитика](ACCOUNTING-ANALYTICS.md). Один модуль админ-панели, период и продажи прежние, расчёт расхода всех простых ингредиентов из frozen receipt graph/requests, включая noStockTracking по прямому уточнению владельца. Физический stock posting не меняется. Ручная приёмка pending.
+
 Статус: ci-verified/API36, [FullCI41305115280 attempt2](https://github.com/mendelev-main/M-POS-Android/actions/runs/41305115280/attempts/2)/883bbaf;173JVM/247Android tests/0failures/0skipped. Следующий блок M15 после05d.2;07/08 не начинаются этим изменением.06/09 TODO, M17 excluded.
 
 Источник: pinned1682c88334e6fb13586ce4b530157c59ca062e43, warehouse-reporting.js warehouseReport/warehouseNotes; Android adapters reporting не переопределяют. source-product-stock.test.cjs1294+: inclusive local range, return by return date, no writes, legacy unknown history. Web берёт текущий balance и вычитает движения после границы; manual/inventory корректировки не полностью покрыты. Native использует полный ledger, включая opening/product_card/inventory, проверяет полноту и единицы, не пересчитывает старые рецептуры.

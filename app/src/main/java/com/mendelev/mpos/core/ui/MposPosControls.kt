@@ -54,6 +54,7 @@ enum class PosControl { Surface, Outline, Cash, Card, Delete, Close, Secondary, 
 @Composable fun MposPosIcon(name: String,modifier: Modifier=Modifier,tint: Color?=null) {
     val ink=tint ?: when(name) {"close","delete"->MaterialTheme.colorScheme.error;"add"->MaterialTheme.colorScheme.primary;else->LocalContentColor.current}
     val path=when(name) {
+        "calendar"->"M4 5H20V21H4ZM4 10H20M8 3V7M16 3V7M8 14H10M14 14H16M8 18H10M14 18H16"
         "history"->"M21 12A9 9 0 1 1 3 12A9 9 0 1 1 21 12ZM12 7V12L15 14"
         "loyalty"->"M20 8V20H4V8M2 8H22M12 8V20M12 8H7A3 3 0 1 1 10 5L12 8ZM12 8H17A3 3 0 1 0 14 5L12 8Z"
         "network"->"M8 2H16V8H8ZM2 16H10V22H2ZM14 16H22V22H14ZM12 8V12M6 16V12H18V16"
@@ -72,6 +73,7 @@ enum class PosControl { Surface, Outline, Cash, Card, Delete, Close, Secondary, 
         "admin"->"M12 3L20 6V12C20 17 15 20 12 22C9 20 4 17 4 12V6L12 3ZM8 12L11 15L16 9"
         "sun"->"M16 12A4 4 0 1 1 8 12A4 4 0 1 1 16 12M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"
         "moon"->"M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"
+        "share"->"M12 16V3M7 8L12 3L17 8M5 13V21H19V13"
         "refresh"->"M3 12A9 9 0 0 1 18.36 5.64L21 8M21 3V8H16M21 12A9 9 0 0 1 5.64 18.36L3 16M8 16H3V21"
         "delete"->"M4 7H20M9 7V4H15V7M6 7L7 20H17L18 7M10 11V16M14 11V16"
         "takeaway"->"M6 7H18L20 21H4L6 7ZM9 8V6A3 3 0 0 1 15 6V8"

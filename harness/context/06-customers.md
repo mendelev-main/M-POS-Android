@@ -33,3 +33,5 @@ Consent берём с сервера, с актуальной версией и 
 LO03/LO04 implemented locally: две JVM регрессии (paid+quoted zero и all-free),
 пять существующих LoyaltyRulesTest и компиляция androidTestKotlin пройдены.
 Live/device приёмка и публикация pending; реальные продажи/синхронизация не запускались.
+
+13.11.2026: QR01–QR03/D04-online — CUSTOMER-QR.md и TELEGRAM-08.md. Сервер00f8fa9 изучен read-only, QR=полный phone, уведомление=deviceChatId через PUT существующего маршрута. Backend/production не менялись; локальные fake-тесты, камера/реальный бот — ручная приёмка.

@@ -78,6 +78,7 @@ import kotlinx.coroutines.*
                     MposWebField(s.availabilityPath,{form=s.copy(availabilityPath=it)},"Доступность товаров","backendAvailability",!busy)
                     MposWebField(s.loyaltyPath,{form=s.copy(loyaltyPath=it)},"API лояльности","backendLoyalty",!busy)
                     MposWebField(s.customersPath,{form=s.copy(customersPath=it)},"API клиентов","backendCustomers",!busy)
+                    MposWebField(s.telegramSettingsPath,{form=s.copy(telegramSettingsPath=it)},"Уведомления рабочего устройства","backendTelegramSettings",!busy)
                     MposWebField(s.loyaltyTermsPath,{form=s.copy(loyaltyTermsPath=it)},"Условия участия","backendLoyaltyTerms",!busy)
                     MposWebField(s.timeoutSeconds.toString(),{it.toIntOrNull()?.let {n->form=s.copy(timeoutSeconds=n)}},"Ожидание ответа, секунд","backendTimeout",!busy)
                 }
