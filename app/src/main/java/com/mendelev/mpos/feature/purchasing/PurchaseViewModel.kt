@@ -55,7 +55,14 @@ class PurchaseViewModel(private val access: PurchaseAccess,private val autoSaveE
             finally {update {it.copy(saving=false)}}
         }
     }
-    fun retryAutosave()=autosave()
+    fun retryAutosave() {
+        val running=autoJob
+        if(running?.isActive==true) {
+            // Keep an explicit retry requested during an in-flight outcome lookup.
+            // The old command must finish before autosave can resolve/reuse its identity.
+            viewModelScope.launch {running.join();autosave()}
+        } else autosave()
+    }
     init {refresh()}
     fun refresh() {
         if(state.value.pending || state.value.saving || state.value.unresolved!=null || state.value.orderUnresolved!=null || state.value.editing!=null || state.value.dirty) return

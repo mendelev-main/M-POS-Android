@@ -20,9 +20,11 @@ class PurchaseAutosaveTest {
         val outcomes=mutableMapOf<String,Pair<String,String>>()
         var gate: CompletableDeferred<Unit>?=null
         var loseReply=false;var failOutcome=false
+        var failedOutcomeGate: CompletableDeferred<Unit>?=null
+        var failedOutcomeEntered: CompletableDeferred<Unit>?=null
         override suspend fun snapshot()=snapshot
         override suspend fun outcome(command: PurchaseCommand): String? {
-            if(failOutcome) error("fixture unavailable")
+            if(failOutcome) {failedOutcomeEntered?.complete(Unit);failedOutcomeGate?.await();error("fixture unavailable")}
             return outcomes[command.commandId]?.let {require(it.first==command.fingerprint());it.second}
         }
         override suspend fun commit(command: PurchaseCommand): String {
@@ -94,9 +96,14 @@ class PurchaseAutosaveTest {
         withTimeout(5000) {model.state.first {it.autoError!=null && !it.saving}}
         assertFalse(model.state.value.pending)
         val first=fake.commands.single()
+        // Retry arrives while a newer autosave is still resolving the old command.
+        val gate=CompletableDeferred<Unit>();fake.failedOutcomeGate=gate
+        val entered=CompletableDeferred<Unit>();fake.failedOutcomeEntered=entered
         withContext(main) {model.line("p") {it.copy(quantity="2")}}
+        withTimeout(5000) {entered.await()}
         fake.failOutcome=false
         withContext(main) {model.retryAutosave()}
+        gate.complete(Unit)
         saved(model)
         assertEquals(1,fake.commands.count {it.commandId==first.commandId})
         assertEquals("2",fake.snapshot.draft!!.lines.single().quantity)
