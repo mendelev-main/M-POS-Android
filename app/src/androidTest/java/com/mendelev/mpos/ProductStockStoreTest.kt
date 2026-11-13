@@ -17,7 +17,7 @@ import java.math.BigDecimal
 import java.util.UUID
 
 class ProductStockStoreTest {
-    @Test fun wholeRecipeBasisPackagingAndReadOnlyCostAreDurableAndRestoreValidatesThem(): Unit=runBlocking {
+    @Test fun wholeRecipeBasisPackagingAndEditableCostAreDurableAndRestoreValidatesThem(): Unit=runBlocking {
         val context=InstrumentationRegistry.getInstrumentation().targetContext
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         val root=File(context.cacheDir,"stock-config-${UUID.randomUUID()}").apply {mkdirs()}
@@ -27,8 +27,8 @@ class ProductStockStoreTest {
             repo.saveProduct(raw.input())
             assertEquals("0.5",db.catalog().product("flour")!!.packSize)
             assertEquals("g",repo.editorSnapshot("flour").details.purchaseContentUnit)
-            try {repo.saveProduct(raw.input().copy(expectedRevision=1,stockEdited=false,cost="3",commandId="cost-edit"));fail()} catch(e:CatalogFailure) {assertEquals("Себестоимость",e.kind)}
-            assertEquals("2",db.catalog().product("flour")!!.cost);assertNull(db.catalog().result("cost-edit"))
+            repo.saveProduct(raw.input().copy(expectedRevision=1,stockEdited=false,cost="3",commandId="cost-edit"))
+            assertEquals("3",db.catalog().product("flour")!!.cost);assertNotNull(db.catalog().result("cost-edit"))
             val recipe=ProductDraft(id="recipe",name="Состав",type="composite",unit="g",displayUnit="g",recipeYield="300",price="5",
                 components=listOf(IngredientInput("flour","0.3","kg")),details=ProductDetails(sellingBasis="recipe-batch",recipeYieldManual=true))
             repo.saveProduct(recipe.input());repo.saveProduct(recipe.input())
@@ -37,7 +37,7 @@ class ProductStockStoreTest {
             work.cart(CartAction.Add("recipe",1,emptySet(),null,"line"),"add",s.cart.sessionId)
             s=work.snapshot()
             assertEquals(0,BigDecimal("0.3").compareTo(CartEngine.reserved(s.cart).getValue("flour")))
-            assertEquals(0,BigDecimal("0.6").compareTo(RecipeCalculator(s.cart.graph).cost(CartEngine.requests(s.cart))))
+            assertEquals(0,BigDecimal("0.9").compareTo(RecipeCalculator(s.cart.graph).cost(CartEngine.requests(s.cart))))
             try {repo.saveProduct(recipe.input().copy(expectedRevision=1,unit="kg",displayUnit="kg",recipeYield="0.3",commandId="unit-while-open"));fail()} catch(e:CatalogFailure) {assertEquals("unit",e.kind)}
             assertEquals("g",db.catalog().product("recipe")!!.unit);assertNull(db.catalog().result("unit-while-open"))
             work.cart(CartAction.Clear(s.cartRevision),"clear",s.cart.sessionId)

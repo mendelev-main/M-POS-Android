@@ -77,8 +77,6 @@ class CatalogRepository(private val db: CatalogDatabase, val photos: ProductPhot
                 if (n.scale() > 12 || n.precision() - n.scale() > 18) throw CatalogFailure("precision", "Количество вне допустимой точности склада")
             }
             val baseCost = CatalogRules.canonical(input.cost.toBigDecimal().divide(display.convert(java.math.BigDecimal.ONE, base)))
-            if(old?.type=="simple" && baseCost.toBigDecimal().compareTo(old.cost.toBigDecimal())!=0)
-                throw CatalogFailure("Себестоимость","Себестоимость изменяется при приёмке по средневзвешенной стоимости")
             if (baseCost.toBigDecimal().scale() > 12) throw CatalogFailure("precision", "Себестоимость вне допустимой точности")
             val product = ProductEntity(input.id, input.categoryId, input.name, CatalogRules.key(input.name), input.price, baseCost,
                 (old?.revision ?: 0) + 1, unit=input.unit, type=input.type, displayUnit=input.displayUnit,

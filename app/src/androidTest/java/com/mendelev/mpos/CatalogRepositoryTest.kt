@@ -19,6 +19,25 @@ class CatalogRepositoryTest {
     private suspend fun expectFailure(block: suspend () -> Unit) {
         try { block(); fail("Expected failure") } catch(_: CatalogFailure) { }
     }
+    @Test fun cardCostEditPersistsWithoutStockMovementAndRejectsStaleOrInvalidInput() = runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
+        try {
+            val repo=CatalogRepository(db);repo.initialize()
+            repo.saveProduct(input().copy(unit="kg",displayUnit="kg"))
+            val balance=repo.dao.balance("p")
+            val movements=repo.dao.movementCount("p")
+            // 0.003 BYN/g is saved as 3 BYN/kg, without changing the quantity.
+            val change=input(command="cost",revision=1,stockRevision=1).copy(unit="kg",displayUnit="g",cost="0.003")
+            repo.saveProduct(change);repo.saveProduct(change)
+            assertEquals("3",repo.dao.product("p")!!.cost)
+            assertEquals(2L,repo.dao.product("p")!!.revision)
+            assertEquals(balance,repo.dao.balance("p"));assertEquals(movements,repo.dao.movementCount("p"))
+            expectFailure {repo.saveProduct(change.copy(commandId="stale",cost="0.004"))}
+            expectFailure {repo.saveProduct(change.copy(commandId="negative",expectedRevision=2,cost="-1"))}
+            assertEquals("3",repo.dao.product("p")!!.cost)
+            assertEquals(balance,repo.dao.balance("p"))
+        } finally {db.close()}
+    }
     @Test fun repeatConflictAndStockChangesAreAtomic() = runBlocking {
         val db = Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         try {

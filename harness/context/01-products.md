@@ -64,3 +64,5 @@ Run40097725989/5b13d8d:16 instrumentation passed eachAPI,API28 full updater E2E 
 
 
 2026-11-10: по запросу владельца успех save/delete/category-order больше не остаётся зелёным баннером. Compact top overlay2500ms через TransientMessages; error state независим, повторное событие продлевает срок. ../../docs/DESIGN-SYSTEM.md, UI принимает владелец.
+
+13.11.2026: владелец разрешил изменение себестоимости простого товара в карточке. Сняты UI readOnly и repository запрет изменения; admin/revision/transaction/precision guards и пересчёт единиц остаются. Количество/движения не меняются при cost-only save, старые продажи используют frozen snapshots; составные товары — расчёт рецептуры. Контракт PRODUCT-STOCK-WEB.md обновлён; новые проверки данных и обновление прежнего запрета в ProductStockStoreTest.

@@ -51,9 +51,8 @@ private fun costLabel(value: BigDecimal?)=value?.setScale(2,RoundingMode.HALF_UP
             else model.changeDisplayUnit(next)
         },enabled,Modifier.testTag("displayUnit"))
         ProductEditorNote("При смене кг ↔ г или л ↔ мл значения карточки пересчитываются. Приёмки и продажи используют базовую единицу: ${unitLabel(d.unit)}. Цена продажи не пересчитывается.")
-        StockPair({modifier->Box(modifier) {ProductEditorField(d.cost,{v->change {it.copy(cost=v)}},"Себестоимость за 1 ${unitLabel(d.displayUnit)}",Modifier.testTag("productCost"),enabled,true,readOnly=d.expectedRevision!=null)}},
+        StockPair({modifier->Box(modifier) {ProductEditorField(d.cost,{v->change {it.copy(cost=v)}},"Себестоимость за 1 ${unitLabel(d.displayUnit)}",Modifier.testTag("productCost"),enabled,true)}},
             {modifier->Box(modifier) {ProductEditorField(d.stock,{v->change {it.copy(stock=v,stockEdited=true)}},"${if(d.expectedRevision==null) "Начальный остаток" else "Текущий остаток"}, ${unitLabel(d.displayUnit)}",Modifier.testTag("productStock"),enabled && !d.noStockTracking,true)}})
-        ProductEditorNote(if(d.expectedRevision!=null) "Себестоимость изменяется только при приёмке по средневзвешенной стоимости." else "Укажите начальную себестоимость. После создания её будут изменять приёмки.")
         StockCard("Как обычно закупаем") {
             ProductEditorNote("Эти значения автоматически подставятся в следующий заказ, но их всегда можно изменить.")
             val contentUnit=d.details?.purchaseContentUnit ?: d.displayUnit
