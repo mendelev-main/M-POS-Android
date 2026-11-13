@@ -63,6 +63,8 @@ enum class PosControl { Surface, Outline, Cash, Card, Delete, Close, Secondary, 
         "warehouse"->"M3 9L12 3L21 9V21H3ZM7 21V12H17V21M7 16H17M7 19H17"
         "analytics"->"M3 3V21H22M7 17V12M12 17V8M17 17V5"
         "next"->"M9 6L15 12L9 18"
+        "minus"->"M5 12H19"
+        "drawer"->"M3 5H21V20H3ZM3 12H21M9 16H15M7 8H9M12 8H14M17 8H17.01"
         "add"->"M12 5V19M5 12H19"
         "edit"->"M16 3L21 8L8 21H3V16L16 3ZM13 6L18 11"
         "copy"->"M8 8H21V21H8ZM16 8V3H3V16H8"

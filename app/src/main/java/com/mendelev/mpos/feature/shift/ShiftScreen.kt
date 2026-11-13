@@ -18,11 +18,10 @@ import com.mendelev.mpos.domain.shift.ShiftRules
 
 @Composable fun ShiftScreen(model: ShiftViewModel,onCatalog: ()->Unit,onWorkspace: ()->Unit,onSettings: ()->Unit) {
     val ui by model.state.collectAsStateWithLifecycle();val s=ui.snapshot
+    val notice by model.notices.collectAsStateWithLifecycle()
     val printerContext=androidx.compose.ui.platform.LocalContext.current
     val printer=remember {com.mendelev.mpos.print.PrintRuntime.get(printerContext)}
     val printStatus by printer.status.collectAsStateWithLifecycle()
-    val telegram=remember {com.mendelev.mpos.telegram.TelegramRuntime.get(printerContext)}
-    val telegramStatus by telegram.status.collectAsStateWithLifecycle()
     var printReport by rememberSaveable {mutableStateOf<String?>(null)}
     LaunchedEffect(ui.committedCashId) {ui.committedCashId?.let {printer.drawer("cash:$it",automatic=true)}}
     val admin by Administration.session.state.collectAsStateWithLifecycle()
@@ -36,13 +35,12 @@ import com.mendelev.mpos.domain.shift.ShiftRules
     fun open() {if(s!=null) {revision=s.revision;previous=s.last?.id;actor=ui.cashiers.singleOrNull()?.id ?: "";expected=s.carry;dialog="open";model.dismiss()}}
     fun close() {if(s?.active!=null) {revision=s.revision;previous=s.active!!.id;actor=s.active!!.actorId;token=ShiftRules.token(s);expected=s.currentCash;counted=java.math.BigDecimal.valueOf(expected,2).toPlainString();printer.drawer("shift-count:${java.util.UUID.randomUUID()}",automatic=true);dialog="close";model.dismiss()}}
     val navigationEnabled=!ui.pending && dialog==null && report==null && planned==null && ui.cashForm==null && ui.cashUnresolved==null
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
         MposAppBar("M-POS · Смена",navigationEnabled=navigationEnabled) {
             MposNavigationAction("Товары",onCatalog);MposNavigationAction("Рабочая зона",onWorkspace);MposNavigationAction("Настройки",onSettings)
         }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(start=26.dp,end=26.dp,top=22.dp,bottom=40.dp)) {
-            Text("Кассовая смена",Modifier.padding(bottom=18.dp),fontSize=21.sp,lineHeight=28.sp,fontWeight=FontWeight.ExtraBold)
-            telegramStatus?.let {Text("Telegram: $it",Modifier.padding(bottom=12.dp),style=MaterialTheme.typography.bodySmall)}
             if(ui.loading) CircularProgressIndicator()
             else if(ui.fatal || s==null) {
                 MposNotice(ui.message ?: "Смена недоступна",true)
@@ -65,6 +63,8 @@ import com.mendelev.mpos.domain.shift.ShiftRules
                 }
             }
         }
+    }
+    MposTopNotice(notice)
     }
     val cashForm=ui.cashForm
     if(cashForm!=null) {

@@ -179,3 +179,13 @@ TransientMessages(viewModelScope) отделён от validation errors: пов�
 11.11.2026: SettingsDirectoryRow/settingsRowModifier — единая карточка записи внутри модуля (сотрудники, поставщики, скидки, доставки, шаблоны и список принтеров): radius16dp, контур1dp outline как у невыбранных чеков истории, background для отделения от поверхности модуля, gap8dp, padding14×12dp. Нажатие всей строки и права прежние.
 
 11.11.2026: новый обязательный стандарт modal close по образцу Отложенных — MposCloseButton44×44/radius12, background/outline1/red cross22, без48dp IconButton-обёртки. Default и custom modal headers используют его; в note только X без footer «Закрыть». В отложенных X и delete центрируются в одной44dp action column с одинаковым inset. Прежние размеры/варианты закрытия в исторических записях ниже/выше заменены этим уточнением; busy/access guards неизменны.
+
+13.11.2026 SHC01–SHC06: выбранный владельцем вариант кассовой смены «Касса»: две колонки cash/revenue+sales, отдельные операции/история; геометрия и границы — [SHIFT-CASH-LAYOUT](SHIFT-CASH-LAYOUT.md). Локальный вариант не меняет другие экраны.
+
+
+13.11.2026 NT01–NT03: единый routine-feedback — BoxScope.MposTopNotice, topCenter с отступом8dp/боковыми16dp, общий MposTransientNotice (width<=400/radius16/primaryContainer/outline/elevation3), TransientMessages.DURATION_MS=2000. События результата не занимают место в скролле, одинаковые повторные события перезапускают таймер. Подключено в смене, товарах, аналитике и приёмке. В смене успешные cash/open/close отделены от message ошибок. Не скрывать под этим правилом обязательную валидацию/неизвестный исход записи.
+
+
+13.11.2026 SF13 заменяет прежний боковой gutter28dp у MposFolderPanel: вкладки от края до края панели, равные доли/gap20dp, внешний край активной первой/последней вкладки соединён с боком панели. Контракт SUPPLIES-FOLDER-UI.md.
+
+13.11.2026 SF14: подложка MposFolderPanel остаётся от края до края, цветная кнопка внутри —88% ширины доли/minHeight34, font13/icon16; hit target56. SHC11: общая высота колонок кассы, кнопка закрытия220dp по центру строки заголовка, без второстепенных подписей.

@@ -98,3 +98,17 @@
 13.11.2026 PDF01–PDF07: выбранный период с primary fill/text/border (не borderless Secondary). Share snapshot→native one-page vector Panorama PDF→Android chooser, all rows expanded; caller confirmed. IO/cancellation/admin epoch guards, private cache reports provider/read-only grants, без новых БД/сетевых эффектов. l и kg display2/HALF_UP, расчёты точные. План/границы docs/ANALYTICS-PDF.md, UI/chooser acceptance pending.
 
 13.11.2026 OT01–OT07: owner month/quarter independent toggles +always one Panorama PDF for shift/month/quarter. Owner confirmed every end-day closing, full calendar periods; missed holiday reports on first next opening (all months/quarters), no unchanged resend after successful end-day coverage. Shared trusted scoped report read, no admin impersonation, historical cost/receipt original validation intact; schedule activation dates encrypted, durable sent/covered/unknown journal, dataset/owner partition. Plan/limits docs/OWNER-PANORAMA-REPORTS.md. No real Telegram calls in tests; UI/live sends pending, no push.
+
+13.11.2026: по запросу владельца из окна смены убраны Telegram status и служебные пояснения переноса Web, включая отдельную строку baseline. Импортированный baseline по-прежнему участвует в expected cash; денежная модель, история и Telegram dispatch не меняются. Четыре предлагаемых компоновки («Обзор», «Касса», «Журнал», «Пульт») подготовлены как интерактивные макеты вне приложения; внедрение нового расположения — после выбора владельца.
+
+13.11.2026 SHC01–SHC06: выбран второй макет «Касса». Cash слева, revenue/count/payment split и sales справа, операции и history ниже на полную ширину; narrow<780dp одна колонка. Header закрытия, active report print через существующий PrintDocuments.shift/PrintWindow, прежний drawer и paging10. Документ docs/SHIFT-CASH-LAYOUT.md. UI acceptance pending, денежные модели/Telegram/БД не менялись.
+
+
+13.11.2026 SHC07–08/NT01–03: убрать header «Открыта»; равные cash actions на всю ширину, порядок Внести/Ящик/Изъять. Общий transient-feedback2секунды сверху, ShiftViewModel.notices отделён от ошибок. Успех только после commit/outcome. Общий helper применён также к существующим transient notices товаров/аналитики/приёмки; AGENTS и DESIGN-SYSTEM фиксируют правило для следующих работ.
+
+
+13.11.2026 SHC09: кассир перенесён из header в начало карточки продаж; кнопка active shift print убрана. Автопечать закрытия и historical report print unchanged, никаких внешних эффектов во время проверки не запускать.
+
+13.11.2026 SHC10: дата/время открытия также перенесены в карточку продаж под кассира; верхняя строка — номер смены и закрытие. Данные/временная зона прежние.
+
+13.11.2026 SHC11: общий верх/низ cash и правой стопки на планшете через intrinsic row/fillMaxHeight; кнопки наличных снизу. Закрытие220dp по центру заголовка, удалены подписи «Сейчас ожидается»/«Кассир». Сами суммы/сотрудник/дата открытия сохранены.

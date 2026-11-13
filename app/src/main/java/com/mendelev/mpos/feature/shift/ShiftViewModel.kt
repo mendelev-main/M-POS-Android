@@ -13,6 +13,8 @@ data class CashForm(val type: String,val shiftId: String,val revision: Long,val 
 data class ShiftUi(val loading: Boolean=true,val pending: Boolean=false,val fatal: Boolean=false,val snapshot: ShiftSnapshot?=null,val message: String?=null,val cashForm: CashForm?=null,val cashUnresolved: ShiftCashCommand?=null,val cashHistory: List<ShiftCashMovement> = emptyList(),val cashiers: List<com.mendelev.mpos.domain.staff.Employee> = emptyList(),val staffLoading: Boolean=true,val staffMessage: String?=null,val dashboard: ShiftDashboard?=null,val dashboardMessage: String?=null,val historyLoading: Boolean=false,val historyMessage: String?=null,val committedCashId: String?=null)
 class ShiftViewModel(private val repo: ShiftRepository,private val cash: ShiftCashAccess=repo.cashAccess()): ViewModel() {
     private val mutable=MutableStateFlow(ShiftUi());val state=mutable.asStateFlow()
+    private val feedback=com.mendelev.mpos.core.ui.TransientMessages(viewModelScope)
+    val notices=feedback.state
     private var watcher: Job?=null
     private var watchGeneration=0L
     private var historyGeneration=0L
@@ -70,7 +72,7 @@ class ShiftViewModel(private val repo: ShiftRepository,private val cash: ShiftCa
         viewModelScope.launch {
             try {
                 val next=withContext(Dispatchers.IO) {block(id);repo.snapshot()}
-                publish(next);done()
+                publish(next);done();feedback.show(if(next.active!=null) "Смена открыта" else "Смена закрыта")
             } catch(e:CancellationException) {throw e}
             catch(e:CatalogFailure) {mutable.update {it.copy(message=e.message)}}
             catch(e:IllegalStateException) {mutable.update {it.copy(message=e.message ?: "Не удалось сохранить смену")}}
@@ -113,7 +115,8 @@ class ShiftViewModel(private val repo: ShiftRepository,private val cash: ShiftCa
         }
     }
     private suspend fun cashSaved() {
-        mutable.update {it.copy(cashForm=null,committedCashId=it.cashUnresolved?.commandId,cashUnresolved=null,message="Операция с наличными сохранена")}
+        feedback.show("Операция с наличными сохранена")
+        mutable.update {it.copy(cashForm=null,committedCashId=it.cashUnresolved?.commandId,cashUnresolved=null,message=null)}
         try {val s=withContext(Dispatchers.IO) {repo.snapshot()};val h=withContext(Dispatchers.IO) {s.last?.id?.let {cash.history(it)}.orEmpty()};publish(s,h);mutable.update {it.copy(fatal=false)};if(watcher?.isActive!=true) watch()}
         catch(e:CancellationException) {throw e}
         catch(_:Exception) {mutable.update {it.copy(fatal=true,message="Операция сохранена. Повторите чтение смены")}}

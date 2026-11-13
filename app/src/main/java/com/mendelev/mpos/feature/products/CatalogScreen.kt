@@ -89,7 +89,7 @@ import java.util.UUID
             CatalogPage(state,search,{search=it},filter,{filter=it},administration.active,{categories=true},{model.edit()},{model.edit(it)})
         }
     }
-    notice?.takeUnless {state.error}?.let {MposTransientNotice(it,Modifier.align(Alignment.TopCenter).padding(top=80.dp,start=16.dp,end=16.dp))}
+    MposTopNotice(notice?.takeUnless {state.error})
     }
     fun openCategory(c: CategoryEntity?) {
         categoryMenu=state.categoryChannels[c?.id]?.menu ?: true;categoryOrder=state.categoryChannels[c?.id]?.order ?: true

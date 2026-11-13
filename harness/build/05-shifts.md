@@ -1,5 +1,7 @@
 # Этап 05 — Смены и роли
 
+13.11.2026: владелец выбрал новый макет «Касса», заменяющий описанную ниже раскладку от08.11. Cash слева, revenue/sales справа, операции/история ниже; контракт [SHIFT-CASH-LAYOUT](../../docs/SHIFT-CASH-LAYOUT.md), SHC01–SHC06. Paging/history/data правила прежние.
+
 Уточнение2026-11-08: всю историю сохраняем и оставляем доступной, без годового удаления/скрытия. Экран читает по10 закрытых смен с кнопкой «Показать10 предыдущих» (keyset по closedAt/id), чеки/возвраты только выбранной страницы и текущей смены. Нумерация сохранена по прежним цепочкам. Сводка: «Итоги продаж» и «Выручка» в одной верхней строке, «Наличные в кассе» ниже на всю ширину. Контракт и ограничения хранения ручных движений — [SHIFT-HISTORY-PAGING](../../docs/SHIFT-HISTORY-PAGING.md).
 
 Статус: in progress —05a cash CM01–CM05 и05b.1–05b.3 ci-verified/API36;05b.4 текущие H03/H04 ci-verified/API36/run41100246927; 05c.1 RPT01–RPT05 ci-verified/API36/run41184335908; UI05c.2 ci-verified/API36/run41186247439;05d.1 RG01–RG06 ci-verified/API36/run41188178378;05d.2 RS01–RS05 ci-verified/API36/run41293338713;05d.3 WH01–WH06 ci-verified/API36/run41305115280 attempt2/schema9; program checkpoint ready07a, device pending

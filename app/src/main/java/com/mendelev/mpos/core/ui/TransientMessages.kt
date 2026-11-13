@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /** Main-thread feedback, independent of persistent validation errors and the screen lifecycle. */
 class TransientMessages(private val scope: CoroutineScope) {
-    companion object {const val DURATION_MS=2500L}
+    companion object {const val DURATION_MS=2000L}
     private val mutable=MutableStateFlow<String?>(null)
     val state=mutable.asStateFlow()
     private var expiry: Job?=null

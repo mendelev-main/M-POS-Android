@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -20,4 +21,9 @@ import androidx.compose.ui.unit.dp
         border=BorderStroke(1.dp,c.primary.copy(alpha=.25f)),shadowElevation=3.dp) {
         Text(message,Modifier.padding(horizontal=18.dp,vertical=12.dp),style=MaterialTheme.typography.bodyMedium)
     }
+}
+
+/** Standard feedback anchor: above screen content, never a row inside a scrolling form. */
+@Composable fun BoxScope.MposTopNotice(message: String?) {
+    message?.let {MposTransientNotice(it,Modifier.align(Alignment.TopCenter).padding(top=8.dp,start=16.dp,end=16.dp))}
 }

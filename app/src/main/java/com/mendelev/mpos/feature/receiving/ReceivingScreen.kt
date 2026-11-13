@@ -94,7 +94,7 @@ import java.math.BigDecimal
                 }
             }
     }
-    ui.transientNotice?.let {MposTransientNotice(it,Modifier.align(Alignment.TopCenter).padding(top=8.dp,start=16.dp,end=16.dp))}
+    MposTopNotice(ui.transientNotice)
     }
     post.history.find {it.id==detail}?.let {ReceivingRecordWindow(it) {detail=null}}
     if(preview!=null && dialog==null) ReceivingConfirmationWindow(preview,locked,ui.dirty,model::dismissPreview) {

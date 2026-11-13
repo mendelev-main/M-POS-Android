@@ -145,7 +145,7 @@ fun reportMoney(minor: BigInteger)=reportNumber(minor)+" BYN"
             }
         }
     }
-    feedback?.let {MposTransientNotice(it,Modifier.align(Alignment.TopCenter).padding(top=90.dp))}
+    MposTopNotice(feedback)
     }
     if(periodDialog && admin.active) MposDialog("Выбор периода",{periodDialog=false;model.clearFilterError()}) {
         Text("Введите даты в формате ГГГГ-ММ-ДД")

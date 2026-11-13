@@ -27,31 +27,36 @@ enum class MposFolderTab(val label: String,val icon: String) { Supplies("Пос�
     modifier: Modifier=Modifier,enabled: Boolean=true,content: @Composable ColumnScope.()->Unit) {
     val dark=isMposDarkTheme()
     val panel=MaterialTheme.colorScheme.surface
-    val gutter=28.dp
     val gap=20.dp
     Box(modifier) {
         Canvas(Modifier.matchParentSize()) {
             val top=56.dp.toPx();val r=18.dp.toPx();val shoulder=10.dp.toPx()
-            // Same geometry as the weighted Row below. Child boundsInParent are relative
-            // to the padded Row and previously omitted the gutter from the silhouette.
-            val cell=(size.width-2*gutter.toPx()-2*gap.toPx())/3
-            val left=gutter.toPx()+selected.ordinal*(cell+gap.toPx())
+            // Tabs share the full panel width. Edge tabs join the outer side directly,
+            // without a concave shoulder extending beyond the panel.
+            val cell=(size.width-2*gap.toPx())/3
+            val left=selected.ordinal*(cell+gap.toPx())
             val right=left+cell
             val path=Path().apply {
-                moveTo(r,top);lineTo(left-shoulder,top)
-                quadraticTo(left,top,left,top-shoulder)
-                lineTo(left,r);quadraticTo(left,0f,left+r,0f)
+                if(selected==MposFolderTab.Supplies) {
+                    moveTo(0f,r);quadraticTo(0f,0f,r,0f)
+                } else {
+                    moveTo(0f,top+r);quadraticTo(0f,top,r,top)
+                    lineTo(left-shoulder,top);quadraticTo(left,top,left,top-shoulder)
+                    lineTo(left,r);quadraticTo(left,0f,left+r,0f)
+                }
                 lineTo((right-r).coerceAtLeast(left+r),0f);quadraticTo(right,0f,right,r)
-                lineTo(right,top-shoulder);quadraticTo(right,top,right+shoulder,top)
-                lineTo(size.width-r,top);quadraticTo(size.width,top,size.width,top+r)
+                if(selected!=MposFolderTab.History) {
+                    lineTo(right,top-shoulder);quadraticTo(right,top,right+shoulder,top)
+                    lineTo(size.width-r,top);quadraticTo(size.width,top,size.width,top+r)
+                }
                 lineTo(size.width,size.height-r);quadraticTo(size.width,size.height,size.width-r,size.height)
                 lineTo(r,size.height);quadraticTo(0f,size.height,0f,size.height-r)
-                lineTo(0f,top+r);quadraticTo(0f,top,r,top);close()
+                close()
             }
             if(cell>0) drawPath(path,panel)
         }
         Column(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal=gutter),verticalAlignment=Alignment.CenterVertically,
+            Row(Modifier.fillMaxWidth().height(56.dp),verticalAlignment=Alignment.CenterVertically,
                 horizontalArrangement=Arrangement.spacedBy(gap)) {
                 MposFolderTab.entries.forEach {tab->
                     val active=tab==selected
@@ -68,12 +73,12 @@ enum class MposFolderTab(val label: String,val icon: String) { Supplies("Пос�
                     Box(Modifier.weight(1f).height(56.dp)
                         .clip(RoundedCornerShape(topStart=16.dp,topEnd=16.dp))
                         .clickable(enabled=enabled,role=Role.Tab) {onSelect(tab)}.semantics {this.selected=active}
-                        .padding(horizontal=4.dp,vertical=8.dp),contentAlignment=Alignment.Center) {
-                        Row(Modifier.fillMaxWidth().heightIn(min=40.dp).background(if(active) fill else fill.copy(alpha=.55f),RoundedCornerShape(10.dp))
-                            .padding(horizontal=12.dp,vertical=9.dp),verticalAlignment=Alignment.CenterVertically,
+                        .padding(vertical=8.dp),contentAlignment=Alignment.Center) {
+                        Row(Modifier.fillMaxWidth(.88f).heightIn(min=34.dp).background(if(active) fill else fill.copy(alpha=.55f),RoundedCornerShape(10.dp))
+                            .padding(horizontal=10.dp,vertical=6.dp),verticalAlignment=Alignment.CenterVertically,
                             horizontalArrangement=Arrangement.spacedBy(7.dp,Alignment.CenterHorizontally)) {
-                            MposPosIcon(tab.icon,Modifier.size(18.dp),tint=ink)
-                            Text(tab.label,color=ink,fontSize=14.sp,fontWeight=FontWeight.Bold)
+                            MposPosIcon(tab.icon,Modifier.size(16.dp),tint=ink)
+                            Text(tab.label,color=ink,fontSize=13.sp,fontWeight=FontWeight.Bold)
                         }
                     }
                 }
