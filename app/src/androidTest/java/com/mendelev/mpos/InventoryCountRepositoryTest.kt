@@ -89,13 +89,24 @@ class InventoryCountRepositoryTest {
             reject {repo.commit(c)};assertEquals("11",db.catalog().balance(p.id)!!.quantity);assertEquals(2,db.catalog().movementCount(p.id))
         } finally {db.close()}
     }
-    @Test fun costOnlyEditIsRejectedAndTrackingOffAndOnRequiresRecount(): Unit=runBlocking {
+    @Test fun costOnlyEditPreservesQuantityAndFrozenFixWhileTrackingChangesRequireRecount(): Unit=runBlocking {
         val db=memory()
         try {
             val (repo,c)=prepare(db,"3");val p=db.catalog().product("p-count")!!
             val edit=ProductInput(p.id,p.revision,p.name,p.categoryId,p.price,"7","10",null,false,"cost-only",unit=p.unit)
-            reject {CatalogRepository(db).saveProduct(edit)};assertEquals(1L,db.catalog().balance(p.id)!!.revision)
-            repo.commit(c);assertEquals(p.cost,repo.snapshot().document.draft!!.counts.single().fixed!!.product.cost);assertEquals(p.cost,db.catalog().product(p.id)!!.cost)
+            val catalog=CatalogRepository(db)
+            val before=db.catalog().balance(p.id);val movements=db.catalog().movementCount(p.id)
+            catalog.saveProduct(edit);catalog.saveProduct(edit)
+            assertEquals(before,db.catalog().balance(p.id));assertEquals(movements,db.catalog().movementCount(p.id))
+            assertEquals("7",db.catalog().product(p.id)!!.cost)
+            // A quantity count stays usable when only cost changes; valuation freezes at Fix.
+            repo.commit(c)
+            val fixed=repo.snapshot().document.draft!!.counts.single().fixed!!
+            assertEquals("7",fixed.product.cost);assertEquals("3",db.catalog().balance(p.id)!!.quantity)
+            catalog.saveProduct(edit.copy(expectedRevision=2,cost="9",commandId="cost-after-fix"))
+            assertEquals("9",db.catalog().product(p.id)!!.cost)
+            assertEquals(fixed,repo.snapshot().document.draft!!.counts.single().fixed)
+            assertEquals(movements+1,db.catalog().movementCount(p.id))
         } finally {db.close()}
         val other=memory()
         try {
