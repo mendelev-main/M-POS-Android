@@ -50,6 +50,7 @@ class WebPendingPurchaseTest {
             val snapshot=ReceivingRepository(db).snapshot()
             val draft=ReceivingRules.open("invoice",order,snapshot.products).let {it.copy(lines=it.lines.map {l->l.copy(quantity="3",total="10")})}
             permit.write {ReceivingRepository(db).commit(ReceivingCommand("save",owner,order.id,0,draft))}
+            ensureReceivingShift(db)
             val command=ReceivingPostCommand("post",owner,1,draft)
             val before=db.workspace().documents()
             for(boundary in 1..8) {var writes=0
@@ -74,6 +75,7 @@ class WebPendingPurchaseTest {
             val snapshot=ReceivingRepository(db).snapshot()
             val draft=ReceivingRules.open("invoice",order,snapshot.products).let {it.copy(lines=it.lines.map {l->l.copy(quantity="3",total="10")})}
             permit.write {ReceivingRepository(db).commit(ReceivingCommand("save",owner,order.id,0,draft))}
+            ensureReceivingShift(db)
             val before=db.workspace().documents();val balance=db.catalog().allBalances();val products=db.catalog().allProducts()
             try {permit.write {ReceivingPostingRepository(db).commit(ReceivingPostCommand("post",owner,1,draft))};fail()} catch(e:com.mendelev.mpos.domain.catalog.CatalogFailure) {assertEquals("split",e.kind)}
             assertEquals(before,db.workspace().documents());assertEquals(balance,db.catalog().allBalances());assertEquals(products,db.catalog().allProducts())

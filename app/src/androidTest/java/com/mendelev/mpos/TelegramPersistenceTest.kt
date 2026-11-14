@@ -12,6 +12,18 @@ import java.util.UUID
 
 class TelegramPersistenceTest {
     private val context=InstrumentationRegistry.getInstrumentation().targetContext
+    @Test fun receivingSwitchCapturesStartAndDatasetWithoutResendingOldInvoices() {
+        val file=File(context.cacheDir,"telegram-ttn-${UUID.randomUUID()}.enc");var dataset="A"
+        fun store()=TelegramSettingsStore(file,TelegramKeystoreCipher(),dataset={dataset}) {true}
+        try {
+            val before=System.currentTimeMillis()
+            val first=store().save(TelegramSettings(enabled=true,botToken="123456:"+"T".repeat(32),chatId="-100123",receivingTtn=true))
+            assertTrue(first.receivingSince>=before);assertEquals("A",first.receivingDataset);assertEquals(first,store().read())
+            val edited=store().save(first.copy(threadId="12"));assertEquals(first.receivingSince,edited.receivingSince)
+            dataset="B";val rebound=store().save(edited);assertEquals("B",rebound.receivingDataset);assertTrue(rebound.receivingSince>=first.receivingSince)
+            val off=store().save(rebound.copy(receivingTtn=false));assertEquals(0L,off.receivingSince);assertEquals("",off.receivingDataset)
+        } finally {file.delete();File(file.path+".bak").delete();File(file.path+".new").delete()}
+    }
     @Test fun encryptedConfigurationReopensAndRefusesStaleUnauthorizedOrCorruptWrites() {
         val file=File(context.cacheDir,"telegram-${UUID.randomUUID()}.enc");var authorized=true
         fun store()=TelegramSettingsStore(file,TelegramKeystoreCipher()) {authorized}

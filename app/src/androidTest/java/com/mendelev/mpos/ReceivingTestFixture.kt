@@ -15,5 +15,13 @@ suspend fun seedReceiving(db: CatalogDatabase,key: String="fixture",unknown: Boo
     val snap=repo.snapshot();val d=PurchaseDraft("receiving-request-$key",s,1,"Поставка $key",listOf(snap.products.single {it.id==p}.blankLine().copy(quantity="10",packSize=if(unknown) "" else "1000",contentUnit="ml")))
     repo.commit(PurchaseCommand("receiving-request-save-$key",first.ownerId,snap.revision,PurchaseAction.Save(d)))
     repo.commit(PurchaseCommand("receiving-request-place-$key",first.ownerId,repo.snapshot().revision,PurchaseAction.Place(order,d)))
+    ensureReceivingShift(db)
     return ReceivingSeed(first.ownerId,repo.snapshot().orders.single {it.id==order},p)
+}
+
+/** Receiving now requires a real open cashier shift, including operator fixtures. */
+suspend fun ensureReceivingShift(db: CatalogDatabase) {
+    if(db.shifts().active().isNotEmpty()) return
+    val repo=ShiftRepository(db);repo.initializeCashierFixture();val s=repo.snapshot()
+    repo.open("receiving-fixture-open",s.revision,s.last?.id,s.ownerId)
 }

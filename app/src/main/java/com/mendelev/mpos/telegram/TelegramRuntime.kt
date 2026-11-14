@@ -32,8 +32,57 @@ class TelegramRuntime private constructor(private val context: Context) {
     private val delivery=TelegramDelivery(journal,transport)
     private val mutable=MutableStateFlow<String?>(null);val status=mutable.asStateFlow()
     private val working=MutableStateFlow(0);val pending=working.asStateFlow()
-    fun settingsStore(generation: Long?=null)=TelegramSettingsStore(File(context.noBackupFilesDir,"telegram-settings-v1.enc"),TelegramKeystoreCipher()) {
+    fun settingsStore(generation: Long?=null)=TelegramSettingsStore(File(context.noBackupFilesDir,"telegram-settings-v1.enc"),TelegramKeystoreCipher(),dataset={com.mendelev.mpos.data.recovery.AppDataset.paths(context).id}) {
         Administration.session.state.value.let {it.active && (generation==null || it.generation==generation)}
+    }
+    private var receivingCacheKey=""
+    private var receivingCache=emptyList<com.mendelev.mpos.domain.warehouse.PostedReceiving>()
+    private val receivingLock=kotlinx.coroutines.sync.Mutex()
+    init { scope.launch {while(isActive) {
+        try {sendReceivingTtn()} catch(e:CancellationException) {throw e} catch(_:Exception) { /* Persisted receipts remain eligible on the next pass. */ }
+        delay(30_000)
+    }}}
+    fun receivingCommitted() {scope.launch {try {sendReceivingTtn()} catch(e:CancellationException) {throw e} catch(_:Exception) {mutable.value="ТТН ожидает отправки в рабочую группу"}}}
+    private suspend fun sendReceivingTtn() {
+        receivingLock.lock()
+        try {
+            val s=settingsStore().read()
+            if(!s.enabled || !s.receivingTtn || s.receivingSince<=0 || s.chatId.isBlank()) return
+            val dataset=com.mendelev.mpos.data.recovery.AppDataset.paths(context).id
+            if(s.receivingDataset!=dataset || com.mendelev.mpos.data.recovery.AppDataset.runtime.blocking.value!=null) return
+            val network=context.getSystemService(android.net.ConnectivityManager::class.java)
+            val capabilities=network.getNetworkCapabilities(network.activeNetwork)
+            if(capabilities?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED)!=true) return
+            fun guard() {check(com.mendelev.mpos.data.recovery.AppDataset.paths(context).id==dataset && com.mendelev.mpos.data.recovery.AppDataset.runtime.blocking.value==null && settingsStore().read()==s) {"Данные или настройки изменились"}}
+            guard()
+            val db=CatalogDatabase.get(context)
+            val revision=db.workspace().documentRevision(PostedReceivingCodec.KEY)
+            val cacheKey="$dataset:$revision:${s.receivingSince}"
+            if(receivingCacheKey!=cacheKey) {
+                receivingCache=ReceivingPostingRepository(db).history().filter {it.at>=s.receivingSince}.sortedBy {it.at}
+                receivingCacheKey=cacheKey
+            }
+            val rows=receivingCache
+            for(record in rows) {
+                guard()
+                val key="receiving-ttn:v1:$dataset:${record.id}"
+                if(journal.state(key)=="sent") continue
+                val report=ReceivingTtn.from(record,record.receivedByName.ifBlank {"Не указан"},java.time.ZoneId.of(record.receivedZone.ifBlank {"UTC"}))
+                val image=ReceivingTtnImage(report,context.resources.getFont(com.mendelev.mpos.R.font.manrope))
+                var complete=true
+                for((batch,range) in TtnPages.batches(image.pages).withIndex()) {
+                    guard()
+                    val result=delivery.send("$key:batch:$batch",s) {
+                        guard()
+                        val attachments=range.map {page->TelegramAttachment("ttn-${page+1}.png","image/png",image.render(page))}
+                        guard()
+                        if(attachments.size==1) TelegramMessage(report.caption,attachments.single()) else TelegramMessage(report.caption,album=attachments)
+                    }
+                    if(!result.sent) {complete=false;mutable.value="ТТН: ${result.message}";break}
+                }
+                if(complete) journal.put(key,"sent")
+            }
+        } finally {receivingLock.unlock()}
     }
     fun clearStatus() {mutable.value=null}
     private fun destination(s: TelegramSettings)=MessageDigest.getInstance("SHA-256").digest("${s.botToken}:${s.chatId}:${s.threadId}".toByteArray()).joinToString("") {"%02x".format(it)}
@@ -152,7 +201,7 @@ class TelegramRuntime private constructor(private val context: Context) {
             mutable.value=if(s.enabled && s.onlineOrders) "Уведомления рабочего устройства подключены на backend" else "Уведомления рабочего устройства отключены на backend"
         } finally {onlineSync.unlock()}
     }
-    fun configurationSaved() {launch {
+    fun configurationSaved() {receivingCommitted();launch {
         try {syncOnline(com.mendelev.mpos.backend.BackendAccess(context,0).store.read())}
         catch(e:CancellationException) {throw e}
         catch(_:Exception) {mutable.value="Настройки сохранены на планшете. Уведомления рабочего устройства ожидают подключения к backend."}

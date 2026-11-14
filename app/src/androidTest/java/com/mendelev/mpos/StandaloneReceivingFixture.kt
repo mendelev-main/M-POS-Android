@@ -10,5 +10,6 @@ suspend fun standaloneInvoice(db: CatalogDatabase,key: String="standalone"): Rec
     val owner=ReceivingRepository(db).snapshot().ownerId
     SupplierRepository(db).commit(SupplierCommand("supplier-$key",owner,SupplierAction.Save("s-$key",null,"Поставка $key",setOf("p-$key"))))
     val s=ReceivingRepository(db).snapshot()
+    ensureReceivingShift(db)
     return ReceivingDraft("invoice-$key",null,"TTN-$key","2026-10-27",listOf(ReceivingLine(s.products.single {it.id=="p-$key"},"10","l","","l","40")),s.suppliers.single {it.id=="s-$key"})
 }

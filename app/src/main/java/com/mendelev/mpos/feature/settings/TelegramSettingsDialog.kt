@@ -45,6 +45,7 @@ import kotlinx.coroutines.*
                 TelegramSettingsSection("Уведомления") {
                     TelegramToggle("Включить Telegram","Разрешить отправку выбранных уведомлений.",s.enabled,!locked) {form=s.copy(enabled=it)}
                     TelegramToggle("Смена открыта","Сообщение после открытия смены.",s.shiftOpened,!locked) {form=s.copy(shiftOpened=it)}
+                    TelegramToggle("ТТН в рабочую группу","Картинки принятой накладной после зачисления товаров.",s.receivingTtn,!locked,"telegramReceivingTtn") {form=s.copy(receivingTtn=it)}
                     TelegramToggle("Смена закрыта","Изображение чека-отчёта после закрытия смены.",s.shiftClosed,!locked) {form=s.copy(shiftClosed=it)}
                     TelegramToggle("Уведомления об онлайн-заказах","Backend отправляет сообщение на ID рабочего устройства.",s.onlineOrders,!locked) {form=s.copy(onlineOrders=it,onlineOrdersConfigured=true)}
                 }

@@ -54,6 +54,11 @@ enum class PosControl { Surface, Outline, Cash, Card, Delete, Close, Secondary, 
 @Composable fun MposPosIcon(name: String,modifier: Modifier=Modifier,tint: Color?=null) {
     val ink=tint ?: when(name) {"close","delete"->MaterialTheme.colorScheme.error;"add"->MaterialTheme.colorScheme.primary;else->LocalContentColor.current}
     val path=when(name) {
+        "phone"->"M22 16.92V20A2 2 0 0 1 19.82 22A19.79 19.79 0 0 1 11.19 18.93A19.5 19.5 0 0 1 5.19 12.93A19.79 19.79 0 0 1 2.1 4.18A2 2 0 0 1 4.09 2H7.09A2 2 0 0 1 9.09 3.72C9.22 4.68 9.45 5.62 9.78 6.52A2 2 0 0 1 9.33 8.63L8.06 9.9A16 16 0 0 0 14.06 15.9L15.33 14.63A2 2 0 0 1 17.44 14.18C18.34 14.51 19.28 14.74 20.24 14.87A2 2 0 0 1 22 16.92Z"
+        "location"->"M21 10C21 17 12 22 12 22C12 22 3 17 3 10A9 9 0 1 1 21 10ZM15 10A3 3 0 1 1 9 10A3 3 0 1 1 15 10"
+        "comment"->"M21 11.5A8.38 8.38 0 0 1 20.1 15.3A8.5 8.5 0 0 1 12.5 20A8.38 8.38 0 0 1 8.7 19.1L3 21L4.9 15.3A8.38 8.38 0 0 1 4 11.5A8.5 8.5 0 0 1 8.7 3.9A8.38 8.38 0 0 1 12.5 3H13A8.48 8.48 0 0 1 21 11V11.5Z"
+        "events"->"M18 8A6 6 0 0 0 6 8C6 15 3 15 3 17H21C21 15 18 15 18 8M10 21H14"
+        "customer"->"M16 7A4 4 0 1 1 8 7A4 4 0 1 1 16 7M4 21V19A6 6 0 0 1 10 13H14A6 6 0 0 1 20 19V21"
         "calendar"->"M4 5H20V21H4ZM4 10H20M8 3V7M16 3V7M8 14H10M14 14H16M8 18H10M14 18H16"
         "history"->"M21 12A9 9 0 1 1 3 12A9 9 0 1 1 21 12ZM12 7V12L15 14"
         "loyalty"->"M20 8V20H4V8M2 8H22M12 8V20M12 8H7A3 3 0 1 1 10 5L12 8ZM12 8H17A3 3 0 1 0 14 5L12 8Z"

@@ -1,5 +1,11 @@
 # Карта функционального переноса
 
+14.11.2026 TG-TTN visual: утверждён «Паспорт накладной» с итогом сверху справа, тёмной палитрой согласованного макета, Manrope, таблицей из макета и маленьким «от» в заголовке. Native PNG implemented locally, ручная Telegram acceptance pending; TELEGRAM-TTN.md.
+
+14.11.2026 TG-TTN01–TG-TTN06 implemented locally: переключатель и многостраничная ТТН в рабочую Telegram-группу после commit; обязательная открытая смена/снимок принявшего. Контракт TELEGRAM-TTN.md, проверки в build-log, device/Telegram acceptance pending.
+
+14.11.2026 EV06 implemented locally (первый визуальный перенос отклонён владельцем; follow-up corrections, повторная приёмка pending): утверждённый макет событий/деталей, история по5, контакты/стикеры и duration→Web ETA. См. EVENTS-DIRECTORY.md. Ручная визуальная приёмка pending.
+
 13.11.2026 AA01–AA03 implemented locally: объединённый модуль Учёт и аналитика, расход simple по выбранному периоду из сохранённых рецептов/модификаторов, включая untracked. Возвраты по дате возврата/оригинальному составу. См. ACCOUNTING-ANALYTICS.md; визуальная приёмка pending.
 
 13.11.2026 D04 scope reduced by owner: админ-панель без версии (версия в Обновлениях); Telegram без preview/manual reports/help blocks и месячных переключателей. Месячные automatic/manual entry points удалены, legacy flags отключаются. Ручная UI acceptance pending.

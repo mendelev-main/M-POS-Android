@@ -32,12 +32,13 @@ import java.math.BigDecimal
     LaunchedEffect(connection) {directory.reset();selected=null;message=null}
     val admin by com.mendelev.mpos.core.access.Administration.session.state.collectAsState()
     var deleting by remember {mutableStateOf(false)}
-    val detail=selected
+    val detail=selected?.let {chosen->(if(selectedHistory) page.rows else orders).firstOrNull {it.optString("id")==chosen.optString("id")} ?: chosen}
+    EventsTheme {
     if(detail==null) OnlineEventsWindow(if(page.history) page.rows else orders,busy || page.loading,
         {selected=it;selectedHistory=page.history;message=null},onWorkspace,
         history=page.history,loading=page.loading,error=page.error,hasMore=page.cursor!=null,
-        onCurrent=directory::current,onHistory=directory::history,onRefresh=directory::refresh,onMore=directory::more)
-    else OnlineOrderWindow(detail,busy || deleting,message,{selected=null;message=null},canDelete=admin.active && !selectedHistory,readOnly=selectedHistory,onDelete={
+        onCurrent=directory::current,onHistory=directory::history,onRefresh=directory::refresh,onMore=directory::more,currentCount=orders.size)
+    else OnlineOrderWindow(detail,busy || deleting || page.loading,message ?: page.error,{selected=null;message=null},canDelete=admin.active && !selectedHistory,readOnly=selectedHistory,onRefresh=directory::refresh,onClose=onWorkspace,onDelete={
         val generation=admin.generation
         deleting=true;message=null
         scope.launch {
@@ -53,6 +54,7 @@ import java.math.BigDecimal
             catch(e:Exception) {message=e.message ?: "Не удалось принять заказ"}
         }
     }
+}
 }
 
 @Composable internal fun OnlineReadyAction(record: OnlineAcceptance,runtime: BackendRuntime,compact: Boolean=false,enabled: Boolean=true) {

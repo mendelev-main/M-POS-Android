@@ -60,6 +60,7 @@ data class WorkspaceRevision(val id: String,val revision: Long)
 
 @Dao
 interface WorkspaceDao {
+    @Query("SELECT revision FROM workspace_documents WHERE id=:id") suspend fun documentRevision(id: String): Long?
     @Query("SELECT * FROM workspace_documents WHERE id >= 'backend-online:' AND id < 'backend-online;' AND (json_extract(payload, '$.records[0].settled')=0 OR json_extract(payload, '$.records[0].readyConfirmed')=0) AND json_extract(payload, '$.records[0].cancelled')=0")
     suspend fun activeOnlineOrders(): List<WorkspaceDocument>
     @Query("SELECT id, revision FROM workspace_documents WHERE (id < 'web-receipt:' OR id >= 'web-receipt;') AND (id < 'backend-online:' OR id >= 'backend-online;') AND (id < 'loyalty-pending:' OR id >= 'loyalty-pending;') AND (id < 'loyalty-result:' OR id >= 'loyalty-result;') ORDER BY id") fun observeRevisions(): Flow<List<WorkspaceRevision>>

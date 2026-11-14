@@ -16,7 +16,7 @@ data class ReceivingPostCommand(val commandId: String,val actorId: String,val re
 }
 /** Immutable posting snapshot. Current product metadata is never used to reconstruct history. */
 data class PostedReceiving(val id: String,val commandId: String,val actorId: String,val at: Long,val draftRevision: Long,val draft: ReceivingDraft,val overageConfirmed: Boolean,
-    val costPolicy: Int=2,val result: ReceivingPreview=ReceivingPostingRules.preview(draft,draft.order,draft.lines.map {it.product},costPolicy)) {
+    val costPolicy: Int=2,val result: ReceivingPreview=ReceivingPostingRules.preview(draft,draft.order,draft.lines.map {it.product},costPolicy),val receivedByName: String="",val receivedZone: String="") {
     fun command()=ReceivingPostCommand(commandId,actorId,draftRevision,draft,overageConfirmed,costPolicy)
 }
 
@@ -34,6 +34,8 @@ object ReceivingPostingRules {
     }
     fun validate(r: PostedReceiving) {
         PurchaseDraftRules.id(r.id);require(r.at>=0);r.command().validate()
+        require(r.receivedByName.length<=512 && r.receivedByName.none {it.isISOControl()})
+        if(r.receivedZone.isNotEmpty()) java.time.ZoneId.of(r.receivedZone)
         val p=preview(r.draft,r.draft.order,r.draft.lines.map {it.product},r.costPolicy)
         require(r.result==p) {"Изменения прихода не соответствуют сохранённым фактам"}
         if(p.hasOverage && !r.overageConfirmed) throw CatalogFailure("overage","Подтвердите превышение заказа")

@@ -27,6 +27,7 @@ class TelegramKeystoreCipher(private val alias: String="mpos.telegram.settings.v
 }
 object TelegramSettingsCodec {
     fun encode(s: TelegramSettings)=JSONObject().apply {
+        put("receivingTtn",s.receivingTtn);put("receivingSince",s.receivingSince);put("receivingDataset",s.receivingDataset)
         put("version",1);put("revision",s.revision);put("enabled",s.enabled);put("botToken",s.botToken);put("chatId",s.chatId);put("threadId",s.threadId)
         put("deviceChatId",s.deviceChatId);put("ownerChatId",s.ownerChatId);put("onlineOrders",s.onlineOrders);put("shiftOpened",s.shiftOpened);put("shiftClosed",s.shiftClosed);put("monthlyWarehouse",s.monthlyWarehouse)
         put("backendUrl",s.backendUrl);put("deviceKey",s.deviceKey);put("ownerShiftStats",s.ownerShiftStats);put("ownerMonthlyStats",s.ownerMonthlyStats);put("onlineOrdersConfigured",s.onlineOrdersConfigured)
@@ -34,10 +35,10 @@ object TelegramSettingsCodec {
     }.toString()
     fun decode(raw: String): TelegramSettings {
         val p=JSONObject(raw);require(p.getInt("version")==1) {"Неизвестная версия настроек Telegram"}
-        return TelegramSettings(p.getLong("revision"),p.getBoolean("enabled"),p.getString("botToken"),p.getString("chatId"),p.getString("threadId"),p.getString("deviceChatId"),p.getString("ownerChatId"),p.getBoolean("onlineOrders"),p.getBoolean("shiftOpened"),p.getBoolean("shiftClosed"),p.getBoolean("monthlyWarehouse"),p.getString("backendUrl"),p.getString("deviceKey"),p.optBoolean("ownerShiftStats",false),p.optBoolean("ownerMonthlyStats",false),p.optBoolean("onlineOrdersConfigured",false),p.optBoolean("ownerMonthReport",false),p.optBoolean("ownerQuarterReport",false),p.optLong("ownerMonthSince",0),p.optLong("ownerQuarterSince",0)).validated()
+        return TelegramSettings(p.getLong("revision"),p.getBoolean("enabled"),p.getString("botToken"),p.getString("chatId"),p.getString("threadId"),p.getString("deviceChatId"),p.getString("ownerChatId"),p.getBoolean("onlineOrders"),p.getBoolean("shiftOpened"),p.getBoolean("shiftClosed"),p.getBoolean("monthlyWarehouse"),p.getString("backendUrl"),p.getString("deviceKey"),p.optBoolean("ownerShiftStats",false),p.optBoolean("ownerMonthlyStats",false),p.optBoolean("onlineOrdersConfigured",false),p.optBoolean("ownerMonthReport",false),p.optBoolean("ownerQuarterReport",false),p.optLong("ownerMonthSince",0),p.optLong("ownerQuarterSince",0),p.optBoolean("receivingTtn",false),p.optLong("receivingSince",0),p.optString("receivingDataset","")).validated()
     }
 }
-class TelegramSettingsStore(file: File,private val cipher: TelegramSecretCipher,private val authorized: ()->Boolean) {
+class TelegramSettingsStore(file: File,private val cipher: TelegramSecretCipher,private val dataset: ()->String={""},private val authorized: ()->Boolean) {
     companion object {private val lock=Any()}
     private val atomic=AtomicFile(file)
     fun read(): TelegramSettings=synchronized(lock) {
@@ -48,7 +49,8 @@ class TelegramSettingsStore(file: File,private val cipher: TelegramSecretCipher,
         check(authorized()) {"Войдите в администрирование"}
         val previous=read();val next=input.validated();check(previous.revision==next.revision) {"Настройки Telegram изменились. Откройте окно заново"}
         val now=System.currentTimeMillis()
-        val saved=next.copy(revision=Math.addExact(next.revision,1),
+        val bound=dataset()
+        val saved=next.copy(receivingSince=if(next.enabled && next.receivingTtn) {if(!previous.enabled || !previous.receivingTtn || previous.receivingDataset!=bound) now else previous.receivingSince} else 0,receivingDataset=if(next.enabled && next.receivingTtn) bound else "",revision=Math.addExact(next.revision,1),
             ownerMonthSince=if(next.enabled && next.ownerMonthReport) {if(!previous.enabled || !previous.ownerMonthReport || previous.ownerMonthSince==0L) now else previous.ownerMonthSince} else 0,
             ownerQuarterSince=if(next.enabled && next.ownerQuarterReport) {if(!previous.enabled || !previous.ownerQuarterReport || previous.ownerQuarterSince==0L) now else previous.ownerQuarterSince} else 0)
         val bytes=cipher.encrypt(TelegramSettingsCodec.encode(saved).toByteArray())

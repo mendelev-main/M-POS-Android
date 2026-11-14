@@ -197,7 +197,7 @@ fun FoundationScreen(fixtureUrl: String? = null) {
                         })
                         val posting: com.mendelev.mpos.feature.receiving.ReceivingPostingViewModel = viewModel(factory=object: ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST") override fun <T: ViewModel> create(modelClass: Class<T>): T = com.mendelev.mpos.feature.receiving.ReceivingPostingViewModel(
-                                com.mendelev.mpos.data.local.ReceivingPostingRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext))) as T
+                                com.mendelev.mpos.data.local.ReceivingPostingRepository(com.mendelev.mpos.data.local.CatalogDatabase.get(context.applicationContext),afterCommit={com.mendelev.mpos.telegram.TelegramRuntime.get(context.applicationContext).receivingCommitted()})) as T
                         })
                         com.mendelev.mpos.feature.receiving.ReceivingScreen(model,posting,receivingOrder,{receivingOrder=null},onSection={supplySection=it;route="purchaseOrders"}) {supplySection=com.mendelev.mpos.core.ui.MposFolderTab.Supplies;route="purchaseOrders"}
                     }

@@ -21,6 +21,7 @@ class ReceivingPostingRepository(private val db: CatalogDatabase,private val clo
         val id=InstallationGate.write {db.withTransaction {
             if(db.catalog().config()?.ownerId!=c.actorId) throw CatalogFailure("owner","Команда относится к другой установке")
             outcome(c)?.let {return@withTransaction it}
+            val shift=db.shifts().active().singleOrNull() ?: throw CatalogFailure("shift","Откройте смену перед приёмкой поставки")
             if(c.costPolicy!=2) throw CatalogFailure("policy","Для нового прихода требуется актуальное правило себестоимости")
             val d=c.draft;val draftDoc=db.workspace().document(ReceivingCodec.KEY) ?: throw CatalogFailure("conflict","Сначала сохраните черновик")
             val drafts=ReceivingCodec.decode(draftDoc.payload);val saved=drafts.find {it.orderId==d.key}
@@ -43,7 +44,7 @@ class ReceivingPostingRepository(private val db: CatalogDatabase,private val clo
             val rows=PostedReceivingCodec.decode(recordsDoc.payload)
             if(rows.any {it.draft.id==d.id || (order!=null && it.draft.order?.id==order.id)}) throw CatalogFailure("conflict","Этот заказ уже принят")
             val now=clock.millis();require(now>=0)
-            val id=UUID.randomUUID().toString();val record=PostedReceiving(id,c.commandId,c.actorId,now,c.revision,d,c.overageConfirmed,c.costPolicy,result)
+            val id=UUID.randomUUID().toString();val record=PostedReceiving(id,c.commandId,c.actorId,now,c.revision,d,c.overageConfirmed,c.costPolicy,result,shift.actorName,shift.zoneId)
             ReceivingPostingRules.validate(record)
             result.lines.filter {it.actual.toBigDecimal().signum()>0}.forEach {l->
                 val p=db.catalog().product(l.productId)!!

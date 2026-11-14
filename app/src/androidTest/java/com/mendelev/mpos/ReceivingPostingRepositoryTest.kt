@@ -20,6 +20,23 @@ class ReceivingPostingRepositoryTest {
         return ReceivingPostCommand("post-$key",seed.owner,1,d,overage)
     }
     private suspend fun reject(block: suspend ()->Unit) {try {block();fail("expected rejection")} catch(_:CatalogFailure) {}}
+    @Test fun closedShiftRejectsWithoutWritesThenRecordsCashierAndReplayAfterClose(): Unit=runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
+        try {
+            val c=prepare(db,"shift-required")
+            val shift=db.shifts().active().single()
+            db.shifts().update(shift.copy(closedAt=shift.openedAt+1,activeSlot=null))
+            val before=db.workspace().documents();val stock=db.catalog().allBalances()
+            try {ReceivingPostingRepository(db).commit(c);fail()} catch(e:CatalogFailure) {assertEquals("shift",e.kind)}
+            assertEquals(before,db.workspace().documents());assertEquals(stock,db.catalog().allBalances());assertNull(db.catalog().result(c.commandId))
+            db.shifts().update(shift)
+            val repo=ReceivingPostingRepository(db);val id=repo.commit(c)
+            val saved=repo.history().single();assertEquals(shift.actorName,saved.receivedByName);assertEquals(shift.zoneId,saved.receivedZone)
+            assertEquals(saved,PostedReceivingCodec.decode(PostedReceivingCodec.encode(listOf(saved))).single())
+            db.shifts().update(shift.copy(closedAt=System.currentTimeMillis(),activeSlot=null))
+            assertEquals(id,repo.commit(c));assertEquals(1,repo.history().size)
+        } finally {db.close()}
+    }
     @Test fun postReopenReplayAndTerminalOrderPreserveHistoricalFacts(): Unit=runBlocking {
         val name="post-${UUID.randomUUID()}.db"
         fun open()=Room.databaseBuilder(context,CatalogDatabase::class.java,name).build()
