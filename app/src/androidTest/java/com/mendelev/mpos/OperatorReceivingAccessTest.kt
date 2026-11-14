@@ -37,7 +37,7 @@ class OperatorReceivingAccessTest {
     @Test fun employeePostingRollsBackOnFailureThenCommitsAndReplaysOnce()=runBlocking {
         val db=database()
         try {
-            val seed=seedReceiving(db,"operator-receiving");val drafts=ReceivingRepository(db);val state=drafts.snapshot()
+            val seed=seedReceiving(db,"operator-receiving",openShift=true);val drafts=ReceivingRepository(db);val state=drafts.snapshot()
             val invoice=ReceivingRules.open("employee-invoice",seed.order,state.products).copy(invoiceNumber="fixture",lines=ReceivingRules.open("employee-invoice",seed.order,state.products).lines.map {it.copy(total="40")})
             Administration.session.logout()
             drafts.commit(ReceivingCommand("employee-invoice-save",seed.owner,invoice.key,0,invoice))

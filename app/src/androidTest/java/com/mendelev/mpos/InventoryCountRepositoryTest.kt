@@ -85,7 +85,7 @@ class InventoryCountRepositoryTest {
         try {
             val (repo,c)=prepare(db,"3");val r=ReceivingRepository(db);val s=r.snapshot();val p=s.products.single {it.id=="p-count"}
             val d=ReceivingDraft("invoice-after-count",null,lines=listOf(ReceivingLine(p,"1","l","","l","2")))
-            r.commit(ReceivingCommand("receiving-save",s.ownerId,d.key,0,d));ReceivingPostingRepository(db).commit(ReceivingPostCommand("receiving-post",s.ownerId,1,d))
+            r.commit(ReceivingCommand("receiving-save",s.ownerId,d.key,0,d));ensureReceivingShift(db);ReceivingPostingRepository(db).commit(ReceivingPostCommand("receiving-post",s.ownerId,1,d))
             reject {repo.commit(c)};assertEquals("11",db.catalog().balance(p.id)!!.quantity);assertEquals(2,db.catalog().movementCount(p.id))
         } finally {db.close()}
     }

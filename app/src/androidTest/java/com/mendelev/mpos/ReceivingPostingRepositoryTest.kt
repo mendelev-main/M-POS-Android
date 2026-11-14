@@ -14,7 +14,7 @@ import java.util.UUID
 class ReceivingPostingRepositoryTest {
     private val context=InstrumentationRegistry.getInstrumentation().targetContext
     private suspend fun prepare(db: CatalogDatabase,key: String="fixture",qty: String="10",total: String="40",overage: Boolean=false): ReceivingPostCommand {
-        val seed=seedReceiving(db,key);val s=ReceivingRepository(db).snapshot()
+        val seed=seedReceiving(db,key,openShift=true);val s=ReceivingRepository(db).snapshot()
         val d=ReceivingRules.open("invoice-$key",seed.order,s.products).let {it.copy(invoiceNumber="TTN-$key",lines=it.lines.map {l->l.copy(quantity=qty,total=total)})}
         ReceivingRepository(db).commit(ReceivingCommand("save-$key",seed.owner,seed.order.id,0,d))
         return ReceivingPostCommand("post-$key",seed.owner,1,d,overage)

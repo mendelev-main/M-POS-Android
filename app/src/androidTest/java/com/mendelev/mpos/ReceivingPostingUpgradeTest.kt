@@ -18,7 +18,7 @@ class ReceivingPostingUpgradeTest {
             val repo=ReceivingPostingRepository(db)
             if(!verify) {
                 seedLegacyPostedReceiving(db)
-                val seed=seedReceiving(db);val s=ReceivingRepository(db).snapshot()
+                val seed=seedReceiving(db,openShift=true);val s=ReceivingRepository(db).snapshot()
                 val d=ReceivingRules.open("invoice",seed.order,s.products).let {it.copy(invoiceNumber="TTN-post",invoiceDate="2026-10-27",lines=it.lines.map {l->l.copy(quantity="3",total="12")})}
                 ReceivingRepository(db).commit(ReceivingCommand("save",s.ownerId,seed.order.id,0,d))
                 repo.commit(ReceivingPostCommand("post",s.ownerId,1,d))

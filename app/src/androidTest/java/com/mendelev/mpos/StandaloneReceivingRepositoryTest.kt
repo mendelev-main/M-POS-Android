@@ -22,7 +22,7 @@ class StandaloneReceivingRepositoryTest {
         fun open()=Room.databaseBuilder(context,CatalogDatabase::class.java,name).build()
         var db=open()
         try {
-            val d=standaloneInvoice(db);val c=save(db,d);val p=d.lines.single().product.id
+            val d=standaloneInvoice(db,openShift=true);val c=save(db,d);val p=d.lines.single().product.id
             assertNull(db.workspace().document(PurchaseOrderCodec.KEY));assertNull(db.workspace().document(PurchaseDraftCodec.KEY))
             db.close();db=open();assertEquals(d,ReceivingRepository(db).snapshot().records.single().draft)
             val post=ReceivingPostCommand("post",c.actorId,1,d);val repo=ReceivingPostingRepository(db);val id=repo.commit(post)
@@ -39,7 +39,7 @@ class StandaloneReceivingRepositoryTest {
     @Test fun saveAndPostingWriteFailuresSqlAbortAndLostReplyAreAtomic(): Unit=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         try {
-            val d=standaloneInvoice(db);val owner=ReceivingRepository(db).snapshot().ownerId;val c=ReceivingCommand("save",owner,d.key,0,d)
+            val d=standaloneInvoice(db,openShift=true);val owner=ReceivingRepository(db).snapshot().ownerId;val c=ReceivingCommand("save",owner,d.key,0,d)
             for(n in 1..3) {
                 var writes=0
                 try {ReceivingRepository(db,afterWrite={if(++writes==n) throw java.io.IOException("save")}).commit(c);fail()} catch(_:java.io.IOException) {}
@@ -63,7 +63,7 @@ class StandaloneReceivingRepositoryTest {
     @Test fun competingDraftsAndPostsOwnerAndInstallationGateAreGuarded(): Unit=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         try {
-            val d=standaloneInvoice(db);val owner=ReceivingRepository(db).snapshot().ownerId;val repo=ReceivingRepository(db)
+            val d=standaloneInvoice(db,openShift=true);val owner=ReceivingRepository(db).snapshot().ownerId;val repo=ReceivingRepository(db)
             val c=ReceivingCommand("save",owner,d.key,0,d)
             reject {repo.commit(c.copy(actorId="cashier"))}
             val results=coroutineScope {(1..2).map {i->async(Dispatchers.IO) {runCatching {repo.commit(c.copy(commandId="save$i",draft=d.copy(id="invoice$i")))}}}.awaitAll()}
@@ -79,7 +79,7 @@ class StandaloneReceivingRepositoryTest {
     @Test fun staleSupplierAndStockNeedExplicitRefreshAndReferencesRemainProtected(): Unit=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         try {
-            val d=standaloneInvoice(db);val c=save(db,d);val p=d.lines.single().product.id;val supplier=d.supplier!!;val post=ReceivingPostCommand("post",c.actorId,1,d)
+            val d=standaloneInvoice(db,openShift=true);val c=save(db,d);val p=d.lines.single().product.id;val supplier=d.supplier!!;val post=ReceivingPostCommand("post",c.actorId,1,d)
             reject {SupplierRepository(db).commit(SupplierCommand("delete",c.actorId,SupplierAction.Delete(supplier.id,1)))}
             reject {ReceivingReferenceGuard(db).product(p)}
             SupplierRepository(db).commit(SupplierCommand("rename",c.actorId,SupplierAction.Save(supplier.id,1,"Новое имя",setOf(p))))
@@ -95,7 +95,7 @@ class StandaloneReceivingRepositoryTest {
     @Test fun clearAllowsReferenceReleaseAndOldReplayDoesNotRestoreEmptyDraft(): Unit=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         try {
-            val d=standaloneInvoice(db).copy(lines=emptyList());val c=save(db,d)
+            val d=standaloneInvoice(db,openShift=true).copy(lines=emptyList());val c=save(db,d)
             val repo=ReceivingRepository(db);repo.commit(ReceivingCommand("clear",c.actorId,d.key,1,null));assertNull(repo.snapshot().records.single().draft)
             SupplierRepository(db).commit(SupplierCommand("delete",c.actorId,SupplierAction.Delete(d.supplier!!.id,1)))
             assertEquals(d.id,repo.commit(c));assertNull(repo.snapshot().records.single().draft)
@@ -106,7 +106,7 @@ class StandaloneReceivingRepositoryTest {
     @Test fun unknownPackNegativeStockAndNoTrackingKeepReceivingRules(): Unit=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         try {
-            val d=standaloneInvoice(db);val p=d.lines.single().product.id
+            val d=standaloneInvoice(db,openShift=true);val p=d.lines.single().product.id
             val product=db.catalog().product(p)!!;db.catalog().updateProduct(product.copy(noStockTracking=true));db.catalog().updateBalance(db.catalog().balance(p)!!.copy(quantity="-2"))
             val s=ReceivingRepository(db).snapshot();val fresh=ReceivingRules.rebase(d,null,s.products).let {it.copy(lines=it.lines.map {l->l.copy(quantity="3",total="10")})}
             val c=save(db,fresh);ReceivingPostingRepository(db).commit(ReceivingPostCommand("post",c.actorId,1,fresh))
@@ -118,7 +118,7 @@ class StandaloneReceivingRepositoryTest {
         fun open()=Room.databaseBuilder(context,CatalogDatabase::class.java,name).build()
         var db=open()
         try {
-            val d=standaloneInvoice(db).let {it.copy(lines=it.lines.map {l->l.copy(quantity="1.5",total="",priceMode="price",unitPrice="2.35")})}
+            val d=standaloneInvoice(db,openShift=true).let {it.copy(lines=it.lines.map {l->l.copy(quantity="1.5",total="",priceMode="price",unitPrice="2.35")})}
             val c=save(db,d);db.close();db=open()
             assertEquals(d,ReceivingRepository(db).snapshot().records.single().draft)
             reject {ReceivingRepository(db).commit(c.copy(draft=d.copy(lines=d.lines.map {it.copy(unitPrice="2.36")})))}
@@ -137,7 +137,7 @@ class StandaloneReceivingRepositoryTest {
     @Test fun payloadTwoDefaultsToTotalModeWithoutChangingLegacyFingerprint(): Unit=runBlocking {
         val db=Room.inMemoryDatabaseBuilder(context,CatalogDatabase::class.java).build()
         try {
-            val d=standaloneInvoice(db);val c=save(db,d)
+            val d=standaloneInvoice(db,openShift=true);val c=save(db,d)
             val raw=org.json.JSONObject(ReceivingCodec.encode(listOf(ReceivingRecord(d.key,1,d)))).put("version",2)
             raw.getJSONArray("items").getJSONObject(0).getJSONObject("draft").getJSONArray("lines").getJSONObject(0).apply {remove("priceMode");remove("unitPrice")}
             val doc=db.workspace().document(ReceivingCodec.KEY)!!;db.workspace().put(doc.copy(payload=raw.toString()))

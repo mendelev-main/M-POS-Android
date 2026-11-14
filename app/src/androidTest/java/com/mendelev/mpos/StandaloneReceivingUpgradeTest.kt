@@ -18,7 +18,7 @@ class StandaloneReceivingUpgradeTest {
             val repo=ReceivingRepository(db);val posting=ReceivingPostingRepository(db)
             if(!verify) {
                 seedLegacyPostedReceiving(db)
-                val d=standaloneInvoice(db).let {it.copy(lines=it.lines.map {l->l.copy(quantity="1.5",total="",priceMode="price",unitPrice="2.35")})};val owner=repo.snapshot().ownerId
+                val d=standaloneInvoice(db,openShift=true).let {it.copy(lines=it.lines.map {l->l.copy(quantity="1.5",total="",priceMode="price",unitPrice="2.35")})};val owner=repo.snapshot().ownerId
                 repo.commit(ReceivingCommand("standalone-save",owner,d.key,0,d))
                 posting.commit(ReceivingPostCommand("standalone-post",owner,1,d))
                 val s=repo.snapshot();val next=ReceivingRules.rebase(d.copy(id="next-invoice",invoiceNumber="NEXT"),null,s.products).let {it.copy(lines=it.lines.map {l->l.copy(quantity="0.0004",total="",unitPrice="25")})}

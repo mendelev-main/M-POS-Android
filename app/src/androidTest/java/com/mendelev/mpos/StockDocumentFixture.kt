@@ -6,7 +6,7 @@ import com.mendelev.mpos.domain.workspace.*
 import com.mendelev.mpos.domain.sale.*
 
 suspend fun stockDocumentFixture(db: CatalogDatabase) {
-    val d=standaloneInvoice(db,"stock-doc");val owner=ReceivingRepository(db).snapshot().ownerId
+    val d=standaloneInvoice(db,"stock-doc",openShift=true);val owner=ReceivingRepository(db).snapshot().ownerId
     ReceivingRepository(db).commit(ReceivingCommand("save-invoice",owner,d.key,0,d))
     ReceivingPostingRepository(db).commit(ReceivingPostCommand("post-invoice",owner,1,d))
     val work=WorkspaceRepository(db);work.initialize()
